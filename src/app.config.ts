@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/detail/index',
     'pages/verify/index',
     'pages/mine/index',
+    'pages/my-publish/index',
     'pages/community/index',
     'pages/publish/index'
   ],

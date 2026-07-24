@@ -32,7 +32,8 @@
     "dev:harmony-hybrid": "npm run build:harmony-hybrid -- --watch",
     "api:sync": "node scripts/sync-openapi.mjs",
     "api:generate": "orval --config orval.config.ts",
-    "api:check": "pnpm api:sync && pnpm api:generate"
+    "api:check": "pnpm api:sync && pnpm api:generate",
+    "test": "vitest run"
   },
   "browserslist": [
     "defaults and fully supports es6-module",
@@ -89,6 +90,7 @@
     "postcss": "^8.5.6",
     "@types/node": "^18",
     "@types/minimatch": "^5",
-    "orval": "8.22.0"
+    "orval": "8.22.0",
+    "vitest": "^2.1.9"
   }
 }

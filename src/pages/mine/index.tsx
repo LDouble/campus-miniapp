@@ -3,7 +3,7 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { DesignIcon } from '../../components/DesignIcon'
 import { useNavigationMetrics } from '../../hooks/useNavigationMetrics'
-import { AcademicStatus, getAcademicStatus, login } from '../../services/api'
+import { AcademicStatus, getAcademicStatus, getMyPublications, login } from '../../services/api'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -30,6 +30,7 @@ const verificationCopy: Record<string, string> = {
 export default function Mine () {
   const [status, setStatus] = useState<AcademicStatus | null>(null)
   const [loggedIn, setLoggedIn] = useState(false)
+  const [publishCount, setPublishCount] = useState(0)
   const [message, setMessage] = useState('')
   const { statusBarHeight, rightInset } = useNavigationMetrics()
 
@@ -41,7 +42,9 @@ export default function Mine () {
       return
     }
     try {
-      setStatus(await getAcademicStatus())
+      const [academic, publications] = await Promise.all([getAcademicStatus(), getMyPublications()])
+      setStatus(academic)
+      setPublishCount(publications.length)
     } catch (_) {
       setStatus(null)
     }
@@ -102,7 +105,7 @@ export default function Mine () {
         </View>
 
         <View className='profile-stats'>
-          <View><Text className='stat-value'>0</Text><Text className='stat-label'>发布</Text></View>
+          <View><Text className='stat-value'>{publishCount}</Text><Text className='stat-label'>发布</Text></View>
           <View><Text className='stat-value'>0</Text><Text className='stat-label'>参与</Text></View>
           <View><Text className='stat-value'>0</Text><Text className='stat-label'>收藏</Text></View>
         </View>
@@ -124,7 +127,7 @@ export default function Mine () {
       <View className='mine-section'>
         <View className='section-heading'><Text>我的校园</Text><Text>记录每一次校园参与</Text></View>
         <View className='shortcut-grid'>
-          {shortcuts.map(item => <View className='shortcut-item' key={item.name} onClick={() => showComingSoon(item.name)}>
+          {shortcuts.map(item => <View className='shortcut-item' key={item.name} onClick={() => item.name === '我的发布' ? Taro.navigateTo({ url: '/pages/my-publish/index' }) : showComingSoon(item.name)}>
             <View className='shortcut-icon'><DesignIcon name={item.icon} /></View>
             <Text>{item.name}</Text>
           </View>)}

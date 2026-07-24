@@ -2,7 +2,7 @@ import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { DesignIcon } from './DesignIcon'
 
-const options = [['动态', '分享校园生活', 'edit'], ['闲置', '出二手回血', 'market'], ['跑腿', '花钱求帮忙', 'errand'], ['拼车', '结伴出行', 'community'], ['失物', '寻找失主/物品', 'lost']]
+const options = [['活动', '发起校园活动', 'check'], ['校园圈', '动态与失物招领', 'edit'], ['二手', '出闲置回血', 'market'], ['跑腿', '花钱求帮忙', 'errand'], ['拼车', '结伴出行', 'community']]
 
 export function PublishSheet ({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null

@@ -1,0 +1,20 @@
+.my-publish-page { min-height: 100vh; padding: 18px 16px 40px; background: #f4f7fb; color: #1e293b; box-sizing: border-box; }
+.my-publish-header { padding: 8px 4px 18px; }
+.page-title { display: block; font-size: 24px; font-weight: 800; }
+.page-subtitle { display: block; margin-top: 5px; color: #94a3b8; font-size: 11px; }
+.state-hint { display: block; padding: 40px 0; color: #94a3b8; text-align: center; }
+.state-card { padding: 30px 18px; border-radius: 22px; background: #fff; color: #64748b; font-size: 13px; text-align: center; }
+.state-card Text { display: block; margin-bottom: 12px; }
+.state-card Button { display: inline-block; margin: 4px; border-radius: 99px; }
+.publication-list { display: flex; flex-direction: column; gap: 12px; }
+.publication-card { padding: 16px; border: 1px solid rgba(255,255,255,.9); border-radius: 20px; background: #fff; box-shadow: 0 6px 20px rgba(15,23,42,.045); }
+.publication-top { display: flex; align-items: center; justify-content: space-between; }
+.type-pill, .status-pill { padding: 4px 9px; border-radius: 99px; background: #eff6ff; color: #2563eb; font-size: 10px; font-weight: 700; }
+.status-pill.draft { background: #f1f5f9; color: #64748b; }
+.status-pill.pending { background: #fff7ed; color: #ea580c; }
+.status-pill.approved { background: #ecfdf5; color: #059669; }
+.status-pill.rejected { background: #fef2f2; color: #dc2626; }
+.publication-title { display: block; margin-top: 12px; font-size: 15px; font-weight: 800; }
+.publication-summary { display: -webkit-box; overflow: hidden; margin-top: 7px; color: #64748b; font-size: 12px; line-height: 1.6; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.rejection-reason { display: block; margin-top: 10px; padding: 9px 10px; border-radius: 10px; background: #fef2f2; color: #dc2626; font-size: 11px; }
+.publication-time { display: block; margin-top: 12px; color: #94a3b8; font-size: 10px; text-align: right; }
