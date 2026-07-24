@@ -5,7 +5,7 @@ import { getFeed, FeedItem } from '../../services/api'
 import { FeedCard } from '../../components/FeedCard'
 import { DesignIcon } from '../../components/DesignIcon'
 import { useNavigationMetrics } from '../../hooks/useNavigationMetrics'
-import { syncCustomTabBar } from '../../utils/tabbar'
+import { consumeCommunityTopic, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
 const topics = ['全部', '闲置', '跑腿', '拼车', '失物招领', '吐槽', '求助', '找搭子']
@@ -18,7 +18,11 @@ export default function Community () {
   const { topInset } = useNavigationMetrics()
   const load = async () => { try { setItems(await getFeed()) } catch (_) { setItems([]) } finally { Taro.stopPullDownRefresh() } }
   useLoad(params => { if (params.topic) setTopic(params.topic); void load() })
-  useDidShow(() => { syncCustomTabBar(1) })
+  useDidShow(() => {
+    syncCustomTabBar(1)
+    const pendingTopic = consumeCommunityTopic()
+    if (pendingTopic) setTopic(pendingTopic)
+  })
   usePullDownRefresh(() => { void load() })
   const filtered = items.filter(item => (topic === '全部' || item.type === typeMap[topic] || (topic === '失物招领' && item.type === 'campus-circle')) && `${item.title}${item.summary}`.includes(keyword))
   return <View className='community-page'>

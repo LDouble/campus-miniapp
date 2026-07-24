@@ -6,7 +6,7 @@ import { FeatureGrid } from '../../components/FeatureGrid'
 import { FeedCard } from '../../components/FeedCard'
 import { DesignIcon } from '../../components/DesignIcon'
 import { useNavigationMetrics } from '../../hooks/useNavigationMetrics'
-import { syncCustomTabBar } from '../../utils/tabbar'
+import { switchToCommunity, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
 export default function Index () {
@@ -24,9 +24,9 @@ export default function Index () {
   const verify = async () => { try { const status = await getAcademicStatus(); if (status.identity) Taro.showToast({ title: '已完成认证', icon: 'none' }); else Taro.navigateTo({ url: '/pages/verify/index' }) } catch (_) { Taro.navigateTo({ url: '/pages/verify/index' }) } }
   const featureClick = (name: string) => {
     if (name === '我的课表' || name === '查成绩' || name === '通过率' || name === '考试安排') { Taro.showToast({ title: `${name}即将开放`, icon: 'none' }); return }
-    if (name === '二手市场') { Taro.navigateTo({ url: '/pages/community/index?topic=闲置' }); return }
-    if (name === '校园跑腿') { Taro.navigateTo({ url: '/pages/community/index?topic=跑腿' }); return }
-    if (name === '失物招领') { Taro.navigateTo({ url: '/pages/community/index?topic=失物招领' }); return }
+    if (name === '二手市场') { void switchToCommunity('闲置'); return }
+    if (name === '校园跑腿') { void switchToCommunity('跑腿'); return }
+    if (name === '失物招领') { void switchToCommunity('失物招领'); return }
     Taro.showToast({ title: `${name}即将开放`, icon: 'none' })
   }
   return <View className='page-shell'>
@@ -35,7 +35,7 @@ export default function Index () {
     <View className='home-scroll'>
       <View className='glass-banner'><View className='banner-shine' /><View className='banner-pill'><DesignIcon name='grade' /><Text>新生专区</Text></View><Text className='banner-title'>2026 秋季报到指南</Text><Text className='banner-subtitle'>提前了解校园，开学不迷路</Text><View className='banner-action'><Text>立即查看</Text><DesignIcon name='arrow' /></View></View>
       <FeatureGrid onClick={featureClick} />
-      <View className='section-heading'><Text>最新动态</Text><Text className='section-more' onClick={() => Taro.navigateTo({ url: '/pages/community/index' })}>查看更多 ›</Text></View>
+      <View className='section-heading'><Text>最新动态</Text><Text className='section-more' onClick={() => void switchToCommunity()}>查看更多 ›</Text></View>
       {loading && <Text className='hint'>正在加载内容…</Text>}
       {!loading && error && <View className='empty'><Text>{error}</Text><Button size='mini' onClick={ensureLogin}>微信登录并重试</Button></View>}
       {!loading && !error && items.length === 0 && <View className='empty'><Text>暂时没有公开内容</Text><Button size='mini' onClick={ensureLogin}>登录后刷新</Button></View>}
