@@ -2,7 +2,7 @@
   "miniprogramRoot": "./dist",
   "projectname": "/Users/selanamac/code/campus-miniapp",
   "description": "校园平台用户端微信小程序",
-  "appid": "touristappid",
+  "appid": "wx0d9936d6708f44c0",
   "setting": {
     "urlCheck": true,
     "es6": false,

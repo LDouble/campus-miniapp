@@ -5,6 +5,8 @@ export default defineAppConfig({
     'pages/verify/index',
     'pages/mine/index',
     'pages/my-publish/index',
+    'pages/timetable/index',
+    'pages/grades/index',
     'pages/community/index',
     'pages/publish/index'
   ],

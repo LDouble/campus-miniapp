@@ -1,0 +1,12 @@
+.academic-custom-header { position:relative; z-index:20; width:100%; flex:none; box-sizing:border-box; }
+.academic-custom-header-sage { background:rgba(245,247,244,.94); color:#19231f; }
+.academic-custom-header-paper { background:rgba(247,243,235,.94); color:#20241f; }
+.academic-custom-navbar { position:relative; display:flex; align-items:center; padding-left:16px; box-sizing:border-box; }
+.academic-custom-back { display:flex; width:36px; height:36px; flex:none; align-items:center; justify-content:center; border:1px solid rgba(31,42,36,.11); border-radius:50%; background:rgba(255,255,255,.5); transition:transform .16s ease, background .16s ease; }
+.academic-custom-back-pressed { background:rgba(31,79,58,.1); transform:scale(.92); }
+.academic-back-chevron { width:8px; height:8px; margin-left:3px; border-bottom:2px solid currentColor; border-left:2px solid currentColor; transform:rotate(45deg); }
+.academic-custom-title { position:absolute; top:50%; left:50%; display:flex; flex-direction:column; align-items:center; transform:translate(-50%,-50%); pointer-events:none; }
+.academic-custom-title Text { font-family:'Songti SC','STSong',serif; font-size:17px; font-weight:800; letter-spacing:.8px; white-space:nowrap; }
+.academic-title-rule { width:16px; height:2px; margin-top:4px; border-radius:99px; background:#c87341; }
+.academic-custom-header-sage .academic-title-rule { background:#4d8a6e; }
+.academic-custom-meta { margin-left:auto; padding:5px 9px; border:1px solid rgba(42,67,54,.09); border-radius:99px; color:#7b877f; font-family:'DIN Alternate','PingFang SC',sans-serif; font-size:8px; font-weight:700; letter-spacing:1px; }

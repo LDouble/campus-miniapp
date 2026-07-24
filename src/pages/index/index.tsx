@@ -22,7 +22,9 @@ export default function Index () {
   const ensureLogin = async () => { try { await login(); await load() } catch (e) { setError((e as Error).message) } }
   const verify = async () => { try { const status = await getAcademicStatus(); if (status.identity) Taro.showToast({ title: '已完成认证', icon: 'none' }); else Taro.navigateTo({ url: '/pages/verify/index' }) } catch (_) { Taro.navigateTo({ url: '/pages/verify/index' }) } }
   const featureClick = (name: string) => {
-    if (name === '我的课表' || name === '查成绩' || name === '通过率' || name === '考试安排') { Taro.showToast({ title: `${name}即将开放`, icon: 'none' }); return }
+    if (name === '我的课表') { void Taro.navigateTo({ url: '/pages/timetable/index' }); return }
+    if (name === '查成绩') { void Taro.navigateTo({ url: '/pages/grades/index' }); return }
+    if (name === '通过率' || name === '考试安排') { Taro.showToast({ title: `${name}即将开放`, icon: 'none' }); return }
     if (name === '二手市场') { void switchToCommunity('闲置'); return }
     if (name === '校园跑腿') { void switchToCommunity('跑腿'); return }
     if (name === '失物招领') { void switchToCommunity('失物招领'); return }
