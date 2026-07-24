@@ -24,3 +24,14 @@ pnpm dev:weapp
 ```bash
 pnpm build:weapp
 ```
+
+## OpenAPI 客户端
+
+小程序请求客户端由服务端 `api/openapi.yaml` 生成，不手写接口路径或响应类型：
+
+```bash
+pnpm api:sync -- ../backend_demo/api/openapi.yaml
+pnpm api:generate
+```
+
+生成代码位于 `src/api/generated`，Taro 的请求适配器位于 `src/api/campus-mutator.ts`。
