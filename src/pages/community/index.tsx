@@ -1,5 +1,5 @@
 import { View, Text, Input } from '@tarojs/components'
-import Taro, { useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow, useLoad } from '@tarojs/taro'
 import { useState } from 'react'
 import { getFeed, FeedItem } from '../../services/api'
 import { FeedCard } from '../../components/FeedCard'
@@ -37,14 +37,13 @@ export default function Community () {
   const [activeFilter, setActiveFilter] = useState<FilterDefinition | null>(null)
   const [filterValues, setFilterValues] = useState<Record<string, string>>({})
   const { topInset } = useNavigationMetrics()
-  const load = async () => { try { setItems(await getFeed()) } catch (_) { setItems([]) } finally { Taro.stopPullDownRefresh() } }
+  const load = async () => { try { setItems(await getFeed()) } catch (_) { setItems([]) } }
   useLoad(params => { if (params.topic) setTopic(params.topic); void load() })
   useDidShow(() => {
     syncCustomTabBar(1)
     const pendingTopic = consumeCommunityTopic()
     if (pendingTopic) setTopic(pendingTopic)
   })
-  usePullDownRefresh(() => { void load() })
   const filters = topicFilters[topic] || []
   const filtered = items.filter(item => (topic === '全部' || item.type === typeMap[topic] || (topic === '失物招领' && item.type === 'campus-circle')) && `${item.title}${item.summary}`.includes(keyword))
   return <View className='community-page'>

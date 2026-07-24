@@ -1,5 +1,5 @@
 import { View, Text, Button } from '@tarojs/components'
-import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { FeedItem, getAcademicStatus, getFeed, login } from '../../services/api'
 import { FeatureGrid } from '../../components/FeatureGrid'
@@ -16,10 +16,9 @@ export default function Index () {
   const { topInset } = useNavigationMetrics()
   const load = async () => {
     setLoading(true); setError('')
-    try { setItems(await getFeed()) } catch (e) { setError((e as Error).message) } finally { setLoading(false); Taro.stopPullDownRefresh() }
+    try { setItems(await getFeed()) } catch (e) { setError((e as Error).message) } finally { setLoading(false) }
   }
   useDidShow(() => { syncCustomTabBar(0); void load() })
-  usePullDownRefresh(() => { void load() })
   const ensureLogin = async () => { try { await login(); await load() } catch (e) { setError((e as Error).message) } }
   const verify = async () => { try { const status = await getAcademicStatus(); if (status.identity) Taro.showToast({ title: '已完成认证', icon: 'none' }); else Taro.navigateTo({ url: '/pages/verify/index' }) } catch (_) { Taro.navigateTo({ url: '/pages/verify/index' }) } }
   const featureClick = (name: string) => {
