@@ -31,7 +31,7 @@ export default function Mine () {
   const [status, setStatus] = useState<AcademicStatus | null>(null)
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
-  const { topInset } = useNavigationMetrics()
+  const { statusBarHeight, rightInset } = useNavigationMetrics()
 
   const loadStatus = async () => {
     const hasToken = Boolean(Taro.getStorageSync('access_token'))
@@ -75,9 +75,8 @@ export default function Mine () {
     <View className='mine-glow mine-glow-primary' />
     <View className='mine-glow mine-glow-secondary' />
 
-    <View className='mine-header' style={{ paddingTop: `${topInset + 8}px` }}>
+    <View className='mine-header' style={{ paddingTop: `${statusBarHeight + 6}px`, paddingRight: `${rightInset}px` }}>
       <View>
-        <Text className='mine-eyebrow'>PERSONAL CENTER</Text>
         <Text className='mine-title'>我的</Text>
       </View>
       <View className='header-action' onClick={() => showComingSoon('设置')}>
