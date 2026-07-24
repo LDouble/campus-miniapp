@@ -8,7 +8,8 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: '/Users/selanamac/code/campus-miniapp',
     date: '2026-7-24',
-    designWidth: 750,
+    // Figma 设计稿以 375 CSS px 为基准，Taro 按 750rpx 输出。
+    designWidth: 375,
     deviceRatio: {
       640: 2.34 / 2,
       750: 1,
