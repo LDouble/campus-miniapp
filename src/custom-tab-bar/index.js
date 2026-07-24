@@ -9,19 +9,23 @@ Component({
   },
   lifetimes: {
     attached() {
-      const pages = getCurrentPages()
-      const route = pages.length ? pages[pages.length - 1].route : ''
-      const selected = this.data.list.findIndex(item => item.pagePath === route)
-      if (selected >= 0) this.setData({ selected })
+      this.syncSelected()
+    }
+  },
+  pageLifetimes: {
+    show() {
+      this.syncSelected()
     }
   },
   methods: {
+    syncSelected() {
+      const pages = getCurrentPages()
+      const route = pages.length ? pages[pages.length - 1].route.replace(/^\//, '') : ''
+      const selected = this.data.list.findIndex(item => item.pagePath === route)
+      if (selected >= 0 && selected !== this.data.selected) this.setData({ selected })
+    },
     switchTab(event) {
       const index = Number(event.currentTarget.dataset.index)
-      if (index === 3) {
-        wx.navigateTo({ url: '/pages/publish/index' })
-        return
-      }
       const item = this.data.list[index]
       if (!item || index === this.data.selected) return
       this.setData({ selected: index })
@@ -29,6 +33,9 @@ Component({
     },
     publish() {
       wx.navigateTo({ url: '/pages/publish/index' })
+    },
+    message() {
+      wx.showToast({ title: '消息功能即将开放', icon: 'none' })
     }
   }
 })
