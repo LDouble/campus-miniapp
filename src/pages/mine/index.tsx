@@ -85,7 +85,7 @@ export default function Mine () {
       </View>
     </View>
 
-    <ScrollView scrollY className='mine-scroll' style={{ height: `calc(100vh - ${topInset + 73}px)` }}>
+    <ScrollView scrollY className='mine-scroll'>
       <View className='profile-card'>
         <View className='profile-orbit' />
         <View className='profile-main'>

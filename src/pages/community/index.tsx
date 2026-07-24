@@ -1,5 +1,5 @@
 import { View, Text, Input, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow, useLoad } from '@tarojs/taro'
 import { useState } from 'react'
 import { getFeed, FeedItem } from '../../services/api'
 import { FeedCard } from '../../components/FeedCard'
@@ -34,22 +34,22 @@ export default function Community () {
   const [topic, setTopic] = useState('全部')
   const [items, setItems] = useState<FeedItem[]>([])
   const [keyword, setKeyword] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
   const [activeFilter, setActiveFilter] = useState<FilterDefinition | null>(null)
   const [filterValues, setFilterValues] = useState<Record<string, string>>({})
   const { topInset } = useNavigationMetrics()
-  const load = async () => { try { setItems(await getFeed()) } catch (_) { setItems([]) } finally { Taro.stopPullDownRefresh() } }
+  const load = async () => { try { setItems(await getFeed()) } catch (_) { setItems([]) } finally { setRefreshing(false) } }
   useLoad(params => { if (params.topic) setTopic(params.topic); void load() })
   useDidShow(() => {
     syncCustomTabBar(1)
     const pendingTopic = consumeCommunityTopic()
     if (pendingTopic) setTopic(pendingTopic)
   })
-  usePullDownRefresh(() => { void load() })
   const filters = topicFilters[topic] || []
   const filtered = items.filter(item => (topic === '全部' || item.type === typeMap[topic] || (topic === '失物招领' && item.type === 'campus-circle')) && `${item.title}${item.summary}`.includes(keyword))
   return <View className='community-page'>
     <View className='community-header' style={{ paddingTop: `${topInset + 8}px` }}><View className='community-title-row'><Text>社区</Text><View className='search-box'><DesignIcon name='search' /><Input value={keyword} onInput={event => setKeyword(event.detail.value)} placeholder={topic === '闲置' ? '搜索二手商品...' : '搜索同学、圈子或话题...'} /></View></View><ScrollView scrollX className='topic-scroll'>{topics.map(name => <Text key={name} className={`topic-tab ${topic === name ? 'selected' : ''}`} onClick={() => { setTopic(name); setActiveFilter(null) }}>{name}</Text>)}</ScrollView>{filters.length > 0 && <ScrollView scrollX className='filter-scroll'>{filters.map(filter => <Text key={filter.key} className={filterValues[filter.key] ? 'selected' : ''} onClick={() => setActiveFilter(filter)}>{filterValues[filter.key] || filter.label}⌄</Text>)}</ScrollView>}</View>
-    <ScrollView scrollY className='community-feed'>{filtered.length ? filtered.map(item => <FeedCard item={item} key={`${item.type}-${item.id}`} />) : <View className='community-empty'><Text>还没有相关内容</Text><Text>换个话题看看吧</Text></View>}</ScrollView>
+    <ScrollView scrollY refresherEnabled refresherTriggered={refreshing} onRefresherRefresh={() => { setRefreshing(true); void load() }} className='community-feed'>{filtered.length ? filtered.map(item => <FeedCard item={item} key={`${item.type}-${item.id}`} />) : <View className='community-empty'><Text>还没有相关内容</Text><Text>换个话题看看吧</Text></View>}</ScrollView>
     <BottomSheetPicker
       open={Boolean(activeFilter)}
       title={activeFilter?.title || ''}
