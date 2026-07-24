@@ -12,16 +12,7 @@ export default defineAppConfig({
     navigationBarBackgroundColor: '#fff',
     navigationBarTitleText: 'WeChat',
     navigationBarTextStyle: 'black',
+    navigationStyle: 'custom',
     enablePullDownRefresh: true
-  },
-  tabBar: {
-    color: '#667085',
-    selectedColor: '#2563eb',
-    backgroundColor: '#ffffff',
-    borderStyle: 'white',
-    list: [
-      { pagePath: 'pages/index/index', text: '首页' },
-      { pagePath: 'pages/mine/index', text: '我的' }
-    ]
   }
 })
