@@ -1,4 +1,4 @@
-import { Button, ScrollView, Text, View } from '@tarojs/components'
+import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { DesignIcon } from '../../components/DesignIcon'
@@ -85,7 +85,7 @@ export default function Mine () {
       </View>
     </View>
 
-    <ScrollView scrollY className='mine-scroll'>
+    <View className='mine-scroll'>
       <View className='profile-card'>
         <View className='profile-orbit' />
         <View className='profile-main'>
@@ -142,6 +142,6 @@ export default function Mine () {
 
       {message && <Text className='mine-message'>{message}</Text>}
       <Text className='mine-version'>校园生活 · 让校园连接更简单</Text>
-    </ScrollView>
+    </View>
   </View>
 }

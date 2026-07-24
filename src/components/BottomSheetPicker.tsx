@@ -1,4 +1,4 @@
-import { ScrollView, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import { DesignIcon } from './DesignIcon'
 import './BottomSheetPicker.scss'
 
@@ -29,7 +29,7 @@ export function BottomSheetPicker ({
         <Text>{title}</Text>
         <View className='picker-close' onClick={onClose}><DesignIcon name='close' /></View>
       </View>
-      <ScrollView scrollY className='picker-options'>
+      <View className='picker-options'>
         {options.map(option => <View
           className={`picker-option ${value === option ? 'selected' : ''}`}
           key={option}
@@ -38,7 +38,7 @@ export function BottomSheetPicker ({
           <Text>{option}</Text>
           {value === option && <DesignIcon name='check' />}
         </View>)}
-      </ScrollView>
+      </View>
     </View>
   </View>
 }

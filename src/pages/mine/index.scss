@@ -1,13 +1,13 @@
-.mine-page { position: relative; display: flex; height: 100vh; flex-direction: column; overflow: hidden; background: #f4f7fb; color: #1e293b; }
+.mine-page { position: relative; min-height: 100vh; background: #f4f7fb; color: #1e293b; }
 .mine-glow { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(2px); }
 .mine-glow-primary { top: -70px; left: -82px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(147,197,253,.48), rgba(219,234,254,.12) 62%, transparent 74%); }
 .mine-glow-secondary { top: 160px; right: -90px; width: 210px; height: 210px; background: radial-gradient(circle, rgba(103,232,249,.24), transparent 70%); }
-.mine-header { position: relative; z-index: 2; display: flex; flex: 0 0 auto; align-items: flex-end; justify-content: space-between; padding: 12px 22px 14px; }
+.mine-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: space-between; padding: 12px 22px 14px; border-bottom: 1px solid rgba(255,255,255,.72); background: rgba(244,247,251,.92); }
 .mine-eyebrow { display: block; margin-bottom: 3px; color: #60a5fa; font-size: 9px; font-weight: 800; letter-spacing: 1.8px; }
 .mine-title { display: block; color: #1e293b; font-size: 28px; font-weight: 800; letter-spacing: -.6px; }
 .header-action { display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.9); border-radius: 50%; background: rgba(255,255,255,.78); color: #64748b; box-shadow: 2px 4px 12px rgba(15,23,42,.06); }
 .header-action .design-icon { font-size: 18px; }
-.mine-scroll { position: relative; z-index: 1; height: 0; min-height: 0; flex: 1; padding: 4px 18px 130px; box-sizing: border-box; }
+.mine-scroll { position: relative; z-index: 1; padding: 4px 18px 130px; box-sizing: border-box; }
 .profile-card { position: relative; overflow: hidden; padding: 20px 18px 16px; border: 1px solid rgba(255,255,255,.9); border-radius: 26px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.82)); box-shadow: 0 10px 30px rgba(59,130,246,.1); }
 .profile-orbit { position: absolute; top: -48px; right: -30px; width: 132px; height: 132px; border: 24px solid rgba(147,197,253,.12); border-radius: 50%; }
 .profile-main { position: relative; display: flex; align-items: center; min-height: 66px; }

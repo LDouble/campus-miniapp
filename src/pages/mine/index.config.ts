@@ -1,4 +1,3 @@
 export default definePageConfig({
-  navigationBarTitleText: '我的',
-  disableScroll: true
+  navigationBarTitleText: '我的'
 })
