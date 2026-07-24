@@ -1,2 +1,61 @@
-.mine { min-height:100vh; padding:48px 18px 30px; background:#f4f7fb; box-sizing:border-box; }.profile { display:flex; align-items:center; gap:14px; padding:20px 8px 28px; }.avatar { display:flex; align-items:center; justify-content:center; width:64px; height:64px; border-radius:50%; color:#fff; background:linear-gradient(135deg,#3b82f6,#22d3ee); font-size:26px; font-weight:800; box-shadow:0 8px 18px rgba(59,130,246,.2); }.welcome { display:block; color:#1e293b; font-size:21px; font-weight:800; }.muted { display:block; margin-top:5px; color:#94a3b8; font-size:12px; }.verify-card { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding:18px; border:1px solid #f1f5f9; border-radius:22px; background:#fff; box-shadow:0 5px 18px rgba(15,23,42,.04); }.card-title { color:#1e293b; font-size:16px; font-weight:800; }.verify-card Button { border-radius:99px; color:#2563eb; background:#eff6ff; font-size:12px; }.mine > Button { border-radius:14px; background:linear-gradient(90deg,#3b82f6,#06b6d4); font-size:14px; }.message { display:block; margin-top:18px; color:#475569; font-size:13px; }
-.mine { padding-top: max(12px, env(safe-area-inset-top)); }
+.mine-page { position: relative; min-height: 100vh; overflow: hidden; background: #f4f7fb; color: #1e293b; }
+.mine-glow { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(2px); }
+.mine-glow-primary { top: -70px; left: -82px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(147,197,253,.48), rgba(219,234,254,.12) 62%, transparent 74%); }
+.mine-glow-secondary { top: 160px; right: -90px; width: 210px; height: 210px; background: radial-gradient(circle, rgba(103,232,249,.24), transparent 70%); }
+.mine-header { position: relative; z-index: 2; display: flex; align-items: flex-end; justify-content: space-between; padding: 12px 22px 14px; }
+.mine-eyebrow { display: block; margin-bottom: 3px; color: #60a5fa; font-size: 9px; font-weight: 800; letter-spacing: 1.8px; }
+.mine-title { display: block; color: #1e293b; font-size: 28px; font-weight: 800; letter-spacing: -.6px; }
+.header-action { display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.9); border-radius: 50%; background: rgba(255,255,255,.78); color: #64748b; box-shadow: 2px 4px 12px rgba(15,23,42,.06); }
+.header-action .design-icon { font-size: 18px; }
+.mine-scroll { position: relative; z-index: 1; padding: 4px 18px 130px; box-sizing: border-box; }
+.profile-card { position: relative; overflow: hidden; padding: 20px 18px 16px; border: 1px solid rgba(255,255,255,.9); border-radius: 26px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(239,246,255,.82)); box-shadow: 0 10px 30px rgba(59,130,246,.1); }
+.profile-orbit { position: absolute; top: -48px; right: -30px; width: 132px; height: 132px; border: 24px solid rgba(147,197,253,.12); border-radius: 50%; }
+.profile-main { position: relative; display: flex; align-items: center; min-height: 66px; }
+.avatar-wrap { position: relative; flex: 0 0 auto; }
+.avatar { display: flex; width: 62px; height: 62px; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,.9); border-radius: 50%; background: linear-gradient(135deg,#3b82f6,#22d3ee); color: #fff; font-size: 24px; font-weight: 800; box-shadow: 0 8px 18px rgba(59,130,246,.24); box-sizing: border-box; }
+.identity-dot { position: absolute; right: 0; bottom: 2px; width: 13px; height: 13px; border: 3px solid #fff; border-radius: 50%; background: #cbd5e1; box-sizing: border-box; }
+.identity-dot.verified { background: #10b981; }
+.profile-copy { flex: 1; min-width: 0; margin-left: 13px; }
+.profile-name { display: block; color: #1e293b; font-size: 18px; font-weight: 800; }
+.profile-meta { display: block; margin-top: 5px; color: #94a3b8; font-size: 11px; line-height: 1.5; }
+.profile-arrow, .row-arrow { color: #94a3b8; font-size: 24px; line-height: 1; }
+.login-button { display: flex; height: 34px; align-items: center; margin: 0; padding: 0 14px; border: 0; border-radius: 99px; background: linear-gradient(90deg,#3b82f6,#22d3ee); color: #fff; font-size: 11px; font-weight: 700; line-height: 34px; }
+.login-button::after { border: 0; }
+.profile-stats { position: relative; display: flex; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(226,232,240,.72); }
+.profile-stats > View { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; }
+.profile-stats > View + View::before { position: absolute; top: 4px; bottom: 4px; left: 0; width: 1px; background: #e2e8f0; content: ''; }
+.stat-value { color: #334155; font-size: 17px; font-weight: 800; }
+.stat-label { margin-top: 3px; color: #94a3b8; font-size: 10px; }
+.verification-card { display: flex; align-items: center; margin-top: 14px; padding: 16px; border: 1px solid rgba(186,230,253,.8); border-radius: 22px; background: linear-gradient(135deg,rgba(224,242,254,.92),rgba(236,254,255,.88)); box-shadow: 0 7px 20px rgba(14,116,144,.06); }
+.verification-card.is-verified { border-color: rgba(167,243,208,.8); background: linear-gradient(135deg,rgba(236,253,245,.94),rgba(240,253,250,.9)); }
+.verification-icon { display: flex; width: 44px; height: 44px; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 15px; background: rgba(255,255,255,.86); color: #0284c7; box-shadow: 2px 4px 12px rgba(14,116,144,.08); }
+.is-verified .verification-icon { color: #10b981; }
+.verification-copy { flex: 1; min-width: 0; margin-left: 12px; }
+.verification-title-row { display: flex; align-items: center; }
+.verification-title { color: #334155; font-size: 14px; font-weight: 800; }
+.verification-badge { margin-left: 7px; padding: 3px 7px; border-radius: 99px; background: rgba(255,255,255,.78); color: #0284c7; font-size: 9px; font-weight: 700; }
+.is-verified .verification-badge { color: #059669; }
+.verification-description, .verification-reason { display: block; margin-top: 5px; color: #64748b; font-size: 10px; line-height: 1.5; }
+.verification-reason { color: #ef4444; }
+.mine-section { margin-top: 24px; }
+.section-heading { display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px 12px; }
+.section-heading Text:first-child { color: #1e293b; font-size: 17px; font-weight: 800; }
+.section-heading Text:last-child { color: #94a3b8; font-size: 9px; }
+.shortcut-grid { display: grid; grid-template-columns: repeat(4,1fr); padding: 17px 8px; border: 1px solid rgba(255,255,255,.9); border-radius: 22px; background: rgba(255,255,255,.88); box-shadow: 0 6px 22px rgba(15,23,42,.045); }
+.shortcut-item { display: flex; flex-direction: column; align-items: center; color: #475569; font-size: 10px; }
+.shortcut-icon { display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; margin-bottom: 7px; border-radius: 14px; background: #eff6ff; color: #3b82f6; }
+.shortcut-item:nth-child(2) .shortcut-icon { background: #ecfeff; color: #0891b2; }
+.shortcut-item:nth-child(3) .shortcut-icon { background: #fff7ed; color: #f97316; }
+.shortcut-item:nth-child(4) .shortcut-icon { background: #f0fdfa; color: #0f766e; }
+.shortcut-icon .design-icon { font-size: 18px; }
+.service-card { margin-top: 16px; padding: 2px 16px; border: 1px solid rgba(255,255,255,.9); border-radius: 22px; background: rgba(255,255,255,.9); box-shadow: 0 6px 22px rgba(15,23,42,.04); }
+.service-row { display: flex; height: 58px; align-items: center; }
+.service-row + .service-row { border-top: 1px solid #f1f5f9; }
+.service-icon { display: flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: 11px; background: #eff6ff; color: #3b82f6; }
+.service-icon-2 { background: #ecfeff; color: #0891b2; }
+.service-icon-3 { background: #fff7ed; color: #f97316; }
+.service-icon-4 { background: #f0fdfa; color: #0f766e; }
+.service-icon .design-icon { font-size: 16px; }
+.service-name { flex: 1; margin-left: 12px; color: #475569; font-size: 13px; font-weight: 650; }
+.mine-message { display: block; margin: 14px 4px 0; color: #ef4444; font-size: 11px; text-align: center; }
+.mine-version { display: block; padding: 22px 0 8px; color: #cbd5e1; font-size: 9px; letter-spacing: .5px; text-align: center; }
