@@ -7,5 +7,9 @@ module.exports = {
       ts: true,
       compiler: 'webpack5',
     }]
+  ],
+  plugins: [
+    '@babel/plugin-transform-optional-chaining',
+    '@babel/plugin-transform-nullish-coalescing-operator'
   ]
 }
