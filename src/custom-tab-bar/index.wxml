@@ -1,7 +1,7 @@
-<cover-view class="tab-bar">
-  <cover-view class="tab-item {{selected === 0 ? 'active' : ''}}" data-index="0" bindtap="switchTab"><cover-view class="tab-icon">⌂</cover-view><cover-view class="tab-text">首页</cover-view></cover-view>
-  <cover-view class="tab-item {{selected === 1 ? 'active' : ''}}" data-index="1" bindtap="switchTab"><cover-view class="tab-icon">◎</cover-view><cover-view class="tab-text">社区</cover-view></cover-view>
-  <cover-view class="tab-publish" bindtap="publish"><cover-view class="tab-publish-plus">+</cover-view></cover-view>
-  <cover-view class="tab-item tab-message" bindtap="message"><cover-view class="tab-icon">◌</cover-view><cover-view class="tab-text">消息</cover-view><cover-view class="unread-dot" /></cover-view>
-  <cover-view class="tab-item {{selected === 2 ? 'active' : ''}}" data-index="2" bindtap="switchTab"><cover-view class="tab-icon">●</cover-view><cover-view class="tab-text">我的</cover-view></cover-view>
-</cover-view>
+<view class="tab-bar">
+  <view class="tab-item {{selected === 0 ? 'active' : ''}}" data-index="0" bindtap="switchTab"><view class="tab-icon">⌂</view><view class="tab-text">首页</view></view>
+  <view class="tab-item {{selected === 1 ? 'active' : ''}}" data-index="1" bindtap="switchTab"><view class="tab-icon">◎</view><view class="tab-text">社区</view></view>
+  <view class="tab-publish" bindtap="publish"><view class="tab-publish-icon"><view class="tab-publish-horizontal" /><view class="tab-publish-vertical" /></view></view>
+  <view class="tab-item tab-message" bindtap="message"><view class="tab-icon">◌</view><view class="tab-text">消息</view><view class="unread-dot" /></view>
+  <view class="tab-item {{selected === 2 ? 'active' : ''}}" data-index="2" bindtap="switchTab"><view class="tab-icon">●</view><view class="tab-text">我的</view></view>
+</view>
