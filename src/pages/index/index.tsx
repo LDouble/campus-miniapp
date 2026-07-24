@@ -6,6 +6,7 @@ import { FeatureGrid } from '../../components/FeatureGrid'
 import { FeedCard } from '../../components/FeedCard'
 import { DesignIcon } from '../../components/DesignIcon'
 import { useNavigationMetrics } from '../../hooks/useNavigationMetrics'
+import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
 export default function Index () {
@@ -17,7 +18,7 @@ export default function Index () {
     setLoading(true); setError('')
     try { setItems(await getFeed()) } catch (e) { setError((e as Error).message) } finally { setLoading(false); Taro.stopPullDownRefresh() }
   }
-  useDidShow(() => { void load() })
+  useDidShow(() => { syncCustomTabBar(0); void load() })
   usePullDownRefresh(() => { void load() })
   const ensureLogin = async () => { try { await login(); await load() } catch (e) { setError((e as Error).message) } }
   const verify = async () => { try { const status = await getAcademicStatus(); if (status.identity) Taro.showToast({ title: '已完成认证', icon: 'none' }); else Taro.navigateTo({ url: '/pages/verify/index' }) } catch (_) { Taro.navigateTo({ url: '/pages/verify/index' }) } }
