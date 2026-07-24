@@ -4,9 +4,10 @@ import { DesignIcon } from './DesignIcon'
 
 export function BottomNav ({ active = 'home', onPublish }: { active?: string; onPublish: () => void }) {
   const go = (name: string) => {
-    if (name === 'home') Taro.reLaunch({ url: '/pages/index/index' })
-    if (name === 'community') Taro.navigateTo({ url: '/pages/community/index' })
-    if (name === 'mine') Taro.reLaunch({ url: '/pages/mine/index' })
+    if (name === active) return
+    if (name === 'home') Taro.redirectTo({ url: '/pages/index/index' })
+    if (name === 'community') Taro.redirectTo({ url: '/pages/community/index' })
+    if (name === 'mine') Taro.redirectTo({ url: '/pages/mine/index' })
   }
   return <View className='bottom-nav'>
     <View className={`nav-item ${active === 'home' ? 'active' : ''}`} onClick={() => go('home')}><DesignIcon name='home' /><Text>首页</Text></View>
