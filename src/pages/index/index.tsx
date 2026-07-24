@@ -5,14 +5,14 @@ import { FeedItem, getAcademicStatus, getFeed, login } from '../../services/api'
 import { FeatureGrid } from '../../components/FeatureGrid'
 import { FeedCard } from '../../components/FeedCard'
 import { DesignIcon } from '../../components/DesignIcon'
-import { useStatusBarHeight } from '../../hooks/useStatusBar'
+import { useNavigationMetrics } from '../../hooks/useNavigationMetrics'
 import './index.scss'
 
 export default function Index () {
   const [items, setItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const statusBarHeight = useStatusBarHeight()
+  const { topInset } = useNavigationMetrics()
   const load = async () => {
     setLoading(true); setError('')
     try { setItems(await getFeed()) } catch (e) { setError((e as Error).message) } finally { setLoading(false); Taro.stopPullDownRefresh() }
@@ -30,7 +30,7 @@ export default function Index () {
   }
   return <View className='page-shell'>
     <View className='page-glow' />
-    <View className='home-header' style={{ paddingTop: `${statusBarHeight + 12}px` }}><View><Text className='greeting'>早上好，同学</Text><View className='school-line'><Text className='school-name'>校园生活</Text><View className='weather'><DesignIcon name='canteen' /><Text>24°</Text></View></View></View><View className='bell'><DesignIcon name='bell' /><View className='notice-dot' /></View></View>
+    <View className='home-header' style={{ paddingTop: `${topInset + 8}px` }}><View><Text className='greeting'>早上好，同学</Text><View className='school-line'><Text className='school-name'>校园生活</Text><View className='weather'><DesignIcon name='canteen' /><Text>24°</Text></View></View></View><View className='bell'><DesignIcon name='bell' /><View className='notice-dot' /></View></View>
     <View className='home-scroll'>
       <View className='glass-banner'><View className='banner-shine' /><View className='banner-pill'><DesignIcon name='grade' /><Text>新生专区</Text></View><Text className='banner-title'>2026 秋季报到指南</Text><Text className='banner-subtitle'>提前了解校园，开学不迷路</Text><View className='banner-action'><Text>立即查看</Text><DesignIcon name='arrow' /></View></View>
       <FeatureGrid onClick={featureClick} />
