@@ -1,8 +1,7 @@
 import { View, Text, Input, Button } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
-import { getAcademicStatus, login } from '../../services/api'
-import { post } from '../../services/request'
+import { getAcademicStatus, login, verifyCredentials } from '../../services/api'
 import './index.scss'
 
 export default function Verify () {
@@ -15,7 +14,7 @@ export default function Verify () {
     setLoading(true); setStatus('正在由服务端校验教务凭据…')
     try {
       if (!Taro.getStorageSync('access_token')) await login()
-      await post('/api/v1/academic-verification/credentials', { student_no: studentNo.trim(), password }, `academic-credentials-${Date.now()}`)
+      await verifyCredentials(studentNo.trim(), password)
       setPassword(''); setStatus('认证成功，可以发布和参与校园内容了')
     } catch (e) { setStatus((e as Error).message) } finally { setLoading(false) }
   }

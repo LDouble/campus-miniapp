@@ -1,4 +1,5 @@
 dist/
+contracts/backend/openapi.yaml
 deploy_versions/
 .temp/
 .rn_temp/

@@ -1,0 +1,5 @@
+{
+  "backend_repository": "LDouble/backend_demo",
+  "source_file": "api/openapi.yaml",
+  "sha256": "3cd9e59b42ab698240b56765b034e96e6e688578069a9bccffec005642449ef3"
+}
