@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { getFeed, FeedItem } from '../../services/api'
 import { FeedCard } from '../../components/FeedCard'
 import { DesignIcon } from '../../components/DesignIcon'
-import { BottomNav } from '../../components/BottomNav'
-import { PublishSheet } from '../../components/PublishSheet'
 import { useStatusBarHeight } from '../../hooks/useStatusBar'
 import './index.scss'
 
@@ -16,7 +14,6 @@ export default function Community () {
   const [topic, setTopic] = useState('全部')
   const [items, setItems] = useState<FeedItem[]>([])
   const [keyword, setKeyword] = useState('')
-  const [publishOpen, setPublishOpen] = useState(false)
   const statusBarHeight = useStatusBarHeight()
   const load = async () => { try { setItems(await getFeed()) } catch (_) { setItems([]) } finally { Taro.stopPullDownRefresh() } }
   useLoad(params => { if (params.topic) setTopic(params.topic); void load() })
@@ -25,6 +22,5 @@ export default function Community () {
   return <View className='community-page'>
     <View className='community-header' style={{ paddingTop: `${statusBarHeight + 12}px` }}><View className='community-title-row'><Text>社区</Text><View className='search-box'><DesignIcon name='search' /><Input value={keyword} onInput={event => setKeyword(event.detail.value)} placeholder={topic === '闲置' ? '搜索二手商品...' : '搜索同学、圈子或话题...'} /></View></View><ScrollView scrollX className='topic-scroll'>{topics.map(name => <Text key={name} className={`topic-tab ${topic === name ? 'selected' : ''}`} onClick={() => setTopic(name)}>{name}</Text>)}</ScrollView>{['闲置', '跑腿', '拼车'].includes(topic) && <ScrollView scrollX className='filter-scroll'><Text>全部分类⌄</Text><Text>默认排序⌄</Text><Text>快捷筛选⌄</Text></ScrollView>}</View>
     <ScrollView scrollY className='community-feed'>{filtered.length ? filtered.map(item => <FeedCard item={item} key={`${item.type}-${item.id}`} />) : <View className='community-empty'><Text>还没有相关内容</Text><Text>换个话题看看吧</Text></View>}</ScrollView>
-    <BottomNav active='community' onPublish={() => setPublishOpen(true)} /><PublishSheet open={publishOpen} onClose={() => setPublishOpen(false)} />
   </View>
 }

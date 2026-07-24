@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { FeedItem, getAcademicStatus, getFeed, login } from '../../services/api'
 import { FeatureGrid } from '../../components/FeatureGrid'
 import { FeedCard } from '../../components/FeedCard'
-import { BottomNav } from '../../components/BottomNav'
-import { PublishSheet } from '../../components/PublishSheet'
 import { DesignIcon } from '../../components/DesignIcon'
 import { useStatusBarHeight } from '../../hooks/useStatusBar'
 import './index.scss'
@@ -14,7 +12,6 @@ export default function Index () {
   const [items, setItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [publishOpen, setPublishOpen] = useState(false)
   const statusBarHeight = useStatusBarHeight()
   const load = async () => {
     setLoading(true); setError('')
@@ -44,6 +41,5 @@ export default function Index () {
       <View className='feed-list'>{items.slice(0, 5).map(item => <FeedCard item={item} key={`${item.type}-${item.id}`} />)}</View>
       <View className='verify-shortcut' onClick={verify}><View><Text className='shortcut-title'>完成教务认证</Text><Text className='shortcut-subtitle'>解锁完整校园服务</Text></View><Text className='shortcut-arrow'>›</Text></View>
     </View>
-    <BottomNav active='home' onPublish={() => setPublishOpen(true)} /><PublishSheet open={publishOpen} onClose={() => setPublishOpen(false)} />
   </View>
 }
