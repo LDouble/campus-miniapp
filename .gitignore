@@ -6,3 +6,7 @@ node_modules/
 .DS_Store
 .swc
 *.local
+# Taro/微信开发工具生成的本地私钥，不进入版本库
+private.*.key
+.preview/
+/custom-tab-bar/

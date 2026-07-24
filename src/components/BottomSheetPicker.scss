@@ -1,0 +1,13 @@
+.picker-layer { position: fixed; z-index: 2000; inset: 0; }
+.picker-mask { position: absolute; inset: 0; background: rgba(15,23,42,.24); }
+.picker-sheet { position: absolute; right: 0; bottom: 0; left: 0; padding: 12px 22px calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.9); border-radius: 30px 30px 0 0; background: rgba(255,255,255,.98); box-shadow: 0 -10px 40px rgba(15,23,42,.1); animation: picker-slide-up .22s ease-out; }
+.picker-handle { width: 44px; height: 5px; margin: 0 auto 18px; border-radius: 99px; background: #e2e8f0; }
+.picker-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; color: #1e293b; font-size: 18px; font-weight: 800; }
+.picker-close { display: flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: 50%; background: #f1f5f9; color: #64748b; }
+.picker-close .design-icon { font-size: 16px; }
+.picker-options { max-height: 48vh; overflow-y: auto; }
+.picker-option { display: flex; min-height: 52px; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 14px; font-weight: 600; }
+.picker-option:last-child { border-bottom: 0; }
+.picker-option.selected { color: #3b82f6; }
+.picker-option .design-icon { color: #3b82f6; font-size: 16px; }
+@keyframes picker-slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
