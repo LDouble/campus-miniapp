@@ -11,20 +11,23 @@
     "outDir": "lib",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "skipLibCheck": true,
     "strictNullChecks": true,
     "sourceMap": true,
+    "baseUrl": ".",
     "rootDir": ".",
     "jsx": "react-jsx",
     "allowJs": true,
     "resolveJsonModule": true,
+    "types": [
+      "@tarojs/taro",
+      "node",
+      "webpack-env"
+    ],
     "typeRoots": [
       "node_modules/@types"
-    ],
-    "paths": {
-      // TS5090 leading './'
-      "@/*": ["./src/*"]
-    }
+    ]
   },
-  "include": ["./src", "./types", "./config"],
+  "include": ["./src", "./types"],
   "compileOnSave": false
 }

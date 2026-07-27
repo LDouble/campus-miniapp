@@ -1,0 +1,132 @@
+import { useEffect, useMemo, useState } from 'react'
+import Taro from '@tarojs/taro'
+import { Text, View } from '@tarojs/components'
+import AcademicHeader from '../components/academic-header'
+import { academicRepository } from '../repository'
+import { academicStorage } from '../storage'
+import { AcademicPeriod, AcademicPreferences, CourseSelectionRecord, CourseSelectionStatus } from '../types'
+import { getPeriodLabel, resolvePeriodId } from '../utils'
+import '../index.scss'
+
+const DEFAULT_PERIOD_ID = '2025-2026-2'
+const defaultPreferences: AcademicPreferences = {
+  section: 'schedule',
+  schedulePeriodId: DEFAULT_PERIOD_ID,
+  gradePeriodId: DEFAULT_PERIOD_ID,
+  examPeriodId: DEFAULT_PERIOD_ID,
+  week: 6,
+  selectedWeekday: 1,
+  scheduleView: 'week',
+}
+const statusMeta: Record<CourseSelectionStatus, { label: string; description: string }> = {
+  selected: { label: '已选中', description: '已进入你的本学期课表' },
+  pending: { label: '待确认', description: '系统正在确认选课结果' },
+  failed: { label: '未选中', description: '本轮选课未成功' },
+}
+type SelectionSheet = 'period' | 'detail' | null
+type SelectionTab = 'results' | 'failed'
+
+export default function SelectionPage() {
+  const [preferences, setPreferences] = useState<AcademicPreferences>({
+    ...defaultPreferences,
+    ...academicStorage.getPreferences(defaultPreferences),
+  })
+  const [periods, setPeriods] = useState<AcademicPeriod[]>([])
+  const [records, setRecords] = useState<CourseSelectionRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<SelectionTab>('results')
+  const [sheet, setSheet] = useState<SelectionSheet>(null)
+  const [activeRecord, setActiveRecord] = useState<CourseSelectionRecord | null>(null)
+
+  const summary = useMemo(() => ({
+    selected: records.filter((item) => item.status === 'selected'),
+    pending: records.filter((item) => item.status === 'pending'),
+  }), [records])
+  const totalCredits = useMemo(() => summary.selected.reduce((total, item) => total + item.credit, 0), [summary.selected])
+  const displayedRecords = useMemo(() => records.filter((record) => (
+    activeTab === 'failed' ? record.status === 'failed' : record.status !== 'failed'
+  )), [activeTab, records])
+
+  const refreshSelections = async () => {
+    try {
+      const result = await academicRepository.getCourseSelections(preferences.schedulePeriodId)
+      setRecords(result)
+    } catch {
+      Taro.showToast({ title: '选课结果加载失败', icon: 'none' })
+    }
+  }
+
+  useEffect(() => {
+    academicRepository.getPeriods()
+      .then((result) => {
+        setPeriods(result)
+        if (!result.length) setLoading(false)
+        setPreferences((current) => {
+          const schedulePeriodId = resolvePeriodId(result, current.schedulePeriodId)
+          return schedulePeriodId === current.schedulePeriodId
+            ? current
+            : { ...current, schedulePeriodId }
+        })
+      })
+      .catch(() => {
+        setLoading(false)
+        Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
+      })
+  }, [])
+  useEffect(() => {
+    if (!periods.some((period) => period.id === preferences.schedulePeriodId)) return
+    setLoading(true)
+    refreshSelections().finally(() => setLoading(false))
+  }, [periods, preferences.schedulePeriodId])
+  useEffect(() => academicStorage.setPreferences(preferences), [preferences])
+  Taro.usePullDownRefresh(() => refreshSelections().finally(() => Taro.stopPullDownRefresh()))
+
+  const updatePeriod = (schedulePeriodId: string) => {
+    setPreferences((current) => ({ ...current, schedulePeriodId }))
+  }
+  const toolbar = (
+    <View className='academic-toolbar academic-toolbar--simple'>
+      <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
+        <Text className='academic-toolbar__label'>选课学期</Text>
+        <View><Text>{getPeriodLabel(periods, preferences.schedulePeriodId)}</Text><Text className='academic-toolbar__chevron'>⌄</Text></View>
+      </View>
+      <View className='academic-toolbar__hint'><View /><Text>结果同步中</Text></View>
+    </View>
+  )
+
+  return (
+    <View className={`academic-page academic-page--selection ${sheet ? 'academic-page--locked' : ''}`}>
+      <View className='academic-page__glow academic-page__glow--two' />
+      <AcademicHeader title='选课结果' toolbar={toolbar} />
+      <View className='academic-content'>
+        {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : <>
+          <View className='selection-hero'>
+            <View><Text className='selection-hero__eyebrow'>本学期已确认</Text><Text className='selection-hero__number'>{summary.selected.length}<Text> 门课程</Text></Text><Text className='selection-hero__copy'>共 {totalCredits.toFixed(1)} 学分，课程已同步至课表</Text></View>
+            <View className='selection-hero__seal'><Text>选课</Text><Text>结果</Text></View>
+          </View>
+          <View className='selection-tabs'>
+            <View className={`selection-tabs__item ${activeTab === 'results' ? 'selection-tabs__item--active' : ''}`} onClick={() => setActiveTab('results')}>选课结果</View>
+            <View className={`selection-tabs__item ${activeTab === 'failed' ? 'selection-tabs__item--active' : ''}`} onClick={() => setActiveTab('failed')}>落选记录<Text>{records.filter((record) => record.status === 'failed').length}</Text></View>
+          </View>
+          {activeTab === 'results' && !!summary.pending.length && <View className='selection-tip'><View /><Text>{summary.pending.length} 门课程仍待确认，最终结果以教务系统为准</Text></View>}
+          <View className='selection-heading'><Text>{activeTab === 'failed' ? '落选课程' : '课程明细'}</Text><Text>{displayedRecords.length} 门</Text></View>
+          {displayedRecords.map((record) => {
+            const meta = statusMeta[record.status]
+            return <View key={record.id} className='selection-card' hoverClass='selection-card--pressed' onClick={() => { setActiveRecord(record); setSheet('detail') }}>
+              <View className={`selection-card__status selection-card__status--${record.status}`}><View /><Text>{meta.label}</Text></View>
+              <Text className='selection-card__name'>{record.courseName}</Text>
+              <Text className='selection-card__type'>{record.courseType} · {record.credit} 学分</Text>
+              <View className='selection-card__line'><Text>{record.teacher || '教师待定'}</Text><Text>{record.schedule || '时间待定'}</Text></View>
+              <View className='selection-card__footer'><Text>{record.location || '地点待定'}</Text><Text>查看详情 ›</Text></View>
+            </View>
+          })}
+          {!displayedRecords.length && <View className='academic-empty'><View className='academic-empty__art'><View /><View /></View><Text className='academic-empty__title'>{activeTab === 'failed' ? '本学期没有落选记录' : '本学期暂无选课结果'}</Text><Text className='academic-empty__copy'>切换学期或下拉刷新再看看</Text></View>}
+        </>}
+      </View>
+      {sheet && <View className='academic-overlay' onClick={() => setSheet(null)}><View className={`academic-sheet academic-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}><View className='academic-sheet__handle' /><View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+        {sheet === 'period' && <View className='academic-sheet__body'><Text className='academic-sheet__title'>选择选课学期</Text><Text className='academic-sheet__subtitle'>查看不同学期的选课结果</Text><View className='period-options'>{periods.map((period) => <View key={period.id} className={`period-options__item ${preferences.schedulePeriodId === period.id ? 'period-options__item--active' : ''}`} onClick={() => { updatePeriod(period.id); setSheet(null) }}><View><Text>{period.label}</Text><Text>查看该学期选课记录</Text></View><View className='period-options__check'>{preferences.schedulePeriodId === period.id ? '✓' : ''}</View></View>)}</View></View>}
+        {sheet === 'detail' && activeRecord && <View className='academic-sheet__body'><View className={`selection-detail__badge selection-detail__badge--${activeRecord.status}`}>{statusMeta[activeRecord.status].label}</View><Text className='academic-sheet__title'>{activeRecord.courseName}</Text><Text className='academic-sheet__subtitle'>{[activeRecord.courseCode, activeRecord.courseType].filter(Boolean).join(' · ')}</Text><View className='detail-list'>{activeRecord.teacher && <View><Text>授课教师</Text><Text>{activeRecord.teacher}</Text></View>}{activeRecord.schedule && <View><Text>上课时间</Text><Text>{activeRecord.schedule}</Text></View>}{activeRecord.location && <View><Text>上课地点</Text><Text>{activeRecord.location}</Text></View>}{activeRecord.campus && <View><Text>开课校区</Text><Text>{activeRecord.campus}</Text></View>}{activeRecord.capacity > 0 && <View><Text>课程容量</Text><Text>{activeRecord.enrolled} / {activeRecord.capacity} 人</Text></View>}{activeRecord.selectedAt && <View><Text>选课时间</Text><Text>{activeRecord.selectedAt}</Text></View>}</View><View className='academic-notice'><Text>选课状态</Text><Text>{activeRecord.note || statusMeta[activeRecord.status].description}</Text></View><View className='academic-button academic-button--full' onClick={() => setSheet(null)}>知道了</View></View>}
+      </View></View>}
+    </View>
+  )
+}

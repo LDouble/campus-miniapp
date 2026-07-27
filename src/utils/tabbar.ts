@@ -1,24 +1,25 @@
 import Taro from '@tarojs/taro'
 
-const COMMUNITY_TOPIC_KEY = 'pending_community_topic'
+interface CustomTabBarInstance {
+  setData: (data: { selected?: number; hidden?: boolean }) => void
+}
+
+const getCustomTabBar = () => {
+  const page = Taro.getCurrentInstance().page as
+    | { getTabBar?: () => CustomTabBarInstance }
+    | undefined
+
+  return page?.getTabBar?.()
+}
 
 /**
- * The WeChat runtime owns one custom tabBar instance per tab page.
- * Set the active item from the page that owns the instance instead of
- * relying on a shared component's initial data.
+ * 微信运行时会为每个 Tab 页创建一个自定义 TabBar 实例。
+ * 页面显示时只同步当前页面所属的原生组件实例。
  */
-export function syncCustomTabBar (selected: number) {
-  const page = Taro.getCurrentInstance().page as any
-  page?.getTabBar?.()?.setData({ selected })
+export function syncCustomTabBar(selected: number) {
+  getCustomTabBar()?.setData({ selected, hidden: false })
 }
 
-export function switchToCommunity (topic = '全部') {
-  Taro.setStorageSync(COMMUNITY_TOPIC_KEY, topic)
-  return Taro.switchTab({ url: '/pages/community/index' })
-}
-
-export function consumeCommunityTopic () {
-  const topic = Taro.getStorageSync(COMMUNITY_TOPIC_KEY)
-  if (topic) Taro.removeStorageSync(COMMUNITY_TOPIC_KEY)
-  return typeof topic === 'string' ? topic : ''
+export function setCustomTabBarHidden(hidden: boolean) {
+  getCustomTabBar()?.setData({ hidden })
 }

@@ -1,14 +1,19 @@
-import { PropsWithChildren } from 'react'
-import { useLaunch } from '@tarojs/taro'
-
+import { useEffect } from 'react'
+import { useDidShow, useDidHide } from '@tarojs/taro'
+// 全局样式
 import './app.scss'
 
-function App({ children }: PropsWithChildren<any>) {
-  useLaunch(() => {
-    console.log('App launched.')
-  })
+function App(props) {
+  // 可以使用所有的 React Hooks
+  useEffect(() => {})
 
-  // children 是将要会渲染的页面
-  return children
+  // 对应 onShow
+  useDidShow(() => {})
+
+  // 对应 onHide
+  useDidHide(() => {})
+
+  return props.children
 }
+
 export default App
