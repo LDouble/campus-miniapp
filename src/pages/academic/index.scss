@@ -2223,3 +2223,6 @@ page {
     animation: none;
   }
 }
+.course-material-actions { display:flex; gap:14rpx; margin-top:28rpx; > view { display:flex; flex:1; align-items:center; justify-content:center; height:78rpx; color:#4b8977; font-size:23rpx; font-weight:750; background:#e9f4ef; border-radius:21rpx; } > view:last-child { color:#fff; background:#64a68f; } }
+.course-material-inline-action { display:flex; align-items:center; justify-content:center; height:66rpx; margin-top:16rpx; color:#3f846e; font-size:22rpx; font-weight:750; background:#e6f3ed; border-radius:18rpx; }
+.grade-card__materials { display:inline-flex !important; width:max-content; padding-top:10rpx; color:#4e907b !important; font-size:20rpx !important; font-weight:700; }

@@ -23,6 +23,7 @@ import {
   sectionTimes,
   weekdays,
 } from '../utils'
+import { shareCourseMaterials } from '../../../features/course-materials/navigation'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -58,6 +59,7 @@ interface CourseDetailCardProps {
   currentWeek: number
   onEdit?: () => void
   onDelete?: () => void
+  onShareMaterials: () => void
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
@@ -67,6 +69,7 @@ function CourseDetailCard({
   currentWeek,
   onEdit,
   onDelete,
+  onShareMaterials,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   return (
@@ -99,6 +102,9 @@ function CourseDetailCard({
             <View onClick={onEdit}>编辑</View>
           </View>
         )}
+        <View className='course-material-inline-action' onClick={onShareMaterials}>
+          分享本课程资料
+        </View>
       </View>
     </View>
   )
@@ -649,6 +655,10 @@ export default function SchedulePage() {
                     currentWeek={preferences.week}
                     onDelete={() => deleteCourse(course)}
                     onEdit={() => openCourseForm(course)}
+                    onShareMaterials={() => shareCourseMaterials({
+                      courseName: course.name,
+                      periodId: course.periodId,
+                    })}
                   />
                 ))}
               </View>
@@ -660,6 +670,10 @@ export default function SchedulePage() {
                     currentWeek={preferences.week}
                     onDelete={() => deleteCourse()}
                     onEdit={() => openCourseForm(activeCourse)}
+                    onShareMaterials={() => shareCourseMaterials({
+                      courseName: activeCourse.name,
+                      periodId: activeCourse.periodId,
+                    })}
                   />
                 </View>
               </>

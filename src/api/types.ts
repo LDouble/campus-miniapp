@@ -37,6 +37,16 @@ export type CommentThread = components['schemas']['CommentThread']
 export type Notice = components['schemas']['Notice']
 export type NoticePage = components['schemas']['NoticePage']
 
+export type MaterialCourseView = components['schemas']['MaterialCourseView']
+export type MaterialCoursePage = components['schemas']['MaterialCoursePage']
+export type CourseMaterialView = components['schemas']['CourseMaterialView']
+export type CourseMaterialPage = components['schemas']['CourseMaterialPage']
+export type MaterialUploadFileInput = components['schemas']['MaterialUploadFileInput']
+export type MaterialUploadSessionView = components['schemas']['MaterialUploadSessionView']
+export type MaterialUploadTarget = components['schemas']['MaterialUploadTarget']
+export type CompleteMaterialUploadFile = components['schemas']['CompleteMaterialUploadFile']
+export type MaterialDownloadView = components['schemas']['MaterialDownloadView']
+
 export type ApiSuccessEnvelope<T> = {
   data: T
   request_id: string

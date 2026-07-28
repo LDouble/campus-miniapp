@@ -15,6 +15,8 @@ import {
   deriveGradePeriods,
   getGradePeriodLabel,
 } from '../utils'
+import { shareCourseMaterials } from '../../../features/course-materials/navigation'
+import { rememberCourseSuggestions } from '../../../features/course-materials/storage'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -92,6 +94,13 @@ export default function GradesPage() {
   )
   const allSelected = grades.length > 0
     && grades.every((grade) => currentSimulation.selectedIds.includes(grade.id))
+
+  useEffect(() => {
+    rememberCourseSuggestions(allGrades.map((grade) => ({
+      name: grade.courseName,
+      periodId: grade.periodId,
+    })))
+  }, [allGrades])
 
   useEffect(() => {
     let cancelled = false
@@ -465,6 +474,18 @@ export default function GradesPage() {
                             <Text className='grade-card__converted'>文字成绩仅展示，不参与加权平均</Text>
                           )}
                           {override && <Text className='grade-card__original'>原始：{getGradeDisplay(grade)} · {grade.credit} 学分</Text>}
+                          {!simulationMode && <Text
+                            className='grade-card__materials'
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              shareCourseMaterials({
+                                courseName: grade.courseName,
+                                periodId: grade.periodId,
+                              })
+                            }}
+                          >
+                            分享本课程资料
+                          </Text>}
                         </View>
                         <View className='grade-card__result'>
                           <Text>{getGradeDisplay(grade, override)}</Text>

@@ -1471,6 +1471,297 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/course-materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询待审核和历史资料 */
+        get: operations["ListAdminCourseMaterials"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-materials/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询资料详情和扫描状态 */
+        get: operations["GetAdminCourseMaterial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-materials/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核资料并同时确认或新建课程归类 */
+        post: operations["ReviewCourseMaterial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-materials/{id}/review/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤销最近一次资料审核并退回待审核 */
+        post: operations["RevokeCourseMaterialReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-materials/{id}/take-down": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 下架违规资料 */
+        post: operations["TakeDownCourseMaterial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/material-course-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询学生提交但尚未归一的课程名称 */
+        get: operations["ListMaterialCourseCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/material-courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询课程分类 */
+        get: operations["ListAdminMaterialCourses"];
+        put?: never;
+        /** 创建规范课程 */
+        post: operations["CreateMaterialCourse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/material-courses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 修改规范课程及别名 */
+        patch: operations["UpdateMaterialCourse"];
+        trace?: never;
+    };
+    "/api/v1/admin/material-courses/{id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 将重复课程及其别名资料合并到目标课程 */
+        post: operations["MergeMaterialCourses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布课程资料 */
+        get: operations["ListCourseMaterials"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我上传的课程资料 */
+        get: operations["ListMyCourseMaterials"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/upload-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 一次创建最多五个资料上传任务 */
+        post: operations["CreateMaterialUploadSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/upload-sessions/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 确认文件上传完成并自动提交扫描审核 */
+        post: operations["CompleteMaterialUploadSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程资料详情 */
+        get: operations["GetCourseMaterial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 修改上传中或被驳回的资料信息 */
+        patch: operations["UpdateMyCourseMaterial"];
+        trace?: never;
+    };
+    "/api/v1/course-materials/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 获取私有文件短期下载地址 */
+        post: operations["GetCourseMaterialDownload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 主动撤回课程资料 */
+        post: operations["WithdrawCourseMaterial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/material-courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 搜索课程分类和课程别名 */
+        get: operations["ListMaterialCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/errands": {
         parameters: {
             query?: never;
@@ -2247,6 +2538,8 @@ export interface components {
             action_path?: string;
             channels: ("in_app" | "push")[];
             audience: components["schemas"]["NoticeAudience"];
+            /** Format: date-time */
+            visible_until?: string | null;
         };
         UpdateNoticeRequest: components["schemas"]["CreateNoticeRequest"] & {
             /** Format: uint64 */
@@ -2320,6 +2613,8 @@ export interface components {
             publish_at?: string | null;
             /** Format: date-time */
             published_at?: string | null;
+            /** Format: date-time */
+            visible_until?: string | null;
             /** Format: date-time */
             revoked_at?: string | null;
             /** Format: uint64 */
@@ -2970,6 +3265,190 @@ export interface components {
         };
         /** @enum {string} */
         CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "pin_comment" | "unpin_comment" | "verify_academic";
+        CompleteMaterialUploadFile: {
+            /** Format: uint64 */
+            material_id: number;
+        };
+        CompleteMaterialUploadSessionRequest: {
+            /** Format: uint64 */
+            expected_version: number;
+            files: components["schemas"]["CompleteMaterialUploadFile"][];
+        };
+        CourseMaterialPage: {
+            items: components["schemas"]["CourseMaterialView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CourseMaterialPageResponseBody: {
+            data: components["schemas"]["CourseMaterialPage"];
+            request_id: string;
+        };
+        CourseMaterialResponseBody: {
+            data: components["schemas"]["CourseMaterialView"];
+            request_id: string;
+        };
+        CourseMaterialView: {
+            candidate_course_name?: string | null;
+            course?: components["schemas"]["MaterialCourseView"];
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: int64 */
+            download_count: number;
+            /** Format: uint64 */
+            id: number;
+            material_type: components["schemas"]["MaterialType"];
+            mime_type: string;
+            original_filename: string;
+            /** Format: uint64 */
+            owner_id: number;
+            period_id?: string | null;
+            /** Format: date-time */
+            published_at?: string | null;
+            rejection_reason?: string | null;
+            review_history?: components["schemas"]["MaterialReviewView"][];
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewed_by?: number | null;
+            scan_message?: string | null;
+            scan_status: components["schemas"]["MaterialScanStatus"];
+            sha256?: string | null;
+            /** Format: int64 */
+            size_bytes: number;
+            status: components["schemas"]["MaterialStatus"];
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CreateMaterialUploadSessionRequest: {
+            files: components["schemas"]["MaterialUploadFileInput"][];
+        };
+        /** @enum {string} */
+        EducationLevel: "undergraduate" | "graduate" | "general";
+        MaterialCoursePage: {
+            items: components["schemas"]["MaterialCourseView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MaterialCoursePageResponseBody: {
+            data: components["schemas"]["MaterialCoursePage"];
+            request_id: string;
+        };
+        MaterialCourseResponseBody: {
+            data: components["schemas"]["MaterialCourseView"];
+            request_id: string;
+        };
+        MaterialCourseView: {
+            aliases?: string[];
+            course_code: string;
+            department?: string | null;
+            education_level: components["schemas"]["EducationLevel"];
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            material_count: number;
+            name: string;
+            /** Format: int64 */
+            sort_order: number;
+            /** @enum {string} */
+            status: "enabled" | "disabled";
+            /** Format: uint64 */
+            version: number;
+        };
+        MaterialDownloadResponseBody: {
+            data: components["schemas"]["MaterialDownloadView"];
+            request_id: string;
+        };
+        MaterialDownloadView: {
+            /** Format: date-time */
+            expires_at: string;
+            filename: string;
+            /** Format: uri */
+            url: string;
+        };
+        MaterialReviewView: {
+            /** @enum {string} */
+            action: "approve" | "reject" | "revoke" | "take_down";
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            previous_status: components["schemas"]["MaterialStatus"];
+            reason?: string | null;
+            resulting_status: components["schemas"]["MaterialStatus"];
+            /** Format: uint64 */
+            reviewer_id: number;
+        };
+        /** @enum {string} */
+        MaterialScanStatus: "pending" | "scanning" | "clean" | "infected" | "failed";
+        /** @enum {string} */
+        MaterialStatus: "uploading" | "scanning" | "pending_review" | "published" | "rejected" | "withdrawn" | "taken_down" | "failed";
+        /** @enum {string} */
+        MaterialType: "slides" | "notes" | "exam" | "homework" | "review" | "other";
+        MaterialUpdatedResponseBody: {
+            data: components["schemas"]["MaterialUpdatedResult"];
+            request_id: string;
+        };
+        MaterialUpdatedResult: {
+            updated: boolean;
+        };
+        MaterialUploadFileInput: {
+            candidate_course_name?: string | null;
+            /** Format: uint64 */
+            course_id?: number | null;
+            description?: string | null;
+            filename: string;
+            material_type: components["schemas"]["MaterialType"];
+            /** @enum {string} */
+            mime_type: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            period_id?: string | null;
+            /** Format: int64 */
+            size_bytes: number;
+            title: string;
+        };
+        MaterialUploadSessionResponseBody: {
+            data: components["schemas"]["MaterialUploadSessionView"];
+            request_id: string;
+        };
+        MaterialUploadSessionView: {
+            completed_count: number;
+            /** Format: date-time */
+            expires_at: string;
+            file_count: number;
+            /** Format: uint64 */
+            id: number;
+            materials?: components["schemas"]["CourseMaterialView"][];
+            /** @enum {string} */
+            status: "created" | "uploading" | "completed" | "expired" | "failed";
+            uploads: components["schemas"]["MaterialUploadTarget"][];
+            /** Format: uint64 */
+            version: number;
+        };
+        MaterialUploadTarget: {
+            /** Format: date-time */
+            expires_at: string;
+            /** @enum {string} */
+            file_field: "file";
+            form_fields: {
+                [key: string]: string;
+            };
+            headers: {
+                [key: string]: string;
+            };
+            /** Format: uint64 */
+            material_id: number;
+            /** @enum {string} */
+            upload_method: "POST";
+            /** Format: uri */
+            upload_url: string;
+        };
         ErrandOptionalOrderResponseBody: {
             data: components["schemas"]["ErrandOptionalOrderResult"];
             request_id: string;
@@ -3641,6 +4120,69 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CommentThreadResponseBody"];
+            };
+        };
+        /** @description 课程资料分页 */
+        CourseMaterialPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseMaterialPageResponseBody"];
+            };
+        };
+        /** @description 课程资料 */
+        CourseMaterialResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseMaterialResponseBody"];
+            };
+        };
+        /** @description 课程分类分页 */
+        MaterialCoursePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialCoursePageResponseBody"];
+            };
+        };
+        /** @description 课程分类 */
+        MaterialCourseResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialCourseResponseBody"];
+            };
+        };
+        /** @description 资料短期下载凭证 */
+        MaterialDownloadResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialDownloadResponseBody"];
+            };
+        };
+        /** @description 资料更新结果 */
+        MaterialUpdatedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialUpdatedResponseBody"];
+            };
+        };
+        /** @description 资料上传会话 */
+        MaterialUploadSessionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialUploadSessionResponseBody"];
             };
         };
         /** @description 跑腿任务及可能存在的交易订单 */
@@ -6004,6 +6546,427 @@ export interface operations {
         responses: {
             200: components["responses"]["CommentResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCourseMaterials: {
+        parameters: {
+            query?: {
+                course_id?: number;
+                material_type?: "slides" | "notes" | "exam" | "homework" | "review" | "other";
+                uploader_id?: number;
+                candidate_only?: boolean;
+                status?: "uploading" | "scanning" | "pending_review" | "published" | "rejected" | "withdrawn" | "taken_down" | "failed";
+                scan_status?: "pending" | "scanning" | "clean" | "infected" | "failed";
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    GetAdminCourseMaterial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseMaterialResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ReviewCourseMaterial: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** @enum {string} */
+                    action: "approve" | "reject";
+                    /** Format: uint64 */
+                    course_id?: number;
+                    create_course_name?: string;
+                    create_course_code?: string;
+                    /** @enum {string} */
+                    education_level?: "undergraduate" | "graduate" | "general";
+                    reason?: string;
+                    save_candidate_as_alias?: boolean;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseMaterialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RevokeCourseMaterialReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseMaterialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    TakeDownCourseMaterial: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["MaterialUpdatedResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListMaterialCourseCandidates: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    ListAdminMaterialCourses: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                education_level?: "undergraduate" | "graduate" | "general";
+                status?: "enabled" | "disabled";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialCoursePageResponse"];
+        };
+    };
+    CreateMaterialCourse: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    course_code: string;
+                    name: string;
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate" | "general";
+                    department?: string;
+                    /** Format: int64 */
+                    sort_order?: number;
+                    aliases?: string[];
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["MaterialCourseResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateMaterialCourse: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    course_code: string;
+                    name: string;
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate" | "general";
+                    department?: string;
+                    /** @enum {string} */
+                    status: "enabled" | "disabled";
+                    /** Format: int64 */
+                    sort_order?: number;
+                    aliases?: string[];
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["MaterialCourseResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    MergeMaterialCourses: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** Format: uint64 */
+                    target_course_id: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["MaterialCourseResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListCourseMaterials: {
+        parameters: {
+            query?: {
+                course_id?: number;
+                material_type?: "slides" | "notes" | "exam" | "homework" | "review" | "other";
+                keyword?: string;
+                period_id?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    ListMyCourseMaterials: {
+        parameters: {
+            query?: {
+                status?: "uploading" | "scanning" | "pending_review" | "published" | "rejected" | "withdrawn" | "taken_down" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    CreateMaterialUploadSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMaterialUploadSessionRequest"];
+            };
+        };
+        responses: {
+            201: components["responses"]["MaterialUploadSessionResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    CompleteMaterialUploadSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteMaterialUploadSessionRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["MaterialUploadSessionResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetCourseMaterial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseMaterialResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateMyCourseMaterial: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    title: string;
+                    /** @enum {string} */
+                    material_type: "slides" | "notes" | "exam" | "homework" | "review" | "other";
+                    /** Format: uint64 */
+                    course_id?: number;
+                    candidate_course_name?: string;
+                    period_id?: string;
+                    description?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseMaterialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetCourseMaterialDownload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialDownloadResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    WithdrawCourseMaterial: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["MaterialUpdatedResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListMaterialCourses: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                education_level?: "undergraduate" | "graduate" | "general";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialCoursePageResponse"];
         };
     };
     ListAdminErrands: {

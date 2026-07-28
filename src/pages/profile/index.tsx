@@ -10,6 +10,7 @@ import './index.scss'
 
 const menus = [
   { key: 'schedule', name: '我的课表', meta: '本周 18 节', route: '/pages/academic/schedule/index' },
+  { key: 'materials', name: '我的资料', meta: '上传草稿与审核进度', route: '/pages/materials/index?view=mine' },
   { key: 'published', name: '我的发布', meta: '动态、跑腿、二手与拼车', route: '/pages/my-services/index?section=published' },
   { key: 'accepted', name: '我的接单', meta: '查看跑腿履约进度', route: '/pages/my-services/index?section=errands&relation=accepted' },
   { key: 'orders', name: '我的订单', meta: '二手与跑腿交易记录', route: '/pages/my-services/index?section=orders&relation=all' },
