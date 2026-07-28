@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import AcademicHeader from '../components/academic-header'
@@ -75,21 +75,21 @@ export default function ExamsPage() {
       })
   }, [])
 
-  const refreshExams = async () => {
+  const refreshExams = useCallback(async () => {
     try {
       const records = await academicRepository.getExams(preferences.examPeriodId)
       setExams(records)
     } catch {
       Taro.showToast({ title: '考试安排加载失败', icon: 'none' })
     }
-  }
+  }, [preferences.examPeriodId])
 
   useEffect(() => {
     if (!periods.some((period) => period.id === preferences.examPeriodId)) return
     setLoading(true)
     refreshExams()
       .finally(() => setLoading(false))
-  }, [periods, preferences.examPeriodId])
+  }, [periods, preferences.examPeriodId, refreshExams])
 
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import AcademicHeader from '../components/academic-header'
@@ -47,14 +47,14 @@ export default function SelectionPage() {
       : records
   ), [activeTab, records])
 
-  const refreshSelections = async () => {
+  const refreshSelections = useCallback(async () => {
     try {
       const result = await academicRepository.getCourseSelections(preferences.schedulePeriodId)
       setRecords(result)
     } catch {
       Taro.showToast({ title: '选课结果加载失败', icon: 'none' })
     }
-  }
+  }, [preferences.schedulePeriodId])
 
   useEffect(() => {
     academicRepository.getPeriods()
@@ -77,7 +77,7 @@ export default function SelectionPage() {
     if (!periods.some((period) => period.id === preferences.schedulePeriodId)) return
     setLoading(true)
     refreshSelections().finally(() => setLoading(false))
-  }, [periods, preferences.schedulePeriodId])
+  }, [periods, preferences.schedulePeriodId, refreshSelections])
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
   Taro.usePullDownRefresh(() => refreshSelections().finally(() => Taro.stopPullDownRefresh()))
 

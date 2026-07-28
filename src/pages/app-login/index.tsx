@@ -49,18 +49,18 @@ export default function AppLoginPage() {
     setStatus('loading')
     setMessage('正在获取微信一次性授权凭证…')
     try {
-      const result = await Taro.login()
-      if (!result.code) throw new Error('微信登录凭证获取失败')
+      const loginResult = await Taro.login()
+      if (!loginResult.code) throw new Error('微信登录凭证获取失败')
       const extraData = JSON.stringify({
         type: 'campus_wechat_login',
         state,
-        code: result.code,
+        code: loginResult.code,
       })
       await new Promise<void>((resolve, reject) => {
         bridge.navigateBackApplication?.({
           extraData,
           success: resolve,
-          fail: (result) => reject(new Error(result.errMsg || '无法返回 App')),
+          fail: (failure) => reject(new Error(failure.errMsg || '无法返回 App')),
         })
       })
     } catch (error) {

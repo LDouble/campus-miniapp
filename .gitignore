@@ -2,12 +2,16 @@ dist/
 deploy_versions/
 .temp/
 .local/
+.codegraph/
+.preview/
 .rn_temp/
 .playwright-mcp/
 node_modules/
 .DS_Store
 .swc
 project.private.config.json
+private.*.key
+/custom-tab-bar/
 
 # 本地教务联调响应，包含用户个人教务数据。
 /academic-grade-response.txt

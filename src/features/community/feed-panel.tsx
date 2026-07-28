@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Input, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
@@ -58,16 +58,18 @@ export default function CommunityFeedPanel({
     () => new Map(sections.map((item) => [item.id, item.name])),
     [sections],
   )
-  const load = async (nextPage = 1, append = false) => {
-    if (!activeSection) return
+  const activeSectionId = activeSection?.id
+  const activeParentSectionId = activeSection?.parent_id
+  const load = useCallback(async (nextPage = 1, append = false) => {
+    if (!activeSectionId) return
     const requestId = ++requestSequence.current
     append ? setLoadingMore(true) : setLoading(true)
     setError('')
     try {
-      const isRoot = activeSection.parent_id === null
+      const isRoot = activeParentSectionId === null
       const result = await lifeServicesRepository.listCampusCirclePosts({
-        sectionId: isRoot ? undefined : activeSection.id,
-        parentSectionId: isRoot ? activeSection.id : undefined,
+        sectionId: isRoot ? undefined : activeSectionId,
+        parentSectionId: isRoot ? activeSectionId : undefined,
         keyword,
         page: nextPage,
       })
@@ -88,12 +90,12 @@ export default function CommunityFeedPanel({
         setLoadingMore(false)
       }
     }
-  }
+  }, [activeParentSectionId, activeSectionId, keyword])
 
   useEffect(() => {
-    if (!sectionsReady || !activeSection) return
+    if (!sectionsReady || !activeSectionId) return
     void load(1, false)
-  }, [activeSection?.id, keyword, refreshSignal, sectionsReady])
+  }, [activeSectionId, load, refreshSignal, sectionsReady])
 
   useEffect(() => {
     if (searchFocusSignal > 0) setSearchFocused(true)
@@ -105,9 +107,9 @@ export default function CommunityFeedPanel({
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
         : await lifeServicesRepository.likeCampusCirclePost(post.id)
       setPosts((current) => current.map((item) => item.id === post.id ? updated : item))
-    } catch (error) {
+    } catch (toggleError) {
       Taro.showToast({
-        title: isApiError(error) ? error.message : '操作失败',
+        title: isApiError(toggleError) ? toggleError.message : '操作失败',
         icon: 'none',
       })
     }
@@ -136,10 +138,14 @@ export default function CommunityFeedPanel({
           onBlur={() => setSearchFocused(false)}
         />
         {draftKeyword && (
-          <View onClick={() => {
-            setDraftKeyword('')
-            setKeyword('')
-          }}>清除</View>
+          <View
+            onClick={() => {
+              setDraftKeyword('')
+              setKeyword('')
+            }}
+          >
+            清除
+          </View>
         )}
         <View
           id='community-search-submit'

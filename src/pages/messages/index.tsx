@@ -177,6 +177,13 @@ export default function MessagesPage() {
         {!loading && !error && visible.map((message) => {
           const type = categoryType(message.category)
           const unread = unreadIds.includes(message.id)
+          const iconTone = type === '教务'
+            ? 'academic'
+            : type === '互动'
+              ? 'social'
+              : type === '服务'
+                ? 'trade'
+                : 'system'
           return (
             <View
               key={message.id}
@@ -184,15 +191,7 @@ export default function MessagesPage() {
               hoverClass='message-card--pressed'
               onClick={() => void open(message)}
             >
-              <View className={`message-card__icon message-card__icon--${
-                type === '教务'
-                  ? 'academic'
-                  : type === '互动'
-                    ? 'social'
-                    : type === '服务'
-                      ? 'trade'
-                      : 'system'
-              }`}>
+              <View className={`message-card__icon message-card__icon--${iconTone}`}>
                 {type.slice(0, 1)}
               </View>
               <View className='message-card__body'>

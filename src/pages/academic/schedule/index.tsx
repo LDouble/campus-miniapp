@@ -156,9 +156,9 @@ export default function SchedulePage() {
           (currentPeriod && currentPeriod.id)
           || resolvePeriodId(records, current.schedulePeriodId)
         )
-        const schedulePeriod = records.find((period) => period.id === schedulePeriodId)
-        const week = schedulePeriod && schedulePeriod.isCurrent
-          ? getCurrentTeachingWeek(schedulePeriod)
+        const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
+        const week = resolvedPeriod && resolvedPeriod.isCurrent
+          ? getCurrentTeachingWeek(resolvedPeriod)
           : 1
         if (
           schedulePeriodId === current.schedulePeriodId
@@ -193,7 +193,7 @@ export default function SchedulePage() {
         setLoading(false)
         Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
       })
-  }, [])
+  }, [academicUserId, initialScheduleCache])
 
   useEffect(() => {
     if (!initialized) return
@@ -235,7 +235,7 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [initialized, periods, preferences.schedulePeriodId])
+  }, [academicUserId, initialized, periods, preferences.schedulePeriodId])
 
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
   useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
@@ -249,7 +249,7 @@ export default function SchedulePage() {
     try {
       const records = await academicRepository.getPeriods()
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
-      const schedulePeriod = records.find((period) => period.id === schedulePeriodId)
+      const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
       const courses = schedulePeriodId
         ? await academicRepository.getCourses(schedulePeriodId)
         : []
@@ -267,8 +267,8 @@ export default function SchedulePage() {
       setPreferences((current) => ({
         ...current,
         schedulePeriodId,
-        week: schedulePeriod && schedulePeriod.isCurrent
-          ? getCurrentTeachingWeek(schedulePeriod)
+        week: resolvedPeriod && resolvedPeriod.isCurrent
+          ? getCurrentTeachingWeek(resolvedPeriod)
           : 1,
         selectedWeekday: 1,
       }))
