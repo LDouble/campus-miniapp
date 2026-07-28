@@ -103,6 +103,25 @@ export const getWeekDates = (period: AcademicPeriod | undefined, week: number) =
   })
 }
 
+const localDateOrdinal = (date: Date) => Date.UTC(
+  date.getFullYear(),
+  date.getMonth(),
+  date.getDate(),
+)
+
+export const getCurrentTeachingWeek = (
+  period: AcademicPeriod,
+  now = new Date(),
+) => {
+  const start = parseDate(period.startDate)
+  if (Number.isNaN(start.getTime()) || period.weeks < 1) return 1
+  const elapsedDays = Math.floor(
+    (localDateOrdinal(now) - localDateOrdinal(start)) / 86400000,
+  )
+  const week = Math.floor(elapsedDays / 7) + 1
+  return Math.min(period.weeks, Math.max(1, week))
+}
+
 export const formatPeriodStartDate = (period: AcademicPeriod) => {
   const start = parseDate(period.startDate)
   return `${start.getFullYear()}年${start.getMonth() + 1}月${start.getDate()}日`

@@ -29,6 +29,11 @@ const credentialKey = (userId: number) => `${CREDENTIAL_KEY_PREFIX}${userId}`
 
 const validUserId = (value: number) => Number.isSafeInteger(value) && value > 0
 
+export const getActiveAcademicUserId = () => {
+  const userId = Number(Taro.getStorageSync<number>(ACTIVE_USER_KEY) || 0)
+  return validUserId(userId) ? userId : 0
+}
+
 export const isAcademicEducationLevel = (
   value: unknown,
 ): value is AcademicEducationLevel => (
