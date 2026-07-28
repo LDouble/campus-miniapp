@@ -439,6 +439,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic-verification/local-proof": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 二次校验并消费本地爬虫证明 */
+        post: operations["VerifyAcademicLocalProof"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-verification/local-proof/challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建本地爬虫一次性认证挑战 */
+        post: operations["CreateAcademicProofChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic-verification/materials": {
         parameters: {
             query?: never;
@@ -2591,7 +2625,7 @@ export interface components {
             /** Format: uint64 */
             id: number;
             /** @enum {string} */
-            method: "credentials" | "student_card";
+            method: "credentials" | "local_proof" | "student_card";
             /** @enum {string} */
             provider: "ouc" | "mock" | "manual";
             real_name: string;
@@ -2609,6 +2643,42 @@ export interface components {
             verified_at: string;
             /** Format: uint64 */
             version: number;
+        };
+        /** @description 交给受信任本地爬虫签名的一次性挑战；不得向普通客户端分发签名私钥 */
+        AcademicProofChallenge: {
+            challenge_id: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: date-time */
+            expires_at: string;
+            nonce: string;
+            /** @enum {string} */
+            proof_version: "v1";
+            /** @enum {string} */
+            provider: "ouc";
+            student_no_digest: string;
+            /** @description 当前用户的不可变签名绑定标识 */
+            subject: string;
+        };
+        AcademicProofChallengeResponseBody: {
+            data: components["schemas"]["AcademicProofChallenge"];
+            request_id: string;
+        };
+        AcademicProofError: {
+            /**
+             * @description 稳定错误码语义：
+             *     - ACADEMIC_PROOF_INVALID：证明格式、签名、subject 或 challenge 绑定无效，不应重试原证明。
+             *     - ACADEMIC_PROOF_EXPIRED：challenge 或 proof 已过期，应重新创建 challenge 并生成证明。
+             *     - ACADEMIC_PROOF_ALREADY_USED：一次性 challenge 已被成功兑换，不应重放。
+             *     - ACADEMIC_PROOF_NETWORK_OR_PROVIDER_FAILURE：服务端二次校验时网络或教务提供方暂时不可用，可稍后重试。
+             * @enum {string}
+             */
+            code: "ACADEMIC_PROOF_INVALID" | "ACADEMIC_PROOF_EXPIRED" | "ACADEMIC_PROOF_ALREADY_USED" | "ACADEMIC_PROOF_SECONDARY_VERIFICATION_FAILED" | "ACADEMIC_IDENTITY_CONFLICT" | "ACADEMIC_VERIFICATION_RATE_LIMITED" | "ACADEMIC_PROOF_NETWORK_OR_PROVIDER_FAILURE";
+            message: string;
+        };
+        AcademicProofErrorResponseBody: {
+            error: components["schemas"]["AcademicProofError"];
+            request_id: string;
         };
         AcademicVerificationMaterial: {
             /** Format: date-time */
@@ -2631,7 +2701,7 @@ export interface components {
             /** Format: uint64 */
             material_id: number | null;
             /** @enum {string} */
-            method: "credentials" | "student_card";
+            method: "credentials" | "local_proof" | "student_card";
             real_name: string;
             review_reason: string | null;
             /** Format: date-time */
@@ -3495,6 +3565,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["AcademicPeriodListResponseBody"];
+            };
+        };
+        /** @description 与当前登录用户绑定、五分钟内有效且仅可兑换一次的本地教务证明挑战 */
+        AcademicProofChallengeResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicProofChallengeResponseBody"];
+            };
+        };
+        /** @description 本地教务证明无效、过期、已兑换、绑定冲突或二次校验失败 */
+        AcademicProofErrorResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicProofErrorResponseBody"];
             };
         };
         /** @description 校园身份认证材料上传结果 */
@@ -4392,6 +4480,59 @@ export interface operations {
             422: components["responses"]["Error"];
             429: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    VerifyAcademicLocalProof: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    challenge_id: string;
+                    proof: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicVerificationRequestResponse"];
+            400: components["responses"]["AcademicProofErrorResponse"];
+            401: components["responses"]["AcademicProofErrorResponse"];
+            409: components["responses"]["AcademicProofErrorResponse"];
+            410: components["responses"]["AcademicProofErrorResponse"];
+            422: components["responses"]["AcademicProofErrorResponse"];
+            429: components["responses"]["AcademicProofErrorResponse"];
+            503: components["responses"]["AcademicProofErrorResponse"];
+        };
+    };
+    CreateAcademicProofChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    student_no: string;
+                    /** @enum {string} */
+                    provider: "ouc";
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate";
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicProofChallengeResponse"];
+            400: components["responses"]["AcademicProofErrorResponse"];
+            429: components["responses"]["AcademicProofErrorResponse"];
+            503: components["responses"]["AcademicProofErrorResponse"];
         };
     };
     UploadAcademicVerificationMaterial: {

@@ -12,6 +12,7 @@ import {
 } from './client'
 import type { AcademicEducationLevel } from './academic-credential'
 import type {
+  AcademicProofChallenge,
   AcademicVerificationMaterial,
   AcademicVerificationRequest,
   AcademicVerificationStatus,
@@ -41,6 +42,34 @@ export const verifyAcademicCredentials = (
     skipAcademicVerificationGuard: true,
   })
 )
+
+export const createAcademicProofChallenge = (
+  studentNo: string,
+  educationLevel: AcademicEducationLevel,
+) => apiRequest<AcademicProofChallenge>({
+  path: '/api/v1/academic-verification/local-proof/challenges',
+  method: 'POST',
+  data: {
+    student_no: studentNo,
+    provider: 'ouc',
+    education_level: educationLevel,
+  },
+  skipAcademicVerificationGuard: true,
+})
+
+export const verifyAcademicLocalProof = (
+  challengeId: string,
+  proof: string,
+) => apiRequest<AcademicVerificationRequest>({
+  path: '/api/v1/academic-verification/local-proof',
+  method: 'POST',
+  data: {
+    challenge_id: challengeId,
+    proof,
+  },
+  idempotencyKey: createIdempotencyKey('academic-local-proof'),
+  skipAcademicVerificationGuard: true,
+})
 
 export const submitStudentCardVerification = (
   realName: string,

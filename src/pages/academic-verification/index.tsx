@@ -428,6 +428,21 @@ export default function AcademicVerificationPage() {
                   </View>
                 </View>}
 
+                {!forceCredentialBinding && (
+                  <View className='verification-proof-capability'>
+                    <View className='verification-proof-capability__icon'>盾</View>
+                    <View className='verification-proof-capability__content'>
+                      <View>
+                        <Text>本地证明认证</Text>
+                        <Text>环境未配置</Text>
+                      </View>
+                      <Text>
+                        可信 Proof Broker 尚未接入，暂不可用；你仍可使用教务账号在线验证。
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
                 {method === 'credentials' && (
                   <View className='verification-form'>
                     <View className='verification-form__heading'>
