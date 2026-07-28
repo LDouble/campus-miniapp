@@ -1,8 +1,24 @@
-import { useMemo, useState } from 'react'
-import Taro, { useDidShow } from '@tarojs/taro'
+import { useEffect, useMemo, useState } from 'react'
+import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Image, Input, ScrollView, Text, View } from '@tarojs/components'
+import { getCurrentUser } from '../../api/account'
+import { getActiveAcademicUserId } from '../../api/academic-credential'
+import type { MarketplaceListingView, Notice } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
+import {
+  avatarText,
+  currentDateParts,
+  greeting,
+  marketplaceTime,
+  noticeCategory,
+  noticeTime,
+  resolveNextCourse,
+} from '../../features/home/data'
+import { formatMoney } from '../../features/life-services/format'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import { noticesRepository } from '../../features/notices/repository'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
+import { academicStorage } from '../academic/storage'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -73,29 +89,81 @@ const serviceColumns = Array.from({ length: serviceColumnCount }, (_, columnInde
     .filter(Boolean)
 ))
 
-const news = [
-  { tag: '教务', title: '关于 2025-2026 学年第二学期选课的通知', time: '10分钟前' },
-  { tag: '活动', title: '春日校园音乐节志愿者招募开始啦', time: '1小时前' },
-  { tag: '生活', title: '崂山校区食堂本周新品菜单已上线', time: '昨天' },
-]
-
-const marketItems = [
-  { name: '九成新拍立得 mini 11', price: '¥ 328', meta: '崂山校区 · 2小时前', type: 'camera' },
-  { name: '高等数学同济第七版', price: '¥ 18', meta: '北海苑 · 5小时前', type: 'book' },
-]
-
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 type LifeHubSection = 'community' | 'errands' | 'market' | 'carpool'
+
+type Settled<T> = { ok: true; value: T } | { ok: false }
+const settle = async <T,>(promise: Promise<T>): Promise<Settled<T>> => {
+  try {
+    return { ok: true, value: await promise }
+  } catch {
+    return { ok: false }
+  }
+}
+
+const loadCachedNextCourse = () => {
+  const userId = getActiveAcademicUserId()
+  return resolveNextCourse(academicStorage.getScheduleCache(userId))
+}
 
 function Index() {
   const [searchValue, setSearchValue] = useState('')
   const [campusName, setCampusName] = useState('崂山校区')
+  const [username, setUsername] = useState('')
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [news, setNews] = useState<Notice[]>([])
+  const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
+  const [newsLoading, setNewsLoading] = useState(true)
+  const [marketLoading, setMarketLoading] = useState(true)
+  const [newsError, setNewsError] = useState(false)
+  const [marketError, setMarketError] = useState(false)
+  const [nextCourse, setNextCourse] = useState(loadCachedNextCourse)
   const headerCollapsed = useCollapsingHeader({
     triggerSelector: '.campus__eyebrow',
     threshold: 48,
     releaseGap: 16,
   })
-  useDidShow(() => syncCustomTabBar(0))
+
+  const loadHome = async () => {
+    const [account, notices, unread, marketplace] = await Promise.all([
+      settle(getCurrentUser()),
+      settle(noticesRepository.list({ page: 1, pageSize: 3 })),
+      settle(noticesRepository.unreadCount()),
+      settle(lifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 })),
+    ])
+
+    if (account.ok) setUsername(account.value.user.username)
+    if (notices.ok) {
+      setNews(notices.value.items)
+      setNewsError(false)
+    } else {
+      setNewsError(true)
+    }
+    if (unread.ok) setUnreadCount(Number(unread.value.count) || 0)
+    if (marketplace.ok) {
+      setMarketItems(marketplace.value.items)
+      setMarketError(false)
+    } else {
+      setMarketError(true)
+    }
+    setNewsLoading(false)
+    setMarketLoading(false)
+    Taro.stopPullDownRefresh()
+  }
+
+  useEffect(() => {
+    void loadHome()
+  }, [])
+
+  useDidShow(() => {
+    syncCustomTabBar(0)
+    setNextCourse(loadCachedNextCourse())
+  })
+
+  usePullDownRefresh(() => {
+    setNextCourse(loadCachedNextCourse())
+    void loadHome()
+  })
 
   const openLifeHub = (section: LifeHubSection) => {
     Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
@@ -165,13 +233,19 @@ function Index() {
     if (typeof result.tapIndex === 'number') setCampusName(campuses[result.tapIndex])
   }
 
-  const openNewsDetail = (item: typeof news[number]) => {
-    Taro.navigateTo({ url: `/pages/community/detail?mode=post&section=${encodeURIComponent(item.tag)}&title=${encodeURIComponent(item.title)}&content=${encodeURIComponent('查看校园最新通知与活动安排，具体时间和要求请以学校官方发布为准。')}&meta=${encodeURIComponent(item.time)}&badge=${encodeURIComponent('校园资讯')}` })
+  const openNewsDetail = (item: Notice) => {
+    void noticesRepository.read(item.id)
+      .then(() => noticesRepository.unreadCount())
+      .then((unread) => setUnreadCount(Number(unread.count) || 0))
+      .catch(() => undefined)
+    Taro.switchTab({ url: '/pages/messages/index' })
   }
 
-  const openMarketDetail = (item: typeof marketItems[number]) => {
-    Taro.navigateTo({ url: `/pages/community/detail?mode=service&section=${encodeURIComponent('海大二手')}&title=${encodeURIComponent(item.name)}&content=${encodeURIComponent('校内同学发布的闲置物品，支持当面查看和沟通。')}&meta=${encodeURIComponent(item.meta)}&badge=${encodeURIComponent('校内面交')}&value=${encodeURIComponent(item.price)}` })
+  const openMarketDetail = (item: MarketplaceListingView) => {
+    Taro.navigateTo({ url: `/pages/marketplace/detail?id=${item.id}` })
   }
+
+  const today = currentDateParts()
 
   return (
     <View className='campus'>
@@ -188,11 +262,11 @@ function Index() {
       <View className='campus__header'>
         <View className='campus__identity'>
           <View className='campus__avatar'>
-            <Text>海</Text>
+            <Text>{avatarText(username)}</Text>
             <View className='campus__online' />
           </View>
           <View className='campus__identity-copy'>
-            <Text className='campus__eyebrow'>下午好，海大同学</Text>
+            <Text className='campus__eyebrow'>{greeting(username)}</Text>
             <View className='campus__school' onClick={chooseCampus}>
               <Text>中国海洋大学 · {campusName}</Text>
               <Text className='campus__chevron'>⌄</Text>
@@ -205,7 +279,7 @@ function Index() {
           </View>
           <View className='icon-button' onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}>
             <Image src={icons.bell} mode='aspectFit' />
-            <View className='icon-button__dot' />
+            {unreadCount > 0 && <View className='icon-button__dot' />}
           </View>
         </View>
       </View>
@@ -300,24 +374,26 @@ function Index() {
 
       <View className='schedule-card' onClick={openSchedule}>
         <View className='schedule-card__date'>
-          <Text className='schedule-card__month'>MAR</Text>
-          <Text className='schedule-card__day'>18</Text>
+          <Text className='schedule-card__month'>{nextCourse ? nextCourse.month : today.month}</Text>
+          <Text className='schedule-card__day'>{nextCourse ? nextCourse.day : today.day}</Text>
         </View>
         <View className='schedule-card__line' />
         <View className='schedule-card__main'>
           <View className='schedule-card__label'>
             <View className='schedule-card__status' />
-            <Text>下一节课 · 14:00</Text>
+            <Text>{nextCourse ? `下一节课 · ${nextCourse.startTime}` : '本学期课表'}</Text>
           </View>
-          <Text className='schedule-card__course'>用户体验设计基础</Text>
+          <Text className='schedule-card__course'>
+            {nextCourse ? nextCourse.course.name : '暂无后续课程'}
+          </Text>
           <View className='schedule-card__meta'>
             <Image src={icons.location} mode='aspectFit' />
-              <Text>行远楼 A305</Text>
-            <Text>·</Text>
-            <Text>王老师</Text>
+            <Text>{nextCourse ? nextCourse.course.location || '地点待定' : '进入课表查看或刷新'}</Text>
+            {nextCourse && nextCourse.course.teacher && <Text>·</Text>}
+            {nextCourse && nextCourse.course.teacher && <Text>{nextCourse.course.teacher}</Text>}
           </View>
         </View>
-        <View className='schedule-card__badge'>还有 25 分钟</View>
+        {nextCourse && <View className='schedule-card__badge'>{nextCourse.badge}</View>}
       </View>
 
       <View className='section-heading section-heading--compact'>
@@ -325,23 +401,32 @@ function Index() {
           <Text className='section-heading__title'>校园新鲜事</Text>
           <Text className='section-heading__sub'>重要消息，不再错过</Text>
         </View>
-        <View className='section-heading__more' onClick={() => openModule('community')}>
+        <View className='section-heading__more' onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}>
           <Text>更多</Text>
           <Image src={icons.arrow} mode='aspectFit' />
         </View>
       </View>
 
       <View className='news-card'>
-        {news.map((item, index) => (
+        {newsLoading && <View className='home-section-state'>正在加载校园消息</View>}
+        {!newsLoading && newsError && (
+          <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
+            消息加载失败，点击重试
+          </View>
+        )}
+        {!newsLoading && !newsError && news.length === 0 && (
+          <View className='home-section-state'>暂时没有校园消息</View>
+        )}
+        {!newsLoading && !newsError && news.map((item, index) => (
           <View
-            key={item.title}
+            key={item.id}
             className={`news-card__item ${index !== news.length - 1 ? 'news-card__item--border' : ''}`}
             onClick={() => openNewsDetail(item)}
           >
-            <View className={`news-card__tag news-card__tag--${index}`}>{item.tag}</View>
+            <View className={`news-card__tag news-card__tag--${index}`}>{noticeCategory(item)}</View>
             <View className='news-card__content'>
               <Text className='news-card__title'>{item.title}</Text>
-              <Text className='news-card__time'>{item.time}</Text>
+              <Text className='news-card__time'>{noticeTime(item)}</Text>
             </View>
             <Image className='news-card__arrow' src={icons.arrow} mode='aspectFit' />
           </View>
@@ -361,16 +446,29 @@ function Index() {
 
       <ScrollView className='market-scroll' scrollX enhanced showScrollbar={false}>
         <View className='market-list'>
-          {marketItems.map((item) => (
-            <View key={item.name} className='market-card' onClick={() => openMarketDetail(item)}>
-              <View className={`market-card__cover market-card__cover--${item.type}`}>
-                <View className='market-card__shape' />
-                <Text>{item.type === 'camera' ? 'SNAP' : 'CALCULUS'}</Text>
+          {marketLoading && <View className='home-section-state home-section-state--market'>正在加载校内闲置</View>}
+          {!marketLoading && marketError && (
+            <View
+              className='home-section-state home-section-state--market home-section-state--error'
+              onClick={() => void loadHome()}
+            >
+              闲置加载失败，点击重试
+            </View>
+          )}
+          {!marketLoading && !marketError && marketItems.length === 0 && (
+            <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
+          )}
+          {!marketLoading && !marketError && marketItems.map((item) => (
+            <View key={item.id} className='market-card' onClick={() => openMarketDetail(item)}>
+              <View className='market-card__cover market-card__cover--listing'>
+                {item.image_urls.length > 0
+                  ? <Image className='market-card__image' src={item.image_urls[0]} mode='aspectFill' lazyLoad />
+                  : <><View className='market-card__shape' /><Text>OUC</Text></>}
               </View>
-              <Text className='market-card__name'>{item.name}</Text>
+              <Text className='market-card__name'>{item.description}</Text>
               <View className='market-card__bottom'>
-                <Text className='market-card__price'>{item.price}</Text>
-                <Text className='market-card__meta'>{item.meta}</Text>
+                <Text className='market-card__price'>{formatMoney(item.price_cents)}</Text>
+                <Text className='market-card__meta'>{marketplaceTime(item)}</Text>
               </View>
             </View>
           ))}
