@@ -484,6 +484,25 @@ page {
     }
   }
 
+  &__composer--open {
+    padding-bottom: 15rpx;
+    background: #fff;
+    box-shadow:
+      0 -18rpx 42rpx rgba(42, 47, 63, 0.16),
+      inset 0 2rpx 0 rgba(255, 255, 255, 0.9);
+  }
+
+  &__composer-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 39;
+    background: rgba(31, 34, 44, 0.22);
+    backdrop-filter: blur(3rpx);
+  }
+
   &__placeholder {
     color: #98939e;
   }
