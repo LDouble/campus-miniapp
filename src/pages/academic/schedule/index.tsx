@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, Input, ScrollView, Text, View } from '@tarojs/components'
+import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import AcademicHeader from '../components/academic-header'
 import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
@@ -15,6 +16,7 @@ import {
   courseColors,
   formatPeriodStartDate,
   formatMonthDay,
+  getCurrentTeachingWeek,
   getWeekDates,
   isSameDay,
   resolvePeriodId,
@@ -103,15 +105,22 @@ function CourseDetailCard({
 }
 
 export default function SchedulePage() {
+  const [academicUserId] = useState(getActiveAcademicUserId)
+  const [initialScheduleCache] = useState(() => (
+    academicStorage.getScheduleCache(academicUserId)
+  ))
   const [preferences, setPreferences] = useState<AcademicPreferences>({
     ...defaultPreferences,
     ...academicStorage.getPreferences(defaultPreferences),
     section: 'schedule',
   })
-  const [periods, setPeriods] = useState<AcademicPeriod[]>([])
+  const [periods, setPeriods] = useState<AcademicPeriod[]>(
+    initialScheduleCache ? initialScheduleCache.periods : [],
+  )
   const [officialCourses, setOfficialCourses] = useState<Course[]>([])
   const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const [sheet, setSheet] = useState<ScheduleSheet>(null)
   const [activeCourse, setActiveCourse] = useState<Course | null>(null)
   const [activeSlotCourses, setActiveSlotCourses] = useState<Course[]>([])
@@ -138,25 +147,47 @@ export default function SchedulePage() {
   )
 
   useEffect(() => {
+    const applyPeriods = (records: AcademicPeriod[]) => {
+      setPeriods(records)
+      if (!records.length) setLoading(false)
+      setPreferences((current) => {
+        const currentPeriod = records.find((period) => period.isCurrent)
+        const schedulePeriodId = (
+          (currentPeriod && currentPeriod.id)
+          || resolvePeriodId(records, current.schedulePeriodId)
+        )
+        const schedulePeriod = records.find((period) => period.id === schedulePeriodId)
+        const week = schedulePeriod && schedulePeriod.isCurrent
+          ? getCurrentTeachingWeek(schedulePeriod)
+          : 1
+        if (
+          schedulePeriodId === current.schedulePeriodId
+          && week === current.week
+        ) return current
+        return {
+          ...current,
+          schedulePeriodId,
+          week,
+          selectedWeekday: 1,
+        }
+      })
+      setInitialized(true)
+    }
+
+    if (initialScheduleCache && initialScheduleCache.periods.length) {
+      applyPeriods(initialScheduleCache.periods)
+      return
+    }
+
     academicRepository.getPeriods()
       .then((records) => {
-        setPeriods(records)
-        if (!records.length) setLoading(false)
-        setPreferences((current) => {
-          const schedulePeriodId = resolvePeriodId(records, current.schedulePeriodId)
-          const schedulePeriod = records.find((period) => period.id === schedulePeriodId)
-          const keepsSelectedPeriod = schedulePeriodId === current.schedulePeriodId
-          const week = keepsSelectedPeriod
-            ? Math.min(Math.max(1, current.week), schedulePeriod?.weeks || 1)
-            : 1
-          if (keepsSelectedPeriod && week === current.week) return current
-          return {
-            ...current,
-            schedulePeriodId,
-            week,
-            selectedWeekday: keepsSelectedPeriod ? current.selectedWeekday : 1,
-          }
-        })
+        const currentCache = academicStorage.getScheduleCache(academicUserId)
+        academicStorage.setScheduleCache(
+          academicUserId,
+          records,
+          currentCache ? currentCache.coursesByPeriod : {},
+        )
+        applyPeriods(records)
       })
       .catch(() => {
         setLoading(false)
@@ -165,13 +196,46 @@ export default function SchedulePage() {
   }, [])
 
   useEffect(() => {
+    if (!initialized) return
     if (!periods.some((period) => period.id === preferences.schedulePeriodId)) return
+    const cache = academicStorage.getScheduleCache(academicUserId)
+    if (
+      cache
+      && Object.prototype.hasOwnProperty.call(
+        cache.coursesByPeriod,
+        preferences.schedulePeriodId,
+      )
+    ) {
+      setOfficialCourses(cache.coursesByPeriod[preferences.schedulePeriodId])
+      setLoading(false)
+      return
+    }
+
+    let active = true
     setLoading(true)
     academicRepository.getCourses(preferences.schedulePeriodId)
-      .then(setOfficialCourses)
-      .catch(() => Taro.showToast({ title: '课程表加载失败', icon: 'none' }))
-      .finally(() => setLoading(false))
-  }, [periods, preferences.schedulePeriodId])
+      .then((courses) => {
+        const currentCache = academicStorage.getScheduleCache(academicUserId)
+        academicStorage.setScheduleCache(
+          academicUserId,
+          periods,
+          {
+            ...(currentCache ? currentCache.coursesByPeriod : {}),
+            [preferences.schedulePeriodId]: courses,
+          },
+        )
+        if (active) setOfficialCourses(courses)
+      })
+      .catch(() => {
+        if (active) Taro.showToast({ title: '课程表加载失败', icon: 'none' })
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [initialized, periods, preferences.schedulePeriodId])
 
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
   useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
@@ -180,18 +244,44 @@ export default function SchedulePage() {
     setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
   }
 
-  const refreshCourses = async () => {
+  const refreshSchedule = async () => {
+    setLoading(true)
     try {
-      const courses = await academicRepository.getCourses(preferences.schedulePeriodId)
+      const records = await academicRepository.getPeriods()
+      const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
+      const schedulePeriod = records.find((period) => period.id === schedulePeriodId)
+      const courses = schedulePeriodId
+        ? await academicRepository.getCourses(schedulePeriodId)
+        : []
+      const currentCache = academicStorage.getScheduleCache(academicUserId)
+      academicStorage.setScheduleCache(
+        academicUserId,
+        records,
+        {
+          ...(currentCache ? currentCache.coursesByPeriod : {}),
+          ...(schedulePeriodId ? { [schedulePeriodId]: courses } : {}),
+        },
+      )
+      setPeriods(records)
       setOfficialCourses(courses)
+      setPreferences((current) => ({
+        ...current,
+        schedulePeriodId,
+        week: schedulePeriod && schedulePeriod.isCurrent
+          ? getCurrentTeachingWeek(schedulePeriod)
+          : 1,
+        selectedWeekday: 1,
+      }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
     } catch {
       Taro.showToast({ title: '课程表刷新失败', icon: 'none' })
+    } finally {
+      setLoading(false)
     }
   }
 
   Taro.usePullDownRefresh(() => {
-    refreshCourses().finally(() => Taro.stopPullDownRefresh())
+    refreshSchedule().finally(() => Taro.stopPullDownRefresh())
   })
 
   const isCourseOverlap = (left: Course, right: Course) => (
@@ -595,7 +685,7 @@ export default function SchedulePage() {
                     onClick={() => {
                       updatePreferences({
                         schedulePeriodId: period.id,
-                        week: 1,
+                        week: period.isCurrent ? getCurrentTeachingWeek(period) : 1,
                         selectedWeekday: 1,
                       })
                       setSheet(null)
