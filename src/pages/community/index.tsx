@@ -1,65 +1,287 @@
-import { View, Text, Input } from '@tarojs/components'
-import Taro, { useDidShow, useLoad } from '@tarojs/taro'
 import { useState } from 'react'
-import { getFeed, FeedItem } from '../../services/api'
-import { FeedCard } from '../../components/FeedCard'
-import { DesignIcon } from '../../components/DesignIcon'
-import { BottomSheetPicker } from '../../components/BottomSheetPicker'
-import { useNavigationMetrics } from '../../hooks/useNavigationMetrics'
-import { consumeCommunityTopic, syncCustomTabBar } from '../../utils/tabbar'
+import Taro, {
+  useDidHide,
+  useDidShow,
+  usePullDownRefresh,
+} from '@tarojs/taro'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
+import type { CampusCircleSectionView } from '../../api/types'
+import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
+import CommunityFeedPanel from '../../features/community/feed-panel'
+import {
+  isLifeHubSection,
+  lifeBusinessThemeList,
+  lifeBusinessThemes,
+  type LifeHubSection,
+} from '../../features/life-services/business-theme'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import LifeServiceListPanel, {
+  type LifeServiceSection,
+} from '../../features/life-services/list-panel'
+import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
+import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
-const topics = ['全部', '闲置', '跑腿', '拼车', '失物招领', '吐槽', '求助', '找搭子']
-const typeMap: Record<string, string> = { 闲置: 'marketplace', 跑腿: 'errand', 拼车: 'carpool', 失物招领: 'campus-circle' }
-interface FilterDefinition { key: string; label: string; title: string; options: string[] }
-const topicFilters: Record<string, FilterDefinition[]> = {
-  闲置: [
-    { key: 'idle-category', label: '全部分类', title: '选择分类', options: ['全部分类', '数码电子', '书籍资料', '服饰鞋包', '美妆个护', '生活用品'] },
-    { key: 'idle-price', label: '价格排序', title: '排序方式', options: ['默认综合排序', '价格从低到高', '价格从高到低'] },
-    { key: 'idle-condition', label: '成色', title: '选择成色', options: ['全部成色', '全新/仅拆封', '九成新', '有使用痕迹'] }
-  ],
-  跑腿: [
-    { key: 'errand-type', label: '全部类型', title: '选择分类', options: ['全部类型', '代取快递', '代买餐饮', '打印复印', '其他帮办事'] },
-    { key: 'errand-sort', label: '默认排序', title: '排序方式', options: ['默认排序', '赏金最高', '最新发布', '距离最近'] },
-    { key: 'errand-urgent', label: '全部订单', title: '快捷筛选', options: ['全部订单', '急单优先'] }
-  ],
-  拼车: [
-    { key: 'carpool-dest', label: '全部目的地', title: '选择目的地', options: ['全部目的地', '高铁南站', '国际机场', '市中心商圈', '跨校区'] },
-    { key: 'carpool-time', label: '全部时间', title: '出发时间', options: ['全部时间', '今天', '明天', '本周末'] },
-    { key: 'carpool-seat', label: '全部拼车', title: '快捷筛选', options: ['全部拼车', '只看有座', '我找车', '车找人'] }
-  ]
+const icons = {
+  search: require('../../assets/icons/search.svg'),
 }
 
-export default function Community () {
-  const [topic, setTopic] = useState('全部')
-  const [items, setItems] = useState<FeedItem[]>([])
-  const [keyword, setKeyword] = useState('')
-  const [activeFilter, setActiveFilter] = useState<FilterDefinition | null>(null)
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
-  const { statusBarHeight, rightInset } = useNavigationMetrics()
-  const load = async () => { try { setItems(await getFeed()) } catch (_) { setItems([]) } }
-  useLoad(params => { if (params.topic) setTopic(params.topic); void load() })
+const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
+
+export default function CommunityPage() {
+  const [activeSection, setActiveSection] = useState<LifeHubSection>('community')
+  const [communityRoots, setCommunityRoots] = useState<CampusCircleSectionView[]>([])
+  const [communitySectionsReady, setCommunitySectionsReady] = useState(false)
+  const [communitySectionsError, setCommunitySectionsError] = useState('')
+  const [activeCommunitySectionId, setActiveCommunitySectionId] = useState(0)
+  const [refreshSignal, setRefreshSignal] = useState(0)
+  const [searchFocusSignal, setSearchFocusSignal] = useState(0)
+  const navbarMetrics = getNavbarMetrics()
+  const navbarHeight = navbarMetrics.statusBarHeight + navbarMetrics.navigationBarHeight
+  const headerCollapsed = useCollapsingHeader({
+    triggerSelector: '.community-page__eyebrow',
+    threshold: 52,
+    releaseGap: 16,
+  })
+
+  const baseCopy = lifeBusinessThemes[activeSection]
+  const allCommunitySections = communityRoots.flatMap((root) => [
+    root,
+    ...(root.children || []).filter((item) => item.status === 'active'),
+  ])
+  const activeCommunitySection = allCommunitySections.find(
+    (item) => item.id === activeCommunitySectionId,
+  ) || communityRoots[0] || null
+  const activeCommunityRoot = activeCommunitySection?.parent_id === null
+    ? activeCommunitySection
+    : communityRoots.find(
+      (root) => root.id === activeCommunitySection?.parent_id,
+    ) || communityRoots[0] || null
+  const activeCommunityChildren = (activeCommunityRoot?.children || []).filter(
+    (item) => item.status === 'active',
+  )
+  const pageCopy = activeSection === 'community' && activeCommunityRoot
+    ? {
+      ...baseCopy,
+      title: activeCommunityRoot.name,
+      subtitle: activeCommunityRoot.description || baseCopy.subtitle,
+    }
+    : baseCopy
+
+  const loadCommunitySections = async () => {
+    setCommunitySectionsError('')
+    try {
+      const result = await lifeServicesRepository.listCampusCircleSections()
+      const roots = result.items.filter(
+        (item) => item.parent_id === null && item.status === 'active',
+      )
+      setCommunityRoots(roots)
+      setActiveCommunitySectionId((current) => {
+        const available = roots.flatMap((root) => [
+          root,
+          ...(root.children || []).filter((item) => item.status === 'active'),
+        ])
+        if (available.some((item) => item.id === current)) return current
+        return roots[0]?.id || 0
+      })
+    } catch {
+      setCommunityRoots([])
+      setActiveCommunitySectionId(0)
+      setCommunitySectionsError('社区板块加载失败，请稍后重试')
+    } finally {
+      setCommunitySectionsReady(true)
+    }
+  }
+
+  const selectSection = (section: LifeHubSection) => {
+    setActiveSection(section)
+    Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
+  }
+
+  const selectCommunityRoot = (root: CampusCircleSectionView) => {
+    setActiveCommunitySectionId(root.id)
+  }
+
+  const focusSearch = () => {
+    setSearchFocusSignal((current) => current + 1)
+    Taro.pageScrollTo({ selector: '.community-content-anchor', duration: 180 })
+  }
+
+  const openPublish = () => {
+    if (activeSection === 'community') {
+      if (!activeCommunitySection) {
+        Taro.showToast({ title: '暂无可发布的社区板块', icon: 'none' })
+        return
+      }
+      Taro.navigateTo({
+        url: `/pages/publish/index?section=community&community_section_id=${activeCommunitySection.id}`,
+      })
+      return
+    }
+    Taro.navigateTo({ url: `/pages/publish/index?section=${activeSection}` })
+  }
+
   useDidShow(() => {
     syncCustomTabBar(1)
-    const pendingTopic = consumeCommunityTopic()
-    if (pendingTopic) setTopic(pendingTopic)
+    setRefreshSignal((current) => current + 1)
+    void loadCommunitySections()
+    const savedSection = Taro.getStorageSync<string>(LIFE_HUB_SECTION_KEY)
+    if (savedSection && isLifeHubSection(savedSection)) {
+      setActiveSection(savedSection)
+    }
   })
-  const filters = topicFilters[topic] || []
-  const filtered = items.filter(item => (topic === '全部' || item.type === typeMap[topic] || (topic === '失物招领' && item.type === 'campus-circle')) && `${item.title}${item.summary}`.includes(keyword))
-  return <View className='community-page'>
-    <View className='community-header' style={{ paddingTop: `${statusBarHeight + 6}px`, paddingRight: `${rightInset}px` }}><View className='community-title-row'><Text>社区</Text><View className='search-box'><DesignIcon name='search' /><Input value={keyword} onInput={event => setKeyword(event.detail.value)} placeholder={topic === '闲置' ? '搜索二手商品...' : '搜索同学、圈子或话题...'} /></View></View><View className='topic-scroll'>{topics.map(name => <Text key={name} className={`topic-tab ${topic === name ? 'selected' : ''}`} onClick={() => { setTopic(name); setActiveFilter(null) }}>{name}</Text>)}</View>{filters.length > 0 && <View className='filter-scroll'>{filters.map(filter => <Text key={filter.key} className={filterValues[filter.key] ? 'selected' : ''} onClick={() => setActiveFilter(filter)}>{filterValues[filter.key] || filter.label}⌄</Text>)}</View>}</View>
-    <View className='community-feed'>{filtered.length ? filtered.map(item => <FeedCard item={item} key={`${item.type}-${item.id}`} />) : <View className='community-empty'><Text>还没有相关内容</Text><Text>换个话题看看吧</Text></View>}</View>
-    <BottomSheetPicker
-      open={Boolean(activeFilter)}
-      title={activeFilter?.title || ''}
-      options={activeFilter?.options || []}
-      value={activeFilter ? (filterValues[activeFilter.key] || activeFilter.options[0]) : ''}
-      onClose={() => setActiveFilter(null)}
-      onSelect={value => {
-        if (!activeFilter) return
-        setFilterValues(previous => ({ ...previous, [activeFilter.key]: value }))
-        setActiveFilter(null)
-      }}
-    />
-  </View>
+
+  useDidHide(() => {
+    setCustomTabBarHidden(false)
+  })
+
+  usePullDownRefresh(() => {
+    setRefreshSignal((current) => current + 1)
+    void loadCommunitySections().finally(() => Taro.stopPullDownRefresh())
+  })
+
+  return (
+    <View className={`community-page community-page--${activeSection}`}>
+      <CustomNavbar
+        title={pageCopy.title}
+        immersive
+        compactImmersive
+        collapsed={headerCollapsed}
+        actionIcon={icons.search}
+        actionLabel={`搜索${pageCopy.title}`}
+        actionVisible={headerCollapsed}
+        onAction={focusSearch}
+      />
+
+      <View className='community-page__intro'>
+        <View className='community-page__intro-copy'>
+          <Text className='community-page__eyebrow'>{pageCopy.title}</Text>
+          <Text className='community-page__subtitle'>{pageCopy.subtitle}</Text>
+        </View>
+        <View
+          className='community-page__search-action'
+          hoverClass='community-page__search-action--pressed'
+          ariaRole='button'
+          ariaLabel={`搜索${pageCopy.title}`}
+          onClick={focusSearch}
+        >
+          <Image src={icons.search} mode='aspectFit' />
+        </View>
+      </View>
+
+      <View
+        className={`life-hub-navigation ${
+          headerCollapsed ? 'life-hub-navigation--active' : ''
+        }`}
+        style={{ top: `${navbarHeight}px` }}
+      >
+        <View className='life-primary-tabs'>
+          {lifeBusinessThemeList.map((section) => (
+            <View
+              id={`life-section-${section.key}`}
+              key={section.key}
+              className={`life-primary-tabs__item life-primary-tabs__item--${section.key} ${
+                activeSection === section.key
+                  ? 'life-primary-tabs__item--active'
+                  : ''
+              }`}
+              hoverClass='life-primary-tabs__item--pressed'
+              onClick={() => selectSection(section.key)}
+            >
+              {section.label}
+            </View>
+          ))}
+        </View>
+
+        {activeSection === 'community' && communityRoots.length > 0 && (
+          <>
+            <ScrollView className='community-root-tabs' scrollX enhanced showScrollbar={false}>
+              <View className='community-root-tabs__inner'>
+                {communityRoots.map((root) => (
+                  <View
+                    id={`community-root-${root.id}`}
+                    key={root.id}
+                    className={
+                      activeCommunityRoot?.id === root.id
+                        ? 'community-root-tabs__item community-root-tabs__item--active'
+                        : 'community-root-tabs__item'
+                    }
+                    hoverClass='community-root-tabs__item--pressed'
+                    onClick={() => selectCommunityRoot(root)}
+                  >
+                    {root.name}
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+
+            {activeCommunityRoot && activeCommunityChildren.length > 0 && (
+              <ScrollView className='community-subtabs' scrollX enhanced showScrollbar={false}>
+                <View className='community-subtabs__inner'>
+                  <View
+                    id={`community-section-${activeCommunityRoot.id}`}
+                    className={
+                      activeCommunitySection?.id === activeCommunityRoot.id
+                        ? 'community-subtabs__item community-section-tab community-subtabs__item--active'
+                        : 'community-subtabs__item community-section-tab'
+                    }
+                    hoverClass='community-subtabs__item--pressed'
+                    onClick={() => setActiveCommunitySectionId(activeCommunityRoot.id)}
+                  >
+                    全部
+                  </View>
+                  {activeCommunityChildren.map((section) => (
+                    <View
+                      id={`community-section-${section.id}`}
+                      key={section.id}
+                      className={
+                        activeCommunitySection?.id === section.id
+                          ? 'community-subtabs__item community-section-tab community-subtabs__item--active'
+                          : 'community-subtabs__item community-section-tab'
+                      }
+                      hoverClass='community-subtabs__item--pressed'
+                      onClick={() => setActiveCommunitySectionId(section.id)}
+                    >
+                      {section.name}
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+          </>
+        )}
+      </View>
+
+      <View className='community-content-anchor'>
+        {activeSection === 'community' ? (
+          <CommunityFeedPanel
+            sectionRoots={communityRoots}
+            activeSection={activeCommunitySection}
+            sectionsReady={communitySectionsReady}
+            sectionsError={communitySectionsError}
+            onRetrySections={() => void loadCommunitySections()}
+            refreshSignal={refreshSignal}
+            searchFocusSignal={searchFocusSignal}
+          />
+        ) : (
+          <LifeServiceListPanel
+            key={activeSection}
+            section={activeSection as LifeServiceSection}
+            refreshSignal={refreshSignal}
+            searchFocusSignal={searchFocusSignal}
+          />
+        )}
+      </View>
+
+      <View
+        id={`life-publish-${activeSection}`}
+        className={`life-publish-fab community-publish-fab life-publish-fab--${activeSection}`}
+        hoverClass='life-publish-fab--pressed'
+        onClick={openPublish}
+      >
+        <Text>＋</Text>
+        <Text>{baseCopy.publishLabel}</Text>
+      </View>
+    </View>
+  )
 }

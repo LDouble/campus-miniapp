@@ -1,12 +1,14 @@
 dist/
 deploy_versions/
 .temp/
+.local/
 .rn_temp/
+.playwright-mcp/
 node_modules/
 .DS_Store
 .swc
-*.local
-# Taro/微信开发工具生成的本地私钥，不进入版本库
-private.*.key
-.preview/
-/custom-tab-bar/
+project.private.config.json
+
+# 本地教务联调响应，包含用户个人教务数据。
+/academic-grade-response.txt
+/grkcb-*.html

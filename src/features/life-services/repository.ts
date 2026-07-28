@@ -1,0 +1,483 @@
+import { apiRequest, createIdempotencyKey } from '../../api/client'
+import type { operations } from '../../api/generated/schema'
+import type {
+  CarpoolTripView,
+  CampusCirclePostView,
+  CampusCirclePostViewPage,
+  CampusCircleSectionView,
+  CarpoolTripViewPage,
+  ErrandOptionalOrderResult,
+  ErrandOrderResult,
+  ErrandView,
+  ErrandViewPage,
+  MarketplaceListingView,
+  MarketplaceListingViewPage,
+  MarketplaceTradeOrder,
+  TradeOrderView,
+  TradeOrderViewPage,
+  CommentView,
+  CommentViewPage,
+} from '../../api/types'
+
+type CreateErrandBody = operations['CreateErrand']['requestBody']['content']['application/json']
+type UpdateErrandBody = operations['UpdateErrand']['requestBody']['content']['application/json']
+type CreateMarketplaceBody = operations['CreateMarketplaceListing']['requestBody']['content']['application/json']
+type UpdateMarketplaceBody = operations['UpdateMarketplaceListing']['requestBody']['content']['application/json']
+type CreateCarpoolBody = operations['CreateCarpoolTrip']['requestBody']['content']['application/json']
+type UpdateCarpoolBody = operations['UpdateCarpoolTrip']['requestBody']['content']['application/json']
+type CreateCampusPostBody = operations['CreateCampusCirclePost']['requestBody']['content']['application/json']
+type UpdateCampusPostBody = operations['UpdateCampusCirclePost']['requestBody']['content']['application/json']
+type CreateCommentBody = operations['CreateComment']['requestBody']['content']['application/json']
+
+export type PagingQuery = {
+  page?: number
+  pageSize?: number
+}
+
+export type ErrandSearch = PagingQuery & {
+  keyword?: string
+}
+
+export type MyErrandSearch = PagingQuery & {
+  relation?: 'all' | 'published' | 'accepted'
+  status?: 'open' | 'accepted' | 'picked_up' | 'delivered' | 'completed' | 'cancelled'
+  reviewStatus?: 'draft' | 'pending_review' | 'approved' | 'rejected'
+}
+
+export type MarketplaceSearch = PagingQuery & {
+  keyword?: string
+  minPriceCents?: number
+  maxPriceCents?: number
+}
+
+export type CarpoolSearch = PagingQuery & {
+  keyword?: string
+  origin?: string
+  destination?: string
+  departureDate?: string
+  seatsNeeded?: number
+}
+
+export type MyCarpoolSearch = PagingQuery & {
+  relation?: 'organized' | 'joined' | 'all'
+  status?: string
+  reviewStatus?: string
+  keyword?: string
+}
+
+export type TradeOrderSearch = PagingQuery & {
+  relation?: 'all' | 'buyer' | 'seller'
+  orderType?: 'marketplace' | 'errand'
+  tradeStatus?: 'confirmed' | 'completed' | 'cancelled' | 'expired'
+  fulfillmentStatus?: 'not_started' | 'in_progress' | 'delivered'
+}
+
+export type CampusCircleSearch = PagingQuery & {
+  keyword?: string
+  sectionId?: number
+  parentSectionId?: number
+}
+
+const versionAction = <T>(path: string, version: number, scope: string) => (
+  apiRequest<T>({
+    path,
+    method: 'POST',
+    idempotencyKey: createIdempotencyKey(scope),
+    data: { expected_version: version },
+  })
+)
+
+export const lifeServicesRepository = {
+  listCampusCircleSections() {
+    return apiRequest<{ items: CampusCircleSectionView[] }>({
+      path: '/api/v1/campus-circle/sections',
+    })
+  },
+
+  listCampusCirclePosts(search: CampusCircleSearch = {}) {
+    return apiRequest<CampusCirclePostViewPage>({
+      path: '/api/v1/campus-circle/posts',
+      query: {
+        section_id: search.sectionId,
+        parent_section_id: search.parentSectionId,
+        keyword: search.keyword,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
+  listMyCampusCirclePosts(search: CampusCircleSearch = {}) {
+    return apiRequest<CampusCirclePostViewPage>({
+      path: '/api/v1/campus-circle/posts/mine',
+      query: {
+        section_id: search.sectionId,
+        keyword: search.keyword,
+        page: search.page || 1,
+        page_size: search.pageSize || 50,
+      },
+    })
+  },
+
+  getCampusCirclePost(id: number) {
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/campus-circle/posts/${id}`,
+    })
+  },
+
+  createCampusCirclePost(input: CreateCampusPostBody) {
+    return apiRequest<CampusCirclePostView>({
+      path: '/api/v1/campus-circle/posts',
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey('campus-circle:create'),
+      data: input,
+    })
+  },
+
+  updateCampusCirclePost(id: number, input: UpdateCampusPostBody) {
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/campus-circle/posts/${id}`,
+      method: 'PATCH',
+      idempotencyKey: createIdempotencyKey(`campus-circle:${id}:update`),
+      data: input,
+    })
+  },
+
+  likeCampusCirclePost(id: number) {
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/campus-circle/posts/${id}/like`,
+      method: 'PUT',
+    })
+  },
+
+  unlikeCampusCirclePost(id: number) {
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/campus-circle/posts/${id}/like`,
+      method: 'DELETE',
+    })
+  },
+
+  listComments(
+    targetType: CreateCommentBody['target_type'],
+    targetId: number,
+    search: PagingQuery = {},
+  ) {
+    return apiRequest<CommentViewPage>({
+      path: '/api/v1/comments',
+      query: {
+        target_type: targetType,
+        target_id: targetId,
+        page: search.page || 1,
+        page_size: search.pageSize || 50,
+      },
+    })
+  },
+
+  createComment(input: CreateCommentBody) {
+    return apiRequest<CommentView>({
+      path: '/api/v1/comments',
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey(
+        `comment:${input.target_type}:${input.target_id}:create`,
+      ),
+      data: input,
+    })
+  },
+
+  listErrands(search: ErrandSearch = {}) {
+    return apiRequest<ErrandViewPage>({
+      path: '/api/v1/errands',
+      query: {
+        keyword: search.keyword,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
+  listMyErrands(search: MyErrandSearch = {}) {
+    return apiRequest<ErrandViewPage>({
+      path: '/api/v1/errands/mine',
+      query: {
+        relation: search.relation || 'all',
+        status: search.status,
+        review_status: search.reviewStatus,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
+  getErrand(id: number) {
+    return apiRequest<ErrandView>({ path: `/api/v1/errands/${id}` })
+  },
+
+  createErrand(input: CreateErrandBody) {
+    return apiRequest<ErrandView>({
+      path: '/api/v1/errands',
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey('errand:create'),
+      data: input,
+    })
+  },
+
+  updateErrand(id: number, input: UpdateErrandBody) {
+    return apiRequest<ErrandView>({
+      path: `/api/v1/errands/${id}`,
+      method: 'PATCH',
+      idempotencyKey: createIdempotencyKey(`errand:${id}:update`),
+      data: input,
+    })
+  },
+
+  acceptErrand(id: number, version: number) {
+    return versionAction<ErrandOrderResult>(
+      `/api/v1/errands/${id}/accept`,
+      version,
+      `errand:${id}:accept`,
+    )
+  },
+
+  pickupErrand(id: number, version: number) {
+    return versionAction<ErrandView>(
+      `/api/v1/errands/${id}/pickup`,
+      version,
+      `errand:${id}:pickup`,
+    )
+  },
+
+  deliverErrand(id: number, version: number) {
+    return versionAction<ErrandView>(
+      `/api/v1/errands/${id}/deliver`,
+      version,
+      `errand:${id}:deliver`,
+    )
+  },
+
+  completeErrand(id: number, version: number) {
+    return versionAction<ErrandOrderResult>(
+      `/api/v1/errands/${id}/complete`,
+      version,
+      `errand:${id}:complete`,
+    )
+  },
+
+  cancelErrand(id: number, version: number) {
+    return versionAction<ErrandOptionalOrderResult>(
+      `/api/v1/errands/${id}/cancel`,
+      version,
+      `errand:${id}:cancel`,
+    )
+  },
+
+  submitErrandReview(id: number, version: number) {
+    return versionAction<ErrandView>(
+      `/api/v1/errands/${id}/submit-review`,
+      version,
+      `errand:${id}:submit-review`,
+    )
+  },
+
+  listMarketplace(search: MarketplaceSearch = {}) {
+    return apiRequest<MarketplaceListingViewPage>({
+      path: '/api/v1/marketplace/listings',
+      query: {
+        keyword: search.keyword,
+        min_price_cents: search.minPriceCents,
+        max_price_cents: search.maxPriceCents,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
+  listMyMarketplaceListings(search: PagingQuery = {}) {
+    return apiRequest<MarketplaceListingViewPage>({
+      path: '/api/v1/marketplace/listings/mine',
+      query: {
+        page: search.page || 1,
+        page_size: search.pageSize || 50,
+      },
+    })
+  },
+
+  getMarketplaceListing(id: number) {
+    return apiRequest<MarketplaceListingView>({
+      path: `/api/v1/marketplace/listings/${id}`,
+    })
+  },
+
+  createMarketplaceListing(input: CreateMarketplaceBody) {
+    return apiRequest<MarketplaceListingView>({
+      path: '/api/v1/marketplace/listings',
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey('marketplace:create'),
+      data: input,
+    })
+  },
+
+  updateMarketplaceListing(id: number, input: UpdateMarketplaceBody) {
+    return apiRequest<MarketplaceListingView>({
+      path: `/api/v1/marketplace/listings/${id}`,
+      method: 'PATCH',
+      idempotencyKey: createIdempotencyKey(`marketplace:${id}:update`),
+      data: input,
+    })
+  },
+
+  submitMarketplaceListing(id: number, version: number) {
+    return versionAction<{ updated: boolean }>(
+      `/api/v1/marketplace/listings/${id}/submit`,
+      version,
+      `marketplace:${id}:submit`,
+    )
+  },
+
+  withdrawMarketplaceListing(id: number, version: number) {
+    return versionAction<{ updated: boolean }>(
+      `/api/v1/marketplace/listings/${id}/withdraw`,
+      version,
+      `marketplace:${id}:withdraw`,
+    )
+  },
+
+  reserveMarketplaceListing(id: number) {
+    return apiRequest<MarketplaceTradeOrder>({
+      path: '/api/v1/marketplace/orders',
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey(`marketplace:${id}:purchase`),
+      data: { listing_id: id },
+    })
+  },
+
+  listCarpool(search: CarpoolSearch = {}) {
+    return apiRequest<CarpoolTripViewPage>({
+      path: '/api/v1/carpool/trips',
+      query: {
+        keyword: search.keyword,
+        origin: search.origin,
+        destination: search.destination,
+        departure_date: search.departureDate,
+        seats_needed: search.seatsNeeded,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
+  listMyCarpoolTrips(search: MyCarpoolSearch = {}) {
+    return apiRequest<CarpoolTripViewPage>({
+      path: '/api/v1/carpool/trips/mine',
+      query: {
+        relation: search.relation || 'all',
+        status: search.status,
+        review_status: search.reviewStatus,
+        keyword: search.keyword,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
+  getCarpoolTrip(id: number) {
+    return apiRequest<CarpoolTripView>({
+      path: `/api/v1/carpool/trips/${id}`,
+    })
+  },
+
+  createCarpoolTrip(input: CreateCarpoolBody) {
+    return apiRequest<CarpoolTripView>({
+      path: '/api/v1/carpool/trips',
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey('carpool:create'),
+      data: input,
+    })
+  },
+
+  updateCarpoolTrip(id: number, input: UpdateCarpoolBody) {
+    return apiRequest<CarpoolTripView>({
+      path: `/api/v1/carpool/trips/${id}`,
+      method: 'PATCH',
+      idempotencyKey: createIdempotencyKey(`carpool:${id}:update`),
+      data: input,
+    })
+  },
+
+  joinCarpoolTrip(id: number, version: number) {
+    return versionAction<CarpoolTripView>(
+      `/api/v1/carpool/trips/${id}/join`,
+      version,
+      `carpool:${id}:join`,
+    )
+  },
+
+  leaveCarpoolTrip(id: number, version: number) {
+    return versionAction<CarpoolTripView>(
+      `/api/v1/carpool/trips/${id}/leave`,
+      version,
+      `carpool:${id}:leave`,
+    )
+  },
+
+  cancelCarpoolTrip(id: number, version: number) {
+    return versionAction<CarpoolTripView>(
+      `/api/v1/carpool/trips/${id}/cancel`,
+      version,
+      `carpool:${id}:cancel`,
+    )
+  },
+
+  submitCarpoolReview(id: number, version: number) {
+    return versionAction<CarpoolTripView>(
+      `/api/v1/carpool/trips/${id}/submit-review`,
+      version,
+      `carpool:${id}:submit-review`,
+    )
+  },
+
+  listMyTradeOrders(search: TradeOrderSearch = {}) {
+    return apiRequest<TradeOrderViewPage>({
+      path: '/api/v1/orders',
+      query: {
+        relation: search.relation || 'all',
+        order_type: search.orderType,
+        trade_status: search.tradeStatus,
+        fulfillment_status: search.fulfillmentStatus,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
+  getMyTradeOrder(id: number) {
+    return apiRequest<TradeOrderView>({ path: `/api/v1/orders/${id}` })
+  },
+
+  cancelTradeOrder(id: number, version: number) {
+    return versionAction<TradeOrderView>(
+      `/api/v1/orders/${id}/cancel`,
+      version,
+      `order:${id}:cancel`,
+    )
+  },
+
+  completeTradeOrder(id: number, version: number) {
+    return versionAction<TradeOrderView>(
+      `/api/v1/orders/${id}/complete`,
+      version,
+      `order:${id}:complete`,
+    )
+  },
+}
+
+export type {
+  CreateCampusPostBody,
+  CreateCarpoolBody,
+  CreateErrandBody,
+  CreateMarketplaceBody,
+  CreateCommentBody,
+  UpdateCarpoolBody,
+  UpdateCampusPostBody,
+  UpdateErrandBody,
+  UpdateMarketplaceBody,
+}

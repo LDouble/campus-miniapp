@@ -1,0 +1,185 @@
+import { useState } from 'react'
+import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
+import { Text, View } from '@tarojs/components'
+import CustomNavbar from '../../components/custom-navbar'
+import type { CarpoolTripView } from '../../api/types'
+import { isApiError } from '../../api/client'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import { openAcademicVerification } from '../../features/academic-verification/guard'
+import {
+  formatDateTime,
+  formatStatus,
+  remainingSeats,
+} from '../../features/life-services/format'
+import '../../features/life-services/detail.scss'
+
+const actionLabels: Record<string, string> = {
+  edit: '编辑行程',
+  submit_review: '重新提交',
+  cancel: '取消行程',
+  join: '加入行程',
+  leave: '退出行程',
+  verify_academic: '完成校园认证',
+}
+
+export default function CarpoolDetailPage() {
+  const [id, setId] = useState(0)
+  const [item, setItem] = useState<CarpoolTripView | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [working, setWorking] = useState(false)
+  const [error, setError] = useState('')
+
+  const load = async (targetId = id) => {
+    if (!targetId) return
+    setLoading(true)
+    setError('')
+    try {
+      setItem(await lifeServicesRepository.getCarpoolTrip(targetId))
+    } catch (loadError) {
+      setError(isApiError(loadError) ? loadError.message : '拼车行程加载失败')
+    } finally {
+      setLoading(false)
+      Taro.stopPullDownRefresh()
+    }
+  }
+
+  useLoad((options) => {
+    const nextId = Number(options.id)
+    setId(nextId)
+    if (nextId > 0) void load(nextId)
+    else {
+      setLoading(false)
+      setError('行程参数无效')
+    }
+  })
+  usePullDownRefresh(() => void load())
+
+  const runAction = async (action: string) => {
+    if (!item || working) return
+    if (action === 'verify_academic') {
+      await openAcademicVerification({ prompt: false })
+      return
+    }
+    if (action === 'edit') {
+      Taro.navigateTo({ url: `/pages/publish/index?section=carpool&mode=edit&id=${item.id}` })
+      return
+    }
+    const confirm = await Taro.showModal({
+      title: actionLabels[action] || '确认操作',
+      content: action === 'join'
+        ? `确认加入从“${item.origin}”到“${item.destination}”的行程吗？`
+        : action === 'leave'
+          ? '退出后将释放当前座位。'
+          : action === 'cancel'
+            ? '取消后所有参与同学都会受到影响，请确认已经沟通。'
+            : '提交后行程会重新进入校园内容审核。',
+      confirmColor: action === 'cancel' ? '#bd6657' : '#708fc9',
+    })
+    if (!confirm.confirm) return
+
+    setWorking(true)
+    try {
+      if (action === 'join') setItem(await lifeServicesRepository.joinCarpoolTrip(item.id, item.version))
+      else if (action === 'leave') setItem(await lifeServicesRepository.leaveCarpoolTrip(item.id, item.version))
+      else if (action === 'cancel') setItem(await lifeServicesRepository.cancelCarpoolTrip(item.id, item.version))
+      else if (action === 'submit_review') setItem(await lifeServicesRepository.submitCarpoolReview(item.id, item.version))
+      Taro.showToast({ title: '状态已更新', icon: 'success' })
+    } catch (actionError) {
+      if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
+      if (isApiError(actionError) && actionError.statusCode === 409) await load()
+      Taro.showToast({
+        title: isApiError(actionError) ? actionError.message : '操作失败，请重试',
+        icon: 'none',
+      })
+    } finally {
+      setWorking(false)
+    }
+  }
+
+  const copyContact = () => {
+    if (!item?.contact || item.contact.includes('*')) {
+      Taro.showToast({ title: '加入行程后可查看完整联系方式', icon: 'none' })
+      return
+    }
+    Taro.setClipboardData({ data: item.contact })
+  }
+
+  return (
+    <View className='life-detail life-detail--carpool'>
+      <CustomNavbar title='拼车详情' subtitle='同路同学一起出发' showBack />
+      <View className='life-detail__content'>
+        {loading && <View className='detail-state'>正在加载行程信息</View>}
+        {!loading && error && <View className='detail-state'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
+        {!loading && item && (
+          <>
+            <View className='detail-overview detail-overview--carpool'>
+              <View className='detail-overview__meta'>
+                <Text>{formatStatus(item.status, item.review_status)}</Text>
+                <Text>{formatDateTime(item.departure_at)}</Text>
+              </View>
+              <View className='detail-route' style={{ marginTop: '28rpx' }}>
+                <View className='detail-route__rail'><View /><View /><View /></View>
+                <View className='detail-route__place'><Text>出发地</Text><Text>{item.origin}</Text></View>
+                <View className='detail-route__place'><Text>目的地</Text><Text>{item.destination}</Text></View>
+              </View>
+              {item.description && (
+                <Text className='detail-overview__description'>{item.description}</Text>
+              )}
+              <View className='detail-overview__summary'>
+                <View><Text>出发时间</Text><Text>{formatDateTime(item.departure_at)}</Text></View>
+                <View className='carpool-count'><Text>{remainingSeats(item.total_seats, item.occupied_seats)}</Text><Text>个空位</Text></View>
+              </View>
+            </View>
+
+            {item.review_status === 'rejected' && (
+              <View className='detail-review-alert'>
+                <Text>审核未通过</Text>
+                <Text>{item.review_reason || '请修改行程信息后重新提交审核。'}</Text>
+              </View>
+            )}
+
+            <View className='detail-section'>
+              <View className='detail-section__heading'><Text>行程信息</Text><Text>出发前请再次确认</Text></View>
+              <View className='detail-facts'>
+                <View className='detail-fact'><Text>总座位</Text><Text>{item.total_seats} 位</Text></View>
+                <View className='detail-fact'><Text>已加入</Text><Text>{item.occupied_seats} 位</Text></View>
+                <View className='detail-fact'><Text>当前关系</Text><Text>{item.viewer_relation === 'organizer' ? '我发起的' : item.viewer_relation === 'participant' ? '我已加入' : '可加入'}</Text></View>
+                <View className='detail-fact'><Text>行程状态</Text><Text>{formatStatus(item.status)}</Text></View>
+              </View>
+            </View>
+
+            <View className='detail-section detail-contact' onClick={copyContact}>
+              <View className='detail-section__heading'><Text>联系发起人</Text><Text>点击复制</Text></View>
+              <View className='detail-contact__row'>
+                <Text>{item.contact_type || '校内联系'}</Text>
+                <Text>{item.contact || '加入后可见'}</Text>
+              </View>
+              <Text className='detail-contact__tip'>联系方式由服务端按参与关系授权，退出或行程结束后会重新隐藏。</Text>
+            </View>
+
+            <View className='detail-section'>
+              <View className='detail-section__heading'><Text>出行提醒</Text><Text>信息撮合</Text></View>
+              <Text className='detail-safety'>请在出发前确认车型、费用、集合点和实际司机信息。平台仅提供校园出行信息撮合，不提供营运或保险担保。</Text>
+            </View>
+
+            {item.available_actions.length > 0 && (
+              <View className='detail-action-bar'>
+                {item.available_actions.slice(0, 3).map((action, index) => (
+                  <View
+                    id={`detail-action-${action}`}
+                    key={action}
+                    className={`detail-action ${index === item.available_actions.length - 1 && action !== 'cancel' ? 'detail-action--primary' : ''} ${action === 'cancel' ? 'detail-action--danger' : ''}`}
+                    hoverClass='detail-action--pressed'
+                    onClick={() => void runAction(action)}
+                  >
+                    {working ? '处理中' : actionLabels[action] || action}
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+      </View>
+    </View>
+  )
+}
