@@ -431,7 +431,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 同步验证教务凭据 */
+        /** 服务端验证教务凭据并授予校园身份 */
         post: operations["VerifyAcademicCredentials"];
         delete?: never;
         options?: never;
@@ -2514,6 +2514,8 @@ export interface components {
             location: string;
             note?: string | null;
             period_id: string;
+            /** @description 下游教务系统返回的选课、修读或成绩状态展示文本。 */
+            result_text?: string | null;
             schedule: string;
             /** Format: date-time */
             selected_at?: string;
