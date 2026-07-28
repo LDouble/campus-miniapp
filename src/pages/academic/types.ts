@@ -101,6 +101,7 @@ export interface CourseSelectionRecord {
   enrolled: number
   status: CourseSelectionStatus
   selectedAt: string
+  resultText?: string
   note?: string
 }
 

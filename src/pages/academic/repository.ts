@@ -101,6 +101,7 @@ const mapCourseSelection = (
   enrolled: selection.enrolled,
   status: selection.status,
   selectedAt: formatDateTime(selection.selected_at),
+  resultText: selection.result_text ?? undefined,
   note: selection.note ?? undefined,
 })
 
