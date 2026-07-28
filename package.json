@@ -11,6 +11,9 @@
   },
   "scripts": {
     "api:generate": "openapi-typescript ../campus_backend/api/openapi.yaml -o src/api/generated/schema.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 14",
+    "ci:check": "yarn lint && yarn typecheck && yarn build:weapp",
     "e2e:community": "npm run build:weapp && bash scripts/e2e-community.sh",
     "e2e:life-services": "npm run build:weapp && bash scripts/e2e-life-services.sh",
     "e2e:personal-records": "bash scripts/e2e-personal-records.sh",
@@ -33,6 +36,7 @@
     "dev:jd": "npm run build:jd -- --watch",
     "dev:quickapp": "npm run build:quickapp -- --watch"
   },
+  "packageManager": "yarn@1.22.22",
   "browserslist": [
     "last 3 versions",
     "Android >= 4.1",
