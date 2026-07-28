@@ -35,6 +35,8 @@ export default function CommunityDetailPage() {
   const [commentTotal, setCommentTotal] = useState(0)
   const [loadingMoreComments, setLoadingMoreComments] = useState(false)
   const [comment, setComment] = useState('')
+  const [commentComposerOpen, setCommentComposerOpen] = useState(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -108,6 +110,12 @@ export default function CommunityDetailPage() {
     }
   }
 
+  const closeCommentComposer = () => {
+    setCommentComposerOpen(false)
+    setKeyboardHeight(0)
+    void Taro.hideKeyboard()
+  }
+
   const submitComment = async () => {
     const value = comment.trim()
     if (!value || !post || post.status !== 'approved' || submitting) {
@@ -131,6 +139,7 @@ export default function CommunityDetailPage() {
           : current)
       }
       setComment('')
+      closeCommentComposer()
       Taro.showToast({
         title: created.status === 'approved' ? '评论已发布' : '评论已提交审核',
         icon: 'success',
@@ -370,36 +379,62 @@ export default function CommunityDetailPage() {
             </View>
 
             {post.status === 'approved' && (
-              <View className='community-detail-comments__composer'>
-                <Input
-                  id='community-comment-input'
-                  value={comment}
-                  disabled={submitting}
-                  maxlength={300}
-                  confirmType='send'
-                  cursorSpacing={18}
-                  placeholder='友善交流，分享你的想法'
-                  placeholderClass='community-detail-comments__placeholder'
-                  onInput={(event) => setComment(event.detail.value)}
-                  onConfirm={() => void submitComment()}
-                />
+              <>
+                {commentComposerOpen && (
+                  <View
+                    className='community-detail-comments__composer-backdrop'
+                    catchMove
+                    ariaRole='button'
+                    ariaLabel='关闭评论输入'
+                    onClick={closeCommentComposer}
+                  />
+                )}
                 <View
-                  id='community-comment-submit'
-                  className={
-                    submitting || !comment.trim()
-                      ? 'community-detail-comments__send community-detail-comments__send--disabled'
-                      : 'community-detail-comments__send'
-                  }
-                  hoverClass='community-detail-comments__send--pressed'
-                  hoverStartTime={20}
-                  hoverStayTime={120}
-                  ariaRole='button'
-                  ariaLabel={submitting ? '评论发送中' : '发送评论'}
-                  onClick={() => void submitComment()}
+                  className={[
+                    'community-detail-comments__composer',
+                    commentComposerOpen
+                      ? 'community-detail-comments__composer--open'
+                      : '',
+                  ].filter(Boolean).join(' ')}
+                  style={{ bottom: `${keyboardHeight}px` }}
                 >
-                  <Image src={communityDetailIcons.send} mode='aspectFit' />
+                  <Input
+                    id='community-comment-input'
+                    value={comment}
+                    disabled={submitting}
+                    maxlength={300}
+                    confirmType='send'
+                    cursorSpacing={0}
+                    adjustPosition={false}
+                    placeholder='友善交流，分享你的想法'
+                    placeholderClass='community-detail-comments__placeholder'
+                    onFocus={() => setCommentComposerOpen(true)}
+                    onKeyboardHeightChange={(event) => {
+                      const height = event.detail.height
+                      setKeyboardHeight(height)
+                      if (height === 0) setCommentComposerOpen(false)
+                    }}
+                    onInput={(event) => setComment(event.detail.value)}
+                    onConfirm={() => void submitComment()}
+                  />
+                  <View
+                    id='community-comment-submit'
+                    className={
+                      submitting || !comment.trim()
+                        ? 'community-detail-comments__send community-detail-comments__send--disabled'
+                        : 'community-detail-comments__send'
+                    }
+                    hoverClass='community-detail-comments__send--pressed'
+                    hoverStartTime={20}
+                    hoverStayTime={120}
+                    ariaRole='button'
+                    ariaLabel={submitting ? '评论发送中' : '发送评论'}
+                    onClick={() => void submitComment()}
+                  >
+                    <Image src={communityDetailIcons.send} mode='aspectFit' />
+                  </View>
                 </View>
-              </View>
+              </>
             )}
           </>
         )}
