@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Input, Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
@@ -92,7 +92,7 @@ export default function LifeServiceListPanel({
   const requestSequence = useRef(0)
   const copy = lifeBusinessThemes[section]
 
-  const load = async (nextPage = 1, append = false) => {
+  const load = useCallback(async (nextPage = 1, append = false) => {
     const requestId = ++requestSequence.current
     append ? setLoadingMore(true) : setLoading(true)
     setError('')
@@ -131,7 +131,16 @@ export default function LifeServiceListPanel({
         setLoadingMore(false)
       }
     }
-  }
+  }, [
+    carpoolFilters.departureDate,
+    carpoolFilters.destination,
+    carpoolFilters.origin,
+    carpoolFilters.seatsNeeded,
+    keyword,
+    marketFilters.maxPriceCents,
+    marketFilters.minPriceCents,
+    section,
+  ])
 
   useEffect(() => {
     setDraftKeyword('')
@@ -141,17 +150,7 @@ export default function LifeServiceListPanel({
 
   useEffect(() => {
     void load(1, false)
-  }, [
-    section,
-    keyword,
-    marketFilters.minPriceCents,
-    marketFilters.maxPriceCents,
-    carpoolFilters.origin,
-    carpoolFilters.destination,
-    carpoolFilters.departureDate,
-    carpoolFilters.seatsNeeded,
-    refreshSignal,
-  ])
+  }, [load, refreshSignal])
 
   useEffect(() => {
     if (searchFocusSignal > 0) setSearchFocused(true)

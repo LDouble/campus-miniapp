@@ -41,7 +41,14 @@ export default function CarpoolFilters({ value, onChange }: Props) {
   const count = activeFilterCount(value)
 
   useEffect(() => {
-    if (sheetVisible) setDraft(value)
+    if (sheetVisible) {
+      setDraft({
+        origin: value.origin,
+        destination: value.destination,
+        departureDate: value.departureDate,
+        seatsNeeded: value.seatsNeeded,
+      })
+    }
   }, [
     sheetVisible,
     value.departureDate,

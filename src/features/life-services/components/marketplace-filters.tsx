@@ -49,7 +49,7 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
   const [validation, setValidation] = useState('')
   const selectedQuickKey = useMemo(
     () => quickRanges.find((item) => sameRange(item.value, value))?.key || 'custom',
-    [value.maxPriceCents, value.minPriceCents],
+    [value],
   )
 
   useEffect(() => {
