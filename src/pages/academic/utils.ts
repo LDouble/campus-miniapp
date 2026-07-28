@@ -93,13 +93,19 @@ export const getGradePeriodLabel = (periods: GradePeriod[], id: string) => (
 )
 
 export const getWeekDates = (period: AcademicPeriod | undefined, week: number) => {
-  const start = parseDate(period?.startDate || '2026/02/23')
+  if (!period) return []
+  const start = parseDate(period.startDate)
   start.setDate(start.getDate() + (week - 1) * 7)
   return Array.from({ length: 7 }, (_, index) => {
     const date = new Date(start)
     date.setDate(start.getDate() + index)
     return date
   })
+}
+
+export const formatPeriodStartDate = (period: AcademicPeriod) => {
+  const start = parseDate(period.startDate)
+  return `${start.getFullYear()}年${start.getMonth() + 1}月${start.getDate()}日`
 }
 
 export const isSameDay = (left: Date, right: Date) => (

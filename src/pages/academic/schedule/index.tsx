@@ -13,6 +13,7 @@ import {
 } from '../types'
 import {
   courseColors,
+  formatPeriodStartDate,
   formatMonthDay,
   getWeekDates,
   isSameDay,
@@ -31,7 +32,7 @@ const defaultPreferences: AcademicPreferences = {
   schedulePeriodId: DEFAULT_PERIOD_ID,
   gradePeriodId: DEFAULT_PERIOD_ID,
   examPeriodId: DEFAULT_PERIOD_ID,
-  week: 6,
+  week: 1,
   selectedWeekday: 1,
   scheduleView: 'week',
 }
@@ -143,9 +144,18 @@ export default function SchedulePage() {
         if (!records.length) setLoading(false)
         setPreferences((current) => {
           const schedulePeriodId = resolvePeriodId(records, current.schedulePeriodId)
-          return schedulePeriodId === current.schedulePeriodId
-            ? current
-            : { ...current, schedulePeriodId, week: 1 }
+          const schedulePeriod = records.find((period) => period.id === schedulePeriodId)
+          const keepsSelectedPeriod = schedulePeriodId === current.schedulePeriodId
+          const week = keepsSelectedPeriod
+            ? Math.min(Math.max(1, current.week), schedulePeriod?.weeks || 1)
+            : 1
+          if (keepsSelectedPeriod && week === current.week) return current
+          return {
+            ...current,
+            schedulePeriodId,
+            week,
+            selectedWeekday: keepsSelectedPeriod ? current.selectedWeekday : 1,
+          }
         })
       })
       .catch(() => {
@@ -583,13 +593,17 @@ export default function SchedulePage() {
                     key={period.id}
                     className={`period-options__item ${preferences.schedulePeriodId === period.id ? 'period-options__item--active' : ''}`}
                     onClick={() => {
-                      updatePreferences({ schedulePeriodId: period.id, week: 1 })
+                      updatePreferences({
+                        schedulePeriodId: period.id,
+                        week: 1,
+                        selectedWeekday: 1,
+                      })
                       setSheet(null)
                     }}
                   >
                     <View>
                       <Text>{period.label}</Text>
-                      <Text>{period.weeks} 周教学周</Text>
+                      <Text>开学 {formatPeriodStartDate(period)} · {period.weeks} 周教学周</Text>
                     </View>
                     <View className='period-options__check'>
                       {preferences.schedulePeriodId === period.id ? '✓' : ''}
