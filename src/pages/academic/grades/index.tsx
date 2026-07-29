@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
+import {
+  openCourseMarketplacePublisher,
+  openCourseMarketplaceSearch,
+} from '../../../features/life-services/marketplace-prefill'
 import AcademicHeader from '../components/academic-header'
 import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
 import { academicRepository } from '../repository'
@@ -30,7 +34,7 @@ const defaultPreferences: AcademicPreferences = {
   scheduleView: 'week',
 }
 
-type GradeSheet = 'period' | 'grade-edit' | null
+type GradeSheet = 'period' | 'grade-edit' | 'marketplace' | null
 
 const formatGradePoint = (score?: number) => (
   score === undefined ? '—' : getGradePoint(score).toFixed(1)
@@ -50,6 +54,7 @@ export default function GradesPage() {
   const [simulationMode, setSimulationMode] = useState(false)
   const [sheet, setSheet] = useState<GradeSheet>(null)
   const [editingGrade, setEditingGrade] = useState<GradeRecord | null>(null)
+  const [marketplaceGrade, setMarketplaceGrade] = useState<GradeRecord | null>(null)
   const [gradeScore, setGradeScore] = useState('')
   const [gradeCredit, setGradeCredit] = useState('')
   const [gradeLevel, setGradeLevel] = useState<GradeLevel>('优秀')
@@ -183,6 +188,34 @@ export default function GradesPage() {
     setGradeLevel(override?.gradeLevel || grade.gradeLevel || '优秀')
     setGradeCredit(String(override?.credit ?? grade.credit))
     setSheet('grade-edit')
+  }
+
+  const openGradeTrade = (grade: GradeRecord) => {
+    if (simulationMode) return
+    setMarketplaceGrade(grade)
+    setSheet('marketplace')
+  }
+
+  const openCourseTrade = (intent: 'sell' | 'wanted') => {
+    if (!marketplaceGrade) return
+    const courseName = marketplaceGrade.courseName.trim()
+    setSheet(null)
+    const prefill = {
+      intent,
+      description: intent === 'wanted'
+        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
+        : `出售与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      courseName,
+      courseCode: marketplaceGrade.courseCode || '',
+      academicPeriodId: marketplaceGrade.periodId,
+      academicPeriodLabel: getGradePeriodLabel(periods, marketplaceGrade.periodId),
+      source: 'grade',
+    } as const
+    if (intent === 'wanted') {
+      void openCourseMarketplaceSearch(prefill)
+      return
+    }
+    void openCourseMarketplacePublisher(prefill)
   }
 
   const saveOverride = () => {
@@ -367,6 +400,25 @@ export default function GradesPage() {
               <View className='academic-button academic-button--full' onClick={saveOverride}>保存并参与计算</View>
             </View>
           )}
+          {sheet === 'marketplace' && marketplaceGrade && (
+            <View className='academic-sheet__body'>
+              <Text className='academic-sheet__title'>{marketplaceGrade.courseName}</Text>
+              <Text className='academic-sheet__subtitle'>
+                {[marketplaceGrade.courseCode, getGradePeriodLabel(periods, marketplaceGrade.periodId)]
+                  .filter(Boolean).join(' · ')}
+              </Text>
+              <View className='course-market-actions course-market-actions--standalone'>
+                <View>
+                  <Text>流转课程资料</Text>
+                  <Text>只带入课程信息，不会带入成绩或绩点</Text>
+                </View>
+                <View className='course-market-actions__buttons'>
+                  <View onClick={() => openCourseTrade('wanted')}>找教材/资料</View>
+                  <View onClick={() => openCourseTrade('sell')}>出售相关资料</View>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       </View>
     )
@@ -416,7 +468,7 @@ export default function GradesPage() {
             ) : (
               <View className='grade-list-heading grade-list-heading--original'>
                 <Text>课程成绩</Text>
-                <Text>点击“模拟计算”可自定义试算</Text>
+                <Text>点击课程可流转相关资料</Text>
               </View>
             )}
             <View className='grade-list'>
@@ -437,8 +489,8 @@ export default function GradesPage() {
                       <View
                         key={grade.id}
                         className={`grade-card ${simulationMode ? 'grade-card--simulation' : 'grade-card--original'} ${selected ? 'grade-card--selected' : ''}`}
-                        hoverClass={simulationMode ? 'grade-card--pressed' : ''}
-                        onClick={() => simulationMode && openEditor(grade)}
+                        hoverClass='grade-card--pressed'
+                        onClick={() => simulationMode ? openEditor(grade) : openGradeTrade(grade)}
                       >
                         {simulationMode && (
                           <View

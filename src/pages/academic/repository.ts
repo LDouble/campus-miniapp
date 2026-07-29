@@ -63,6 +63,7 @@ const mapGrade = (grade: AcademicGrade): GradeRecord => ({
   id: grade.id,
   periodId: grade.period_id,
   courseName: grade.course_name,
+  courseCode: grade.course_code,
   courseType: grade.course_type,
   credit: grade.credit,
   score: grade.score ?? undefined,

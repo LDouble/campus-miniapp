@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
 import { Picker, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
@@ -14,6 +14,11 @@ import type {
   ErrandView,
   MarketplaceListingView,
 } from '../../api/types'
+import {
+  consumeMarketplacePublishPrefill,
+  type MarketplaceIntent,
+  type MarketplaceSource,
+} from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import './index.scss'
 
@@ -22,6 +27,13 @@ type PublishMode = 'create' | 'edit' | 'resubmit'
 
 type PublisherForm = {
   content: string
+  marketIntent: MarketplaceIntent
+  marketCategory: 'general' | 'course_material'
+  courseName: string
+  courseCode: string
+  academicPeriodId: string
+  academicPeriodLabel: string
+  marketSource: MarketplaceSource
   pickupLocation: string
   dropoffLocation: string
   rewardYuan: string
@@ -40,7 +52,7 @@ type PublisherForm = {
   version: number
 }
 
-const DRAFT_KEY = 'lifePublisher.drafts.v2'
+const DRAFT_KEY = 'lifePublisher.drafts.v3'
 const CONTACT_LABELS = ['微信', '手机号', 'QQ']
 const CONTACT_VALUES: PublisherForm['contactType'][] = ['wechat', 'phone', 'qq']
 
@@ -51,7 +63,7 @@ const sectionOptions: Array<{
 }> = [
   { key: 'community', label: '动态', title: '分享校园动态' },
   { key: 'errands', label: '跑腿', title: '发布跑腿需求' },
-  { key: 'market', label: '二手', title: '出售闲置好物' },
+  { key: 'market', label: '二手', title: '发布二手交易' },
   { key: 'carpool', label: '拼车', title: '发布拼车行程' },
 ]
 
@@ -67,8 +79,15 @@ const tomorrow = () => {
   return `${year}-${month}-${day}`
 }
 
-const emptyForm = (): PublisherForm => ({
+const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => ({
   content: '',
+  marketIntent,
+  marketCategory: 'general',
+  courseName: '',
+  courseCode: '',
+  academicPeriodId: '',
+  academicPeriodLabel: '',
+  marketSource: 'manual',
   pickupLocation: '',
   dropoffLocation: '',
   rewardYuan: '',
@@ -92,20 +111,28 @@ const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionV
 )
 
 const storedDrafts = () => (
-  Taro.getStorageSync<Partial<Record<PublishSection, PublisherForm>>>(DRAFT_KEY) || {}
+  Taro.getStorageSync<Partial<Record<string, PublisherForm>>>(DRAFT_KEY) || {}
+)
+
+const draftKey = (section: PublishSection, intent: MarketplaceIntent = 'sell') => (
+  section === 'market' ? `${section}:${intent}` : section
 )
 
 const saveDraft = (section: PublishSection, form: PublisherForm) => {
   Taro.setStorageSync(DRAFT_KEY, {
     ...storedDrafts(),
-    [section]: form,
+    [draftKey(section, form.marketIntent)]: form,
   })
 }
 
-const clearDraft = (section: PublishSection) => {
+const clearDraft = (section: PublishSection, form: PublisherForm) => {
   const drafts = storedDrafts()
-  delete drafts[section]
-  Taro.setStorageSync(DRAFT_KEY, drafts)
+  delete drafts[draftKey(section, form.marketIntent)]
+  if (Object.keys(drafts).length > 0) {
+    Taro.setStorageSync(DRAFT_KEY, drafts)
+  } else {
+    Taro.removeStorageSync(DRAFT_KEY)
+  }
 }
 
 const toCents = (value: string) => {
@@ -182,11 +209,26 @@ export default function PublishPage() {
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const skipNextDraftSave = useRef(false)
   const {
     keyboardHeight,
     onKeyboardVisibilityChange,
   } = useKeyboardInset()
   const current = sectionOptions.find((item) => item.key === section) || sectionOptions[0]
+  const hasDraftContent = useMemo(() => (
+    [
+      form.content,
+      form.courseName,
+      form.courseCode,
+      form.pickupLocation,
+      form.dropoffLocation,
+      form.rewardYuan,
+      form.priceYuan,
+      form.origin,
+      form.destination,
+      form.contact,
+    ].some((value) => value.trim().length > 0) || form.imageUrls.length > 0
+  ), [form])
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
     setForm((draft) => ({ ...draft, [key]: value }))
@@ -206,8 +248,15 @@ export default function PublishPage() {
   })
 
   const mapMarketplace = (item: MarketplaceListingView): PublisherForm => ({
-    ...emptyForm(),
+    ...emptyForm(item.intent),
     content: item.description,
+    marketIntent: item.intent,
+    marketCategory: item.category,
+    courseName: item.course_name || '',
+    courseCode: item.course_code || '',
+    academicPeriodId: item.academic_period_id || '',
+    academicPeriodLabel: item.academic_period_label || '',
+    marketSource: item.source,
     priceYuan: yuanValue(item.price_cents),
     contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
     contact: item.contact.includes('*') ? '' : item.contact,
@@ -260,6 +309,7 @@ export default function PublishPage() {
 
   useLoad((options) => {
     const initialSection = isSection(options.section) ? options.section : 'community'
+    const initialIntent: MarketplaceIntent = options.intent === 'wanted' ? 'wanted' : 'sell'
     const initialMode: PublishMode = options.mode === 'edit'
       ? 'edit'
       : options.mode === 'resubmit'
@@ -278,11 +328,26 @@ export default function PublishPage() {
     if (initialMode !== 'create' && initialId > 0) {
       void loadEdit(initialSection, initialId)
     } else {
-      const initialForm = storedDrafts()[initialSection] || emptyForm()
+      const initialForm = storedDrafts()[draftKey(initialSection, initialIntent)]
+        || emptyForm(initialIntent)
+      const prefill = initialSection === 'market' && options.course_prefill === '1'
+        ? consumeMarketplacePublishPrefill()
+        : null
+      const nextForm = prefill ? {
+        ...initialForm,
+        marketIntent: prefill.intent,
+        content: prefill.description,
+        marketCategory: 'course_material' as const,
+        courseName: prefill.courseName,
+        courseCode: prefill.courseCode,
+        academicPeriodId: prefill.academicPeriodId,
+        academicPeriodLabel: prefill.academicPeriodLabel,
+        marketSource: prefill.source,
+      } : initialForm
       setForm(
         initialSection === 'community' && initialCommunitySectionId > 0
-          ? { ...initialForm, communitySectionId: initialCommunitySectionId }
-          : initialForm,
+          ? { ...nextForm, communitySectionId: initialCommunitySectionId }
+          : nextForm,
       )
     }
     void lifeServicesRepository.listCampusCircleSections()
@@ -322,6 +387,10 @@ export default function PublishPage() {
 
   useEffect(() => {
     if (mode !== 'create' || loadingEdit) return
+    if (skipNextDraftSave.current) {
+      skipNextDraftSave.current = false
+      return
+    }
     const timer = setTimeout(() => saveDraft(section, form), 350)
     return () => clearTimeout(timer)
   }, [form, loadingEdit, mode, section])
@@ -330,7 +399,46 @@ export default function PublishPage() {
     if (mode !== 'create' || next === section) return
     saveDraft(section, form)
     setSection(next)
-    setForm(storedDrafts()[next] || emptyForm())
+    setForm(storedDrafts()[draftKey(next)] || emptyForm())
+  }
+
+  const selectMarketIntent = (intent: MarketplaceIntent) => {
+    if (form.marketIntent === intent) return
+    if (mode === 'create') {
+      saveDraft(section, form)
+      setForm(storedDrafts()[draftKey('market', intent)] || emptyForm(intent))
+      return
+    }
+    update('marketIntent', intent)
+  }
+
+  const clearCurrentDraft = async () => {
+    if (mode !== 'create' || !hasDraftContent) return
+    const result = await Taro.showModal({
+      title: '清空当前草稿',
+      content: section === 'market'
+        ? `将清空当前“${form.marketIntent === 'wanted' ? '求购' : '出售'}”草稿，其他发布草稿不受影响。`
+        : '将清空当前发布草稿，其他类型的草稿不受影响。',
+      confirmText: '清空',
+      confirmColor: '#d87567',
+    })
+    if (!result.confirm) return
+    skipNextDraftSave.current = true
+    clearDraft(section, form)
+    setForm(emptyForm(form.marketIntent))
+    Taro.showToast({ title: '草稿已清空', icon: 'success' })
+  }
+
+  const removeCourseContext = () => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      marketCategory: 'general',
+      courseName: '',
+      courseCode: '',
+      academicPeriodId: '',
+      academicPeriodLabel: '',
+      marketSource: 'manual',
+    }))
   }
 
   const validationError = useMemo(() => {
@@ -348,7 +456,11 @@ export default function PublishPage() {
       if (toCents(form.rewardYuan) <= 0) return '跑腿报酬必须大于 0 元'
       if (!toIso(form.deadlineDate, form.deadlineTime)) return '请选择有效截止时间'
     }
-    if (section === 'market' && toCents(form.priceYuan) <= 0) return '商品价格必须大于 0 元'
+    if (section === 'market') {
+      if (toCents(form.priceYuan) <= 0) {
+        return form.marketIntent === 'wanted' ? '求购预算必须大于 0 元' : '商品价格必须大于 0 元'
+      }
+    }
     if (section === 'carpool') {
       if (!form.origin.trim() || !form.destination.trim()) return '请填写出发地和目的地'
       const seats = Number(form.totalSeats)
@@ -360,7 +472,7 @@ export default function PublishPage() {
   }, [communitySectionOptions, form, section, sectionsReady])
 
   const navigateAfterSubmit = async (id: number) => {
-    clearDraft(section)
+    clearDraft(section, form)
     Taro.showToast({ title: '已提交审核', icon: 'success' })
     await new Promise((resolve) => setTimeout(resolve, 450))
     if (section === 'errands') {
@@ -424,8 +536,15 @@ export default function PublishPage() {
         }
       } else if (section === 'market') {
         const input = {
+          intent: form.marketIntent,
           description: form.content.trim(),
           price_cents: toCents(form.priceYuan),
+          category: form.marketCategory,
+          course_name: form.courseName.trim() || undefined,
+          course_code: form.courseCode.trim() || undefined,
+          academic_period_id: form.academicPeriodId.trim() || undefined,
+          academic_period_label: form.academicPeriodLabel.trim() || undefined,
+          source: form.marketSource,
           contact_type: form.contactType,
           contact: form.contact.trim(),
           image_urls: form.imageUrls,
@@ -515,16 +634,61 @@ export default function PublishPage() {
         </View>
 
         <View className='publisher-intro'>
-          <Text className='publisher-intro__title'>{current.title}</Text>
-          <Text className='publisher-intro__meta'>
-            {mode === 'create' ? '草稿自动保存' : `编辑 #${resourceId}`}
+          <Text className='publisher-intro__title'>
+            {section === 'market'
+              ? form.marketIntent === 'wanted' ? '发布求购' : '出售闲置好物'
+              : current.title}
           </Text>
+          <View className='publisher-intro__meta'>
+            <Text>{mode === 'create' ? '草稿自动保存' : `编辑 #${resourceId}`}</Text>
+            {mode === 'create' && hasDraftContent && (
+              <Text
+                className='publisher-intro__clear'
+                onClick={() => void clearCurrentDraft()}
+              >
+                清空草稿
+              </Text>
+            )}
+          </View>
         </View>
 
         {loadingEdit ? (
           <View className='publisher-loading'>正在加载原内容</View>
         ) : (
           <>
+            {section === 'market' && (
+              <View className='publisher-section publisher-section--market-context'>
+                <View className='publisher-market-intents'>
+                  <View
+                    className={form.marketIntent === 'sell' ? 'publisher-market-intent--active' : ''}
+                    onClick={() => selectMarketIntent('sell')}
+                  >
+                    我要出售
+                  </View>
+                  <View
+                    className={form.marketIntent === 'wanted' ? 'publisher-market-intent--active' : ''}
+                    onClick={() => selectMarketIntent('wanted')}
+                  >
+                    我要求购
+                  </View>
+                </View>
+                {(form.courseName || form.academicPeriodLabel) && (
+                  <View className='publisher-course-context'>
+                    <View className='publisher-course-context__copy'>
+                      <Text>{form.courseName || '课程资料'}</Text>
+                      <Text>{[form.courseCode, form.academicPeriodLabel].filter(Boolean).join(' · ')}</Text>
+                    </View>
+                    <Text
+                      className='publisher-course-context__remove'
+                      onClick={removeCourseContext}
+                    >
+                      移除
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
             <View className='publisher-section publisher-section--content'>
               <View className='publisher-field publisher-field--content'>
                 <View className='publisher-textarea'>
@@ -532,7 +696,11 @@ export default function PublishPage() {
                     id='publisher-content'
                     value={form.content}
                     maxlength={section === 'community' ? 5000 : 2000}
-                    placeholder={section === 'market' ? '描述成色、配件和使用情况' : section === 'errands' ? '说明物品、时间要求和注意事项' : section === 'carpool' ? '补充集合、行李或返程信息（可选）' : '分享真实、友善的校园内容'}
+                    placeholder={section === 'market'
+                      ? form.marketIntent === 'wanted'
+                        ? '说明版本、预算和希望的交易地点'
+                        : '描述成色、配件和使用情况'
+                      : section === 'errands' ? '说明物品、时间要求和注意事项' : section === 'carpool' ? '补充集合、行李或返程信息（可选）' : '分享真实、友善的校园内容'}
                     placeholderClass='publisher-placeholder'
                     onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                     onInput={(event) => update('content', event.detail.value)}
@@ -561,10 +729,20 @@ export default function PublishPage() {
             {section === 'market' && (
               <View className='publisher-section'>
                 <SectionHeading title='交易信息' />
-                <InputField inputId='publisher-price-yuan' label='商品售价' value={form.priceYuan} type='digit' maxlength={10} placeholder='请输入售价' suffix='元' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('priceYuan', value)} />
+                <InputField
+                  inputId='publisher-price-yuan'
+                  label={form.marketIntent === 'wanted' ? '求购预算' : '商品售价'}
+                  value={form.priceYuan}
+                  type='digit'
+                  maxlength={10}
+                  placeholder={form.marketIntent === 'wanted' ? '请输入预算' : '请输入售价'}
+                  suffix='元'
+                  onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                  onInput={(value) => update('priceYuan', value)}
+                />
                 {form.imageUrls.length > 0 && (
                   <View className='publisher-note publisher-note--compact'>
-                    <Text>已保留 {form.imageUrls.length} 张原商品图片</Text>
+                    <Text>已保留 {form.imageUrls.length} 张原图片</Text>
                   </View>
                 )}
               </View>

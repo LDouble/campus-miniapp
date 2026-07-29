@@ -9,6 +9,11 @@ import {
   getSelectedCampus,
   loadMiniappRuntimeConfig,
 } from '../../../features/runtime-config'
+import {
+  openCourseMarketplacePublisher,
+  openCourseMarketplaceSearch,
+  type MarketplaceIntent,
+} from '../../../features/life-services/marketplace-prefill'
 import AcademicHeader from '../components/academic-header'
 import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
@@ -27,6 +32,7 @@ import {
   getWeekDates,
   isSameDay,
   resolvePeriodId,
+  resolveScheduleAnchor,
   weekdays,
 } from '../utils'
 import '../index.scss'
@@ -64,6 +70,8 @@ interface CourseDetailCardProps {
   currentWeek: number
   onEdit?: () => void
   onDelete?: () => void
+  onWanted: () => void
+  onSell: () => void
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
@@ -73,6 +81,8 @@ function CourseDetailCard({
   currentWeek,
   onEdit,
   onDelete,
+  onWanted,
+  onSell,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   return (
@@ -105,6 +115,16 @@ function CourseDetailCard({
             <View onClick={onEdit}>编辑</View>
           </View>
         )}
+        <View className='course-market-actions course-market-actions--course-card'>
+          <View>
+            <Text>课程资料</Text>
+            <Text>先找现有资料，没有再发布求购</Text>
+          </View>
+          <View className='course-market-actions__buttons'>
+            <View onClick={onWanted}>求购 / 找资料</View>
+            <View onClick={onSell}>转卖资料</View>
+          </View>
+        </View>
       </View>
     </View>
   )
@@ -176,15 +196,7 @@ export default function SchedulePage() {
       setPeriods(records)
       if (!records.length) setLoading(false)
       setPreferences((current) => {
-        const currentPeriod = records.find((period) => period.isCurrent)
-        const schedulePeriodId = (
-          (currentPeriod && currentPeriod.id)
-          || resolvePeriodId(records, current.schedulePeriodId)
-        )
-        const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
-        const week = resolvedPeriod && resolvedPeriod.isCurrent
-          ? getCurrentTeachingWeek(resolvedPeriod)
-          : 1
+        const { periodId: schedulePeriodId, week } = resolveScheduleAnchor(records)
         if (
           schedulePeriodId === current.schedulePeriodId
           && week === current.week
@@ -199,13 +211,10 @@ export default function SchedulePage() {
       setInitialized(true)
     }
 
-    if (initialScheduleCache && initialScheduleCache.periods.length) {
-      applyPeriods(initialScheduleCache.periods)
-      return
-    }
-
+    let active = true
     academicRepository.getPeriods()
       .then((records) => {
+        if (!active) return
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         academicStorage.setScheduleCache(
           academicUserId,
@@ -215,9 +224,18 @@ export default function SchedulePage() {
         applyPeriods(records)
       })
       .catch(() => {
+        if (!active) return
+        if (initialScheduleCache && initialScheduleCache.periods.length) {
+          applyPeriods(initialScheduleCache.periods)
+          Taro.showToast({ title: '网络异常，已使用本地课表', icon: 'none' })
+          return
+        }
         setLoading(false)
         Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
       })
+    return () => {
+      active = false
+    }
   }, [academicUserId, initialScheduleCache])
 
   useEffect(() => {
@@ -341,6 +359,27 @@ export default function SchedulePage() {
     setSheet(null)
     setActiveCourse(null)
     setActiveSlotCourses([])
+  }
+
+  const openCourseTrade = (course: Course, intent: MarketplaceIntent) => {
+    closeCourseFloat()
+    const courseName = course.name.trim()
+    const prefill = {
+      intent,
+      description: intent === 'wanted'
+        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
+        : `转卖与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      courseName,
+      courseCode: '',
+      academicPeriodId: course.periodId,
+      academicPeriodLabel: periods.find((period) => period.id === course.periodId)?.label || course.periodId,
+      source: 'schedule',
+    } as const
+    if (intent === 'wanted') {
+      void openCourseMarketplaceSearch(prefill)
+      return
+    }
+    void openCourseMarketplacePublisher(prefill)
   }
 
   const openCourseForm = (course?: Course) => {
@@ -680,6 +719,8 @@ export default function SchedulePage() {
                     currentWeek={preferences.week}
                     onDelete={() => deleteCourse(course)}
                     onEdit={() => openCourseForm(course)}
+                    onWanted={() => openCourseTrade(course, 'wanted')}
+                    onSell={() => openCourseTrade(course, 'sell')}
                   />
                 ))}
               </View>
@@ -691,6 +732,8 @@ export default function SchedulePage() {
                     currentWeek={preferences.week}
                     onDelete={() => deleteCourse()}
                     onEdit={() => openCourseForm(activeCourse)}
+                    onWanted={() => openCourseTrade(activeCourse, 'wanted')}
+                    onSell={() => openCourseTrade(activeCourse, 'sell')}
                   />
                 </View>
               </>

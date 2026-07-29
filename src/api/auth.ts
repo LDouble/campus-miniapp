@@ -5,7 +5,19 @@ import { clearAcademicCredential } from './academic-credential'
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
 const TOKEN_EXPIRES_AT_KEY = 'campus.auth.expiresAt.v1'
-export const API_BASE_URL = String(__CAMPUS_API_BASE_URL__).replace(/\/+$/, '')
+export const API_BASE_URL = String(__CAMPUS_API_BASE_URL__)
+
+export const apiUrl = (path: string) => {
+  const baseEndsWithSlash = API_BASE_URL.endsWith('/')
+  const pathStartsWithSlash = path.startsWith('/')
+  if (baseEndsWithSlash && pathStartsWithSlash) {
+    return `${API_BASE_URL}${path.slice(1)}`
+  }
+  if (!baseEndsWithSlash && !pathStartsWithSlash) {
+    return `${API_BASE_URL}/${path}`
+  }
+  return `${API_BASE_URL}${path}`
+}
 
 export const WECHAT_APP_ID = String(__CAMPUS_WECHAT_APP_ID__)
 
@@ -55,7 +67,7 @@ const wechatLogin = async () => {
   if (!loginResult.code) throw new Error('微信登录凭证获取失败')
 
   const response = await Taro.request<ApiSuccessEnvelope<TokenPair> | ApiErrorEnvelope>({
-    url: `${API_BASE_URL}/api/v1/auth/wechat/login`,
+    url: apiUrl('/api/v1/auth/wechat/login'),
     method: 'POST',
     data: {
       app_id: WECHAT_APP_ID,
@@ -85,7 +97,7 @@ export const refreshAccessToken = () => {
       if (!refreshToken) return login()
 
       const response = await Taro.request<ApiSuccessEnvelope<TokenPair> | ApiErrorEnvelope>({
-        url: `${API_BASE_URL}/api/v1/auth/refresh`,
+        url: apiUrl('/api/v1/auth/refresh'),
         method: 'POST',
         data: { refresh_token: refreshToken },
         header: {

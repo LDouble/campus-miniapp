@@ -1,6 +1,6 @@
 import Taro from '@tarojs/taro'
 import {
-  API_BASE_URL,
+  apiUrl,
   ensureAccessToken,
   refreshAccessToken,
 } from './auth'
@@ -71,7 +71,7 @@ const parseUploadBody = (
 
 const uploadMaterialOnce = async (filePath: string, token: string) => {
   const response = await Taro.uploadFile({
-    url: `${API_BASE_URL}/api/v1/academic-verification/materials`,
+    url: apiUrl('/api/v1/academic-verification/materials'),
     filePath,
     name: 'file',
     timeout: 60_000,

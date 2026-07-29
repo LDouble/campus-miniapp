@@ -9,6 +9,10 @@ export default function CampusServiceDetailPage() {
   const [type, setType] = useState<CampusServiceType>('study')
   const [item, setItem] = useState<CampusServiceItem | null>(campusServiceData.study.items[0])
   useLoad((options) => {
+    if (options.type === 'shuttle') {
+      Taro.redirectTo({ url: '/pages/shuttle/index' })
+      return
+    }
     if (!isCampusServiceType(options.type)) return
     setType(options.type)
     setItem(campusServiceData[options.type].items.find((record) => record.id === options.id) || null)

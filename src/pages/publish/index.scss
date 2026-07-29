@@ -97,10 +97,20 @@ page {
   }
 
   &__meta {
+    display: flex;
     flex: none;
+    align-items: center;
+    gap: 13rpx;
     margin-left: 18rpx;
     color: #809693;
     font-size: 20rpx;
+  }
+
+  &__clear {
+    padding: 8rpx 0 8rpx 12rpx;
+    color: #c56f61;
+    font-weight: 680;
+    border-left: 2rpx solid rgba(128, 150, 147, 0.16);
   }
 }
 
@@ -303,6 +313,87 @@ page {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12rpx;
   margin: 20rpx 0 17rpx;
+}
+
+.publisher-section--market-context {
+  padding: 18rpx 22rpx 4rpx;
+}
+
+.publisher-market-intents {
+  display: flex;
+  gap: 8rpx;
+  padding: 7rpx;
+  margin-bottom: 18rpx;
+  background: #edf4f2;
+  border-radius: 20rpx;
+
+  > view {
+    display: flex;
+    min-height: 64rpx;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    color: #718783;
+    font-size: 24rpx;
+    font-weight: 700;
+    border-radius: 15rpx;
+  }
+
+  .publisher-market-intent--active {
+    color: #326f70;
+    background: #fff;
+    box-shadow: 0 7rpx 18rpx rgba(57, 113, 108, 0.1);
+  }
+}
+
+.publisher-course-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  padding: 17rpx 19rpx;
+  margin-bottom: 8rpx;
+  background: #fff7ec;
+  border: 2rpx solid rgba(220, 159, 94, 0.12);
+  border-radius: 18rpx;
+
+  &__copy {
+    min-width: 0;
+    flex: 1;
+
+    text {
+      display: block;
+    }
+
+    text:first-child {
+      overflow: hidden;
+      color: #5b574d;
+      font-size: 24rpx;
+      font-weight: 720;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    text:last-child {
+      overflow: hidden;
+      margin-top: 5rpx;
+      color: #9b876f;
+      font-size: 20rpx;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__remove {
+    display: flex;
+    min-height: 54rpx;
+    flex: none;
+    align-items: center;
+    padding: 0 10rpx;
+    color: #b87564;
+    font-size: 21rpx;
+    font-weight: 680;
+  }
 }
 
 .publisher-community-section {

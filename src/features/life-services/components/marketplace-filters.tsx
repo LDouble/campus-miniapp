@@ -5,6 +5,8 @@ import FilterSheet from './filter-sheet'
 import './filters.scss'
 
 export type MarketplaceFilterValue = {
+  intent?: 'sell' | 'wanted'
+  category?: 'general' | 'course_material'
   minPriceCents?: number
   maxPriceCents?: number
 }
@@ -23,6 +25,15 @@ const quickRanges: Array<{
   { key: 'under-50', label: '50 元内', value: { maxPriceCents: 5000 } },
   { key: '50-200', label: '50–200 元', value: { minPriceCents: 5000, maxPriceCents: 20000 } },
   { key: 'over-200', label: '200 元以上', value: { minPriceCents: 20000 } },
+]
+
+const intentOptions: Array<{
+  key: 'all' | 'sell' | 'wanted'
+  label: string
+}> = [
+  { key: 'all', label: '全部' },
+  { key: 'sell', label: '出售' },
+  { key: 'wanted', label: '求购' },
 ]
 
 const sameRange = (left: MarketplaceFilterValue, right: MarketplaceFilterValue) => (
@@ -75,6 +86,8 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
       return
     }
     onChange({
+      intent: value.intent,
+      category: value.category,
       minPriceCents: min === undefined ? undefined : Math.round(min * 100),
       maxPriceCents: max === undefined ? undefined : Math.round(max * 100),
     })
@@ -85,6 +98,22 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
     <>
       <ScrollView className='filter-quick-scroll' scrollX enhanced showScrollbar={false}>
         <View className='filter-quick-row'>
+          {intentOptions.map((option) => (
+            <View
+              key={option.key}
+              className={`filter-chip ${
+                (value.intent || 'all') === option.key ? 'filter-chip--market-active' : ''
+              }`}
+              hoverClass='filter-chip--pressed'
+              onClick={() => onChange({
+                ...value,
+                intent: option.key === 'all' ? undefined : option.key,
+              })}
+            >
+              {option.label}
+            </View>
+          ))}
+          <View className='filter-quick-row__divider' />
           {quickRanges.map((range) => (
             <View
               key={range.key}
@@ -92,7 +121,11 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
                 selectedQuickKey === range.key ? 'filter-chip--market-active' : ''
               }`}
               hoverClass='filter-chip--pressed'
-              onClick={() => onChange(range.value)}
+              onClick={() => onChange({
+                ...range.value,
+                intent: value.intent,
+                category: value.category,
+              })}
             >
               {range.label}
             </View>
@@ -114,7 +147,13 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
           <Text>已筛选</Text>
           <View>
             <Text>{rangeSummary(value)}</Text>
-            <Text onClick={() => onChange({})}>移除</Text>
+            <Text onClick={() => onChange({
+              intent: value.intent,
+              category: value.category,
+            })}
+            >
+              移除
+            </Text>
           </View>
         </View>
       )}

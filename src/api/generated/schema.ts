@@ -2022,6 +2022,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/shuttle/routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询校车线路 */
+        get: operations["ListAdminShuttleRoutes"];
+        put?: never;
+        /** 管理端创建校车线路草稿 */
+        post: operations["CreateAdminShuttleRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shuttle/routes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看校车线路 */
+        get: operations["GetAdminShuttleRoute"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端修改校车线路 */
+        patch: operations["UpdateAdminShuttleRoute"];
+        trace?: never;
+    };
+    "/api/v1/admin/shuttle/routes/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停用校车线路 */
+        post: operations["DisableAdminShuttleRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shuttle/routes/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布校车线路 */
+        post: operations["PublishAdminShuttleRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shuttle/routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布校车线路及指定日期班次 */
+        get: operations["ListShuttleRoutes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shuttle/routes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看校车线路及指定日期班次 */
+        get: operations["GetShuttleRoute"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders": {
         parameters: {
             query?: never;
@@ -3098,9 +3202,15 @@ export interface components {
             request_id: string;
         };
         MarketplaceListingView: {
+            academic_period_id: string | null;
+            academic_period_label: string | null;
             available_actions: components["schemas"]["MarketplaceViewerAction"][];
+            /** @enum {string} */
+            category: "general" | "course_material";
             contact: string;
             contact_type: string;
+            course_code: string | null;
+            course_name: string | null;
             /** Format: date-time */
             created_at: string;
             currency: string;
@@ -3108,6 +3218,8 @@ export interface components {
             /** Format: uint64 */
             id: number;
             image_urls: string[];
+            /** @enum {string} */
+            intent: "sell" | "wanted";
             /** Format: uint64 */
             owner_id: number;
             /** Format: int64 */
@@ -3117,6 +3229,8 @@ export interface components {
             reviewed_at?: string | null;
             /** Format: uint64 */
             reviewed_by?: number | null;
+            /** @enum {string} */
+            source: "manual" | "course_selection" | "grade" | "schedule";
             status: string;
             /** Format: date-time */
             updated_at: string;
@@ -3185,7 +3299,121 @@ export interface components {
             updated: boolean;
         };
         /** @enum {string} */
-        MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "verify_academic";
+        MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
+        ShuttleDateOverrideInput: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times?: string[];
+            note?: string;
+            /** Format: date */
+            service_date: string;
+            suspended: boolean;
+        };
+        /** @enum {string} */
+        ShuttleDayType: "workday" | "weekend" | "holiday" | "vacation" | "special";
+        /** @enum {string} */
+        ShuttleResolutionSource: "date_override" | "special_period" | "weekly_rule";
+        ShuttleResolvedSchedule: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times: string[];
+            /** Format: date-time */
+            next_departure_at?: string | null;
+            note?: string;
+            /** Format: date */
+            service_date: string;
+            source: components["schemas"]["ShuttleResolutionSource"];
+            suspended: boolean;
+        };
+        ShuttleRouteInput: {
+            campuses: string[];
+            date_overrides?: components["schemas"]["ShuttleDateOverrideInput"][];
+            destination: string;
+            name: string;
+            notice?: string;
+            origin: string;
+            /** Format: int64 */
+            reference_duration_minutes: number;
+            schedules: components["schemas"]["ShuttleScheduleInput"][];
+            service_type: components["schemas"]["ShuttleServiceType"];
+            special_periods?: components["schemas"]["ShuttleSpecialPeriodInput"][];
+            stops: components["schemas"]["ShuttleStopInput"][];
+        };
+        ShuttleRoutePageResponseBody: {
+            data: components["schemas"]["ShuttleRouteViewPage"];
+            request_id: string;
+        };
+        ShuttleRouteResponseBody: {
+            data: components["schemas"]["ShuttleRouteView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ShuttleRouteStatus: "draft" | "published" | "disabled";
+        ShuttleRouteUpdateInput: components["schemas"]["ShuttleRouteInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        ShuttleRouteView: {
+            campuses: string[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            created_by?: number;
+            date_overrides: components["schemas"]["ShuttleDateOverrideInput"][];
+            destination: string;
+            /** Format: uint64 */
+            id: number;
+            name: string;
+            notice?: string;
+            origin: string;
+            /** Format: int64 */
+            reference_duration_minutes: number;
+            resolved_schedule: components["schemas"]["ShuttleResolvedSchedule"];
+            schedules: components["schemas"]["ShuttleScheduleInput"][];
+            service_type: components["schemas"]["ShuttleServiceType"];
+            special_periods: components["schemas"]["ShuttleSpecialPeriodInput"][];
+            status: components["schemas"]["ShuttleRouteStatus"];
+            stops: components["schemas"]["ShuttleStopInput"][];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            updated_by?: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        ShuttleRouteViewPage: {
+            items: components["schemas"]["ShuttleRouteView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ShuttleScheduleInput: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times: string[];
+            note?: string;
+        };
+        /** @enum {string} */
+        ShuttleServiceType: "campus_loop" | "intercampus";
+        ShuttleSpecialPeriodInput: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times?: string[];
+            /** Format: date */
+            end_date: string;
+            note?: string;
+            /** Format: date */
+            start_date: string;
+            suspended: boolean;
+        };
+        ShuttleStopInput: {
+            campus: string;
+            name: string;
+            note?: string;
+            /** Format: int32 */
+            offset_minutes: number;
+        };
+        ShuttleVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
         TradeOrderPageResponseBody: {
             data: components["schemas"]["TradeOrderViewPage"];
             request_id: string;
@@ -3728,6 +3956,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MarketplaceUpdatedResponseBody"];
+            };
+        };
+        /** @description 校车线路分页 */
+        ShuttleRoutePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ShuttleRoutePageResponseBody"];
+            };
+        };
+        /** @description 校车线路 */
+        ShuttleRouteResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ShuttleRouteResponseBody"];
             };
         };
         /** @description 交易订单分页 */
@@ -6334,6 +6580,8 @@ export interface operations {
     ListAdminMarketplaceListings: {
         parameters: {
             query?: {
+                intent?: "sell" | "wanted";
+                category?: "general" | "course_material";
                 status?: string;
                 keyword?: string;
                 min_price_cents?: number;
@@ -6399,6 +6647,8 @@ export interface operations {
     ListMarketplaceListings: {
         parameters: {
             query?: {
+                intent?: "sell" | "wanted";
+                category?: "general" | "course_material";
                 keyword?: string;
                 min_price_cents?: number;
                 max_price_cents?: number;
@@ -6426,9 +6676,19 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @enum {string} */
+                    intent: "sell" | "wanted";
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
+                    /** @enum {string} */
+                    category: "general" | "course_material";
+                    course_name?: string;
+                    course_code?: string;
+                    academic_period_id?: string;
+                    academic_period_label?: string;
+                    /** @enum {string} */
+                    source: "manual" | "course_selection" | "grade" | "schedule";
                     contact_type: string;
                     contact: string;
                     image_urls?: string[];
@@ -6443,6 +6703,7 @@ export interface operations {
     ListMyMarketplaceListings: {
         parameters: {
             query?: {
+                intent?: "sell" | "wanted";
                 status?: string;
                 page?: number;
                 page_size?: number;
@@ -6487,9 +6748,19 @@ export interface operations {
                 "application/json": {
                     /** Format: uint64 */
                     expected_version: number;
+                    /** @enum {string} */
+                    intent: "sell" | "wanted";
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
+                    /** @enum {string} */
+                    category: "general" | "course_material";
+                    course_name?: string;
+                    course_code?: string;
+                    academic_period_id?: string;
+                    academic_period_label?: string;
+                    /** @enum {string} */
+                    source: "manual" | "course_selection" | "grade" | "schedule";
                     contact_type?: string;
                     contact?: string;
                     image_urls?: string[];
@@ -6800,6 +7071,167 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["ReadResultResponse"];
+        };
+    };
+    ListAdminShuttleRoutes: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                service_type?: "campus_loop" | "intercampus";
+                status?: "draft" | "published" | "disabled";
+                date?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRoutePageResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    CreateAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleRouteInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetAdminShuttleRoute: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleRouteUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DisableAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListShuttleRoutes: {
+        parameters: {
+            query?: {
+                service_type?: "campus_loop" | "intercampus";
+                campus?: string;
+                date?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRoutePageResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetShuttleRoute: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     ListMyTradeOrders: {

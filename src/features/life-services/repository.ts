@@ -46,6 +46,8 @@ export type MyErrandSearch = PagingQuery & {
 
 export type MarketplaceSearch = PagingQuery & {
   keyword?: string
+  intent?: 'sell' | 'wanted'
+  category?: 'general' | 'course_material'
   minPriceCents?: number
   maxPriceCents?: number
 }
@@ -283,6 +285,8 @@ export const lifeServicesRepository = {
       path: '/api/v1/marketplace/listings',
       query: {
         keyword: search.keyword,
+        intent: search.intent,
+        category: search.category,
         min_price_cents: search.minPriceCents,
         max_price_cents: search.maxPriceCents,
         page: search.page || 1,
@@ -341,11 +345,11 @@ export const lifeServicesRepository = {
     )
   },
 
-  reserveMarketplaceListing(id: number) {
+  respondMarketplaceListing(id: number) {
     return apiRequest<MarketplaceTradeOrder>({
       path: '/api/v1/marketplace/orders',
       method: 'POST',
-      idempotencyKey: createIdempotencyKey(`marketplace:${id}:purchase`),
+      idempotencyKey: createIdempotencyKey(`marketplace:${id}:respond`),
       data: { listing_id: id },
     })
   },

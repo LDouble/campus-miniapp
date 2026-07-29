@@ -1,91 +1,252 @@
 import type { MarketplaceListingView, Notice } from '../../api/types'
 import type { AcademicScheduleCache } from '../../pages/academic/storage'
-import type { Course } from '../../pages/academic/types'
+import type { AcademicPeriod, Course } from '../../pages/academic/types'
 import { parseDate } from '../../pages/academic/utils'
 import {
-  getSectionStartTime,
+  getCampusSections,
   MiniappRuntimeConfig,
 } from '../runtime-config'
 
-const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const monthNames = [
   'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
   'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
 ]
 
-export type NextCourse = {
+export type CoursePreviewItem = {
   course: Course
   startsAt: Date
+  endsAt: Date
   startTime: string
-  month: string
-  day: string
-  badge: string
+  endTime: string
+  status: 'ongoing' | 'upcoming'
+  statusText: string
 }
 
-const sameDay = (left: Date, right: Date) => (
-  left.getFullYear() === right.getFullYear()
-  && left.getMonth() === right.getMonth()
-  && left.getDate() === right.getDate()
-)
+export type CoursePreview = {
+  targetDate: Date
+  dayLabel: '今天' | '明天' | '假期'
+  dateLabel: string
+  total: number
+  items: CoursePreviewItem[]
+  hiddenCount: number
+  emptyText: string
+  emptyHint: string
+}
 
-const nextDay = (value: Date) => {
+const startOfDay = (value: Date) => {
   const result = new Date(value)
-  result.setDate(result.getDate() + 1)
+  result.setHours(0, 0, 0, 0)
   return result
 }
 
-const courseBadge = (startsAt: Date, now: Date) => {
-  const minutes = Math.max(0, Math.ceil((startsAt.getTime() - now.getTime()) / 60000))
-  const time = `${String(startsAt.getHours()).padStart(2, '0')}:${String(startsAt.getMinutes()).padStart(2, '0')}`
-  if (minutes < 60) return `还有 ${minutes} 分钟`
-  if (sameDay(startsAt, now)) return `今天 ${time}`
-  if (sameDay(startsAt, nextDay(now))) return `明天 ${time}`
-  return `${weekdays[startsAt.getDay()]} ${time}`
+const offsetDay = (value: Date, offset: number) => {
+  const result = startOfDay(value)
+  result.setDate(result.getDate() + offset)
+  return result
 }
 
-export const resolveNextCourse = (
+const periodDayIndex = (period: AcademicPeriod, targetDate: Date) => {
+  const periodStart = startOfDay(parseDate(period.startDate))
+  if (Number.isNaN(periodStart.getTime())) return -1
+  return Math.round(
+    (startOfDay(targetDate).getTime() - periodStart.getTime()) / 86400000,
+  )
+}
+
+const resolvePeriodForDate = (
+  periods: AcademicPeriod[],
+  targetDate: Date,
+) => periods
+  .map((period) => ({ period, dayIndex: periodDayIndex(period, targetDate) }))
+  .filter(({ period, dayIndex }) => dayIndex >= 0 && dayIndex < period.weeks * 7)
+  .sort((left, right) => (
+    Number(right.period.isCurrent) - Number(left.period.isCurrent)
+    || right.dayIndex - left.dayIndex
+  ))[0] || null
+
+const resolveUpcomingPeriod = (
+  periods: AcademicPeriod[],
+  now: Date,
+) => periods
+  .map((period) => ({ period, startsAt: startOfDay(parseDate(period.startDate)) }))
+  .filter(({ startsAt }) => (
+    !Number.isNaN(startsAt.getTime())
+    && startsAt.getTime() > startOfDay(now).getTime()
+  ))
+  .sort((left, right) => left.startsAt.getTime() - right.startsAt.getTime())[0] || null
+
+const clockOnDate = (date: Date, clock: string) => {
+  const [hours, minutes] = clock.split(':').map(Number)
+  const result = startOfDay(date)
+  result.setHours(hours, minutes, 0, 0)
+  return result
+}
+
+const coursesOnDate = (
+  cache: AcademicScheduleCache,
+  customCourses: Course[],
+  config: MiniappRuntimeConfig,
+  selectedCampus: string,
+  targetDate: Date,
+) => {
+  const resolved = resolvePeriodForDate(cache.periods, targetDate)
+  if (!resolved) return { hasPeriod: false, items: [] as CoursePreviewItem[] }
+
+  const { period, dayIndex } = resolved
+  const week = Math.floor(dayIndex / 7) + 1
+  const weekday = dayIndex % 7 + 1
+  const officialCourses = cache.coursesByPeriod[period.id] || []
+  const periodCourses = [
+    ...officialCourses,
+    ...customCourses.filter((course) => course.periodId === period.id),
+  ]
+
+  const items = periodCourses
+    .filter((course) => (
+      course.weekday === weekday
+      && course.weeks.includes(week)
+    ))
+    .map((course): CoursePreviewItem | null => {
+      const sections = getCampusSections(
+        config,
+        course.campus || selectedCampus,
+      )
+      const startTime = sections[String(course.startSection)]?.start || ''
+      const endTime = sections[String(course.endSection)]?.end || ''
+      if (!startTime || !endTime) return null
+      const startsAt = clockOnDate(targetDate, startTime)
+      const endsAt = clockOnDate(targetDate, endTime)
+      return {
+        course,
+        startsAt,
+        endsAt,
+        startTime,
+        endTime,
+        status: 'upcoming',
+        statusText: '',
+      }
+    })
+    .filter((item): item is CoursePreviewItem => !!item)
+    .sort((left, right) => (
+      left.startsAt.getTime() - right.startsAt.getTime()
+      || left.course.id.localeCompare(right.course.id)
+    ))
+
+  return { hasPeriod: true, items }
+}
+
+const buildCoursePreview = (
+  targetDate: Date,
+  dayLabel: CoursePreview['dayLabel'],
+  hasPeriod: boolean,
+  occurrences: CoursePreviewItem[],
+  now: Date,
+  limit: number,
+  hasCache: boolean,
+): CoursePreview => {
+  const items = occurrences.map((item): CoursePreviewItem => {
+    const ongoing = item.startsAt.getTime() <= now.getTime()
+      && item.endsAt.getTime() > now.getTime()
+    return {
+      ...item,
+      status: ongoing ? 'ongoing' : 'upcoming',
+      statusText: ongoing
+        ? `还有 ${Math.max(1, Math.ceil(
+          (item.endsAt.getTime() - now.getTime()) / 60000,
+        ))} 分钟`
+        : '',
+    }
+  })
+  const total = items.length
+  const visibleItems = items.slice(0, limit)
+  let emptyText = dayLabel === '明天' ? '明天没有课' : '今天没有后续课程'
+  let emptyHint = '进入课表查看或刷新'
+  if (!hasCache) emptyText = '课表尚未同步'
+  else if (!hasPeriod) emptyText = '当前日期暂无学期安排'
+
+  return {
+    targetDate,
+    dayLabel,
+    dateLabel: `${targetDate.getMonth() + 1}月${targetDate.getDate()}日`,
+    total,
+    items: visibleItems,
+    hiddenCount: Math.max(0, total - visibleItems.length),
+    emptyText,
+    emptyHint,
+  }
+}
+
+export const resolveCoursePreview = (
   cache: AcademicScheduleCache | null,
+  customCourses: Course[],
   config: MiniappRuntimeConfig,
   selectedCampus: string,
   now = new Date(),
-): NextCourse | null => {
-  if (!cache) return null
-  const period = cache.periods.find((item) => item.isCurrent)
-  if (!period) return null
-  const start = parseDate(period.startDate)
-  if (Number.isNaN(start.getTime())) return null
+  limit = 2,
+): CoursePreview => {
+  const today = startOfDay(now)
+  const tomorrow = offsetDay(now, 1)
+  const currentPeriod = cache
+    ? resolvePeriodForDate(cache.periods, today)
+    : null
+  const upcomingPeriod = cache && !currentPeriod
+    ? resolveUpcomingPeriod(cache.periods, now)
+    : null
 
-  const courses = cache.coursesByPeriod[period.id] || []
-  let nearest: { course: Course; startsAt: Date; startTime: string } | null = null
-
-  courses.forEach((course) => {
-    const startTime = getSectionStartTime(
-      config,
-      course.campus || selectedCampus,
-      course.startSection,
-    )
-    if (!startTime) return
-    const parts = startTime.split(':').map(Number)
-    course.weeks.forEach((week) => {
-      if (week < 1 || week > period.weeks || course.weekday < 1 || course.weekday > 7) return
-      const startsAt = new Date(start)
-      startsAt.setDate(start.getDate() + (week - 1) * 7 + course.weekday - 1)
-      startsAt.setHours(parts[0], parts[1], 0, 0)
-      if (startsAt.getTime() < now.getTime()) return
-      if (!nearest || startsAt.getTime() < nearest.startsAt.getTime()) {
-        nearest = { course, startsAt, startTime }
-      }
-    })
-  })
-
-  if (!nearest) return null
-  const result = nearest as { course: Course; startsAt: Date; startTime: string }
-  return {
-    ...result,
-    month: monthNames[result.startsAt.getMonth()],
-    day: String(result.startsAt.getDate()),
-    badge: courseBadge(result.startsAt, now),
+  if (upcomingPeriod) {
+    const daysUntilStart = Math.max(1, Math.round(
+      (upcomingPeriod.startsAt.getTime() - today.getTime()) / 86400000,
+    ))
+    return {
+      targetDate: upcomingPeriod.startsAt,
+      dayLabel: '假期',
+      dateLabel: daysUntilStart === 1
+        ? '明天开学'
+        : `${upcomingPeriod.startsAt.getMonth() + 1}月${upcomingPeriod.startsAt.getDate()}日开学`,
+      total: 0,
+      items: [],
+      hiddenCount: 0,
+      emptyText: daysUntilStart === 1
+        ? '假期最后一天，好好放松吧'
+        : '享受假期吧',
+      emptyHint: daysUntilStart === 1
+        ? '明天开学，准备迎接新学期'
+        : `距离开学还有 ${daysUntilStart} 天`,
+    }
   }
+
+  const todayResult = cache
+    ? coursesOnDate(cache, customCourses, config, selectedCampus, today)
+    : { hasPeriod: false, items: [] }
+  const remainingToday = todayResult.items.filter(
+    (item) => item.endsAt.getTime() > now.getTime(),
+  )
+  const showTomorrow = now.getHours() >= 22 || remainingToday.length === 0
+
+  if (!showTomorrow) {
+    return buildCoursePreview(
+      today,
+      '今天',
+      todayResult.hasPeriod,
+      remainingToday,
+      now,
+      limit,
+      !!cache,
+    )
+  }
+
+  const tomorrowResult = cache
+    ? coursesOnDate(cache, customCourses, config, selectedCampus, tomorrow)
+    : { hasPeriod: false, items: [] }
+  return buildCoursePreview(
+    tomorrow,
+    '明天',
+    tomorrowResult.hasPeriod,
+    tomorrowResult.items,
+    now,
+    limit,
+    !!cache,
+  )
 }
 
 export const currentDateParts = (now = new Date()) => ({

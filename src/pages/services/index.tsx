@@ -59,7 +59,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
     title: '校园生活',
     subtitle: '日常校园服务',
     items: [
-      { key: 'shuttle', name: '校园校车', icon: icons.shuttle, route: '/pages/campus-service/index?type=shuttle' },
+      { key: 'shuttle', name: '校园校车', icon: icons.shuttle, route: '/pages/shuttle/index' },
       { key: 'carpool', name: '校园拼车', icon: icons.shuttle, lifeSection: 'carpool' },
       { key: 'community', name: '校园社区', icon: icons.community, lifeSection: 'community' },
       { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
