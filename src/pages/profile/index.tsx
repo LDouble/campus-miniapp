@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { Input, Switch, Text, View } from '@tarojs/components'
+import { Switch, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import type { AcademicVerificationStatus } from '../../api/types'
@@ -62,6 +63,6 @@ export default function ProfilePage() {
       <View className='profile-settings'><View><View><Text>消息提醒</Text><Text>接收教务与服务进度通知</Text></View><Switch checked={noticeEnabled} color='#62a58e' onChange={(event) => setNoticeEnabled(event.detail.value)} /></View><View><View><Text>紧凑模式</Text><Text>在列表中展示更多内容</Text></View><Switch checked={compactMode} color='#62a58e' onChange={(event) => setCompactMode(event.detail.value)} /></View></View>
       <View className='profile-feedback' onClick={() => setPanel('feedback')}>设置与意见反馈</View>
     </View>
-    {panel && <View className='profile-overlay' onClick={() => setPanel(null)}><View className='profile-sheet' onClick={(event) => event.stopPropagation()}><View className='profile-sheet__handle' />{panel === 'favorites' ? <><Text className='profile-sheet__title'>收藏与浏览</Text><View className='profile-favorite'><Text>高数复习资料互助帖</Text><Text>用户体验设计基础期中笔记</Text><Text>崂山校区 → 青岛北站拼车</Text></View></> : <><Text className='profile-sheet__title'>意见反馈</Text><Text className='profile-sheet__subtitle'>你的建议会帮助海大校园变得更好</Text><Input className='profile-feedback-input' value={feedback} onInput={(event) => setFeedback(event.detail.value)} maxlength={120} placeholder='写下问题或建议' /></>}<View className='profile-sheet__button' onClick={() => { if (panel === 'feedback' && !feedback.trim()) return Taro.showToast({ title: '请填写反馈内容', icon: 'none' }); if (panel === 'feedback') { setFeedback(''); Taro.showToast({ title: '反馈已提交', icon: 'success' }) } setPanel(null) }}>{panel === 'feedback' ? '提交反馈' : '完成'}</View></View></View>}
+    {panel && <View className='profile-overlay' onClick={() => setPanel(null)}><View className='profile-sheet' onClick={(event) => event.stopPropagation()}><View className='profile-sheet__handle' />{panel === 'favorites' ? <><Text className='profile-sheet__title'>收藏与浏览</Text><View className='profile-favorite'><Text>高数复习资料互助帖</Text><Text>用户体验设计基础期中笔记</Text><Text>崂山校区 → 青岛北站拼车</Text></View></> : <><Text className='profile-sheet__title'>意见反馈</Text><Text className='profile-sheet__subtitle'>你的建议会帮助海大校园变得更好</Text><KeyboardSafeInput className='profile-feedback-input' value={feedback} onInput={(event) => setFeedback(event.detail.value)} maxlength={120} placeholder='写下问题或建议' /></>}<View className='profile-sheet__button' onClick={() => { if (panel === 'feedback' && !feedback.trim()) return Taro.showToast({ title: '请填写反馈内容', icon: 'none' }); if (panel === 'feedback') { setFeedback(''); Taro.showToast({ title: '反馈已提交', icon: 'success' }) } setPanel(null) }}>{panel === 'feedback' ? '提交反馈' : '完成'}</View></View></View>}
   </View>
 }

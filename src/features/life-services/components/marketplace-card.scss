@@ -1,0 +1,179 @@
+.marketplace-card {
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 2rpx solid #e7eaf0;
+  border-radius: 24rpx;
+  background: #fff;
+  transition: opacity 150ms ease, transform 150ms ease;
+  white-space: normal;
+}
+
+.marketplace-card--compact {
+  display: inline-flex;
+  width: 300rpx;
+  flex: 0 0 300rpx;
+  flex-direction: column;
+  vertical-align: top;
+  border-color: rgba(255, 255, 255, 0.95);
+  border-radius: 30rpx;
+  box-shadow: 8rpx 12rpx 24rpx rgba(50, 91, 84, 0.08);
+}
+
+.marketplace-card--pressed {
+  opacity: 0.82;
+  transform: scale(0.99);
+}
+
+.marketplace-card--no-image {
+  border-color: #e9e5df;
+}
+
+.marketplace-card__cover {
+  position: relative;
+  height: 250rpx;
+  overflow: hidden;
+  background: #f2f3f5;
+}
+
+.marketplace-card--compact .marketplace-card__cover {
+  height: 190rpx;
+}
+
+.marketplace-card__cover--placeholder {
+  height: 250rpx;
+}
+
+.marketplace-card--compact .marketplace-card__cover--placeholder {
+  height: 210rpx;
+}
+
+.marketplace-card__cover image {
+  width: 100%;
+  height: 100%;
+}
+
+.marketplace-card__placeholder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 70rpx 24rpx 22rpx;
+  background: #f7f5f2;
+}
+
+.marketplace-card__placeholder--tone-1 {
+  background: #edf4ee;
+}
+
+.marketplace-card__placeholder--tone-2 {
+  background: #fff2dc;
+}
+
+.marketplace-card__placeholder--tone-3 {
+  background: #f5ecea;
+}
+
+.marketplace-card__placeholder-quote {
+  position: absolute;
+  top: 13rpx;
+  left: 20rpx;
+  color: #c9a59d;
+  font-family: Georgia, serif;
+  font-size: 74rpx;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.68;
+}
+
+.marketplace-card__placeholder-headline {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #34312f;
+  font-size: 29rpx;
+  font-weight: 720;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+  white-space: normal;
+  word-break: break-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.marketplace-card--compact .marketplace-card__placeholder {
+  padding: 61rpx 22rpx 18rpx;
+}
+
+.marketplace-card--compact .marketplace-card__placeholder-quote {
+  top: 11rpx;
+  left: 18rpx;
+  font-size: 66rpx;
+}
+
+.marketplace-card--compact .marketplace-card__placeholder-headline {
+  font-size: 28rpx;
+  line-height: 1.42;
+  -webkit-line-clamp: 3;
+}
+
+.marketplace-card__status {
+  position: absolute;
+  top: 12rpx;
+  left: 12rpx;
+  display: inline-flex;
+  min-height: 42rpx;
+  padding: 0 13rpx;
+  align-items: center;
+  border: 2rpx solid rgba(255, 255, 255, 0.74);
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: #a94739;
+  font-size: 19rpx;
+  font-weight: 700;
+  backdrop-filter: blur(8rpx);
+}
+
+.marketplace-card__body {
+  padding: 18rpx;
+}
+
+.marketplace-card--no-image .marketplace-card__body {
+  padding-top: 15rpx;
+}
+
+.marketplace-card__description {
+  display: -webkit-box;
+  min-height: 72rpx;
+  overflow: hidden;
+  color: #2f3742;
+  font-size: 25rpx;
+  font-weight: 680;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.marketplace-card__price {
+  display: block;
+  margin-top: 12rpx;
+  color: #d94f3b;
+  font-size: 34rpx;
+  font-weight: 820;
+}
+
+.marketplace-card--no-image .marketplace-card__price {
+  margin-top: 0;
+}
+
+.marketplace-card__footer {
+  display: flex;
+  min-height: 52rpx;
+  align-items: flex-end;
+  justify-content: space-between;
+  color: #8a929d;
+  font-size: 19rpx;
+}
+
+.marketplace-card__footer text:last-child {
+  color: #b65b4f;
+  font-weight: 680;
+}

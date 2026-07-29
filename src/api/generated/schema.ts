@@ -2247,6 +2247,8 @@ export interface components {
             action_path?: string;
             channels: ("in_app" | "push")[];
             audience: components["schemas"]["NoticeAudience"];
+            /** Format: date-time */
+            visible_until?: string | null;
         };
         UpdateNoticeRequest: components["schemas"]["CreateNoticeRequest"] & {
             /** Format: uint64 */
@@ -2320,6 +2322,8 @@ export interface components {
             publish_at?: string | null;
             /** Format: date-time */
             published_at?: string | null;
+            /** Format: date-time */
+            visible_until?: string | null;
             /** Format: date-time */
             revoked_at?: string | null;
             /** Format: uint64 */
@@ -2789,6 +2793,7 @@ export interface components {
         CampusCirclePostView: {
             /** Format: uint64 */
             author_id: number;
+            author_nickname: string;
             available_actions: components["schemas"]["CampusCircleViewerAction"][];
             /**
              * Format: int64
@@ -2935,6 +2940,7 @@ export interface components {
         CommentView: {
             /** Format: uint64 */
             author_id: number;
+            author_nickname: string;
             available_actions: components["schemas"]["CommentViewerAction"][];
             content: string;
             /** Format: date-time */
@@ -4341,14 +4347,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    student_no: string;
-                    password: string;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             200: components["responses"]["AcademicPeriodListResponse"];
             403: components["responses"]["Error"];

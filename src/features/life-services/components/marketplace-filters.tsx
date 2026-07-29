@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Input, ScrollView, Text, View } from '@tarojs/components'
+import { ScrollView, Text, View } from '@tarojs/components'
+import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import FilterSheet from './filter-sheet'
 import './filters.scss'
 
@@ -136,7 +137,7 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
               <Text>最低价</Text>
               <View className='filter-input'>
                 <Text>¥</Text>
-                <Input
+                <KeyboardSafeInput
                   value={minYuan}
                   type='digit'
                   maxlength={8}
@@ -153,7 +154,7 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
               <Text>最高价</Text>
               <View className='filter-input'>
                 <Text>¥</Text>
-                <Input
+                <KeyboardSafeInput
                   value={maxYuan}
                   type='digit'
                   maxlength={8}

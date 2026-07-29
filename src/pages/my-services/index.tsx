@@ -5,7 +5,7 @@ import Taro, {
   usePullDownRefresh,
   useReachBottom,
 } from '@tarojs/taro'
-import { Input, ScrollView, Text, View } from '@tarojs/components'
+import { ScrollView, Text, View } from '@tarojs/components'
 import type {
   CampusCirclePostView,
   CarpoolTripView,
@@ -15,6 +15,7 @@ import type {
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import {
   formatDateTime,
   formatMoney,
@@ -437,7 +438,7 @@ export default function MyServicesPage() {
 
         <View className='my-services-search'>
           <View />
-          <Input
+          <KeyboardSafeInput
             value={keyword}
             confirmType='search'
             maxlength={40}

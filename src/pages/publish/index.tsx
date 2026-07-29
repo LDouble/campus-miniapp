@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
-import { Input, Picker, ScrollView, Text, Textarea, View } from '@tarojs/components'
+import { Picker, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import {
+  KeyboardSafeInput,
+  KeyboardSafeTextarea,
+  useKeyboardInset,
+} from '../../components/keyboard-safe-input'
 import { isApiError } from '../../api/client'
 import type {
   CarpoolTripView,
@@ -43,12 +48,11 @@ const sectionOptions: Array<{
   key: PublishSection
   label: string
   title: string
-  hint: string
 }> = [
-  { key: 'community', label: '动态', title: '分享校园动态', hint: '记录校园生活、学习见闻与此刻心情' },
-  { key: 'errands', label: '跑腿', title: '发布跑腿需求', hint: '把路线、时间和报酬说清楚，更容易被接单' },
-  { key: 'market', label: '二手', title: '出售闲置好物', hint: '真实描述物品状态，优先选择校内面交' },
-  { key: 'carpool', label: '拼车', title: '发布拼车行程', hint: '明确起终点、时间和座位，出发前再次确认' },
+  { key: 'community', label: '动态', title: '分享校园动态' },
+  { key: 'errands', label: '跑腿', title: '发布跑腿需求' },
+  { key: 'market', label: '二手', title: '出售闲置好物' },
+  { key: 'carpool', label: '拼车', title: '发布拼车行程' },
 ]
 
 const isSection = (value?: string): value is PublishSection => (
@@ -127,6 +131,7 @@ const InputField = ({
   type = 'text',
   suffix,
   inputId,
+  onKeyboardVisibilityChange,
   onInput,
 }: {
   label: string
@@ -136,22 +141,34 @@ const InputField = ({
   type?: 'text' | 'number' | 'digit'
   suffix?: string
   inputId?: string
+  onKeyboardVisibilityChange: (height: number) => void
   onInput: (value: string) => void
 }) => (
   <View className='publisher-field'>
     <Text className='publisher-field__label'>{label}</Text>
     <View className='publisher-input'>
-      <Input
+      <KeyboardSafeInput
         id={inputId}
         value={value}
         type={type}
         maxlength={maxlength}
         placeholder={placeholder}
         placeholderClass='publisher-placeholder'
+        onKeyboardVisibilityChange={onKeyboardVisibilityChange}
         onInput={(event) => onInput(event.detail.value)}
       />
       {suffix && <Text>{suffix}</Text>}
     </View>
+  </View>
+)
+
+const SectionHeading = ({
+  title,
+}: {
+  title: string
+}) => (
+  <View className='publisher-section__head'>
+    <Text className='publisher-section__title'>{title}</Text>
   </View>
 )
 
@@ -165,6 +182,10 @@ export default function PublishPage() {
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const {
+    keyboardHeight,
+    onKeyboardVisibilityChange,
+  } = useKeyboardInset()
   const current = sectionOptions.find((item) => item.key === section) || sectionOptions[0]
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
@@ -467,55 +488,53 @@ export default function PublishPage() {
 
   return (
     <View className={`publisher-page publisher-page--${section}`}>
+      <View className='publisher-page__orb publisher-page__orb--one' />
+      <View className='publisher-page__orb publisher-page__orb--two' />
       <CustomNavbar
         title={mode === 'create' ? '发布' : '编辑发布'}
-        subtitle={mode === 'create' ? '统一发布器' : '修改后重新进入审核'}
         showBack
       />
-      <View className='publisher-page__content'>
-        <ScrollView className='publisher-types' scrollX enhanced showScrollbar={false}>
-          <View className='publisher-types__inner'>
-            {sectionOptions.map((item) => (
-              <View
-                key={item.key}
-                className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
-                onClick={() => selectSection(item.key)}
-              >
-                {item.label}
-              </View>
-            ))}
-          </View>
-        </ScrollView>
+      <View
+        className='publisher-page__content'
+        style={keyboardHeight > 0
+          ? `padding-bottom: calc(244rpx + env(safe-area-inset-bottom) + ${keyboardHeight}px)`
+          : undefined}
+      >
+        <View className='publisher-types' ariaRole='tablist'>
+          {sectionOptions.map((item) => (
+            <View
+              key={item.key}
+              className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
+              ariaRole='button'
+              ariaLabel={`${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
+              onClick={() => selectSection(item.key)}
+            >
+              <Text>{item.label}</Text>
+            </View>
+          ))}
+        </View>
 
-        <View className={`publisher-hero publisher-hero--${section}`}>
-          <Text>{current.title}</Text>
-          <Text>{current.hint}</Text>
-          <View><Text>{mode === 'create' ? '自动保存草稿' : `编辑资源 #${resourceId}`}</Text><Text>提交后进入审核</Text></View>
+        <View className='publisher-intro'>
+          <Text className='publisher-intro__title'>{current.title}</Text>
+          <Text className='publisher-intro__meta'>
+            {mode === 'create' ? '草稿自动保存' : `编辑 #${resourceId}`}
+          </Text>
         </View>
 
         {loadingEdit ? (
           <View className='publisher-loading'>正在加载原内容</View>
         ) : (
           <>
-            <View className='publisher-section'>
-              <Text className='publisher-section__title'>基本信息</Text>
-              <View className='publisher-field'>
-                <Text className='publisher-field__label'>
-                  {section === 'community'
-                    ? '动态内容'
-                    : section === 'errands'
-                      ? '任务说明'
-                      : section === 'market'
-                        ? '物品描述'
-                        : '补充说明（可选）'}
-                </Text>
+            <View className='publisher-section publisher-section--content'>
+              <View className='publisher-field publisher-field--content'>
                 <View className='publisher-textarea'>
-                  <Textarea
+                  <KeyboardSafeTextarea
                     id='publisher-content'
                     value={form.content}
                     maxlength={section === 'community' ? 5000 : 2000}
                     placeholder={section === 'market' ? '描述成色、配件和使用情况' : section === 'errands' ? '说明物品、时间要求和注意事项' : section === 'carpool' ? '补充集合、行李或返程信息（可选）' : '分享真实、友善的校园内容'}
                     placeholderClass='publisher-placeholder'
+                    onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                     onInput={(event) => update('content', event.detail.value)}
                   />
                   <Text>{form.content.length}</Text>
@@ -525,9 +544,9 @@ export default function PublishPage() {
 
             {section === 'errands' && (
               <View className='publisher-section'>
-                <Text className='publisher-section__title'>任务与路线</Text>
-                <InputField inputId='publisher-pickup-location' label='取件地' value={form.pickupLocation} maxlength={100} placeholder='例如：北区快递站' onInput={(value) => update('pickupLocation', value)} />
-                <InputField inputId='publisher-dropoff-location' label='送达地' value={form.dropoffLocation} maxlength={100} placeholder='例如：图书馆南门' onInput={(value) => update('dropoffLocation', value)} />
+                <SectionHeading title='任务信息' />
+                <InputField inputId='publisher-pickup-location' label='取件地' value={form.pickupLocation} maxlength={100} placeholder='例如：北区快递站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('pickupLocation', value)} />
+                <InputField inputId='publisher-dropoff-location' label='送达地' value={form.dropoffLocation} maxlength={100} placeholder='例如：图书馆南门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('dropoffLocation', value)} />
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>截止时间</Text>
                   <View className='publisher-picker-row'>
@@ -535,26 +554,27 @@ export default function PublishPage() {
                     <Picker mode='time' value={form.deadlineTime} onChange={(event) => update('deadlineTime', String(event.detail.value))}><View>{form.deadlineTime}</View></Picker>
                   </View>
                 </View>
-                <InputField inputId='publisher-reward-yuan' label='任务报酬' value={form.rewardYuan} type='digit' maxlength={8} placeholder='请输入报酬' suffix='元' onInput={(value) => update('rewardYuan', value)} />
+                <InputField inputId='publisher-reward-yuan' label='任务报酬' value={form.rewardYuan} type='digit' maxlength={8} placeholder='请输入报酬' suffix='元' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('rewardYuan', value)} />
               </View>
             )}
 
             {section === 'market' && (
               <View className='publisher-section'>
-                <Text className='publisher-section__title'>交易信息</Text>
-                <InputField inputId='publisher-price-yuan' label='商品售价' value={form.priceYuan} type='digit' maxlength={10} placeholder='请输入售价' suffix='元' onInput={(value) => update('priceYuan', value)} />
-                <View className='publisher-note'>
-                  <Text>图片能力准备中</Text>
-                  <Text>当前版本可先发布文字商品；通用校园媒体上传接通后，这里会支持 1–9 张图片排序。</Text>
-                </View>
+                <SectionHeading title='交易信息' />
+                <InputField inputId='publisher-price-yuan' label='商品售价' value={form.priceYuan} type='digit' maxlength={10} placeholder='请输入售价' suffix='元' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('priceYuan', value)} />
+                {form.imageUrls.length > 0 && (
+                  <View className='publisher-note publisher-note--compact'>
+                    <Text>已保留 {form.imageUrls.length} 张原商品图片</Text>
+                  </View>
+                )}
               </View>
             )}
 
             {section === 'carpool' && (
               <View className='publisher-section'>
-                <Text className='publisher-section__title'>路线与座位</Text>
-                <InputField inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onInput={(value) => update('origin', value)} />
-                <InputField inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onInput={(value) => update('destination', value)} />
+                <SectionHeading title='行程信息' />
+                <InputField inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('origin', value)} />
+                <InputField inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('destination', value)} />
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>出发时间</Text>
                   <View className='publisher-picker-row'>
@@ -562,23 +582,21 @@ export default function PublishPage() {
                     <Picker mode='time' value={form.departureTime} onChange={(event) => update('departureTime', String(event.detail.value))}><View>{form.departureTime}</View></Picker>
                   </View>
                 </View>
-                <InputField inputId='publisher-total-seats' label='可加入人数' value={form.totalSeats} type='number' maxlength={2} placeholder='1–20' suffix='人' onInput={(value) => update('totalSeats', value)} />
+                <InputField inputId='publisher-total-seats' label='可加入人数' value={form.totalSeats} type='number' maxlength={2} placeholder='1–20' suffix='人' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('totalSeats', value)} />
               </View>
             )}
 
             {section === 'community' && (
               <View className='publisher-section'>
-                <Text className='publisher-section__title'>发布板块</Text>
+                <SectionHeading title='发布板块' />
                 {!sectionsReady && (
-                  <View className='publisher-note'>
-                    <Text>正在读取服务端板块</Text>
-                    <Text>板块加载完成后才可提交。</Text>
+                  <View className='publisher-note publisher-note--compact'>
+                    <Text>正在加载板块</Text>
                   </View>
                 )}
                 {sectionsReady && communitySectionOptions.length === 0 && (
-                  <View className='publisher-note'>
+                  <View className='publisher-note publisher-note--compact'>
                     <Text>暂无启用板块</Text>
-                    <Text>请联系管理员在服务端创建并启用社区板块。</Text>
                   </View>
                 )}
                 {communitySectionOptions.length > 0 && (
@@ -604,16 +622,12 @@ export default function PublishPage() {
                     ))}
                   </View>
                 )}
-                <View className='publisher-note publisher-note--safe'>
-                  <Text>板块由服务端统一配置</Text>
-                  <Text>内容提交后进入审核，通过后才会出现在对应板块。</Text>
-                </View>
               </View>
             )}
 
             {section !== 'community' && (
               <View className='publisher-section'>
-                <Text className='publisher-section__title'>联系与安全</Text>
+                <SectionHeading title='联系方式' />
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>联系方式</Text>
                   <View className='publisher-contact'>
@@ -625,40 +639,48 @@ export default function PublishPage() {
                     >
                       <View>{CONTACT_LABELS[CONTACT_VALUES.indexOf(form.contactType)]}</View>
                     </Picker>
-                    <Input
+                    <KeyboardSafeInput
                       id='publisher-contact'
                       value={form.contact}
                       maxlength={128}
                       placeholder='仅在服务端授权后展示'
                       placeholderClass='publisher-placeholder'
+                      onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                       onInput={(event) => update('contact', event.detail.value)}
                     />
                   </View>
-                </View>
-                <View className='publisher-note publisher-note--safe'>
-                  <Text>联系方式不会公开展示</Text>
-                  <Text>平台按发布者、参与者与交易状态决定谁可以查看完整联系方式。</Text>
+                  <Text className='publisher-field__help'>仅交易相关用户可查看</Text>
                 </View>
               </View>
             )}
-
-            <View className='publisher-rule'>
-              <Text>提交前请确认</Text>
-              <Text>内容真实、字段完整，不发布验证码、账号密码或他人隐私。提交后会进入校园内容审核，并可在“我的服务”查看进度。</Text>
-            </View>
           </>
         )}
       </View>
 
       {!loadingEdit && (
         <View className='publisher-actions'>
-          {mode === 'create' && <View className='publisher-actions__draft' onClick={saveAndLeave}>保存草稿</View>}
-          <View
-            id='publisher-submit'
-            className={`publisher-actions__submit ${validationError ? 'publisher-actions__submit--disabled' : ''}`}
-            onClick={() => void submit()}
-          >
-            {submitting ? '正在提交' : mode === 'create' ? '提交审核' : '保存并提交'}
+          <View className={`publisher-actions__status ${validationError ? '' : 'publisher-actions__status--ready'}`}>
+            <View />
+            <Text>{validationError ? `尚缺：${validationError}` : '内容完整，提交后进入审核'}</Text>
+          </View>
+          <View className='publisher-actions__buttons'>
+            {mode === 'create' && (
+              <View
+                className='publisher-actions__draft'
+                hoverClass='publisher-actions__button--pressed'
+                onClick={saveAndLeave}
+              >
+                保存退出
+              </View>
+            )}
+            <View
+              id='publisher-submit'
+              className={`publisher-actions__submit ${validationError ? 'publisher-actions__submit--disabled' : ''}`}
+              hoverClass='publisher-actions__button--pressed'
+              onClick={() => void submit()}
+            >
+              {submitting ? '正在提交' : mode === 'create' ? '提交审核' : '保存并提交'}
+            </View>
           </View>
         </View>
       )}

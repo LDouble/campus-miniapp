@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
-import { Image, Input, Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import './index.scss'
 
 const icons = {
@@ -94,7 +95,7 @@ export default function Services() {
       <View className='services-page__content'>
         <View className='services-search'>
           <Image src={icons.search} mode='aspectFit' />
-          <Input placeholder='搜索校园服务' placeholderClass='services-search__placeholder' />
+          <KeyboardSafeInput placeholder='搜索校园服务' placeholderClass='services-search__placeholder' />
         </View>
 
         {groups.map((group) => (

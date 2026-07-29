@@ -4,15 +4,21 @@ import Taro, {
   usePullDownRefresh,
   useShareAppMessage,
 } from '@tarojs/taro'
-import { Button, Image, Input, Text, View } from '@tarojs/components'
+import { Button, Image, Text, View } from '@tarojs/components'
 import type {
   CampusCirclePostView,
   CommentView,
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { formatDateTime, formatStatus } from '../../features/life-services/format'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import {
+  communityAuthorInitial,
+  communityAuthorName,
+  communityAuthorTone,
+} from '../../features/community/author'
 import './detail.scss'
 
 const communityDetailIcons = {
@@ -23,9 +29,6 @@ const communityDetailIcons = {
   send: require('../../assets/community/send.svg'),
   share: require('../../assets/community/share.svg'),
 }
-
-const getIdentityCode = (id: number) => String(id).padStart(2, '0').slice(-2)
-const getIdentityTone = (id: number) => Math.abs(id) % 4
 
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
@@ -220,14 +223,13 @@ export default function CommunityDetailPage() {
             <View className='community-detail-card'>
               <View className='community-detail-card__top'>
                 <View
-                  className={`community-detail-card__avatar community-detail-card__avatar--tone-${getIdentityTone(post.section_id)}`}
+                  className={`community-detail-card__avatar community-detail-card__avatar--tone-${communityAuthorTone(post)}`}
                 >
-                  {getIdentityCode(post.author_id)}
+                  {communityAuthorInitial(post)}
                 </View>
                 <View className='community-detail-card__author'>
                   <View>
-                    <Text>校园同学</Text>
-                    <Text>校园号 {post.author_id}</Text>
+                    <Text>{communityAuthorName(post)}</Text>
                   </View>
                   <Text className='community-detail-card__time'>
                     {formatDateTime(post.published_at || post.created_at)}
@@ -332,14 +334,13 @@ export default function CommunityDetailPage() {
                   className={`community-detail-comments__item community-comment community-comment--${item.status}`}
                 >
                   <View
-                    className={`community-detail-comments__avatar community-detail-comments__avatar--tone-${getIdentityTone(item.author_id)}`}
+                    className={`community-detail-comments__avatar community-detail-comments__avatar--tone-${communityAuthorTone(item)}`}
                   >
-                    {getIdentityCode(item.author_id)}
+                    {communityAuthorInitial(item)}
                   </View>
                   <View className='community-detail-comments__copy'>
                     <View className='community-detail-comments__author'>
-                      <Text>校园同学</Text>
-                      <Text>校园号 {item.author_id}</Text>
+                      <Text>{communityAuthorName(item)}</Text>
                     </View>
                     <Text className='community-comment__content'>{item.content}</Text>
                     <View className='community-detail-comments__meta'>
@@ -398,19 +399,22 @@ export default function CommunityDetailPage() {
                   ].filter(Boolean).join(' ')}
                   style={{ bottom: `${keyboardHeight}px` }}
                 >
-                  <Input
+                  <KeyboardSafeInput
                     id='community-comment-input'
                     value={comment}
                     disabled={submitting}
                     maxlength={300}
                     confirmType='send'
-                    cursorSpacing={0}
-                    adjustPosition={false}
+                    cursorSpacing={18}
+                    keepVisibleOnKeyboard={false}
                     placeholder='友善交流，分享你的想法'
                     placeholderClass='community-detail-comments__placeholder'
-                    onFocus={() => setCommentComposerOpen(true)}
+                    onFocus={(event) => {
+                      setCommentComposerOpen(true)
+                      setKeyboardHeight(Math.max(0, event.detail.height || 0))
+                    }}
                     onKeyboardHeightChange={(event) => {
-                      const height = event.detail.height
+                      const height = Math.max(0, event.detail.height || 0)
                       setKeyboardHeight(height)
                       if (height === 0) setCommentComposerOpen(false)
                     }}

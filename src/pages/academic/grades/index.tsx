@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Input, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
+import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import AcademicHeader from '../components/academic-header'
 import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
 import { academicRepository } from '../repository'
@@ -334,7 +335,7 @@ export default function GradesPage() {
                   </View>
                   <View className='academic-field'>
                     <Text className='academic-field__label'>折算百分制（参与加权平均）</Text>
-                    <Input
+                    <KeyboardSafeInput
                       type='digit'
                       value={gradeScore}
                       placeholder='例如：优秀折算为 95'
@@ -345,7 +346,7 @@ export default function GradesPage() {
               ) : (
                 <View className='academic-field'>
                   <Text className='academic-field__label'>模拟成绩（0–100）</Text>
-                  <Input
+                  <KeyboardSafeInput
                     type='digit'
                     value={gradeScore}
                     placeholder='请输入模拟成绩'
@@ -355,7 +356,7 @@ export default function GradesPage() {
               )}
               <View className='academic-field'>
                 <Text className='academic-field__label'>模拟学分（0.5–20）</Text>
-                <Input
+                <KeyboardSafeInput
                   type='digit'
                   value={gradeCredit}
                   placeholder='请输入模拟学分'

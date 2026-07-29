@@ -3,8 +3,9 @@ import Taro, {
   useDidHide,
   useDidShow,
   usePullDownRefresh,
+  useShareAppMessage,
 } from '@tarojs/taro'
-import { Image, ScrollView, Text, View } from '@tarojs/components'
+import { ScrollView, Text, View } from '@tarojs/components'
 import type { CampusCircleSectionView } from '../../api/types'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import CommunityFeedPanel from '../../features/community/feed-panel'
@@ -102,6 +103,16 @@ export default function CommunityPage() {
     setActiveCommunitySectionId(root.id)
   }
 
+  const chooseCommunitySection = async () => {
+    if (!activeCommunityRoot || activeCommunityChildren.length === 0) return
+    const options = [activeCommunityRoot, ...activeCommunityChildren]
+    const result = await Taro.showActionSheet({
+      itemList: options.map((item, index) => index === 0 ? '全部' : item.name),
+    })
+    const selected = options[result.tapIndex]
+    if (selected) setActiveCommunitySectionId(selected.id)
+  }
+
   const focusSearch = () => {
     setSearchFocusSignal((current) => current + 1)
     Taro.pageScrollTo({ selector: '.community-content-anchor', duration: 180 })
@@ -140,6 +151,27 @@ export default function CommunityPage() {
     void loadCommunitySections().finally(() => Taro.stopPullDownRefresh())
   })
 
+  useShareAppMessage((event) => {
+    const target = event.target as {
+      dataset?: Record<string, string | number>
+    } | undefined
+    const dataset = target?.dataset || {}
+    const postId = Number(dataset.postId)
+    const shareTitle = typeof dataset.shareTitle === 'string'
+      ? dataset.shareTitle
+      : '海大校园社区'
+    const shareImage = typeof dataset.shareImage === 'string'
+      ? dataset.shareImage
+      : ''
+    const result = {
+      title: shareTitle,
+      path: postId > 0
+        ? `/pages/community/detail?id=${postId}&mode=post`
+        : '/pages/community/index',
+    }
+    return shareImage ? { ...result, imageUrl: shareImage } : result
+  })
+
   return (
     <View className={`community-page community-page--${activeSection}`}>
       <CustomNavbar
@@ -157,15 +189,6 @@ export default function CommunityPage() {
         <View className='community-page__intro-copy'>
           <Text className='community-page__eyebrow'>{pageCopy.title}</Text>
           <Text className='community-page__subtitle'>{pageCopy.subtitle}</Text>
-        </View>
-        <View
-          className='community-page__search-action'
-          hoverClass='community-page__search-action--pressed'
-          ariaRole='button'
-          ariaLabel={`搜索${pageCopy.title}`}
-          onClick={focusSearch}
-        >
-          <Image src={icons.search} mode='aspectFit' />
         </View>
       </View>
 
@@ -215,39 +238,6 @@ export default function CommunityPage() {
               </View>
             </ScrollView>
 
-            {activeCommunityRoot && activeCommunityChildren.length > 0 && (
-              <ScrollView className='community-subtabs' scrollX enhanced showScrollbar={false}>
-                <View className='community-subtabs__inner'>
-                  <View
-                    id={`community-section-${activeCommunityRoot.id}`}
-                    className={
-                      activeCommunitySection?.id === activeCommunityRoot.id
-                        ? 'community-subtabs__item community-section-tab community-subtabs__item--active'
-                        : 'community-subtabs__item community-section-tab'
-                    }
-                    hoverClass='community-subtabs__item--pressed'
-                    onClick={() => setActiveCommunitySectionId(activeCommunityRoot.id)}
-                  >
-                    全部
-                  </View>
-                  {activeCommunityChildren.map((section) => (
-                    <View
-                      id={`community-section-${section.id}`}
-                      key={section.id}
-                      className={
-                        activeCommunitySection?.id === section.id
-                          ? 'community-subtabs__item community-section-tab community-subtabs__item--active'
-                          : 'community-subtabs__item community-section-tab'
-                      }
-                      hoverClass='community-subtabs__item--pressed'
-                      onClick={() => setActiveCommunitySectionId(section.id)}
-                    >
-                      {section.name}
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
-            )}
           </>
         )}
       </View>
@@ -262,6 +252,13 @@ export default function CommunityPage() {
             onRetrySections={() => void loadCommunitySections()}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
+            filterLabel={
+              activeCommunitySection?.parent_id === null
+                ? '全部'
+                : activeCommunitySection?.name || '全部'
+            }
+            canFilter={activeCommunityChildren.length > 0}
+            onOpenFilter={() => void chooseCommunitySection()}
           />
         ) : (
           <LifeServiceListPanel
@@ -275,7 +272,9 @@ export default function CommunityPage() {
 
       <View
         id={`life-publish-${activeSection}`}
-        className={`life-publish-fab community-publish-fab life-publish-fab--${activeSection}`}
+        className={`life-publish-fab community-publish-fab life-publish-fab--${activeSection} ${
+          headerCollapsed ? 'life-publish-fab--compact' : ''
+        }`}
         hoverClass='life-publish-fab--pressed'
         onClick={openPublish}
       >
