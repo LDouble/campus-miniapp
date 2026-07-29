@@ -1,7 +1,11 @@
 import type { MarketplaceListingView, Notice } from '../../api/types'
 import type { AcademicScheduleCache } from '../../pages/academic/storage'
 import type { Course } from '../../pages/academic/types'
-import { parseDate, sectionTimes } from '../../pages/academic/utils'
+import { parseDate } from '../../pages/academic/utils'
+import {
+  getSectionStartTime,
+  MiniappRuntimeConfig,
+} from '../runtime-config'
 
 const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const monthNames = [
@@ -41,6 +45,8 @@ const courseBadge = (startsAt: Date, now: Date) => {
 
 export const resolveNextCourse = (
   cache: AcademicScheduleCache | null,
+  config: MiniappRuntimeConfig,
+  selectedCampus: string,
   now = new Date(),
 ): NextCourse | null => {
   if (!cache) return null
@@ -53,7 +59,11 @@ export const resolveNextCourse = (
   let nearest: { course: Course; startsAt: Date; startTime: string } | null = null
 
   courses.forEach((course) => {
-    const startTime = sectionTimes[course.startSection - 1]
+    const startTime = getSectionStartTime(
+      config,
+      course.campus || selectedCampus,
+      course.startSection,
+    )
     if (!startTime) return
     const parts = startTime.split(':').map(Number)
     course.weeks.forEach((week) => {
@@ -82,20 +92,6 @@ export const currentDateParts = (now = new Date()) => ({
   month: monthNames[now.getMonth()],
   day: String(now.getDate()),
 })
-
-export const greeting = (username: string, now = new Date()) => {
-  const hour = now.getHours()
-  const salutation = hour < 6
-    ? '夜深了'
-    : hour < 11
-      ? '早上好'
-      : hour < 14
-        ? '中午好'
-        : hour < 18
-          ? '下午好'
-          : '晚上好'
-  return `${salutation}，${username || '海大同学'}`
-}
 
 export const avatarText = (username: string) => {
   const value = username.trim()

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Input, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
   ErrandView,
   MarketplaceListingView,
 } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { lifeBusinessThemes } from './business-theme'
 import type { LifeHubSection } from './business-theme'
 import { lifeServicesRepository } from './repository'
@@ -199,7 +200,7 @@ export default function LifeServiceListPanel({
     <View className={`life-panel life-panel--${section}`}>
       <View className={`life-search life-search--${section}`}>
         <View className='life-search__icon' />
-        <Input
+        <KeyboardSafeInput
           id={`life-search-input-${section}`}
           value={draftKeyword}
           focus={searchFocused}

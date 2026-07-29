@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
-import { Image, Text, View } from '@tarojs/components'
+import { Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import type { MarketplaceListingView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
-import { formatDateTime, formatMoney, formatStatus } from '../../features/life-services/format'
+import { formatMoney, formatStatus } from '../../features/life-services/format'
 import '../../features/life-services/detail.scss'
+import './detail.scss'
 
 const actionLabels: Record<string, string> = {
   edit: '编辑商品',
@@ -101,6 +102,13 @@ export default function MarketplaceDetailPage() {
     Taro.setClipboardData({ data: item.contact })
   }
 
+  const relationLabel = item?.viewer_relation === 'owner'
+    ? '我发布的'
+    : item?.viewer_relation === 'buyer'
+      ? '我已预订'
+      : '校内在售'
+  const coverTone = item ? Math.abs(item.id) % 4 : 0
+
   return (
     <View className='life-detail life-detail--market'>
       <CustomNavbar title='闲置详情' subtitle='校内见面交易' showBack />
@@ -109,21 +117,46 @@ export default function MarketplaceDetailPage() {
         {!loading && error && <View className='detail-state'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
         {!loading && item && (
           <>
-            <View className='detail-overview detail-overview--market'>
-              <View className='market-gallery'>
-                {item.image_urls.length
-                  ? item.image_urls.map((url) => <Image key={url} src={url} mode='aspectFill' lazyLoad />)
-                  : <View className='market-gallery__empty'><Text>OUC</Text><Text>校内闲置</Text></View>}
+            <View className='market-detail-hero'>
+              <View className='market-detail-gallery'>
+                {item.image_urls.length > 0 ? (
+                  <Swiper
+                    className='market-detail-gallery__swiper'
+                    indicatorDots={item.image_urls.length > 1}
+                    indicatorColor='rgba(255, 255, 255, 0.48)'
+                    indicatorActiveColor='#ffffff'
+                    circular={item.image_urls.length > 1}
+                  >
+                    {item.image_urls.map((url) => (
+                      <SwiperItem key={url}>
+                        <Image className='market-detail-gallery__image' src={url} mode='aspectFill' lazyLoad />
+                      </SwiperItem>
+                    ))}
+                  </Swiper>
+                ) : (
+                  <View className={`market-detail-gallery__empty market-detail-gallery__empty--tone-${coverTone}`}>
+                    <Text className='market-detail-gallery__quote'>“</Text>
+                    <Text className='market-detail-gallery__text'>{item.description}</Text>
+                  </View>
+                )}
               </View>
-              <View className='detail-overview__meta'>
-                <Text>{formatStatus(item.status)}</Text>
-                <Text>{item.viewer_relation === 'owner' ? '我发布的' : item.viewer_relation === 'buyer' ? '我已预订' : '校内在售'}</Text>
+              <View className='market-detail-main'>
+                <View className='market-detail-badges'>
+                  <Text>{formatStatus(item.status)}</Text>
+                  <Text>{relationLabel}</Text>
+                </View>
+                <View className='market-detail-price'>
+                  <Text>{formatMoney(item.price_cents)}</Text>
+                  <View>
+                    <Text>校内面交</Text>
+                    <Text>见面验货后付款</Text>
+                  </View>
+                </View>
+                <View className='market-detail-description'>
+                  <Text>商品描述</Text>
+                  <Text>{item.description}</Text>
+                </View>
               </View>
-              <View className='detail-overview__summary detail-overview__summary--primary'>
-                <View><Text>商品售价</Text><Text>线下面交</Text></View>
-                <Text>{formatMoney(item.price_cents)}</Text>
-              </View>
-              <Text className='detail-overview__description'>{item.description}</Text>
             </View>
 
             {item.status === 'rejected' && (
@@ -133,28 +166,38 @@ export default function MarketplaceDetailPage() {
               </View>
             )}
 
-            <View className='detail-section'>
-              <View className='detail-section__heading'><Text>商品信息</Text><Text>真实描述</Text></View>
-              <View className='detail-facts'>
-                <View className='detail-fact'><Text>发布状态</Text><Text>{formatStatus(item.status)}</Text></View>
-                <View className='detail-fact'><Text>交易方式</Text><Text>校内面交</Text></View>
-                <View className='detail-fact'><Text>发布时间</Text><Text>{formatDateTime(item.created_at)}</Text></View>
-                <View className='detail-fact'><Text>图片数量</Text><Text>{item.image_urls.length} 张</Text></View>
+            {/*
+            <View className='detail-section market-detail-section'>
+              <View className='detail-section__heading'><Text>商品信息</Text><Text>{item.created_at}</Text></View>
+              <View className='market-detail-facts'>
+                <View><Text>发布状态</Text><Text>{formatStatus(item.status)}</Text></View>
+                <View><Text>交易方式</Text><Text>校内面交</Text></View>
+                <View><Text>商品图片</Text><Text>{item.image_urls.length > 0 ? `${item.image_urls.length} 张` : '文字商品卡'}</Text></View>
               </View>
             </View>
+            */}
 
-            <View className='detail-section detail-contact' onClick={copyContact}>
-              <View className='detail-section__heading'><Text>联系卖家</Text><Text>点击复制</Text></View>
-              <View className='detail-contact__row'>
-                <Text>{item.contact_type || '校内联系'}</Text>
-                <Text>{item.contact || '预订后可见'}</Text>
+            <View className='detail-section detail-contact market-detail-contact' onClick={copyContact}>
+              <View className='detail-section__heading'><Text>联系卖家</Text><Text>校内身份</Text></View>
+              <View className='market-detail-contact__main'>
+                <View className='market-detail-contact__avatar'>卖</View>
+                <View className='market-detail-contact__value'>
+                  <Text>{item.contact_type || '校内联系'}</Text>
+                  <Text>{item.contact || '预订后可见'}</Text>
+                </View>
+                <Text className='market-detail-contact__copy'>复制</Text>
               </View>
-              <Text className='detail-contact__tip'>联系方式由服务端按买卖关系授权，不会出现在公开列表和分享卡中。</Text>
+              <Text className='detail-contact__tip'>预订后可查看完整联系方式，公开页面会自动隐藏敏感信息。</Text>
             </View>
 
-            <View className='detail-section'>
-              <View className='detail-section__heading'><Text>交易提醒</Text><Text>线下付款</Text></View>
-              <Text className='detail-safety'>见面后先核对实物与功能，再决定是否付款。平台只提供信息撮合，不代收款，也不会要求提供验证码。</Text>
+            <View className='detail-section market-detail-section'>
+              <View className='detail-section__heading'><Text>交易步骤</Text><Text>线下付款</Text></View>
+              <View className='market-detail-steps'>
+                <View><Text>1</Text><View><Text>核对实物</Text><Text>当面检查外观、配件和功能</Text></View></View>
+                <View><Text>2</Text><View><Text>确认价格</Text><Text>交易前再次确认商品和金额</Text></View></View>
+                <View><Text>3</Text><View><Text>完成付款</Text><Text>确认无误后再线下支付</Text></View></View>
+              </View>
+              <Text className='detail-safety'>平台仅提供信息撮合，不代收款，也不会索要验证码。</Text>
             </View>
 
             {item.available_actions.length > 0 && (

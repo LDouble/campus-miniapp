@@ -20,6 +20,7 @@ export interface Course {
   name: string
   teacher: string
   location: string
+  campus?: string
   weekday: number
   startSection: number
   endSection: number

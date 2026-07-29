@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Image, Input, ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
+import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import {
+  getMiniappRuntimeConfig,
+  getSectionStartTime,
+  getSelectedCampus,
+  loadMiniappRuntimeConfig,
+} from '../../../features/runtime-config'
 import AcademicHeader from '../components/academic-header'
 import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
@@ -20,7 +27,6 @@ import {
   getWeekDates,
   isSameDay,
   resolvePeriodId,
-  sectionTimes,
   weekdays,
 } from '../utils'
 import '../index.scss'
@@ -105,6 +111,10 @@ function CourseDetailCard({
 }
 
 export default function SchedulePage() {
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
+  const [campusName, setCampusName] = useState(() => (
+    getSelectedCampus(getMiniappRuntimeConfig())
+  ))
   const [academicUserId] = useState(getActiveAcademicUserId)
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
@@ -129,6 +139,9 @@ export default function SchedulePage() {
   )
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
+  const sectionTimes = Array.from({ length: 12 }, (_, index) => (
+    getSectionStartTime(runtimeConfig, campusName, index + 1)
+  ))
   const weekDates = getWeekDates(schedulePeriod, preferences.week)
   const allCourses = useMemo(() => [
     ...officialCourses,
@@ -145,6 +158,18 @@ export default function SchedulePage() {
       )),
     [allCourses, preferences.selectedWeekday, preferences.week],
   )
+
+  useEffect(() => {
+    let active = true
+    loadMiniappRuntimeConfig().then((config) => {
+      if (!active) return
+      setRuntimeConfig(config)
+      setCampusName(getSelectedCampus(config))
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     const applyPeriods = (records: AcademicPeriod[]) => {
@@ -606,7 +631,13 @@ export default function SchedulePage() {
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
                 <View className='day-course__time'>
-                  <Text>{sectionTimes[course.startSection - 1]}</Text>
+                  <Text>
+                    {getSectionStartTime(
+                      runtimeConfig,
+                      course.campus || campusName,
+                      course.startSection,
+                    )}
+                  </Text>
                   <Text>第 {course.startSection}-{course.endSection} 节</Text>
                 </View>
                 <View className='day-course__main'>
@@ -730,7 +761,7 @@ export default function SchedulePage() {
               <ScrollView className='course-form-scroll' scrollY>
                 <View className='academic-field'>
                   <Text className='academic-field__label'>课程名称 *</Text>
-                  <Input
+                  <KeyboardSafeInput
                     value={courseDraft.name}
                     maxlength={30}
                     placeholder='例如：专业学习小组'
@@ -740,7 +771,7 @@ export default function SchedulePage() {
                 <View className='academic-field-row'>
                   <View className='academic-field'>
                     <Text className='academic-field__label'>任课教师</Text>
-                    <Input
+                    <KeyboardSafeInput
                       value={courseDraft.teacher}
                       maxlength={15}
                       placeholder='选填'
@@ -749,7 +780,7 @@ export default function SchedulePage() {
                   </View>
                   <View className='academic-field'>
                     <Text className='academic-field__label'>上课地点</Text>
-                    <Input
+                    <KeyboardSafeInput
                       value={courseDraft.location}
                       maxlength={20}
                       placeholder='选填'

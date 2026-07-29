@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
-import { Image, Input, ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import './module.scss'
 
@@ -144,7 +145,7 @@ function ModulePage() {
 
       <View className='module-search'>
         <Image src={icons.search} mode='aspectFit' />
-        <Input
+        <KeyboardSafeInput
           value={keyword}
           onInput={(event) => setKeyword(event.detail.value)}
           onConfirm={() => showTip(keyword.trim() ? `搜索“${keyword.trim()}”` : '请输入搜索内容')}

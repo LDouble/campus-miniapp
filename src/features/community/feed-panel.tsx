@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Input, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { lifeServicesRepository } from '../life-services/repository'
 import CommunityPostCard from './post-card'
 import './feed-panel.scss'
@@ -15,6 +16,9 @@ type Props = {
   onRetrySections?: () => void
   refreshSignal?: number
   searchFocusSignal?: number
+  filterLabel?: string
+  canFilter?: boolean
+  onOpenFilter?: () => void
 }
 
 const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionView[] => (
@@ -38,6 +42,9 @@ export default function CommunityFeedPanel({
   onRetrySections,
   refreshSignal = 0,
   searchFocusSignal = 0,
+  filterLabel = '全部',
+  canFilter = false,
+  onOpenFilter,
 }: Props) {
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -125,7 +132,7 @@ export default function CommunityFeedPanel({
     <View className='api-community'>
       <View className='api-community-search'>
         <View className='api-community-search__icon' />
-        <Input
+        <KeyboardSafeInput
           id='community-search-input'
           value={draftKeyword}
           focus={searchFocused}
@@ -160,7 +167,19 @@ export default function CommunityFeedPanel({
           <Text>{keyword ? `“${keyword}”` : '最新动态'}</Text>
           <Text>{keyword ? '搜索结果' : '按发布时间排列'}</Text>
         </View>
-        <Text>{loading ? '加载中' : `${total} 条动态`}</Text>
+        <View className='api-community__heading-actions'>
+          <Text>{loading ? '加载中' : `${total} 条动态`}</Text>
+          {canFilter && (
+            <View
+              className='api-community__filter'
+              hoverClass='api-community__filter--pressed'
+              onClick={onOpenFilter}
+            >
+              <Text>{filterLabel}</Text>
+              <Text>筛选</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {!sectionsReady && <View className='api-community-state'>正在加载社区板块</View>}
@@ -178,7 +197,19 @@ export default function CommunityFeedPanel({
         </View>
       )}
       {sectionsReady && !sectionsError && activeSection && loading && (
-        <View className='api-community-state'>正在加载校园动态</View>
+        <View className='community-feed-skeleton'>
+          {[0, 1].map((index) => (
+            <View key={index} className='community-feed-skeleton__item'>
+              <View className='community-feed-skeleton__header'>
+                <View />
+                <View><View /><View /></View>
+              </View>
+              <View className='community-feed-skeleton__line' />
+              <View className='community-feed-skeleton__line community-feed-skeleton__line--short' />
+              <View className='community-feed-skeleton__media' />
+            </View>
+          ))}
+        </View>
       )}
       {sectionsReady && !sectionsError && activeSection && !loading && error && (
         <View className='api-community-state api-community-state--error'>

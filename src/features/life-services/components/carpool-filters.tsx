@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Input, Picker, ScrollView, Text, View } from '@tarojs/components'
+import { Picker, ScrollView, Text, View } from '@tarojs/components'
+import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import FilterSheet from './filter-sheet'
 import './filters.scss'
 
@@ -152,7 +153,7 @@ export default function CarpoolFilters({ value, onChange }: Props) {
           <View className='route-filter-fields'>
             <View className='route-filter-field'>
               <Text>起</Text>
-              <Input
+              <KeyboardSafeInput
                 value={draft.origin || ''}
                 maxlength={60}
                 placeholder='输入起点'
@@ -165,7 +166,7 @@ export default function CarpoolFilters({ value, onChange }: Props) {
             <View className='route-filter-rail' />
             <View className='route-filter-field route-filter-field--destination'>
               <Text>终</Text>
-              <Input
+              <KeyboardSafeInput
                 value={draft.destination || ''}
                 maxlength={60}
                 placeholder='输入终点'

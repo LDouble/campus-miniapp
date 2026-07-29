@@ -58,6 +58,7 @@ const validCourse = (value: unknown): value is Course => {
     && typeof course.name === 'string'
     && typeof course.teacher === 'string'
     && typeof course.location === 'string'
+    && (course.campus === undefined || typeof course.campus === 'string')
     && Number.isInteger(course.weekday)
     && Number.isInteger(course.startSection)
     && Number.isInteger(course.endSection)

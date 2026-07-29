@@ -6,11 +6,11 @@ import Taro, {
 } from '@tarojs/taro'
 import {
   Image,
-  Input,
   Text,
   View,
 } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { getCurrentUser } from '../../api/account'
 import {
   isAcademicEducationLevel,
@@ -490,7 +490,7 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View className='verification-field'>
                       <Text>学号</Text>
-                      <Input
+                      <KeyboardSafeInput
                         value={studentNo}
                         maxlength={64}
                         placeholder='请输入教务系统学号'
@@ -501,7 +501,7 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View className='verification-field'>
                       <Text>教务密码</Text>
-                      <Input
+                      <KeyboardSafeInput
                         value={password}
                         password
                         maxlength={256}
@@ -548,7 +548,7 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View className='verification-field'>
                       <Text>真实姓名</Text>
-                      <Input
+                      <KeyboardSafeInput
                         value={realName}
                         maxlength={100}
                         placeholder='请输入学生证上的姓名'
@@ -558,7 +558,7 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View className='verification-field'>
                       <Text>学号</Text>
-                      <Input
+                      <KeyboardSafeInput
                         value={studentNo}
                         maxlength={64}
                         placeholder='请输入学生证上的学号'

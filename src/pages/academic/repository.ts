@@ -50,6 +50,7 @@ const mapCourse = (course: AcademicCourse): Course => ({
   name: course.name,
   teacher: course.teacher,
   location: course.location,
+  campus: course.campus,
   weekday: course.weekday,
   startSection: course.start_section,
   endSection: course.end_section,

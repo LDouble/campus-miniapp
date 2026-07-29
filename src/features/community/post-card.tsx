@@ -1,7 +1,11 @@
-import Taro from '@tarojs/taro'
-import { Image, Text, View } from '@tarojs/components'
+import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
 import { formatDateTime } from '../life-services/format'
+import {
+  communityAuthorInitial,
+  communityAuthorName,
+  communityAuthorTone,
+} from './author'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -24,10 +28,11 @@ export default function CommunityPostCard({
   onToggleLike,
   onOpen,
 }: Props) {
-  const avatarTone = post.section_id % 4
+  const authorName = communityAuthorName(post)
+  const authorInitial = communityAuthorInitial(post)
+  const avatarTone = communityAuthorTone(post)
   const visibleImages = post.images.slice(0, 3)
   const remainingImages = Math.max(0, post.images.length - visibleImages.length)
-  const authorCode = String(post.author_id).padStart(2, '0').slice(-2)
   const publishedAt = formatDateTime(post.published_at || post.created_at)
 
   return (
@@ -41,22 +46,18 @@ export default function CommunityPostCard({
         hoverStartTime={20}
         hoverStayTime={120}
         ariaRole='button'
-        ariaLabel={`查看校园同学 ${post.author_id} 发布的动态`}
+        ariaLabel={`查看${authorName}发布的动态`}
         onClick={() => onOpen(post)}
       >
         <View className={`community-post__avatar community-post__avatar--tone-${avatarTone}`}>
-          <Text>{authorCode}</Text>
+          <Text>{authorInitial}</Text>
         </View>
         <View className='community-post__author'>
           <View className='community-post__author-line'>
-            <Text>校园同学</Text>
-            <Text>校园号 {post.author_id}</Text>
+            <Text>{authorName}</Text>
           </View>
           <View className='community-post__meta'>
             <Text>{publishedAt}</Text>
-            <View className='community-post__meta-divider' />
-            <Image src={communityIcons.topic} mode='aspectFit' />
-            <Text className='community-post__section-name'>{sectionName}</Text>
           </View>
         </View>
       </View>
@@ -70,7 +71,14 @@ export default function CommunityPostCard({
         ariaLabel={`查看动态：${post.content || '校园图片动态'}`}
         onClick={() => onOpen(post)}
       >
+        <View className='community-post__section-pill'>
+          <Image src={communityIcons.topic} mode='aspectFit' />
+          <Text>{sectionName}</Text>
+        </View>
         {post.content && <Text className='community-post__content'>{post.content}</Text>}
+        {post.content && post.content.length > 90 && (
+          <Text className='community-post__expand'>展开全文</Text>
+        )}
         {visibleImages.length > 0 && (
           <View className={`community-post__images community-post__images--${visibleImages.length}`}>
             {visibleImages.map((image, index) => (
@@ -113,17 +121,17 @@ export default function CommunityPostCard({
           <Image src={communityIcons.comment} mode='aspectFit' />
           <Text className='community-post__action-count'>{post.comment_count}</Text>
         </View>
-        <View
+        <Button
           className='community-post__action community-post__action--share'
+          openType='share'
+          data-post-id={post.id}
+          data-share-title={(post.content || '海大校园动态').trim().slice(0, 28)}
+          data-share-image={post.images[0]?.url || ''}
           hoverClass='community-post__action--pressed'
-          hoverStartTime={20}
-          hoverStayTime={120}
-          ariaRole='button'
           ariaLabel='分享这条动态'
-          onClick={() => Taro.showShareMenu({ withShareTicket: true })}
         >
           <Image src={communityIcons.share} mode='aspectFit' />
-        </View>
+        </Button>
       </View>
     </View>
   )
