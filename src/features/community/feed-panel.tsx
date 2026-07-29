@@ -14,6 +14,7 @@ type Props = {
   sectionsReady: boolean
   sectionsError?: string
   onRetrySections?: () => void
+  pinnedPost?: CampusCirclePostView | null
   refreshSignal?: number
   searchFocusSignal?: number
   filterLabel?: string
@@ -40,6 +41,7 @@ export default function CommunityFeedPanel({
   sectionsReady,
   sectionsError = '',
   onRetrySections,
+  pinnedPost = null,
   refreshSignal = 0,
   searchFocusSignal = 0,
   filterLabel = '全部',
@@ -56,6 +58,11 @@ export default function CommunityFeedPanel({
   const [error, setError] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const requestSequence = useRef(0)
+  const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
+
+  useEffect(() => {
+    pendingPinnedPost.current = pinnedPost
+  }, [pinnedPost])
 
   const sections = useMemo(
     () => flattenSections(sectionRoots),
@@ -81,9 +88,16 @@ export default function CommunityFeedPanel({
         page: nextPage,
       })
       if (requestId !== requestSequence.current) return
+      const pinned = !append && nextPage === 1
+        ? pendingPinnedPost.current
+        : null
+      const incoming = pinned
+        ? [pinned, ...result.items.filter((item) => item.id !== pinned.id)]
+        : result.items
       setPosts((current) => append
-        ? mergeUniquePosts(current, result.items)
-        : result.items)
+        ? mergeUniquePosts(current, incoming)
+        : incoming)
+      if (pinned) pendingPinnedPost.current = null
       setPage(result.page)
       setTotal(Number(result.total))
     } catch (loadError) {
@@ -127,45 +141,108 @@ export default function CommunityFeedPanel({
   }
 
   const canLoadMore = posts.length < total
+  const normalizedDraftKeyword = draftKeyword.trim()
+
+  const hideSearchKeyboard = () => {
+    setSearchFocused(false)
+    void Taro.hideKeyboard().catch(() => undefined)
+  }
+
+  const submitSearch = () => {
+    if (!normalizedDraftKeyword) {
+      setDraftKeyword('')
+      if (keyword) setKeyword('')
+      hideSearchKeyboard()
+      return
+    }
+
+    setDraftKeyword(normalizedDraftKeyword)
+    hideSearchKeyboard()
+    if (normalizedDraftKeyword === keyword) {
+      void load(1, false)
+      return
+    }
+    setKeyword(normalizedDraftKeyword)
+  }
+
+  const clearSearch = (keepFocus = false) => {
+    setDraftKeyword('')
+    if (keyword) setKeyword('')
+    if (keepFocus) {
+      setSearchFocused(true)
+      return
+    }
+    hideSearchKeyboard()
+  }
+
+  const cancelSearchEdit = () => {
+    setDraftKeyword(keyword)
+    hideSearchKeyboard()
+  }
 
   return (
     <View className='api-community'>
-      <View className='api-community-search'>
+      <View
+        className={[
+          'api-community-search',
+          searchFocused ? 'api-community-search--focused' : '',
+          keyword ? 'api-community-search--active' : '',
+        ].filter(Boolean).join(' ')}
+      >
         <View className='api-community-search__icon' />
         <KeyboardSafeInput
           id='community-search-input'
           value={draftKeyword}
           focus={searchFocused}
+          keepVisibleOnKeyboard={false}
           maxlength={40}
           confirmType='search'
           placeholder='搜索动态、话题或校园关键词'
           placeholderClass='api-community-search__placeholder'
           onInput={(event) => setDraftKeyword(event.detail.value)}
-          onConfirm={() => setKeyword(draftKeyword.trim())}
+          onConfirm={submitSearch}
+          onFocus={() => setSearchFocused(true)}
           onBlur={() => setSearchFocused(false)}
         />
         {draftKeyword && (
           <View
-            onClick={() => {
-              setDraftKeyword('')
-              setKeyword('')
-            }}
+            className='api-community-search__clear'
+            hoverClass='api-community-search__control--pressed'
+            ariaLabel='清除搜索内容'
+            onClick={() => clearSearch(true)}
           >
-            清除
+            ×
           </View>
         )}
-        <View
-          id='community-search-submit'
-          onClick={() => setKeyword(draftKeyword.trim())}
-        >
-          搜索
-        </View>
+        {(searchFocused || draftKeyword || keyword) && (
+          <View
+            id='community-search-submit'
+            className={[
+              'api-community-search__submit',
+              normalizedDraftKeyword
+                ? ''
+                : 'api-community-search__submit--secondary',
+            ].filter(Boolean).join(' ')}
+            hoverClass='api-community-search__control--pressed'
+            onClick={normalizedDraftKeyword
+              ? submitSearch
+              : keyword
+                ? () => clearSearch(false)
+                : cancelSearchEdit}
+          >
+            {normalizedDraftKeyword ? '搜索' : keyword ? '清除' : '取消'}
+          </View>
+        )}
       </View>
 
       <View className='api-community__heading'>
         <View>
           <Text>{keyword ? `“${keyword}”` : '最新动态'}</Text>
-          <Text>{keyword ? '搜索结果' : '按发布时间排列'}</Text>
+          <Text>
+            {keyword
+              ? `${activeSection?.name || '当前板块'}内的搜索结果`
+              : '按发布时间排列'}
+          </Text>
         </View>
         <View className='api-community__heading-actions'>
           <Text>{loading ? '加载中' : `${total} 条动态`}</Text>
@@ -237,6 +314,14 @@ export default function CommunityFeedPanel({
           <View>OUC</View>
           <Text>{keyword ? '没有找到相关动态' : '这个板块还没有动态'}</Text>
           <Text>{keyword ? '换个关键词试试吧' : '去统一发布器分享第一条内容'}</Text>
+          {keyword && (
+            <View
+              hoverClass='api-community-search__control--pressed'
+              onClick={() => clearSearch(false)}
+            >
+              清除搜索
+            </View>
+          )}
         </View>
       )}
 

@@ -660,6 +660,42 @@
   background: #f6d7d1;
 }
 
+.life-state > .course-market-empty__actions {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  margin-top: 24rpx;
+  gap: 12rpx;
+  background: transparent;
+}
+
+.course-market-empty__actions > view {
+  display: flex;
+  min-height: 78rpx;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  font-size: 23rpx;
+  font-weight: 720;
+  border-radius: 21rpx;
+}
+
+.course-market-empty__primary {
+  color: #fff;
+  background: linear-gradient(135deg, #55b7bd, #469cae 72%, #e98c70);
+  box-shadow: 0 9rpx 20rpx rgba(70, 156, 174, 0.17);
+}
+
+.course-market-empty__secondary {
+  color: #53857f;
+  background: #edf6f3;
+  border: 2rpx solid rgba(83, 133, 127, 0.1);
+}
+
+.course-market-empty__button--pressed {
+  opacity: 0.74;
+}
+
 .life-load-more {
   display: flex;
   min-height: 88rpx;

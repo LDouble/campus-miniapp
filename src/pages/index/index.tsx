@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import {
   Image,
@@ -10,16 +10,19 @@ import {
 } from '@tarojs/components'
 import { getCurrentUser } from '../../api/account'
 import { getActiveAcademicUserId } from '../../api/academic-credential'
-import type { MarketplaceListingView, Notice } from '../../api/types'
+import type {
+  CampusCirclePostView,
+  CampusCircleSectionView,
+  MarketplaceListingView,
+} from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
-import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { saveCommunityFeedPin } from '../../features/community/feed-pin'
 import {
   avatarText,
-  currentDateParts,
-  noticeCategory,
-  noticeTime,
-  resolveNextCourse,
+  resolveCoursePreview,
 } from '../../features/home/data'
+import { communityAuthorName } from '../../features/community/author'
+import { formatDateTime } from '../../features/life-services/format'
 import MarketplaceCard from '../../features/life-services/components/marketplace-card'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { noticesRepository } from '../../features/notices/repository'
@@ -36,13 +39,19 @@ import {
 } from '../../features/runtime-config'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { academicRepository } from '../academic/repository'
-import { academicStorage } from '../academic/storage'
-import { getAcademicCalendarLabel } from '../academic/utils'
+import {
+  academicStorage,
+  type AcademicScheduleCache,
+} from '../academic/storage'
+import {
+  getAcademicCalendarLabel,
+  getCurrentAcademicWeek,
+  resolveScheduleAnchor,
+} from '../academic/utils'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
 const icons = {
-  search: require('../../assets/icons/search.svg'),
   scan: require('../../assets/icons/scan.svg'),
   bell: require('../../assets/icons/bell.svg'),
   academic: require('../../assets/icons/academic.svg'),
@@ -89,7 +98,7 @@ const quickServices = [
   { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/campus-service/index?type=pass-rate' },
   { key: 'materials', name: '资料', icon: icons.materials, tone: 'green', route: '/pages/materials/index' },
   { key: 'calendar', name: '校历', icon: icons.calendar, tone: 'pink', route: '/pages/campus-service/index?type=calendar' },
-  { key: 'shuttle', name: '校车', icon: icons.shuttle, tone: 'blue', route: '/pages/campus-service/index?type=shuttle' },
+  { key: 'shuttle', name: '校车', icon: icons.shuttle, tone: 'blue', route: '/pages/shuttle/index' },
   { key: 'community', name: '社区', icon: icons.community, tone: 'purple', tab: '/pages/community/index' },
   { key: 'market', name: '二手', icon: icons.market, tone: 'orange', module: 'market' },
   { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
@@ -105,11 +114,18 @@ const homeServiceKeys = new Set([
   'schedule',
   'grades',
   'exams',
-  'classroom',
+  'study',
+  'result',
+  'pass-rate',
+  'materials',
+  'calendar',
   'shuttle',
-  'campus-card',
   'community',
   'market',
+  'errands',
+  'carpool',
+  'lost',
+  'library',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
 const serviceFeatureKeys: Record<string, string> = {
@@ -129,13 +145,14 @@ const settle = async <T,>(promise: Promise<T>): Promise<Settled<T>> => {
   }
 }
 
-const loadCachedNextCourse = (
+const loadCachedCoursePreview = (
   config: MiniappRuntimeConfig,
   campusName: string,
 ) => {
   const userId = getActiveAcademicUserId()
-  return resolveNextCourse(
+  return resolveCoursePreview(
     academicStorage.getScheduleCache(userId),
+    academicStorage.getCustomCourses(),
     config,
     campusName,
   )
@@ -147,40 +164,75 @@ const loadCachedAcademicLabel = () => {
   return getAcademicCalendarLabel(cache ? cache.periods : [])
 }
 
-const loadLatestAcademicLabel = async (userIdPromise: Promise<number>) => {
+const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
   const periodsPromise = settle(academicRepository.getPeriods())
   const userId = await userIdPromise
   const cache = academicStorage.getScheduleCache(userId)
   const periodsResult = await periodsPromise
 
   if (!periodsResult.ok || !periodsResult.value.length) {
-    return getAcademicCalendarLabel(cache ? cache.periods : [])
+    return {
+      label: getAcademicCalendarLabel(cache ? cache.periods : []),
+      cache,
+    }
   }
-  const currentCache = academicStorage.getScheduleCache(userId)
+
+  const periods = periodsResult.value
+  let coursesByPeriod = cache ? cache.coursesByPeriod : {}
   academicStorage.setScheduleCache(
     userId,
-    periodsResult.value,
-    currentCache ? currentCache.coursesByPeriod : {},
+    periods,
+    coursesByPeriod,
   )
-  return getAcademicCalendarLabel(periodsResult.value)
+
+  const { periodId } = resolveScheduleAnchor(periods)
+  const anchoredPeriod = periods.find((period) => period.id === periodId)
+  const isCurrentPeriod = !!anchoredPeriod
+    && getCurrentAcademicWeek([anchoredPeriod]) !== null
+  const hasCachedCourses = !!periodId
+    && Object.prototype.hasOwnProperty.call(coursesByPeriod, periodId)
+
+  if (periodId && isCurrentPeriod && !hasCachedCourses) {
+    const coursesResult = await settle(academicRepository.getCourses(periodId))
+    if (coursesResult.ok) {
+      coursesByPeriod = {
+        ...coursesByPeriod,
+        [periodId]: coursesResult.value,
+      }
+      academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
+    }
+  }
+
+  const latestCache: AcademicScheduleCache = {
+    version: 1,
+    platformUserId: userId,
+    periods,
+    coursesByPeriod,
+  }
+  return {
+    label: getAcademicCalendarLabel(periods),
+    cache: latestCache,
+  }
 }
 
-const noticePriority = (notice: Notice) => {
-  if (notice.priority === 'urgent') return 0
-  if (notice.priority === 'important') return 1
-  return 2
-}
-
-const prioritizeNotices = (items: Notice[]) => (
+const latestCommunityPosts = (items: CampusCirclePostView[]) => (
   [...items]
-    .sort((left, right) => {
-      const priority = noticePriority(left) - noticePriority(right)
-      if (priority !== 0) return priority
-      const leftTime = new Date(left.published_at || left.publish_at || left.created_at).getTime()
-      const rightTime = new Date(right.published_at || right.publish_at || right.created_at).getTime()
-      return rightTime - leftTime
+    .filter((item) => item.status === 'approved')
+    .sort((left, right) => (
+      new Date(right.published_at || right.created_at).getTime()
+      - new Date(left.published_at || left.created_at).getTime()
+    ))
+    .slice(0, 3)
+)
+
+const communitySectionNames = (sections: CampusCircleSectionView[]) => (
+  sections.reduce<Record<number, string>>((names, section) => {
+    names[section.id] = section.name
+    section.children.forEach((child) => {
+      names[child.id] = child.name
     })
-    .slice(0, 4)
+    return names
+  }, {})
 )
 
 function Index() {
@@ -188,17 +240,17 @@ function Index() {
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
-  const [searchValue, setSearchValue] = useState('')
   const [username, setUsername] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
-  const [news, setNews] = useState<Notice[]>([])
+  const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
+  const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
   const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
-  const [newsLoading, setNewsLoading] = useState(true)
+  const [communityLoading, setCommunityLoading] = useState(true)
   const [marketLoading, setMarketLoading] = useState(true)
-  const [newsError, setNewsError] = useState(false)
+  const [communityError, setCommunityError] = useState(false)
   const [marketError, setMarketError] = useState(false)
-  const [nextCourse, setNextCourse] = useState(() => (
-    loadCachedNextCourse(runtimeConfig, campusName)
+  const [coursePreview, setCoursePreview] = useState(() => (
+    loadCachedCoursePreview(runtimeConfig, campusName)
   ))
   const [academicCalendarLabel, setAcademicCalendarLabel] = useState(
     loadCachedAcademicLabel,
@@ -215,21 +267,23 @@ function Index() {
     const academicUserIdPromise = accountPromise.then((account) => (
       account.ok ? account.value.user.id : getActiveAcademicUserId()
     ))
-    const academicLabelPromise = loadLatestAcademicLabel(academicUserIdPromise)
+    const academicPromise = loadLatestAcademic(academicUserIdPromise)
     const runtimeConfigPromise = loadMiniappRuntimeConfig()
     const [
       account,
-      notices,
+      community,
+      communitySections,
       unread,
       marketplace,
-      latestAcademicLabel,
+      latestAcademic,
       latestRuntimeConfig,
     ] = await Promise.all([
       accountPromise,
-      settle(noticesRepository.list({ page: 1, pageSize: 8 })),
+      settle(lifeServicesRepository.listCampusCirclePosts({ page: 1, pageSize: 8 })),
+      settle(lifeServicesRepository.listCampusCircleSections()),
       settle(noticesRepository.unreadCount()),
       settle(lifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 })),
-      academicLabelPromise,
+      academicPromise,
       runtimeConfigPromise,
     ])
 
@@ -237,14 +291,22 @@ function Index() {
     setRuntimeConfig(latestRuntimeConfig)
     setCampusName(selectedCampus)
     setBannerIndex(0)
-    setNextCourse(loadCachedNextCourse(latestRuntimeConfig, selectedCampus))
+    setCoursePreview(resolveCoursePreview(
+      latestAcademic.cache,
+      academicStorage.getCustomCourses(),
+      latestRuntimeConfig,
+      selectedCampus,
+    ))
     if (account.ok) setUsername(account.value.user.username)
-    setAcademicCalendarLabel(latestAcademicLabel)
-    if (notices.ok) {
-      setNews(prioritizeNotices(notices.value.items))
-      setNewsError(false)
+    setAcademicCalendarLabel(latestAcademic.label)
+    if (community.ok) {
+      setCommunityPosts(latestCommunityPosts(community.value.items))
+      setCommunityError(false)
     } else {
-      setNewsError(true)
+      setCommunityError(true)
+    }
+    if (communitySections.ok) {
+      setSectionNames(communitySectionNames(communitySections.value.items))
     }
     if (unread.ok) setUnreadCount(Number(unread.value.count) || 0)
     if (marketplace.ok) {
@@ -253,7 +315,7 @@ function Index() {
     } else {
       setMarketError(true)
     }
-    setNewsLoading(false)
+    setCommunityLoading(false)
     setMarketLoading(false)
     Taro.stopPullDownRefresh()
   }
@@ -262,14 +324,21 @@ function Index() {
     void loadHome()
   }, [])
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [campusName, runtimeConfig])
+
   useDidShow(() => {
     syncCustomTabBar(0)
-    setNextCourse(loadCachedNextCourse(runtimeConfig, campusName))
+    setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
     setAcademicCalendarLabel(loadCachedAcademicLabel())
   })
 
   usePullDownRefresh(() => {
-    setNextCourse(loadCachedNextCourse(runtimeConfig, campusName))
+    setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
     setAcademicCalendarLabel(loadCachedAcademicLabel())
     void loadHome()
   })
@@ -317,25 +386,6 @@ function Index() {
     Taro.navigateTo({ url: '/pages/academic/schedule/index' })
   }
 
-  const showTip = (title: string) => Taro.showToast({ title, icon: 'none' })
-
-  const searchResults = useMemo(() => {
-    const keyword = searchValue.trim().toLowerCase()
-    if (!keyword) return []
-    return quickServices.filter((item) => item.name.toLowerCase().includes(keyword)).slice(0, 6)
-  }, [searchValue])
-
-  const handleSearch = () => {
-    const keyword = searchValue.trim()
-    if (!keyword) return showTip('输入关键词发现校园服务')
-    if (searchResults[0]) {
-      openQuickService(searchResults[0])
-      setSearchValue('')
-      return
-    }
-    openLifeHub('community')
-  }
-
   const chooseCampus = async () => {
     const campuses = enabledCampuses(runtimeConfig)
     const result = await Taro.showActionSheet({ itemList: campuses })
@@ -344,18 +394,14 @@ function Index() {
     setCampusName(selectedCampus)
     setBannerIndex(0)
     saveSelectedCampus(selectedCampus)
-    setNextCourse(loadCachedNextCourse(runtimeConfig, selectedCampus))
+    setCoursePreview(loadCachedCoursePreview(runtimeConfig, selectedCampus))
   }
 
-  const openNewsDetail = (item: Notice) => {
-    void noticesRepository.read(item.id)
-      .then(() => noticesRepository.unreadCount())
-      .then((unread) => setUnreadCount(Number(unread.count) || 0))
-      .catch(() => undefined)
-    Taro.switchTab({ url: '/pages/messages/index' })
+  const openCommunityPost = (item: CampusCirclePostView) => {
+    saveCommunityFeedPin(item)
+    openLifeHub('community')
   }
 
-  const today = currentDateParts()
   const banners = activeBanners(runtimeConfig, campusName)
   const runtimeBanner = banners[bannerIndex % Math.max(1, banners.length)] || null
   const slogans = activeSlogans(runtimeConfig, campusName)
@@ -368,7 +414,7 @@ function Index() {
     const featureKey = serviceFeatureKeys[service.key]
     return !featureKey || !campusConfig || campusConfig.features[featureKey] !== false
   })
-  const visibleNews = news.slice(0, 3)
+  const visibleCommunityPosts = communityPosts.slice(0, 3)
 
   const openRuntimeBanner = (banner: RuntimeBanner) => {
     if (banner.action.type === 'miniapp_path' && banner.action.value) {
@@ -417,66 +463,82 @@ function Index() {
         </View>
       </View>
 
-      <View className='campus__search'>
-        <Image src={icons.search} mode='aspectFit' />
-        <KeyboardSafeInput
-          value={searchValue}
-          onInput={(event) => setSearchValue(event.detail.value)}
-          onConfirm={handleSearch}
-          confirmType='search'
-          placeholder='搜课表、闲置、校园活动…'
-          placeholderClass='campus__search-placeholder'
-        />
-        <View className='campus__search-action' onClick={handleSearch}>搜索</View>
-      </View>
-      {!!searchValue.trim() && <View className='campus-search-results'>
-        {searchResults.length ? searchResults.map((item) => <View key={item.key} onClick={() => { openQuickService(item); setSearchValue('') }}><Image src={item.icon} mode='aspectFit' /><Text>服务 · {item.name}</Text><Text>›</Text></View>) : <View onClick={() => openLifeHub('community')}><Image src={icons.search} mode='aspectFit' /><Text>去社区搜索“{searchValue.trim()}”</Text><Text>›</Text></View>}
-      </View>}
-
-      <View className='section-heading section-heading--today'>
-        <View>
-          <Text className='section-heading__title'>今天</Text>
-          <Text className='section-heading__sub'>先看接下来要做的事</Text>
-        </View>
-        <Text className='section-heading__count'>{campusName}</Text>
-      </View>
-
       <View className='schedule-card' onClick={openSchedule}>
-        <View className='schedule-card__date'>
-          <Text className='schedule-card__month'>{nextCourse ? nextCourse.month : today.month}</Text>
-          <Text className='schedule-card__day'>{nextCourse ? nextCourse.day : today.day}</Text>
-        </View>
-        <View className='schedule-card__line' />
-        <View className='schedule-card__main'>
-          <View className='schedule-card__label'>
-            <View className='schedule-card__status' />
-            <Text>{nextCourse ? `下一节课 · ${nextCourse.startTime}` : '本学期课表'}</Text>
+        <View className='schedule-card__header'>
+          <View className='schedule-card__date'>
+            <Text className='schedule-card__day-label'>{coursePreview.dayLabel}</Text>
+            <Text className='schedule-card__date-label'>{coursePreview.dateLabel}</Text>
           </View>
-          <Text className='schedule-card__course'>
-            {nextCourse ? nextCourse.course.name : '暂无后续课程'}
-          </Text>
-          <View className='schedule-card__meta'>
-            <Image src={icons.location} mode='aspectFit' />
-            <Text>{nextCourse ? nextCourse.course.location || '地点待定' : '进入课表查看或刷新'}</Text>
-            {nextCourse && nextCourse.course.teacher && <Text>·</Text>}
-            {nextCourse && nextCourse.course.teacher && <Text>{nextCourse.course.teacher}</Text>}
+          <View className='schedule-card__summary'>
+            <Text>{coursePreview.total
+              ? `共 ${coursePreview.total} 节`
+              : '查看课表'}
+            </Text>
+            <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
-        {nextCourse && <View className='schedule-card__badge'>{nextCourse.badge}</View>}
-      </View>
 
-      <View className='section-heading'>
-        <View>
-          <Text className='section-heading__title'>常用功能</Text>
-          <Text className='section-heading__sub'>把每天会用的放在前面</Text>
-        </View>
-        <View className='section-heading__more section-heading__more--services' onClick={openAllServices}>
-          <Text>全部服务</Text>
-          <Image src={icons.arrow} mode='aspectFit' />
-        </View>
+        {coursePreview.items.length > 0 ? (
+          <View className='schedule-card__courses'>
+            {coursePreview.items.map((item, index) => (
+              <View
+                key={`${item.course.id}-${item.startsAt.getTime()}`}
+                className={[
+                  'schedule-card__course-row',
+                  item.status === 'ongoing'
+                    ? 'schedule-card__course-row--ongoing'
+                    : '',
+                ].filter(Boolean).join(' ')}
+              >
+                <Text className='schedule-card__time'>{item.startTime}</Text>
+                <View className='schedule-card__course-copy'>
+                  <Text className='schedule-card__course-name'>
+                    {item.course.name}
+                  </Text>
+                  <View className='schedule-card__meta'>
+                    <Image src={icons.location} mode='aspectFit' />
+                    <Text>{item.course.location || '地点待定'}</Text>
+                    {item.status === 'ongoing' && (
+                      <Text>· {item.statusText}</Text>
+                    )}
+                  </View>
+                </View>
+                {item.status === 'ongoing' && (
+                  <Text className='schedule-card__state'>上课中</Text>
+                )}
+                {item.status === 'upcoming'
+                  && coursePreview.dayLabel === '今天'
+                  && index === 0
+                  && (
+                    <Text className='schedule-card__state schedule-card__state--next'>
+                      下一节
+                    </Text>
+                  )}
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View className='schedule-card__empty'>
+            <Text>{coursePreview.emptyText}</Text>
+            <Text>{coursePreview.emptyHint}</Text>
+          </View>
+        )}
       </View>
 
       <View className='service-panel'>
+        <View className='service-panel__simple-head'>
+          <Text>校园服务</Text>
+          <View
+            className='service-panel__all'
+            hoverClass='service-panel__all--pressed'
+            ariaRole='button'
+            ariaLabel='查看全部服务'
+            onClick={openAllServices}
+          >
+            <Text>全部</Text>
+            <Image src={icons.arrow} mode='aspectFit' />
+          </View>
+        </View>
         <View className='service-panel__home-grid'>
           {visibleHomeServices.map((item) => (
             <View
@@ -589,36 +651,40 @@ function Index() {
       <View className='section-heading section-heading--compact'>
         <View>
           <Text className='section-heading__title'>校园新鲜事</Text>
-          <Text className='section-heading__sub'>重要消息，不再错过</Text>
+          <Text className='section-heading__sub'>看看同学们正在聊什么</Text>
         </View>
-        <View className='section-heading__more' onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}>
+        <View className='section-heading__more' onClick={() => openLifeHub('community')}>
           <Text>更多</Text>
           <Image src={icons.arrow} mode='aspectFit' />
         </View>
       </View>
 
       <View className='news-card'>
-        {newsLoading && <View className='home-section-state'>正在加载校园消息</View>}
-        {!newsLoading && newsError && (
+        {communityLoading && <View className='home-section-state'>正在加载校园动态</View>}
+        {!communityLoading && communityError && (
           <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
-            消息加载失败，点击重试
+            动态加载失败，点击重试
           </View>
         )}
-        {!newsLoading && !newsError && visibleNews.length === 0 && (
-          <View className='home-section-state'>暂时没有校园消息</View>
+        {!communityLoading && !communityError && visibleCommunityPosts.length === 0 && (
+          <View className='home-section-state'>暂时没有校园动态</View>
         )}
-        {!newsLoading && !newsError && visibleNews.map((item, index) => (
+        {!communityLoading && !communityError && visibleCommunityPosts.map((item, index) => (
           <View
             key={item.id}
-            className={`news-card__item ${index !== visibleNews.length - 1 ? 'news-card__item--border' : ''}`}
-            onClick={() => openNewsDetail(item)}
+            className={`news-card__item ${index !== visibleCommunityPosts.length - 1 ? 'news-card__item--border' : ''}`}
+            onClick={() => openCommunityPost(item)}
           >
-            <View className={`news-card__tag news-card__tag--${item.priority}`}>
-              {item.priority === 'urgent' ? '紧急' : noticeCategory(item)}
+            <View className='news-card__tag news-card__tag--community'>
+              {sectionNames[item.section_id] || '社区'}
             </View>
             <View className='news-card__content'>
-              <Text className='news-card__title'>{item.title}</Text>
-              <Text className='news-card__time'>{noticeTime(item)}</Text>
+              <Text className='news-card__title'>
+                {item.content?.trim() || '分享了一组校园图片'}
+              </Text>
+              <Text className='news-card__time'>
+                {communityAuthorName(item)} · {formatDateTime(item.published_at || item.created_at)}
+              </Text>
             </View>
             <Image className='news-card__arrow' src={icons.arrow} mode='aspectFit' />
           </View>

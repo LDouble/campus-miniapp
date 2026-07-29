@@ -10,7 +10,7 @@
     "framework": "React"
   },
   "scripts": {
-    "api:generate": "openapi-typescript ../campus_backend/api/openapi.yaml -o src/api/generated/schema.ts",
+    "api:generate": "openapi-typescript ../backend_demo/api/openapi.yaml -o src/api/generated/schema.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "ci:check": "yarn lint && yarn typecheck && yarn build:weapp",

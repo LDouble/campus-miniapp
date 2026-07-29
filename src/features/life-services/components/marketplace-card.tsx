@@ -16,6 +16,7 @@ type Props = {
 export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
   const cover = item.image_urls?.[0]
   const placeholderTone = Math.abs(item.id) % 4
+  const isWanted = item.intent === 'wanted'
 
   return (
     <View
@@ -24,6 +25,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
         'marketplace-card',
         `marketplace-card--${variant}`,
         cover ? '' : 'marketplace-card--no-image',
+        isWanted ? 'marketplace-card--wanted' : 'marketplace-card--sell',
       ].filter(Boolean).join(' ')}
       hoverClass='marketplace-card--pressed'
       onClick={() => openDetail(item.id)}
@@ -47,7 +49,13 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
         {cover && (
           <Text className='marketplace-card__description'>{item.description}</Text>
         )}
-        <Text className='marketplace-card__price'>{formatMoney(item.price_cents)}</Text>
+        <View className='marketplace-card__price-line'>
+          <Text className='marketplace-card__intent'>{isWanted ? '求购' : '出售'}</Text>
+          <Text className='marketplace-card__price'>
+            {isWanted ? '预算 ' : ''}{formatMoney(item.price_cents)}
+          </Text>
+        </View>
+        {item.course_name && <Text className='marketplace-card__course'>{item.course_name}</Text>}
         <View className='marketplace-card__footer'>
           <Text>校内面交</Text>
           <Text>查看 ›</Text>

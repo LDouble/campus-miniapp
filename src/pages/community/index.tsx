@@ -6,9 +6,13 @@ import Taro, {
   useShareAppMessage,
 } from '@tarojs/taro'
 import { ScrollView, Text, View } from '@tarojs/components'
-import type { CampusCircleSectionView } from '../../api/types'
+import type {
+  CampusCirclePostView,
+  CampusCircleSectionView,
+} from '../../api/types'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import CommunityFeedPanel from '../../features/community/feed-panel'
+import { consumeCommunityFeedPin } from '../../features/community/feed-pin'
 import {
   isLifeHubSection,
   lifeBusinessThemeList,
@@ -19,6 +23,10 @@ import { lifeServicesRepository } from '../../features/life-services/repository'
 import LifeServiceListPanel, {
   type LifeServiceSection,
 } from '../../features/life-services/list-panel'
+import {
+  consumeMarketplaceSearchPrefill,
+  type MarketplaceSearchPrefill,
+} from '../../features/life-services/marketplace-prefill'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
@@ -35,8 +43,14 @@ export default function CommunityPage() {
   const [communitySectionsReady, setCommunitySectionsReady] = useState(false)
   const [communitySectionsError, setCommunitySectionsError] = useState('')
   const [activeCommunitySectionId, setActiveCommunitySectionId] = useState(0)
+  const [pinnedCommunityPost, setPinnedCommunityPost] = useState<
+    CampusCirclePostView | null
+  >(null)
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [searchFocusSignal, setSearchFocusSignal] = useState(0)
+  const [marketplaceSearchPrefill, setMarketplaceSearchPrefill] = useState<
+    MarketplaceSearchPrefill | null
+  >(null)
   const navbarMetrics = getNavbarMetrics()
   const navbarHeight = navbarMetrics.statusBarHeight + navbarMetrics.navigationBarHeight
   const headerCollapsed = useCollapsingHeader({
@@ -95,6 +109,7 @@ export default function CommunityPage() {
   }
 
   const selectSection = (section: LifeHubSection) => {
+    setMarketplaceSearchPrefill(null)
     setActiveSection(section)
     Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
   }
@@ -113,9 +128,35 @@ export default function CommunityPage() {
     if (selected) setActiveCommunitySectionId(selected.id)
   }
 
-  const focusSearch = () => {
+  const scrollSearchBelowNavigation = () => new Promise<void>((resolve) => {
+    const query = Taro.createSelectorQuery()
+    query.select('.community-content-anchor').boundingClientRect()
+    query.select('.life-hub-navigation').boundingClientRect()
+    query.selectViewport().scrollOffset()
+    query.exec((results) => {
+      const content = results[0] as { top?: number } | null
+      const navigation = results[1] as { height?: number } | null
+      const viewport = results[2] as { scrollTop?: number } | null
+      const contentTop = Number(content?.top)
+      const navigationHeight = Number(navigation?.height)
+
+      if (!Number.isFinite(contentTop) || !Number.isFinite(navigationHeight)) {
+        resolve()
+        return
+      }
+
+      const currentScrollTop = Number(viewport?.scrollTop || 0)
+      const visibleTop = navbarHeight + navigationHeight + 8
+      void Taro.pageScrollTo({
+        scrollTop: Math.max(0, currentScrollTop + contentTop - visibleTop),
+        duration: 180,
+      }).then(() => resolve()).catch(() => resolve())
+    })
+  })
+
+  const focusSearch = async () => {
+    await scrollSearchBelowNavigation()
     setSearchFocusSignal((current) => current + 1)
-    Taro.pageScrollTo({ selector: '.community-content-anchor', duration: 180 })
   }
 
   const openPublish = () => {
@@ -136,6 +177,21 @@ export default function CommunityPage() {
     syncCustomTabBar(1)
     setRefreshSignal((current) => current + 1)
     void loadCommunitySections()
+    const feedPin = consumeCommunityFeedPin()
+    setPinnedCommunityPost(feedPin)
+    if (feedPin) {
+      setMarketplaceSearchPrefill(null)
+      setActiveSection('community')
+      setActiveCommunitySectionId(feedPin.section_id)
+      void Taro.pageScrollTo({ scrollTop: 0, duration: 0 })
+      return
+    }
+    const marketplacePrefill = consumeMarketplaceSearchPrefill()
+    if (marketplacePrefill) {
+      setActiveSection('market')
+      setMarketplaceSearchPrefill(marketplacePrefill)
+      return
+    }
     const savedSection = Taro.getStorageSync<string>(LIFE_HUB_SECTION_KEY)
     if (savedSection && isLifeHubSection(savedSection)) {
       setActiveSection(savedSection)
@@ -147,6 +203,7 @@ export default function CommunityPage() {
   })
 
   usePullDownRefresh(() => {
+    setPinnedCommunityPost(null)
     setRefreshSignal((current) => current + 1)
     void loadCommunitySections().finally(() => Taro.stopPullDownRefresh())
   })
@@ -182,7 +239,7 @@ export default function CommunityPage() {
         actionIcon={icons.search}
         actionLabel={`搜索${pageCopy.title}`}
         actionVisible={headerCollapsed}
-        onAction={focusSearch}
+        onAction={() => void focusSearch()}
       />
 
       <View className='community-page__intro'>
@@ -250,6 +307,7 @@ export default function CommunityPage() {
             sectionsReady={communitySectionsReady}
             sectionsError={communitySectionsError}
             onRetrySections={() => void loadCommunitySections()}
+            pinnedPost={pinnedCommunityPost}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
             filterLabel={
@@ -266,6 +324,10 @@ export default function CommunityPage() {
             section={activeSection as LifeServiceSection}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
+            marketplaceSearchPrefill={marketplaceSearchPrefill}
+            onMarketplaceSearchPrefillConsumed={() => {
+              setMarketplaceSearchPrefill(null)
+            }}
           />
         )}
       </View>

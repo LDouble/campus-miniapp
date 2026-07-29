@@ -19,6 +19,8 @@ export default defineAppConfig({
     'pages/materials/index',
     'pages/campus-service/index',
     'pages/campus-service/detail',
+    'pages/shuttle/index',
+    'pages/shuttle/detail',
     'pages/services/index'
   ],
   window: {

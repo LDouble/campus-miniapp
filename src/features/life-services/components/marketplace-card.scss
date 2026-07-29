@@ -28,6 +28,10 @@
   border-color: #e9e5df;
 }
 
+.marketplace-card--wanted.marketplace-card--no-image {
+  border-color: #dce9e5;
+}
+
 .marketplace-card__cover {
   position: relative;
   height: 250rpx;
@@ -71,6 +75,10 @@
 
 .marketplace-card__placeholder--tone-3 {
   background: #f5ecea;
+}
+
+.marketplace-card--wanted .marketplace-card__placeholder {
+  background: #edf5f2;
 }
 
 .marketplace-card__placeholder-quote {
@@ -154,14 +162,44 @@
 
 .marketplace-card__price {
   display: block;
-  margin-top: 12rpx;
   color: #d94f3b;
-  font-size: 34rpx;
+  font-size: 30rpx;
   font-weight: 820;
 }
 
-.marketplace-card--no-image .marketplace-card__price {
-  margin-top: 0;
+.marketplace-card__price-line {
+  display: flex;
+  min-height: 54rpx;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 12rpx;
+}
+
+.marketplace-card__intent {
+  padding: 5rpx 10rpx;
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 720;
+  background: #d96d58;
+  border-radius: 999rpx;
+}
+
+.marketplace-card--wanted .marketplace-card__intent {
+  background: #4e8e84;
+}
+
+.marketplace-card--wanted .marketplace-card__price {
+  color: #397c74;
+}
+
+.marketplace-card__course {
+  display: block;
+  overflow: hidden;
+  margin: 2rpx 0 8rpx;
+  color: #7d8f8a;
+  font-size: 19rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .marketplace-card__footer {

@@ -137,18 +137,9 @@
   }
 
   .market-detail-description {
-    display: flex;
-    flex-direction: column;
-    gap: 14rpx;
     padding-top: 26rpx;
 
-    text:first-child {
-      color: #8a8e8b;
-      font-size: 23rpx;
-      font-weight: 700;
-    }
-
-    text:last-child {
+    text {
       color: #2f3434;
       font-size: 29rpx;
       line-height: 1.72;

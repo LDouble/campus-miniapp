@@ -46,6 +46,7 @@ export interface GradeRecord {
   id: string
   periodId: string
   courseName: string
+  courseCode?: string
   courseType: string
   credit: number
   score?: number
