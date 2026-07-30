@@ -14,6 +14,7 @@ import {
   openCourseMarketplaceSearch,
   type MarketplaceIntent,
 } from '../../../features/life-services/marketplace-prefill'
+import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
 import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
@@ -109,6 +110,13 @@ function CourseDetailCard({
           <View><Text>周次</Text><Text>第 {course.weeks.join('、')} 周</Text></View>
           <View><Text>来源</Text><Text>{course.source === 'custom' ? '自定义课程' : '教务课程'}</Text></View>
         </View>
+        {course.source === 'official' && course.courseCode && (
+          <CoursePassRatePreview
+            courseCode={course.courseCode}
+            courseName={course.name}
+            teacherName={course.teacher}
+          />
+        )}
         {course.source === 'custom' && onEdit && onDelete && (
           <View className='course-conflict-card__actions'>
             <View onClick={onDelete}>删除</View>
@@ -370,7 +378,7 @@ export default function SchedulePage() {
         ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
         : `转卖与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
       courseName,
-      courseCode: '',
+      courseCode: course.courseCode || '',
       academicPeriodId: course.periodId,
       academicPeriodLabel: periods.find((period) => period.id === course.periodId)?.label || course.periodId,
       source: 'schedule',

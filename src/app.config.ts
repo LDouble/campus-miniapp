@@ -16,6 +16,8 @@ export default defineAppConfig({
     'pages/academic/grades/index',
     'pages/academic/exams/index',
     'pages/academic/selection/index',
+    'pages/academic/statistics/courses',
+    'pages/academic/statistics/index',
     'pages/calendar/index',
     'pages/materials/index',
     'pages/campus-service/index',

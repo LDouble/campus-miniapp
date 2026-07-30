@@ -102,7 +102,7 @@ const quickServices = [
   },
   { key: 'study', name: '自习室', icon: icons.study, tone: 'purple', route: '/pages/campus-service/index?type=study' },
   { key: 'result', name: '选课结果', icon: icons.result, tone: 'orange', route: '/pages/academic/selection/index' },
-  { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/campus-service/index?type=pass-rate' },
+  { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/academic/statistics/courses' },
   { key: 'materials', name: '资料', icon: icons.materials, tone: 'green', route: '/pages/materials/index' },
   { key: 'calendar', name: '校历', icon: icons.calendar, tone: 'pink', route: '/pages/calendar/index' },
   { key: 'shuttle', name: '校车', icon: icons.shuttle, tone: 'blue', route: '/pages/shuttle/index' },

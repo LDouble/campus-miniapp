@@ -17,6 +17,7 @@ export interface AcademicPeriod {
 export interface Course {
   id: string
   periodId: string
+  courseCode?: string
   name: string
   teacher: string
   location: string

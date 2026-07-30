@@ -6,6 +6,7 @@ import {
   openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
+import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
 import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
 import { academicRepository } from '../repository'
@@ -407,6 +408,10 @@ export default function GradesPage() {
                 {[marketplaceGrade.courseCode, getGradePeriodLabel(periods, marketplaceGrade.periodId)]
                   .filter(Boolean).join(' · ')}
               </Text>
+              <CoursePassRatePreview
+                courseCode={marketplaceGrade.courseCode}
+                courseName={marketplaceGrade.courseName}
+              />
               <View className='course-market-actions course-market-actions--standalone'>
                 <View>
                   <Text>流转课程资料</Text>
