@@ -1590,6 +1590,144 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/classroom-occupancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询占用记录 */
+        get: operations["ListAdminClassroomOccupancies"];
+        put?: never;
+        /** 管理端新增课表或临时占用 */
+        post: operations["CreateAdminClassroomOccupancy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classroom-occupancy-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询占用反馈 */
+        get: operations["ListAdminClassroomOccupancyReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classroom-occupancy-reports/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端审核占用反馈 */
+        post: operations["ReviewAdminClassroomOccupancyReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classrooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询教室 */
+        get: operations["ListAdminClassrooms"];
+        put?: never;
+        /** 管理端创建教室 */
+        post: operations["CreateAdminClassroom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classrooms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端更新教室 */
+        patch: operations["UpdateAdminClassroom"];
+        trace?: never;
+    };
+    "/api/v1/classrooms/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按校区日期和节次查询空教室 */
+        get: operations["ListAvailableClassrooms"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classrooms/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 反馈教室实际占用 */
+        post: operations["CreateClassroomOccupancyReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classrooms/reports/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的教室占用反馈 */
+        get: operations["ListMyClassroomOccupancyReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/errands": {
         parameters: {
             query?: never;
@@ -3427,6 +3565,225 @@ export interface components {
         };
         /** @enum {string} */
         CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "pin_comment" | "unpin_comment" | "verify_academic";
+        ClassroomAvailabilityItem: {
+            available: boolean;
+            classroom: components["schemas"]["ClassroomView"];
+            /** @enum {string} */
+            confidence: "schedule_only" | "confirmed_occupied";
+        };
+        ClassroomBuildingGroup: {
+            building: string;
+            classrooms: components["schemas"]["ClassroomAvailabilityItem"][];
+        };
+        ClassroomInput: {
+            building: string;
+            campus: string;
+            /** Format: int64 */
+            capacity?: number;
+            display_name: string;
+            facilities?: string[];
+            room: string;
+            room_type?: string;
+        };
+        /** @enum {string} */
+        ClassroomOccupancyAdminSource: "schedule" | "admin";
+        ClassroomOccupancyInput: {
+            /** Format: uint64 */
+            classroom_id: number;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date-time */
+            expires_at?: string;
+            note?: string;
+            period_id?: string;
+            /** Format: date */
+            service_date?: string;
+            source_ref?: string;
+            source_type: components["schemas"]["ClassroomOccupancyAdminSource"];
+            /** Format: int64 */
+            start_section: number;
+            /** Format: int64 */
+            teaching_week?: number;
+            /** Format: int64 */
+            weekday?: number;
+        };
+        ClassroomOccupancyPage: {
+            items: components["schemas"]["ClassroomOccupancyView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassroomOccupancyPageResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyPage"];
+            request_id: string;
+        };
+        ClassroomOccupancyReportInput: {
+            category: components["schemas"]["ClassroomReportCategory"];
+            /** Format: uint64 */
+            classroom_id: number;
+            description?: string;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date */
+            service_date: string;
+            /** Format: int64 */
+            start_section: number;
+        };
+        ClassroomOccupancyReportPage: {
+            items: components["schemas"]["ClassroomOccupancyReportView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassroomOccupancyReportPageResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyReportPage"];
+            request_id: string;
+        };
+        ClassroomOccupancyReportResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyReportView"];
+            request_id: string;
+        };
+        ClassroomOccupancyReportReviewInput: {
+            approved: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+            /** Format: date-time */
+            expires_at?: string;
+            reason?: string;
+        };
+        ClassroomOccupancyReportView: {
+            category: components["schemas"]["ClassroomReportCategory"];
+            classroom: components["schemas"]["ClassroomView"];
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            reporter_id?: number | null;
+            review_reason?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewed_by?: number | null;
+            /** Format: date */
+            service_date: string;
+            /** Format: int64 */
+            start_section: number;
+            status: components["schemas"]["ClassroomReportStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        ClassroomOccupancyResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClassroomOccupancySource: "schedule" | "admin" | "student_report";
+        /** @enum {string} */
+        ClassroomOccupancyStatus: "active" | "disabled" | "expired";
+        ClassroomOccupancyView: {
+            /** Format: uint64 */
+            classroom_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: uint64 */
+            id: number;
+            note?: string | null;
+            period_id?: string | null;
+            /** Format: date */
+            service_date?: string | null;
+            source_ref?: string | null;
+            source_type: components["schemas"]["ClassroomOccupancySource"];
+            /** Format: int64 */
+            start_section: number;
+            status: components["schemas"]["ClassroomOccupancyStatus"];
+            /** Format: int64 */
+            teaching_week?: number | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+            /** Format: int64 */
+            weekday?: number | null;
+        };
+        ClassroomPage: {
+            items: components["schemas"]["ClassroomView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassroomPageResponseBody: {
+            data: components["schemas"]["ClassroomPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClassroomReportCategory: "class_in_progress" | "event" | "maintenance" | "other";
+        /** @enum {string} */
+        ClassroomReportStatus: "pending" | "approved" | "rejected" | "withdrawn" | "revoked";
+        ClassroomResponseBody: {
+            data: components["schemas"]["ClassroomView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClassroomStatus: "active" | "disabled";
+        ClassroomUpdateInput: components["schemas"]["ClassroomInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+            status: components["schemas"]["ClassroomStatus"];
+        };
+        ClassroomView: {
+            building: string;
+            campus: string;
+            /** Format: int64 */
+            capacity?: number | null;
+            /** Format: date-time */
+            created_at: string;
+            display_name: string;
+            facilities: string[];
+            /** Format: uint64 */
+            id: number;
+            room: string;
+            room_type?: string | null;
+            status: components["schemas"]["ClassroomStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        EmptyClassroomAvailability: {
+            campus: string;
+            data_source_notice: string;
+            /** Format: int64 */
+            end_section: number;
+            groups: components["schemas"]["ClassroomBuildingGroup"][];
+            period_id: string;
+            /** Format: date-time */
+            refreshed_at: string;
+            /** Format: date */
+            service_date: string;
+            /** Format: int64 */
+            start_section: number;
+            /** Format: int64 */
+            teaching_week: number;
+        };
+        EmptyClassroomAvailabilityResponseBody: {
+            data: components["schemas"]["EmptyClassroomAvailability"];
+            request_id: string;
+        };
         ErrandOptionalOrderResponseBody: {
             data: components["schemas"]["ErrandOptionalOrderResult"];
             request_id: string;
@@ -4276,6 +4633,69 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CommentThreadResponseBody"];
+            };
+        };
+        /** @description 教室占用分页 */
+        ClassroomOccupancyPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyPageResponseBody"];
+            };
+        };
+        /** @description 教室占用反馈分页 */
+        ClassroomOccupancyReportPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportPageResponseBody"];
+            };
+        };
+        /** @description 教室占用反馈 */
+        ClassroomOccupancyReportResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportResponseBody"];
+            };
+        };
+        /** @description 教室占用 */
+        ClassroomOccupancyResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyResponseBody"];
+            };
+        };
+        /** @description 教室分页 */
+        ClassroomPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomPageResponseBody"];
+            };
+        };
+        /** @description 教室 */
+        ClassroomResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomResponseBody"];
+            };
+        };
+        /** @description 空教室查询结果 */
+        EmptyClassroomAvailabilityResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["EmptyClassroomAvailabilityResponseBody"];
             };
         };
         /** @description 跑腿任务及可能存在的交易订单 */
@@ -6773,6 +7193,206 @@ export interface operations {
         responses: {
             200: components["responses"]["CommentResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListAdminClassroomOccupancies: {
+        parameters: {
+            query?: {
+                classroom_id?: number;
+                period_id?: string;
+                service_date?: string;
+                source_type?: "schedule" | "admin" | "student_report";
+                status?: "active" | "disabled" | "expired";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomOccupancyPageResponse"];
+        };
+    };
+    CreateAdminClassroomOccupancy: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClassroomOccupancyResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListAdminClassroomOccupancyReports: {
+        parameters: {
+            query?: {
+                campus?: string;
+                status?: "pending" | "approved" | "rejected" | "withdrawn" | "revoked";
+                service_date?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomOccupancyReportPageResponse"];
+        };
+    };
+    ReviewAdminClassroomOccupancyReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ClassroomOccupancyReportResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminClassrooms: {
+        parameters: {
+            query?: {
+                campus?: string;
+                building?: string;
+                status?: "active" | "disabled";
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomPageResponse"];
+        };
+    };
+    CreateAdminClassroom: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClassroomResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminClassroom: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ClassroomResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAvailableClassrooms: {
+        parameters: {
+            query: {
+                campus: string;
+                date: string;
+                start_section: number;
+                end_section: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["EmptyClassroomAvailabilityResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateClassroomOccupancyReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClassroomOccupancyReportResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    ListMyClassroomOccupancyReports: {
+        parameters: {
+            query?: {
+                status?: "pending" | "approved" | "rejected" | "withdrawn" | "revoked";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomOccupancyReportPageResponse"];
         };
     };
     ListAdminErrands: {

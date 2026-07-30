@@ -17,6 +17,10 @@ export default function CampusServicePage() {
       Taro.redirectTo({ url: '/pages/shuttle/index' })
       return
     }
+    if (options.type === 'classroom') {
+      Taro.redirectTo({ url: '/pages/empty-classroom/index' })
+      return
+    }
     if (isCampusServiceType(options.type)) setType(options.type)
   })
   const data = campusServiceData[type]
