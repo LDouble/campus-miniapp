@@ -21,6 +21,8 @@ import {
   type ClassroomView,
   type EmptyClassroomAvailability,
 } from '../../features/empty-classroom/repository'
+import { loadAcademicCalendar } from '../../features/calendar/repository'
+import { resolveAcademicCalendarState } from '../../features/calendar/utils'
 import { isApiError } from '../../api/client'
 import './index.scss'
 
@@ -73,9 +75,12 @@ const defaultSearch = (config: MiniappRuntimeConfig, campus: string) => {
     return slot && clock < slot.end
   })
   if (nextSection) {
-    return { date: dateKey(now), startSection: nextSection, endSection: nextSection }
+    const [startSection, endSection] = quickRanges.find(([start, end]) => (
+      nextSection >= start && nextSection <= end
+    )) || [nextSection, nextSection]
+    return { date: dateKey(now), startSection, endSection }
   }
-  return { date: dateKey(dateFromOffset(1)), startSection: 1, endSection: 1 }
+  return { date: dateKey(dateFromOffset(1)), startSection: 1, endSection: 2 }
 }
 
 const sourceErrorText = (error: unknown) => {
@@ -102,6 +107,7 @@ export default function EmptyClassroomPage() {
   const [endSection, setEndSection] = useState(initialSearch.endSection)
   const [result, setResult] = useState<EmptyClassroomAvailability | null>(null)
   const [loading, setLoading] = useState(true)
+  const [queryReady, setQueryReady] = useState(false)
   const [errorText, setErrorText] = useState('')
   const [reportingClassroom, setReportingClassroom] = useState<ClassroomView | null>(null)
   const [reportCategory, setReportCategory] = useState<ClassroomReportCategory>('class_in_progress')
@@ -145,7 +151,12 @@ export default function EmptyClassroomPage() {
   }, [campus, endSection, serviceDate, startSection])
 
   useEffect(() => {
-    loadMiniappRuntimeConfig().then((next) => {
+    let active = true
+    Promise.all([
+      loadMiniappRuntimeConfig(),
+      loadAcademicCalendar('undergraduate'),
+    ]).then(([next, calendarResult]) => {
+      if (!active) return
       setConfig(next)
       const available = enabledCampuses(next)
       setCampus((current) => {
@@ -157,26 +168,36 @@ export default function EmptyClassroomPage() {
         setEndSection(search.endSection)
         return fallback
       })
+
+      const calendarState = resolveAcademicCalendarState(calendarResult.calendar)
+      if (calendarState.kind === 'upcoming') {
+        setServiceDate(calendarState.term.start_date)
+        setStartSection(1)
+        setEndSection(2)
+      }
+      setQueryReady(true)
+    }).catch(() => {
+      if (active) setQueryReady(true)
     })
+    return () => {
+      active = false
+    }
   }, [])
 
   useEffect(() => {
+    if (!queryReady) return
     void refresh()
-  }, [refresh])
+  }, [queryReady, refresh])
 
   usePullDownRefresh(async () => {
-    await refresh()
+    if (queryReady) await refresh()
     Taro.stopPullDownRefresh()
   })
 
   const chooseCampus = (value: string) => {
     if (value === campus) return
-    const search = defaultSearch(config, value)
     saveSelectedCampus(value)
     setCampus(value)
-    setServiceDate(search.date)
-    setStartSection(search.startSection)
-    setEndSection(search.endSection)
   }
 
   const chooseRange = (start: number, end: number) => {
