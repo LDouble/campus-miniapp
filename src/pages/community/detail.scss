@@ -132,11 +132,6 @@ page {
       white-space: nowrap;
     }
 
-    > view text:last-child {
-      margin-left: 11rpx;
-      color: #99949f;
-      font-size: 19rpx;
-    }
   }
 
   &__time {
@@ -367,11 +362,6 @@ page {
       font-weight: 690;
     }
 
-    text:last-child {
-      margin-left: 10rpx;
-      color: #a09aa5;
-      font-size: 18rpx;
-    }
   }
 
   .community-comment__content {

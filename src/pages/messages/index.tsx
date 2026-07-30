@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
-import { Input, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type { Notice } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
 import { syncCustomTabBar } from '../../utils/tabbar'
@@ -144,7 +145,7 @@ export default function MessagesPage() {
 
         <View className='messages-search'>
           <View />
-          <Input
+          <KeyboardSafeInput
             value={keyword}
             confirmType='search'
             maxlength={40}

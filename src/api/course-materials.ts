@@ -7,9 +7,11 @@ import type {
   CompleteMaterialUploadFile,
   CourseMaterialPage,
   CourseMaterialView,
+  MaterialFeedbackCategory,
+  MaterialFeedbackPage,
+  MaterialFeedbackView,
   MaterialCoursePage,
   MaterialDownloadView,
-  MaterialUploadFileInput,
   MaterialUploadSessionView,
   MaterialUploadTarget,
 } from './types'
@@ -19,6 +21,7 @@ type ListCourseMaterialsParameters = NonNullable<
 operations['ListCourseMaterials']['parameters']['query']
 >
 export type UpdateMyCourseMaterialRequest = operations['UpdateMyCourseMaterial']['requestBody']['content']['application/json']
+export type CreateMaterialUploadSessionRequest = operations['CreateMaterialUploadSession']['requestBody']['content']['application/json']
 
 export interface ListCourseMaterialsQuery {
   courseId?: ListCourseMaterialsParameters['course_id']
@@ -85,14 +88,20 @@ export const listAllMyCourseMaterials = async (
   }
 }
 
+export const getCourseMaterial = (materialId: number) => (
+  apiRequest<CourseMaterialView>({
+    path: `/api/v1/course-materials/${materialId}`,
+  })
+)
+
 export const createMaterialUploadSession = (
-  files: MaterialUploadFileInput[],
+  data: CreateMaterialUploadSessionRequest,
   idempotencyKey: string,
 ) => (
   apiRequest<MaterialUploadSessionView>({
     path: '/api/v1/course-materials/upload-sessions',
     method: 'POST',
-    data: { files },
+    data,
     idempotencyKey,
   })
 )
@@ -133,12 +142,35 @@ export const uploadMaterialFile = (
   })
 }
 
-export const getMaterialDownload = (materialId: number) => (
+export const getMaterialDownload = (materialId: number, fileId: number) => (
   apiRequest<MaterialDownloadView>({
-    path: `/api/v1/course-materials/${materialId}/download`,
+    path: `/api/v1/course-materials/${materialId}/files/${fileId}/download`,
     method: 'POST',
   })
 )
+
+export const createCourseMaterialFeedback = (
+  materialId: number,
+  data: {
+    file_id?: number
+    category: MaterialFeedbackCategory
+    description?: string
+  },
+) => apiRequest<MaterialFeedbackView>({
+  path: `/api/v1/course-materials/${materialId}/feedbacks`,
+  method: 'POST',
+  data,
+  idempotencyKey: createIdempotencyKey(`material-feedback-${materialId}`),
+})
+
+export const listMyCourseMaterialFeedbacks = (
+  status?: MaterialFeedbackView['status'],
+  page = 1,
+  pageSize = 100,
+) => apiRequest<MaterialFeedbackPage>({
+  path: '/api/v1/course-material-feedbacks/mine',
+  query: { status, page, page_size: pageSize },
+})
 
 export const withdrawCourseMaterial = (materialId: number, expectedVersion: number) => (
   apiRequest<{ updated: boolean }>({
@@ -159,8 +191,8 @@ export const updateMyCourseMaterial = (
   idempotencyKey: createIdempotencyKey(`material-update-${materialId}`),
 })
 
-export const downloadAndOpenMaterial = async (materialId: number) => {
-  const target = await getMaterialDownload(materialId)
+export const downloadAndOpenMaterial = async (materialId: number, fileId: number) => {
+  const target = await getMaterialDownload(materialId, fileId)
   const result = await Taro.downloadFile({ url: target.url })
   if (result.statusCode < 200 || result.statusCode >= 300) {
     throw new Error('资料下载失败')

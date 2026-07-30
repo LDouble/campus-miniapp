@@ -7,10 +7,17 @@ export type AcademicVerificationRequest = components['schemas']['AcademicVerific
 export type AcademicVerificationStatus = components['schemas']['AcademicVerificationStatus']
 export type AcademicVerificationMaterial = components['schemas']['AcademicVerificationMaterial']
 export type AcademicPeriod = components['schemas']['AcademicPeriod']
+export type AcademicCalendar = components['schemas']['AcademicCalendar']
+export type AcademicCalendarEvent = components['schemas']['AcademicCalendarEvent']
+export type AcademicCalendarTerm = components['schemas']['AcademicCalendarTerm']
+export type AcademicEducationLevel = components['schemas']['AcademicEducationLevel']
 export type AcademicCourse = components['schemas']['AcademicCourse']
 export type AcademicGrade = components['schemas']['AcademicGrade']
 export type AcademicExam = components['schemas']['AcademicExam']
 export type AcademicCourseSelection = components['schemas']['AcademicCourseSelection']
+export type AcademicCoursePassRatePage = components['schemas']['AcademicCoursePassRatePage']
+export type AcademicInstructorPassRatePage = components['schemas']['AcademicInstructorPassRatePage']
+export type AcademicPassRateTrend = components['schemas']['AcademicPassRateTrend']
 
 export type ErrandView = components['schemas']['ErrandView']
 export type ErrandViewPage = components['schemas']['ErrandViewPage']
@@ -46,6 +53,11 @@ export type MaterialUploadSessionView = components['schemas']['MaterialUploadSes
 export type MaterialUploadTarget = components['schemas']['MaterialUploadTarget']
 export type CompleteMaterialUploadFile = components['schemas']['CompleteMaterialUploadFile']
 export type MaterialDownloadView = components['schemas']['MaterialDownloadView']
+export type MaterialFileView = components['schemas']['MaterialFileView']
+export type MaterialFeedbackCategory = components['schemas']['MaterialFeedbackCategory']
+export type MaterialFeedbackStatus = components['schemas']['MaterialFeedbackStatus']
+export type MaterialFeedbackView = components['schemas']['MaterialFeedbackView']
+export type MaterialFeedbackPage = components['schemas']['MaterialFeedbackPage']
 
 export type ApiSuccessEnvelope<T> = {
   data: T

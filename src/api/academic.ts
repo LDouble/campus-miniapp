@@ -8,10 +8,20 @@ import {
 import type {
   AcademicCourse,
   AcademicCourseSelection,
+  AcademicCalendar,
+  AcademicEducationLevel,
   AcademicExam,
   AcademicGrade,
   AcademicPeriod,
 } from './types'
+
+export const getAcademicCalendar = (educationLevel: AcademicEducationLevel) => (
+  apiRequest<AcademicCalendar>({
+    path: '/api/v1/academic/calendar',
+    method: 'GET',
+    query: { education_level: educationLevel },
+  })
+)
 
 type AcademicRequestBody = {
   student_no: string
@@ -48,9 +58,10 @@ const academicPost = async <T>(path: string, periodId?: string) => apiRequest<T>
   data: await academicRequestBody(periodId),
 })
 
-export const listAcademicPeriods = () => academicPost<AcademicPeriod[]>(
-  '/api/v1/academic/periods',
-)
+export const listAcademicPeriods = () => apiRequest<AcademicPeriod[]>({
+  path: '/api/v1/academic/periods',
+  method: 'POST',
+})
 
 export const listAcademicCourses = (periodId: string) => academicPost<AcademicCourse[]>(
   '/api/v1/academic/courses',

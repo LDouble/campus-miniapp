@@ -5,12 +5,14 @@ import type {
   MaterialCourseSuggestion,
   MaterialKind,
   MaterialUploadDraft,
+  MaterialUploadMetadata,
   MaterialUploadState,
   MaterialUploadStatus,
 } from './types'
 
-const UPLOAD_DRAFTS_KEY_PREFIX = 'courseMaterials.uploadDrafts.v2.'
+const UPLOAD_DRAFTS_KEY_PREFIX = 'courseMaterials.uploadDrafts.v3.'
 const LEGACY_UPLOAD_DRAFTS_KEY = 'courseMaterials.uploadDrafts.v1'
+const LEGACY_UPLOAD_DRAFTS_V2_KEY_PREFIX = 'courseMaterials.uploadDrafts.v2.'
 const RECENT_COURSES_KEY_PREFIX = 'courseMaterials.recentCourses.v1.'
 const validKinds = new Set<MaterialKind>([
   'slides',
@@ -41,12 +43,20 @@ const isDraft = (value: unknown): value is MaterialUploadDraft => {
     && (draft.persistentFile === undefined || typeof draft.persistentFile === 'boolean')
     && typeof draft.fileName === 'string'
     && typeof draft.fileSize === 'number'
-    && typeof draft.title === 'string'
-    && validKinds.has(draft.kind)
-    && typeof draft.courseName === 'string'
-    && (draft.courseId === undefined || Number.isSafeInteger(draft.courseId))
     && validStatuses.has(draft.status)
     && typeof draft.progress === 'number'
+  )
+}
+
+const isMetadata = (value: unknown): value is MaterialUploadMetadata => {
+  if (!value || typeof value !== 'object') return false
+  const metadata = value as MaterialUploadMetadata
+  return (
+    typeof metadata.title === 'string'
+    && validKinds.has(metadata.kind)
+    && typeof metadata.courseName === 'string'
+    && (metadata.courseId === undefined || Number.isSafeInteger(metadata.courseId))
+    && typeof metadata.description === 'string'
   )
 }
 
@@ -54,9 +64,10 @@ const isUploadState = (value: unknown): value is MaterialUploadState => {
   if (!value || typeof value !== 'object') return false
   const state = value as MaterialUploadState
   return (
-    state.version === 2
+    state.version === 3
     && Array.isArray(state.drafts)
     && state.drafts.every(isDraft)
+    && isMetadata(state.metadata)
     && !!state.batch
     && typeof state.batch.createIdempotencyKey === 'string'
     && typeof state.batch.completeIdempotencyKey === 'string'
@@ -98,6 +109,7 @@ export const materialDraftStorage = {
     if (!validUserId(userId)) return null
     try {
       Taro.removeStorageSync(LEGACY_UPLOAD_DRAFTS_KEY)
+      Taro.removeStorageSync(`${LEGACY_UPLOAD_DRAFTS_V2_KEY_PREFIX}${userId}`)
       const value = Taro.getStorageSync<unknown>(draftsKey(userId))
       if (!isUploadState(value)) return null
       const drafts = await Promise.all(value.drafts.map(async (draft) => {
@@ -109,7 +121,7 @@ export const materialDraftStorage = {
             status: 'needs_file' as const,
             progress: 0,
             uploadTarget: undefined,
-            materialId: undefined,
+            fileId: undefined,
             errorMessage: '本地文件已失效，请重新选择',
           }
         }

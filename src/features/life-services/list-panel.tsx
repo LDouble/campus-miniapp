@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Input, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
   ErrandView,
   MarketplaceListingView,
 } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { lifeBusinessThemes } from './business-theme'
 import type { LifeHubSection } from './business-theme'
+import {
+  openCourseMarketplacePublisher,
+  type MarketplaceSearchPrefill,
+} from './marketplace-prefill'
 import { lifeServicesRepository } from './repository'
 import CarpoolCard from './components/carpool-card'
 import CarpoolFilters, {
@@ -27,6 +32,8 @@ type Props = {
   section: LifeServiceSection
   refreshSignal?: number
   searchFocusSignal?: number
+  marketplaceSearchPrefill?: MarketplaceSearchPrefill | null
+  onMarketplaceSearchPrefillConsumed?: () => void
 }
 
 const mergeUniqueItems = (current: ServiceItem[], incoming: ServiceItem[]) => {
@@ -77,6 +84,8 @@ export default function LifeServiceListPanel({
   section,
   refreshSignal = 0,
   searchFocusSignal = 0,
+  marketplaceSearchPrefill = null,
+  onMarketplaceSearchPrefillConsumed,
 }: Props) {
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -89,6 +98,7 @@ export default function LifeServiceListPanel({
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
+  const [courseSearch, setCourseSearch] = useState<MarketplaceSearchPrefill | null>(null)
   const requestSequence = useRef(0)
   const copy = lifeBusinessThemes[section]
 
@@ -102,6 +112,8 @@ export default function LifeServiceListPanel({
         : section === 'market'
           ? await lifeServicesRepository.listMarketplace({
             keyword,
+            intent: marketFilters.intent,
+            category: marketFilters.category,
             minPriceCents: marketFilters.minPriceCents,
             maxPriceCents: marketFilters.maxPriceCents,
             page: nextPage,
@@ -137,6 +149,8 @@ export default function LifeServiceListPanel({
     carpoolFilters.origin,
     carpoolFilters.seatsNeeded,
     keyword,
+    marketFilters.category,
+    marketFilters.intent,
     marketFilters.maxPriceCents,
     marketFilters.minPriceCents,
     section,
@@ -156,21 +170,43 @@ export default function LifeServiceListPanel({
     if (searchFocusSignal > 0) setSearchFocused(true)
   }, [searchFocusSignal])
 
+  useEffect(() => {
+    if (section !== 'market' || !marketplaceSearchPrefill) return
+    setCourseSearch(marketplaceSearchPrefill)
+    setDraftKeyword(marketplaceSearchPrefill.courseName)
+    setKeyword(marketplaceSearchPrefill.courseName)
+    setMarketFilters({
+      intent: 'sell',
+      category: 'course_material',
+    })
+    setItems([])
+    onMarketplaceSearchPrefillConsumed?.()
+  }, [
+    marketplaceSearchPrefill,
+    onMarketplaceSearchPrefillConsumed,
+    section,
+  ])
+
   const canLoadMore = items.length < total
   const hasStructuredFilters = section === 'market'
-    ? marketFilters.minPriceCents !== undefined || marketFilters.maxPriceCents !== undefined
+    ? marketFilters.intent !== undefined
+      || marketFilters.category !== undefined
+      || marketFilters.minPriceCents !== undefined
+      || marketFilters.maxPriceCents !== undefined
     : section === 'carpool'
       ? Object.values(carpoolFilters).some(
         (value) => value !== undefined && value !== '',
       )
       : false
 
-  const resultTitle = keyword
-    ? `“${keyword}”`
+  const resultTitle = courseSearch
+    ? `《${courseSearch.courseName}》相关资料`
+    : keyword
+      ? `“${keyword}”`
     : section === 'errands'
       ? '全校待接任务'
       : section === 'market'
-        ? '最新闲置'
+        ? marketFilters.intent === 'wanted' ? '最新求购' : marketFilters.intent === 'sell' ? '最新出售' : '最新交易'
         : '近期行程'
 
   const carpoolGroups = useMemo(() => {
@@ -187,8 +223,15 @@ export default function LifeServiceListPanel({
     }))
   }, [items, section])
 
-  const submitSearch = () => setKeyword(draftKeyword.trim())
+  const submitSearch = () => {
+    const nextKeyword = draftKeyword.trim()
+    if (courseSearch && nextKeyword !== courseSearch.courseName.trim()) {
+      setCourseSearch(null)
+    }
+    setKeyword(nextKeyword)
+  }
   const clearAll = () => {
+    setCourseSearch(null)
     setDraftKeyword('')
     setKeyword('')
     if (section === 'market') setMarketFilters({})
@@ -199,7 +242,7 @@ export default function LifeServiceListPanel({
     <View className={`life-panel life-panel--${section}`}>
       <View className={`life-search life-search--${section}`}>
         <View className='life-search__icon' />
-        <Input
+        <KeyboardSafeInput
           id={`life-search-input-${section}`}
           value={draftKeyword}
           focus={searchFocused}
@@ -217,6 +260,7 @@ export default function LifeServiceListPanel({
             ariaRole='button'
             ariaLabel='清除搜索'
             onClick={() => {
+              setCourseSearch(null)
               setDraftKeyword('')
               setKeyword('')
             }}
@@ -316,9 +360,37 @@ export default function LifeServiceListPanel({
             <View />
             <View />
           </View>
-          <Text>{keyword ? '没有找到匹配结果' : emptyCopy[section].title}</Text>
-          <Text>{keyword ? '换个关键词或调整筛选条件' : emptyCopy[section].subtitle}</Text>
-          {(keyword || hasStructuredFilters) && (
+          <Text>
+            {courseSearch
+              ? `暂未找到《${courseSearch.courseName}》相关资料`
+              : keyword ? '没有找到匹配结果' : emptyCopy[section].title}
+          </Text>
+          <Text>
+            {courseSearch
+              ? '可以发布求购，让有资料的同学联系你'
+              : keyword ? '换个关键词或调整筛选条件' : emptyCopy[section].subtitle}
+          </Text>
+          {courseSearch ? (
+            <View className='course-market-empty__actions'>
+              <View
+                className='course-market-empty__primary'
+                hoverClass='course-market-empty__button--pressed'
+                onClick={() => void openCourseMarketplacePublisher({
+                  ...courseSearch,
+                  intent: 'wanted',
+                })}
+              >
+                发布求购
+              </View>
+              <View
+                className='course-market-empty__secondary'
+                hoverClass='course-market-empty__button--pressed'
+                onClick={clearAll}
+              >
+                查看全部资料
+              </View>
+            </View>
+          ) : (keyword || hasStructuredFilters) && (
             <View onClick={clearAll}>清除筛选</View>
           )}
         </View>

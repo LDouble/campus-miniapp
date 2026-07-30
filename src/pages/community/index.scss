@@ -5,11 +5,10 @@ page {
 .community-page {
   min-height: 100vh;
   padding-bottom: 170rpx;
-  color: #17212b;
+  color: #2f3434;
   background:
-    radial-gradient(circle at 96% 2%, rgba(126, 111, 222, 0.12), transparent 30%),
-    radial-gradient(circle at 4% 48%, rgba(92, 183, 190, 0.08), transparent 28%),
-    linear-gradient(180deg, #f6f5fc 0%, #f1f6f8 54%, #f5f7fa 100%);
+    radial-gradient(circle at 96% 1%, rgba(57, 124, 116, 0.1), transparent 28%),
+    linear-gradient(180deg, #f7f5f0 0%, #faf8f4 45%, #f7f5f0 100%);
 
   &--errands {
     background:
@@ -31,8 +30,8 @@ page {
 
   &__intro {
     display: flex;
-    min-height: 108rpx;
-    padding: 10rpx 28rpx 16rpx;
+    min-height: 88rpx;
+    padding: 6rpx 28rpx 10rpx;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
@@ -53,17 +52,17 @@ page {
   }
 
   &__eyebrow {
-    color: #17212b;
-    font-size: 39rpx;
+    color: #2f3434;
+    font-size: 37rpx;
     font-weight: 800;
     line-height: 1.25;
     letter-spacing: -1rpx;
   }
 
   &__subtitle {
-    margin-top: 5rpx;
-    color: #687484;
-    font-size: 24rpx;
+    margin-top: 3rpx;
+    color: #737874;
+    font-size: 23rpx;
   }
 
   &__search-action {
@@ -92,20 +91,20 @@ page {
 
 .community-content-anchor {
   min-height: 45vh;
-  padding-top: 18rpx;
+  padding-top: 10rpx;
 }
 
 .life-hub-navigation {
   position: sticky;
   z-index: 24;
-  padding: 8rpx 0 10rpx;
-  background: rgba(245, 247, 250, 0.94);
+  padding: 4rpx 0 8rpx;
+  background: rgba(247, 245, 240, 0.94);
   transition: box-shadow 180ms ease, background-color 180ms ease;
   backdrop-filter: blur(18rpx);
 
   &--active {
-    background: rgba(245, 247, 250, 0.985);
-    box-shadow: 0 12rpx 28rpx rgba(29, 39, 52, 0.08);
+    background: rgba(247, 245, 240, 0.985);
+    box-shadow: 0 10rpx 24rpx rgba(47, 52, 52, 0.07);
   }
 }
 
@@ -147,7 +146,7 @@ page {
       }
     }
 
-    &--community::after { background: #4f46e5; }
+    &--community::after { background: #397c74; }
     &--errands::after { background: #d97706; }
     &--market::after { background: #e85d4a; }
     &--carpool::after { background: #2563eb; }
@@ -169,7 +168,7 @@ page {
   min-width: 100%;
   padding: 0 28rpx;
   box-sizing: border-box;
-  gap: 30rpx;
+  gap: 24rpx;
 }
 
 .community-root-tabs__item {
@@ -194,12 +193,12 @@ page {
 }
 
 .community-root-tabs__item--active {
-  color: #3f37bd;
+  color: #397c74;
   font-weight: 780;
 }
 
 .community-root-tabs__item--active::after {
-  background: #4f46e5;
+  background: #397c74;
 }
 
 .community-root-tabs__item--pressed,
@@ -244,7 +243,7 @@ page {
 }
 
 .community-subtabs__item--active::after {
-  background: #4f46e5;
+  background: #397c74;
 }
 
 .life-publish-fab {
@@ -275,15 +274,18 @@ page {
   }
 
   &--community {
+    background: #397c74;
+    box-shadow:
+      0 12rpx 28rpx rgba(57, 124, 116, 0.24),
+      inset 0 2rpx 3rpx rgba(255, 255, 255, 0.24);
+  }
+
+  &--community.life-publish-fab--compact {
     width: 76rpx;
     min-width: 76rpx;
     height: 76rpx;
     padding: 0;
     gap: 0;
-    background: linear-gradient(145deg, #7569e5, #5c53d2);
-    box-shadow:
-      0 12rpx 28rpx rgba(79, 70, 190, 0.24),
-      inset 0 2rpx 3rpx rgba(255, 255, 255, 0.24);
 
     text:first-child {
       margin-top: -3rpx;

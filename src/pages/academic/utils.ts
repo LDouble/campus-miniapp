@@ -7,11 +7,6 @@ import {
 
 export const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
-export const sectionTimes = [
-  '08:00', '08:55', '09:50', '10:45', '14:00', '14:55',
-  '16:00', '16:55', '18:30', '19:25', '20:20', '21:15',
-]
-
 export const courseColors = [
   'aqua', 'blue', 'mint', 'lilac', 'sand', 'sky',
   'rose', 'peach', 'lemon', 'sage', 'indigo', 'coral',
@@ -120,6 +115,100 @@ export const getCurrentTeachingWeek = (
   )
   const week = Math.floor(elapsedDays / 7) + 1
   return Math.min(period.weeks, Math.max(1, week))
+}
+
+export const resolveScheduleAnchor = (
+  periods: AcademicPeriod[],
+  now = new Date(),
+) => {
+  const today = localDateOrdinal(now)
+  const timeline = periods
+    .map((period) => {
+      const start = parseDate(period.startDate)
+      if (Number.isNaN(start.getTime()) || period.weeks < 1) return null
+      const startOrdinal = localDateOrdinal(start)
+      return {
+        period,
+        startOrdinal,
+        endOrdinal: startOrdinal + period.weeks * 7 * 86400000,
+      }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  const current = timeline
+    .filter(({ startOrdinal, endOrdinal }) => (
+      today >= startOrdinal && today < endOrdinal
+    ))
+    .sort((left, right) => right.startOrdinal - left.startOrdinal)[0]
+  if (current) {
+    return {
+      periodId: current.period.id,
+      week: getCurrentTeachingWeek(current.period, now),
+    }
+  }
+
+  const upcoming = timeline
+    .filter(({ startOrdinal }) => startOrdinal > today)
+    .sort((left, right) => left.startOrdinal - right.startOrdinal)[0]
+  if (upcoming) {
+    return {
+      periodId: upcoming.period.id,
+      week: 1,
+    }
+  }
+
+  const latestFinished = timeline
+    .filter(({ endOrdinal }) => endOrdinal <= today)
+    .sort((left, right) => right.endOrdinal - left.endOrdinal)[0]
+  if (latestFinished) {
+    return {
+      periodId: latestFinished.period.id,
+      week: 1,
+    }
+  }
+
+  const fallback = periods.find((period) => period.isCurrent) || periods[0]
+  return {
+    periodId: fallback?.id || '',
+    week: fallback?.isCurrent ? getCurrentTeachingWeek(fallback, now) : 1,
+  }
+}
+
+export const getCurrentAcademicWeek = (
+  periods: AcademicPeriod[],
+  now = new Date(),
+) => {
+  const today = localDateOrdinal(now)
+  const currentPeriod = periods.find((period) => {
+    const start = parseDate(period.startDate)
+    if (Number.isNaN(start.getTime()) || period.weeks < 1) return false
+    const startOrdinal = localDateOrdinal(start)
+    const endOrdinal = startOrdinal + period.weeks * 7 * 86400000
+    return today >= startOrdinal && today < endOrdinal
+  })
+  return currentPeriod ? getCurrentTeachingWeek(currentPeriod, now) : null
+}
+
+export const getAcademicCalendarLabel = (
+  periods: AcademicPeriod[],
+  now = new Date(),
+) => {
+  const currentWeek = getCurrentAcademicWeek(periods, now)
+  if (currentWeek) return `第 ${currentWeek} 周`
+
+  const today = localDateOrdinal(now)
+  const upcoming = periods
+    .map((period) => ({ period, start: parseDate(period.startDate) }))
+    .filter(({ start }) => (
+      !Number.isNaN(start.getTime()) && localDateOrdinal(start) > today
+    ))
+    .sort((left, right) => left.start.getTime() - right.start.getTime())[0]
+  if (upcoming) return `${formatDateLabel(upcoming.start)}开学`
+
+  const hasConfiguredPeriod = periods.some((period) => (
+    !Number.isNaN(parseDate(period.startDate).getTime())
+  ))
+  return hasConfiguredPeriod ? '本学期已结束' : '教学周次待同步'
 }
 
 export const formatPeriodStartDate = (period: AcademicPeriod) => {

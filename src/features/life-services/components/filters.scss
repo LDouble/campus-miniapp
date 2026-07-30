@@ -12,6 +12,14 @@
   box-sizing: border-box;
 }
 
+.filter-quick-row__divider {
+  width: 2rpx;
+  height: 40rpx;
+  flex: 0 0 2rpx;
+  margin: 0 4rpx;
+  background: rgba(91, 124, 121, 0.13);
+}
+
 .filter-chip {
   display: inline-flex;
   min-width: 116rpx;

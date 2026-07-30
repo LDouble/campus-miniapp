@@ -320,6 +320,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开校历 */
+        get: operations["GetAcademicCalendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/course-selections": {
         parameters: {
             query?: never;
@@ -399,6 +416,108 @@ export interface paths {
         put?: never;
         /** 查询本人可用教务学期 */
         post: operations["ListAcademicPeriods"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/pass-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程历史通过率 */
+        get: operations["ListAcademicCoursePassRates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/pass-rates/instructors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教师姓名维度的课程历史通过率 */
+        get: operations["ListAcademicInstructorPassRates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/pass-rates/instructors/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教师姓名维度的分学期通过率与平均分趋势 */
+        get: operations["GetAcademicInstructorPassRateTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/pass-rates/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程分学期通过率与平均分趋势 */
+        get: operations["GetAcademicCoursePassRateTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-statistics/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询学业统计批次 */
+        get: operations["ListAdminAcademicStatisticsBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-statistics/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端手动触发学业统计重算 */
+        post: operations["TriggerAdminAcademicStatisticsRun"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1471,6 +1590,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/course-material-feedbacks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询资料问题反馈 */
+        get: operations["ListAdminCourseMaterialFeedbacks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-material-feedbacks/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 处理资料问题反馈 */
+        post: operations["ReviewCourseMaterialFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/course-materials": {
         parameters: {
             query?: never;
@@ -1499,6 +1652,23 @@ export interface paths {
         get: operations["GetAdminCourseMaterial"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-materials/{id}/files/{file_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 获取已完成安全扫描资料的短期审核预览地址 */
+        post: operations["GetAdminCourseMaterialPreview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1625,6 +1795,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/course-material-feedbacks/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的资料问题反馈 */
+        get: operations["ListMyCourseMaterialFeedbacks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/course-materials": {
         parameters: {
             query?: never;
@@ -1668,7 +1855,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 一次创建最多五个资料上传任务 */
+        /** 创建包含最多五个文件的资料上传会话 */
         post: operations["CreateMaterialUploadSession"];
         delete?: never;
         options?: never;
@@ -1711,7 +1898,24 @@ export interface paths {
         patch: operations["UpdateMyCourseMaterial"];
         trace?: never;
     };
-    "/api/v1/course-materials/{id}/download": {
+    "/api/v1/course-materials/{id}/feedbacks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 反馈资料或指定文件的问题 */
+        post: operations["CreateCourseMaterialFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/{id}/files/{file_id}/download": {
         parameters: {
             query?: never;
             header?: never;
@@ -1754,6 +1958,144 @@ export interface paths {
         };
         /** 搜索课程分类和课程别名 */
         get: operations["ListMaterialCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classroom-occupancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询占用记录 */
+        get: operations["ListAdminClassroomOccupancies"];
+        put?: never;
+        /** 管理端新增课表或临时占用 */
+        post: operations["CreateAdminClassroomOccupancy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classroom-occupancy-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询占用反馈 */
+        get: operations["ListAdminClassroomOccupancyReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classroom-occupancy-reports/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端审核占用反馈 */
+        post: operations["ReviewAdminClassroomOccupancyReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classrooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询教室 */
+        get: operations["ListAdminClassrooms"];
+        put?: never;
+        /** 管理端创建教室 */
+        post: operations["CreateAdminClassroom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/classrooms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端更新教室 */
+        patch: operations["UpdateAdminClassroom"];
+        trace?: never;
+    };
+    "/api/v1/classrooms/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按校区日期和节次查询空教室 */
+        get: operations["ListAvailableClassrooms"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classrooms/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 反馈教室实际占用 */
+        post: operations["CreateClassroomOccupancyReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classrooms/reports/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的教室占用反馈 */
+        get: operations["ListMyClassroomOccupancyReports"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2313,6 +2655,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/shuttle/routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询校车线路 */
+        get: operations["ListAdminShuttleRoutes"];
+        put?: never;
+        /** 管理端创建校车线路草稿 */
+        post: operations["CreateAdminShuttleRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shuttle/routes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看校车线路 */
+        get: operations["GetAdminShuttleRoute"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端修改校车线路 */
+        patch: operations["UpdateAdminShuttleRoute"];
+        trace?: never;
+    };
+    "/api/v1/admin/shuttle/routes/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停用校车线路 */
+        post: operations["DisableAdminShuttleRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shuttle/routes/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布校车线路 */
+        post: operations["PublishAdminShuttleRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shuttle/routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布校车线路及指定日期班次 */
+        get: operations["ListShuttleRoutes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shuttle/routes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看校车线路及指定日期班次 */
+        get: operations["GetShuttleRoute"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders": {
         parameters: {
             query?: never;
@@ -2774,6 +3220,44 @@ export interface components {
             };
             request_id: string;
         };
+        AcademicCalendar: {
+            education_level: components["schemas"]["AcademicEducationLevel"];
+            events: components["schemas"]["AcademicCalendarEvent"][];
+            /** Format: date-time */
+            refreshed_at: string;
+            terms: components["schemas"]["AcademicCalendarTerm"][];
+            timezone: string;
+        };
+        AcademicCalendarEvent: {
+            campuses: string[];
+            description: string;
+            /** Format: date */
+            end_date: string;
+            id: string;
+            period_id: string;
+            /** Format: date */
+            start_date: string;
+            title: string;
+            type: components["schemas"]["AcademicCalendarEventType"];
+        };
+        /** @enum {string} */
+        AcademicCalendarEventType: "term_start" | "teaching" | "exam" | "holiday" | "makeup" | "registration" | "other";
+        AcademicCalendarResponseBody: {
+            data: components["schemas"]["AcademicCalendar"];
+            request_id: string;
+        };
+        AcademicCalendarTerm: {
+            /** Format: date */
+            end_date: string;
+            id: string;
+            is_current: boolean;
+            label: string;
+            short_label: string;
+            /** Format: date */
+            start_date: string;
+            /** Format: int32 */
+            week_count: number;
+        };
         AcademicCourse: {
             campus: string;
             course_code: string;
@@ -2823,6 +3307,8 @@ export interface components {
         };
         /** @enum {string} */
         AcademicCourseSelectionStatus: "selected" | "pending" | "failed";
+        /** @enum {string} */
+        AcademicEducationLevel: "undergraduate" | "graduate";
         AcademicExam: {
             campus: string;
             course_code: string;
@@ -2880,6 +3366,194 @@ export interface components {
             data: components["schemas"]["AcademicPeriod"][];
             request_id: string;
         };
+        AcademicCoursePassRatePage: {
+            items: components["schemas"]["AcademicCoursePassRateView"][];
+            metadata: components["schemas"]["AcademicStatisticsMetadata"];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicCoursePassRatePageResponseBody: {
+            data: components["schemas"]["AcademicCoursePassRatePage"];
+            request_id: string;
+        };
+        AcademicCoursePassRateView: {
+            /** Format: double */
+            average_score?: number;
+            confidence: components["schemas"]["AcademicStatisticsConfidence"];
+            course_code: string;
+            course_name: string;
+            distribution: components["schemas"]["AcademicGradeDistribution"];
+            /** Format: int64 */
+            fail_count: number;
+            /** Format: int64 */
+            numeric_score_count: number;
+            /** Format: int64 */
+            pass_count: number;
+            /** Format: double */
+            pass_rate: number;
+            /** Format: int64 */
+            term_count: number;
+            /** Format: int64 */
+            valid_count: number;
+        };
+        AcademicGradeDistribution: {
+            /** Format: int64 */
+            level_excellent_count: number;
+            /** Format: int64 */
+            level_fail_count: number;
+            /** Format: int64 */
+            level_good_count: number;
+            /** Format: int64 */
+            level_medium_count: number;
+            /** Format: int64 */
+            level_pass_count: number;
+            /** Format: int64 */
+            numeric_fail_count: number;
+            /** Format: int64 */
+            score_60_69_count: number;
+            /** Format: int64 */
+            score_70_79_count: number;
+            /** Format: int64 */
+            score_80_89_count: number;
+            /** Format: int64 */
+            score_90_100_count: number;
+        };
+        AcademicInstructorPassRatePage: {
+            items: components["schemas"]["AcademicInstructorPassRateView"][];
+            metadata: components["schemas"]["AcademicStatisticsMetadata"];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicInstructorPassRatePageResponseBody: {
+            data: components["schemas"]["AcademicInstructorPassRatePage"];
+            request_id: string;
+        };
+        AcademicInstructorPassRateView: {
+            /** Format: double */
+            average_score?: number;
+            /** Format: int64 */
+            class_count: number;
+            confidence: components["schemas"]["AcademicStatisticsConfidence"];
+            course_code: string;
+            course_name: string;
+            distribution: components["schemas"]["AcademicGradeDistribution"];
+            /** Format: int64 */
+            fail_count: number;
+            /** Format: int64 */
+            numeric_score_count: number;
+            /** Format: int64 */
+            pass_count: number;
+            /** Format: double */
+            pass_rate: number;
+            teacher_identity_scope: components["schemas"]["AcademicTeacherIdentityScope"];
+            teacher_key: string;
+            teacher_name: string;
+            /** Format: int64 */
+            term_count: number;
+            /** Format: int64 */
+            valid_count: number;
+        };
+        AcademicPassRateTrend: {
+            course_code: string;
+            course_name: string;
+            metadata: components["schemas"]["AcademicStatisticsMetadata"];
+            points: components["schemas"]["AcademicPassRateTrendPoint"][];
+            teacher_identity_scope?: components["schemas"]["AcademicTeacherIdentityScope"];
+            teacher_key?: string;
+            teacher_name?: string;
+        };
+        AcademicPassRateTrendPoint: {
+            /** Format: double */
+            average_score?: number;
+            confidence: components["schemas"]["AcademicStatisticsConfidence"];
+            distribution: components["schemas"]["AcademicGradeDistribution"];
+            /** Format: int64 */
+            fail_count: number;
+            /** Format: int64 */
+            numeric_score_count: number;
+            /** Format: int64 */
+            pass_count: number;
+            /** Format: double */
+            pass_rate: number;
+            term_code: string;
+            /** Format: int64 */
+            valid_count: number;
+        };
+        AcademicPassRateTrendResponseBody: {
+            data: components["schemas"]["AcademicPassRateTrend"];
+            request_id: string;
+        };
+        AcademicStatisticsBatchPage: {
+            items: components["schemas"]["AcademicStatisticsBatchView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicStatisticsBatchPageResponseBody: {
+            data: components["schemas"]["AcademicStatisticsBatchPage"];
+            request_id: string;
+        };
+        AcademicStatisticsBatchView: {
+            /** Format: int64 */
+            course_stat_count: number;
+            /** Format: date-time */
+            created_at: string;
+            error_summary?: string;
+            /** Format: date-time */
+            finished_at?: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            instructor_stat_count: number;
+            /** Format: date-time */
+            published_at?: string;
+            rule_version: string;
+            /** Format: date-time */
+            source_cutoff_at: string;
+            /** Format: int64 */
+            source_row_count: number;
+            /** Format: date-time */
+            started_at: string;
+            /** @enum {string} */
+            status: "running" | "failed" | "published";
+            trigger_note?: string;
+            trigger_task_id?: string;
+            /** @enum {string} */
+            trigger_type: "scheduled" | "manual";
+            /** Format: uint64 */
+            triggered_by?: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @enum {string} */
+        AcademicStatisticsConfidence: "sample_limited" | "reference" | "sufficient";
+        AcademicStatisticsMetadata: {
+            /** Format: uint64 */
+            batch_id: number;
+            /** Format: int64 */
+            minimum_sample_size: number;
+            /** Format: date-time */
+            published_at: string;
+            rule_version: string;
+            /** Format: date-time */
+            source_cutoff_at: string;
+        };
+        AcademicStatisticsRunAccepted: {
+            /** Format: date-time */
+            queued_at: string;
+            task_id: string;
+        };
+        AcademicStatisticsRunAcceptedResponseBody: {
+            data: components["schemas"]["AcademicStatisticsRunAccepted"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicTeacherIdentityScope: "normalized_name";
         AcademicIdentity: {
             /** Format: date-time */
             created_at: string;
@@ -3084,6 +3758,7 @@ export interface components {
         CampusCirclePostView: {
             /** Format: uint64 */
             author_id: number;
+            author_nickname: string;
             available_actions: components["schemas"]["CampusCircleViewerAction"][];
             /**
              * Format: int64
@@ -3230,6 +3905,7 @@ export interface components {
         CommentView: {
             /** Format: uint64 */
             author_id: number;
+            author_nickname: string;
             available_actions: components["schemas"]["CommentViewerAction"][];
             content: string;
             /** Format: date-time */
@@ -3267,7 +3943,7 @@ export interface components {
         CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "pin_comment" | "unpin_comment" | "verify_academic";
         CompleteMaterialUploadFile: {
             /** Format: uint64 */
-            material_id: number;
+            file_id: number;
         };
         CompleteMaterialUploadSessionRequest: {
             /** Format: uint64 */
@@ -3297,11 +3973,10 @@ export interface components {
             description?: string | null;
             /** Format: int64 */
             download_count: number;
+            files: components["schemas"]["MaterialFileView"][];
             /** Format: uint64 */
             id: number;
             material_type: components["schemas"]["MaterialType"];
-            mime_type: string;
-            original_filename: string;
             /** Format: uint64 */
             owner_id: number;
             period_id?: string | null;
@@ -3313,11 +3988,6 @@ export interface components {
             reviewed_at?: string | null;
             /** Format: uint64 */
             reviewed_by?: number | null;
-            scan_message?: string | null;
-            scan_status: components["schemas"]["MaterialScanStatus"];
-            sha256?: string | null;
-            /** Format: int64 */
-            size_bytes: number;
             status: components["schemas"]["MaterialStatus"];
             title: string;
             /** Format: date-time */
@@ -3326,7 +3996,14 @@ export interface components {
             version: number;
         };
         CreateMaterialUploadSessionRequest: {
+            candidate_course_name?: string | null;
+            /** Format: uint64 */
+            course_id?: number | null;
+            description?: string | null;
             files: components["schemas"]["MaterialUploadFileInput"][];
+            material_type: components["schemas"]["MaterialType"];
+            period_id?: string | null;
+            title: string;
         };
         /** @enum {string} */
         EducationLevel: "undergraduate" | "graduate" | "general";
@@ -3369,9 +4046,76 @@ export interface components {
         MaterialDownloadView: {
             /** Format: date-time */
             expires_at: string;
+            /** Format: uint64 */
+            file_id: number;
             filename: string;
             /** Format: uri */
             url: string;
+        };
+        /** @enum {string} */
+        MaterialFeedbackCategory: "file_unavailable" | "wrong_course" | "content_error" | "copyright_privacy" | "other";
+        MaterialFeedbackPage: {
+            items: components["schemas"]["MaterialFeedbackView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MaterialFeedbackPageResponseBody: {
+            data: components["schemas"]["MaterialFeedbackPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        MaterialFeedbackResolutionAction: "keep" | "correct_course" | "take_down" | "reject";
+        MaterialFeedbackResponseBody: {
+            data: components["schemas"]["MaterialFeedbackView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        MaterialFeedbackStatus: "pending" | "resolved" | "rejected";
+        MaterialFeedbackView: {
+            category: components["schemas"]["MaterialFeedbackCategory"];
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: uint64 */
+            file_id?: number | null;
+            /** Format: uint64 */
+            id: number;
+            material?: components["schemas"]["CourseMaterialView"];
+            /** Format: uint64 */
+            material_id: number;
+            /** Format: uint64 */
+            reporter_id: number;
+            resolution_action?: components["schemas"]["MaterialFeedbackResolutionAction"];
+            resolution_note?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewed_by?: number | null;
+            status: components["schemas"]["MaterialFeedbackStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        MaterialFileView: {
+            declared_mime_type: string;
+            detected_mime_type?: string | null;
+            /** Format: int64 */
+            download_count: number;
+            /** Format: uint64 */
+            id: number;
+            original_filename: string;
+            scan_message?: string | null;
+            scan_status: components["schemas"]["MaterialScanStatus"];
+            sha256?: string | null;
+            /** Format: int64 */
+            size_bytes: number;
+            /** Format: int64 */
+            sort_order: number;
+            /** Format: uint64 */
+            version: number;
         };
         MaterialReviewView: {
             /** @enum {string} */
@@ -3400,18 +4144,11 @@ export interface components {
             updated: boolean;
         };
         MaterialUploadFileInput: {
-            candidate_course_name?: string | null;
-            /** Format: uint64 */
-            course_id?: number | null;
-            description?: string | null;
             filename: string;
-            material_type: components["schemas"]["MaterialType"];
             /** @enum {string} */
             mime_type: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-            period_id?: string | null;
             /** Format: int64 */
             size_bytes: number;
-            title: string;
         };
         MaterialUploadSessionResponseBody: {
             data: components["schemas"]["MaterialUploadSessionView"];
@@ -3424,7 +4161,7 @@ export interface components {
             file_count: number;
             /** Format: uint64 */
             id: number;
-            materials?: components["schemas"]["CourseMaterialView"][];
+            material: components["schemas"]["CourseMaterialView"];
             /** @enum {string} */
             status: "created" | "uploading" | "completed" | "expired" | "failed";
             uploads: components["schemas"]["MaterialUploadTarget"][];
@@ -3436,18 +4173,237 @@ export interface components {
             expires_at: string;
             /** @enum {string} */
             file_field: "file";
+            /** Format: uint64 */
+            file_id: number;
             form_fields: {
                 [key: string]: string;
             };
             headers: {
                 [key: string]: string;
             };
-            /** Format: uint64 */
-            material_id: number;
             /** @enum {string} */
             upload_method: "POST";
             /** Format: uri */
             upload_url: string;
+        };
+        ClassroomAvailabilityItem: {
+            available: boolean;
+            classroom: components["schemas"]["ClassroomView"];
+            /** @enum {string} */
+            confidence: "schedule_only" | "confirmed_occupied";
+        };
+        ClassroomBuildingGroup: {
+            building: string;
+            classrooms: components["schemas"]["ClassroomAvailabilityItem"][];
+        };
+        ClassroomInput: {
+            building: string;
+            campus: string;
+            /** Format: int64 */
+            capacity?: number;
+            display_name: string;
+            facilities?: string[];
+            room: string;
+            room_type?: string;
+        };
+        /** @enum {string} */
+        ClassroomOccupancyAdminSource: "schedule" | "admin";
+        ClassroomOccupancyInput: {
+            /** Format: uint64 */
+            classroom_id: number;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date-time */
+            expires_at?: string;
+            note?: string;
+            period_id?: string;
+            /** Format: date */
+            service_date?: string;
+            source_ref?: string;
+            source_type: components["schemas"]["ClassroomOccupancyAdminSource"];
+            /** Format: int64 */
+            start_section: number;
+            /** Format: int64 */
+            teaching_week?: number;
+            /** Format: int64 */
+            weekday?: number;
+        };
+        ClassroomOccupancyPage: {
+            items: components["schemas"]["ClassroomOccupancyView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassroomOccupancyPageResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyPage"];
+            request_id: string;
+        };
+        ClassroomOccupancyReportInput: {
+            category: components["schemas"]["ClassroomReportCategory"];
+            /** Format: uint64 */
+            classroom_id: number;
+            description?: string;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date */
+            service_date: string;
+            /** Format: int64 */
+            start_section: number;
+        };
+        ClassroomOccupancyReportPage: {
+            items: components["schemas"]["ClassroomOccupancyReportView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassroomOccupancyReportPageResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyReportPage"];
+            request_id: string;
+        };
+        ClassroomOccupancyReportResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyReportView"];
+            request_id: string;
+        };
+        ClassroomOccupancyReportReviewInput: {
+            approved: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+            /** Format: date-time */
+            expires_at?: string;
+            reason?: string;
+        };
+        ClassroomOccupancyReportView: {
+            category: components["schemas"]["ClassroomReportCategory"];
+            classroom: components["schemas"]["ClassroomView"];
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            reporter_id?: number | null;
+            review_reason?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewed_by?: number | null;
+            /** Format: date */
+            service_date: string;
+            /** Format: int64 */
+            start_section: number;
+            status: components["schemas"]["ClassroomReportStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        ClassroomOccupancyResponseBody: {
+            data: components["schemas"]["ClassroomOccupancyView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClassroomOccupancySource: "schedule" | "admin" | "student_report";
+        /** @enum {string} */
+        ClassroomOccupancyStatus: "active" | "disabled" | "expired";
+        ClassroomOccupancyView: {
+            /** Format: uint64 */
+            classroom_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: uint64 */
+            id: number;
+            note?: string | null;
+            period_id?: string | null;
+            /** Format: date */
+            service_date?: string | null;
+            source_ref?: string | null;
+            source_type: components["schemas"]["ClassroomOccupancySource"];
+            /** Format: int64 */
+            start_section: number;
+            status: components["schemas"]["ClassroomOccupancyStatus"];
+            /** Format: int64 */
+            teaching_week?: number | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+            /** Format: int64 */
+            weekday?: number | null;
+        };
+        ClassroomPage: {
+            items: components["schemas"]["ClassroomView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassroomPageResponseBody: {
+            data: components["schemas"]["ClassroomPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClassroomReportCategory: "class_in_progress" | "event" | "maintenance" | "other";
+        /** @enum {string} */
+        ClassroomReportStatus: "pending" | "approved" | "rejected" | "withdrawn" | "revoked";
+        ClassroomResponseBody: {
+            data: components["schemas"]["ClassroomView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClassroomStatus: "active" | "disabled";
+        ClassroomUpdateInput: components["schemas"]["ClassroomInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+            status: components["schemas"]["ClassroomStatus"];
+        };
+        ClassroomView: {
+            building: string;
+            campus: string;
+            /** Format: int64 */
+            capacity?: number | null;
+            /** Format: date-time */
+            created_at: string;
+            display_name: string;
+            facilities: string[];
+            /** Format: uint64 */
+            id: number;
+            room: string;
+            room_type?: string | null;
+            status: components["schemas"]["ClassroomStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        EmptyClassroomAvailability: {
+            campus: string;
+            data_source_notice: string;
+            /** Format: int64 */
+            end_section: number;
+            groups: components["schemas"]["ClassroomBuildingGroup"][];
+            period_id: string;
+            /** Format: date-time */
+            refreshed_at: string;
+            /** Format: date */
+            service_date: string;
+            /** Format: int64 */
+            start_section: number;
+            /** Format: int64 */
+            teaching_week: number;
+        };
+        EmptyClassroomAvailabilityResponseBody: {
+            data: components["schemas"]["EmptyClassroomAvailability"];
+            request_id: string;
         };
         ErrandOptionalOrderResponseBody: {
             data: components["schemas"]["ErrandOptionalOrderResult"];
@@ -3571,9 +4527,15 @@ export interface components {
             request_id: string;
         };
         MarketplaceListingView: {
+            academic_period_id: string | null;
+            academic_period_label: string | null;
             available_actions: components["schemas"]["MarketplaceViewerAction"][];
+            /** @enum {string} */
+            category: "general" | "course_material";
             contact: string;
             contact_type: string;
+            course_code: string | null;
+            course_name: string | null;
             /** Format: date-time */
             created_at: string;
             currency: string;
@@ -3581,6 +4543,8 @@ export interface components {
             /** Format: uint64 */
             id: number;
             image_urls: string[];
+            /** @enum {string} */
+            intent: "sell" | "wanted";
             /** Format: uint64 */
             owner_id: number;
             /** Format: int64 */
@@ -3590,6 +4554,8 @@ export interface components {
             reviewed_at?: string | null;
             /** Format: uint64 */
             reviewed_by?: number | null;
+            /** @enum {string} */
+            source: "manual" | "course_selection" | "grade" | "schedule";
             status: string;
             /** Format: date-time */
             updated_at: string;
@@ -3658,7 +4624,121 @@ export interface components {
             updated: boolean;
         };
         /** @enum {string} */
-        MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "verify_academic";
+        MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
+        ShuttleDateOverrideInput: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times?: string[];
+            note?: string;
+            /** Format: date */
+            service_date: string;
+            suspended: boolean;
+        };
+        /** @enum {string} */
+        ShuttleDayType: "workday" | "weekend" | "holiday" | "vacation" | "special";
+        /** @enum {string} */
+        ShuttleResolutionSource: "date_override" | "special_period" | "weekly_rule";
+        ShuttleResolvedSchedule: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times: string[];
+            /** Format: date-time */
+            next_departure_at?: string | null;
+            note?: string;
+            /** Format: date */
+            service_date: string;
+            source: components["schemas"]["ShuttleResolutionSource"];
+            suspended: boolean;
+        };
+        ShuttleRouteInput: {
+            campuses: string[];
+            date_overrides?: components["schemas"]["ShuttleDateOverrideInput"][];
+            destination: string;
+            name: string;
+            notice?: string;
+            origin: string;
+            /** Format: int64 */
+            reference_duration_minutes: number;
+            schedules: components["schemas"]["ShuttleScheduleInput"][];
+            service_type: components["schemas"]["ShuttleServiceType"];
+            special_periods?: components["schemas"]["ShuttleSpecialPeriodInput"][];
+            stops: components["schemas"]["ShuttleStopInput"][];
+        };
+        ShuttleRoutePageResponseBody: {
+            data: components["schemas"]["ShuttleRouteViewPage"];
+            request_id: string;
+        };
+        ShuttleRouteResponseBody: {
+            data: components["schemas"]["ShuttleRouteView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ShuttleRouteStatus: "draft" | "published" | "disabled";
+        ShuttleRouteUpdateInput: components["schemas"]["ShuttleRouteInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        ShuttleRouteView: {
+            campuses: string[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            created_by?: number;
+            date_overrides: components["schemas"]["ShuttleDateOverrideInput"][];
+            destination: string;
+            /** Format: uint64 */
+            id: number;
+            name: string;
+            notice?: string;
+            origin: string;
+            /** Format: int64 */
+            reference_duration_minutes: number;
+            resolved_schedule: components["schemas"]["ShuttleResolvedSchedule"];
+            schedules: components["schemas"]["ShuttleScheduleInput"][];
+            service_type: components["schemas"]["ShuttleServiceType"];
+            special_periods: components["schemas"]["ShuttleSpecialPeriodInput"][];
+            status: components["schemas"]["ShuttleRouteStatus"];
+            stops: components["schemas"]["ShuttleStopInput"][];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            updated_by?: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        ShuttleRouteViewPage: {
+            items: components["schemas"]["ShuttleRouteView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ShuttleScheduleInput: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times: string[];
+            note?: string;
+        };
+        /** @enum {string} */
+        ShuttleServiceType: "campus_loop" | "intercampus";
+        ShuttleSpecialPeriodInput: {
+            day_type: components["schemas"]["ShuttleDayType"];
+            departure_times?: string[];
+            /** Format: date */
+            end_date: string;
+            note?: string;
+            /** Format: date */
+            start_date: string;
+            suspended: boolean;
+        };
+        ShuttleStopInput: {
+            campus: string;
+            name: string;
+            note?: string;
+            /** Format: int32 */
+            offset_minutes: number;
+        };
+        ShuttleVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
         TradeOrderPageResponseBody: {
             data: components["schemas"]["TradeOrderViewPage"];
             request_id: string;
@@ -3933,6 +5013,15 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
+        /** @description 公开校历 */
+        AcademicCalendarResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCalendarResponseBody"];
+            };
+        };
         /** @description 本人指定学期课程 */
         AcademicCourseListResponse: {
             headers: {
@@ -3976,6 +5065,51 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["AcademicPeriodListResponseBody"];
+            };
+        };
+        /** @description 课程通过率分页 */
+        AcademicCoursePassRatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCoursePassRatePageResponseBody"];
+            };
+        };
+        /** @description 规范化教师姓名维度的课程通过率分页；同名教师会合并 */
+        AcademicInstructorPassRatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicInstructorPassRatePageResponseBody"];
+            };
+        };
+        /** @description 课程或教师的分学期成绩趋势 */
+        AcademicPassRateTrendResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicPassRateTrendResponseBody"];
+            };
+        };
+        /** @description 学业统计批次分页 */
+        AcademicStatisticsBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicStatisticsBatchPageResponseBody"];
+            };
+        };
+        /** @description 学业统计任务已入队 */
+        AcademicStatisticsRunAcceptedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicStatisticsRunAcceptedResponseBody"];
             };
         };
         /** @description 校园身份认证材料上传结果 */
@@ -4167,6 +5301,24 @@ export interface components {
                 "application/json": components["schemas"]["MaterialDownloadResponseBody"];
             };
         };
+        /** @description 资料问题反馈分页 */
+        MaterialFeedbackPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialFeedbackPageResponseBody"];
+            };
+        };
+        /** @description 资料问题反馈 */
+        MaterialFeedbackResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialFeedbackResponseBody"];
+            };
+        };
         /** @description 资料更新结果 */
         MaterialUpdatedResponse: {
             headers: {
@@ -4183,6 +5335,69 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MaterialUploadSessionResponseBody"];
+            };
+        };
+        /** @description 教室占用分页 */
+        ClassroomOccupancyPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyPageResponseBody"];
+            };
+        };
+        /** @description 教室占用反馈分页 */
+        ClassroomOccupancyReportPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportPageResponseBody"];
+            };
+        };
+        /** @description 教室占用反馈 */
+        ClassroomOccupancyReportResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportResponseBody"];
+            };
+        };
+        /** @description 教室占用 */
+        ClassroomOccupancyResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyResponseBody"];
+            };
+        };
+        /** @description 教室分页 */
+        ClassroomPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomPageResponseBody"];
+            };
+        };
+        /** @description 教室 */
+        ClassroomResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassroomResponseBody"];
+            };
+        };
+        /** @description 空教室查询结果 */
+        EmptyClassroomAvailabilityResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["EmptyClassroomAvailabilityResponseBody"];
             };
         };
         /** @description 跑腿任务及可能存在的交易订单 */
@@ -4264,6 +5479,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MarketplaceUpdatedResponseBody"];
+            };
+        };
+        /** @description 校车线路分页 */
+        ShuttleRoutePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ShuttleRoutePageResponseBody"];
+            };
+        };
+        /** @description 校车线路 */
+        ShuttleRouteResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ShuttleRouteResponseBody"];
             };
         };
         /** @description 交易订单分页 */
@@ -4780,6 +6013,21 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    GetAcademicCalendar: {
+        parameters: {
+            query?: {
+                education_level?: "undergraduate" | "graduate";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCalendarResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
     ListAcademicCourseSelections: {
         parameters: {
             query?: never;
@@ -4883,17 +6131,118 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicPeriodListResponse"];
+            403: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAcademicCoursePassRates: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                course_code?: string;
+                term_code?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCoursePassRatePageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListAcademicInstructorPassRates: {
+        parameters: {
+            query: {
+                course_code: string;
+                teacher_name?: string;
+                term_code?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicInstructorPassRatePageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetAcademicInstructorPassRateTrend: {
+        parameters: {
+            query: {
+                course_code: string;
+                teacher_key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicPassRateTrendResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetAcademicCoursePassRateTrend: {
+        parameters: {
+            query: {
+                course_code: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicPassRateTrendResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicStatisticsBatches: {
+        parameters: {
+            query?: {
+                status?: "running" | "failed" | "published";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicStatisticsBatchPageResponse"];
+        };
+    };
+    TriggerAdminAcademicStatisticsRun: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
         requestBody: {
             content: {
                 "application/json": {
-                    student_no: string;
-                    password: string;
+                    confirmation: string;
+                    note?: string;
                 };
             };
         };
         responses: {
-            200: components["responses"]["AcademicPeriodListResponse"];
-            403: components["responses"]["Error"];
+            202: components["responses"]["AcademicStatisticsRunAcceptedResponse"];
+            400: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -6548,6 +7897,55 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    ListAdminCourseMaterialFeedbacks: {
+        parameters: {
+            query?: {
+                material_id?: number;
+                category?: "file_unavailable" | "wrong_course" | "content_error" | "copyright_privacy" | "other";
+                status?: "pending" | "resolved" | "rejected";
+                reporter_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialFeedbackPageResponse"];
+        };
+    };
+    ReviewCourseMaterialFeedback: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** @enum {string} */
+                    action: "keep" | "correct_course" | "take_down" | "reject";
+                    /** Format: uint64 */
+                    course_id?: number;
+                    resolution_note: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["MaterialFeedbackResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListAdminCourseMaterials: {
         parameters: {
             query?: {
@@ -6582,6 +7980,22 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CourseMaterialResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetAdminCourseMaterialPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                file_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialDownloadResponse"];
             404: components["responses"]["Error"];
         };
     };
@@ -6783,12 +8197,30 @@ export interface operations {
                     expected_version: number;
                     /** Format: uint64 */
                     target_course_id: number;
+                    /** Format: uint64 */
+                    target_expected_version: number;
                 };
             };
         };
         responses: {
             200: components["responses"]["MaterialCourseResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListMyCourseMaterialFeedbacks: {
+        parameters: {
+            query?: {
+                status?: "pending" | "resolved" | "rejected";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialFeedbackPageResponse"];
         };
     };
     ListCourseMaterials: {
@@ -6913,12 +8345,42 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    CreateCourseMaterialFeedback: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    file_id?: number;
+                    /** @enum {string} */
+                    category: "file_unavailable" | "wrong_course" | "content_error" | "copyright_privacy" | "other";
+                    description?: string;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["MaterialFeedbackResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
     GetCourseMaterialDownload: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: number;
+                file_id: number;
             };
             cookie?: never;
         };
@@ -6967,6 +8429,206 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["MaterialCoursePageResponse"];
+        };
+    };
+    ListAdminClassroomOccupancies: {
+        parameters: {
+            query?: {
+                classroom_id?: number;
+                period_id?: string;
+                service_date?: string;
+                source_type?: "schedule" | "admin" | "student_report";
+                status?: "active" | "disabled" | "expired";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomOccupancyPageResponse"];
+        };
+    };
+    CreateAdminClassroomOccupancy: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClassroomOccupancyResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListAdminClassroomOccupancyReports: {
+        parameters: {
+            query?: {
+                campus?: string;
+                status?: "pending" | "approved" | "rejected" | "withdrawn" | "revoked";
+                service_date?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomOccupancyReportPageResponse"];
+        };
+    };
+    ReviewAdminClassroomOccupancyReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ClassroomOccupancyReportResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminClassrooms: {
+        parameters: {
+            query?: {
+                campus?: string;
+                building?: string;
+                status?: "active" | "disabled";
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomPageResponse"];
+        };
+    };
+    CreateAdminClassroom: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClassroomResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminClassroom: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ClassroomResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAvailableClassrooms: {
+        parameters: {
+            query: {
+                campus: string;
+                date: string;
+                start_section: number;
+                end_section: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["EmptyClassroomAvailabilityResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateClassroomOccupancyReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassroomOccupancyReportInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClassroomOccupancyReportResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    ListMyClassroomOccupancyReports: {
+        parameters: {
+            query?: {
+                status?: "pending" | "approved" | "rejected" | "withdrawn" | "revoked";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassroomOccupancyReportPageResponse"];
         };
     };
     ListAdminErrands: {
@@ -7298,6 +8960,8 @@ export interface operations {
     ListAdminMarketplaceListings: {
         parameters: {
             query?: {
+                intent?: "sell" | "wanted";
+                category?: "general" | "course_material";
                 status?: string;
                 keyword?: string;
                 min_price_cents?: number;
@@ -7363,6 +9027,8 @@ export interface operations {
     ListMarketplaceListings: {
         parameters: {
             query?: {
+                intent?: "sell" | "wanted";
+                category?: "general" | "course_material";
                 keyword?: string;
                 min_price_cents?: number;
                 max_price_cents?: number;
@@ -7390,9 +9056,19 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @enum {string} */
+                    intent: "sell" | "wanted";
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
+                    /** @enum {string} */
+                    category: "general" | "course_material";
+                    course_name?: string;
+                    course_code?: string;
+                    academic_period_id?: string;
+                    academic_period_label?: string;
+                    /** @enum {string} */
+                    source: "manual" | "course_selection" | "grade" | "schedule";
                     contact_type: string;
                     contact: string;
                     image_urls?: string[];
@@ -7407,6 +9083,7 @@ export interface operations {
     ListMyMarketplaceListings: {
         parameters: {
             query?: {
+                intent?: "sell" | "wanted";
                 status?: string;
                 page?: number;
                 page_size?: number;
@@ -7451,9 +9128,19 @@ export interface operations {
                 "application/json": {
                     /** Format: uint64 */
                     expected_version: number;
+                    /** @enum {string} */
+                    intent: "sell" | "wanted";
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
+                    /** @enum {string} */
+                    category: "general" | "course_material";
+                    course_name?: string;
+                    course_code?: string;
+                    academic_period_id?: string;
+                    academic_period_label?: string;
+                    /** @enum {string} */
+                    source: "manual" | "course_selection" | "grade" | "schedule";
                     contact_type?: string;
                     contact?: string;
                     image_urls?: string[];
@@ -7764,6 +9451,167 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["ReadResultResponse"];
+        };
+    };
+    ListAdminShuttleRoutes: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                service_type?: "campus_loop" | "intercampus";
+                status?: "draft" | "published" | "disabled";
+                date?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRoutePageResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    CreateAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleRouteInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetAdminShuttleRoute: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleRouteUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DisableAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminShuttleRoute: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShuttleVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListShuttleRoutes: {
+        parameters: {
+            query?: {
+                service_type?: "campus_loop" | "intercampus";
+                campus?: string;
+                date?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRoutePageResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetShuttleRoute: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ShuttleRouteResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     ListMyTradeOrders: {

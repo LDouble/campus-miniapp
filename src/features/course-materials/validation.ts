@@ -3,6 +3,7 @@ import type {
   MaterialCourseSuggestion,
   MaterialUploadBatch,
   MaterialUploadDraft,
+  MaterialUploadMetadata,
 } from './types'
 
 export const supportedMaterialExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx'] as const
@@ -23,11 +24,14 @@ export const isSupportedMaterialFile = (filename: string) => (
   )
 )
 
-export const validateMaterialDrafts = (drafts: MaterialUploadDraft[]) => {
+export const validateMaterialDrafts = (
+  drafts: MaterialUploadDraft[],
+  metadata: MaterialUploadMetadata,
+) => {
   if (!drafts.length) return '请先选择资料文件'
   if (drafts.length > MAX_MATERIAL_FILES) return '单次最多上传 5 个文件'
+  if (!metadata.title.trim() || !metadata.courseName.trim()) return '请补全资料名称和课程'
   for (const draft of drafts) {
-    if (!draft.title.trim() || !draft.courseName.trim()) return '请补全标题和课程'
     if (!draft.filePath || draft.status === 'needs_file') return `${draft.fileName} 需要重新选择`
     if (!isSupportedMaterialFile(draft.fileName)) return `${draft.fileName} 的文件类型暂不支持`
     if (!Number.isFinite(draft.fileSize) || draft.fileSize <= 0) return `${draft.fileName} 的文件大小无效`
@@ -47,8 +51,8 @@ export const isMaterialUploadSessionReusable = (
   && Date.parse(batch.sessionExpiresAt) > now + 5_000
   && drafts.every((draft) => (
     !!draft.uploadTarget
-    && !!draft.materialId
-    && draft.uploadTarget.material_id === draft.materialId
+    && !!draft.fileId
+    && draft.uploadTarget.file_id === draft.fileId
   ))
 )
 

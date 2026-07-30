@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
+import {
+  openCourseMarketplacePublisher,
+  openCourseMarketplaceSearch,
+} from '../../../features/life-services/marketplace-prefill'
+import {
+  openCourseMaterials,
+  shareCourseMaterials,
+} from '../../../features/course-materials/navigation'
+import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
 import { AcademicPeriod, AcademicPreferences, CourseSelectionRecord, CourseSelectionStatus } from '../types'
 import { getPeriodLabel, resolvePeriodId } from '../utils'
-import { openCourseMaterials, shareCourseMaterials } from '../../../features/course-materials/navigation'
-import { rememberCourseSuggestions } from '../../../features/course-materials/storage'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -48,13 +55,6 @@ export default function SelectionPage() {
       ? records.filter((record) => record.status === 'failed')
       : records
   ), [activeTab, records])
-  useEffect(() => {
-    rememberCourseSuggestions(records.map((record) => ({
-      name: record.courseName,
-      courseCode: record.courseCode,
-      periodId: record.periodId,
-    })))
-  }, [records])
 
   const refreshSelections = useCallback(async () => {
     try {
@@ -92,6 +92,39 @@ export default function SelectionPage() {
 
   const updatePeriod = (schedulePeriodId: string) => {
     setPreferences((current) => ({ ...current, schedulePeriodId }))
+  }
+  const openCourseTrade = (intent: 'sell' | 'wanted') => {
+    if (!activeRecord) return
+    const courseName = activeRecord.courseName.trim()
+    setSheet(null)
+    const prefill = {
+      intent,
+      description: intent === 'wanted'
+        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
+        : `出售与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      courseName,
+      courseCode: activeRecord.courseCode,
+      academicPeriodId: activeRecord.periodId,
+      academicPeriodLabel: getPeriodLabel(periods, activeRecord.periodId),
+      source: 'course_selection',
+    } as const
+    if (intent === 'wanted') {
+      void openCourseMarketplaceSearch(prefill)
+      return
+    }
+    void openCourseMarketplacePublisher(prefill)
+  }
+  const openCourseMaterialPage = (action?: 'upload') => {
+    if (!activeRecord) return
+    setSheet(null)
+    const context = {
+      courseName: activeRecord.courseName,
+      courseCode: activeRecord.courseCode,
+      periodId: activeRecord.periodId,
+    }
+    void (action === 'upload'
+      ? shareCourseMaterials(context)
+      : openCourseMaterials(context))
   }
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
@@ -135,7 +168,55 @@ export default function SelectionPage() {
       </View>
       {sheet && <View className='academic-overlay' onClick={() => setSheet(null)}><View className={`academic-sheet academic-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}><View className='academic-sheet__handle' /><View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
         {sheet === 'period' && <View className='academic-sheet__body'><Text className='academic-sheet__title'>选择选课学期</Text><Text className='academic-sheet__subtitle'>查看不同学期的选课结果</Text><View className='period-options'>{periods.map((period) => <View key={period.id} className={`period-options__item ${preferences.schedulePeriodId === period.id ? 'period-options__item--active' : ''}`} onClick={() => { updatePeriod(period.id); setSheet(null) }}><View><Text>{period.label}</Text><Text>查看该学期选课记录</Text></View><View className='period-options__check'>{preferences.schedulePeriodId === period.id ? '✓' : ''}</View></View>)}</View></View>}
-        {sheet === 'detail' && activeRecord && <View className='academic-sheet__body'><View className={`selection-detail__badge selection-detail__badge--${activeRecord.status}`}>{statusMeta[activeRecord.status].label}</View><Text className='academic-sheet__title'>{activeRecord.courseName}</Text><Text className='academic-sheet__subtitle'>{[activeRecord.courseCode, activeRecord.courseType].filter(Boolean).join(' · ')}</Text><View className='detail-list'>{activeRecord.teacher && <View><Text>授课教师</Text><Text>{activeRecord.teacher}</Text></View>}{activeRecord.schedule && <View><Text>上课时间</Text><Text>{activeRecord.schedule}</Text></View>}{activeRecord.location && <View><Text>上课地点</Text><Text>{activeRecord.location}</Text></View>}{activeRecord.campus && <View><Text>开课校区</Text><Text>{activeRecord.campus}</Text></View>}{activeRecord.capacity > 0 && <View><Text>课程容量</Text><Text>{activeRecord.enrolled} / {activeRecord.capacity} 人</Text></View>}{activeRecord.selectedAt && <View><Text>选课时间</Text><Text>{activeRecord.selectedAt}</Text></View>}</View><View className='academic-notice'><Text>{activeRecord.resultText ? '修读情况/成绩' : '选课状态'}</Text><Text>{activeRecord.resultText || activeRecord.note || statusMeta[activeRecord.status].description}</Text></View><View className='course-material-actions'><View onClick={() => openCourseMaterials({ courseName: activeRecord.courseName, courseCode: activeRecord.courseCode, periodId: activeRecord.periodId })}>查看资料</View><View onClick={() => shareCourseMaterials({ courseName: activeRecord.courseName, courseCode: activeRecord.courseCode, periodId: activeRecord.periodId })}>分享资料</View></View></View>}
+        {sheet === 'detail' && activeRecord && (
+          <View className='academic-sheet__body'>
+            <View className={`selection-detail__badge selection-detail__badge--${activeRecord.status}`}>
+              {statusMeta[activeRecord.status].label}
+            </View>
+            <Text className='academic-sheet__title'>{activeRecord.courseName}</Text>
+            <Text className='academic-sheet__subtitle'>
+              {[activeRecord.courseCode, activeRecord.courseType].filter(Boolean).join(' · ')}
+            </Text>
+            <View className='detail-list'>
+              {activeRecord.teacher && <View><Text>授课教师</Text><Text>{activeRecord.teacher}</Text></View>}
+              {activeRecord.schedule && <View><Text>上课时间</Text><Text>{activeRecord.schedule}</Text></View>}
+              {activeRecord.location && <View><Text>上课地点</Text><Text>{activeRecord.location}</Text></View>}
+              {activeRecord.campus && <View><Text>开课校区</Text><Text>{activeRecord.campus}</Text></View>}
+              {activeRecord.capacity > 0 && <View><Text>课程容量</Text><Text>{activeRecord.enrolled} / {activeRecord.capacity} 人</Text></View>}
+              {activeRecord.selectedAt && <View><Text>选课时间</Text><Text>{activeRecord.selectedAt}</Text></View>}
+            </View>
+            <View className='academic-notice'>
+              <Text>{activeRecord.resultText ? '修读情况/成绩' : '选课状态'}</Text>
+              <Text>
+                {activeRecord.resultText
+                  || activeRecord.note
+                  || statusMeta[activeRecord.status].description}
+              </Text>
+            </View>
+            <CoursePassRatePreview
+              courseCode={activeRecord.courseCode}
+              courseName={activeRecord.courseName}
+              teacherName={activeRecord.teacher}
+            />
+            {activeRecord.status === 'selected' && (
+              <View className='course-market-actions'>
+                <View>
+                  <Text>课程相关</Text>
+                  <Text>查资料，也可以求购或转卖教材</Text>
+                </View>
+                <View className='course-market-actions__buttons'>
+                  <View onClick={() => openCourseMaterialPage()}>查找资料</View>
+                  <View onClick={() => openCourseMaterialPage('upload')}>分享资料</View>
+                  <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
+                  <View onClick={() => openCourseTrade('sell')}>转卖教材</View>
+                </View>
+              </View>
+            )}
+            <View className='academic-button academic-button--full' onClick={() => setSheet(null)}>
+              知道了
+            </View>
+          </View>
+        )}
       </View></View>}
     </View>
   )

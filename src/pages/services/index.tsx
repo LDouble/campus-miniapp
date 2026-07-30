@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
-import { Image, Input, Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import './index.scss'
 
 const icons = {
@@ -40,8 +41,8 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'grades', name: '成绩查询', icon: icons.grade, route: '/pages/academic/grades/index' },
       { key: 'exams', name: '考试安排', icon: icons.exam, route: '/pages/academic/exams/index' },
       { key: 'result', name: '选课结果', icon: icons.result, route: '/pages/academic/selection/index' },
-      { key: 'pass-rate', name: '课程通过率', icon: icons.passRate, route: '/pages/campus-service/index?type=pass-rate' },
-      { key: 'calendar', name: '校历', icon: icons.calendar, route: '/pages/campus-service/index?type=calendar' },
+      { key: 'pass-rate', name: '课程通过率', icon: icons.passRate, route: '/pages/academic/statistics/courses' },
+      { key: 'calendar', name: '校历', icon: icons.calendar, route: '/pages/calendar/index' },
     ],
   },
   {
@@ -58,7 +59,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
     title: '校园生活',
     subtitle: '日常校园服务',
     items: [
-      { key: 'shuttle', name: '校园校车', icon: icons.shuttle, route: '/pages/campus-service/index?type=shuttle' },
+      { key: 'shuttle', name: '校园校车', icon: icons.shuttle, route: '/pages/shuttle/index' },
       { key: 'carpool', name: '校园拼车', icon: icons.shuttle, lifeSection: 'carpool' },
       { key: 'community', name: '校园社区', icon: icons.community, lifeSection: 'community' },
       { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
@@ -94,7 +95,7 @@ export default function Services() {
       <View className='services-page__content'>
         <View className='services-search'>
           <Image src={icons.search} mode='aspectFit' />
-          <Input placeholder='搜索校园服务' placeholderClass='services-search__placeholder' />
+          <KeyboardSafeInput placeholder='搜索校园服务' placeholderClass='services-search__placeholder' />
         </View>
 
         {groups.map((group) => (

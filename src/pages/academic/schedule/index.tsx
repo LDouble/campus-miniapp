@@ -1,7 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Image, Input, ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
+import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import {
+  getMiniappRuntimeConfig,
+  getSectionStartTime,
+  getSelectedCampus,
+  loadMiniappRuntimeConfig,
+} from '../../../features/runtime-config'
+import {
+  openCourseMarketplacePublisher,
+  openCourseMarketplaceSearch,
+  type MarketplaceIntent,
+} from '../../../features/life-services/marketplace-prefill'
+import {
+  openCourseMaterials,
+  shareCourseMaterials,
+} from '../../../features/course-materials/navigation'
+import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
 import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
@@ -20,10 +37,9 @@ import {
   getWeekDates,
   isSameDay,
   resolvePeriodId,
-  sectionTimes,
+  resolveScheduleAnchor,
   weekdays,
 } from '../utils'
-import { shareCourseMaterials } from '../../../features/course-materials/navigation'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -59,6 +75,9 @@ interface CourseDetailCardProps {
   currentWeek: number
   onEdit?: () => void
   onDelete?: () => void
+  onWanted: () => void
+  onSell: () => void
+  onFindMaterials: () => void
   onShareMaterials: () => void
 }
 
@@ -69,6 +88,9 @@ function CourseDetailCard({
   currentWeek,
   onEdit,
   onDelete,
+  onWanted,
+  onSell,
+  onFindMaterials,
   onShareMaterials,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
@@ -96,14 +118,30 @@ function CourseDetailCard({
           <View><Text>周次</Text><Text>第 {course.weeks.join('、')} 周</Text></View>
           <View><Text>来源</Text><Text>{course.source === 'custom' ? '自定义课程' : '教务课程'}</Text></View>
         </View>
+        {course.source === 'official' && course.courseCode && (
+          <CoursePassRatePreview
+            courseCode={course.courseCode}
+            courseName={course.name}
+            teacherName={course.teacher}
+          />
+        )}
         {course.source === 'custom' && onEdit && onDelete && (
           <View className='course-conflict-card__actions'>
             <View onClick={onDelete}>删除</View>
             <View onClick={onEdit}>编辑</View>
           </View>
         )}
-        <View className='course-material-inline-action' onClick={onShareMaterials}>
-          分享本课程资料
+        <View className='course-market-actions course-market-actions--course-card'>
+          <View>
+            <Text>课程相关</Text>
+            <Text>查资料，也可以求购或转卖教材</Text>
+          </View>
+          <View className='course-market-actions__buttons'>
+            <View onClick={onFindMaterials}>查找资料</View>
+            <View onClick={onShareMaterials}>分享资料</View>
+            <View onClick={onWanted}>求购教材</View>
+            <View onClick={onSell}>转卖教材</View>
+          </View>
         </View>
       </View>
     </View>
@@ -111,6 +149,10 @@ function CourseDetailCard({
 }
 
 export default function SchedulePage() {
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
+  const [campusName, setCampusName] = useState(() => (
+    getSelectedCampus(getMiniappRuntimeConfig())
+  ))
   const [academicUserId] = useState(getActiveAcademicUserId)
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
@@ -135,6 +177,9 @@ export default function SchedulePage() {
   )
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
+  const sectionTimes = Array.from({ length: 12 }, (_, index) => (
+    getSectionStartTime(runtimeConfig, campusName, index + 1)
+  ))
   const weekDates = getWeekDates(schedulePeriod, preferences.week)
   const allCourses = useMemo(() => [
     ...officialCourses,
@@ -153,19 +198,23 @@ export default function SchedulePage() {
   )
 
   useEffect(() => {
+    let active = true
+    loadMiniappRuntimeConfig().then((config) => {
+      if (!active) return
+      setRuntimeConfig(config)
+      setCampusName(getSelectedCampus(config))
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
     const applyPeriods = (records: AcademicPeriod[]) => {
       setPeriods(records)
       if (!records.length) setLoading(false)
       setPreferences((current) => {
-        const currentPeriod = records.find((period) => period.isCurrent)
-        const schedulePeriodId = (
-          (currentPeriod && currentPeriod.id)
-          || resolvePeriodId(records, current.schedulePeriodId)
-        )
-        const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
-        const week = resolvedPeriod && resolvedPeriod.isCurrent
-          ? getCurrentTeachingWeek(resolvedPeriod)
-          : 1
+        const { periodId: schedulePeriodId, week } = resolveScheduleAnchor(records)
         if (
           schedulePeriodId === current.schedulePeriodId
           && week === current.week
@@ -180,13 +229,10 @@ export default function SchedulePage() {
       setInitialized(true)
     }
 
-    if (initialScheduleCache && initialScheduleCache.periods.length) {
-      applyPeriods(initialScheduleCache.periods)
-      return
-    }
-
+    let active = true
     academicRepository.getPeriods()
       .then((records) => {
+        if (!active) return
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         academicStorage.setScheduleCache(
           academicUserId,
@@ -196,9 +242,18 @@ export default function SchedulePage() {
         applyPeriods(records)
       })
       .catch(() => {
+        if (!active) return
+        if (initialScheduleCache && initialScheduleCache.periods.length) {
+          applyPeriods(initialScheduleCache.periods)
+          Taro.showToast({ title: '网络异常，已使用本地课表', icon: 'none' })
+          return
+        }
         setLoading(false)
         Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
       })
+    return () => {
+      active = false
+    }
   }, [academicUserId, initialScheduleCache])
 
   useEffect(() => {
@@ -322,6 +377,38 @@ export default function SchedulePage() {
     setSheet(null)
     setActiveCourse(null)
     setActiveSlotCourses([])
+  }
+
+  const openCourseTrade = (course: Course, intent: MarketplaceIntent) => {
+    closeCourseFloat()
+    const courseName = course.name.trim()
+    const prefill = {
+      intent,
+      description: intent === 'wanted'
+        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
+        : `转卖与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      courseName,
+      courseCode: course.courseCode || '',
+      academicPeriodId: course.periodId,
+      academicPeriodLabel: periods.find((period) => period.id === course.periodId)?.label || course.periodId,
+      source: 'schedule',
+    } as const
+    if (intent === 'wanted') {
+      void openCourseMarketplaceSearch(prefill)
+      return
+    }
+    void openCourseMarketplacePublisher(prefill)
+  }
+  const openCourseMaterialPage = (course: Course, action?: 'upload') => {
+    setSheet(null)
+    const context = {
+      courseName: course.name,
+      courseCode: course.courseCode,
+      periodId: course.periodId,
+    }
+    void (action === 'upload'
+      ? shareCourseMaterials(context)
+      : openCourseMaterials(context))
   }
 
   const openCourseForm = (course?: Course) => {
@@ -612,7 +699,13 @@ export default function SchedulePage() {
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
                 <View className='day-course__time'>
-                  <Text>{sectionTimes[course.startSection - 1]}</Text>
+                  <Text>
+                    {getSectionStartTime(
+                      runtimeConfig,
+                      course.campus || campusName,
+                      course.startSection,
+                    )}
+                  </Text>
                   <Text>第 {course.startSection}-{course.endSection} 节</Text>
                 </View>
                 <View className='day-course__main'>
@@ -655,10 +748,10 @@ export default function SchedulePage() {
                     currentWeek={preferences.week}
                     onDelete={() => deleteCourse(course)}
                     onEdit={() => openCourseForm(course)}
-                    onShareMaterials={() => shareCourseMaterials({
-                      courseName: course.name,
-                      periodId: course.periodId,
-                    })}
+                    onWanted={() => openCourseTrade(course, 'wanted')}
+                    onSell={() => openCourseTrade(course, 'sell')}
+                    onFindMaterials={() => openCourseMaterialPage(course)}
+                    onShareMaterials={() => openCourseMaterialPage(course, 'upload')}
                   />
                 ))}
               </View>
@@ -670,10 +763,10 @@ export default function SchedulePage() {
                     currentWeek={preferences.week}
                     onDelete={() => deleteCourse()}
                     onEdit={() => openCourseForm(activeCourse)}
-                    onShareMaterials={() => shareCourseMaterials({
-                      courseName: activeCourse.name,
-                      periodId: activeCourse.periodId,
-                    })}
+                    onWanted={() => openCourseTrade(activeCourse, 'wanted')}
+                    onSell={() => openCourseTrade(activeCourse, 'sell')}
+                    onFindMaterials={() => openCourseMaterialPage(activeCourse)}
+                    onShareMaterials={() => openCourseMaterialPage(activeCourse, 'upload')}
                   />
                 </View>
               </>
@@ -744,7 +837,7 @@ export default function SchedulePage() {
               <ScrollView className='course-form-scroll' scrollY>
                 <View className='academic-field'>
                   <Text className='academic-field__label'>课程名称 *</Text>
-                  <Input
+                  <KeyboardSafeInput
                     value={courseDraft.name}
                     maxlength={30}
                     placeholder='例如：专业学习小组'
@@ -754,7 +847,7 @@ export default function SchedulePage() {
                 <View className='academic-field-row'>
                   <View className='academic-field'>
                     <Text className='academic-field__label'>任课教师</Text>
-                    <Input
+                    <KeyboardSafeInput
                       value={courseDraft.teacher}
                       maxlength={15}
                       placeholder='选填'
@@ -763,7 +856,7 @@ export default function SchedulePage() {
                   </View>
                   <View className='academic-field'>
                     <Text className='academic-field__label'>上课地点</Text>
-                    <Input
+                    <KeyboardSafeInput
                       value={courseDraft.location}
                       maxlength={20}
                       placeholder='选填'

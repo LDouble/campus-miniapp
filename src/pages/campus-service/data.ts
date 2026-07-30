@@ -1,5 +1,5 @@
 export type CampusServiceType =
-  | 'study' | 'pass-rate' | 'calendar' | 'shuttle' | 'library'
+  | 'study' | 'shuttle' | 'library'
   | 'classroom' | 'campus-card' | 'repair' | 'lost'
 
 export type CampusServiceItem = {
@@ -31,24 +31,6 @@ export const campusServiceData: Record<CampusServiceType, CampusServiceConfig> =
     items: [
       { id: 'study-1', title: '图书馆三楼东区', badge: '较空闲', summary: '插座充足 · 静音区 · 开放至 22:30', meta: '崂山校区 · 剩余 86 座', details: [['开放时间', '07:00—22:30'], ['当前人数', '114 / 200'], ['设施', '电源、Wi-Fi、饮水机'], ['位置', '图书馆三楼东侧']], notice: '请保持安静，离座超过 30 分钟将自动释放座位。' },
       { id: 'study-2', title: '行远楼 A 区公共自习室', badge: '有座位', summary: '讨论友好 · 空调开放 · 无需预约', meta: '崂山校区 · 剩余 34 座', details: [['开放时间', '08:00—21:45'], ['当前人数', '46 / 80'], ['设施', '白板、Wi-Fi'], ['位置', '行远楼 A108']], notice: '本区域允许低声讨论，请勿占用消防通道。' },
-    ],
-  },
-  'pass-rate': {
-    title: '课程通过率', subtitle: '选课前看看历史学习数据', hero: '用数据了解课程难度',
-    metric: '88%', metricLabel: '全校平均通过率', filters: ['全部', '专业课', '通识课'],
-    action: '查看计算说明',
-    items: [
-      { id: 'rate-1', title: '高等数学（二）', badge: '82%', summary: '近三学年平均通过率，样本 1,286 人', meta: '公共必修 · 4 学分', details: [['平均分', '76.8'], ['通过率', '82%'], ['优秀率', '13%'], ['统计学期', '近 6 个学期']], notice: '数据为匿名历史统计，仅供选课与学习规划参考。' },
-      { id: 'rate-2', title: '数据可视化', badge: '94%', summary: '过程性考核占比较高，项目实践为主', meta: '专业选修 · 2.5 学分', details: [['平均分', '84.6'], ['通过率', '94%'], ['优秀率', '28%'], ['统计学期', '近 4 个学期']], notice: '不同教师考核方式可能存在差异，以本学期教学大纲为准。' },
-    ],
-  },
-  calendar: {
-    title: '校历', subtitle: '教学周次与校园日程', hero: '重要时间，一眼掌握',
-    metric: '第 6 周', metricLabel: '当前教学周', filters: ['本学期', '考试周', '节假日'],
-    action: '订阅校历',
-    items: [
-      { id: 'cal-1', title: '春季学期期中教学检查', badge: '第 9 周', summary: '教学秩序、课堂质量与学习反馈集中检查', meta: '2026 年 4 月 20—24 日', details: [['开始日期', '2026/04/20'], ['结束日期', '2026/04/24'], ['类型', '教学安排'], ['适用校区', '全部校区']], notice: '具体课程检查安排由各学院另行通知。' },
-      { id: 'cal-2', title: '端午节假期', badge: '放假', summary: '课程调整以教务处最新通知为准', meta: '2026 年 6 月 19—21 日', details: [['放假日期', '6 月 19—21 日'], ['调课安排', '待教务处通知'], ['类型', '节假日'], ['适用校区', '全部校区']], notice: '请关注课程群和教务系统的临时调课信息。' },
     ],
   },
   shuttle: {

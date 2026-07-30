@@ -17,9 +17,11 @@ export interface AcademicPeriod {
 export interface Course {
   id: string
   periodId: string
+  courseCode?: string
   name: string
   teacher: string
   location: string
+  campus?: string
   weekday: number
   startSection: number
   endSection: number
@@ -45,6 +47,7 @@ export interface GradeRecord {
   id: string
   periodId: string
   courseName: string
+  courseCode?: string
   courseType: string
   credit: number
   score?: number

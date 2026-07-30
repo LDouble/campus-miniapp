@@ -1,6 +1,6 @@
 import Taro from '@tarojs/taro'
 import {
-  API_BASE_URL,
+  apiUrl,
   clearSession,
   ensureAccessToken,
   refreshAccessToken,
@@ -94,7 +94,7 @@ export async function apiRequest<T>(options: RequestOptions): Promise<T> {
   const method = options.method || 'GET'
   const token = options.anonymous ? '' : await ensureAccessToken()
   const response = await Taro.request<ApiSuccessEnvelope<T> | ApiErrorEnvelope>({
-    url: `${API_BASE_URL}${options.path}${queryString(options.query)}`,
+    url: `${apiUrl(options.path)}${queryString(options.query)}`,
     method,
     data: options.data,
     header: {

@@ -1,16 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
 import Taro, { useDidShow, useReachBottom, useRouter } from '@tarojs/taro'
-import { Image, Input, ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import {
+  KeyboardSafeInput,
+  KeyboardSafeTextarea,
+  useKeyboardInset,
+} from '../../components/keyboard-safe-input'
+import {
   completeMaterialUploadSession,
+  createCourseMaterialFeedback,
   createMaterialUploadSession,
   downloadAndOpenMaterial,
+  getCourseMaterial,
   listAllMaterialCourses,
   listAllMyCourseMaterials,
   listCourseMaterials,
-  uploadMaterialFile,
+  listMyCourseMaterialFeedbacks,
   updateMyCourseMaterial,
+  uploadMaterialFile,
   withdrawCourseMaterial,
 } from '../../api/course-materials'
 import { getCurrentUser } from '../../api/account'
@@ -18,6 +26,8 @@ import { createIdempotencyKey } from '../../api/client'
 import type {
   CourseMaterialView,
   MaterialCourseView,
+  MaterialFeedbackCategory,
+  MaterialFeedbackView,
   MaterialUploadFileInput,
 } from '../../api/types'
 import {
@@ -33,18 +43,21 @@ import {
   removePersistedMaterialFiles,
 } from '../../features/course-materials/storage'
 import {
+  materialFeedbackCategories,
+  materialFeedbackLabels,
   materialKindLabels,
   materialKinds,
   MaterialKind,
   MaterialRouteContext,
   MaterialUploadBatch,
   MaterialUploadDraft,
+  MaterialUploadMetadata,
 } from '../../features/course-materials/types'
 import {
+  isMaterialUploadSessionReusable,
   materialExtension,
   MAX_MATERIAL_FILES,
   MAX_MATERIAL_FILE_SIZE,
-  isMaterialUploadSessionReusable,
   mimeTypes,
   resolveMaterialCourse,
   supportedMaterialExtensions,
@@ -56,8 +69,9 @@ const icons = {
   search: require('../../assets/icons/search.svg'),
   materials: require('../../assets/icons/materials.svg'),
 }
-type Sheet = 'filter' | 'upload' | 'detail' | null
-type ViewMode = 'browse' | 'mine'
+
+type Sheet = 'filter' | 'upload' | 'detail' | 'feedback' | null
+type ViewMode = 'browse' | 'mine' | 'feedbacks'
 
 const decodeRouteValue = (value?: string) => {
   if (!value) return ''
@@ -68,10 +82,19 @@ const decodeRouteValue = (value?: string) => {
   }
 }
 
+const toPositiveInteger = (value?: string) => {
+  const parsed = Number(value)
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined
+}
+
 const formatFileSize = (size: number) => (
   size >= 1024 * 1024
     ? `${(size / 1024 / 1024).toFixed(1)} MB`
     : `${Math.max(1, Math.round(size / 1024))} KB`
+)
+
+const packageSize = (material: CourseMaterialView) => (
+  material.files.reduce((total, file) => total + file.size_bytes, 0)
 )
 
 const draftStatusMeta = {
@@ -81,6 +104,7 @@ const draftStatusMeta = {
   failed: { label: '上传失败', className: 'failed' },
   needs_file: { label: '需重新选择', className: 'failed' },
 } as const
+
 const materialStatusLabels: Record<CourseMaterialView['status'], string> = {
   uploading: '上传中',
   scanning: '安全检查中',
@@ -91,9 +115,26 @@ const materialStatusLabels: Record<CourseMaterialView['status'], string> = {
   taken_down: '已下架',
   failed: '处理失败',
 }
+
+const feedbackStatusLabels: Record<MaterialFeedbackView['status'], string> = {
+  pending: '待处理',
+  resolved: '已处理',
+  rejected: '未采纳',
+}
+
 const createUploadBatch = (): MaterialUploadBatch => ({
   createIdempotencyKey: createIdempotencyKey('material-upload-create'),
   completeIdempotencyKey: createIdempotencyKey('material-upload-complete'),
+})
+
+const createUploadMetadata = (
+  routeContext: MaterialRouteContext,
+): MaterialUploadMetadata => ({
+  title: '',
+  kind: 'other',
+  courseName: routeContext.courseName || '',
+  periodId: routeContext.periodId,
+  description: '',
 })
 
 const useDebouncedValue = <T,>(value: T, delay: number) => {
@@ -113,7 +154,9 @@ export default function MaterialsPage() {
     periodId: decodeRouteValue(router.params.periodId),
     action: router.params.action === 'upload' ? 'upload' : undefined,
     view: router.params.view === 'mine' ? 'mine' : undefined,
+    materialId: toPositiveInteger(router.params.material_id),
   }), [router.params])
+  const { keyboardHeight, onKeyboardVisibilityChange } = useKeyboardInset()
   const [cachedCourseSuggestions] = useState(getRecentCourseSuggestions)
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebouncedValue(keyword, 300)
@@ -126,6 +169,9 @@ export default function MaterialsPage() {
     routeContext.action === 'upload' ? 'upload' : null,
   )
   const [drafts, setDrafts] = useState<MaterialUploadDraft[]>([])
+  const [metadata, setMetadata] = useState<MaterialUploadMetadata>(
+    createUploadMetadata(routeContext),
+  )
   const [uploadBatch, setUploadBatch] = useState<MaterialUploadBatch>(createUploadBatch)
   const [draftUserId, setDraftUserId] = useState(0)
   const [draftStorageReady, setDraftStorageReady] = useState(false)
@@ -133,16 +179,19 @@ export default function MaterialsPage() {
   const [coursesLoaded, setCoursesLoaded] = useState(false)
   const [materials, setMaterials] = useState<CourseMaterialView[]>([])
   const [myMaterials, setMyMaterials] = useState<CourseMaterialView[]>([])
+  const [myFeedbacks, setMyFeedbacks] = useState<MaterialFeedbackView[]>([])
   const [activeMaterial, setActiveMaterial] = useState<CourseMaterialView | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCourse, setEditCourse] = useState('')
   const [editKind, setEditKind] = useState<MaterialKind>('other')
+  const [feedbackCategory, setFeedbackCategory] = useState<MaterialFeedbackCategory>('file_unavailable')
+  const [feedbackFileId, setFeedbackFileId] = useState<number | undefined>()
+  const [feedbackDescription, setFeedbackDescription] = useState('')
+  const [submittingFeedback, setSubmittingFeedback] = useState(false)
   const [loading, setLoading] = useState(false)
   const [materialsPage, setMaterialsPage] = useState(1)
   const [materialsTotal, setMaterialsTotal] = useState(0)
   const [uploading, setUploading] = useState(false)
-  const [batchCourse, setBatchCourse] = useState(routeContext.courseName || '')
-  const [batchKind, setBatchKind] = useState<MaterialKind | ''>('')
 
   useEffect(() => {
     let active = true
@@ -154,6 +203,7 @@ export default function MaterialsPage() {
         setDraftUserId(userId)
         if (restored) {
           setDrafts(restored.drafts)
+          setMetadata(restored.metadata)
           setUploadBatch(restored.batch)
         }
         setDraftStorageReady(true)
@@ -165,6 +215,7 @@ export default function MaterialsPage() {
       active = false
     }
   }, [])
+
   useEffect(() => {
     if (!draftStorageReady || !draftUserId) return
     if (!drafts.length) {
@@ -172,22 +223,40 @@ export default function MaterialsPage() {
       return
     }
     materialDraftStorage.write(draftUserId, {
-      version: 2,
+      version: 3,
       drafts,
+      metadata,
       batch: uploadBatch,
     })
-  }, [draftStorageReady, draftUserId, drafts, uploadBatch])
+  }, [draftStorageReady, draftUserId, drafts, metadata, uploadBatch])
+
   useDidShow(() => {
-    void listAllMyCourseMaterials().then(setMyMaterials).catch(() => {
-      // 页面主体仍可使用，失败状态由空态和后续重试承接。
-    })
+    void listAllMyCourseMaterials().then(setMyMaterials).catch(() => undefined)
+    void listMyCourseMaterialFeedbacks().then((page) => setMyFeedbacks(page.items)).catch(() => undefined)
   })
+
   useEffect(() => {
     listAllMaterialCourses()
       .then(setApiCourses)
       .catch(() => Taro.showToast({ title: '课程分类加载失败', icon: 'none' }))
       .finally(() => setCoursesLoaded(true))
   }, [])
+
+  const openMaterialDetail = (material: CourseMaterialView) => {
+    setActiveMaterial(material)
+    setEditTitle(material.title)
+    setEditCourse(material.course?.name || material.candidate_course_name || '')
+    setEditKind(material.material_type)
+    setSheet('detail')
+  }
+
+  useEffect(() => {
+    if (!routeContext.materialId) return
+    getCourseMaterial(routeContext.materialId)
+      .then(openMaterialDetail)
+      .catch(() => Taro.showToast({ title: '资料已不可用', icon: 'none' }))
+  }, [routeContext.materialId])
+
   const courseSuggestions = useMemo(() => (
     buildCourseSuggestions(apiCourses, cachedCourseSuggestions)
   ), [apiCourses, cachedCourseSuggestions])
@@ -200,6 +269,7 @@ export default function MaterialsPage() {
       })
   ), [apiCourses, course, routeContext.courseCode, routeContext.courseName])
   const unresolvedCourse = coursesLoaded && course !== '全部课程' && !selectedCourse
+
   useEffect(() => {
     if (viewMode !== 'browse' || !coursesLoaded) return
     if (unresolvedCourse) {
@@ -217,14 +287,13 @@ export default function MaterialsPage() {
       keyword: debouncedKeyword,
       periodId: routeContext.periodId || undefined,
       page: 1,
-      pageSize: 100,
+      pageSize: 20,
     })
       .then((page) => {
-        if (active) {
-          setMaterials(page.items)
-          setMaterialsPage(page.page)
-          setMaterialsTotal(page.total)
-        }
+        if (!active) return
+        setMaterials(page.items)
+        setMaterialsPage(page.page)
+        setMaterialsTotal(page.total)
       })
       .catch(() => {
         if (active) Taro.showToast({ title: '资料加载失败，请稍后重试', icon: 'none' })
@@ -244,6 +313,7 @@ export default function MaterialsPage() {
     unresolvedCourse,
     viewMode,
   ])
+
   useReachBottom(() => {
     if (
       viewMode !== 'browse'
@@ -258,7 +328,7 @@ export default function MaterialsPage() {
       keyword: debouncedKeyword,
       periodId: routeContext.periodId || undefined,
       page: materialsPage + 1,
-      pageSize: 100,
+      pageSize: 20,
     })
       .then((page) => {
         setMaterials((current) => [
@@ -272,29 +342,43 @@ export default function MaterialsPage() {
       .finally(() => setLoading(false))
   })
 
-  const visibleDrafts = useMemo(() => drafts.filter((draft) => {
-    const search = keyword.trim().toLowerCase()
-    return (!search || `${draft.title}${draft.courseName}${draft.fileName}`.toLowerCase().includes(search))
-      && (course === '全部课程' || draft.courseName === course)
-      && (kind === 'all' || draft.kind === kind)
-  }), [course, drafts, keyword, kind])
   const visibleMyMaterials = useMemo(() => myMaterials.filter((item) => {
     const search = keyword.trim().toLowerCase()
     const courseName = item.course?.name || item.candidate_course_name || ''
-    return (!search || `${item.title}${courseName}${item.original_filename}`.toLowerCase().includes(search))
+    const filenames = item.files.map((file) => file.original_filename).join('')
+    return (!search || `${item.title}${courseName}${filenames}`.toLowerCase().includes(search))
       && (course === '全部课程' || courseName === course)
       && (kind === 'all' || item.material_type === kind)
   }), [course, keyword, kind, myMaterials])
+
   const courseOptions = useMemo(() => {
     const names = [
       routeContext.courseName,
       ...apiCourses.map((item) => item.name),
       ...courseSuggestions.map((item) => item.name),
-      ...drafts.map((item) => item.courseName),
+      metadata.courseName,
     ].filter(Boolean) as string[]
     return ['全部课程', ...Array.from(new Set(names))]
-  }, [apiCourses, courseSuggestions, drafts, routeContext.courseName])
+  }, [apiCourses, courseSuggestions, metadata.courseName, routeContext.courseName])
   const filtersActive = course !== '全部课程' || kind !== 'all'
+
+  const invalidateUploadSession = () => {
+    setDrafts((current) => current.map((draft) => ({
+      ...draft,
+      status: draft.filePath ? 'draft' : 'needs_file',
+      progress: 0,
+      uploadTarget: undefined,
+      fileId: undefined,
+      errorMessage: draft.filePath ? undefined : draft.errorMessage,
+    })))
+    setUploadBatch(createUploadBatch())
+  }
+
+  const updateMetadata = (patch: Partial<MaterialUploadMetadata>) => {
+    if (uploading) return
+    setMetadata((current) => ({ ...current, ...patch }))
+    invalidateUploadSession()
+  }
 
   const chooseFiles = async () => {
     if (uploading) return
@@ -328,6 +412,15 @@ export default function MaterialsPage() {
           periodId: routeContext.periodId,
         }
         : undefined
+      const firstSuggestion = inferCourseSuggestion(
+        selected[0].name,
+        courseSuggestions,
+        fallback,
+      )
+      const courseRecord = resolveMaterialCourse(apiCourses, {
+        name: firstSuggestion?.name,
+        courseCode: firstSuggestion?.courseCode || routeContext.courseCode,
+      })
       const nextDrafts: MaterialUploadDraft[] = []
       let hasTemporaryFile = false
       try {
@@ -335,22 +428,12 @@ export default function MaterialsPage() {
           const file = selected[index]
           const persisted = await persistMaterialFile(file.path)
           if (!persisted.persistent) hasTemporaryFile = true
-          const suggestedCourse = inferCourseSuggestion(file.name, courseSuggestions, fallback)
-          const courseRecord = resolveMaterialCourse(apiCourses, {
-            name: suggestedCourse?.name,
-            courseCode: suggestedCourse?.courseCode || routeContext.courseCode,
-          })
           nextDrafts.push({
             id: `material-draft-${Date.now()}-${index}`,
             filePath: persisted.filePath,
             persistentFile: persisted.persistent,
             fileName: file.name,
             fileSize: file.size,
-            title: normalizeMaterialTitle(file.name) || file.name,
-            kind: inferMaterialKind(file.name),
-            courseName: courseRecord?.name || suggestedCourse?.name || '',
-            courseId: courseRecord?.id,
-            periodId: suggestedCourse?.periodId,
             status: 'draft',
             progress: 0,
           })
@@ -361,9 +444,15 @@ export default function MaterialsPage() {
       }
       await removePersistedMaterialFiles(drafts)
       setDrafts(nextDrafts)
+      setMetadata({
+        title: normalizeMaterialTitle(selected[0].name) || selected[0].name,
+        kind: inferMaterialKind(selected[0].name),
+        courseName: courseRecord?.name || firstSuggestion?.name || '',
+        courseId: courseRecord?.id,
+        periodId: firstSuggestion?.periodId,
+        description: '',
+      })
       setUploadBatch(createUploadBatch())
-      setBatchCourse(fallback?.name || '')
-      setBatchKind('')
       setSheet('upload')
       if (hasTemporaryFile) {
         Taro.showToast({ title: '存储空间不足，退出后需重新选择部分文件', icon: 'none' })
@@ -375,55 +464,22 @@ export default function MaterialsPage() {
     }
   }
 
-  const resetDraftUpload = (draft: MaterialUploadDraft): MaterialUploadDraft => ({
-    ...draft,
-    status: draft.filePath ? 'draft' : 'needs_file',
-    progress: 0,
-    uploadTarget: undefined,
-    materialId: undefined,
-    errorMessage: draft.filePath ? undefined : draft.errorMessage,
-  })
-  const editDraft = (id: string, patch: Partial<MaterialUploadDraft>) => {
-    if (uploading) return
-    setDrafts((current) => current.map((draft) => (
-      resetDraftUpload(draft.id === id ? { ...draft, ...patch } : draft)
-    )))
-    setUploadBatch(createUploadBatch())
-  }
   const removeDraft = (id: string) => {
     if (uploading) return
     const removed = drafts.find((draft) => draft.id === id)
     if (removed) void removePersistedMaterialFiles([removed])
-    setDrafts((current) => current.filter((draft) => draft.id !== id).map(resetDraftUpload))
-    setUploadBatch(createUploadBatch())
-  }
-  const applyCourseToAll = () => {
-    if (uploading) return
-    const value = batchCourse.trim()
-    if (!value) {
-      Taro.showToast({ title: '请先填写课程名称', icon: 'none' })
-      return
-    }
-    const resolved = resolveMaterialCourse(apiCourses, { name: value })
-    setDrafts((current) => current.map((draft) => resetDraftUpload({
+    setDrafts((current) => current.filter((draft) => draft.id !== id).map((draft) => ({
       ...draft,
-      courseName: resolved?.name || value,
-      courseId: resolved?.id,
-      periodId: value === routeContext.courseName ? routeContext.periodId : undefined,
+      status: draft.filePath ? 'draft' : 'needs_file',
+      progress: 0,
+      uploadTarget: undefined,
+      fileId: undefined,
     })))
     setUploadBatch(createUploadBatch())
   }
-  const applyKindToAll = (value: MaterialKind) => {
-    if (uploading) return
-    setBatchKind(value)
-    setDrafts((current) => current.map((draft) => resetDraftUpload({
-      ...draft,
-      kind: value,
-    })))
-    setUploadBatch(createUploadBatch())
-  }
+
   const submitDrafts = async () => {
-    const validationError = validateMaterialDrafts(drafts)
+    const validationError = validateMaterialDrafts(drafts, metadata)
     if (validationError) {
       Taro.showToast({ title: validationError, icon: 'none' })
       return
@@ -438,8 +494,9 @@ export default function MaterialsPage() {
       setUploadBatch(nextBatch)
       if (draftUserId) {
         materialDraftStorage.write(draftUserId, {
-          version: 2,
+          version: 3,
           drafts: nextDrafts,
+          metadata,
           batch: nextBatch,
         })
       }
@@ -447,39 +504,40 @@ export default function MaterialsPage() {
     let workingDrafts = drafts.map((draft) => ({ ...draft }))
     let workingBatch = { ...uploadBatch }
     try {
-      const sessionReusable = isMaterialUploadSessionReusable(
-        workingBatch,
-        workingDrafts,
-      )
-      if (workingBatch.sessionId && !sessionReusable) {
-        workingDrafts = workingDrafts.map(resetDraftUpload)
+      const reusable = isMaterialUploadSessionReusable(workingBatch, workingDrafts)
+      if (workingBatch.sessionId && !reusable) {
+        workingDrafts = workingDrafts.map((draft) => ({
+          ...draft,
+          status: draft.filePath ? 'draft' : 'needs_file',
+          progress: 0,
+          uploadTarget: undefined,
+          fileId: undefined,
+        }))
         workingBatch = createUploadBatch()
       }
       const files = workingDrafts.map<MaterialUploadFileInput>((draft) => {
-        const extension = materialExtension(draft.fileName)
-        const mimeType = mimeTypes[extension]
+        const mimeType = mimeTypes[materialExtension(draft.fileName)]
         if (!mimeType) throw new Error(`${draft.fileName} 的文件类型暂不支持`)
-        const courseRecord = resolveMaterialCourse(apiCourses, {
-          id: draft.courseId,
-          name: draft.courseName,
-        })
         return {
           filename: draft.fileName,
-          title: draft.title.trim(),
-          material_type: draft.kind,
           mime_type: mimeType,
           size_bytes: draft.fileSize,
-          course_id: courseRecord?.id,
-          candidate_course_name: courseRecord ? undefined : draft.courseName.trim(),
-          period_id: draft.periodId || undefined,
         }
       })
       if (!workingBatch.sessionId) {
-        persistState(workingDrafts, workingBatch)
-        const session = await createMaterialUploadSession(
+        const courseRecord = resolveMaterialCourse(apiCourses, {
+          id: metadata.courseId,
+          name: metadata.courseName,
+        })
+        const session = await createMaterialUploadSession({
+          title: metadata.title.trim(),
+          material_type: metadata.kind,
+          course_id: courseRecord?.id,
+          candidate_course_name: courseRecord ? undefined : metadata.courseName.trim(),
+          period_id: metadata.periodId || undefined,
+          description: metadata.description.trim() || undefined,
           files,
-          workingBatch.createIdempotencyKey,
-        )
+        }, workingBatch.createIdempotencyKey)
         if (session.uploads.length !== workingDrafts.length) {
           throw new Error('上传任务数量与所选文件不一致')
         }
@@ -492,7 +550,7 @@ export default function MaterialsPage() {
         workingDrafts = workingDrafts.map((draft, index) => ({
           ...draft,
           uploadTarget: session.uploads[index],
-          materialId: session.uploads[index].material_id,
+          fileId: session.uploads[index].file_id,
         }))
         persistState(workingDrafts, workingBatch)
       }
@@ -520,11 +578,10 @@ export default function MaterialsPage() {
           }
           persistState([...workingDrafts], workingBatch)
         } catch (error) {
-          const message = error instanceof Error ? error.message : '文件上传失败'
           workingDrafts[index] = {
             ...workingDrafts[index],
             status: 'failed',
-            errorMessage: message,
+            errorMessage: error instanceof Error ? error.message : '文件上传失败',
           }
           persistState([...workingDrafts], workingBatch)
           throw error
@@ -534,8 +591,8 @@ export default function MaterialsPage() {
         throw new Error('上传会话无效，请重新上传')
       }
       const completedFiles = workingDrafts.map((draft) => {
-        if (!draft.materialId) throw new Error('上传任务无效，请重新上传')
-        return { material_id: draft.materialId }
+        if (!draft.fileId) throw new Error('上传任务无效，请重新上传')
+        return { file_id: draft.fileId }
       })
       const completed = await completeMaterialUploadSession(
         workingBatch.sessionId,
@@ -545,24 +602,26 @@ export default function MaterialsPage() {
       )
       await removePersistedMaterialFiles(workingDrafts)
       setDrafts([])
+      setMetadata(createUploadMetadata(routeContext))
       setUploadBatch(createUploadBatch())
       materialDraftStorage.clear(draftUserId)
       setMyMaterials((current) => [
-        ...(completed.materials || []),
-        ...current.filter((item) => (
-          !(completed.materials || []).some((created) => created.id === item.id)
-        )),
+        completed.material,
+        ...current.filter((item) => item.id !== completed.material.id),
       ])
       setViewMode('mine')
       setSheet(null)
       Taro.showToast({ title: '已提交安全检查', icon: 'success' })
     } catch (error) {
-      const message = error instanceof Error ? error.message : '上传失败，请重试'
-      Taro.showToast({ title: message, icon: 'none' })
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '上传失败，请重试',
+        icon: 'none',
+      })
     } finally {
       setUploading(false)
     }
   }
+
   const openUpload = () => {
     if (drafts.length) {
       setSheet('upload')
@@ -570,16 +629,10 @@ export default function MaterialsPage() {
     }
     void chooseFiles()
   }
-  const openMaterialDetail = (material: CourseMaterialView) => {
-    setActiveMaterial(material)
-    setEditTitle(material.title)
-    setEditCourse(material.course?.name || material.candidate_course_name || '')
-    setEditKind(material.material_type)
-    setSheet('detail')
-  }
+
   const saveRejectedMaterial = async () => {
     if (!activeMaterial || !editTitle.trim() || !editCourse.trim()) {
-      Taro.showToast({ title: '请补全标题和课程', icon: 'none' })
+      Taro.showToast({ title: '请补全资料名称和课程', icon: 'none' })
       return
     }
     const courseRecord = resolveMaterialCourse(apiCourses, { name: editCourse.trim() })
@@ -602,6 +655,7 @@ export default function MaterialsPage() {
       Taro.showToast({ title: '保存失败，请刷新后重试', icon: 'none' })
     }
   }
+
   const withdrawMaterial = async (material: CourseMaterialView) => {
     const result = await Taro.showModal({
       title: '撤回资料',
@@ -620,8 +674,42 @@ export default function MaterialsPage() {
       Taro.showToast({ title: '撤回失败，请刷新后重试', icon: 'none' })
     }
   }
+
+  const openFeedback = () => {
+    setFeedbackCategory('file_unavailable')
+    setFeedbackFileId(activeMaterial?.files.length === 1 ? activeMaterial.files[0].id : undefined)
+    setFeedbackDescription('')
+    setSheet('feedback')
+  }
+
+  const submitFeedback = async () => {
+    if (!activeMaterial || submittingFeedback) return
+    if (feedbackCategory === 'other' && !feedbackDescription.trim()) {
+      Taro.showToast({ title: '请简单说明遇到的问题', icon: 'none' })
+      return
+    }
+    setSubmittingFeedback(true)
+    try {
+      const created = await createCourseMaterialFeedback(activeMaterial.id, {
+        file_id: feedbackFileId,
+        category: feedbackCategory,
+        description: feedbackDescription.trim() || undefined,
+      })
+      setMyFeedbacks((current) => [created, ...current])
+      setSheet('detail')
+      Taro.showToast({ title: '反馈已提交', icon: 'success' })
+    } catch {
+      Taro.showToast({ title: '反馈提交失败，请稍后重试', icon: 'none' })
+    } finally {
+      setSubmittingFeedback(false)
+    }
+  }
+
   const closeSheet = () => {
-    if (!uploading) setSheet(null)
+    if (!uploading && !submittingFeedback) {
+      setSheet(null)
+      onKeyboardVisibilityChange(0)
+    }
   }
 
   return (
@@ -631,82 +719,107 @@ export default function MaterialsPage() {
         <View className='materials-view-tabs'>
           <View className={viewMode === 'browse' ? 'materials-view-tabs__active' : ''} onClick={() => setViewMode('browse')}>资料库</View>
           <View className={viewMode === 'mine' ? 'materials-view-tabs__active' : ''} onClick={() => setViewMode('mine')}>我的资料{drafts.length ? <Text>{drafts.length}</Text> : null}</View>
+          <View className={viewMode === 'feedbacks' ? 'materials-view-tabs__active' : ''} onClick={() => setViewMode('feedbacks')}>我的反馈</View>
         </View>
-        <View className='materials-search'>
+        {viewMode !== 'feedbacks' && <View className='materials-search'>
           <Image src={icons.search} mode='aspectFit' />
-          <Input value={keyword} onInput={(event) => setKeyword(event.detail.value)} confirmType='search' placeholder='搜索课程、资料名称或文件' placeholderClass='materials-search__placeholder' />
+          <KeyboardSafeInput
+            value={keyword}
+            onInput={(event) => setKeyword(event.detail.value)}
+            confirmType='search'
+            placeholder='搜索课程、资料名称或文件'
+            placeholderClass='materials-search__placeholder'
+            onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+          />
           {!!keyword && <Text onClick={() => setKeyword('')}>×</Text>}
-        </View>
+        </View>}
         <View className='materials-hero'>
           <View>
             <Text className='materials-hero__eyebrow'>{routeContext.courseName ? '已从课程进入' : '海大同学资料库'}</Text>
             <Text className='materials-hero__title'>{routeContext.courseName || '把好资料，传给下一位同学'}</Text>
-            <Text className='materials-hero__copy'>{routeContext.courseName ? '课程已自动填写，选择文件即可分享' : '从微信聊天选择文件，标题和类型会自动补全'}</Text>
+            <Text className='materials-hero__copy'>{routeContext.courseName ? '课程已自动填写，选择文件即可分享' : '一份资料可包含多个文件，审核通过后统一展示'}</Text>
           </View>
           <Image src={icons.materials} mode='aspectFit' />
         </View>
-        <View className='materials-actions'>
+        {viewMode !== 'feedbacks' && <View className='materials-actions'>
           <View className={`materials-filter-button ${filtersActive ? 'materials-filter-button--active' : ''}`} onClick={() => setSheet('filter')}><Text>筛选</Text>{filtersActive && <View />}</View>
           <ScrollView scrollX showScrollbar={false} className='materials-course-scroll'>
             <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} onClick={() => setCourse(item)}>{item}</View>)}</View>
           </ScrollView>
           <View className='materials-upload-button' onClick={openUpload}>分享资料</View>
-        </View>
+        </View>}
 
-        {viewMode === 'browse' ? (
-          <>
-            <View className='materials-heading'><View><Text>课程资料</Text><Text>仅展示已审核发布的内容</Text></View><Text>{materials.length} 份</Text></View>
-            {loading && !materials.length ? <View className='materials-empty'><View /><Text>正在加载资料</Text><Text>请稍候</Text></View> : <View className='materials-list'>
-              {materials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
-                <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
-                <View className='material-card__main'>
-                  <Text className='material-card__title'>{item.title}</Text>
-                  <Text className='material-card__course'>{item.course?.name || item.candidate_course_name || '课程待确认'} · {formatFileSize(item.size_bytes)}</Text>
-                  <Text className='material-card__status'>{item.download_count} 次下载 · {item.original_filename}</Text>
-                </View>
-                <Text className='material-card__arrow'>›</Text>
-              </View>)}
+        {viewMode === 'browse' && <>
+          <View className='materials-heading'><View><Text>课程资料</Text><Text>仅展示已审核发布的内容</Text></View><Text>{materialsTotal} 份</Text></View>
+          {loading && !materials.length ? <View className='materials-empty'><View /><Text>正在加载资料</Text><Text>请稍候</Text></View> : <View className='materials-list'>
+            {materials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
+              <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
+              <View className='material-card__main'>
+                <Text className='material-card__title'>{item.title}</Text>
+                <Text className='material-card__course'>{item.course?.name || item.candidate_course_name || '课程待确认'} · {item.files.length} 个文件</Text>
+                <Text className='material-card__status'>{item.download_count} 次下载 · {formatFileSize(packageSize(item))}</Text>
+              </View>
+              <Text className='material-card__arrow'>›</Text>
+            </View>)}
+          </View>}
+          {loading && !!materials.length && <Text className='materials-loading-more'>正在加载更多…</Text>}
+          {!loading && !materials.length && <View className='materials-empty'><View /><Text>{unresolvedCourse ? '该课程尚未归入课程目录' : '没有找到相关资料'}</Text><Text>{unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : '试试更换课程、类型或关键词'}</Text></View>}
+        </>}
+
+        {viewMode === 'mine' && <>
+          <View className='materials-heading'><View><Text>我的上传</Text><Text>查看草稿、安全检查和审核进度</Text></View><Text>{(drafts.length ? 1 : 0) + visibleMyMaterials.length} 份</Text></View>
+          <View className='materials-list'>
+            {!!drafts.length && <View className='material-card' onClick={() => setSheet('upload')}>
+              <View className={`material-card__file material-card__file--${metadata.kind}`}><Text>{materialKindLabels[metadata.kind]}</Text></View>
+              <View className='material-card__main'>
+                <Text className='material-card__title'>{metadata.title || '未完成的资料'}</Text>
+                <Text className='material-card__course'>{metadata.courseName || '课程待确认'} · {drafts.length} 个文件</Text>
+                <Text className={`material-card__status material-card__status--${draftStatusMeta[drafts[0].status].className}`}>{draftStatusMeta[drafts[0].status].label}</Text>
+              </View>
+              <Text className='material-card__arrow'>›</Text>
             </View>}
-            {loading && !!materials.length && <Text className='materials-loading-more'>正在加载更多…</Text>}
-            {!loading && !materials.length && <View className='materials-empty'><View /><Text>{unresolvedCourse ? '该课程尚未归入课程目录' : '没有找到相关资料'}</Text><Text>{unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : '试试更换课程、类型或关键词'}</Text></View>}
-          </>
-        ) : (
-          <>
-            <View className='materials-heading'><View><Text>我的上传</Text><Text>查看草稿、安全检查和审核进度</Text></View><Text>{visibleDrafts.length + visibleMyMaterials.length} 份</Text></View>
-            <View className='materials-list'>
-              {visibleDrafts.map((draft) => {
-                const status = draftStatusMeta[draft.status]
-                return (
-                  <View key={draft.id} className='material-card'>
-                    <View className={`material-card__file material-card__file--${draft.kind}`}><Text>{materialKindLabels[draft.kind]}</Text></View>
-                    <View className='material-card__main'>
-                      <Text className='material-card__title'>{draft.title}</Text>
-                      <Text className='material-card__course'>{draft.courseName || '课程待确认'} · {formatFileSize(draft.fileSize)}</Text>
-                      <Text className={`material-card__status material-card__status--${status.className}`}>{status.label}{draft.errorMessage ? ` · ${draft.errorMessage}` : ''}</Text>
-                    </View>
-                    <Text className='material-card__arrow' onClick={() => setSheet('upload')}>›</Text>
-                  </View>
-                )
-              })}
-              {visibleMyMaterials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
-                <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
-                <View className='material-card__main'>
-                  <Text className='material-card__title'>{item.title}</Text>
-                  <Text className='material-card__course'>{item.course?.name || item.candidate_course_name || '课程待确认'} · {formatFileSize(item.size_bytes)}</Text>
-                  <Text className={`material-card__status material-card__status--${item.status}`}>{materialStatusLabels[item.status]}{item.rejection_reason ? ` · ${item.rejection_reason}` : ''}</Text>
-                </View>
-                <Text className='material-card__arrow'>›</Text>
-              </View>)}
-            </View>
-            {!visibleDrafts.length && !visibleMyMaterials.length && <View className='materials-empty'><View /><Text>还没有上传记录</Text><Text>从微信聊天选择一份资料开始分享</Text></View>}
-          </>
-        )}
+            {visibleMyMaterials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
+              <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
+              <View className='material-card__main'>
+                <Text className='material-card__title'>{item.title}</Text>
+                <Text className='material-card__course'>{item.course?.name || item.candidate_course_name || '课程待确认'} · {item.files.length} 个文件</Text>
+                <Text className={`material-card__status material-card__status--${item.status}`}>{materialStatusLabels[item.status]}{item.rejection_reason ? ` · ${item.rejection_reason}` : ''}</Text>
+              </View>
+              <Text className='material-card__arrow'>›</Text>
+            </View>)}
+          </View>
+          {!drafts.length && !visibleMyMaterials.length && <View className='materials-empty'><View /><Text>还没有上传记录</Text><Text>从微信聊天选择一份资料开始分享</Text></View>}
+        </>}
+
+        {viewMode === 'feedbacks' && <>
+          <View className='materials-heading'><View><Text>我的反馈</Text><Text>处理结果会同步更新在这里</Text></View><Text>{myFeedbacks.length} 条</Text></View>
+          <View className='materials-list'>
+            {myFeedbacks.map((feedback) => <View key={feedback.id} className='material-card' onClick={() => feedback.material && openMaterialDetail(feedback.material)}>
+              <View className='material-card__file material-card__file--other'><Text>反馈</Text></View>
+              <View className='material-card__main'>
+                <Text className='material-card__title'>{feedback.material?.title || `资料 #${feedback.material_id}`}</Text>
+                <Text className='material-card__course'>{materialFeedbackLabels[feedback.category]} · {feedbackStatusLabels[feedback.status]}</Text>
+                <Text className='material-card__status'>{feedback.resolution_note || feedback.description || '等待管理员处理'}</Text>
+              </View>
+              {feedback.material && <Text className='material-card__arrow'>›</Text>}
+            </View>)}
+          </View>
+          {!myFeedbacks.length && <View className='materials-empty'><View /><Text>还没有反馈记录</Text><Text>发现资料有问题时，可以在详情中告诉我们</Text></View>}
+        </>}
       </View>
 
       {sheet && <View className='materials-overlay' onClick={closeSheet}>
-        <View className={`materials-sheet materials-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}>
+        <View
+          className={`materials-sheet materials-sheet--${sheet}`}
+          style={keyboardHeight ? {
+            bottom: `${keyboardHeight}px`,
+            maxHeight: `calc(100vh - ${keyboardHeight}px - 20px)`,
+          } : undefined}
+          onClick={(event) => event.stopPropagation()}
+        >
           <View className='materials-sheet__handle' />
           <View className='materials-sheet__close' onClick={closeSheet}>×</View>
+
           {sheet === 'filter' && <View className='materials-sheet__body'>
             <Text className='materials-sheet__title'>筛选资料</Text>
             <Text className='materials-sheet__label'>课程</Text>
@@ -719,73 +832,133 @@ export default function MaterialsPage() {
             <View className='materials-primary' onClick={() => setSheet(null)}>查看资料</View>
             <View className='materials-secondary' onClick={() => { setCourse('全部课程'); setKind('all') }}>清除筛选</View>
           </View>}
+
           {sheet === 'upload' && <View className='materials-sheet__body'>
-            <Text className='materials-sheet__title'>确认智能补全</Text>
-            <Text className='materials-sheet__subtitle'>支持 PDF、Word、PPT，单次最多 5 个文件</Text>
+            <Text className='materials-sheet__title'>分享课程资料</Text>
+            <Text className='materials-sheet__subtitle'>一份资料最多包含 5 个 PDF、Word 或 PPT 文件</Text>
             {!drafts.length ? (
-              <View className='materials-file-empty' onClick={chooseFiles}><Text>从微信聊天选择文件</Text><Text>标题、类型和课程将自动识别</Text></View>
+              <View className='materials-file-empty' onClick={chooseFiles}><Text>从微信聊天选择文件</Text><Text>资料名称、类型和课程会自动补全</Text></View>
             ) : <>
-              <View className='materials-batch'>
-                <Text className='materials-sheet__label'>批量设置课程</Text>
-                <View className='materials-batch__row'>
-                  <Input disabled={uploading} value={batchCourse} onInput={(event) => setBatchCourse(event.detail.value)} className='materials-input' placeholder='可直接输入待确认课程' placeholderClass='materials-input__placeholder' />
-                  <View onClick={applyCourseToAll}>应用全部</View>
-                </View>
-                <ScrollView scrollX showScrollbar={false}>
-                  <View className='materials-inline-options'>{courseOptions.slice(1).map((item) => <View key={item} onClick={() => setBatchCourse(item)}>{item}</View>)}</View>
-                </ScrollView>
-                <Text className='materials-sheet__label'>批量设置类型</Text>
-                <ScrollView scrollX showScrollbar={false}>
-                  <View className='materials-inline-options'>{materialKinds.map((item) => <View key={item} className={batchKind === item ? 'materials-option--active' : ''} onClick={() => applyKindToAll(item)}>{materialKindLabels[item]}</View>)}</View>
-                </ScrollView>
-              </View>
+              <Text className='materials-sheet__label'>资料名称</Text>
+              <KeyboardSafeInput
+                disabled={uploading}
+                value={metadata.title}
+                onInput={(event) => updateMetadata({ title: event.detail.value })}
+                className='materials-input'
+                placeholder='例如：高数期末复习资料'
+                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+              />
+              <Text className='materials-sheet__label'>课程</Text>
+              <KeyboardSafeInput
+                disabled={uploading}
+                value={metadata.courseName}
+                onInput={(event) => updateMetadata({
+                  courseName: event.detail.value,
+                  courseId: undefined,
+                  periodId: undefined,
+                })}
+                className='materials-input'
+                placeholder='找不到课程也可直接输入'
+                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+              />
+              <ScrollView scrollX showScrollbar={false}>
+                <View className='materials-inline-options'>{courseOptions.slice(1).map((item) => (
+                  <View key={item} onClick={() => {
+                    const record = resolveMaterialCourse(apiCourses, { name: item })
+                    updateMetadata({
+                      courseName: record?.name || item,
+                      courseId: record?.id,
+                      periodId: item === routeContext.courseName
+                        ? routeContext.periodId
+                        : undefined,
+                    })
+                  }}
+                  >
+                    {item}
+                  </View>
+                ))}</View>
+              </ScrollView>
+              <Text className='materials-sheet__label'>资料类型</Text>
+              <ScrollView scrollX showScrollbar={false}>
+                <View className='materials-inline-options'>{materialKinds.map((item) => <View key={item} className={metadata.kind === item ? 'materials-option--active' : ''} onClick={() => updateMetadata({ kind: item })}>{materialKindLabels[item]}</View>)}</View>
+              </ScrollView>
+              <Text className='materials-sheet__label'>补充说明（选填）</Text>
+              <KeyboardSafeTextarea
+                disabled={uploading}
+                value={metadata.description}
+                onInput={(event) => updateMetadata({ description: event.detail.value })}
+                className='materials-textarea'
+                maxlength={500}
+                placeholder='可补充资料范围、适用章节等'
+                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+              />
               <View className='materials-draft-list'>
                 {drafts.map((draft, index) => <View key={draft.id} className='materials-draft'>
                   <View className='materials-draft__heading'><Text>{index + 1}. {draft.fileName}</Text>{!uploading && <Text onClick={() => removeDraft(draft.id)}>移除</Text>}</View>
-                  <Text className='materials-draft__meta'>{formatFileSize(draft.fileSize)}</Text>
-                  <Text className='materials-sheet__label'>标题</Text>
-                  <Input disabled={uploading} value={draft.title} onInput={(event) => editDraft(draft.id, { title: event.detail.value })} className='materials-input' placeholder='资料标题' />
-                  <Text className='materials-sheet__label'>课程</Text>
-                  <Input disabled={uploading} value={draft.courseName} onInput={(event) => editDraft(draft.id, { courseName: event.detail.value, courseId: undefined, periodId: undefined })} className='materials-input' placeholder='找不到课程也可直接输入' />
-                  <Text className='materials-sheet__label'>类型</Text>
-                  <ScrollView scrollX showScrollbar={false}>
-                    <View className='materials-inline-options'>{materialKinds.map((item) => <View key={item} className={draft.kind === item ? 'materials-option--active' : ''} onClick={() => editDraft(draft.id, { kind: item })}>{materialKindLabels[item]}</View>)}</View>
-                  </ScrollView>
+                  <Text className='materials-draft__meta'>{formatFileSize(draft.fileSize)} · {draftStatusMeta[draft.status].label}</Text>
                   {draft.status === 'uploading' && <View className='materials-progress'><View style={{ width: `${draft.progress}%` }} /></View>}
                   {draft.errorMessage && <Text className='materials-draft__error'>{draft.errorMessage}</Text>}
                 </View>)}
               </View>
               {!uploading && <View className='materials-file-add' onClick={chooseFiles}>重新选择文件</View>}
-              <View className={`materials-primary ${uploading ? 'materials-primary--disabled' : ''}`} onClick={submitDrafts}>{uploading ? '正在上传…' : drafts.some((draft) => draft.status === 'failed') ? '重试上传' : '上传并自动提交审核'}</View>
+              <View className={`materials-primary ${uploading ? 'materials-primary--disabled' : ''}`} onClick={submitDrafts}>{uploading ? '正在上传…' : drafts.some((draft) => draft.status === 'failed') ? '重试上传' : '上传并提交审核'}</View>
               <Text className='materials-upload-notice'>上传即表示确认资料不包含隐私、侵权或违规内容</Text>
             </>}
           </View>}
+
           {sheet === 'detail' && activeMaterial && <View className='materials-sheet__body'>
             <View className={`materials-detail-file material-card__file--${activeMaterial.material_type}`}>{materialKindLabels[activeMaterial.material_type]}</View>
             <Text className='materials-sheet__title'>{activeMaterial.title}</Text>
             <Text className='materials-sheet__subtitle'>{activeMaterial.course?.name || activeMaterial.candidate_course_name || '课程待确认'} · {materialStatusLabels[activeMaterial.status]}</Text>
+            {!!activeMaterial.description && <Text className='materials-detail-description'>{activeMaterial.description}</Text>}
             <View className='materials-detail-list'>
-              <View><Text>文件名称</Text><Text>{activeMaterial.original_filename}</Text></View>
-              <View><Text>文件大小</Text><Text>{formatFileSize(activeMaterial.size_bytes)}</Text></View>
-              <View><Text>资料类型</Text><Text>{materialKindLabels[activeMaterial.material_type]}</Text></View>
-              <View><Text>下载次数</Text><Text>{activeMaterial.download_count} 次</Text></View>
+              {activeMaterial.files.map((file, index) => <View key={file.id} className='materials-detail-file-row'>
+                <View><Text>{index + 1}. {file.original_filename}</Text><Text>{formatFileSize(file.size_bytes)} · {file.download_count} 次下载</Text></View>
+                {activeMaterial.status === 'published' && <Text onClick={() => downloadAndOpenMaterial(activeMaterial.id, file.id).catch(() => Taro.showToast({ title: '资料下载失败', icon: 'none' }))}>打开</Text>}
+              </View>)}
             </View>
             {activeMaterial.rejection_reason && <View className='materials-note'><Text>未通过原因</Text><Text>{activeMaterial.rejection_reason}</Text></View>}
-            {activeMaterial.scan_message && <View className='materials-note'><Text>安全检查</Text><Text>{activeMaterial.scan_message}</Text></View>}
             {viewMode === 'mine' && activeMaterial.status === 'rejected' && <View className='materials-rejected-edit'>
-              <Text className='materials-sheet__label'>修改标题</Text>
-              <Input value={editTitle} onInput={(event) => setEditTitle(event.detail.value)} className='materials-input' />
+              <Text className='materials-sheet__label'>修改资料名称</Text>
+              <KeyboardSafeInput value={editTitle} onInput={(event) => setEditTitle(event.detail.value)} className='materials-input' onKeyboardVisibilityChange={onKeyboardVisibilityChange} />
               <Text className='materials-sheet__label'>修改课程</Text>
-              <Input value={editCourse} onInput={(event) => setEditCourse(event.detail.value)} className='materials-input' placeholder='找不到课程也可直接输入' />
+              <KeyboardSafeInput value={editCourse} onInput={(event) => setEditCourse(event.detail.value)} className='materials-input' placeholder='找不到课程也可直接输入' onKeyboardVisibilityChange={onKeyboardVisibilityChange} />
               <Text className='materials-sheet__label'>修改类型</Text>
               <ScrollView scrollX showScrollbar={false}>
                 <View className='materials-inline-options'>{materialKinds.map((item) => <View key={item} className={editKind === item ? 'materials-option--active' : ''} onClick={() => setEditKind(item)}>{materialKindLabels[item]}</View>)}</View>
               </ScrollView>
               <View className='materials-primary' onClick={saveRejectedMaterial}>保存并重新提交</View>
             </View>}
-            {activeMaterial.status === 'published' && <View className='materials-primary' onClick={() => downloadAndOpenMaterial(activeMaterial.id).catch(() => Taro.showToast({ title: '资料下载失败', icon: 'none' }))}>下载并打开</View>}
+            {activeMaterial.status === 'published' && <View className='materials-secondary' onClick={openFeedback}>资料有问题</View>}
             {viewMode === 'mine' && ['scanning', 'pending_review', 'published', 'rejected'].includes(activeMaterial.status) && <View className='materials-secondary materials-secondary--danger' onClick={() => withdrawMaterial(activeMaterial)}>撤回资料</View>}
             {activeMaterial.status !== 'published' && <Text className='materials-upload-notice'>资料发布前不会向其他同学展示下载入口</Text>}
+          </View>}
+
+          {sheet === 'feedback' && activeMaterial && <View className='materials-sheet__body'>
+            <Text className='materials-sheet__title'>资料有问题</Text>
+            <Text className='materials-sheet__subtitle'>{activeMaterial.title}</Text>
+            <Text className='materials-sheet__label'>问题类型</Text>
+            <View className='materials-option-grid'>
+              {materialFeedbackCategories.map((item) => <View key={item} className={feedbackCategory === item ? 'materials-option--active' : ''} onClick={() => setFeedbackCategory(item)}>{materialFeedbackLabels[item]}</View>)}
+            </View>
+            {activeMaterial.files.length > 1 && <>
+              <Text className='materials-sheet__label'>涉及文件（选填）</Text>
+              <View className='materials-feedback-files'>
+                <View className={!feedbackFileId ? 'materials-option--active' : ''} onClick={() => setFeedbackFileId(undefined)}>整份资料</View>
+                {activeMaterial.files.map((file) => <View key={file.id} className={feedbackFileId === file.id ? 'materials-option--active' : ''} onClick={() => setFeedbackFileId(file.id)}>{file.original_filename}</View>)}
+              </View>
+            </>}
+            <Text className='materials-sheet__label'>补充说明{feedbackCategory === 'other' ? '' : '（选填）'}</Text>
+            <KeyboardSafeTextarea
+              value={feedbackDescription}
+              onInput={(event) => setFeedbackDescription(event.detail.value)}
+              className='materials-textarea'
+              maxlength={500}
+              placeholder='请描述具体问题，便于快速核实'
+              onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+            />
+            <View className={`materials-primary ${submittingFeedback ? 'materials-primary--disabled' : ''}`} onClick={submitFeedback}>{submittingFeedback ? '正在提交…' : '提交反馈'}</View>
+            <View className='materials-secondary' onClick={() => setSheet('detail')}>返回资料详情</View>
           </View>}
         </View>
       </View>}

@@ -40,24 +40,27 @@ const draft: MaterialUploadDraft = {
   filePath: 'wxfile://saved/material.pdf',
   fileName: 'material.pdf',
   fileSize: 1024,
-  title: '课程资料',
-  kind: 'notes',
-  courseName: '高等数学（二）',
-  courseId: 1,
   status: 'draft',
   progress: 0,
 }
-assert.equal(validateMaterialDrafts([draft]), '')
+const metadata = {
+  title: '课程资料',
+  kind: 'notes' as const,
+  courseName: '高等数学（二）',
+  courseId: 1,
+  description: '',
+}
+assert.equal(validateMaterialDrafts([draft], metadata), '')
 assert.match(validateMaterialDrafts([
   { ...draft, fileSize: MAX_MATERIAL_FILE_SIZE + 1 },
-]), /超过 50MB/)
+], metadata), /超过 50MB/)
 assert.match(validateMaterialDrafts([
   { ...draft, filePath: '', status: 'needs_file' },
-]), /需要重新选择/)
+], metadata), /需要重新选择/)
 assert.match(validateMaterialDrafts(Array.from(
   { length: 6 },
   (_, index) => ({ ...draft, id: `draft-${index}` }),
-)), /最多上传 5 个文件/)
+), metadata), /最多上传 5 个文件/)
 assert.equal(isMaterialUploadSessionReusable({
   createIdempotencyKey: 'create-key',
   completeIdempotencyKey: 'complete-key',
@@ -66,9 +69,9 @@ assert.equal(isMaterialUploadSessionReusable({
   sessionExpiresAt: new Date(Date.now() + 60_000).toISOString(),
 }, [{
   ...draft,
-  materialId: 2,
+  fileId: 2,
   uploadTarget: {
-    material_id: 2,
+    file_id: 2,
     upload_url: 'https://storage.example/upload',
     upload_method: 'POST',
     file_field: 'file',

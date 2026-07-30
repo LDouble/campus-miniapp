@@ -1,9 +1,10 @@
 import type {
+  CourseMaterialView,
+  MaterialFeedbackCategory,
   MaterialUploadTarget,
-  MaterialUploadFileInput,
 } from '../../api/types'
 
-export type MaterialKind = MaterialUploadFileInput['material_type']
+export type MaterialKind = CourseMaterialView['material_type']
 
 export type MaterialUploadStatus = 'draft' | 'uploading' | 'uploaded' | 'failed' | 'needs_file'
 
@@ -20,16 +21,20 @@ export interface MaterialUploadDraft {
   persistentFile?: boolean
   fileName: string
   fileSize: number
+  status: MaterialUploadStatus
+  progress: number
+  uploadTarget?: MaterialUploadTarget
+  fileId?: number
+  errorMessage?: string
+}
+
+export interface MaterialUploadMetadata {
   title: string
   kind: MaterialKind
   courseName: string
   courseId?: number
   periodId?: string
-  status: MaterialUploadStatus
-  progress: number
-  uploadTarget?: MaterialUploadTarget
-  materialId?: number
-  errorMessage?: string
+  description: string
 }
 
 export interface MaterialUploadBatch {
@@ -41,8 +46,9 @@ export interface MaterialUploadBatch {
 }
 
 export interface MaterialUploadState {
-  version: 2
+  version: 3
   drafts: MaterialUploadDraft[]
+  metadata: MaterialUploadMetadata
   batch: MaterialUploadBatch
 }
 
@@ -52,6 +58,7 @@ export interface MaterialRouteContext {
   periodId?: string
   action?: 'upload'
   view?: 'mine'
+  materialId?: number
 }
 
 export const materialKindLabels: Record<MaterialKind, string> = {
@@ -64,3 +71,15 @@ export const materialKindLabels: Record<MaterialKind, string> = {
 }
 
 export const materialKinds = Object.keys(materialKindLabels) as MaterialKind[]
+
+export const materialFeedbackLabels: Record<MaterialFeedbackCategory, string> = {
+  file_unavailable: '文件无法打开',
+  wrong_course: '课程归类有误',
+  content_error: '资料内容有误',
+  copyright_privacy: '版权或隐私问题',
+  other: '其他问题',
+}
+
+export const materialFeedbackCategories = Object.keys(
+  materialFeedbackLabels,
+) as MaterialFeedbackCategory[]
