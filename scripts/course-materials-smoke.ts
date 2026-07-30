@@ -5,6 +5,9 @@ import {
   normalizeMaterialTitle,
 } from '../src/features/course-materials/inference'
 import type { MaterialCourseView } from '../src/api/types'
+import {
+  buildCourseMaterialQuery,
+} from '../src/features/course-materials/route'
 import type { MaterialUploadDraft } from '../src/features/course-materials/types'
 import {
   MAX_MATERIAL_FILE_SIZE,
@@ -34,6 +37,16 @@ assert.equal(inferCourseSuggestion('高数二期末真题.pdf', [
 ])?.name, '高数二')
 assert.equal(inferMaterialKind('高数二期末真题.pdf'), 'exam')
 assert.equal(normalizeMaterialTitle('高数二-期末真题.pdf'), '高数二 期末真题')
+const routeParams = new URLSearchParams(buildCourseMaterialQuery({
+  courseName: '高等数学（二）',
+  courseCode: 'MATH-002',
+  periodId: '2025-2026-2',
+  periodLabel: '2025-2026 学年春季学期',
+  source: 'grades',
+}))
+assert.equal(routeParams.get('courseName'), '高等数学（二）')
+assert.equal(routeParams.get('periodLabel'), '2025-2026 学年春季学期')
+assert.equal(routeParams.get('source'), 'grades')
 
 const draft: MaterialUploadDraft = {
   id: 'draft-1',

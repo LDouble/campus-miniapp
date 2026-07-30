@@ -56,6 +56,8 @@ export interface MaterialRouteContext {
   courseName?: string
   courseCode?: string
   periodId?: string
+  periodLabel?: string
+  source?: 'schedule' | 'grades' | 'selection'
   action?: 'upload'
   view?: 'mine'
   materialId?: number

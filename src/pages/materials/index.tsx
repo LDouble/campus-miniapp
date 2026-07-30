@@ -73,6 +73,15 @@ const icons = {
 type Sheet = 'filter' | 'upload' | 'detail' | 'feedback' | null
 type ViewMode = 'browse' | 'mine' | 'feedbacks'
 
+const materialSourceLabels: Record<
+NonNullable<MaterialRouteContext['source']>,
+string
+> = {
+  schedule: '从课表进入',
+  grades: '从成绩进入',
+  selection: '从选课结果进入',
+}
+
 const decodeRouteValue = (value?: string) => {
   if (!value) return ''
   try {
@@ -152,6 +161,10 @@ export default function MaterialsPage() {
     courseName: decodeRouteValue(router.params.courseName),
     courseCode: decodeRouteValue(router.params.courseCode),
     periodId: decodeRouteValue(router.params.periodId),
+    periodLabel: decodeRouteValue(router.params.periodLabel),
+    source: ['schedule', 'grades', 'selection'].includes(router.params.source || '')
+      ? router.params.source as MaterialRouteContext['source']
+      : undefined,
     action: router.params.action === 'upload' ? 'upload' : undefined,
     view: router.params.view === 'mine' ? 'mine' : undefined,
     materialId: toPositiveInteger(router.params.material_id),
@@ -162,6 +175,9 @@ export default function MaterialsPage() {
   const debouncedKeyword = useDebouncedValue(keyword, 300)
   const [course, setCourse] = useState(routeContext.courseName || '全部课程')
   const [kind, setKind] = useState<'all' | MaterialKind>('all')
+  const [limitToSourcePeriod, setLimitToSourcePeriod] = useState(
+    !!routeContext.periodId,
+  )
   const [viewMode, setViewMode] = useState<ViewMode>(
     routeContext.view === 'mine' ? 'mine' : 'browse',
   )
@@ -288,7 +304,7 @@ export default function MaterialsPage() {
       courseId: selectedCourse?.id,
       materialType: kind === 'all' ? undefined : kind,
       keyword: debouncedKeyword,
-      periodId: routeContext.periodId || undefined,
+      periodId: limitToSourcePeriod ? routeContext.periodId : undefined,
       page: 1,
       pageSize: 20,
     })
@@ -313,6 +329,7 @@ export default function MaterialsPage() {
     coursesLoaded,
     debouncedKeyword,
     kind,
+    limitToSourcePeriod,
     materialsReloadKey,
     routeContext.periodId,
     selectedCourse?.id,
@@ -332,7 +349,7 @@ export default function MaterialsPage() {
       courseId: selectedCourse?.id,
       materialType: kind === 'all' ? undefined : kind,
       keyword: debouncedKeyword,
-      periodId: routeContext.periodId || undefined,
+      periodId: limitToSourcePeriod ? routeContext.periodId : undefined,
       page: materialsPage + 1,
       pageSize: 20,
     })
@@ -367,6 +384,30 @@ export default function MaterialsPage() {
     return ['全部课程', ...Array.from(new Set(names))]
   }, [apiCourses, courseSuggestions, metadata.courseName, routeContext.courseName])
   const filtersActive = course !== '全部课程' || kind !== 'all'
+  const sourceCourseActive = !!routeContext.courseName
+    && course === routeContext.courseName
+  const sourceLabel = routeContext.source
+    ? materialSourceLabels[routeContext.source]
+    : '从课程进入'
+  const sourcePeriodLabel = routeContext.periodLabel || '来源学期'
+  const canExpandPeriod = !!routeContext.periodId
+    && sourceCourseActive
+    && limitToSourcePeriod
+    && !materialsLoadFailed
+    && !unresolvedCourse
+  const heroCopy = sourceCourseActive
+    ? routeContext.action === 'upload'
+      ? '课程和学期已自动带入，选择文件即可分享'
+      : limitToSourcePeriod
+        ? `正在查看${sourcePeriodLabel}的已审核资料`
+        : '正在查看这门课程的全部学期资料'
+    : '一份资料可包含多个文件，审核通过后统一展示'
+  const selectBrowseCourse = (nextCourse: string) => {
+    setCourse(nextCourse)
+    setLimitToSourcePeriod(
+      !!routeContext.periodId && nextCourse === routeContext.courseName,
+    )
+  }
 
   const invalidateUploadSession = () => {
     setDrafts((current) => current.map((draft) => ({
@@ -741,22 +782,33 @@ export default function MaterialsPage() {
         </View>}
         <View className='materials-hero'>
           <View>
-            <Text className='materials-hero__eyebrow'>{routeContext.courseName ? '已从课程进入' : '海大同学资料库'}</Text>
-            <Text className='materials-hero__title'>{routeContext.courseName || '把好资料，传给下一位同学'}</Text>
-            <Text className='materials-hero__copy'>{routeContext.courseName ? '课程已自动填写，选择文件即可分享' : '一份资料可包含多个文件，审核通过后统一展示'}</Text>
+            <Text className='materials-hero__eyebrow'>{sourceCourseActive ? sourceLabel : '海大同学资料库'}</Text>
+            <Text className='materials-hero__title'>{course === '全部课程' ? '把好资料，传给下一位同学' : course}</Text>
+            <Text className='materials-hero__copy'>{heroCopy}</Text>
           </View>
           <Image src={icons.materials} mode='aspectFit' />
         </View>
+        {viewMode === 'browse' && sourceCourseActive && routeContext.periodId && (
+          <View className='materials-source-context'>
+            <View>
+              <Text>{limitToSourcePeriod ? sourcePeriodLabel : '全部学期'}</Text>
+              <Text>{limitToSourcePeriod ? '优先保持来源页面的课程范围' : '课程不变，仅放宽学期范围'}</Text>
+            </View>
+            <Text onClick={() => setLimitToSourcePeriod((current) => !current)}>
+              {limitToSourcePeriod ? '查看其他学期' : '只看来源学期'}
+            </Text>
+          </View>
+        )}
         {viewMode !== 'feedbacks' && <View className='materials-actions'>
           <View className={`materials-filter-button ${filtersActive ? 'materials-filter-button--active' : ''}`} onClick={() => setSheet('filter')}><Text>筛选</Text>{filtersActive && <View />}</View>
           <ScrollView scrollX showScrollbar={false} className='materials-course-scroll'>
-            <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} onClick={() => setCourse(item)}>{item}</View>)}</View>
+            <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
           </ScrollView>
           <View className='materials-upload-button' onClick={openUpload}>分享资料</View>
         </View>}
 
         {viewMode === 'browse' && <>
-          <View className='materials-heading'><View><Text>课程资料</Text><Text>仅展示已审核发布的内容</Text></View><Text>{materialsTotal} 份</Text></View>
+          <View className='materials-heading'><View><Text>课程资料</Text><Text>{limitToSourcePeriod && routeContext.periodId ? `${sourcePeriodLabel} · 仅展示已审核内容` : '全部学期 · 仅展示已审核内容'}</Text></View><Text>{materialsTotal} 份</Text></View>
           {loading && !materials.length ? <View className='materials-empty'><View /><Text>正在加载资料</Text><Text>请稍候</Text></View> : <View className='materials-list'>
             {materials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
               <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
@@ -770,12 +822,19 @@ export default function MaterialsPage() {
           </View>}
           {loading && !!materials.length && <Text className='materials-loading-more'>正在加载更多…</Text>}
           {!loading && !materials.length && <View
-            className='materials-empty'
+            className={`materials-empty ${materialsLoadFailed || canExpandPeriod ? 'materials-empty--action' : ''}`}
             onClick={materialsLoadFailed ? () => setMaterialsReloadKey((current) => current + 1) : undefined}
           >
             <View />
-            <Text>{materialsLoadFailed ? '资料暂时没有加载出来' : unresolvedCourse ? '该课程尚未归入课程目录' : '没有找到相关资料'}</Text>
-            <Text>{materialsLoadFailed ? '点击这里重新加载' : unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : '试试更换课程、类型或关键词'}</Text>
+            <Text>{materialsLoadFailed ? '资料暂时没有加载出来' : unresolvedCourse ? '该课程尚未归入课程目录' : canExpandPeriod ? '这个学期还没有资料' : '没有找到相关资料'}</Text>
+            <Text
+              onClick={canExpandPeriod ? (event) => {
+                event.stopPropagation()
+                setLimitToSourcePeriod(false)
+              } : undefined}
+            >
+              {materialsLoadFailed ? '点击这里重新加载' : unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : canExpandPeriod ? '看看这门课的其他学期资料 ›' : '试试更换课程、类型或关键词'}
+            </Text>
           </View>}
         </>}
 
@@ -836,14 +895,14 @@ export default function MaterialsPage() {
           {sheet === 'filter' && <View className='materials-sheet__body'>
             <Text className='materials-sheet__title'>筛选资料</Text>
             <Text className='materials-sheet__label'>课程</Text>
-            <View className='materials-option-grid'>{courseOptions.map((item) => <View key={item} className={course === item ? 'materials-option--active' : ''} onClick={() => setCourse(item)}>{item}</View>)}</View>
+            <View className='materials-option-grid'>{courseOptions.map((item) => <View key={item} className={course === item ? 'materials-option--active' : ''} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
             <Text className='materials-sheet__label'>资料类型</Text>
             <View className='materials-option-grid'>
               <View className={kind === 'all' ? 'materials-option--active' : ''} onClick={() => setKind('all')}>全部类型</View>
               {materialKinds.map((item) => <View key={item} className={kind === item ? 'materials-option--active' : ''} onClick={() => setKind(item)}>{materialKindLabels[item]}</View>)}
             </View>
             <View className='materials-primary' onClick={() => setSheet(null)}>查看资料</View>
-            <View className='materials-secondary' onClick={() => { setCourse('全部课程'); setKind('all') }}>清除筛选</View>
+            <View className='materials-secondary' onClick={() => { selectBrowseCourse('全部课程'); setKind('all') }}>清除筛选</View>
           </View>}
 
           {sheet === 'upload' && <View className='materials-sheet__body'>

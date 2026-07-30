@@ -131,13 +131,15 @@ function CourseDetailCard({
             <View onClick={onEdit}>编辑</View>
           </View>
         )}
-        <View className='course-market-actions course-market-actions--course-card'>
-          <View>
-            <Text>课程相关</Text>
-            <Text>查资料，也可以求购或转卖教材</Text>
+        <View className='course-resource-actions course-resource-actions--course-card'>
+          <View className='course-resource-actions__primary' onClick={onFindMaterials}>
+            <View>
+              <Text>查看课程资料</Text>
+              <Text>已带入课程与当前学期</Text>
+            </View>
+            <Text>查看 ›</Text>
           </View>
-          <View className='course-market-actions__buttons'>
-            <View onClick={onFindMaterials}>查找资料</View>
+          <View className='course-resource-actions__secondary'>
             <View onClick={onShareMaterials}>分享资料</View>
             <View onClick={onWanted}>求购教材</View>
             <View onClick={onSell}>转卖教材</View>
@@ -405,6 +407,8 @@ export default function SchedulePage() {
       courseName: course.name,
       courseCode: course.courseCode,
       periodId: course.periodId,
+      periodLabel: periods.find((period) => period.id === course.periodId)?.label,
+      source: 'schedule' as const,
     }
     void (action === 'upload'
       ? shareCourseMaterials(context)

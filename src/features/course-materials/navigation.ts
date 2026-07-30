@@ -1,25 +1,14 @@
 import Taro from '@tarojs/taro'
 import { rememberCourseSuggestion } from './storage'
+import {
+  buildCourseMaterialQuery,
+  type CourseMaterialNavigation,
+} from './route'
 
-interface CourseMaterialNavigation {
-  courseName: string
-  courseCode?: string
-  periodId?: string
-  action?: 'upload'
-}
-
-const query = (context: CourseMaterialNavigation) => {
-  const values = {
-    courseName: context.courseName,
-    courseCode: context.courseCode,
-    periodId: context.periodId,
-    action: context.action,
-  }
-  return Object.entries(values)
-    .filter(([, value]) => value)
-    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
-    .join('&')
-}
+export {
+  buildCourseMaterialQuery,
+  type CourseMaterialNavigation,
+} from './route'
 
 export const openCourseMaterials = (context: CourseMaterialNavigation) => {
   rememberCourseSuggestion({
@@ -27,7 +16,9 @@ export const openCourseMaterials = (context: CourseMaterialNavigation) => {
     courseCode: context.courseCode,
     periodId: context.periodId,
   })
-  return Taro.navigateTo({ url: `/pages/materials/index?${query(context)}` })
+  return Taro.navigateTo({
+    url: `/pages/materials/index?${buildCourseMaterialQuery(context)}`,
+  })
 }
 
 export const shareCourseMaterials = (

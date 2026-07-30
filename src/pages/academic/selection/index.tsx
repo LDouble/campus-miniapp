@@ -121,6 +121,8 @@ export default function SelectionPage() {
       courseName: activeRecord.courseName,
       courseCode: activeRecord.courseCode,
       periodId: activeRecord.periodId,
+      periodLabel: getPeriodLabel(periods, activeRecord.periodId),
+      source: 'selection' as const,
     }
     void (action === 'upload'
       ? shareCourseMaterials(context)

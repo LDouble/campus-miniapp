@@ -40,7 +40,7 @@ const defaultPreferences: AcademicPreferences = {
   scheduleView: 'week',
 }
 
-type GradeSheet = 'period' | 'grade-edit' | 'marketplace' | null
+type GradeSheet = 'period' | 'grade-edit' | 'course-services' | null
 
 const formatGradePoint = (score?: number) => (
   score === undefined ? '—' : getGradePoint(score).toFixed(1)
@@ -60,7 +60,7 @@ export default function GradesPage() {
   const [simulationMode, setSimulationMode] = useState(false)
   const [sheet, setSheet] = useState<GradeSheet>(null)
   const [editingGrade, setEditingGrade] = useState<GradeRecord | null>(null)
-  const [marketplaceGrade, setMarketplaceGrade] = useState<GradeRecord | null>(null)
+  const [activeGrade, setActiveGrade] = useState<GradeRecord | null>(null)
   const [gradeScore, setGradeScore] = useState('')
   const [gradeCredit, setGradeCredit] = useState('')
   const [gradeLevel, setGradeLevel] = useState<GradeLevel>('优秀')
@@ -203,15 +203,29 @@ export default function GradesPage() {
     setSheet('grade-edit')
   }
 
-  const openGradeTrade = (grade: GradeRecord) => {
+  const openGradeServices = (grade: GradeRecord) => {
     if (simulationMode) return
-    setMarketplaceGrade(grade)
-    setSheet('marketplace')
+    setActiveGrade(grade)
+    setSheet('course-services')
+  }
+
+  const openGradeMaterials = (grade: GradeRecord, action?: 'upload') => {
+    setSheet(null)
+    const context = {
+      courseName: grade.courseName,
+      courseCode: grade.courseCode,
+      periodId: grade.periodId,
+      periodLabel: getGradePeriodLabel(periods, grade.periodId),
+      source: 'grades' as const,
+    }
+    void (action === 'upload'
+      ? shareCourseMaterials(context)
+      : openCourseMaterials(context))
   }
 
   const openCourseTrade = (intent: 'sell' | 'wanted') => {
-    if (!marketplaceGrade) return
-    const courseName = marketplaceGrade.courseName.trim()
+    if (!activeGrade) return
+    const courseName = activeGrade.courseName.trim()
     setSheet(null)
     const prefill = {
       intent,
@@ -219,9 +233,9 @@ export default function GradesPage() {
         ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
         : `出售与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
       courseName,
-      courseCode: marketplaceGrade.courseCode || '',
-      academicPeriodId: marketplaceGrade.periodId,
-      academicPeriodLabel: getGradePeriodLabel(periods, marketplaceGrade.periodId),
+      courseCode: activeGrade.courseCode || '',
+      academicPeriodId: activeGrade.periodId,
+      academicPeriodLabel: getGradePeriodLabel(periods, activeGrade.periodId),
       source: 'grade',
     } as const
     if (intent === 'wanted') {
@@ -413,24 +427,31 @@ export default function GradesPage() {
               <View className='academic-button academic-button--full' onClick={saveOverride}>保存并参与计算</View>
             </View>
           )}
-          {sheet === 'marketplace' && marketplaceGrade && (
+          {sheet === 'course-services' && activeGrade && (
             <View className='academic-sheet__body'>
-              <Text className='academic-sheet__title'>{marketplaceGrade.courseName}</Text>
+              <Text className='academic-sheet__title'>{activeGrade.courseName}</Text>
               <Text className='academic-sheet__subtitle'>
-                {[marketplaceGrade.courseCode, getGradePeriodLabel(periods, marketplaceGrade.periodId)]
+                {[activeGrade.courseCode, getGradePeriodLabel(periods, activeGrade.periodId)]
                   .filter(Boolean).join(' · ')}
               </Text>
               <CoursePassRatePreview
-                courseCode={marketplaceGrade.courseCode}
-                courseName={marketplaceGrade.courseName}
+                courseCode={activeGrade.courseCode}
+                courseName={activeGrade.courseName}
               />
-              <View className='course-market-actions course-market-actions--standalone'>
-                <View>
-                  <Text>流转课程资料</Text>
-                  <Text>只带入课程信息，不会带入成绩或绩点</Text>
+              <View className='course-resource-actions course-resource-actions--standalone'>
+                <View
+                  className='course-resource-actions__primary'
+                  onClick={() => openGradeMaterials(activeGrade)}
+                >
+                  <View>
+                    <Text>查看课程资料</Text>
+                    <Text>只带入课程和学期，不会带入成绩</Text>
+                  </View>
+                  <Text>查看 ›</Text>
                 </View>
-                <View className='course-market-actions__buttons'>
-                  <View onClick={() => openCourseTrade('wanted')}>找教材/资料</View>
+                <View className='course-resource-actions__secondary'>
+                  <View onClick={() => openGradeMaterials(activeGrade, 'upload')}>分享资料</View>
+                  <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
                   <View onClick={() => openCourseTrade('sell')}>出售相关资料</View>
                 </View>
               </View>
@@ -485,7 +506,7 @@ export default function GradesPage() {
             ) : (
               <View className='grade-list-heading grade-list-heading--original'>
                 <Text>课程成绩</Text>
-                <Text>点击课程可流转相关资料</Text>
+                <Text>点击课程查看更多学习服务</Text>
               </View>
             )}
             <View className='grade-list'>
@@ -507,7 +528,7 @@ export default function GradesPage() {
                         key={grade.id}
                         className={`grade-card ${simulationMode ? 'grade-card--simulation' : 'grade-card--original'} ${selected ? 'grade-card--selected' : ''}`}
                         hoverClass='grade-card--pressed'
-                        onClick={() => simulationMode ? openEditor(grade) : openGradeTrade(grade)}
+                        onClick={() => simulationMode ? openEditor(grade) : openGradeServices(grade)}
                       >
                         {simulationMode && (
                           <View
@@ -535,32 +556,15 @@ export default function GradesPage() {
                             <Text className='grade-card__converted'>文字成绩仅展示，不参与加权平均</Text>
                           )}
                           {override && <Text className='grade-card__original'>原始：{getGradeDisplay(grade)} · {grade.credit} 学分</Text>}
-                          {!simulationMode && <View className='grade-card__material-actions'>
-                            <Text
-                              className='grade-card__materials'
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                openCourseMaterials({
-                                  courseName: grade.courseName,
-                                  periodId: grade.periodId,
-                                })
-                              }}
-                            >
-                              查找资料
-                            </Text>
-                            <Text
-                              className='grade-card__materials'
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                shareCourseMaterials({
-                                  courseName: grade.courseName,
-                                  periodId: grade.periodId,
-                                })
-                              }}
-                            >
-                              分享资料
-                            </Text>
-                          </View>}
+                          {!simulationMode && <Text
+                            className='grade-card__materials'
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              openGradeMaterials(grade)
+                            }}
+                          >
+                            查看课程资料 ›
+                          </Text>}
                         </View>
                         <View className='grade-card__result'>
                           <Text>{getGradeDisplay(grade, override)}</Text>
