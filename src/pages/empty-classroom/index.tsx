@@ -107,6 +107,7 @@ export default function EmptyClassroomPage() {
   const [reportCategory, setReportCategory] = useState<ClassroomReportCategory>('class_in_progress')
   const [reportDescription, setReportDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [customRangeOpen, setCustomRangeOpen] = useState(false)
   const { keyboardHeight, onKeyboardVisibilityChange } = useKeyboardInset()
 
   const campuses = useMemo(() => enabledCampuses(config), [config])
@@ -115,6 +116,9 @@ export default function EmptyClassroomPage() {
     [campus, config],
   )
   const total = result?.groups.reduce((sum, group) => sum + group.classrooms.length, 0) || 0
+  const customRangeSelected = !quickRanges.some(
+    ([start, end]) => start === startSection && end === endSection,
+  )
   const timeText = useMemo(() => {
     const start = campusSections[String(startSection)]?.start
     const end = campusSections[String(endSection)]?.end
@@ -178,6 +182,7 @@ export default function EmptyClassroomPage() {
   const chooseRange = (start: number, end: number) => {
     setStartSection(start)
     setEndSection(end)
+    setCustomRangeOpen(false)
   }
 
   const openReport = (classroom: ClassroomView) => {
@@ -216,120 +221,144 @@ export default function EmptyClassroomPage() {
       <CustomNavbar title='空教室' subtitle='课表推算 · 非实时状态' showBack />
 
       <View className='empty-classroom-page__content'>
-        <View className='empty-classroom-query'>
-          <View className='empty-classroom-query__summary'>
-            <View>
-              <Text>查找空教室</Text>
-              <Text>{campus.replace('校区', '')} · {dateLabel(serviceDate)} · 第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节</Text>
-            </View>
-            <View className='empty-classroom-query__metric'>
-              <Text>{loading ? '—' : total}</Text>
-              <Text>间</Text>
-            </View>
+        <View className='empty-classroom-overview'>
+          <View className='empty-classroom-overview__summary'>
+            <Text>{campus}</Text>
+            <Text>
+              {dateLabel(serviceDate)} · 第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节 · {timeText}
+            </Text>
           </View>
+          <View className='empty-classroom-overview__metric'>
+            <Text>{loading ? '—' : total}</Text>
+            <Text>间可用</Text>
+          </View>
+        </View>
 
-          <View className='empty-classroom-query__notice'>
-            <View />
-            <Text>结果来自课表和已审核反馈，到场后请确认现场状态</Text>
-          </View>
-
-          <View className='empty-classroom-query__label'>
-            <Text>校区</Text>
-          </View>
-          <ScrollView className='empty-classroom-campus' scrollX enhanced showScrollbar={false}>
-            {campuses.map((item) => (
-              <View
-                key={item}
-                className={campus === item ? 'empty-classroom-campus__active' : ''}
-                onClick={() => chooseCampus(item)}
+        <View className='empty-classroom-filters'>
+          <ScrollView className='empty-classroom-scope' scrollX enhanced showScrollbar={false}>
+            <View className='empty-classroom-scope__track'>
+              <Text className='empty-classroom-scope__label'>校区</Text>
+              {campuses.map((item) => (
+                <View
+                  key={item}
+                  className={[
+                    'empty-classroom-scope__chip',
+                    campus === item ? 'empty-classroom-scope__chip--active' : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => chooseCampus(item)}
+                >
+                  {item.replace('校区', '')}
+                </View>
+              ))}
+              <View className='empty-classroom-scope__divider' />
+              <Text className='empty-classroom-scope__label'>日期</Text>
+              {[0, 1].map((offset) => {
+                const date = dateFromOffset(offset)
+                const value = dateKey(date)
+                return (
+                  <View
+                    key={value}
+                    className={[
+                      'empty-classroom-scope__chip',
+                      serviceDate === value ? 'empty-classroom-scope__chip--active' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => setServiceDate(value)}
+                  >
+                    {offset === 0 ? '今天' : '明天'}
+                  </View>
+                )
+              })}
+              <Picker
+                mode='date'
+                value={serviceDate}
+                onChange={(event) => setServiceDate(String(event.detail.value))}
               >
-                {item.replace('校区', '')}
-              </View>
-            ))}
+                <View
+                  className={[
+                    'empty-classroom-scope__chip',
+                    ![dateKey(dateFromOffset(0)), dateKey(dateFromOffset(1))].includes(serviceDate)
+                      ? 'empty-classroom-scope__chip--active'
+                      : '',
+                  ].filter(Boolean).join(' ')}
+                >
+                  {![dateKey(dateFromOffset(0)), dateKey(dateFromOffset(1))].includes(serviceDate)
+                    ? dateLabel(serviceDate)
+                    : '其他'}
+                </View>
+              </Picker>
+            </View>
           </ScrollView>
 
-          <View className='empty-classroom-query__divider' />
-
-          <View className='empty-classroom-query__label'>
-            <Text>日期</Text>
-            <Text>{serviceDate}</Text>
-          </View>
-          <View className='empty-classroom-date'>
-            {[0, 1].map((offset) => {
-              const date = dateFromOffset(offset)
-              const value = dateKey(date)
-              return (
-                <View
-                  key={value}
-                  className={serviceDate === value ? 'empty-classroom-date__active' : ''}
-                  onClick={() => setServiceDate(value)}
-                >
-                  <Text>{offset === 0 ? '今天' : '明天'}</Text>
-                  <Text>{date.getMonth() + 1}月{date.getDate()}日</Text>
-                </View>
-              )
-            })}
-            <Picker
-              mode='date'
-              value={serviceDate}
-              onChange={(event) => setServiceDate(String(event.detail.value))}
-            >
-              <View className={[
-                'empty-classroom-date__picker',
-                ![dateKey(dateFromOffset(0)), dateKey(dateFromOffset(1))].includes(serviceDate)
-                  ? 'empty-classroom-date__active'
-                  : '',
-              ].filter(Boolean).join(' ')}
-              >
-                <Text>其他</Text>
-                <Text>{dateLabel(serviceDate)}</Text>
-              </View>
-            </Picker>
-          </View>
-
-          <View className='empty-classroom-query__label empty-classroom-query__label--section'>
+          <View className='empty-classroom-period__head'>
             <Text>节次</Text>
             <Text>{timeText}</Text>
           </View>
-          <View className='empty-classroom-ranges'>
-            {quickRanges.map(([start, end]) => (
+          <ScrollView className='empty-classroom-period' scrollX enhanced showScrollbar={false}>
+            <View className='empty-classroom-period__track'>
+              {quickRanges.map(([start, end]) => (
+                <View
+                  key={`${start}-${end}`}
+                  className={[
+                    'empty-classroom-period__chip',
+                    startSection === start && endSection === end
+                      ? 'empty-classroom-period__chip--active'
+                      : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => chooseRange(start, end)}
+                >
+                  {start}—{end}节
+                </View>
+              ))}
               <View
-                key={`${start}-${end}`}
-                className={startSection === start && endSection === end ? 'empty-classroom-ranges__active' : ''}
-                onClick={() => chooseRange(start, end)}
+                className={[
+                  'empty-classroom-period__chip',
+                  customRangeSelected ? 'empty-classroom-period__chip--active' : '',
+                ].filter(Boolean).join(' ')}
+                onClick={() => setCustomRangeOpen((current) => !current)}
               >
-                {start}—{end}
+                {customRangeSelected
+                  ? `${startSection}${startSection === endSection ? '' : `—${endSection}`}节`
+                  : '自定义'}
               </View>
-            ))}
-          </View>
+            </View>
+          </ScrollView>
 
-          <View className='empty-classroom-custom'>
-            <Text>自定义节次</Text>
-            <Picker
-              mode='selector'
-              range={sectionNumbers}
-              value={Math.max(0, startSection - 1)}
-              onChange={(event) => {
-                const next = sectionNumbers[Number(event.detail.value)] || 1
-                setStartSection(next)
-                if (endSection < next) setEndSection(next)
-              }}
-            >
-              <View>第 {startSection} 节</View>
-            </Picker>
-            <Text>至</Text>
-            <Picker
-              mode='selector'
-              range={sectionNumbers}
-              value={Math.max(0, endSection - 1)}
-              onChange={(event) => {
-                const next = sectionNumbers[Number(event.detail.value)] || startSection
-                setEndSection(Math.max(startSection, next))
-              }}
-            >
-              <View>第 {endSection} 节</View>
-            </Picker>
-          </View>
+          {customRangeOpen && (
+            <View className='empty-classroom-custom-panel'>
+              <Text>自定义节次</Text>
+              <View className='empty-classroom-custom-panel__pickers'>
+                <Picker
+                  mode='selector'
+                  range={sectionNumbers}
+                  value={Math.max(0, startSection - 1)}
+                  onChange={(event) => {
+                    const next = sectionNumbers[Number(event.detail.value)] || 1
+                    setStartSection(next)
+                    if (endSection < next) setEndSection(next)
+                  }}
+                >
+                  <View>第 {startSection} 节</View>
+                </Picker>
+                <Text>至</Text>
+                <Picker
+                  mode='selector'
+                  range={sectionNumbers}
+                  value={Math.max(0, endSection - 1)}
+                  onChange={(event) => {
+                    const next = sectionNumbers[Number(event.detail.value)] || startSection
+                    setEndSection(Math.max(startSection, next))
+                  }}
+                >
+                  <View>第 {endSection} 节</View>
+                </Picker>
+              </View>
+            </View>
+          )}
+        </View>
+
+        <View className='empty-classroom-note'>
+          <View />
+          <Text>基于课表和已审核反馈推算，到场后请确认现场状态</Text>
         </View>
 
         <View className='empty-classroom-heading'>
@@ -337,7 +366,7 @@ export default function EmptyClassroomPage() {
             <Text>可用教室</Text>
             <Text>{dateLabel(serviceDate)} · 第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节</Text>
           </View>
-          <Text>{loading ? '查询中' : `${total} 间`}</Text>
+          <Text>{loading ? '查询中' : `${result?.groups.length || 0} 栋`}</Text>
         </View>
 
         {loading && (
