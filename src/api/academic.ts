@@ -8,10 +8,20 @@ import {
 import type {
   AcademicCourse,
   AcademicCourseSelection,
+  AcademicCalendar,
+  AcademicEducationLevel,
   AcademicExam,
   AcademicGrade,
   AcademicPeriod,
 } from './types'
+
+export const getAcademicCalendar = (educationLevel: AcademicEducationLevel) => (
+  apiRequest<AcademicCalendar>({
+    path: '/api/v1/academic/calendar',
+    method: 'GET',
+    query: { education_level: educationLevel },
+  })
+)
 
 type AcademicRequestBody = {
   student_no: string

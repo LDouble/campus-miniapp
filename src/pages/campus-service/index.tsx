@@ -9,6 +9,10 @@ export default function CampusServicePage() {
   const [type, setType] = useState<CampusServiceType>('study')
   const [activeFilter, setActiveFilter] = useState(0)
   useLoad((options) => {
+    if (options.type === 'calendar') {
+      Taro.redirectTo({ url: '/pages/calendar/index' })
+      return
+    }
     if (options.type === 'shuttle') {
       Taro.redirectTo({ url: '/pages/shuttle/index' })
       return

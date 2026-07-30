@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import {
   Image,
@@ -16,6 +16,14 @@ import type {
   MarketplaceListingView,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
+import {
+  getCachedAcademicCalendar,
+  getCalendarEducationLevel,
+  loadAcademicCalendar,
+} from '../../features/calendar/repository'
+import {
+  academicCalendarLabel as getAcademicCalendarLabel,
+} from '../../features/calendar/utils'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
 import {
   avatarText,
@@ -44,7 +52,6 @@ import {
   type AcademicScheduleCache,
 } from '../academic/storage'
 import {
-  getAcademicCalendarLabel,
   getCurrentAcademicWeek,
   resolveScheduleAnchor,
 } from '../academic/utils'
@@ -97,7 +104,7 @@ const quickServices = [
   { key: 'result', name: '选课结果', icon: icons.result, tone: 'orange', route: '/pages/academic/selection/index' },
   { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/campus-service/index?type=pass-rate' },
   { key: 'materials', name: '资料', icon: icons.materials, tone: 'green', route: '/pages/materials/index' },
-  { key: 'calendar', name: '校历', icon: icons.calendar, tone: 'pink', route: '/pages/campus-service/index?type=calendar' },
+  { key: 'calendar', name: '校历', icon: icons.calendar, tone: 'pink', route: '/pages/calendar/index' },
   { key: 'shuttle', name: '校车', icon: icons.shuttle, tone: 'blue', route: '/pages/shuttle/index' },
   { key: 'community', name: '社区', icon: icons.community, tone: 'purple', tab: '/pages/community/index' },
   { key: 'market', name: '二手', icon: icons.market, tone: 'orange', module: 'market' },
@@ -159,9 +166,8 @@ const loadCachedCoursePreview = (
 }
 
 const loadCachedAcademicLabel = () => {
-  const userId = getActiveAcademicUserId()
-  const cache = academicStorage.getScheduleCache(userId)
-  return getAcademicCalendarLabel(cache ? cache.periods : [])
+  const result = getCachedAcademicCalendar()
+  return getAcademicCalendarLabel(result.calendar)
 }
 
 const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
@@ -171,10 +177,7 @@ const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
   const periodsResult = await periodsPromise
 
   if (!periodsResult.ok || !periodsResult.value.length) {
-    return {
-      label: getAcademicCalendarLabel(cache ? cache.periods : []),
-      cache,
-    }
+    return cache
   }
 
   const periods = periodsResult.value
@@ -209,10 +212,7 @@ const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
     periods,
     coursesByPeriod,
   }
-  return {
-    label: getAcademicCalendarLabel(periods),
-    cache: latestCache,
-  }
+  return latestCache
 }
 
 const latestCommunityPosts = (items: CampusCirclePostView[]) => (
@@ -262,12 +262,13 @@ function Index() {
     releaseGap: 16,
   })
 
-  const loadHome = async () => {
+  const loadHome = useCallback(async () => {
     const accountPromise = settle(getCurrentUser())
     const academicUserIdPromise = accountPromise.then((account) => (
       account.ok ? account.value.user.id : getActiveAcademicUserId()
     ))
     const academicPromise = loadLatestAcademic(academicUserIdPromise)
+    const calendarPromise = loadAcademicCalendar(getCalendarEducationLevel())
     const runtimeConfigPromise = loadMiniappRuntimeConfig()
     const [
       account,
@@ -276,6 +277,7 @@ function Index() {
       unread,
       marketplace,
       latestAcademic,
+      latestCalendar,
       latestRuntimeConfig,
     ] = await Promise.all([
       accountPromise,
@@ -284,6 +286,7 @@ function Index() {
       settle(noticesRepository.unreadCount()),
       settle(lifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 })),
       academicPromise,
+      calendarPromise,
       runtimeConfigPromise,
     ])
 
@@ -292,13 +295,13 @@ function Index() {
     setCampusName(selectedCampus)
     setBannerIndex(0)
     setCoursePreview(resolveCoursePreview(
-      latestAcademic.cache,
+      latestAcademic,
       academicStorage.getCustomCourses(),
       latestRuntimeConfig,
       selectedCampus,
     ))
     if (account.ok) setUsername(account.value.user.username)
-    setAcademicCalendarLabel(latestAcademic.label)
+    setAcademicCalendarLabel(getAcademicCalendarLabel(latestCalendar.calendar))
     if (community.ok) {
       setCommunityPosts(latestCommunityPosts(community.value.items))
       setCommunityError(false)
@@ -318,11 +321,11 @@ function Index() {
     setCommunityLoading(false)
     setMarketLoading(false)
     Taro.stopPullDownRefresh()
-  }
+  }, [])
 
   useEffect(() => {
     void loadHome()
-  }, [])
+  }, [loadHome])
 
   useEffect(() => {
     const timer = setInterval(() => {

@@ -320,6 +320,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开校历 */
+        get: operations["GetAcademicCalendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/course-selections": {
         parameters: {
             query?: never;
@@ -2587,6 +2604,44 @@ export interface components {
             };
             request_id: string;
         };
+        AcademicCalendar: {
+            education_level: components["schemas"]["AcademicEducationLevel"];
+            events: components["schemas"]["AcademicCalendarEvent"][];
+            /** Format: date-time */
+            refreshed_at: string;
+            terms: components["schemas"]["AcademicCalendarTerm"][];
+            timezone: string;
+        };
+        AcademicCalendarEvent: {
+            campuses: string[];
+            description: string;
+            /** Format: date */
+            end_date: string;
+            id: string;
+            period_id: string;
+            /** Format: date */
+            start_date: string;
+            title: string;
+            type: components["schemas"]["AcademicCalendarEventType"];
+        };
+        /** @enum {string} */
+        AcademicCalendarEventType: "term_start" | "teaching" | "exam" | "holiday" | "makeup" | "registration" | "other";
+        AcademicCalendarResponseBody: {
+            data: components["schemas"]["AcademicCalendar"];
+            request_id: string;
+        };
+        AcademicCalendarTerm: {
+            /** Format: date */
+            end_date: string;
+            id: string;
+            is_current: boolean;
+            label: string;
+            short_label: string;
+            /** Format: date */
+            start_date: string;
+            /** Format: int32 */
+            week_count: number;
+        };
         AcademicCourse: {
             campus: string;
             course_code: string;
@@ -2636,6 +2691,8 @@ export interface components {
         };
         /** @enum {string} */
         AcademicCourseSelectionStatus: "selected" | "pending" | "failed";
+        /** @enum {string} */
+        AcademicEducationLevel: "undergraduate" | "graduate";
         AcademicExam: {
             campus: string;
             course_code: string;
@@ -3688,6 +3745,15 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
+        /** @description 公开校历 */
+        AcademicCalendarResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCalendarResponseBody"];
+            };
+        };
         /** @description 本人指定学期课程 */
         AcademicCourseListResponse: {
             headers: {
@@ -4488,6 +4554,21 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["Error"];
+        };
+    };
+    GetAcademicCalendar: {
+        parameters: {
+            query?: {
+                education_level?: "undergraduate" | "graduate";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCalendarResponse"];
+            503: components["responses"]["Error"];
         };
     };
     ListAcademicCourseSelections: {
