@@ -1,7 +1,9 @@
 .empty-classroom-page {
   min-height: 100vh;
   color: #21465c;
-  background: linear-gradient(180deg, #fffdf9 0%, #f8f6f1 100%);
+  background:
+    radial-gradient(circle at 88% 2%, rgba(129, 202, 198, 0.12), transparent 30%),
+    linear-gradient(180deg, #fffdf9 0%, #f7f5ef 100%);
 
   &__content {
     box-sizing: border-box;
@@ -9,158 +11,169 @@
   }
 }
 
-.empty-classroom-hero {
-  position: relative;
-  overflow: hidden;
+.empty-classroom-query {
   box-sizing: border-box;
-  min-height: 250rpx;
-  padding: 34rpx;
+  padding: 30rpx;
   border-radius: 34rpx;
-  background: linear-gradient(135deg, #dff1ee 0%, #e7f2ec 50%, #f6eee2 100%);
-  box-shadow: 0 16rpx 40rpx rgba(43, 84, 92, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 14rpx 38rpx rgba(43, 73, 81, 0.07);
 
-  &::after {
-    position: absolute;
-    top: -80rpx;
-    right: -60rpx;
-    width: 250rpx;
-    height: 250rpx;
-    border: 34rpx solid rgba(255, 255, 255, 0.34);
-    border-radius: 50%;
-    content: '';
-  }
-
-  &__copy {
-    position: relative;
-    z-index: 1;
+  &__summary {
     display: flex;
-    max-width: 470rpx;
-    flex-direction: column;
-    gap: 16rpx;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24rpx;
 
-    text:first-child {
-      font-size: 36rpx;
-      font-weight: 700;
-      line-height: 1.35;
-    }
+    > view:first-child {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 10rpx;
 
-    text:last-child {
-      color: #5e7778;
-      font-size: 24rpx;
+      text:first-child {
+        color: #21465c;
+        font-size: 35rpx;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+
+      text:last-child {
+        overflow: hidden;
+        color: #71817f;
+        font-size: 22rpx;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
   }
 
   &__metric {
-    position: absolute;
-    z-index: 1;
-    top: 34rpx;
-    right: 34rpx;
     display: flex;
-    align-items: flex-end;
-    gap: 8rpx;
+    flex: 0 0 auto;
+    align-items: baseline;
+    gap: 5rpx;
+    color: #71817f;
+    font-size: 21rpx;
 
     text:first-child {
       color: #469cae;
-      font-size: 54rpx;
+      font-size: 46rpx;
       font-weight: 700;
       line-height: 1;
-    }
-
-    text:last-child {
-      color: #71817f;
-      font-size: 22rpx;
     }
   }
 
   &__notice {
-    position: absolute;
-    z-index: 1;
-    right: 34rpx;
-    bottom: 30rpx;
-    left: 34rpx;
     display: flex;
     align-items: center;
-    gap: 12rpx;
+    margin-top: 22rpx;
+    gap: 10rpx;
     color: #71817f;
-    font-size: 22rpx;
+    font-size: 21rpx;
+    line-height: 1.5;
 
     view {
-      width: 10rpx;
-      height: 10rpx;
+      width: 9rpx;
+      height: 9rpx;
+      flex: 0 0 auto;
       border-radius: 50%;
       background: #e98c70;
     }
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 28rpx 2rpx 14rpx;
+
+    text:first-child {
+      color: #21465c;
+      font-size: 24rpx;
+      font-weight: 650;
+    }
+
+    text:last-child {
+      color: #95a09d;
+      font-size: 20rpx;
+    }
+
+    &--section {
+      margin-top: 26rpx;
+    }
+  }
+
+  &__divider {
+    height: 2rpx;
+    margin-top: 26rpx;
+    background: #f0f0eb;
   }
 }
 
 .empty-classroom-campus {
   width: 100%;
-  margin-top: 28rpx;
   white-space: nowrap;
 
   > view {
     display: inline-flex;
-    min-width: 118rpx;
-    height: 64rpx;
+    min-width: 104rpx;
+    height: 58rpx;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    margin-right: 16rpx;
-    padding: 0 28rpx;
-    border: 2rpx solid rgba(70, 156, 174, 0.12);
-    border-radius: 22rpx;
+    margin-right: 12rpx;
+    padding: 0 24rpx;
+    border-radius: 18rpx;
     color: #71817f;
-    background: rgba(255, 255, 255, 0.82);
-    font-size: 25rpx;
+    background: #f3f4ef;
+    font-size: 23rpx;
   }
 
   &__active {
-    border-color: transparent !important;
     color: #fff !important;
-    background: linear-gradient(135deg, #55b7bd, #469cae) !important;
-    box-shadow: 0 10rpx 24rpx rgba(70, 156, 174, 0.2);
+    background: #469cae !important;
   }
 }
 
 .empty-classroom-date {
   display: grid;
-  margin-top: 22rpx;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14rpx;
+  gap: 12rpx;
 
   > view,
   &__picker {
     display: flex;
-    min-height: 94rpx;
+    min-height: 80rpx;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
     flex-direction: column;
-    gap: 5rpx;
-    border: 2rpx solid rgba(33, 70, 92, 0.08);
-    border-radius: 22rpx;
-    color: #71817f;
-    background: rgba(255, 255, 255, 0.86);
+    gap: 3rpx;
+    border-radius: 18rpx;
+    color: #899592;
+    background: #f5f5f0;
 
     text:first-child {
-      color: #21465c;
-      font-size: 26rpx;
+      color: #455f68;
+      font-size: 23rpx;
       font-weight: 600;
     }
 
     text:last-child {
-      font-size: 20rpx;
+      font-size: 18rpx;
     }
   }
 
   &__active {
-    border-color: rgba(70, 156, 174, 0.5) !important;
-    background: #edf7f5 !important;
-    box-shadow: inset 0 0 0 2rpx rgba(70, 156, 174, 0.06);
+    color: #427f88 !important;
+    background: #e8f4f1 !important;
+
+    text:first-child {
+      color: #356f79 !important;
+    }
   }
 }
 
-.empty-classroom-section-title,
 .empty-classroom-heading,
 .empty-classroom-building__head {
   display: flex;
@@ -168,103 +181,78 @@
   justify-content: space-between;
 }
 
-.empty-classroom-section-title {
-  margin: 38rpx 4rpx 20rpx;
-
-  text:first-child {
-    font-size: 30rpx;
-    font-weight: 700;
-  }
-
-  text:last-child {
-    color: #71817f;
-    font-size: 23rpx;
-  }
-}
-
 .empty-classroom-ranges {
-  width: 100%;
-  white-space: nowrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10rpx;
 
   > view {
-    display: inline-flex;
-    min-width: 142rpx;
-    height: 84rpx;
+    display: flex;
+    height: 62rpx;
+    align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    margin-right: 14rpx;
-    flex-direction: column;
-    gap: 5rpx;
-    padding-left: 24rpx;
-    border-radius: 20rpx;
-    color: #21465c;
-    background: #fff;
-    box-shadow: 0 8rpx 24rpx rgba(46, 77, 84, 0.06);
-
-    text:first-child {
-      font-size: 24rpx;
-      font-weight: 600;
-    }
-
-    text:last-child {
-      color: #8a9693;
-      font-size: 19rpx;
-    }
+    border-radius: 17rpx;
+    color: #62757a;
+    background: #f3f4ef;
+    font-size: 21rpx;
   }
 
   &__active {
     color: #fff !important;
-    background: linear-gradient(135deg, #55b7bd, #469cae) !important;
-
-    text:last-child {
-      color: rgba(255, 255, 255, 0.78) !important;
-    }
+    background: #469cae !important;
   }
 }
 
 .empty-classroom-custom {
   display: flex;
-  height: 76rpx;
+  height: 66rpx;
   align-items: center;
   box-sizing: border-box;
-  margin-top: 18rpx;
-  gap: 12rpx;
-  padding: 0 22rpx;
-  border: 2rpx solid rgba(33, 70, 92, 0.06);
-  border-radius: 20rpx;
+  margin-top: 12rpx;
+  gap: 10rpx;
+  padding: 0 4rpx;
   color: #71817f;
-  background: rgba(255, 255, 255, 0.7);
-  font-size: 22rpx;
+  font-size: 20rpx;
 
   > text:first-child {
     margin-right: auto;
-    color: #21465c;
-    font-weight: 600;
+    color: #899592;
   }
 
   picker view {
-    padding: 10rpx 16rpx;
-    border-radius: 14rpx;
-    color: #469cae;
-    background: #edf7f5;
-  }
-
-  > text:last-child {
-    display: none;
+    padding: 9rpx 15rpx;
+    border-radius: 13rpx;
+    color: #427f88;
+    background: #edf5f2;
   }
 }
 
 .empty-classroom-heading {
-  margin: 42rpx 4rpx 22rpx;
+  margin: 38rpx 4rpx 20rpx;
 
-  text:first-child {
-    font-size: 31rpx;
-    font-weight: 700;
+  > view {
+    display: flex;
+    flex-direction: column;
+    gap: 6rpx;
+
+    text:first-child {
+      font-size: 31rpx;
+      font-weight: 700;
+    }
+
+    text:last-child {
+      color: #8a9693;
+      font-size: 20rpx;
+    }
   }
 
-  text:last-child {
-    color: #71817f;
-    font-size: 23rpx;
+  > text {
+    padding: 9rpx 15rpx;
+    border-radius: 999rpx;
+    color: #427f88;
+    background: #e8f4f1;
+    font-size: 21rpx;
   }
 }
 
@@ -274,7 +262,7 @@
   gap: 18rpx;
 
   view {
-    height: 180rpx;
+    height: 150rpx;
     border-radius: 28rpx;
     background: linear-gradient(100deg, #f2f1ec 30%, #faf9f5 50%, #f2f1ec 70%);
     background-size: 300% 100%;
@@ -283,11 +271,17 @@
 }
 
 .empty-classroom-building {
-  margin-bottom: 26rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10rpx 28rpx rgba(43, 73, 81, 0.06);
 
   &__head {
-    margin-bottom: 14rpx;
-    padding: 0 4rpx;
+    min-height: 78rpx;
+    box-sizing: border-box;
+    padding: 0 24rpx;
+    border-bottom: 2rpx solid #f1f1ec;
 
     text:first-child {
       font-size: 27rpx;
@@ -300,86 +294,73 @@
     }
   }
 
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16rpx;
+  &__list {
+    padding: 0 24rpx;
   }
 }
 
-.empty-classroom-card {
-  overflow: hidden;
+.empty-classroom-row {
+  display: flex;
+  min-height: 112rpx;
+  align-items: center;
+  justify-content: space-between;
   box-sizing: border-box;
-  min-height: 190rpx;
-  padding: 24rpx 22rpx 20rpx;
-  border-radius: 26rpx;
-  background: #fff;
-  box-shadow: 0 10rpx 28rpx rgba(43, 73, 81, 0.07);
+  gap: 20rpx;
+  padding: 18rpx 0;
+  border-bottom: 2rpx solid #f3f3ee;
 
-  &__top {
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__main {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12rpx;
-
-    > view:first-child {
-      display: flex;
-      min-width: 0;
-      flex-direction: column;
-      gap: 5rpx;
-
-      text:first-child {
-        overflow: hidden;
-        font-size: 31rpx;
-        font-weight: 700;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      text:last-child {
-        color: #8a9693;
-        font-size: 20rpx;
-      }
-    }
-  }
-
-  &__status {
-    flex: 0 0 auto;
-    padding: 7rpx 13rpx;
-    border-radius: 999rpx;
-    color: #469cae;
-    background: #edf7f5;
-    font-size: 19rpx;
-  }
-
-  &__meta {
-    display: -webkit-box;
-    overflow: hidden;
-    min-height: 58rpx;
-    margin-top: 18rpx;
-    color: #71817f;
-    font-size: 21rpx;
-    line-height: 1.45;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  &__foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 16rpx;
-    padding-top: 16rpx;
-    border-top: 2rpx solid #f2f2ed;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 8rpx;
 
     text:first-child {
-      color: #8a9693;
-      font-size: 18rpx;
+      overflow: hidden;
+      color: #21465c;
+      font-size: 29rpx;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     text:last-child {
-      color: #469cae;
+      overflow: hidden;
+      color: #85918e;
       font-size: 21rpx;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__aside {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    flex-direction: column;
+    gap: 8rpx;
+    text-align: right;
+
+    text:first-child {
+      max-width: 190rpx;
+      overflow: hidden;
+      color: #97a19e;
+      font-size: 18rpx;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    text:last-child {
+      padding: 8rpx 14rpx;
+      border-radius: 14rpx;
+      color: #427f88;
+      background: #edf5f2;
+      font-size: 20rpx;
       font-weight: 600;
     }
   }
@@ -404,6 +385,16 @@
     font-size: 22rpx;
   }
 
+  &__retry {
+    margin-top: 26rpx;
+    padding: 14rpx 28rpx;
+    border-radius: 18rpx;
+    color: #427f88;
+    background: #e8f4f1;
+    font-size: 23rpx;
+    font-weight: 600;
+  }
+
   &__door {
     position: relative;
     width: 84rpx;
@@ -425,7 +416,7 @@
 }
 
 .empty-classroom-disclaimer {
-  padding: 28rpx 20rpx 0;
+  padding: 20rpx 20rpx 0;
   color: #9aa39e;
   font-size: 20rpx;
   line-height: 1.6;

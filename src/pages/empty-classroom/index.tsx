@@ -83,6 +83,9 @@ const sourceErrorText = (error: unknown) => {
     if (error.code === 'date_outside_teaching_term') {
       return '当前不在教学周，享受假期吧'
     }
+    if (error.code === 'forbidden') {
+      return '暂时无法查询空教室，请稍后再试'
+    }
     return error.message
   }
   return '空教室服务暂时不可用'
@@ -213,114 +216,127 @@ export default function EmptyClassroomPage() {
       <CustomNavbar title='空教室' subtitle='课表推算 · 非实时状态' showBack />
 
       <View className='empty-classroom-page__content'>
-        <View className='empty-classroom-hero'>
-          <View className='empty-classroom-hero__copy'>
-            <Text>找一间此刻刚好空着的教室</Text>
-            <Text>{campus.replace('校区', '')} · {dateLabel(serviceDate)} · {timeText}</Text>
+        <View className='empty-classroom-query'>
+          <View className='empty-classroom-query__summary'>
+            <View>
+              <Text>查找空教室</Text>
+              <Text>{campus.replace('校区', '')} · {dateLabel(serviceDate)} · 第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节</Text>
+            </View>
+            <View className='empty-classroom-query__metric'>
+              <Text>{loading ? '—' : total}</Text>
+              <Text>间</Text>
+            </View>
           </View>
-          <View className='empty-classroom-hero__metric'>
-            <Text>{loading ? '—' : total}</Text>
-            <Text>间可用</Text>
-          </View>
-          <View className='empty-classroom-hero__notice'>
+
+          <View className='empty-classroom-query__notice'>
             <View />
-            <Text>基于课表与已审核反馈，不代表实时状态</Text>
+            <Text>结果来自课表和已审核反馈，到场后请确认现场状态</Text>
           </View>
-        </View>
 
-        <ScrollView className='empty-classroom-campus' scrollX enhanced showScrollbar={false}>
-          {campuses.map((item) => (
-            <View
-              key={item}
-              className={campus === item ? 'empty-classroom-campus__active' : ''}
-              onClick={() => chooseCampus(item)}
-            >
-              {item.replace('校区', '')}
-            </View>
-          ))}
-        </ScrollView>
-
-        <View className='empty-classroom-date'>
-          {[0, 1].map((offset) => {
-            const date = dateFromOffset(offset)
-            const value = dateKey(date)
-            return (
+          <View className='empty-classroom-query__label'>
+            <Text>校区</Text>
+          </View>
+          <ScrollView className='empty-classroom-campus' scrollX enhanced showScrollbar={false}>
+            {campuses.map((item) => (
               <View
-                key={value}
-                className={serviceDate === value ? 'empty-classroom-date__active' : ''}
-                onClick={() => setServiceDate(value)}
+                key={item}
+                className={campus === item ? 'empty-classroom-campus__active' : ''}
+                onClick={() => chooseCampus(item)}
               >
-                <Text>{offset === 0 ? '今天' : '明天'}</Text>
-                <Text>{date.getMonth() + 1}月{date.getDate()}日</Text>
+                {item.replace('校区', '')}
               </View>
-            )
-          })}
-          <Picker
-            mode='date'
-            value={serviceDate}
-            onChange={(event) => setServiceDate(String(event.detail.value))}
-          >
-            <View className={[
-              'empty-classroom-date__picker',
-              ![dateKey(dateFromOffset(0)), dateKey(dateFromOffset(1))].includes(serviceDate)
-                ? 'empty-classroom-date__active'
-                : '',
-            ].filter(Boolean).join(' ')}
-            >
-              <Text>其他日期</Text>
-              <Text>{dateLabel(serviceDate)}</Text>
-            </View>
-          </Picker>
-        </View>
+            ))}
+          </ScrollView>
 
-        <View className='empty-classroom-section-title'>
-          <Text>选择节次</Text>
-          <Text>第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节</Text>
-        </View>
-        <ScrollView className='empty-classroom-ranges' scrollX enhanced showScrollbar={false}>
-          {quickRanges.map(([start, end]) => (
-            <View
-              key={`${start}-${end}`}
-              className={startSection === start && endSection === end ? 'empty-classroom-ranges__active' : ''}
-              onClick={() => chooseRange(start, end)}
-            >
-              <Text>{start}—{end} 节</Text>
-              <Text>{campusSections[String(start)]?.start || ''}</Text>
-            </View>
-          ))}
-        </ScrollView>
+          <View className='empty-classroom-query__divider' />
 
-        <View className='empty-classroom-custom'>
-          <Text>自定义</Text>
-          <Picker
-            mode='selector'
-            range={sectionNumbers}
-            value={Math.max(0, startSection - 1)}
-            onChange={(event) => {
-              const next = sectionNumbers[Number(event.detail.value)] || 1
-              setStartSection(next)
-              if (endSection < next) setEndSection(next)
-            }}
-          >
-            <View>第 {startSection} 节</View>
-          </Picker>
-          <Text>至</Text>
-          <Picker
-            mode='selector'
-            range={sectionNumbers}
-            value={Math.max(0, endSection - 1)}
-            onChange={(event) => {
-              const next = sectionNumbers[Number(event.detail.value)] || startSection
-              setEndSection(Math.max(startSection, next))
-            }}
-          >
-            <View>第 {endSection} 节</View>
-          </Picker>
-          <Text>{timeText}</Text>
+          <View className='empty-classroom-query__label'>
+            <Text>日期</Text>
+            <Text>{serviceDate}</Text>
+          </View>
+          <View className='empty-classroom-date'>
+            {[0, 1].map((offset) => {
+              const date = dateFromOffset(offset)
+              const value = dateKey(date)
+              return (
+                <View
+                  key={value}
+                  className={serviceDate === value ? 'empty-classroom-date__active' : ''}
+                  onClick={() => setServiceDate(value)}
+                >
+                  <Text>{offset === 0 ? '今天' : '明天'}</Text>
+                  <Text>{date.getMonth() + 1}月{date.getDate()}日</Text>
+                </View>
+              )
+            })}
+            <Picker
+              mode='date'
+              value={serviceDate}
+              onChange={(event) => setServiceDate(String(event.detail.value))}
+            >
+              <View className={[
+                'empty-classroom-date__picker',
+                ![dateKey(dateFromOffset(0)), dateKey(dateFromOffset(1))].includes(serviceDate)
+                  ? 'empty-classroom-date__active'
+                  : '',
+              ].filter(Boolean).join(' ')}
+              >
+                <Text>其他</Text>
+                <Text>{dateLabel(serviceDate)}</Text>
+              </View>
+            </Picker>
+          </View>
+
+          <View className='empty-classroom-query__label empty-classroom-query__label--section'>
+            <Text>节次</Text>
+            <Text>{timeText}</Text>
+          </View>
+          <View className='empty-classroom-ranges'>
+            {quickRanges.map(([start, end]) => (
+              <View
+                key={`${start}-${end}`}
+                className={startSection === start && endSection === end ? 'empty-classroom-ranges__active' : ''}
+                onClick={() => chooseRange(start, end)}
+              >
+                {start}—{end}
+              </View>
+            ))}
+          </View>
+
+          <View className='empty-classroom-custom'>
+            <Text>自定义节次</Text>
+            <Picker
+              mode='selector'
+              range={sectionNumbers}
+              value={Math.max(0, startSection - 1)}
+              onChange={(event) => {
+                const next = sectionNumbers[Number(event.detail.value)] || 1
+                setStartSection(next)
+                if (endSection < next) setEndSection(next)
+              }}
+            >
+              <View>第 {startSection} 节</View>
+            </Picker>
+            <Text>至</Text>
+            <Picker
+              mode='selector'
+              range={sectionNumbers}
+              value={Math.max(0, endSection - 1)}
+              onChange={(event) => {
+                const next = sectionNumbers[Number(event.detail.value)] || startSection
+                setEndSection(Math.max(startSection, next))
+              }}
+            >
+              <View>第 {endSection} 节</View>
+            </Picker>
+          </View>
         </View>
 
         <View className='empty-classroom-heading'>
-          <Text>可用教室</Text>
+          <View>
+            <Text>可用教室</Text>
+            <Text>{dateLabel(serviceDate)} · 第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节</Text>
+          </View>
           <Text>{loading ? '查询中' : `${total} 间`}</Text>
         </View>
 
@@ -335,6 +351,11 @@ export default function EmptyClassroomPage() {
             <View className='empty-classroom-empty__door'><View /></View>
             <Text>{errorText}</Text>
             <Text>{errorText.includes('假期') ? '开学后再来看看教室安排' : '下拉刷新或稍后再试'}</Text>
+            {!errorText.includes('假期') && (
+              <View className='empty-classroom-empty__retry' onClick={() => void refresh()}>
+                重新查询
+              </View>
+            )}
           </View>
         )}
 
@@ -352,22 +373,20 @@ export default function EmptyClassroomPage() {
               <Text>{group.building}</Text>
               <Text>{group.classrooms.length} 间</Text>
             </View>
-            <View className='empty-classroom-building__grid'>
+            <View className='empty-classroom-building__list'>
               {group.classrooms.map(({ classroom }) => (
-                <View key={classroom.id} className='empty-classroom-card'>
-                  <View className='empty-classroom-card__top'>
-                    <View>
-                      <Text>{classroom.room}</Text>
-                      <Text>{classroom.room_type || '普通教室'}</Text>
-                    </View>
-                    <View className='empty-classroom-card__status'>可用</View>
+                <View key={classroom.id} className='empty-classroom-row'>
+                  <View className='empty-classroom-row__main'>
+                    <Text>{classroom.room}</Text>
+                    <Text>
+                      {classroom.room_type || '普通教室'}
+                      {classroom.capacity ? ` · ${classroom.capacity} 人` : ''}
+                    </Text>
                   </View>
-                  <Text className='empty-classroom-card__meta'>
-                    {classroom.capacity ? `${classroom.capacity} 人` : '容量未录入'}
-                    {classroom.facilities.length ? ` · ${classroom.facilities.slice(0, 2).join('、')}` : ''}
-                  </Text>
-                  <View className='empty-classroom-card__foot'>
-                    <Text>{timeText}</Text>
+                  <View className='empty-classroom-row__aside'>
+                    {(classroom.facilities || []).length > 0 && (
+                      <Text>{(classroom.facilities || []).slice(0, 2).join('、')}</Text>
+                    )}
                     <Text onClick={() => openReport(classroom)}>反馈占用</Text>
                   </View>
                 </View>
@@ -377,7 +396,7 @@ export default function EmptyClassroomPage() {
         ))}
 
         <View className='empty-classroom-disclaimer'>
-          到场后请以门牌、现场课程和管理人员安排为准
+          查询结果仅供参考，请以门牌、现场课程和管理人员安排为准
         </View>
       </View>
 
