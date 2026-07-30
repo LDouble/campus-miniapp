@@ -189,6 +189,8 @@ export default function MaterialsPage() {
   const [feedbackDescription, setFeedbackDescription] = useState('')
   const [submittingFeedback, setSubmittingFeedback] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [materialsLoadFailed, setMaterialsLoadFailed] = useState(false)
+  const [materialsReloadKey, setMaterialsReloadKey] = useState(0)
   const [materialsPage, setMaterialsPage] = useState(1)
   const [materialsTotal, setMaterialsTotal] = useState(0)
   const [uploading, setUploading] = useState(false)
@@ -281,6 +283,7 @@ export default function MaterialsPage() {
     }
     let active = true
     setLoading(true)
+    setMaterialsLoadFailed(false)
     listCourseMaterials({
       courseId: selectedCourse?.id,
       materialType: kind === 'all' ? undefined : kind,
@@ -296,7 +299,9 @@ export default function MaterialsPage() {
         setMaterialsTotal(page.total)
       })
       .catch(() => {
-        if (active) Taro.showToast({ title: '资料加载失败，请稍后重试', icon: 'none' })
+        if (!active) return
+        setMaterialsLoadFailed(true)
+        Taro.showToast({ title: '资料加载失败，请稍后重试', icon: 'none' })
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -308,6 +313,7 @@ export default function MaterialsPage() {
     coursesLoaded,
     debouncedKeyword,
     kind,
+    materialsReloadKey,
     routeContext.periodId,
     selectedCourse?.id,
     unresolvedCourse,
@@ -763,7 +769,14 @@ export default function MaterialsPage() {
             </View>)}
           </View>}
           {loading && !!materials.length && <Text className='materials-loading-more'>正在加载更多…</Text>}
-          {!loading && !materials.length && <View className='materials-empty'><View /><Text>{unresolvedCourse ? '该课程尚未归入课程目录' : '没有找到相关资料'}</Text><Text>{unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : '试试更换课程、类型或关键词'}</Text></View>}
+          {!loading && !materials.length && <View
+            className='materials-empty'
+            onClick={materialsLoadFailed ? () => setMaterialsReloadKey((current) => current + 1) : undefined}
+          >
+            <View />
+            <Text>{materialsLoadFailed ? '资料暂时没有加载出来' : unresolvedCourse ? '该课程尚未归入课程目录' : '没有找到相关资料'}</Text>
+            <Text>{materialsLoadFailed ? '点击这里重新加载' : unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : '试试更换课程、类型或关键词'}</Text>
+          </View>}
         </>}
 
         {viewMode === 'mine' && <>
