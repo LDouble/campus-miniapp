@@ -47,6 +47,7 @@ const mapPeriod = (period: AcademicPeriodDTO): AcademicPeriod => ({
 const mapCourse = (course: AcademicCourse): Course => ({
   id: course.id,
   periodId: course.period_id,
+  courseCode: course.course_code,
   name: course.name,
   teacher: course.teacher,
   location: course.location,

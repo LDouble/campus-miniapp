@@ -5,6 +5,7 @@ import {
   openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
+import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
@@ -151,7 +152,53 @@ export default function SelectionPage() {
       </View>
       {sheet && <View className='academic-overlay' onClick={() => setSheet(null)}><View className={`academic-sheet academic-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}><View className='academic-sheet__handle' /><View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
         {sheet === 'period' && <View className='academic-sheet__body'><Text className='academic-sheet__title'>选择选课学期</Text><Text className='academic-sheet__subtitle'>查看不同学期的选课结果</Text><View className='period-options'>{periods.map((period) => <View key={period.id} className={`period-options__item ${preferences.schedulePeriodId === period.id ? 'period-options__item--active' : ''}`} onClick={() => { updatePeriod(period.id); setSheet(null) }}><View><Text>{period.label}</Text><Text>查看该学期选课记录</Text></View><View className='period-options__check'>{preferences.schedulePeriodId === period.id ? '✓' : ''}</View></View>)}</View></View>}
-        {sheet === 'detail' && activeRecord && <View className='academic-sheet__body'><View className={`selection-detail__badge selection-detail__badge--${activeRecord.status}`}>{statusMeta[activeRecord.status].label}</View><Text className='academic-sheet__title'>{activeRecord.courseName}</Text><Text className='academic-sheet__subtitle'>{[activeRecord.courseCode, activeRecord.courseType].filter(Boolean).join(' · ')}</Text><View className='detail-list'>{activeRecord.teacher && <View><Text>授课教师</Text><Text>{activeRecord.teacher}</Text></View>}{activeRecord.schedule && <View><Text>上课时间</Text><Text>{activeRecord.schedule}</Text></View>}{activeRecord.location && <View><Text>上课地点</Text><Text>{activeRecord.location}</Text></View>}{activeRecord.campus && <View><Text>开课校区</Text><Text>{activeRecord.campus}</Text></View>}{activeRecord.capacity > 0 && <View><Text>课程容量</Text><Text>{activeRecord.enrolled} / {activeRecord.capacity} 人</Text></View>}{activeRecord.selectedAt && <View><Text>选课时间</Text><Text>{activeRecord.selectedAt}</Text></View>}</View><View className='academic-notice'><Text>{activeRecord.resultText ? '修读情况/成绩' : '选课状态'}</Text><Text>{activeRecord.resultText || activeRecord.note || statusMeta[activeRecord.status].description}</Text></View>{activeRecord.status === 'selected' && <View className='course-market-actions'><View><Text>课程资料</Text><Text>优先查找已有资料，没有再发布求购</Text></View><View className='course-market-actions__buttons'><View onClick={() => openCourseTrade('wanted')}>找教材/资料</View><View onClick={() => openCourseTrade('sell')}>出售相关资料</View></View></View>}<View className='academic-button academic-button--full' onClick={() => setSheet(null)}>知道了</View></View>}
+        {sheet === 'detail' && activeRecord && (
+          <View className='academic-sheet__body'>
+            <View className={`selection-detail__badge selection-detail__badge--${activeRecord.status}`}>
+              {statusMeta[activeRecord.status].label}
+            </View>
+            <Text className='academic-sheet__title'>{activeRecord.courseName}</Text>
+            <Text className='academic-sheet__subtitle'>
+              {[activeRecord.courseCode, activeRecord.courseType].filter(Boolean).join(' · ')}
+            </Text>
+            <View className='detail-list'>
+              {activeRecord.teacher && <View><Text>授课教师</Text><Text>{activeRecord.teacher}</Text></View>}
+              {activeRecord.schedule && <View><Text>上课时间</Text><Text>{activeRecord.schedule}</Text></View>}
+              {activeRecord.location && <View><Text>上课地点</Text><Text>{activeRecord.location}</Text></View>}
+              {activeRecord.campus && <View><Text>开课校区</Text><Text>{activeRecord.campus}</Text></View>}
+              {activeRecord.capacity > 0 && <View><Text>课程容量</Text><Text>{activeRecord.enrolled} / {activeRecord.capacity} 人</Text></View>}
+              {activeRecord.selectedAt && <View><Text>选课时间</Text><Text>{activeRecord.selectedAt}</Text></View>}
+            </View>
+            <View className='academic-notice'>
+              <Text>{activeRecord.resultText ? '修读情况/成绩' : '选课状态'}</Text>
+              <Text>
+                {activeRecord.resultText
+                  || activeRecord.note
+                  || statusMeta[activeRecord.status].description}
+              </Text>
+            </View>
+            <CoursePassRatePreview
+              courseCode={activeRecord.courseCode}
+              courseName={activeRecord.courseName}
+              teacherName={activeRecord.teacher}
+            />
+            {activeRecord.status === 'selected' && (
+              <View className='course-market-actions'>
+                <View>
+                  <Text>课程资料</Text>
+                  <Text>优先查找已有资料，没有再发布求购</Text>
+                </View>
+                <View className='course-market-actions__buttons'>
+                  <View onClick={() => openCourseTrade('wanted')}>找教材/资料</View>
+                  <View onClick={() => openCourseTrade('sell')}>出售相关资料</View>
+                </View>
+              </View>
+            )}
+            <View className='academic-button academic-button--full' onClick={() => setSheet(null)}>
+              知道了
+            </View>
+          </View>
+        )}
       </View></View>}
     </View>
   )

@@ -422,6 +422,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/pass-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程历史通过率 */
+        get: operations["ListAcademicCoursePassRates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/pass-rates/instructors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教师姓名维度的课程历史通过率 */
+        get: operations["ListAcademicInstructorPassRates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/pass-rates/instructors/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教师姓名维度的分学期通过率与平均分趋势 */
+        get: operations["GetAcademicInstructorPassRateTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/pass-rates/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程分学期通过率与平均分趋势 */
+        get: operations["GetAcademicCoursePassRateTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-statistics/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询学业统计批次 */
+        get: operations["ListAdminAcademicStatisticsBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-statistics/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端手动触发学业统计重算 */
+        post: operations["TriggerAdminAcademicStatisticsRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic-verification": {
         parameters: {
             query?: never;
@@ -2750,6 +2852,194 @@ export interface components {
             data: components["schemas"]["AcademicPeriod"][];
             request_id: string;
         };
+        AcademicCoursePassRatePage: {
+            items: components["schemas"]["AcademicCoursePassRateView"][];
+            metadata: components["schemas"]["AcademicStatisticsMetadata"];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicCoursePassRatePageResponseBody: {
+            data: components["schemas"]["AcademicCoursePassRatePage"];
+            request_id: string;
+        };
+        AcademicCoursePassRateView: {
+            /** Format: double */
+            average_score?: number;
+            confidence: components["schemas"]["AcademicStatisticsConfidence"];
+            course_code: string;
+            course_name: string;
+            distribution: components["schemas"]["AcademicGradeDistribution"];
+            /** Format: int64 */
+            fail_count: number;
+            /** Format: int64 */
+            numeric_score_count: number;
+            /** Format: int64 */
+            pass_count: number;
+            /** Format: double */
+            pass_rate: number;
+            /** Format: int64 */
+            term_count: number;
+            /** Format: int64 */
+            valid_count: number;
+        };
+        AcademicGradeDistribution: {
+            /** Format: int64 */
+            level_excellent_count: number;
+            /** Format: int64 */
+            level_fail_count: number;
+            /** Format: int64 */
+            level_good_count: number;
+            /** Format: int64 */
+            level_medium_count: number;
+            /** Format: int64 */
+            level_pass_count: number;
+            /** Format: int64 */
+            numeric_fail_count: number;
+            /** Format: int64 */
+            score_60_69_count: number;
+            /** Format: int64 */
+            score_70_79_count: number;
+            /** Format: int64 */
+            score_80_89_count: number;
+            /** Format: int64 */
+            score_90_100_count: number;
+        };
+        AcademicInstructorPassRatePage: {
+            items: components["schemas"]["AcademicInstructorPassRateView"][];
+            metadata: components["schemas"]["AcademicStatisticsMetadata"];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicInstructorPassRatePageResponseBody: {
+            data: components["schemas"]["AcademicInstructorPassRatePage"];
+            request_id: string;
+        };
+        AcademicInstructorPassRateView: {
+            /** Format: double */
+            average_score?: number;
+            /** Format: int64 */
+            class_count: number;
+            confidence: components["schemas"]["AcademicStatisticsConfidence"];
+            course_code: string;
+            course_name: string;
+            distribution: components["schemas"]["AcademicGradeDistribution"];
+            /** Format: int64 */
+            fail_count: number;
+            /** Format: int64 */
+            numeric_score_count: number;
+            /** Format: int64 */
+            pass_count: number;
+            /** Format: double */
+            pass_rate: number;
+            teacher_identity_scope: components["schemas"]["AcademicTeacherIdentityScope"];
+            teacher_key: string;
+            teacher_name: string;
+            /** Format: int64 */
+            term_count: number;
+            /** Format: int64 */
+            valid_count: number;
+        };
+        AcademicPassRateTrend: {
+            course_code: string;
+            course_name: string;
+            metadata: components["schemas"]["AcademicStatisticsMetadata"];
+            points: components["schemas"]["AcademicPassRateTrendPoint"][];
+            teacher_identity_scope?: components["schemas"]["AcademicTeacherIdentityScope"];
+            teacher_key?: string;
+            teacher_name?: string;
+        };
+        AcademicPassRateTrendPoint: {
+            /** Format: double */
+            average_score?: number;
+            confidence: components["schemas"]["AcademicStatisticsConfidence"];
+            distribution: components["schemas"]["AcademicGradeDistribution"];
+            /** Format: int64 */
+            fail_count: number;
+            /** Format: int64 */
+            numeric_score_count: number;
+            /** Format: int64 */
+            pass_count: number;
+            /** Format: double */
+            pass_rate: number;
+            term_code: string;
+            /** Format: int64 */
+            valid_count: number;
+        };
+        AcademicPassRateTrendResponseBody: {
+            data: components["schemas"]["AcademicPassRateTrend"];
+            request_id: string;
+        };
+        AcademicStatisticsBatchPage: {
+            items: components["schemas"]["AcademicStatisticsBatchView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicStatisticsBatchPageResponseBody: {
+            data: components["schemas"]["AcademicStatisticsBatchPage"];
+            request_id: string;
+        };
+        AcademicStatisticsBatchView: {
+            /** Format: int64 */
+            course_stat_count: number;
+            /** Format: date-time */
+            created_at: string;
+            error_summary?: string;
+            /** Format: date-time */
+            finished_at?: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            instructor_stat_count: number;
+            /** Format: date-time */
+            published_at?: string;
+            rule_version: string;
+            /** Format: date-time */
+            source_cutoff_at: string;
+            /** Format: int64 */
+            source_row_count: number;
+            /** Format: date-time */
+            started_at: string;
+            /** @enum {string} */
+            status: "running" | "failed" | "published";
+            trigger_note?: string;
+            trigger_task_id?: string;
+            /** @enum {string} */
+            trigger_type: "scheduled" | "manual";
+            /** Format: uint64 */
+            triggered_by?: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @enum {string} */
+        AcademicStatisticsConfidence: "sample_limited" | "reference" | "sufficient";
+        AcademicStatisticsMetadata: {
+            /** Format: uint64 */
+            batch_id: number;
+            /** Format: int64 */
+            minimum_sample_size: number;
+            /** Format: date-time */
+            published_at: string;
+            rule_version: string;
+            /** Format: date-time */
+            source_cutoff_at: string;
+        };
+        AcademicStatisticsRunAccepted: {
+            /** Format: date-time */
+            queued_at: string;
+            task_id: string;
+        };
+        AcademicStatisticsRunAcceptedResponseBody: {
+            data: components["schemas"]["AcademicStatisticsRunAccepted"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicTeacherIdentityScope: "normalized_name";
         AcademicIdentity: {
             /** Format: date-time */
             created_at: string;
@@ -3799,6 +4089,51 @@ export interface components {
                 "application/json": components["schemas"]["AcademicPeriodListResponseBody"];
             };
         };
+        /** @description 课程通过率分页 */
+        AcademicCoursePassRatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCoursePassRatePageResponseBody"];
+            };
+        };
+        /** @description 规范化教师姓名维度的课程通过率分页；同名教师会合并 */
+        AcademicInstructorPassRatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicInstructorPassRatePageResponseBody"];
+            };
+        };
+        /** @description 课程或教师的分学期成绩趋势 */
+        AcademicPassRateTrendResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicPassRateTrendResponseBody"];
+            };
+        };
+        /** @description 学业统计批次分页 */
+        AcademicStatisticsBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicStatisticsBatchPageResponseBody"];
+            };
+        };
+        /** @description 学业统计任务已入队 */
+        AcademicStatisticsRunAcceptedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicStatisticsRunAcceptedResponseBody"];
+            };
+        };
         /** @description 校园身份认证材料上传结果 */
         AcademicVerificationMaterialResponse: {
             headers: {
@@ -4678,6 +5013,114 @@ export interface operations {
         responses: {
             200: components["responses"]["AcademicPeriodListResponse"];
             403: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAcademicCoursePassRates: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                course_code?: string;
+                term_code?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCoursePassRatePageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListAcademicInstructorPassRates: {
+        parameters: {
+            query: {
+                course_code: string;
+                teacher_name?: string;
+                term_code?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicInstructorPassRatePageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetAcademicInstructorPassRateTrend: {
+        parameters: {
+            query: {
+                course_code: string;
+                teacher_key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicPassRateTrendResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetAcademicCoursePassRateTrend: {
+        parameters: {
+            query: {
+                course_code: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicPassRateTrendResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicStatisticsBatches: {
+        parameters: {
+            query?: {
+                status?: "running" | "failed" | "published";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicStatisticsBatchPageResponse"];
+        };
+    };
+    TriggerAdminAcademicStatisticsRun: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    confirmation: string;
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicStatisticsRunAcceptedResponse"];
+            400: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
