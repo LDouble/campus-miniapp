@@ -65,3 +65,59 @@
 .message-sheet__button--primary {
   background: linear-gradient(135deg, #4d9786, #70aa8d);
 }
+
+.messages-summary,
+.messages-search,
+.messages-tabs view,
+.message-card,
+.message-sheet__button {
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.messages-tabs view {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 120ms ease;
+}
+
+.message-overlay {
+  animation: message-overlay-in 180ms ease both;
+}
+
+.message-sheet {
+  animation: message-sheet-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes message-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes message-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(40rpx);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messages-summary,
+  .messages-search,
+  .messages-tabs view,
+  .message-card,
+  .message-sheet__button {
+    transition: none;
+  }
+
+  .message-overlay,
+  .message-sheet {
+    animation: none;
+  }
+}

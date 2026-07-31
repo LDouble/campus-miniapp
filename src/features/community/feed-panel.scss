@@ -442,12 +442,19 @@
 
   image {
     opacity: 1;
+    animation: community-like-pop 240ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .community-post__action-label,
   .community-post__action-count {
     color: #c76453;
   }
+}
+
+@keyframes community-like-pop {
+  0% { transform: scale(0.82); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
 }
 
 .community-post__action--share {
@@ -475,6 +482,10 @@
 @media (prefers-reduced-motion: reduce) {
   .community-post__action {
     transition: none;
+  }
+
+  .community-post__action--liked image {
+    animation: none;
   }
 }
 
