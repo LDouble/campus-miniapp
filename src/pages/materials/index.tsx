@@ -70,8 +70,17 @@ const icons = {
   materials: require('../../assets/icons/materials.svg'),
 }
 
-type Sheet = 'filter' | 'upload' | 'detail' | 'feedback' | null
+type Sheet = 'filter' | 'upload' | 'upload-course' | 'detail' | 'feedback' | null
 type ViewMode = 'browse' | 'mine' | 'feedbacks'
+
+interface UploadCourseOption {
+  id?: number
+  name: string
+  courseCode?: string
+  department?: string
+  periodId?: string
+  searchText: string
+}
 
 const materialSourceLabels: Record<
 NonNullable<MaterialRouteContext['source']>,
@@ -188,6 +197,7 @@ export default function MaterialsPage() {
   const [metadata, setMetadata] = useState<MaterialUploadMetadata>(
     createUploadMetadata(routeContext),
   )
+  const [uploadCourseQuery, setUploadCourseQuery] = useState('')
   const [uploadBatch, setUploadBatch] = useState<MaterialUploadBatch>(createUploadBatch)
   const [draftUserId, setDraftUserId] = useState(0)
   const [draftStorageReady, setDraftStorageReady] = useState(false)
@@ -396,9 +406,9 @@ export default function MaterialsPage() {
     routeContext.courseCode,
     routeContext.courseName,
   ])
-  const uploadCourseOptions = useMemo(() => {
+  const uploadCourseCandidates = useMemo<UploadCourseOption[]>(() => {
     const seen = new Set<string>()
-    const candidates = [
+    return [
       ...(routeContext.courseName ? [{
         name: routeContext.courseName,
         courseCode: routeContext.courseCode,
@@ -418,32 +428,60 @@ export default function MaterialsPage() {
         id: record?.id,
         name,
         courseCode: record?.course_code || suggestion.courseCode,
+        department: record?.department || undefined,
         periodId: name === routeContext.courseName
           ? routeContext.periodId
           : suggestion.periodId,
+        searchText: [
+          name,
+          record?.course_code,
+          record?.department,
+          ...(record?.aliases || []),
+        ].filter(Boolean).join(' ').toLowerCase(),
       }]
     })
-    const courseKeyword = metadata.courseName.trim().toLowerCase()
-    const visible = courseKeyword && !uploadCourseMatch
-      ? candidates.filter((item) => (
-        item.name.toLowerCase().includes(courseKeyword)
-        || item.courseCode?.toLowerCase().includes(courseKeyword)
-      ))
-      : candidates
-    return visible
-      .sort((left, right) => (
-        Number(right.id === uploadCourseMatch?.id)
-        - Number(left.id === uploadCourseMatch?.id)
-      ))
-      .slice(0, 6)
   }, [
     apiCourses,
     courseSuggestions,
-    metadata.courseName,
     routeContext.courseCode,
     routeContext.courseName,
     routeContext.periodId,
+  ])
+  const uploadCourseOptions = useMemo(() => {
+    const courseKeyword = metadata.courseName.trim().toLowerCase()
+    const visible = courseKeyword && !uploadCourseMatch
+      ? uploadCourseCandidates.filter((item) => item.searchText.includes(courseKeyword))
+      : uploadCourseCandidates
+    const selectedId = uploadCourseMatch?.id
+    const selectedName = uploadCourseMatch?.name || metadata.courseName.trim()
+    const isSelected = (item: UploadCourseOption) => (
+      selectedId ? item.id === selectedId : item.name === selectedName
+    )
+    return [...visible]
+      .sort((left, right) => Number(isSelected(right)) - Number(isSelected(left)))
+      .slice(0, 6)
+  }, [
+    metadata.courseName,
+    uploadCourseCandidates,
     uploadCourseMatch,
+  ])
+  const visibleUploadCourseOptions = useMemo(() => {
+    const courseKeyword = uploadCourseQuery.trim().toLowerCase()
+    const visible = courseKeyword
+      ? uploadCourseCandidates.filter((item) => item.searchText.includes(courseKeyword))
+      : uploadCourseCandidates
+    const selectedId = uploadCourseMatch?.id
+    const selectedName = uploadCourseMatch?.name || metadata.courseName.trim()
+    const isSelected = (item: UploadCourseOption) => (
+      selectedId ? item.id === selectedId : item.name === selectedName
+    )
+    return [...visible]
+      .sort((left, right) => Number(isSelected(right)) - Number(isSelected(left)))
+  }, [
+    metadata.courseName,
+    uploadCourseCandidates,
+    uploadCourseMatch,
+    uploadCourseQuery,
   ])
   const filtersActive = course !== '全部课程' || kind !== 'all'
   const sourceCourseActive = !!routeContext.courseName
@@ -511,6 +549,21 @@ export default function MaterialsPage() {
         ? routeContext.periodId
         : undefined,
     })
+  }
+  const openUploadCoursePicker = () => {
+    setUploadCourseQuery(uploadCourseMatch ? '' : metadata.courseName.trim())
+    onKeyboardVisibilityChange(0)
+    setSheet('upload-course')
+  }
+  const selectUploadCourseOption = (option: UploadCourseOption) => {
+    updateMetadata({
+      courseName: option.name,
+      courseId: option.id,
+      periodId: option.periodId,
+    })
+    setUploadCourseQuery('')
+    onKeyboardVisibilityChange(0)
+    setSheet('upload')
   }
 
   const chooseFiles = async () => {
@@ -840,6 +893,12 @@ export default function MaterialsPage() {
 
   const closeSheet = () => {
     if (!uploading && !submittingFeedback) {
+      if (sheet === 'upload-course') {
+        setUploadCourseQuery('')
+        setSheet('upload')
+        onKeyboardVisibilityChange(0)
+        return
+      }
       setSheet(null)
       onKeyboardVisibilityChange(0)
     }
@@ -971,7 +1030,9 @@ export default function MaterialsPage() {
           onClick={(event) => event.stopPropagation()}
         >
           <View className='materials-sheet__handle' />
-          <View className='materials-sheet__close' onClick={closeSheet}>×</View>
+          {sheet !== 'upload-course' && (
+            <View className='materials-sheet__close' onClick={closeSheet}>×</View>
+          )}
 
           {sheet === 'filter' && <View className='materials-sheet__body'>
             <Text className='materials-sheet__title'>筛选资料</Text>
@@ -1071,6 +1132,13 @@ export default function MaterialsPage() {
                     没有匹配课程，可直接使用输入的名称
                   </Text>
                 )}
+                <View
+                  className='materials-course-picker__more'
+                  onClick={openUploadCoursePicker}
+                >
+                  <Text>查看全部课程</Text>
+                  <Text>{uploadCourseCandidates.length ? `${uploadCourseCandidates.length} 门 ›` : '›'}</Text>
+                </View>
               </View>
               <Text className='materials-sheet__label'>资料类型</Text>
               <ScrollView scrollX showScrollbar={false}>
@@ -1099,6 +1167,65 @@ export default function MaterialsPage() {
               <Text className='materials-upload-notice'>上传即表示确认资料不包含隐私、侵权或违规内容</Text>
             </>}
           </View>}
+
+          {sheet === 'upload-course' && (
+            <View className='materials-sheet__body materials-course-browser'>
+              <View className='materials-course-browser__back' onClick={closeSheet}>
+                <Text>‹</Text>
+                <Text>返回分享资料</Text>
+              </View>
+              <Text className='materials-sheet__title'>选择课程</Text>
+              <Text className='materials-sheet__subtitle'>支持课程名称、课程号和课程别名搜索</Text>
+              <View className='materials-course-browser__search'>
+                <Image src={icons.search} mode='aspectFit' />
+                <KeyboardSafeInput
+                  value={uploadCourseQuery}
+                  onInput={(event) => setUploadCourseQuery(event.detail.value)}
+                  confirmType='search'
+                  placeholder='搜索全部课程'
+                  onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                />
+                {!!uploadCourseQuery && (
+                  <View onClick={() => setUploadCourseQuery('')}>×</View>
+                )}
+              </View>
+              <View className='materials-course-browser__summary'>
+                <Text>{uploadCourseQuery.trim() ? '搜索结果' : '全部课程'}</Text>
+                <Text>{visibleUploadCourseOptions.length} 门</Text>
+              </View>
+              <ScrollView
+                scrollY
+                showScrollbar={false}
+                className='materials-course-browser__list'
+              >
+                {visibleUploadCourseOptions.map((item) => {
+                  const selected = item.id
+                    ? item.id === uploadCourseMatch?.id
+                    : item.name === metadata.courseName
+                  return (
+                    <View
+                      key={`${item.id || 'candidate'}-${item.name}`}
+                      className={`materials-course-browser__option ${selected ? 'materials-course-browser__option--active' : ''}`}
+                      hoverClass='materials-course-browser__option--pressed'
+                      onClick={() => selectUploadCourseOption(item)}
+                    >
+                      <View>
+                        <Text>{item.name}</Text>
+                        <Text>{[item.courseCode, item.department].filter(Boolean).join(' · ') || '课程目录'}</Text>
+                      </View>
+                      <Text>{selected ? '当前选择' : '选择'}</Text>
+                    </View>
+                  )
+                })}
+                {!visibleUploadCourseOptions.length && (
+                  <View className='materials-course-browser__empty'>
+                    <Text>没有找到匹配课程</Text>
+                    <Text>返回后仍可直接输入课程名称</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          )}
 
           {sheet === 'detail' && activeMaterial && <View className='materials-sheet__body'>
             <View className={`materials-detail-file material-card__file--${activeMaterial.material_type}`}>{materialKindLabels[activeMaterial.material_type]}</View>
