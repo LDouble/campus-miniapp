@@ -9,6 +9,7 @@ import {
   View,
 } from '@tarojs/components'
 import { getCurrentUser } from '../../api/account'
+import { isAccountCancelled } from '../../api/auth'
 import { getActiveAcademicUserId } from '../../api/academic-credential'
 import type {
   CampusCirclePostView,
@@ -369,6 +370,10 @@ function Index() {
 
   useDidShow(() => {
     syncCustomTabBar(0)
+    if (isAccountCancelled()) {
+      void Taro.reLaunch({ url: '/pages/account-cancellation/index?success=1' })
+      return
+    }
     void loadHome()
   })
 

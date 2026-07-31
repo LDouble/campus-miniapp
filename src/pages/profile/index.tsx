@@ -4,6 +4,7 @@ import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import type { AcademicVerificationStatus } from '../../api/types'
+import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -16,6 +17,8 @@ const icons = {
   orders: require('../../assets/icons/market.svg'),
   carpool: require('../../assets/icons/shuttle.svg'),
   identity: require('../../assets/icons/academic.svg'),
+  privacy: require('../../assets/icons/study.svg'),
+  account: require('../../assets/icons/profile.svg'),
 }
 
 const menus = [
@@ -76,6 +79,16 @@ export default function ProfilePage() {
   })
   const openMenu = (item: typeof menus[number] | typeof identityMenu) => {
     Taro.navigateTo({ url: item.route })
+  }
+  const openPrivacy = async () => {
+    try {
+      await openMiniProgramPrivacyContract()
+    } catch (error) {
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '隐私保护指引暂不可用',
+        icon: 'none',
+      })
+    }
   }
   const identity = academicStatus?.identity
   const latestRequest = academicStatus?.latest_request
@@ -153,25 +166,69 @@ export default function ProfilePage() {
 
         <View className='profile-section motion-enter motion-enter--delay-2'>
           <Text className='profile-section__title'>账号与身份</Text>
-          <View
-            className='profile-identity-entry'
-            hoverClass='profile-identity-entry--pressed'
-            ariaRole='button'
-            ariaLabel={`校园身份，${identityMeta}`}
-            onClick={() => openMenu(identityMenu)}
-          >
-            <View className='profile-identity-entry__icon'>
-              <Image src={identityMenu.icon} mode='aspectFit' />
+          <View className='profile-account-list'>
+            <View
+              className='profile-identity-entry'
+              hoverClass='profile-identity-entry--pressed'
+              ariaRole='button'
+              ariaLabel={`校园身份，${identityMeta}`}
+              onClick={() => openMenu(identityMenu)}
+            >
+              <View className='profile-identity-entry__icon'>
+                <Image src={identityMenu.icon} mode='aspectFit' />
+              </View>
+              <View className='profile-identity-entry__main'>
+                <Text>{identityMenu.name}</Text>
+                <Text>{identityMeta}</Text>
+              </View>
+              <Image
+                className='profile-identity-entry__arrow'
+                src={icons.arrow}
+                mode='aspectFit'
+              />
             </View>
-            <View className='profile-identity-entry__main'>
-              <Text>{identityMenu.name}</Text>
-              <Text>{identityMeta}</Text>
+
+            <View
+              className='profile-identity-entry'
+              hoverClass='profile-identity-entry--pressed'
+              ariaRole='button'
+              ariaLabel='查看小程序用户隐私保护指引'
+              onClick={() => void openPrivacy()}
+            >
+              <View className='profile-identity-entry__icon profile-identity-entry__icon--privacy'>
+                <Image src={icons.privacy} mode='aspectFit' />
+              </View>
+              <View className='profile-identity-entry__main'>
+                <Text>隐私保护指引</Text>
+                <Text>查看微信官方隐私协议</Text>
+              </View>
+              <Image
+                className='profile-identity-entry__arrow'
+                src={icons.arrow}
+                mode='aspectFit'
+              />
             </View>
-            <Image
-              className='profile-identity-entry__arrow'
-              src={icons.arrow}
-              mode='aspectFit'
-            />
+
+            <View
+              className='profile-identity-entry profile-identity-entry--danger'
+              hoverClass='profile-identity-entry--pressed'
+              ariaRole='button'
+              ariaLabel='注销当前账号'
+              onClick={() => Taro.navigateTo({ url: '/pages/account-cancellation/index' })}
+            >
+              <View className='profile-identity-entry__icon'>
+                <Image src={icons.account} mode='aspectFit' />
+              </View>
+              <View className='profile-identity-entry__main'>
+                <Text>注销账号</Text>
+                <Text>匿名化账号并解绑教务</Text>
+              </View>
+              <Image
+                className='profile-identity-entry__arrow'
+                src={icons.arrow}
+                mode='aspectFit'
+              />
+            </View>
           </View>
         </View>
       </View>

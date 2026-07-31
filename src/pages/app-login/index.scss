@@ -157,10 +157,18 @@
 }
 
 .app-login__privacy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 24rpx;
   color: #a0aeaa;
   font-size: 20rpx;
   text-align: center;
+}
+
+.app-login__privacy text:last-child {
+  margin-left: 7rpx;
+  color: #4d9079;
 }
 
 @keyframes app-login-spin {
