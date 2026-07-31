@@ -25,14 +25,22 @@ export class ApiError extends Error {
   statusCode: number
   code: string
   requestId: string
+  details: unknown
 
-  constructor(statusCode: number, code: string, message: string, requestId = '') {
+  constructor(
+    statusCode: number,
+    code: string,
+    message: string,
+    requestId = '',
+    details: unknown = null,
+  ) {
     super(message)
     Object.setPrototypeOf(this, ApiError.prototype)
     this.name = 'ApiError'
     this.statusCode = statusCode
     this.code = code
     this.requestId = requestId
+    this.details = details
   }
 }
 
@@ -66,6 +74,16 @@ export const parseApiError = (statusCode: number, body: unknown) => {
       String(envelope.error.code),
       String(envelope.error.message),
       String(envelope.request_id || ''),
+    )
+  }
+  if (body && typeof body === 'object' && 'data' in body) {
+    const requestId = 'request_id' in body ? String(body.request_id || '') : ''
+    return new ApiError(
+      statusCode,
+      statusCode === 409 ? 'request_conflict' : 'request_failed',
+      statusCode === 409 ? '当前状态已变化，请刷新后重试' : '校园服务暂时不可用',
+      requestId,
+      body.data,
     )
   }
   return new ApiError(statusCode, 'request_failed', '校园服务暂时不可用')

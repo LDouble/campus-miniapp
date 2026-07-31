@@ -711,6 +711,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/account/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人账号注销阻断项 */
+        get: operations["GetAccountCancellationPreflight"];
+        put?: never;
+        /** 注销当前账号并解绑教务身份 */
+        post: operations["CancelMyAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/activities": {
         parameters: {
             query?: never;
@@ -2963,7 +2981,7 @@ export interface components {
             id: number;
             username: string;
             /** @enum {string} */
-            status: "active" | "disabled";
+            status: "active" | "disabled" | "deleted";
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -3750,6 +3768,34 @@ export interface components {
             data: components["schemas"]["AcademicVerificationStatus"];
             request_id: string;
         };
+        AccountCancellationBlocker: {
+            /** Format: int64 */
+            count: number;
+            module: components["schemas"]["AccountCancellationBlockerModule"];
+        };
+        /** @enum {string} */
+        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool";
+        AccountCancellationInput: {
+            app_id: string;
+            code: string;
+            confirmed: boolean;
+        };
+        AccountCancellationPreflight: {
+            blockers: components["schemas"]["AccountCancellationBlocker"][];
+            can_cancel: boolean;
+        };
+        AccountCancellationPreflightResponseBody: {
+            data: components["schemas"]["AccountCancellationPreflight"];
+            request_id: string;
+        };
+        AccountCancellationResponseBody: {
+            data: components["schemas"]["AccountCancellationResult"];
+            request_id: string;
+        };
+        AccountCancellationResult: {
+            academic_unlinked: boolean;
+            cancelled: boolean;
+        };
         ActivityPageResponseBody: {
             data: components["schemas"]["ActivityViewPage"];
             request_id: string;
@@ -3875,6 +3921,7 @@ export interface components {
         /** @enum {string} */
         CampusCirclePostStatus: "pending_review" | "approved" | "rejected" | "withdrawn";
         CampusCirclePostView: {
+            author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
             author_nickname: string;
@@ -4022,6 +4069,7 @@ export interface components {
             request_id: string;
         };
         CommentView: {
+            author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
             author_nickname: string;
@@ -5435,6 +5483,24 @@ export interface components {
                 "application/json": components["schemas"]["AcademicVerificationStatusResponseBody"];
             };
         };
+        /** @description 账号注销预检结果 */
+        AccountCancellationPreflightResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AccountCancellationPreflightResponseBody"];
+            };
+        };
+        /** @description 账号注销结果 */
+        AccountCancellationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AccountCancellationResponseBody"];
+            };
+        };
         /** @description 活动分页 */
         ActivityPageResponse: {
             headers: {
@@ -6809,6 +6875,40 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["Success"];
+        };
+    };
+    GetAccountCancellationPreflight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AccountCancellationPreflightResponse"];
+        };
+    };
+    CancelMyAccount: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountCancellationInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AccountCancellationResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            409: components["responses"]["AccountCancellationPreflightResponse"];
+            503: components["responses"]["Error"];
         };
     };
     ListActivities: {

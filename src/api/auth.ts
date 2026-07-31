@@ -5,6 +5,7 @@ import { clearAcademicCredential } from './academic-credential'
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
 const TOKEN_EXPIRES_AT_KEY = 'campus.auth.expiresAt.v1'
+const ACCOUNT_CANCELLED_KEY = 'campus.auth.accountCancelled.v1'
 export const API_BASE_URL = String(__CAMPUS_API_BASE_URL__)
 
 export const apiUrl = (path: string) => {
@@ -40,6 +41,23 @@ export const clearSession = () => {
   Taro.removeStorageSync(ACCESS_TOKEN_KEY)
   Taro.removeStorageSync(REFRESH_TOKEN_KEY)
   Taro.removeStorageSync(TOKEN_EXPIRES_AT_KEY)
+}
+
+export class AccountCancelledError extends Error {
+  constructor() {
+    super('账号已注销，如需继续使用请重新注册')
+    Object.setPrototypeOf(this, AccountCancelledError.prototype)
+    this.name = 'AccountCancelledError'
+  }
+}
+
+export const isAccountCancelled = () => (
+  Taro.getStorageSync<boolean>(ACCOUNT_CANCELLED_KEY) === true
+)
+
+export const markAccountCancelled = () => {
+  clearSession()
+  Taro.setStorageSync(ACCOUNT_CANCELLED_KEY, true)
 }
 
 export const getAccessToken = () => (
@@ -90,6 +108,16 @@ export const login = () => {
   return authenticatePromise
 }
 
+export const resumeAfterAccountCancellation = async () => {
+  Taro.removeStorageSync(ACCOUNT_CANCELLED_KEY)
+  try {
+    return await login()
+  } catch (error) {
+    Taro.setStorageSync(ACCOUNT_CANCELLED_KEY, true)
+    throw error
+  }
+}
+
 export const refreshAccessToken = () => {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -118,6 +146,7 @@ export const refreshAccessToken = () => {
 }
 
 export const ensureAccessToken = async () => {
+  if (isAccountCancelled()) throw new AccountCancelledError()
   const current = getAccessToken()
   if (!current) return login()
   if (tokenExpiresSoon()) return refreshAccessToken()

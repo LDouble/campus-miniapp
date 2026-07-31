@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
 import './index.scss'
 
 type Status = 'ready' | 'loading' | 'error'
@@ -69,6 +70,17 @@ export default function AppLoginPage() {
     }
   }
 
+  const openPrivacy = async () => {
+    try {
+      await openMiniProgramPrivacyContract()
+    } catch (error) {
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '隐私保护指引暂不可用',
+        icon: 'none',
+      })
+    }
+  }
+
   return <View className='app-login'>
     <CustomNavbar title='微信授权登录' subtitle='海大校园' />
     <View className='app-login__content'>
@@ -103,9 +115,10 @@ export default function AppLoginPage() {
         {status === 'loading' && <View className='app-login__spinner' />}
         <Text>{status === 'loading' ? '正在授权' : '微信授权并返回 App'}</Text>
       </View>
-      <Text className='app-login__privacy'>
-        继续即表示你同意使用微信身份完成校园账号登录
-      </Text>
+      <View className='app-login__privacy'>
+        <Text>继续即表示你已阅读</Text>
+        <Text onClick={() => void openPrivacy()}>小程序用户隐私保护指引</Text>
+      </View>
     </View>
   </View>
 }

@@ -273,16 +273,15 @@ page {
   align-items: center;
   min-height: 104rpx;
   padding: 14rpx 22rpx;
-  background: rgba(255, 255, 255, 0.88);
-  border: 2rpx solid rgba(255, 255, 255, 0.96);
-  border-radius: 28rpx;
-  box-shadow: 8rpx 12rpx 28rpx rgba(50, 92, 84, 0.06);
+  background: transparent;
+  border-bottom: 1rpx solid rgba(57, 91, 91, 0.08);
   transition: opacity 160ms ease, transform 160ms ease;
 
   &--pressed {
-    opacity: 0.78;
-    transform: scale(0.99);
+    background: rgba(233, 245, 242, 0.68);
   }
+
+  &:last-child { border-bottom: 0; }
 
   &__icon {
     display: flex;
@@ -299,6 +298,8 @@ page {
       width: 35rpx;
       height: 35rpx;
     }
+
+    &--privacy { background: #fff0dc; }
   }
 
   &__main {
@@ -332,4 +333,16 @@ page {
     margin-left: 16rpx;
     opacity: 0.5;
   }
+
+  &--danger &__main text:first-child { color: #b76659; }
+  &--danger &__icon { background: #fff0ec; }
+}
+
+.profile-account-list {
+  padding: 0 6rpx;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.88);
+  border: 2rpx solid rgba(255, 255, 255, 0.96);
+  border-radius: 28rpx;
+  box-shadow: 8rpx 12rpx 28rpx rgba(50, 92, 84, 0.06);
 }

@@ -8,6 +8,7 @@ export default defineAppConfig({
     'pages/marketplace/detail',
     'pages/carpool/detail',
     'pages/profile/index',
+    'pages/account-cancellation/index',
     'pages/my-services/index',
     'pages/publish/index',
     'pages/messages/index',
