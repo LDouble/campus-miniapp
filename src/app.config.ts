@@ -25,7 +25,9 @@ export default defineAppConfig({
     'pages/empty-classroom/index',
     'pages/shuttle/index',
     'pages/shuttle/detail',
-    'pages/services/index'
+    'pages/services/index',
+    'pages/content-report/index',
+    'pages/feature-unavailable/index'
   ],
   window: {
     backgroundTextStyle: 'dark',

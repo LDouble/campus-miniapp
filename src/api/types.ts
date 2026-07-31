@@ -39,6 +39,7 @@ export type CampusCirclePostViewPage = components['schemas']['CampusCirclePostPa
 
 export type CommentView = components['schemas']['CommentView']
 export type CommentViewPage = components['schemas']['CommentPage']
+export type ContentReportView = components['schemas']['ContentReportView']
 export type CommentThread = components['schemas']['CommentThread']
 
 export type Notice = components['schemas']['Notice']

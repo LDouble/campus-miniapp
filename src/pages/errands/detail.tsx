@@ -6,6 +6,7 @@ import type { ErrandView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
+import { openContentReport } from '../../features/content-report'
 import {
   formatDateTime,
   formatMoney,
@@ -187,6 +188,20 @@ export default function ErrandDetailPage() {
               <View className='detail-section__heading'><Text>安全提示</Text><Text>线下互助</Text></View>
               <Text className='detail-safety'>取送前请核对物品和地点，不代收验证码、不垫付高额费用。报酬为线下结算，平台不代收款。</Text>
             </View>
+
+            {item.viewer_relation !== 'publisher' && (
+              <View
+                className='detail-report-link'
+                hoverClass='detail-report-link--pressed'
+                onClick={() => void openContentReport({
+                  resourceType: 'errand',
+                  resourceId: item.id,
+                  resourceVersion: item.version,
+                })}
+              >
+                举报这条信息
+              </View>
+            )}
 
             {item.available_actions.length > 0 && (
               <View className='detail-action-bar'>

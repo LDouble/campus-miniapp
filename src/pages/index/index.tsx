@@ -42,6 +42,9 @@ import {
   getSelectedCampus,
   loadMiniappRuntimeConfig,
   MiniappRuntimeConfig,
+  MiniappModuleKey,
+  openMiniappModule,
+  resolveMiniappModule,
   RuntimeBanner,
   saveSelectedCampus,
 } from '../../features/runtime-config'
@@ -139,6 +142,27 @@ const serviceFeatureKeys: Record<string, string> = {
   classroom: 'classroom',
   shuttle: 'shuttle',
   'campus-card': 'campus_card',
+}
+const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
+  schedule: 'academic_schedule',
+  grades: 'academic_grades',
+  exams: 'academic_exams',
+  result: 'academic_selection',
+  'pass-rate': 'academic_statistics',
+  materials: 'course_materials',
+  calendar: 'calendar',
+  shuttle: 'shuttle',
+  community: 'community',
+  market: 'marketplace',
+  errands: 'errand',
+  carpool: 'carpool',
+  classroom: 'empty_classroom',
+}
+const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
+  community: 'community',
+  errands: 'errand',
+  market: 'marketplace',
+  carpool: 'carpool',
 }
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 type LifeHubSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -263,13 +287,30 @@ function Index() {
   })
 
   const loadHome = useCallback(async () => {
+    const latestRuntimeConfig = await loadMiniappRuntimeConfig()
+    const moduleEnabled = (key: MiniappModuleKey) => (
+      resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
+    )
     const accountPromise = settle(getCurrentUser())
     const academicUserIdPromise = accountPromise.then((account) => (
       account.ok ? account.value.user.id : getActiveAcademicUserId()
     ))
-    const academicPromise = loadLatestAcademic(academicUserIdPromise)
-    const calendarPromise = loadAcademicCalendar(getCalendarEducationLevel())
-    const runtimeConfigPromise = loadMiniappRuntimeConfig()
+    const academicPromise = moduleEnabled('academic_schedule')
+      ? loadLatestAcademic(academicUserIdPromise)
+      : Promise.resolve(academicStorage.getScheduleCache(getActiveAcademicUserId()))
+    const calendarPromise = moduleEnabled('calendar')
+      ? loadAcademicCalendar(getCalendarEducationLevel())
+        .then((result) => getAcademicCalendarLabel(result.calendar))
+      : Promise.resolve(loadCachedAcademicLabel())
+    const communityPromise = moduleEnabled('community')
+      ? settle(lifeServicesRepository.listCampusCirclePosts({ page: 1, pageSize: 8 }))
+      : Promise.resolve({ ok: false } as Settled<never>)
+    const communitySectionsPromise = moduleEnabled('community')
+      ? settle(lifeServicesRepository.listCampusCircleSections())
+      : Promise.resolve({ ok: false } as Settled<never>)
+    const marketplacePromise = moduleEnabled('marketplace')
+      ? settle(lifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
+      : Promise.resolve({ ok: false } as Settled<never>)
     const [
       account,
       community,
@@ -277,17 +318,15 @@ function Index() {
       unread,
       marketplace,
       latestAcademic,
-      latestCalendar,
-      latestRuntimeConfig,
+      latestCalendarLabel,
     ] = await Promise.all([
       accountPromise,
-      settle(lifeServicesRepository.listCampusCirclePosts({ page: 1, pageSize: 8 })),
-      settle(lifeServicesRepository.listCampusCircleSections()),
+      communityPromise,
+      communitySectionsPromise,
       settle(noticesRepository.unreadCount()),
-      settle(lifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 })),
+      marketplacePromise,
       academicPromise,
       calendarPromise,
-      runtimeConfigPromise,
     ])
 
     const selectedCampus = getSelectedCampus(latestRuntimeConfig)
@@ -301,12 +340,13 @@ function Index() {
       selectedCampus,
     ))
     if (account.ok) setUsername(account.value.user.username)
-    setAcademicCalendarLabel(getAcademicCalendarLabel(latestCalendar.calendar))
+    setAcademicCalendarLabel(latestCalendarLabel)
     if (community.ok) {
       setCommunityPosts(latestCommunityPosts(community.value.items))
       setCommunityError(false)
     } else {
-      setCommunityError(true)
+      setCommunityPosts([])
+      setCommunityError(moduleEnabled('community'))
     }
     if (communitySections.ok) {
       setSectionNames(communitySectionNames(communitySections.value.items))
@@ -316,16 +356,13 @@ function Index() {
       setMarketItems(marketplace.value.items)
       setMarketError(false)
     } else {
-      setMarketError(true)
+      setMarketItems([])
+      setMarketError(moduleEnabled('marketplace'))
     }
     setCommunityLoading(false)
     setMarketLoading(false)
     Taro.stopPullDownRefresh()
   }, [])
-
-  useEffect(() => {
-    void loadHome()
-  }, [loadHome])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -336,8 +373,7 @@ function Index() {
 
   useDidShow(() => {
     syncCustomTabBar(0)
-    setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
-    setAcademicCalendarLabel(loadCachedAcademicLabel())
+    void loadHome()
   })
 
   usePullDownRefresh(() => {
@@ -346,26 +382,41 @@ function Index() {
     void loadHome()
   })
 
-  const openLifeHub = (section: LifeHubSection) => {
-    Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
-    Taro.switchTab({ url: '/pages/community/index' })
+  const openLifeHub = async (section: LifeHubSection) => {
+    const moduleKey = lifeSectionModules[section]
+    if (resolveMiniappModule(runtimeConfig, moduleKey).state === 'enabled') {
+      Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
+    }
+    await openMiniappModule(
+      moduleKey,
+      '/pages/community/index',
+      { tab: true, config: runtimeConfig },
+    )
   }
 
   const openModule = (type: string) => {
     if (['community', 'errands', 'market', 'carpool'].includes(type)) {
-      openLifeHub(type as LifeHubSection)
+      void openLifeHub(type as LifeHubSection)
       return
     }
     Taro.showToast({ title: '服务入口已更新', icon: 'none' })
   }
 
   const openAcademic = (route: string) => {
+    const service = quickServices.find((item) => (
+      'route' in item && item.route === route
+    ))
+    const moduleKey = service ? serviceModuleKeys[service.key] : undefined
+    if (moduleKey) {
+      void openMiniappModule(moduleKey, route, { config: runtimeConfig })
+      return
+    }
     Taro.navigateTo({ url: route })
   }
 
   const openQuickService = (item: typeof quickServices[number]) => {
     if ('tab' in item && item.tab) {
-      openLifeHub('community')
+      void openLifeHub('community')
       return
     }
     if ('route' in item && item.route) {
@@ -374,7 +425,7 @@ function Index() {
     }
     if ('module' in item && item.module) {
       if (['market', 'errands', 'carpool'].includes(item.module)) {
-        openLifeHub(item.module as LifeHubSection)
+        void openLifeHub(item.module as LifeHubSection)
         return
       }
       Taro.showToast({ title: `${item.name}入口配置异常`, icon: 'none' })
@@ -386,7 +437,11 @@ function Index() {
   }
 
   const openSchedule = () => {
-    Taro.navigateTo({ url: '/pages/academic/schedule/index' })
+    void openMiniappModule(
+      'academic_schedule',
+      '/pages/academic/schedule/index',
+      { config: runtimeConfig },
+    )
   }
 
   const chooseCampus = async () => {
@@ -402,7 +457,7 @@ function Index() {
 
   const openCommunityPost = (item: CampusCirclePostView) => {
     saveCommunityFeedPin(item)
-    openLifeHub('community')
+    void openLifeHub('community')
   }
 
   const banners = activeBanners(runtimeConfig, campusName)
@@ -415,7 +470,12 @@ function Index() {
   const campusConfig = runtimeConfig.campuses[campusName]
   const visibleHomeServices = homeServices.filter((service) => {
     const featureKey = serviceFeatureKeys[service.key]
-    return !featureKey || !campusConfig || campusConfig.features[featureKey] !== false
+    const moduleKey = serviceModuleKeys[service.key]
+    return (
+      (!featureKey || !campusConfig || campusConfig.features[featureKey] !== false)
+      && (!moduleKey
+        || resolveMiniappModule(runtimeConfig, moduleKey, campusName).state !== 'hidden')
+    )
   })
   const visibleCommunityPosts = communityPosts.slice(0, 3)
 

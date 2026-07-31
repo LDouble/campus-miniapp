@@ -1,7 +1,15 @@
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
+import { useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import {
+  getMiniappRuntimeConfig,
+  loadMiniappRuntimeConfig,
+  openMiniappModule,
+  resolveMiniappModule,
+  type MiniappModuleKey,
+} from '../../features/runtime-config'
 import './index.scss'
 
 const icons = {
@@ -31,6 +39,21 @@ type ServiceItem = {
 }
 
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
+const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
+  schedule: 'academic_schedule',
+  grades: 'academic_grades',
+  exams: 'academic_exams',
+  result: 'academic_selection',
+  'pass-rate': 'academic_statistics',
+  calendar: 'calendar',
+  classroom: 'empty_classroom',
+  materials: 'course_materials',
+  shuttle: 'shuttle',
+  carpool: 'carpool',
+  community: 'community',
+  market: 'marketplace',
+  errands: 'errand',
+}
 
 const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> = [
   {
@@ -72,10 +95,28 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
 ]
 
 export default function Services() {
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
+
+  useDidShow(() => {
+    void loadMiniappRuntimeConfig().then(setRuntimeConfig)
+  })
+
   const openService = (item: ServiceItem) => {
+    const moduleKey = serviceModules[item.key]
     if (item.lifeSection) {
-      Taro.setStorageSync(LIFE_HUB_SECTION_KEY, item.lifeSection)
-      Taro.switchTab({ url: '/pages/community/index' })
+      if (
+        moduleKey
+        && resolveMiniappModule(runtimeConfig, moduleKey).state === 'enabled'
+      ) {
+        Taro.setStorageSync(LIFE_HUB_SECTION_KEY, item.lifeSection)
+      }
+      if (moduleKey) {
+        void openMiniappModule(
+          moduleKey,
+          '/pages/community/index',
+          { tab: true, config: runtimeConfig },
+        )
+      }
       return
     }
     if (item.tab) {
@@ -83,6 +124,10 @@ export default function Services() {
       return
     }
     if (item.route) {
+      if (moduleKey) {
+        void openMiniappModule(moduleKey, item.route, { config: runtimeConfig })
+        return
+      }
       Taro.navigateTo({ url: item.route })
       return
     }
@@ -98,17 +143,24 @@ export default function Services() {
           <KeyboardSafeInput placeholder='搜索校园服务' placeholderClass='services-search__placeholder' />
         </View>
 
-        {groups.map((group) => (
+        {groups.map((group) => {
+          const items = group.items.filter((item) => {
+            const moduleKey = serviceModules[item.key]
+            return !moduleKey
+              || resolveMiniappModule(runtimeConfig, moduleKey).state !== 'hidden'
+          })
+          if (!items.length) return null
+          return (
           <View key={group.title} className='services-group'>
             <View className='services-group__head'>
               <View>
                 <Text className='services-group__title'>{group.title}</Text>
                 <Text className='services-group__subtitle'>{group.subtitle}</Text>
               </View>
-              <Text className='services-group__count'>{group.items.length} 项</Text>
+              <Text className='services-group__count'>{items.length} 项</Text>
             </View>
             <View className='services-group__grid'>
-              {group.items.map((item) => (
+              {items.map((item) => (
                 <View
                   key={item.key}
                   className='services-group__item'
@@ -123,7 +175,8 @@ export default function Services() {
               ))}
             </View>
           </View>
-        ))}
+          )
+        })}
       </View>
     </View>
   )

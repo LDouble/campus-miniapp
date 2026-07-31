@@ -1590,6 +1590,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/content-report-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询举报工单 */
+        get: operations["ListAdminContentReportCases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content-report-cases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看举报工单 */
+        get: operations["GetAdminContentReportCase"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content-report-cases/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端处理举报工单 */
+        post: operations["ResolveAdminContentReportCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 举报公开内容 */
+        post: operations["CreateContentReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content-reports/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的举报 */
+        get: operations["ListMyContentReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content-security/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询微信内容安全审核记录 */
+        get: operations["ListAdminContentSecurityReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/content-security/reviews/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看微信内容安全审核记录 */
+        get: operations["GetAdminContentSecurityReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/course-material-feedbacks": {
         parameters: {
             query?: never;
@@ -3941,6 +4060,183 @@ export interface components {
         };
         /** @enum {string} */
         CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "pin_comment" | "unpin_comment" | "verify_academic";
+        ContentReportCaseDetail: components["schemas"]["ContentReportCaseSummary"] & {
+            reports: components["schemas"]["ContentReportView"][];
+        };
+        ContentReportCasePage: {
+            items: components["schemas"]["ContentReportCaseSummary"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ContentReportCasePageResponseBody: {
+            data: components["schemas"]["ContentReportCasePage"];
+            request_id: string;
+        };
+        ContentReportCaseResponseBody: {
+            data: components["schemas"]["ContentReportCaseDetail"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ContentReportCaseStatus: "pending" | "resolved" | "dismissed";
+        ContentReportCaseSummary: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            report_count: number;
+            resolution?: components["schemas"]["ContentReportResolution"];
+            resolution_reason?: string | null;
+            /** Format: uint64 */
+            resource_id: number;
+            resource_path: string;
+            resource_type: components["schemas"]["ContentReportResourceType"];
+            /** Format: uint64 */
+            resource_version: number;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewed_by?: number | null;
+            status: components["schemas"]["ContentReportCaseStatus"];
+            target_action?: components["schemas"]["ContentReportTargetAction"];
+            /** Format: uint64 */
+            target_author_id: number;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        ContentReportCategory: "spam" | "fraud" | "harassment" | "pornography" | "illegal" | "privacy" | "misinformation" | "copyright" | "other";
+        ContentReportInput: {
+            category: components["schemas"]["ContentReportCategory"];
+            description?: string;
+            /** Format: uint64 */
+            resource_id: number;
+            resource_type: components["schemas"]["ContentReportResourceType"];
+            /** Format: uint64 */
+            resource_version: number;
+        };
+        ContentReportPage: {
+            items: components["schemas"]["ContentReportView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ContentReportPageResponseBody: {
+            data: components["schemas"]["ContentReportPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ContentReportResolution: "dismiss" | "confirm_no_action" | "return_to_review";
+        ContentReportResolveInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            reason?: string;
+            resolution: components["schemas"]["ContentReportResolution"];
+        };
+        /** @enum {string} */
+        ContentReportResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool";
+        ContentReportResponseBody: {
+            data: components["schemas"]["ContentReportView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ContentReportTargetAction: "none" | "returned_to_review";
+        ContentReportView: {
+            /** Format: uint64 */
+            case_id: number;
+            category: components["schemas"]["ContentReportCategory"];
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            reporter_id: number;
+            resolution?: components["schemas"]["ContentReportResolution"];
+            /** Format: uint64 */
+            resource_id: number;
+            resource_type: components["schemas"]["ContentReportResourceType"];
+            /** Format: uint64 */
+            resource_version: number;
+            status: components["schemas"]["ContentReportCaseStatus"];
+            target_action?: components["schemas"]["ContentReportTargetAction"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ContentSecurityReasonDetail: {
+            /** Format: int64 */
+            errcode: number;
+            /** Format: int64 */
+            fragment_index: number;
+            keyword?: string;
+            /** Format: int64 */
+            label: number;
+            /** Format: int64 */
+            probability: number;
+            strategy: string;
+            suggestion: components["schemas"]["ContentSecuritySuggestion"];
+            trace_id: string;
+        };
+        /** @enum {string} */
+        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback";
+        ContentSecurityReviewPage: {
+            items: components["schemas"]["ContentSecurityReviewView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ContentSecurityReviewPageResponseBody: {
+            data: components["schemas"]["ContentSecurityReviewPage"];
+            request_id: string;
+        };
+        ContentSecurityReviewResponseBody: {
+            data: components["schemas"]["ContentSecurityReviewView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ContentSecurityReviewStatus: "auto_approved" | "pending_manual" | "manual_approved" | "manual_rejected";
+        ContentSecurityReviewView: {
+            /** Format: uint64 */
+            actor_id: number;
+            /** Format: date-time */
+            checked_at: string;
+            content_hash: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            label: number;
+            provider: string;
+            reason_details: components["schemas"]["ContentSecurityReasonDetail"][];
+            /** Format: uint64 */
+            resource_id: number;
+            resource_path: string;
+            resource_type: components["schemas"]["ContentSecurityResourceType"];
+            /** Format: uint64 */
+            resource_version: number;
+            /** Format: date-time */
+            reviewed_at?: string;
+            /** Format: uint64 */
+            reviewed_by?: number;
+            /** Format: int64 */
+            scene: number;
+            status: components["schemas"]["ContentSecurityReviewStatus"];
+            suggestion: components["schemas"]["ContentSecuritySuggestion"];
+            trace_id?: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        ContentSecuritySuggestion: "pass" | "review" | "risky";
         CompleteMaterialUploadFile: {
             /** Format: uint64 */
             file_id: number;
@@ -5254,6 +5550,60 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CommentThreadResponseBody"];
+            };
+        };
+        /** @description 举报工单分页 */
+        ContentReportCasePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ContentReportCasePageResponseBody"];
+            };
+        };
+        /** @description 举报工单详情 */
+        ContentReportCaseResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ContentReportCaseResponseBody"];
+            };
+        };
+        /** @description 我的举报分页 */
+        ContentReportPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ContentReportPageResponseBody"];
+            };
+        };
+        /** @description 举报提交结果 */
+        ContentReportResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ContentReportResponseBody"];
+            };
+        };
+        /** @description 内容安全审核记录分页 */
+        ContentSecurityReviewPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ContentSecurityReviewPageResponseBody"];
+            };
+        };
+        /** @description 内容安全审核记录 */
+        ContentSecurityReviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ContentSecurityReviewResponseBody"];
             };
         };
         /** @description 课程资料分页 */
@@ -7895,6 +8245,132 @@ export interface operations {
         responses: {
             200: components["responses"]["CommentResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListAdminContentReportCases: {
+        parameters: {
+            query?: {
+                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool";
+                status?: "pending" | "resolved" | "dismissed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ContentReportCasePageResponse"];
+        };
+    };
+    GetAdminContentReportCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ContentReportCaseResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ResolveAdminContentReportCase: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReportResolveInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ContentReportCaseResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateContentReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReportInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ContentReportResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    ListMyContentReports: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ContentReportPageResponse"];
+        };
+    };
+    ListAdminContentSecurityReviews: {
+        parameters: {
+            query?: {
+                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback";
+                suggestion?: "pass" | "review" | "risky";
+                status?: "auto_approved" | "pending_manual" | "manual_approved" | "manual_rejected";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ContentSecurityReviewPageResponse"];
+        };
+    };
+    GetAdminContentSecurityReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ContentSecurityReviewResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminCourseMaterialFeedbacks: {

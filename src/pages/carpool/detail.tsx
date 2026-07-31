@@ -6,6 +6,7 @@ import type { CarpoolTripView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
+import { openContentReport } from '../../features/content-report'
 import {
   formatDateTime,
   formatStatus,
@@ -161,6 +162,20 @@ export default function CarpoolDetailPage() {
               <View className='detail-section__heading'><Text>出行提醒</Text><Text>信息撮合</Text></View>
               <Text className='detail-safety'>请在出发前确认车型、费用、集合点和实际司机信息。平台仅提供校园出行信息撮合，不提供营运或保险担保。</Text>
             </View>
+
+            {item.viewer_relation !== 'organizer' && (
+              <View
+                className='detail-report-link'
+                hoverClass='detail-report-link--pressed'
+                onClick={() => void openContentReport({
+                  resourceType: 'carpool',
+                  resourceId: item.id,
+                  resourceVersion: item.version,
+                })}
+              >
+                举报这条信息
+              </View>
+            )}
 
             {item.available_actions.length > 0 && (
               <View className='detail-action-bar'>
