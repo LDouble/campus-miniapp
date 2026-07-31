@@ -99,7 +99,7 @@ export default function ProfilePage() {
       <CustomNavbar title='我的海大' subtitle='中国海洋大学' />
 
       <View className='profile-page__content'>
-        <View className='profile-card'>
+        <View className='profile-card motion-enter'>
           <View className='profile-card__avatar'>
             <Text>{(identity?.real_name || '海大同学').slice(0, 1)}</Text>
             <View className='profile-card__status' />
@@ -127,7 +127,7 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        <View className='profile-section'>
+        <View className='profile-section motion-enter motion-enter--delay-1'>
           <View className='profile-section__head'>
             <Text className='profile-section__title'>我的服务</Text>
             <Text className='profile-section__hint'>常用记录，一步直达</Text>
@@ -151,7 +151,7 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        <View className='profile-section'>
+        <View className='profile-section motion-enter motion-enter--delay-2'>
           <Text className='profile-section__title'>账号与身份</Text>
           <View
             className='profile-identity-entry'

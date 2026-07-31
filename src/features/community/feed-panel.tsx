@@ -297,10 +297,11 @@ export default function CommunityFeedPanel({
 
       {sectionsReady && !sectionsError && activeSection && !loading && !error && (
         <View className='community-post-list'>
-          {posts.map((post) => (
+          {posts.map((post, index) => (
             <CommunityPostCard
               key={post.id}
               post={post}
+              motionDelay={Math.min(index + 1, 4)}
               sectionName={sectionNames.get(post.section_id) || '未知板块'}
               onToggleLike={(target) => void toggleLike(target)}
               onOpen={openPost}

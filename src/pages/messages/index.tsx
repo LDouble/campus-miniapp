@@ -143,12 +143,18 @@ export default function MessagesPage() {
     <View className={`messages-page ${active ? 'messages-page--locked' : ''}`}>
       <CustomNavbar title='消息' subtitle={`${unreadCount} 条未读`} />
       <View className='messages-page__content'>
-        <View className='messages-summary'>
+        <View className='messages-summary motion-enter'>
           <View><Text>校园消息</Text><Text>重要提醒，及时抵达</Text></View>
-          <View onClick={() => void readAll()}>全部已读</View>
+          <View
+            className='motion-press'
+            hoverClass='motion-press--active'
+            onClick={() => void readAll()}
+          >
+            全部已读
+          </View>
         </View>
 
-        <View className='messages-search'>
+        <View className='messages-search motion-enter motion-enter--delay-1'>
           <View />
           <KeyboardSafeInput
             value={keyword}
@@ -160,11 +166,15 @@ export default function MessagesPage() {
           {keyword && <Text onClick={() => setKeyword('')}>清除</Text>}
         </View>
 
-        <View className='messages-tabs'>
+        <View className='messages-tabs motion-enter motion-enter--delay-2'>
           {tabs.map((item) => (
             <View
               key={item}
-              className={tab === item ? 'messages-tabs__active' : ''}
+              className={[
+                'motion-press',
+                tab === item ? 'messages-tabs__active' : '',
+              ].filter(Boolean).join(' ')}
+              hoverClass='motion-press--active'
               onClick={() => setTab(item)}
             >
               {item}
@@ -180,7 +190,7 @@ export default function MessagesPage() {
           </View>
         )}
 
-        {!loading && !error && visible.map((message) => {
+        {!loading && !error && visible.map((message, index) => {
           const type = categoryType(message.category)
           const unread = unreadIds.includes(message.id)
           const iconTone = type === '教务'
@@ -193,7 +203,12 @@ export default function MessagesPage() {
           return (
             <View
               key={message.id}
-              className={`message-card ${unread ? 'message-card--unread' : ''}`}
+              className={[
+                'message-card',
+                'motion-enter',
+                `motion-enter--delay-${Math.min(index + 1, 4)}`,
+                unread ? 'message-card--unread' : '',
+              ].filter(Boolean).join(' ')}
               hoverClass='message-card--pressed'
               onClick={() => void open(message)}
             >
@@ -245,13 +260,18 @@ export default function MessagesPage() {
             <View className='message-sheet__actions'>
               {actionRoute(active.action_path) && (
                 <View
-                  className='message-sheet__button message-sheet__button--primary'
+                  className='message-sheet__button message-sheet__button--primary motion-press'
+                  hoverClass='motion-press--active'
                   onClick={() => goAction(active)}
                 >
                   查看相关内容
                 </View>
               )}
-              <View className='message-sheet__button' onClick={() => setActive(null)}>
+              <View
+                className='message-sheet__button motion-press'
+                hoverClass='motion-press--active'
+                onClick={() => setActive(null)}
+              >
                 知道了
               </View>
             </View>

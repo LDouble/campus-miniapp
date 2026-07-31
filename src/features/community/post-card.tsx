@@ -18,6 +18,7 @@ const communityIcons = {
 type Props = {
   post: CampusCirclePostView
   sectionName: string
+  motionDelay?: number
   onToggleLike: (post: CampusCirclePostView) => void
   onOpen: (post: CampusCirclePostView) => void
 }
@@ -25,6 +26,7 @@ type Props = {
 export default function CommunityPostCard({
   post,
   sectionName,
+  motionDelay = 0,
   onToggleLike,
   onOpen,
 }: Props) {
@@ -38,7 +40,12 @@ export default function CommunityPostCard({
   return (
     <View
       id={`community-post-${post.id}`}
-      className='community-post api-post'
+      className={[
+        'community-post',
+        'api-post',
+        'motion-enter',
+        motionDelay > 0 ? `motion-enter--delay-${Math.min(motionDelay, 4)}` : '',
+      ].filter(Boolean).join(' ')}
     >
       <View
         className='community-post__header'

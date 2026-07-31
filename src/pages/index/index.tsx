@@ -509,7 +509,7 @@ function Index() {
         collapsed={headerCollapsed}
       />
 
-      <View className='campus__header'>
+      <View className='campus__header motion-enter'>
         <View className='campus__identity'>
           <View className='campus__avatar'>
             <Text>{avatarText(username)}</Text>
@@ -524,14 +524,26 @@ function Index() {
           </View>
         </View>
         <View className='campus__header-actions'>
-          <View className='icon-button' onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}>
+          <View
+            className='icon-button motion-press'
+            hoverClass='motion-press--active'
+            hoverStartTime={20}
+            hoverStayTime={100}
+            onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}
+          >
             <Image src={icons.bell} mode='aspectFit' />
             {unreadCount > 0 && <View className='icon-button__dot' />}
           </View>
         </View>
       </View>
 
-      <View className='schedule-card' onClick={openSchedule}>
+      <View
+        className='schedule-card motion-enter motion-enter--delay-1 motion-press'
+        hoverClass='motion-press--active'
+        hoverStartTime={20}
+        hoverStayTime={100}
+        onClick={openSchedule}
+      >
         <View className='schedule-card__header'>
           <View className='schedule-card__date'>
             <Text className='schedule-card__day-label'>{coursePreview.dayLabel}</Text>
@@ -593,7 +605,7 @@ function Index() {
         )}
       </View>
 
-      <View className='service-panel'>
+      <View className='service-panel motion-enter motion-enter--delay-2'>
         <View className='service-panel__simple-head'>
           <Text>校园服务</Text>
           <View
@@ -627,9 +639,15 @@ function Index() {
       <View
         className={[
           'hero-card',
+          'motion-enter',
+          'motion-enter--delay-3',
+          'motion-press',
           runtimeBanner ? 'hero-card--notice' : '',
           runtimeBanner?.image_url ? 'hero-card--image' : '',
         ].filter(Boolean).join(' ')}
+        hoverClass='motion-press--active'
+        hoverStartTime={20}
+        hoverStayTime={100}
         onClick={() => runtimeBanner
           ? openRuntimeBanner(runtimeBanner)
           : openModule('community')}
@@ -744,6 +762,8 @@ function Index() {
             key={item.id}
             className={[
               'news-card__item',
+              'motion-enter',
+              `motion-enter--delay-${Math.min(index + 1, 4)}`,
               index === 0 ? 'news-card__item--featured' : 'news-card__item--compact',
             ].join(' ')}
             hoverClass='news-card__item--pressed'
