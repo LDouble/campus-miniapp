@@ -2219,6 +2219,7 @@ page {
 
   &__buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 12rpx;
     margin-top: 17rpx;
 
@@ -2226,6 +2227,7 @@ page {
       display: flex;
       min-height: 70rpx;
       flex: 1;
+      flex-basis: calc(50% - 6rpx);
       align-items: center;
       justify-content: center;
       color: #356e68;
@@ -2241,6 +2243,78 @@ page {
         border-color: #559b94;
       }
     }
+  }
+}
+
+.course-resource-actions {
+  margin-top: 18rpx;
+
+  &--standalone {
+    margin-top: 28rpx;
+  }
+
+  &__primary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 88rpx;
+    padding: 0 22rpx;
+    color: #fff;
+    background: linear-gradient(135deg, #55b7bd, #469cae 72%, #e98c70);
+    border: 2rpx solid rgba(255, 255, 255, 0.52);
+    border-radius: 22rpx;
+    box-shadow: 0 10rpx 22rpx rgba(67, 143, 145, 0.15);
+
+    > view {
+      flex: 1;
+      min-width: 0;
+
+      text {
+        display: block;
+      }
+
+      text:first-child {
+        font-size: 24rpx;
+        font-weight: 740;
+      }
+
+      text:last-child {
+        margin-top: 4rpx;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 19rpx;
+      }
+    }
+
+    > text {
+      flex: none;
+      margin-left: 18rpx;
+      font-size: 22rpx;
+      font-weight: 700;
+    }
+  }
+
+  &__secondary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10rpx;
+    margin-top: 11rpx;
+
+    > view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 62rpx;
+      color: #527c78;
+      font-size: 20rpx;
+      font-weight: 680;
+      background: rgba(255, 255, 255, 0.8);
+      border: 2rpx solid rgba(76, 139, 130, 0.1);
+      border-radius: 17rpx;
+    }
+  }
+
+  &--course-card {
+    margin-top: 17rpx;
   }
 }
 
@@ -2295,3 +2369,6 @@ page {
     animation: none;
   }
 }
+.course-material-actions { display:flex; gap:14rpx; margin-top:28rpx; > view { display:flex; flex:1; align-items:center; justify-content:center; height:78rpx; color:#4b8977; font-size:23rpx; font-weight:750; background:#e9f4ef; border-radius:21rpx; } > view:last-child { color:#fff; background:#64a68f; } }
+.course-material-inline-action { display:flex; align-items:center; justify-content:center; height:66rpx; margin-top:16rpx; color:#3f846e; font-size:22rpx; font-weight:750; background:#e6f3ed; border-radius:18rpx; }
+.grade-card__materials { display:inline-flex !important; align-items:center; width:max-content; min-height:48rpx; padding:0 13rpx; margin-top:11rpx; color:#4e907b !important; font-size:19rpx !important; font-weight:700; background:#edf6f2; border-radius:14rpx; }

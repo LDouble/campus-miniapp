@@ -14,6 +14,10 @@ import {
   openCourseMarketplaceSearch,
   type MarketplaceIntent,
 } from '../../../features/life-services/marketplace-prefill'
+import {
+  openCourseMaterials,
+  shareCourseMaterials,
+} from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
 import { findCourseConflicts } from '../calculations'
@@ -73,6 +77,8 @@ interface CourseDetailCardProps {
   onDelete?: () => void
   onWanted: () => void
   onSell: () => void
+  onFindMaterials: () => void
+  onShareMaterials: () => void
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
@@ -84,6 +90,8 @@ function CourseDetailCard({
   onDelete,
   onWanted,
   onSell,
+  onFindMaterials,
+  onShareMaterials,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   return (
@@ -123,14 +131,18 @@ function CourseDetailCard({
             <View onClick={onEdit}>编辑</View>
           </View>
         )}
-        <View className='course-market-actions course-market-actions--course-card'>
-          <View>
-            <Text>课程资料</Text>
-            <Text>先找现有资料，没有再发布求购</Text>
+        <View className='course-resource-actions course-resource-actions--course-card'>
+          <View className='course-resource-actions__primary' onClick={onFindMaterials}>
+            <View>
+              <Text>查看课程资料</Text>
+              <Text>已带入课程与当前学期</Text>
+            </View>
+            <Text>查看 ›</Text>
           </View>
-          <View className='course-market-actions__buttons'>
-            <View onClick={onWanted}>求购 / 找资料</View>
-            <View onClick={onSell}>转卖资料</View>
+          <View className='course-resource-actions__secondary'>
+            <View onClick={onShareMaterials}>分享资料</View>
+            <View onClick={onWanted}>求购教材</View>
+            <View onClick={onSell}>转卖教材</View>
           </View>
         </View>
       </View>
@@ -388,6 +400,19 @@ export default function SchedulePage() {
       return
     }
     void openCourseMarketplacePublisher(prefill)
+  }
+  const openCourseMaterialPage = (course: Course, action?: 'upload') => {
+    setSheet(null)
+    const context = {
+      courseName: course.name,
+      courseCode: course.courseCode,
+      periodId: course.periodId,
+      periodLabel: periods.find((period) => period.id === course.periodId)?.label,
+      source: 'schedule' as const,
+    }
+    void (action === 'upload'
+      ? shareCourseMaterials(context)
+      : openCourseMaterials(context))
   }
 
   const openCourseForm = (course?: Course) => {
@@ -729,6 +754,8 @@ export default function SchedulePage() {
                     onEdit={() => openCourseForm(course)}
                     onWanted={() => openCourseTrade(course, 'wanted')}
                     onSell={() => openCourseTrade(course, 'sell')}
+                    onFindMaterials={() => openCourseMaterialPage(course)}
+                    onShareMaterials={() => openCourseMaterialPage(course, 'upload')}
                   />
                 ))}
               </View>
@@ -742,6 +769,8 @@ export default function SchedulePage() {
                     onEdit={() => openCourseForm(activeCourse)}
                     onWanted={() => openCourseTrade(activeCourse, 'wanted')}
                     onSell={() => openCourseTrade(activeCourse, 'sell')}
+                    onFindMaterials={() => openCourseMaterialPage(activeCourse)}
+                    onShareMaterials={() => openCourseMaterialPage(activeCourse, 'upload')}
                   />
                 </View>
               </>

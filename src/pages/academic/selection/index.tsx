@@ -5,6 +5,10 @@ import {
   openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
+import {
+  openCourseMaterials,
+  shareCourseMaterials,
+} from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
 import { academicRepository } from '../repository'
@@ -110,6 +114,20 @@ export default function SelectionPage() {
     }
     void openCourseMarketplacePublisher(prefill)
   }
+  const openCourseMaterialPage = (action?: 'upload') => {
+    if (!activeRecord) return
+    setSheet(null)
+    const context = {
+      courseName: activeRecord.courseName,
+      courseCode: activeRecord.courseCode,
+      periodId: activeRecord.periodId,
+      periodLabel: getPeriodLabel(periods, activeRecord.periodId),
+      source: 'selection' as const,
+    }
+    void (action === 'upload'
+      ? shareCourseMaterials(context)
+      : openCourseMaterials(context))
+  }
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
       <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
@@ -185,12 +203,14 @@ export default function SelectionPage() {
             {activeRecord.status === 'selected' && (
               <View className='course-market-actions'>
                 <View>
-                  <Text>课程资料</Text>
-                  <Text>优先查找已有资料，没有再发布求购</Text>
+                  <Text>课程相关</Text>
+                  <Text>查资料，也可以求购或转卖教材</Text>
                 </View>
                 <View className='course-market-actions__buttons'>
-                  <View onClick={() => openCourseTrade('wanted')}>找教材/资料</View>
-                  <View onClick={() => openCourseTrade('sell')}>出售相关资料</View>
+                  <View onClick={() => openCourseMaterialPage()}>查找资料</View>
+                  <View onClick={() => openCourseMaterialPage('upload')}>分享资料</View>
+                  <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
+                  <View onClick={() => openCourseTrade('sell')}>转卖教材</View>
                 </View>
               </View>
             )}
