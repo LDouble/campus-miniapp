@@ -521,11 +521,14 @@
   }
 }
 .detail-report-link {
+  display: flex;
   width: fit-content;
-  margin: 10px auto 24px;
-  padding: 8px 14px;
+  min-height: 64rpx;
+  margin: 20rpx auto 48rpx;
+  padding: 0 28rpx;
+  align-items: center;
   color: #81969e;
-  font-size: 13px;
+  font-size: 26rpx;
 }
 
 .detail-report-link--pressed {

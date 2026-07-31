@@ -534,12 +534,17 @@ page {
   }
 }
 .community-detail-card__report {
+  display: flex;
+  min-height: 64rpx;
   margin-left: auto;
-  padding: 8px 4px;
+  padding: 0 12rpx;
+  align-items: center;
   color: #82979e;
-  font-size: 13px;
+  font-size: 26rpx;
 }
 
 .community-comment__report {
+  padding: 12rpx 8rpx;
   color: #7b9199;
+  font-size: 24rpx;
 }

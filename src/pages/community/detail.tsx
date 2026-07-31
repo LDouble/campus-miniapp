@@ -311,7 +311,8 @@ export default function CommunityDetailPage() {
                     <Image src={communityDetailIcons.edit} mode='aspectFit' />
                   </View>
                 )}
-                {!post.available_actions.includes('edit') && (
+                {post.viewer_relation !== 'owner'
+                  && post.viewer_relation !== 'admin' && (
                   <View
                     className='community-detail-card__report'
                     hoverClass='community-detail-card__action--pressed'
@@ -367,7 +368,8 @@ export default function CommunityDetailPage() {
                           <Text>{formatStatus(item.status)}</Text>
                         </>
                       )}
-                      {!item.available_actions.includes('edit') && (
+                      {item.viewer_relation !== 'author'
+                        && item.viewer_relation !== 'admin' && (
                         <>
                           <View />
                           <Text
