@@ -387,58 +387,95 @@
 
 .community-post__actions {
   display: flex;
-  min-height: 88rpx;
-  margin-top: 5rpx;
+  min-height: 82rpx;
+  padding: 0;
+  margin-top: 16rpx;
   align-items: center;
-  gap: 16rpx;
+  gap: 0;
+  box-sizing: border-box;
+  border-top: 2rpx solid rgba(82, 122, 113, 0.1);
+  background: transparent;
 }
 
 .community-post__action {
   display: flex;
-  min-width: 88rpx;
-  min-height: 88rpx;
+  min-width: 0;
+  min-height: 68rpx;
+  flex: 1;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   padding: 0;
   margin: 0;
   border: 0;
-  border-radius: 0;
+  border-radius: 16rpx;
   background: transparent;
-  color: #686d69;
+  color: #5f7773;
   line-height: 1;
-  transition: opacity 160ms ease;
+  transition: background-color 160ms ease, opacity 160ms ease, transform 160ms ease;
 }
 
 .community-post__action image {
-  width: 39rpx;
-  height: 39rpx;
+  width: 31rpx;
+  height: 31rpx;
   flex: none;
+  opacity: 0.78;
+}
+
+.community-post__action-label {
+  margin-left: 8rpx;
+  color: #4c6966;
+  font-size: 21rpx;
+  font-weight: 650;
 }
 
 .community-post__action-count {
-  min-width: 30rpx;
-  margin-left: 8rpx;
-  color: #6b6671;
-  font-size: 21rpx;
-  font-weight: 520;
-  text-align: left;
+  min-width: 18rpx;
+  margin-left: 5rpx;
+  color: #879895;
+  font-size: 19rpx;
+  font-weight: 560;
+  text-align: center;
 }
 
-.community-post__action--liked .community-post__action-count {
-  color: #d95642;
+.community-post__action--liked {
+  background: transparent;
+
+  image {
+    opacity: 1;
+  }
+
+  .community-post__action-label,
+  .community-post__action-count {
+    color: #c76453;
+  }
 }
 
 .community-post__action--share {
-  min-width: 88rpx;
+  flex: 1;
+  color: #5f7773;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: center;
 
   &::after {
     border: 0;
   }
 }
 
-.community-post__action--pressed,
+.community-post__action--pressed {
+  opacity: 0.72;
+  background: rgba(233, 245, 242, 0.62);
+  transform: scale(0.98);
+}
+
 .community-post__tap-area--pressed {
   opacity: 0.48;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community-post__action {
+    transition: none;
+  }
 }
 
 .api-community-state {

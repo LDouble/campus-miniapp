@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { ScrollView, Text, View } from '@tarojs/components'
 import type { Notice } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
-import { syncCustomTabBar } from '../../utils/tabbar'
+import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
 type MessageType = '教务' | '互动' | '服务' | '系统'
@@ -85,6 +85,11 @@ export default function MessagesPage() {
   usePullDownRefresh(() => {
     void load()
   })
+
+  useEffect(() => {
+    setCustomTabBarHidden(Boolean(active))
+    return () => setCustomTabBarHidden(false)
+  }, [active])
 
   const visible = useMemo(() => {
     const normalized = keyword.trim().toLowerCase()
@@ -220,24 +225,35 @@ export default function MessagesPage() {
         <View className='message-overlay' onClick={() => setActive(null)}>
           <View className='message-sheet' onClick={(event) => event.stopPropagation()}>
             <View className='message-sheet__handle' />
-            <Text className='message-sheet__type'>
-              {categoryType(active.category)}消息
-            </Text>
-            <Text className='message-sheet__title'>{active.title}</Text>
-            <Text className='message-sheet__time'>
-              {formatDateTime(active.published_at || active.created_at)}
-            </Text>
-            <Text className='message-sheet__content'>{active.body}</Text>
-            {actionRoute(active.action_path) && (
-              <View
-                className='message-sheet__button message-sheet__button--primary'
-                onClick={() => goAction(active)}
-              >
-                查看相关内容
+            <ScrollView
+              className='message-sheet__scroll'
+              scrollY
+              enhanced
+              showScrollbar={false}
+            >
+              <View className='message-sheet__scroll-content'>
+                <Text className='message-sheet__type'>
+                  {categoryType(active.category)}消息
+                </Text>
+                <Text className='message-sheet__title'>{active.title}</Text>
+                <Text className='message-sheet__time'>
+                  {formatDateTime(active.published_at || active.created_at)}
+                </Text>
+                <Text className='message-sheet__content'>{active.body}</Text>
               </View>
-            )}
-            <View className='message-sheet__button' onClick={() => setActive(null)}>
-              知道了
+            </ScrollView>
+            <View className='message-sheet__actions'>
+              {actionRoute(active.action_path) && (
+                <View
+                  className='message-sheet__button message-sheet__button--primary'
+                  onClick={() => goAction(active)}
+                >
+                  查看相关内容
+                </View>
+              )}
+              <View className='message-sheet__button' onClick={() => setActive(null)}>
+                知道了
+              </View>
             </View>
           </View>
         </View>

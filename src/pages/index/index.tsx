@@ -29,7 +29,11 @@ import {
   avatarText,
   resolveCoursePreview,
 } from '../../features/home/data'
-import { communityAuthorName } from '../../features/community/author'
+import {
+  communityAuthorInitial,
+  communityAuthorName,
+  communityAuthorTone,
+} from '../../features/community/author'
 import { formatDateTime } from '../../features/life-services/format'
 import MarketplaceCard from '../../features/life-services/components/marketplace-card'
 import { lifeServicesRepository } from '../../features/life-services/repository'
@@ -77,6 +81,8 @@ const icons = {
   shuttle: require('../../assets/icons/shuttle.svg'),
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
+  comment: require('../../assets/community/comment.svg'),
+  heart: require('../../assets/community/heart.svg'),
 }
 
 const quickServices = [
@@ -736,21 +742,62 @@ function Index() {
         {!communityLoading && !communityError && visibleCommunityPosts.map((item, index) => (
           <View
             key={item.id}
-            className={`news-card__item ${index !== visibleCommunityPosts.length - 1 ? 'news-card__item--border' : ''}`}
+            className={[
+              'news-card__item',
+              index === 0 ? 'news-card__item--featured' : 'news-card__item--compact',
+            ].join(' ')}
+            hoverClass='news-card__item--pressed'
+            hoverStartTime={20}
+            hoverStayTime={120}
+            ariaRole='button'
+            ariaLabel={`查看${communityAuthorName(item)}发布的动态`}
             onClick={() => openCommunityPost(item)}
           >
-            <View className='news-card__tag news-card__tag--community'>
-              {sectionNames[item.section_id] || '社区'}
+            <View className='news-card__topline'>
+              <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
+                <Text>{communityAuthorInitial(item)}</Text>
+              </View>
+              <View className='news-card__author'>
+                <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
+                <Text className='news-card__time'>
+                  {formatDateTime(item.published_at || item.created_at)}
+                </Text>
+              </View>
+              <View className='news-card__tag'>
+                <Text>{sectionNames[item.section_id] || '社区'}</Text>
+              </View>
             </View>
-            <View className='news-card__content'>
+
+            <View className='news-card__body'>
               <Text className='news-card__title'>
                 {item.content?.trim() || '分享了一组校园图片'}
               </Text>
-              <Text className='news-card__time'>
-                {communityAuthorName(item)} · {formatDateTime(item.published_at || item.created_at)}
-              </Text>
+              {index === 0 && item.images[0] && (
+                <Image
+                  className='news-card__cover'
+                  src={item.images[0].url}
+                  mode='aspectFill'
+                  lazyLoad
+                />
+              )}
             </View>
-            <Image className='news-card__arrow' src={icons.arrow} mode='aspectFit' />
+
+            {index === 0 && (
+              <View className='news-card__footer'>
+                <View className='news-card__metric'>
+                  <Image src={icons.heart} mode='aspectFit' />
+                  <Text>{item.like_count}</Text>
+                </View>
+                <View className='news-card__metric'>
+                  <Image src={icons.comment} mode='aspectFit' />
+                  <Text>{item.comment_count}</Text>
+                </View>
+                <View className='news-card__read'>
+                  <Text>去看看</Text>
+                  <Image src={icons.arrow} mode='aspectFit' />
+                </View>
+              </View>
+            )}
           </View>
         ))}
       </View>
