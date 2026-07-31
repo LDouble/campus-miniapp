@@ -6,12 +6,12 @@
 }
 
 .content-report__body {
-  padding: 18px 18px 0;
+  padding: 20px 18px 0;
 }
 
 .content-report__section {
-  margin-bottom: 16px;
-  padding: 20px;
+  margin-bottom: 18px;
+  padding: 22px 20px;
   border: 1px solid rgba(48, 149, 182, 0.09);
   border-radius: 20px;
   background: #fff;
@@ -19,22 +19,22 @@
 }
 
 .content-report__title {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 700;
 }
 
 .content-report__options {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .content-report__option {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 48px;
+  min-height: 56px;
   border-bottom: 1px solid #edf4f6;
   color: #395c67;
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .content-report__option:last-child {
@@ -76,28 +76,28 @@
 
 .content-report__field-head > text:last-child {
   color: #91a5ac;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .content-report__textarea {
   width: 100%;
-  height: 128px;
-  margin-top: 14px;
-  padding: 14px;
+  height: 144px;
+  margin-top: 16px;
+  padding: 16px;
   box-sizing: border-box;
   border-radius: 14px;
   background: #f5f9fa;
   color: #274b57;
-  font-size: 15px;
-  line-height: 1.65;
+  font-size: 17px;
+  line-height: 1.7;
 }
 
 .content-report__hint {
   display: block;
   padding: 0 4px;
   color: #81979f;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .content-report__footer {
@@ -112,11 +112,11 @@
 }
 
 .content-report__submit {
-  padding: 14px 0;
+  padding: 16px 0;
   border-radius: 14px;
   background: #3095b6;
   color: #fff;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   text-align: center;
 }
