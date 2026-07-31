@@ -383,6 +383,68 @@ export default function MaterialsPage() {
     ].filter(Boolean) as string[]
     return ['全部课程', ...Array.from(new Set(names))]
   }, [apiCourses, courseSuggestions, metadata.courseName, routeContext.courseName])
+  const uploadCourseMatch = useMemo(() => resolveMaterialCourse(apiCourses, {
+    id: metadata.courseId,
+    name: metadata.courseName,
+    courseCode: metadata.courseName === routeContext.courseName
+      ? routeContext.courseCode
+      : undefined,
+  }), [
+    apiCourses,
+    metadata.courseId,
+    metadata.courseName,
+    routeContext.courseCode,
+    routeContext.courseName,
+  ])
+  const uploadCourseOptions = useMemo(() => {
+    const seen = new Set<string>()
+    const candidates = [
+      ...(routeContext.courseName ? [{
+        name: routeContext.courseName,
+        courseCode: routeContext.courseCode,
+        periodId: routeContext.periodId,
+      }] : []),
+      ...courseSuggestions,
+    ].flatMap((suggestion) => {
+      const record = resolveMaterialCourse(apiCourses, {
+        name: suggestion.name,
+        courseCode: suggestion.courseCode,
+      })
+      const name = record?.name || suggestion.name.trim()
+      const key = name.toLowerCase()
+      if (!name || seen.has(key)) return []
+      seen.add(key)
+      return [{
+        id: record?.id,
+        name,
+        courseCode: record?.course_code || suggestion.courseCode,
+        periodId: name === routeContext.courseName
+          ? routeContext.periodId
+          : suggestion.periodId,
+      }]
+    })
+    const courseKeyword = metadata.courseName.trim().toLowerCase()
+    const visible = courseKeyword && !uploadCourseMatch
+      ? candidates.filter((item) => (
+        item.name.toLowerCase().includes(courseKeyword)
+        || item.courseCode?.toLowerCase().includes(courseKeyword)
+      ))
+      : candidates
+    return visible
+      .sort((left, right) => (
+        Number(right.id === uploadCourseMatch?.id)
+        - Number(left.id === uploadCourseMatch?.id)
+      ))
+      .slice(0, 6)
+  }, [
+    apiCourses,
+    courseSuggestions,
+    metadata.courseName,
+    routeContext.courseCode,
+    routeContext.courseName,
+    routeContext.periodId,
+    uploadCourseMatch,
+  ])
   const filtersActive = course !== '全部课程' || kind !== 'all'
   const sourceCourseActive = !!routeContext.courseName
     && course === routeContext.courseName
@@ -434,6 +496,21 @@ export default function MaterialsPage() {
     if (uploading) return
     setMetadata((current) => ({ ...current, ...patch }))
     invalidateUploadSession()
+  }
+  const updateUploadCourseName = (courseName: string) => {
+    const record = resolveMaterialCourse(apiCourses, {
+      name: courseName,
+      courseCode: courseName === routeContext.courseName
+        ? routeContext.courseCode
+        : undefined,
+    })
+    updateMetadata({
+      courseName,
+      courseId: record?.id,
+      periodId: record?.name === routeContext.courseName
+        ? routeContext.periodId
+        : undefined,
+    })
   }
 
   const chooseFiles = async () => {
@@ -924,36 +1001,77 @@ export default function MaterialsPage() {
                 placeholder='例如：高数期末复习资料'
                 onKeyboardVisibilityChange={onKeyboardVisibilityChange}
               />
-              <Text className='materials-sheet__label'>课程</Text>
-              <KeyboardSafeInput
-                disabled={uploading}
-                value={metadata.courseName}
-                onInput={(event) => updateMetadata({
-                  courseName: event.detail.value,
-                  courseId: undefined,
-                  periodId: undefined,
-                })}
-                className='materials-input'
-                placeholder='找不到课程也可直接输入'
-                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-              />
-              <ScrollView scrollX showScrollbar={false}>
-                <View className='materials-inline-options'>{courseOptions.slice(1).map((item) => (
-                  <View key={item} onClick={() => {
-                    const record = resolveMaterialCourse(apiCourses, { name: item })
-                    updateMetadata({
-                      courseName: record?.name || item,
-                      courseId: record?.id,
-                      periodId: item === routeContext.courseName
-                        ? routeContext.periodId
-                        : undefined,
-                    })
-                  }}
-                  >
-                    {item}
+              <View className='materials-sheet__field-heading'>
+                <Text>课程</Text>
+                <Text className={coursesLoaded && !uploadCourseMatch && metadata.courseName.trim()
+                  ? 'materials-sheet__field-status materials-sheet__field-status--pending'
+                  : 'materials-sheet__field-status'}
+                >
+                  {!metadata.courseName.trim()
+                    ? '请选择'
+                    : !coursesLoaded
+                      ? '正在匹配'
+                      : uploadCourseMatch
+                        ? '已匹配课程库'
+                        : '将由管理员归类'}
+                </Text>
+              </View>
+              <View className='materials-course-picker'>
+                <View className='materials-course-picker__input-row'>
+                  <KeyboardSafeInput
+                    disabled={uploading}
+                    value={metadata.courseName}
+                    onInput={(event) => updateUploadCourseName(event.detail.value)}
+                    className='materials-input materials-course-picker__input'
+                    placeholder='输入课程名称或课程号'
+                    onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                  />
+                  {!!metadata.courseName && !uploading && (
+                    <View
+                      className='materials-course-picker__clear'
+                      onClick={() => updateUploadCourseName('')}
+                    >
+                      ×
+                    </View>
+                  )}
+                </View>
+                {!!uploadCourseOptions.length && (
+                  <Text className='materials-course-picker__caption'>
+                    {metadata.courseName.trim() && !uploadCourseMatch ? '匹配课程' : '常用课程'}
+                  </Text>
+                )}
+                {!!uploadCourseOptions.length ? (
+                  <View className='materials-course-picker__grid'>
+                    {uploadCourseOptions.map((item) => {
+                      const selected = item.id
+                        ? item.id === uploadCourseMatch?.id
+                        : item.name === metadata.courseName
+                      return (
+                        <View
+                          key={`${item.id || 'candidate'}-${item.name}`}
+                          className={`materials-course-picker__option ${selected ? 'materials-course-picker__option--active' : ''}`}
+                          hoverClass='materials-course-picker__option--pressed'
+                          onClick={() => updateMetadata({
+                            courseName: item.name,
+                            courseId: item.id,
+                            periodId: item.periodId,
+                          })}
+                        >
+                          <View>
+                            <Text>{item.name}</Text>
+                            <Text>{item.courseCode || '课程目录'}</Text>
+                          </View>
+                          {selected && <Text>已选</Text>}
+                        </View>
+                      )
+                    })}
                   </View>
-                ))}</View>
-              </ScrollView>
+                ) : (
+                  <Text className='materials-course-picker__empty'>
+                    没有匹配课程，可直接使用输入的名称
+                  </Text>
+                )}
+              </View>
               <Text className='materials-sheet__label'>资料类型</Text>
               <ScrollView scrollX showScrollbar={false}>
                 <View className='materials-inline-options'>{materialKinds.map((item) => <View key={item} className={metadata.kind === item ? 'materials-option--active' : ''} onClick={() => updateMetadata({ kind: item })}>{materialKindLabels[item]}</View>)}</View>
