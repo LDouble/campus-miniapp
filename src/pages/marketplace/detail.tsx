@@ -6,6 +6,7 @@ import type { MarketplaceListingView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
+import { openContentReport } from '../../features/content-report'
 import { formatMoney, formatStatus } from '../../features/life-services/format'
 import '../../features/life-services/detail.scss'
 import './detail.scss'
@@ -209,6 +210,20 @@ export default function MarketplaceDetailPage() {
               </View>
               <Text className='detail-safety'>平台仅提供信息撮合，不代收款，也不会索要验证码。</Text>
             </View>
+
+            {item.viewer_relation !== 'owner' && (
+              <View
+                className='detail-report-link'
+                hoverClass='detail-report-link--pressed'
+                onClick={() => void openContentReport({
+                  resourceType: 'marketplace_listing',
+                  resourceId: item.id,
+                  resourceVersion: item.version,
+                })}
+              >
+                举报这条信息
+              </View>
+            )}
 
             {item.available_actions.length > 0 && (
               <View className='detail-action-bar'>

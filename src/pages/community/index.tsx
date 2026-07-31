@@ -27,6 +27,12 @@ import {
   consumeMarketplaceSearchPrefill,
   type MarketplaceSearchPrefill,
 } from '../../features/life-services/marketplace-prefill'
+import {
+  getMiniappRuntimeConfig,
+  loadMiniappRuntimeConfig,
+  resolveMiniappModule,
+  type MiniappModuleKey,
+} from '../../features/runtime-config'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
@@ -36,8 +42,15 @@ const icons = {
 }
 
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
+const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
+  community: 'community',
+  errands: 'errand',
+  market: 'marketplace',
+  carpool: 'carpool',
+}
 
 export default function CommunityPage() {
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [activeSection, setActiveSection] = useState<LifeHubSection>('community')
   const [communityRoots, setCommunityRoots] = useState<CampusCircleSectionView[]>([])
   const [communitySectionsReady, setCommunitySectionsReady] = useState(false)
@@ -59,7 +72,21 @@ export default function CommunityPage() {
     releaseGap: 16,
   })
 
-  const baseCopy = lifeBusinessThemes[activeSection]
+  const visibleLifeSections = lifeBusinessThemeList.filter((section) => (
+    resolveMiniappModule(runtimeConfig, lifeSectionModules[section.key]).state !== 'hidden'
+  ))
+  const fallbackSection = visibleLifeSections[0]?.key || 'community'
+  const displayedSection = visibleLifeSections.some(
+    (section) => section.key === activeSection,
+  ) ? activeSection : fallbackSection
+  const hasVisibleLifeSection = visibleLifeSections.length > 0
+  const displayedModule = resolveMiniappModule(
+    runtimeConfig,
+    lifeSectionModules[displayedSection],
+  )
+  const canUseDisplayedSection = hasVisibleLifeSection
+    && displayedModule.state === 'enabled'
+  const baseCopy = lifeBusinessThemes[displayedSection]
   const allCommunitySections = communityRoots.flatMap((root) => [
     root,
     ...(root.children || []).filter((item) => item.status === 'active'),
@@ -75,7 +102,7 @@ export default function CommunityPage() {
   const activeCommunityChildren = (activeCommunityRoot?.children || []).filter(
     (item) => item.status === 'active',
   )
-  const pageCopy = activeSection === 'community' && activeCommunityRoot
+  const pageCopy = displayedSection === 'community' && activeCommunityRoot
     ? {
       ...baseCopy,
       title: activeCommunityRoot.name,
@@ -109,6 +136,16 @@ export default function CommunityPage() {
   }
 
   const selectSection = (section: LifeHubSection) => {
+    const module = resolveMiniappModule(runtimeConfig, lifeSectionModules[section])
+    if (module.state === 'maintenance') {
+      void Taro.navigateTo({
+        url: `/pages/feature-unavailable/index?module=${lifeSectionModules[section]}&message=${encodeURIComponent(
+          module.message || '功能维护中，请稍后再试',
+        )}`,
+      })
+      return
+    }
+    if (module.state === 'hidden') return
     setMarketplaceSearchPrefill(null)
     setActiveSection(section)
     Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
@@ -160,7 +197,7 @@ export default function CommunityPage() {
   }
 
   const openPublish = () => {
-    if (activeSection === 'community') {
+    if (displayedSection === 'community') {
       if (!activeCommunitySection) {
         Taro.showToast({ title: '暂无可发布的社区板块', icon: 'none' })
         return
@@ -170,31 +207,67 @@ export default function CommunityPage() {
       })
       return
     }
-    Taro.navigateTo({ url: `/pages/publish/index?section=${activeSection}` })
+    Taro.navigateTo({ url: `/pages/publish/index?section=${displayedSection}` })
   }
 
   useDidShow(() => {
     syncCustomTabBar(1)
     setRefreshSignal((current) => current + 1)
-    void loadCommunitySections()
+    void loadMiniappRuntimeConfig().then((config) => {
+      setRuntimeConfig(config)
+      const availableSections = lifeBusinessThemeList.filter((section) => (
+        resolveMiniappModule(config, lifeSectionModules[section.key]).state !== 'hidden'
+      ))
+      const firstSection = availableSections.find((section) => (
+        resolveMiniappModule(config, lifeSectionModules[section.key]).state === 'enabled'
+      ))?.key || availableSections[0]?.key || 'community'
+      setActiveSection((current) => (
+        availableSections.some((section) => (
+          section.key === current
+          && resolveMiniappModule(
+            config,
+            lifeSectionModules[section.key],
+          ).state === 'enabled'
+        ))
+          ? current
+          : firstSection
+      ))
+      if (resolveMiniappModule(config, 'community').state === 'enabled') {
+        void loadCommunitySections()
+      } else {
+        setCommunityRoots([])
+        setCommunitySectionsReady(true)
+      }
+    })
     const feedPin = consumeCommunityFeedPin()
     setPinnedCommunityPost(feedPin)
     if (feedPin) {
       setMarketplaceSearchPrefill(null)
-      setActiveSection('community')
+      if (resolveMiniappModule(runtimeConfig, 'community').state !== 'hidden') {
+        setActiveSection('community')
+      }
       setActiveCommunitySectionId(feedPin.section_id)
       void Taro.pageScrollTo({ scrollTop: 0, duration: 0 })
       return
     }
     const marketplacePrefill = consumeMarketplaceSearchPrefill()
     if (marketplacePrefill) {
-      setActiveSection('market')
-      setMarketplaceSearchPrefill(marketplacePrefill)
+      if (resolveMiniappModule(runtimeConfig, 'marketplace').state !== 'hidden') {
+        setActiveSection('market')
+        setMarketplaceSearchPrefill(marketplacePrefill)
+      }
       return
     }
     const savedSection = Taro.getStorageSync<string>(LIFE_HUB_SECTION_KEY)
     if (savedSection && isLifeHubSection(savedSection)) {
-      setActiveSection(savedSection)
+      if (
+        resolveMiniappModule(
+          runtimeConfig,
+          lifeSectionModules[savedSection],
+        ).state !== 'hidden'
+      ) {
+        setActiveSection(savedSection)
+      }
     }
   })
 
@@ -205,7 +278,11 @@ export default function CommunityPage() {
   usePullDownRefresh(() => {
     setPinnedCommunityPost(null)
     setRefreshSignal((current) => current + 1)
-    void loadCommunitySections().finally(() => Taro.stopPullDownRefresh())
+    if (resolveMiniappModule(runtimeConfig, 'community').state === 'enabled') {
+      void loadCommunitySections().finally(() => Taro.stopPullDownRefresh())
+      return
+    }
+    Taro.stopPullDownRefresh()
   })
 
   useShareAppMessage((event) => {
@@ -230,7 +307,7 @@ export default function CommunityPage() {
   })
 
   return (
-    <View className={`community-page community-page--${activeSection}`}>
+    <View className={`community-page community-page--${displayedSection}`}>
       <CustomNavbar
         title={pageCopy.title}
         immersive
@@ -238,7 +315,7 @@ export default function CommunityPage() {
         collapsed={headerCollapsed}
         actionIcon={icons.search}
         actionLabel={`搜索${pageCopy.title}`}
-        actionVisible={headerCollapsed}
+        actionVisible={headerCollapsed && canUseDisplayedSection}
         onAction={() => void focusSearch()}
       />
 
@@ -256,12 +333,12 @@ export default function CommunityPage() {
         style={{ top: `${navbarHeight}px` }}
       >
         <View className='life-primary-tabs'>
-          {lifeBusinessThemeList.map((section) => (
+          {visibleLifeSections.map((section) => (
             <View
               id={`life-section-${section.key}`}
               key={section.key}
               className={`life-primary-tabs__item life-primary-tabs__item--${section.key} ${
-                activeSection === section.key
+                displayedSection === section.key
                   ? 'life-primary-tabs__item--active'
                   : ''
               }`}
@@ -273,7 +350,7 @@ export default function CommunityPage() {
           ))}
         </View>
 
-        {activeSection === 'community' && communityRoots.length > 0 && (
+        {displayedSection === 'community' && communityRoots.length > 0 && (
           <>
             <ScrollView className='community-root-tabs' scrollX enhanced showScrollbar={false}>
               <View className='community-root-tabs__inner'>
@@ -300,7 +377,17 @@ export default function CommunityPage() {
       </View>
 
       <View className='community-content-anchor'>
-        {activeSection === 'community' ? (
+        {!canUseDisplayedSection ? (
+          <View className='community-module-state'>
+            <View className='community-module-state__mark'>···</View>
+            <Text className='community-module-state__title'>
+              {hasVisibleLifeSection ? `${baseCopy.title}维护中` : '校园社区暂未开放'}
+            </Text>
+            <Text className='community-module-state__message'>
+              {displayedModule.message || '功能正在调整，请稍后再来看看'}
+            </Text>
+          </View>
+        ) : displayedSection === 'community' ? (
           <CommunityFeedPanel
             sectionRoots={communityRoots}
             activeSection={activeCommunitySection}
@@ -320,8 +407,8 @@ export default function CommunityPage() {
           />
         ) : (
           <LifeServiceListPanel
-            key={activeSection}
-            section={activeSection as LifeServiceSection}
+            key={displayedSection}
+            section={displayedSection as LifeServiceSection}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
             marketplaceSearchPrefill={marketplaceSearchPrefill}
@@ -332,17 +419,19 @@ export default function CommunityPage() {
         )}
       </View>
 
-      <View
-        id={`life-publish-${activeSection}`}
-        className={`life-publish-fab community-publish-fab life-publish-fab--${activeSection} ${
-          headerCollapsed ? 'life-publish-fab--compact' : ''
-        }`}
-        hoverClass='life-publish-fab--pressed'
-        onClick={openPublish}
-      >
-        <Text>＋</Text>
-        <Text>{baseCopy.publishLabel}</Text>
-      </View>
+      {canUseDisplayedSection && (
+        <View
+          id={`life-publish-${displayedSection}`}
+          className={`life-publish-fab community-publish-fab life-publish-fab--${displayedSection} ${
+            headerCollapsed ? 'life-publish-fab--compact' : ''
+          }`}
+          hoverClass='life-publish-fab--pressed'
+          onClick={openPublish}
+        >
+          <Text>＋</Text>
+          <Text>{baseCopy.publishLabel}</Text>
+        </View>
+      )}
     </View>
   )
 }

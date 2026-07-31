@@ -520,3 +520,15 @@
     transition: none;
   }
 }
+.detail-report-link {
+  width: fit-content;
+  margin: 10px auto 24px;
+  padding: 8px 14px;
+  color: #81969e;
+  font-size: 13px;
+}
+
+.detail-report-link--pressed {
+  color: #496b77;
+  opacity: 0.72;
+}

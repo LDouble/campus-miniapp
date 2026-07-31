@@ -38,6 +38,30 @@ export type RuntimeSlogan = {
   enabled: boolean
 }
 
+export const MINIAPP_MODULE_KEYS = [
+  'academic_schedule',
+  'academic_grades',
+  'academic_exams',
+  'academic_selection',
+  'academic_statistics',
+  'calendar',
+  'community',
+  'marketplace',
+  'errand',
+  'carpool',
+  'course_materials',
+  'empty_classroom',
+  'shuttle',
+] as const
+
+export type MiniappModuleKey = typeof MINIAPP_MODULE_KEYS[number]
+export type MiniappModuleState = 'enabled' | 'maintenance' | 'hidden'
+
+export type MiniappModuleConfig = {
+  state: MiniappModuleState
+  message?: string
+}
+
 export type MiniappRuntimeConfig = {
   schema_version: 1
   title: string
@@ -46,6 +70,7 @@ export type MiniappRuntimeConfig = {
   campus_order: string[]
   campuses: Record<string, CampusRuntimeConfig>
   notes: Record<string, string>
+  modules: Record<MiniappModuleKey, MiniappModuleConfig>
   slogan_interval_ms: number
   slogans: RuntimeSlogan[]
   banners: RuntimeBanner[]
@@ -62,6 +87,7 @@ type StoredRuntimeConfig = {
 
 const CONFIG_STORAGE_KEY = 'campus.miniapp.runtimeConfig.v1'
 export const CAMPUS_STORAGE_KEY = 'campus.home.campus.v1'
+const CONFIG_FRESH_MS = 60_000
 
 const sharedSections: Record<string, CampusSection> = {
   1: { start: '08:00', end: '08:50' },
@@ -83,6 +109,19 @@ const defaultFeatures = {
   classroom: true,
   shuttle: true,
   study_room: true,
+}
+
+const enabledModules = Object.fromEntries(
+  MINIAPP_MODULE_KEYS.map((key) => [key, { state: 'enabled' }]),
+) as Record<MiniappModuleKey, MiniappModuleConfig>
+
+const conservativeModules: Record<MiniappModuleKey, MiniappModuleConfig> = {
+  ...enabledModules,
+  community: { state: 'hidden' },
+  marketplace: { state: 'hidden' },
+  errand: { state: 'hidden' },
+  carpool: { state: 'hidden' },
+  course_materials: { state: 'hidden' },
 }
 
 export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
@@ -118,6 +157,7 @@ export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
     西海岸校区: '上午课间分别为5分钟和15分钟，下午、晚上与其他校区一致。',
     其他校区: '崂山校区与鱼山校区上课时间一致。',
   },
+  modules: conservativeModules,
   slogan_interval_ms: 5000,
   slogans: [
     {
@@ -216,6 +256,22 @@ const isSlogan = (value: unknown): value is RuntimeSlogan => {
   )
 }
 
+const isModuleConfig = (value: unknown): value is MiniappModuleConfig => (
+  isRecord(value)
+  && ['enabled', 'maintenance', 'hidden'].includes(String(value.state))
+  && (value.message === undefined || typeof value.message === 'string')
+)
+
+const normalizeModules = (
+  value: unknown,
+): Record<MiniappModuleKey, MiniappModuleConfig> => {
+  if (!isRecord(value)) return conservativeModules
+  return Object.fromEntries(MINIAPP_MODULE_KEYS.map((key) => [
+    key,
+    isModuleConfig(value[key]) ? value[key] : conservativeModules[key],
+  ])) as Record<MiniappModuleKey, MiniappModuleConfig>
+}
+
 const isRuntimeConfig = (value: unknown): value is MiniappRuntimeConfig => {
   if (!isRecord(value)) return false
   if (
@@ -226,6 +282,7 @@ const isRuntimeConfig = (value: unknown): value is MiniappRuntimeConfig => {
     || !Array.isArray(value.campus_order)
     || !isRecord(value.campuses)
     || !isRecord(value.notes)
+    || (value.modules !== undefined && !isRecord(value.modules))
     || typeof value.slogan_interval_ms !== 'number'
     || !Array.isArray(value.slogans)
     || !Array.isArray(value.banners)
@@ -241,26 +298,55 @@ const isRuntimeConfig = (value: unknown): value is MiniappRuntimeConfig => {
     && value.slogans.length > 0
     && value.slogans.every(isSlogan)
     && value.banners.every(isBanner)
+    && (value.modules === undefined || Object.entries(value.modules)
+      .every(([key, module]) => (
+        MINIAPP_MODULE_KEYS.includes(key as MiniappModuleKey)
+        && isModuleConfig(module)
+      )))
   )
 }
 
-const cachedRuntimeConfig = () => {
+const normalizeRuntimeConfig = (
+  value: MiniappRuntimeConfig,
+): MiniappRuntimeConfig => ({
+  ...value,
+  modules: normalizeModules(value.modules),
+})
+
+const storedRuntimeConfig = (): StoredRuntimeConfig | null => {
   try {
     const stored = Taro.getStorageSync<StoredRuntimeConfig>(CONFIG_STORAGE_KEY)
     if (stored && stored.version === 1 && isRuntimeConfig(stored.value)) {
-      return stored.value
+      return {
+        ...stored,
+        value: normalizeRuntimeConfig(stored.value),
+      }
     }
   } catch {
     // Storage failure falls back to the bundled bootstrap document.
   }
-  return DEFAULT_MINIAPP_RUNTIME_CONFIG
+  return null
 }
+
+const cachedRuntimeConfig = () => (
+  storedRuntimeConfig()?.value || DEFAULT_MINIAPP_RUNTIME_CONFIG
+)
 
 export const getMiniappRuntimeConfig = cachedRuntimeConfig
 
 let pendingRequest: Promise<MiniappRuntimeConfig> | null = null
 
-export const loadMiniappRuntimeConfig = (): Promise<MiniappRuntimeConfig> => {
+export const loadMiniappRuntimeConfig = (
+  options: { force?: boolean } = {},
+): Promise<MiniappRuntimeConfig> => {
+  const stored = storedRuntimeConfig()
+  if (
+    !options.force
+    && stored
+    && Date.now() - stored.updatedAt < CONFIG_FRESH_MS
+  ) {
+    return Promise.resolve(stored.value)
+  }
   if (pendingRequest) return pendingRequest
   let tracked: Promise<MiniappRuntimeConfig>
   tracked = apiRequest<RuntimeConfigView>({
@@ -269,13 +355,14 @@ export const loadMiniappRuntimeConfig = (): Promise<MiniappRuntimeConfig> => {
   })
     .then((view) => {
       if (!isRuntimeConfig(view.value)) throw new Error('invalid miniapp runtime config')
+      const value = normalizeRuntimeConfig(view.value)
       Taro.setStorageSync(CONFIG_STORAGE_KEY, {
         version: 1,
         serverVersion: Number(view.version) || 0,
         updatedAt: Date.now(),
-        value: view.value,
+        value,
       } as StoredRuntimeConfig)
-      return view.value
+      return value
     })
     .catch(cachedRuntimeConfig)
     .finally(() => {
@@ -283,6 +370,59 @@ export const loadMiniappRuntimeConfig = (): Promise<MiniappRuntimeConfig> => {
     })
   pendingRequest = tracked
   return tracked
+}
+
+const legacyCampusFeatureKeys: Partial<Record<MiniappModuleKey, string>> = {
+  empty_classroom: 'classroom',
+  shuttle: 'shuttle',
+}
+
+export const resolveMiniappModule = (
+  config: MiniappRuntimeConfig,
+  key: MiniappModuleKey,
+  campusName = getSelectedCampus(config),
+): MiniappModuleConfig => {
+  const module = config.modules[key] || conservativeModules[key]
+  if (module.state !== 'enabled') return module
+  const features = config.campuses[campusName]?.features
+  const legacyKey = legacyCampusFeatureKeys[key]
+  if (
+    features
+    && (features[key] === false || (legacyKey && features[legacyKey] === false))
+  ) {
+    return { state: 'hidden' }
+  }
+  return module
+}
+
+export const visibleMiniappModule = (
+  config: MiniappRuntimeConfig,
+  key: MiniappModuleKey,
+  campusName?: string,
+) => resolveMiniappModule(config, key, campusName).state !== 'hidden'
+
+export const openMiniappModule = async (
+  key: MiniappModuleKey,
+  url: string,
+  options: { tab?: boolean; config?: MiniappRuntimeConfig } = {},
+) => {
+  const config = options.config || getMiniappRuntimeConfig()
+  const module = resolveMiniappModule(config, key)
+  if (module.state === 'hidden') {
+    await Taro.showToast({ title: '该功能暂未开放', icon: 'none' })
+    return false
+  }
+  if (module.state === 'maintenance') {
+    await Taro.navigateTo({
+      url: `/pages/feature-unavailable/index?module=${key}&message=${encodeURIComponent(
+        module.message || '功能维护中，请稍后再试',
+      )}`,
+    })
+    return false
+  }
+  if (options.tab) await Taro.switchTab({ url })
+  else await Taro.navigateTo({ url })
+  return true
 }
 
 export const enabledCampuses = (config: MiniappRuntimeConfig) => (

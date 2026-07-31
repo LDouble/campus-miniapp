@@ -12,6 +12,7 @@ import type {
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { openContentReport } from '../../features/content-report'
 import { formatDateTime, formatStatus } from '../../features/life-services/format'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import {
@@ -310,6 +311,21 @@ export default function CommunityDetailPage() {
                     <Image src={communityDetailIcons.edit} mode='aspectFit' />
                   </View>
                 )}
+                {!post.available_actions.includes('edit') && (
+                  <View
+                    className='community-detail-card__report'
+                    hoverClass='community-detail-card__action--pressed'
+                    ariaRole='button'
+                    ariaLabel='举报这条动态'
+                    onClick={() => void openContentReport({
+                      resourceType: 'campus_circle_post',
+                      resourceId: post.id,
+                      resourceVersion: post.version,
+                    })}
+                  >
+                    举报
+                  </View>
+                )}
               </View>
               {post.review_reason && (
                 <View className='community-detail-card__review'>
@@ -349,6 +365,21 @@ export default function CommunityDetailPage() {
                         <>
                           <View />
                           <Text>{formatStatus(item.status)}</Text>
+                        </>
+                      )}
+                      {!item.available_actions.includes('edit') && (
+                        <>
+                          <View />
+                          <Text
+                            className='community-comment__report'
+                            onClick={() => void openContentReport({
+                              resourceType: 'comment',
+                              resourceId: item.id,
+                              resourceVersion: item.version,
+                            })}
+                          >
+                            举报
+                          </Text>
                         </>
                       )}
                     </View>

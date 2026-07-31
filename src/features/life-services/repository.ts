@@ -28,6 +28,7 @@ type UpdateCarpoolBody = operations['UpdateCarpoolTrip']['requestBody']['content
 type CreateCampusPostBody = operations['CreateCampusCirclePost']['requestBody']['content']['application/json']
 type UpdateCampusPostBody = operations['UpdateCampusCirclePost']['requestBody']['content']['application/json']
 type CreateCommentBody = operations['CreateComment']['requestBody']['content']['application/json']
+type CreateContentReportBody = operations['CreateContentReport']['requestBody']['content']['application/json']
 
 export type PagingQuery = {
   page?: number
@@ -90,6 +91,17 @@ const versionAction = <T>(path: string, version: number, scope: string) => (
 )
 
 export const lifeServicesRepository = {
+  createContentReport(input: CreateContentReportBody) {
+    return apiRequest<operations['CreateContentReport']['responses'][201]['content']['application/json']['data']>({
+      path: '/api/v1/content-reports',
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey(
+        `content-report:${input.resource_type}:${input.resource_id}`,
+      ),
+      data: input,
+    })
+  },
+
   listCampusCircleSections() {
     return apiRequest<{ items: CampusCircleSectionView[] }>({
       path: '/api/v1/campus-circle/sections',

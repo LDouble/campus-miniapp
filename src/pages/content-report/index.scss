@@ -1,0 +1,130 @@
+.content-report {
+  min-height: 100vh;
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  background: #f4fafc;
+  color: #173d49;
+}
+
+.content-report__body {
+  padding: 18px 18px 0;
+}
+
+.content-report__section {
+  margin-bottom: 16px;
+  padding: 20px;
+  border: 1px solid rgba(48, 149, 182, 0.09);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(34, 91, 107, 0.05);
+}
+
+.content-report__title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.content-report__options {
+  margin-top: 12px;
+}
+
+.content-report__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  border-bottom: 1px solid #edf4f6;
+  color: #395c67;
+  font-size: 15px;
+}
+
+.content-report__option:last-child {
+  border-bottom: 0;
+}
+
+.content-report__option--active {
+  color: #237f9d;
+  font-weight: 600;
+}
+
+.content-report__option--pressed {
+  opacity: 0.72;
+}
+
+.content-report__radio {
+  display: flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1px solid #bfd2d8;
+  border-radius: 50%;
+}
+
+.content-report__radio view {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3095b6;
+}
+
+.content-report__field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.content-report__field-head > text:last-child {
+  color: #91a5ac;
+  font-size: 12px;
+}
+
+.content-report__textarea {
+  width: 100%;
+  height: 128px;
+  margin-top: 14px;
+  padding: 14px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: #f5f9fa;
+  color: #274b57;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.content-report__hint {
+  display: block;
+  padding: 0 4px;
+  color: #81979f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.content-report__footer {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(48, 149, 182, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.content-report__submit {
+  padding: 14px 0;
+  border-radius: 14px;
+  background: #3095b6;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.content-report__submit--disabled {
+  background: #c6d5da;
+}
+
+.content-report__submit--pressed {
+  opacity: 0.84;
+}
