@@ -2,7 +2,6 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import { useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
-import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import {
   getMiniappRuntimeConfig,
   loadMiniappRuntimeConfig,
@@ -13,11 +12,9 @@ import {
 import './index.scss'
 
 const icons = {
-  search: require('../../assets/icons/search.svg'),
   calendar: require('../../assets/icons/calendar.svg'),
   grade: require('../../assets/icons/grade.svg'),
   exam: require('../../assets/icons/exam.svg'),
-  study: require('../../assets/icons/study.svg'),
   result: require('../../assets/icons/result.svg'),
   passRate: require('../../assets/icons/pass-rate.svg'),
   materials: require('../../assets/icons/materials.svg'),
@@ -25,7 +22,6 @@ const icons = {
   community: require('../../assets/icons/community.svg'),
   market: require('../../assets/icons/market.svg'),
   errands: require('../../assets/icons/errands.svg'),
-  lost: require('../../assets/icons/lost.svg'),
   academic: require('../../assets/icons/academic.svg'),
 }
 
@@ -72,10 +68,8 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
     title: '学习服务',
     subtitle: '学习空间与资源',
     items: [
-      { key: 'study', name: '自习室', icon: icons.study, route: '/pages/campus-service/index?type=study' },
-      { key: 'classroom', name: '空教室', icon: icons.academic, route: '/pages/campus-service/index?type=classroom' },
+      { key: 'classroom', name: '空教室', icon: icons.academic, route: '/pages/empty-classroom/index' },
       { key: 'materials', name: '学习资料', icon: icons.materials, route: '/pages/materials/index' },
-      { key: 'library', name: '图书馆', icon: icons.study, route: '/pages/campus-service/index?type=library' },
     ],
   },
   {
@@ -87,9 +81,6 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'community', name: '校园社区', icon: icons.community, lifeSection: 'community' },
       { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
       { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
-      { key: 'lost', name: '失物招领', icon: icons.lost, route: '/pages/campus-service/index?type=lost' },
-      { key: 'campus-card', name: '校园卡', icon: icons.result, route: '/pages/campus-service/index?type=campus-card' },
-      { key: 'repair', name: '校园报修', icon: icons.materials, route: '/pages/campus-service/index?type=repair' },
     ],
   },
 ]
@@ -138,11 +129,6 @@ export default function Services() {
     <View className='services-page'>
       <CustomNavbar title='全部服务' subtitle='中国海洋大学' showBack />
       <View className='services-page__content'>
-        <View className='services-search'>
-          <Image src={icons.search} mode='aspectFit' />
-          <KeyboardSafeInput placeholder='搜索校园服务' placeholderClass='services-search__placeholder' />
-        </View>
-
         {groups.map((group) => {
           const items = group.items.filter((item) => {
             const moduleKey = serviceModules[item.key]

@@ -29,7 +29,11 @@ import {
   avatarText,
   resolveCoursePreview,
 } from '../../features/home/data'
-import { communityAuthorName } from '../../features/community/author'
+import {
+  communityAuthorInitial,
+  communityAuthorName,
+  communityAuthorTone,
+} from '../../features/community/author'
 import { formatDateTime } from '../../features/life-services/format'
 import MarketplaceCard from '../../features/life-services/components/marketplace-card'
 import { lifeServicesRepository } from '../../features/life-services/repository'
@@ -58,27 +62,27 @@ import {
   getCurrentAcademicWeek,
   resolveScheduleAnchor,
 } from '../academic/utils'
+import { normalizeWebViewUrl } from '../../features/webview/url'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
 const icons = {
-  scan: require('../../assets/icons/scan.svg'),
   bell: require('../../assets/icons/bell.svg'),
   academic: require('../../assets/icons/academic.svg'),
   community: require('../../assets/icons/community.svg'),
   market: require('../../assets/icons/market.svg'),
   errands: require('../../assets/icons/errands.svg'),
-  lost: require('../../assets/icons/lost.svg'),
   calendar: require('../../assets/icons/calendar.svg'),
   grade: require('../../assets/icons/grade.svg'),
   exam: require('../../assets/icons/exam.svg'),
-  study: require('../../assets/icons/study.svg'),
   result: require('../../assets/icons/result.svg'),
   passRate: require('../../assets/icons/pass-rate.svg'),
   materials: require('../../assets/icons/materials.svg'),
   shuttle: require('../../assets/icons/shuttle.svg'),
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
+  comment: require('../../assets/community/comment.svg'),
+  heart: require('../../assets/community/heart.svg'),
 }
 
 const quickServices = [
@@ -103,7 +107,6 @@ const quickServices = [
     tone: 'sand',
     route: '/pages/academic/exams/index',
   },
-  { key: 'study', name: '自习室', icon: icons.study, tone: 'purple', route: '/pages/campus-service/index?type=study' },
   { key: 'result', name: '选课结果', icon: icons.result, tone: 'orange', route: '/pages/academic/selection/index' },
   { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/academic/statistics/courses' },
   { key: 'materials', name: '资料', icon: icons.materials, tone: 'green', route: '/pages/materials/index' },
@@ -113,18 +116,13 @@ const quickServices = [
   { key: 'market', name: '二手', icon: icons.market, tone: 'orange', module: 'market' },
   { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
   { key: 'carpool', name: '拼车', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
-  { key: 'lost', name: '失物招领', icon: icons.lost, tone: 'pink', route: '/pages/campus-service/index?type=lost' },
-  { key: 'library', name: '图书馆', icon: icons.study, tone: 'green', route: '/pages/campus-service/index?type=library' },
-  { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/campus-service/index?type=classroom' },
-  { key: 'campus-card', name: '校园卡', icon: icons.result, tone: 'sand', route: '/pages/campus-service/index?type=campus-card' },
-  { key: 'repair', name: '校园报修', icon: icons.materials, tone: 'purple', route: '/pages/campus-service/index?type=repair' },
+  { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
 ]
 
 const homeServiceKeys = new Set([
   'schedule',
   'grades',
   'exams',
-  'study',
   'result',
   'pass-rate',
   'materials',
@@ -134,8 +132,6 @@ const homeServiceKeys = new Set([
   'market',
   'errands',
   'carpool',
-  'lost',
-  'library',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
 const serviceFeatureKeys: Record<string, string> = {
@@ -485,9 +481,21 @@ function Index() {
       return
     }
     if (banner.action.type === 'webview') {
-      Taro.showToast({ title: '外部页面暂未开放', icon: 'none' })
+      const target = normalizeWebViewUrl(banner.action.value)
+      if (!target) {
+        Taro.showToast({ title: '链接配置无效', icon: 'none' })
+        return
+      }
+      Taro.navigateTo({
+        url: `/pages/webview/index?url=${encodeURIComponent(target)}`,
+      })
     }
   }
+  const bannerActionable = !!runtimeBanner && (
+    (runtimeBanner.action.type === 'miniapp_path' && !!runtimeBanner.action.value)
+    || (runtimeBanner.action.type === 'webview'
+      && !!normalizeWebViewUrl(runtimeBanner.action.value))
+  )
 
   return (
     <View className='campus'>
@@ -516,9 +524,6 @@ function Index() {
           </View>
         </View>
         <View className='campus__header-actions'>
-          <View className='icon-button' onClick={() => Taro.scanCode({ onlyFromCamera: false }).catch(() => undefined)}>
-            <Image src={icons.scan} mode='aspectFit' />
-          </View>
           <View className='icon-button' onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}>
             <Image src={icons.bell} mode='aspectFit' />
             {unreadCount > 0 && <View className='icon-button__dot' />}
@@ -689,10 +694,12 @@ function Index() {
               ))}
             </Swiper>
           )}
-          <View className='hero-card__action'>
-            <Text>{runtimeBanner ? '查看详情' : '发现校园新鲜事'}</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
-          </View>
+          {(!runtimeBanner || bannerActionable) && (
+            <View className='hero-card__action'>
+              <Text>{runtimeBanner ? '查看详情' : '发现校园新鲜事'}</Text>
+              <Image src={icons.arrow} mode='aspectFit' />
+            </View>
+          )}
         </View>
         {!runtimeBanner?.image_url && (
           <View className='hero-card__art'>
@@ -735,21 +742,62 @@ function Index() {
         {!communityLoading && !communityError && visibleCommunityPosts.map((item, index) => (
           <View
             key={item.id}
-            className={`news-card__item ${index !== visibleCommunityPosts.length - 1 ? 'news-card__item--border' : ''}`}
+            className={[
+              'news-card__item',
+              index === 0 ? 'news-card__item--featured' : 'news-card__item--compact',
+            ].join(' ')}
+            hoverClass='news-card__item--pressed'
+            hoverStartTime={20}
+            hoverStayTime={120}
+            ariaRole='button'
+            ariaLabel={`查看${communityAuthorName(item)}发布的动态`}
             onClick={() => openCommunityPost(item)}
           >
-            <View className='news-card__tag news-card__tag--community'>
-              {sectionNames[item.section_id] || '社区'}
+            <View className='news-card__topline'>
+              <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
+                <Text>{communityAuthorInitial(item)}</Text>
+              </View>
+              <View className='news-card__author'>
+                <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
+                <Text className='news-card__time'>
+                  {formatDateTime(item.published_at || item.created_at)}
+                </Text>
+              </View>
+              <View className='news-card__tag'>
+                <Text>{sectionNames[item.section_id] || '社区'}</Text>
+              </View>
             </View>
-            <View className='news-card__content'>
+
+            <View className='news-card__body'>
               <Text className='news-card__title'>
                 {item.content?.trim() || '分享了一组校园图片'}
               </Text>
-              <Text className='news-card__time'>
-                {communityAuthorName(item)} · {formatDateTime(item.published_at || item.created_at)}
-              </Text>
+              {index === 0 && item.images[0] && (
+                <Image
+                  className='news-card__cover'
+                  src={item.images[0].url}
+                  mode='aspectFill'
+                  lazyLoad
+                />
+              )}
             </View>
-            <Image className='news-card__arrow' src={icons.arrow} mode='aspectFit' />
+
+            {index === 0 && (
+              <View className='news-card__footer'>
+                <View className='news-card__metric'>
+                  <Image src={icons.heart} mode='aspectFit' />
+                  <Text>{item.like_count}</Text>
+                </View>
+                <View className='news-card__metric'>
+                  <Image src={icons.comment} mode='aspectFit' />
+                  <Text>{item.comment_count}</Text>
+                </View>
+                <View className='news-card__read'>
+                  <Text>去看看</Text>
+                  <Image src={icons.arrow} mode='aspectFit' />
+                </View>
+              </View>
+            )}
           </View>
         ))}
       </View>

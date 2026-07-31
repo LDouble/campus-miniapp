@@ -24,8 +24,6 @@ const SAFE_PAGES = new Set([
   '/pages/academic/exams/index',
   '/pages/academic/selection/index',
   '/pages/materials/index',
-  '/pages/campus-service/index',
-  '/pages/campus-service/detail',
   '/pages/services/index',
 ])
 

@@ -107,6 +107,9 @@ export default function CommunityPostCard({
           onClick={() => onToggleLike(post)}
         >
           <Image src={post.liked ? communityIcons.heartActive : communityIcons.heart} mode='aspectFit' />
+          <Text className='community-post__action-label'>
+            {post.liked ? '已赞' : '点赞'}
+          </Text>
           <Text className='community-post__action-count'>{post.like_count}</Text>
         </View>
         <View
@@ -119,6 +122,7 @@ export default function CommunityPostCard({
           onClick={() => onOpen(post)}
         >
           <Image src={communityIcons.comment} mode='aspectFit' />
+          <Text className='community-post__action-label'>评论</Text>
           <Text className='community-post__action-count'>{post.comment_count}</Text>
         </View>
         <Button
@@ -131,6 +135,7 @@ export default function CommunityPostCard({
           ariaLabel='分享这条动态'
         >
           <Image src={communityIcons.share} mode='aspectFit' />
+          <Text className='community-post__action-label'>分享</Text>
         </Button>
       </View>
     </View>

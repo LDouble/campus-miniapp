@@ -1,0 +1,43 @@
+.webview-error {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 240rpx 48rpx 80rpx;
+  background: #f4fafc;
+  text-align: center;
+
+  &__mark {
+    width: 104rpx;
+    height: 104rpx;
+    margin: 0 auto 32rpx;
+    border-radius: 32rpx;
+    background: #e7f4f6;
+    color: #348da8;
+    font-size: 52rpx;
+    line-height: 104rpx;
+  }
+
+  &__title {
+    display: block;
+    color: #183b48;
+    font-size: 36rpx;
+    font-weight: 700;
+  }
+
+  &__description {
+    display: block;
+    margin-top: 18rpx;
+    color: #718994;
+    font-size: 28rpx;
+    line-height: 1.6;
+  }
+
+  &__action {
+    width: 280rpx;
+    margin: 48rpx auto 0;
+    border-radius: 999rpx;
+    background: #3495b2;
+    color: #fff;
+    font-size: 28rpx;
+    line-height: 88rpx;
+  }
+}

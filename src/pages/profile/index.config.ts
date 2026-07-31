@@ -1,5 +1,5 @@
 export default definePageConfig({
   navigationStyle: 'custom',
-  backgroundColor: '#f2f8fc',
+  backgroundColor: '#faf7f2',
   usingComponents: {},
 })

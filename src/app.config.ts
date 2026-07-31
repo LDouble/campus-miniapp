@@ -20,13 +20,12 @@ export default defineAppConfig({
     'pages/academic/statistics/index',
     'pages/calendar/index',
     'pages/materials/index',
-    'pages/campus-service/index',
-    'pages/campus-service/detail',
     'pages/empty-classroom/index',
     'pages/shuttle/index',
     'pages/shuttle/detail',
     'pages/services/index',
     'pages/content-report/index',
+    'pages/webview/index',
     'pages/feature-unavailable/index'
   ],
   window: {
