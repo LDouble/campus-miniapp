@@ -408,6 +408,15 @@ export default function MaterialsPage() {
       !!routeContext.periodId && nextCourse === routeContext.courseName,
     )
   }
+  const handleMaterialsEmptyClick = () => {
+    if (materialsLoadFailed) {
+      setMaterialsReloadKey((current) => current + 1)
+      return
+    }
+    if (canExpandPeriod) {
+      setLimitToSourcePeriod(false)
+    }
+  }
 
   const invalidateUploadSession = () => {
     setDrafts((current) => current.map((draft) => ({
@@ -823,16 +832,11 @@ export default function MaterialsPage() {
           {loading && !!materials.length && <Text className='materials-loading-more'>正在加载更多…</Text>}
           {!loading && !materials.length && <View
             className={`materials-empty ${materialsLoadFailed || canExpandPeriod ? 'materials-empty--action' : ''}`}
-            onClick={materialsLoadFailed ? () => setMaterialsReloadKey((current) => current + 1) : undefined}
+            onClick={handleMaterialsEmptyClick}
           >
             <View />
             <Text>{materialsLoadFailed ? '资料暂时没有加载出来' : unresolvedCourse ? '该课程尚未归入课程目录' : canExpandPeriod ? '这个学期还没有资料' : '没有找到相关资料'}</Text>
-            <Text
-              onClick={canExpandPeriod ? (event) => {
-                event.stopPropagation()
-                setLimitToSourcePeriod(false)
-              } : undefined}
-            >
+            <Text>
               {materialsLoadFailed ? '点击这里重新加载' : unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : canExpandPeriod ? '看看这门课的其他学期资料 ›' : '试试更换课程、类型或关键词'}
             </Text>
           </View>}
