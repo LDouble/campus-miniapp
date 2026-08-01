@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import { apiRequest } from './client'
+import { apiRequest, isApiError } from './client'
 import { getCurrentUser } from './account'
 import {
   AcademicCredentialMissingError,
@@ -52,11 +52,30 @@ const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBo
   }
 }
 
-const academicPost = async <T>(path: string, periodId?: string) => apiRequest<T>({
-  path,
-  method: 'POST',
-  data: await academicRequestBody(periodId),
+const wait = (milliseconds: number) => new Promise<void>((resolve) => {
+  setTimeout(resolve, milliseconds)
 })
+
+const retryDelay = (error: unknown) => {
+  if (isApiError(error)) {
+    if (error.code !== 'academic_provider_busy' || error.statusCode !== 429) return 0
+    return (error.retryAfterMs || 3000) + Math.floor(Math.random() * 1000)
+  }
+  return 700 + Math.floor(Math.random() * 500)
+}
+
+const academicPost = async <T>(path: string, periodId?: string) => {
+  const data = await academicRequestBody(periodId)
+  const request = () => apiRequest<T>({ path, method: 'POST', data })
+  try {
+    return await request()
+  } catch (error) {
+    const delay = retryDelay(error)
+    if (!delay) throw error
+    await wait(delay)
+    return request()
+  }
+}
 
 export const listAcademicPeriods = () => apiRequest<AcademicPeriod[]>({
   path: '/api/v1/academic/periods',

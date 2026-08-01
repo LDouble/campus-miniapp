@@ -5507,6 +5507,8 @@ export interface components {
         /** @description Error response */
         Error: {
             headers: {
+                /** @description Optional whole seconds before retrying a transient request. */
+                "Retry-After"?: string;
                 [name: string]: unknown;
             };
             content: {
@@ -6648,6 +6650,7 @@ export interface operations {
             400: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -6672,6 +6675,7 @@ export interface operations {
             400: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -6696,6 +6700,7 @@ export interface operations {
             400: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -6720,6 +6725,7 @@ export interface operations {
             400: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };

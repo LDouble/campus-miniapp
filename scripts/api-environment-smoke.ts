@@ -1,5 +1,8 @@
 import * as assert from 'node:assert/strict'
-import { loadApiEndpoints } from '../config/api-endpoints'
+import {
+  defaultReviewApiBaseUrl,
+  loadApiEndpoints,
+} from '../config/api-endpoints'
 import {
   normalizeMiniProgramEnvVersion,
   resolveApiBaseUrl,
@@ -21,13 +24,16 @@ assert.deepEqual(loadApiEndpoints({ TARO_APP_API_BASE_URL: 'http://localhost:808
   production: 'http://localhost:8080',
 })
 assert.deepEqual(loadApiEndpoints({
-  TARO_APP_REVIEW_API_BASE_URL: endpoints.review,
   TARO_APP_PRODUCTION_API_BASE_URL: endpoints.production,
 }, true), {
-  review: 'https://review-api.example.invalid',
+  review: defaultReviewApiBaseUrl,
   production: 'https://api.example.invalid',
 })
 assert.throws(() => loadApiEndpoints({}, true), /require isolated API URLs/)
+assert.throws(() => loadApiEndpoints({
+  TARO_APP_REVIEW_API_BASE_URL: 'http://review-api.example.invalid',
+  TARO_APP_PRODUCTION_API_BASE_URL: endpoints.production,
+}, true), /must use HTTPS/)
 assert.throws(() => loadApiEndpoints({
   TARO_APP_REVIEW_API_BASE_URL: 'https://REVIEW-api.example.invalid',
   TARO_APP_PRODUCTION_API_BASE_URL: endpoints.review,

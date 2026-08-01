@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
@@ -7,7 +7,9 @@ import {
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
+import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import AcademicHeader from '../components/academic-header'
+import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
@@ -47,16 +49,30 @@ const formatGradePoint = (score?: number) => (
 )
 
 export default function GradesPage() {
+  const [academicUserId] = useState(getActiveAcademicUserId)
+  const [initialRecordsCache] = useState(() => (
+    academicStorage.getRecordsCache(academicUserId)
+  ))
+  const hasInitialSnapshot = Boolean(initialRecordsCache?.gradesUpdatedAt)
   const [preferences, setPreferences] = useState<AcademicPreferences>({
     ...defaultPreferences,
     ...academicStorage.getPreferences(defaultPreferences),
     section: 'grades',
   })
-  const [allGrades, setAllGrades] = useState<GradeRecord[]>([])
+  const [allGrades, setAllGrades] = useState<GradeRecord[]>(
+    initialRecordsCache?.grades || [],
+  )
   const [simulations, setSimulations] = useState<Record<string, GradeSimulation>>(
     academicStorage.getGradeSimulations(),
   )
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!hasInitialSnapshot)
+  const [retrying, setRetrying] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [hasSnapshot, setHasSnapshot] = useState(hasInitialSnapshot)
+  const [usingCache, setUsingCache] = useState(false)
+  const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
+    initialRecordsCache?.gradesUpdatedAt || 0,
+  )
   const [simulationMode, setSimulationMode] = useState(false)
   const [sheet, setSheet] = useState<GradeSheet>(null)
   const [editingGrade, setEditingGrade] = useState<GradeRecord | null>(null)
@@ -118,7 +134,12 @@ export default function GradesPage() {
     academicRepository.getGrades()
       .then((records) => {
         if (cancelled) return
+        academicStorage.setGradeRecords(academicUserId, records)
         setAllGrades(records)
+        setCacheUpdatedAt(Date.now())
+        setHasSnapshot(true)
+        setUsingCache(false)
+        setLoadError(false)
         setPreferences((current) => {
           if (
             current.gradePeriodId === ALL_PERIOD_ID
@@ -128,7 +149,13 @@ export default function GradesPage() {
         })
       })
       .catch(() => {
-        if (!cancelled) Taro.showToast({ title: '成绩加载失败', icon: 'none' })
+        if (cancelled) return
+        if (hasInitialSnapshot) {
+          setUsingCache(true)
+          Taro.showToast({ title: '已展示上次成绩', icon: 'none' })
+        } else {
+          setLoadError(true)
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -136,7 +163,34 @@ export default function GradesPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [academicUserId, hasInitialSnapshot])
+
+  const refreshGrades = useCallback(async () => {
+    setRetrying(true)
+    setLoadError(false)
+    try {
+      const records = await academicRepository.getGrades()
+      academicStorage.setGradeRecords(academicUserId, records)
+      setAllGrades(records)
+      setCacheUpdatedAt(Date.now())
+      setHasSnapshot(true)
+      setUsingCache(false)
+    } catch {
+      if (hasSnapshot) {
+        setUsingCache(true)
+        Taro.showToast({ title: '刷新失败，继续展示上次成绩', icon: 'none' })
+      } else {
+        setLoadError(true)
+      }
+    } finally {
+      setRetrying(false)
+      setLoading(false)
+    }
+  }, [academicUserId, hasSnapshot])
+
+  Taro.usePullDownRefresh(() => {
+    refreshGrades().finally(() => Taro.stopPullDownRefresh())
+  })
 
   useEffect(() => {
     if (loading) return
@@ -472,8 +526,11 @@ export default function GradesPage() {
             <View className='academic-state__loader' />
             <Text>正在整理成绩…</Text>
           </View>
+        ) : loadError ? (
+          <AcademicLoadState retrying={retrying} onRetry={refreshGrades} />
         ) : (
           <>
+            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} />}
             <View className={`grade-summary ${simulationMode ? 'grade-summary--simulation' : 'grade-summary--original'}`}>
               <View className='grade-summary__lead'>
                 <Text className='grade-summary__eyebrow'>{simulationMode ? '模拟计算结果' : '原始成绩统计'}</Text>

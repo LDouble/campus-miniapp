@@ -10,12 +10,11 @@
 
 未知值回落 review，防止开发或审核运行时误连生产数据。不支持通过远程配置、请求 Header 或查询参数切换 API 环境。
 
-生产构建必须显式提供两个互不相同的 HTTPS 地址：
+当前 review 地址临时固定为 `http://106.75.251.4:8080`；生产构建只需显式提供 production HTTPS 地址：
 
 ```bash
-TARO_APP_REVIEW_API_BASE_URL=https://review-api.example.com \
 TARO_APP_PRODUCTION_API_BASE_URL=https://api.example.com \
 yarn build:weapp
 ```
 
-`TARO_APP_API_BASE_URL` 只作为本地开发兼容值，生产构建不会用它替代上述两个地址。提审前需将两个 HTTPS 域名全部加入小程序合法请求域名。
+`TARO_APP_API_BASE_URL` 只作为本地开发兼容值，生产构建不会用它替代上述地址。review 的 HTTP/IP 地址仅用于当前联调，微信真机通常会因合法域名与 HTTPS 策略拒绝请求；正式提审前必须替换为已备案并加入小程序合法请求域名的 HTTPS 地址。
