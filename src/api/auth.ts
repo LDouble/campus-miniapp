@@ -18,7 +18,6 @@ const miniProgramEnvVersion = () => {
 
 export const API_BASE_URL = resolveApiBaseUrl(miniProgramEnvVersion(), {
   review: __CAMPUS_REVIEW_API_BASE_URL__,
-  staging: __CAMPUS_STAGING_API_BASE_URL__,
   production: __CAMPUS_PRODUCTION_API_BASE_URL__,
 })
 

@@ -25,7 +25,6 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     plugins: ['@tarojs/plugin-html'],
     defineConstants: {
       __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(apiEndpoints.review),
-      __CAMPUS_STAGING_API_BASE_URL__: JSON.stringify(apiEndpoints.staging),
       __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(apiEndpoints.production),
       __CAMPUS_WECHAT_APP_ID__: JSON.stringify(
         process.env.TARO_APP_WECHAT_APP_ID || 'wx0d9936d6708f44c0',

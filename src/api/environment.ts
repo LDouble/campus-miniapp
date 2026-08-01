@@ -2,7 +2,6 @@ export type MiniProgramEnvVersion = 'develop' | 'trial' | 'release'
 
 export type RuntimeApiEndpoints = {
   review: string
-  staging: string
   production: string
 }
 
@@ -17,8 +16,7 @@ export const resolveApiBaseUrl = (
 ) => {
   const normalized = normalizeMiniProgramEnvVersion(envVersion)
   let value = endpoints.review
-  if (normalized === 'trial') value = endpoints.staging
-  if (normalized === 'release') value = endpoints.production
+  if (normalized === 'trial' || normalized === 'release') value = endpoints.production
 
   const result = String(value || '').trim().replace(/\/+$/, '')
   if (!result) throw new Error(`API base URL is empty for ${normalized}`)

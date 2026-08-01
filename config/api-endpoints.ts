@@ -1,13 +1,11 @@
 export type ApiEndpointEnvironment = {
   TARO_APP_API_BASE_URL?: string
   TARO_APP_REVIEW_API_BASE_URL?: string
-  TARO_APP_STAGING_API_BASE_URL?: string
   TARO_APP_PRODUCTION_API_BASE_URL?: string
 }
 
 export type ApiEndpoints = {
   review: string
-  staging: string
   production: string
 }
 
@@ -42,7 +40,6 @@ export const loadApiEndpoints = (
   const legacy = normalizeUrl(environment.TARO_APP_API_BASE_URL || localApiBaseUrl)
   const endpoints = {
     review: normalizeUrl(environment.TARO_APP_REVIEW_API_BASE_URL || legacy),
-    staging: normalizeUrl(environment.TARO_APP_STAGING_API_BASE_URL || legacy),
     production: normalizeUrl(environment.TARO_APP_PRODUCTION_API_BASE_URL || legacy),
   }
 
@@ -50,7 +47,6 @@ export const loadApiEndpoints = (
 
   const missing = [
     ['review', environment.TARO_APP_REVIEW_API_BASE_URL],
-    ['staging', environment.TARO_APP_STAGING_API_BASE_URL],
     ['production', environment.TARO_APP_PRODUCTION_API_BASE_URL],
   ].filter(([, value]) => !String(value || '').trim())
   if (missing.length > 0) {
@@ -62,8 +58,8 @@ export const loadApiEndpoints = (
   Object.entries(endpoints).forEach(([name, value]) => {
     validateIsolatedEndpoint(name as keyof ApiEndpoints, value)
   })
-  if (new Set(Object.values(endpoints).map(canonicalEndpoint)).size !== 3) {
-    throw new Error('review, staging, and production API URLs must be distinct')
+  if (new Set(Object.values(endpoints).map(canonicalEndpoint)).size !== 2) {
+    throw new Error('review and production API URLs must be distinct')
   }
   return endpoints
 }
