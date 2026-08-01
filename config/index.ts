@@ -25,6 +25,9 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       __CAMPUS_WECHAT_APP_ID__: JSON.stringify(
         process.env.TARO_APP_WECHAT_APP_ID || 'wx0d9936d6708f44c0',
       ),
+      __CAMPUS_APP_RELEASE__: JSON.stringify(
+        process.env.TARO_APP_RELEASE || process.env.npm_package_version || 'development',
+      ),
     },
     copy: {
       patterns: [
