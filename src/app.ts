@@ -5,12 +5,15 @@ import {
   resolveMiniappModule,
   type MiniappModuleKey,
 } from './features/runtime-config'
+import { installGlobalErrorReporting } from './features/error-reporting'
 // 全局样式
 import './app.scss'
 
 function App(props) {
   // 可以使用所有的 React Hooks
-  useEffect(() => {})
+  useEffect(() => {
+    installGlobalErrorReporting()
+  }, [])
 
   // 对应 onShow
   useDidShow(() => {

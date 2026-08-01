@@ -7,6 +7,7 @@ import {
 } from './auth'
 import type { ApiErrorEnvelope, ApiSuccessEnvelope } from './types'
 import { handleAcademicVerificationRequired } from '../features/academic-verification/guard'
+import { reportClientError } from '../features/error-reporting'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -111,19 +112,43 @@ export const createIdempotencyKey = (scope: string) => {
 export async function apiRequest<T>(options: RequestOptions): Promise<T> {
   const method = options.method || 'GET'
   const token = options.anonymous ? '' : await ensureAccessToken()
-  const response = await Taro.request<ApiSuccessEnvelope<T> | ApiErrorEnvelope>({
-    url: `${apiUrl(options.path)}${queryString(options.query)}`,
-    method,
-    data: options.data,
-    header: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.idempotencyKey
-        ? { 'Idempotency-Key': options.idempotencyKey }
-        : {}),
-    },
-  })
+  let response: Taro.request.SuccessCallbackResult<ApiSuccessEnvelope<T> | ApiErrorEnvelope>
+  try {
+    response = await Taro.request<ApiSuccessEnvelope<T> | ApiErrorEnvelope>({
+      url: `${apiUrl(options.path)}${queryString(options.query)}`,
+      method,
+      data: options.data,
+      header: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.idempotencyKey
+          ? { 'Idempotency-Key': options.idempotencyKey }
+          : {}),
+      },
+    })
+  } catch (error) {
+    void reportClientError({
+      kind: 'network_error',
+      route: options.path,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+    throw error
+  }
+
+  if (response.statusCode >= 500) {
+    const requestId = response.data && typeof response.data === 'object' && 'request_id' in response.data
+      ? String(response.data.request_id || '')
+      : ''
+    void reportClientError({
+      kind: 'http_5xx',
+      route: options.path,
+      message: `API request failed with status ${response.statusCode}`,
+      requestId,
+      statusCode: response.statusCode,
+    })
+  }
 
   const responseError = response.statusCode < 200 || response.statusCode >= 300
     ? parseApiError(response.statusCode, response.data)
@@ -148,6 +173,12 @@ export async function apiRequest<T>(options: RequestOptions): Promise<T> {
     return throwApiError(responseError, options)
   }
   if (!('data' in response.data)) {
+    void reportClientError({
+      kind: 'invalid_response',
+      route: options.path,
+      message: 'API response envelope is missing data',
+      statusCode: response.statusCode,
+    })
     throw new ApiError(response.statusCode, 'invalid_response', '校园服务返回了无效数据')
   }
   return response.data.data

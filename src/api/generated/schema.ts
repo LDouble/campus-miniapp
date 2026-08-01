@@ -2447,6 +2447,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/error-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询异常聚合 */
+        get: operations["ListAdminErrorReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/error-reports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看异常详情 */
+        get: operations["GetAdminErrorReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/error-reports/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端处置异常 */
+        post: operations["ResolveAdminErrorReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/error-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 匿名接收脱敏后的客户端异常 */
+        post: operations["CreateErrorReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/marketplace/listings": {
         parameters: {
             query?: never;
@@ -4862,6 +4930,94 @@ export interface components {
         };
         /** @enum {string} */
         ErrandViewerAction: "edit" | "submit_review" | "accept" | "pickup" | "deliver" | "complete" | "cancel" | "verify_academic";
+        /** @enum {string} */
+        ClientErrorReportKind: "js_error" | "unhandled_rejection" | "network_error" | "http_5xx" | "invalid_response";
+        /** @enum {string} */
+        ClientErrorReportSource: "miniapp" | "admin";
+        ErrorReportAccepted: {
+            accepted: boolean;
+        };
+        ErrorReportAcceptedResponseBody: {
+            data: components["schemas"]["ErrorReportAccepted"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ErrorReportAlertLevel: "normal" | "warning" | "critical";
+        /** @enum {string} */
+        ErrorReportEnvironment: "production" | "staging" | "development";
+        ErrorReportInput: {
+            kind: components["schemas"]["ClientErrorReportKind"];
+            message: string;
+            release: string;
+            request_id?: string;
+            route: string;
+            source: components["schemas"]["ClientErrorReportSource"];
+            stack?: string;
+            /** Format: int64 */
+            status_code?: number;
+        };
+        /** @enum {string} */
+        ErrorReportKind: "js_error" | "unhandled_rejection" | "network_error" | "http_5xx" | "invalid_response" | "panic" | "worker_failure";
+        ErrorReportPage: {
+            items: components["schemas"]["ErrorReportView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ErrorReportPageResponseBody: {
+            data: components["schemas"]["ErrorReportPage"];
+            request_id: string;
+        };
+        ErrorReportResolutionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            note?: string;
+            /** @enum {string} */
+            status: "resolved" | "ignored";
+        };
+        ErrorReportResponseBody: {
+            data: components["schemas"]["ErrorReportView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ErrorReportSource: "miniapp" | "admin" | "backend" | "worker";
+        /** @enum {string} */
+        ErrorReportStatus: "open" | "resolved" | "ignored";
+        ErrorReportView: {
+            alert_level: components["schemas"]["ErrorReportAlertLevel"];
+            /** Format: date-time */
+            created_at: string;
+            environment: components["schemas"]["ErrorReportEnvironment"];
+            fingerprint: string;
+            /** Format: date-time */
+            first_seen_at: string;
+            /** Format: uint64 */
+            id: number;
+            kind: components["schemas"]["ErrorReportKind"];
+            /** Format: date-time */
+            last_seen_at: string;
+            message: string;
+            /** Format: int64 */
+            occurrence_count: number;
+            release: string;
+            request_id?: string | null;
+            resolution_note?: string | null;
+            /** Format: date-time */
+            resolved_at?: string | null;
+            /** Format: uint64 */
+            resolved_by?: number | null;
+            route: string;
+            source: components["schemas"]["ErrorReportSource"];
+            stack?: string | null;
+            status: components["schemas"]["ErrorReportStatus"];
+            /** Format: int64 */
+            status_code?: number | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
         MarketplaceListingPageResponseBody: {
             data: components["schemas"]["MarketplaceListingViewPage"];
             request_id: string;
@@ -5850,6 +6006,33 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ErrandResponseBody"];
+            };
+        };
+        /** @description 异常已接收 */
+        ErrorReportAcceptedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorReportAcceptedResponseBody"];
+            };
+        };
+        /** @description 异常分页 */
+        ErrorReportPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorReportPageResponseBody"];
+            };
+        };
+        /** @description 异常详情 */
+        ErrorReportResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorReportResponseBody"];
             };
         };
         /** @description 二手商品分页 */
@@ -9531,6 +9714,82 @@ export interface operations {
         responses: {
             200: components["responses"]["ErrandResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListAdminErrorReports: {
+        parameters: {
+            query?: {
+                source?: "miniapp" | "admin" | "backend" | "worker";
+                environment?: "production" | "staging" | "development";
+                kind?: "js_error" | "unhandled_rejection" | "network_error" | "http_5xx" | "invalid_response" | "panic" | "worker_failure";
+                status?: "open" | "resolved" | "ignored";
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ErrorReportPageResponse"];
+        };
+    };
+    GetAdminErrorReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ErrorReportResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ResolveAdminErrorReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ErrorReportResolutionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ErrorReportResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateErrorReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ErrorReportInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["ErrorReportAcceptedResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     ListAdminMarketplaceListings: {
