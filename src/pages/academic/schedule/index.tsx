@@ -20,6 +20,7 @@ import {
 } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
+import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
@@ -167,9 +168,17 @@ export default function SchedulePage() {
   const [periods, setPeriods] = useState<AcademicPeriod[]>(
     initialScheduleCache ? initialScheduleCache.periods : [],
   )
-  const [officialCourses, setOfficialCourses] = useState<Course[]>([])
+  const initialCourses = initialScheduleCache
+    ?.coursesByPeriod[preferences.schedulePeriodId]
+  const [officialCourses, setOfficialCourses] = useState<Course[]>(initialCourses || [])
   const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(initialCourses === undefined)
+  const [retrying, setRetrying] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [usingCache, setUsingCache] = useState(false)
+  const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
+    initialScheduleCache?.updatedAt || 0,
+  )
   const [initialized, setInitialized] = useState(false)
   const [sheet, setSheet] = useState<ScheduleSheet>(null)
   const [activeCourse, setActiveCourse] = useState<Course | null>(null)
@@ -247,11 +256,12 @@ export default function SchedulePage() {
         if (!active) return
         if (initialScheduleCache && initialScheduleCache.periods.length) {
           applyPeriods(initialScheduleCache.periods)
+          setUsingCache(true)
           Taro.showToast({ title: '网络异常，已使用本地课表', icon: 'none' })
           return
         }
         setLoading(false)
-        Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
+        setLoadError(true)
       })
     return () => {
       active = false
@@ -262,20 +272,22 @@ export default function SchedulePage() {
     if (!initialized) return
     if (!periods.some((period) => period.id === preferences.schedulePeriodId)) return
     const cache = academicStorage.getScheduleCache(academicUserId)
-    if (
+    const hasCachedCourses = Boolean(
       cache
       && Object.prototype.hasOwnProperty.call(
         cache.coursesByPeriod,
         preferences.schedulePeriodId,
       )
-    ) {
+    )
+    if (hasCachedCourses && cache) {
       setOfficialCourses(cache.coursesByPeriod[preferences.schedulePeriodId])
+      setCacheUpdatedAt(cache.updatedAt || 0)
       setLoading(false)
-      return
     }
 
     let active = true
-    setLoading(true)
+    if (!hasCachedCourses) setLoading(true)
+    setLoadError(false)
     academicRepository.getCourses(preferences.schedulePeriodId)
       .then((courses) => {
         const currentCache = academicStorage.getScheduleCache(academicUserId)
@@ -287,10 +299,20 @@ export default function SchedulePage() {
             [preferences.schedulePeriodId]: courses,
           },
         )
-        if (active) setOfficialCourses(courses)
+        if (active) {
+          setOfficialCourses(courses)
+          setCacheUpdatedAt(Date.now())
+          setUsingCache(false)
+        }
       })
       .catch(() => {
-        if (active) Taro.showToast({ title: '课程表加载失败', icon: 'none' })
+        if (!active) return
+        if (hasCachedCourses) {
+          setUsingCache(true)
+          Taro.showToast({ title: '已展示上次课程表', icon: 'none' })
+        } else {
+          setLoadError(true)
+        }
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -308,7 +330,17 @@ export default function SchedulePage() {
   }
 
   const refreshSchedule = async () => {
-    setLoading(true)
+    const cache = academicStorage.getScheduleCache(academicUserId)
+    const hasCachedCourses = Boolean(
+      cache
+      && Object.prototype.hasOwnProperty.call(
+        cache.coursesByPeriod,
+        preferences.schedulePeriodId,
+      )
+    )
+    if (!hasCachedCourses) setLoading(true)
+    setRetrying(true)
+    setLoadError(false)
     try {
       const records = await academicRepository.getPeriods()
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
@@ -327,6 +359,8 @@ export default function SchedulePage() {
       )
       setPeriods(records)
       setOfficialCourses(courses)
+      setCacheUpdatedAt(Date.now())
+      setUsingCache(false)
       setPreferences((current) => ({
         ...current,
         schedulePeriodId,
@@ -337,9 +371,15 @@ export default function SchedulePage() {
       }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
     } catch {
-      Taro.showToast({ title: '课程表刷新失败', icon: 'none' })
+      if (hasCachedCourses) {
+        setUsingCache(true)
+        Taro.showToast({ title: '刷新失败，继续展示上次课程表', icon: 'none' })
+      } else {
+        setLoadError(true)
+      }
     } finally {
       setLoading(false)
+      setRetrying(false)
     }
   }
 
@@ -946,7 +986,14 @@ export default function SchedulePage() {
             <View className='academic-state__loader' />
             <Text>正在整理课程表…</Text>
           </View>
-        ) : preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
+        ) : loadError ? (
+          <AcademicLoadState retrying={retrying} onRetry={refreshSchedule} />
+        ) : (
+          <>
+            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} />}
+            {preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
+          </>
+        )}
       </View>
       <View
         className='academic-fab'

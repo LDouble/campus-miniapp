@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
+import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import {
   openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
@@ -11,6 +12,7 @@ import {
 } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import AcademicHeader from '../components/academic-header'
+import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
 import { AcademicPeriod, AcademicPreferences, CourseSelectionRecord, CourseSelectionStatus } from '../types'
@@ -36,13 +38,30 @@ type SelectionSheet = 'period' | 'detail' | null
 type SelectionTab = 'all' | 'failed'
 
 export default function SelectionPage() {
+  const [academicUserId] = useState(getActiveAcademicUserId)
+  const [initialScheduleCache] = useState(() => (
+    academicStorage.getScheduleCache(academicUserId)
+  ))
+  const [initialRecordsCache] = useState(() => (
+    academicStorage.getRecordsCache(academicUserId)
+  ))
   const [preferences, setPreferences] = useState<AcademicPreferences>({
     ...defaultPreferences,
     ...academicStorage.getPreferences(defaultPreferences),
   })
-  const [periods, setPeriods] = useState<AcademicPeriod[]>([])
-  const [records, setRecords] = useState<CourseSelectionRecord[]>([])
-  const [loading, setLoading] = useState(true)
+  const initialRecords = initialRecordsCache
+    ?.selectionsByPeriod[preferences.schedulePeriodId]
+  const initialUpdatedAt = initialRecordsCache
+    ?.selectionsUpdatedAtByPeriod[preferences.schedulePeriodId] || 0
+  const [periods, setPeriods] = useState<AcademicPeriod[]>(
+    initialScheduleCache?.periods || [],
+  )
+  const [records, setRecords] = useState<CourseSelectionRecord[]>(initialRecords || [])
+  const [loading, setLoading] = useState(!initialUpdatedAt)
+  const [retrying, setRetrying] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [usingCache, setUsingCache] = useState(false)
+  const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [activeTab, setActiveTab] = useState<SelectionTab>('all')
   const [sheet, setSheet] = useState<SelectionSheet>(null)
   const [activeRecord, setActiveRecord] = useState<CourseSelectionRecord | null>(null)
@@ -55,15 +74,69 @@ export default function SelectionPage() {
       ? records.filter((record) => record.status === 'failed')
       : records
   ), [activeTab, records])
+  const hasSelectedPeriod = periods.some((period) => (
+    period.id === preferences.schedulePeriodId
+  ))
 
-  const refreshSelections = useCallback(async () => {
-    try {
-      const result = await academicRepository.getCourseSelections(preferences.schedulePeriodId)
-      setRecords(result)
-    } catch {
-      Taro.showToast({ title: '选课结果加载失败', icon: 'none' })
+  const refreshSelections = useCallback(async (
+    manual = false,
+    periodId = preferences.schedulePeriodId,
+  ) => {
+    const cache = academicStorage.getRecordsCache(academicUserId)
+    const cached = cache?.selectionsByPeriod[periodId]
+    const updatedAt = cache
+      ?.selectionsUpdatedAtByPeriod[periodId] || 0
+    if (cached && !manual) {
+      setRecords(cached)
+      setCacheUpdatedAt(updatedAt)
     }
-  }, [preferences.schedulePeriodId])
+    if (!updatedAt) setLoading(true)
+    if (manual) setRetrying(true)
+    setLoadError(false)
+    try {
+      const result = await academicRepository.getCourseSelections(periodId)
+      academicStorage.setSelectionRecords(
+        academicUserId,
+        periodId,
+        result,
+      )
+      setRecords(result)
+      setCacheUpdatedAt(Date.now())
+      setUsingCache(false)
+    } catch {
+      if (updatedAt) {
+        setUsingCache(true)
+        Taro.showToast({ title: '已展示上次选课结果', icon: 'none' })
+      } else {
+        setLoadError(true)
+      }
+    } finally {
+      setLoading(false)
+      setRetrying(false)
+    }
+  }, [academicUserId, preferences.schedulePeriodId])
+
+  const retryPage = useCallback(async () => {
+    setRetrying(true)
+    setLoadError(false)
+    try {
+      const result = await academicRepository.getPeriods()
+      const periodId = resolvePeriodId(result, preferences.schedulePeriodId)
+      if (!periodId) throw new Error('academic period unavailable')
+      setPeriods(result)
+      setPreferences((current) => ({ ...current, schedulePeriodId: periodId }))
+      if (hasSelectedPeriod && periodId === preferences.schedulePeriodId) {
+        await refreshSelections(false, periodId)
+      } else {
+        setLoading(true)
+      }
+    } catch {
+      setLoadError(true)
+    } finally {
+      setRetrying(false)
+      setLoading(false)
+    }
+  }, [hasSelectedPeriod, preferences.schedulePeriodId, refreshSelections])
 
   useEffect(() => {
     academicRepository.getPeriods()
@@ -78,17 +151,20 @@ export default function SelectionPage() {
         })
       })
       .catch(() => {
+        if (initialScheduleCache?.periods.length) {
+          Taro.showToast({ title: '已使用上次学期信息', icon: 'none' })
+          return
+        }
         setLoading(false)
-        Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
+        setLoadError(true)
       })
-  }, [])
+  }, [initialScheduleCache])
   useEffect(() => {
-    if (!periods.some((period) => period.id === preferences.schedulePeriodId)) return
-    setLoading(true)
-    refreshSelections().finally(() => setLoading(false))
-  }, [periods, preferences.schedulePeriodId, refreshSelections])
+    if (!hasSelectedPeriod) return
+    void refreshSelections()
+  }, [hasSelectedPeriod, refreshSelections])
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
-  Taro.usePullDownRefresh(() => refreshSelections().finally(() => Taro.stopPullDownRefresh()))
+  Taro.usePullDownRefresh(() => refreshSelections(true).finally(() => Taro.stopPullDownRefresh()))
 
   const updatePeriod = (schedulePeriodId: string) => {
     setPreferences((current) => ({ ...current, schedulePeriodId }))
@@ -143,7 +219,10 @@ export default function SelectionPage() {
       <View className='academic-page__glow academic-page__glow--two' />
       <AcademicHeader title='选课结果' toolbar={toolbar} />
       <View className='academic-content'>
-        {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : <>
+        {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : loadError ? (
+          <AcademicLoadState retrying={retrying} onRetry={retryPage} />
+        ) : <>
+          {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} />}
           <View className='selection-hero'>
             <View><Text className='selection-hero__eyebrow'>本学期课程记录</Text><Text className='selection-hero__number'>{records.length}<Text> 门课程</Text></Text><Text className='selection-hero__copy'>完整展示教务系统返回的课程状态</Text></View>
             <View className='selection-hero__seal'><Text>课程</Text><Text>记录</Text></View>

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
+import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import AcademicHeader from '../components/academic-header'
+import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
 import {
@@ -33,14 +35,30 @@ const defaultPreferences: AcademicPreferences = {
 type ExamSheet = 'period' | 'exam-detail' | null
 
 export default function ExamsPage() {
+  const [academicUserId] = useState(getActiveAcademicUserId)
+  const [initialScheduleCache] = useState(() => (
+    academicStorage.getScheduleCache(academicUserId)
+  ))
+  const [initialRecordsCache] = useState(() => (
+    academicStorage.getRecordsCache(academicUserId)
+  ))
   const [preferences, setPreferences] = useState<AcademicPreferences>({
     ...defaultPreferences,
     ...academicStorage.getPreferences(defaultPreferences),
     section: 'exams',
   })
-  const [periods, setPeriods] = useState<AcademicPeriod[]>([])
-  const [exams, setExams] = useState<ExamRecord[]>([])
-  const [loading, setLoading] = useState(true)
+  const initialExams = initialRecordsCache?.examsByPeriod[preferences.examPeriodId]
+  const initialUpdatedAt = initialRecordsCache
+    ?.examsUpdatedAtByPeriod[preferences.examPeriodId] || 0
+  const [periods, setPeriods] = useState<AcademicPeriod[]>(
+    initialScheduleCache?.periods || [],
+  )
+  const [exams, setExams] = useState<ExamRecord[]>(initialExams || [])
+  const [loading, setLoading] = useState(!initialUpdatedAt)
+  const [retrying, setRetrying] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [usingCache, setUsingCache] = useState(false)
+  const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [sheet, setSheet] = useState<ExamSheet>(null)
   const [activeExam, setActiveExam] = useState<ExamRecord | null>(null)
 
@@ -56,6 +74,7 @@ export default function ExamsPage() {
     groups[date] = [...(groups[date] || []), exam]
     return groups
   }, {}), [visibleExams])
+  const hasSelectedPeriod = periods.some((period) => period.id === preferences.examPeriodId)
 
   useEffect(() => {
     academicRepository.getPeriods()
@@ -70,31 +89,79 @@ export default function ExamsPage() {
         })
       })
       .catch(() => {
+        if (initialScheduleCache?.periods.length) {
+          Taro.showToast({ title: '已使用上次学期信息', icon: 'none' })
+          return
+        }
         setLoading(false)
-        Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
+        setLoadError(true)
       })
-  }, [])
+  }, [initialScheduleCache])
 
-  const refreshExams = useCallback(async () => {
-    try {
-      const records = await academicRepository.getExams(preferences.examPeriodId)
-      setExams(records)
-    } catch {
-      Taro.showToast({ title: '考试安排加载失败', icon: 'none' })
+  const refreshExams = useCallback(async (
+    manual = false,
+    periodId = preferences.examPeriodId,
+  ) => {
+    const cache = academicStorage.getRecordsCache(academicUserId)
+    const cached = cache?.examsByPeriod[periodId]
+    const updatedAt = cache?.examsUpdatedAtByPeriod[periodId] || 0
+    if (cached && !manual) {
+      setExams(cached)
+      setCacheUpdatedAt(updatedAt)
     }
-  }, [preferences.examPeriodId])
+    if (!updatedAt) setLoading(true)
+    if (manual) setRetrying(true)
+    setLoadError(false)
+    try {
+      const records = await academicRepository.getExams(periodId)
+      academicStorage.setExamRecords(academicUserId, periodId, records)
+      setExams(records)
+      setCacheUpdatedAt(Date.now())
+      setUsingCache(false)
+    } catch {
+      if (updatedAt) {
+        setUsingCache(true)
+        Taro.showToast({ title: '已展示上次考试安排', icon: 'none' })
+      } else {
+        setLoadError(true)
+      }
+    } finally {
+      setLoading(false)
+      setRetrying(false)
+    }
+  }, [academicUserId, preferences.examPeriodId])
+
+  const retryPage = useCallback(async () => {
+    setRetrying(true)
+    setLoadError(false)
+    try {
+      const records = await academicRepository.getPeriods()
+      const periodId = resolvePeriodId(records, preferences.examPeriodId)
+      if (!periodId) throw new Error('academic period unavailable')
+      setPeriods(records)
+      setPreferences((current) => ({ ...current, examPeriodId: periodId }))
+      if (hasSelectedPeriod && periodId === preferences.examPeriodId) {
+        await refreshExams(false, periodId)
+      } else {
+        setLoading(true)
+      }
+    } catch {
+      setLoadError(true)
+    } finally {
+      setRetrying(false)
+      setLoading(false)
+    }
+  }, [hasSelectedPeriod, preferences.examPeriodId, refreshExams])
 
   useEffect(() => {
-    if (!periods.some((period) => period.id === preferences.examPeriodId)) return
-    setLoading(true)
-    refreshExams()
-      .finally(() => setLoading(false))
-  }, [periods, preferences.examPeriodId, refreshExams])
+    if (!hasSelectedPeriod) return
+    void refreshExams()
+  }, [hasSelectedPeriod, refreshExams])
 
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
 
   Taro.usePullDownRefresh(() => {
-    refreshExams().finally(() => Taro.stopPullDownRefresh())
+    refreshExams(true).finally(() => Taro.stopPullDownRefresh())
   })
 
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
@@ -187,8 +254,11 @@ export default function ExamsPage() {
             <View className='academic-state__loader' />
             <Text>正在整理考试安排…</Text>
           </View>
+        ) : loadError ? (
+          <AcademicLoadState retrying={retrying} onRetry={retryPage} />
         ) : (
           <>
+            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} />}
             <View className='exam-hero'>
               <View>
                 <Text className='exam-hero__eyebrow'>考试日程</Text>

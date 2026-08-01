@@ -27,6 +27,7 @@ export class ApiError extends Error {
   code: string
   requestId: string
   details: unknown
+  retryAfterMs: number
 
   constructor(
     statusCode: number,
@@ -34,6 +35,7 @@ export class ApiError extends Error {
     message: string,
     requestId = '',
     details: unknown = null,
+    retryAfterMs = 0,
   ) {
     super(message)
     Object.setPrototypeOf(this, ApiError.prototype)
@@ -42,6 +44,7 @@ export class ApiError extends Error {
     this.code = code
     this.requestId = requestId
     this.details = details
+    this.retryAfterMs = retryAfterMs
   }
 }
 
@@ -59,7 +62,21 @@ const queryString = (query?: RequestOptions['query']) => {
   return parts.length ? `?${parts.join('&')}` : ''
 }
 
-export const parseApiError = (statusCode: number, body: unknown) => {
+const parseRetryAfterMs = (headers?: Record<string, unknown>) => {
+  if (!headers) return 0
+  const entry = Object.entries(headers).find(([key]) => key.toLowerCase() === 'retry-after')
+  if (!entry) return 0
+  const seconds = Number(entry[1])
+  if (!Number.isFinite(seconds) || seconds <= 0) return 0
+  return Math.min(Math.ceil(seconds * 1000), 60_000)
+}
+
+export const parseApiError = (
+  statusCode: number,
+  body: unknown,
+  headers?: Record<string, unknown>,
+) => {
+  const retryAfterMs = parseRetryAfterMs(headers)
   if (
     body
     && typeof body === 'object'
@@ -75,6 +92,8 @@ export const parseApiError = (statusCode: number, body: unknown) => {
       String(envelope.error.code),
       String(envelope.error.message),
       String(envelope.request_id || ''),
+      null,
+      retryAfterMs,
     )
   }
   if (body && typeof body === 'object' && 'data' in body) {
@@ -85,9 +104,17 @@ export const parseApiError = (statusCode: number, body: unknown) => {
       statusCode === 409 ? '当前状态已变化，请刷新后重试' : '校园服务暂时不可用',
       requestId,
       body.data,
+      retryAfterMs,
     )
   }
-  return new ApiError(statusCode, 'request_failed', '校园服务暂时不可用')
+  return new ApiError(
+    statusCode,
+    'request_failed',
+    '校园服务暂时不可用',
+    '',
+    null,
+    retryAfterMs,
+  )
 }
 
 const throwApiError = async (error: ApiError, options: RequestOptions): Promise<never> => {
@@ -151,7 +178,7 @@ export async function apiRequest<T>(options: RequestOptions): Promise<T> {
   }
 
   const responseError = response.statusCode < 200 || response.statusCode >= 300
-    ? parseApiError(response.statusCode, response.data)
+    ? parseApiError(response.statusCode, response.data, response.header)
     : null
   if (
     response.statusCode === 401
