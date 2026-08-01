@@ -3,8 +3,13 @@ import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
 import prodConfig from './prod'
 import vitePluginImp from 'vite-plugin-imp'
+import { loadApiEndpoints } from './api-endpoints'
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+  const apiEndpoints = loadApiEndpoints(
+    process.env,
+    process.env.NODE_ENV === 'production',
+  )
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'campus-miniapp',
     date: '2026-7-25',
@@ -19,9 +24,8 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     outputRoot: 'dist',
     plugins: ['@tarojs/plugin-html'],
     defineConstants: {
-      __CAMPUS_API_BASE_URL__: JSON.stringify(
-        process.env.TARO_APP_API_BASE_URL || 'http://127.0.0.1:18080',
-      ),
+      __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(apiEndpoints.review),
+      __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(apiEndpoints.production),
       __CAMPUS_WECHAT_APP_ID__: JSON.stringify(
         process.env.TARO_APP_WECHAT_APP_ID || 'wx0d9936d6708f44c0',
       ),

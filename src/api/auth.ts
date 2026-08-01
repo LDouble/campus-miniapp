@@ -1,12 +1,25 @@
 import Taro from '@tarojs/taro'
 import type { ApiErrorEnvelope, ApiSuccessEnvelope, TokenPair } from './types'
 import { clearAcademicCredential } from './academic-credential'
+import { resolveApiBaseUrl } from './environment'
 
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
 const TOKEN_EXPIRES_AT_KEY = 'campus.auth.expiresAt.v1'
 const ACCOUNT_CANCELLED_KEY = 'campus.auth.accountCancelled.v1'
-export const API_BASE_URL = String(__CAMPUS_API_BASE_URL__)
+const miniProgramEnvVersion = () => {
+  try {
+    return Taro.getAccountInfoSync().miniProgram.envVersion
+  } catch {
+    // H5 and incomplete development runtimes fail closed to the review API.
+    return 'develop'
+  }
+}
+
+export const API_BASE_URL = resolveApiBaseUrl(miniProgramEnvVersion(), {
+  review: __CAMPUS_REVIEW_API_BASE_URL__,
+  production: __CAMPUS_PRODUCTION_API_BASE_URL__,
+})
 
 export const apiUrl = (path: string) => {
   const baseEndsWithSlash = API_BASE_URL.endsWith('/')
