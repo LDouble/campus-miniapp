@@ -17,6 +17,7 @@ import type {
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
+import { getAcademicQueryChannel } from '../../features/academic-direct/channel'
 import {
   avatarText,
   resolveCoursePreview,
@@ -204,8 +205,9 @@ const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
   }
 
   const latestCache: AcademicScheduleCache = {
-    version: 1,
+    version: 2,
     platformUserId: userId,
+    channel: getAcademicQueryChannel(),
     periods,
     coursesByPeriod,
   }

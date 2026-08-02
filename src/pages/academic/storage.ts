@@ -1,5 +1,9 @@
 import Taro from '@tarojs/taro'
 import {
+  AcademicQueryChannel,
+  getAcademicQueryChannel,
+} from '../../features/academic-direct/channel'
+import {
   AcademicPeriod,
   AcademicPreferences,
   Course,
@@ -12,8 +16,9 @@ const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 
 export interface AcademicScheduleCache {
-  version: 1
+  version: 2
   platformUserId: number
+  channel: AcademicQueryChannel
   periods: AcademicPeriod[]
   coursesByPeriod: Record<string, Course[]>
 }
@@ -69,19 +74,24 @@ const validCourse = (value: unknown): value is Course => {
   )
 }
 
-const scheduleCacheKey = (platformUserId: number) => (
-  `${SCHEDULE_CACHE_KEY_PREFIX}${platformUserId}`
+const scheduleCacheKey = (
+  platformUserId: number,
+  channel: AcademicQueryChannel,
+) => (
+  `${SCHEDULE_CACHE_KEY_PREFIX}${platformUserId}.${channel}`
 )
 
 const validScheduleCache = (
   value: unknown,
   platformUserId: number,
+  channel: AcademicQueryChannel,
 ): value is AcademicScheduleCache => {
   if (!value || typeof value !== 'object') return false
   const cache = value as AcademicScheduleCache
   return (
-    cache.version === 1
+    cache.version === 2
     && cache.platformUserId === platformUserId
+    && cache.channel === channel
     && Array.isArray(cache.periods)
     && cache.periods.every(validPeriod)
     && !!cache.coursesByPeriod
@@ -109,8 +119,9 @@ export const academicStorage = {
   ),
   getScheduleCache: (platformUserId: number) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
-    const value = safeRead<unknown>(scheduleCacheKey(platformUserId), null)
-    return validScheduleCache(value, platformUserId) ? value : null
+    const channel = getAcademicQueryChannel()
+    const value = safeRead<unknown>(scheduleCacheKey(platformUserId, channel), null)
+    return validScheduleCache(value, platformUserId, channel) ? value : null
   },
   setScheduleCache: (
     platformUserId: number,
@@ -118,9 +129,11 @@ export const academicStorage = {
     coursesByPeriod: Record<string, Course[]>,
   ) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return
-    safeWrite<AcademicScheduleCache>(scheduleCacheKey(platformUserId), {
-      version: 1,
+    const channel = getAcademicQueryChannel()
+    safeWrite<AcademicScheduleCache>(scheduleCacheKey(platformUserId, channel), {
+      version: 2,
       platformUserId,
+      channel,
       periods,
       coursesByPeriod,
     })

@@ -8,7 +8,10 @@ import {
 } from '../../../features/life-services/marketplace-prefill'
 import AcademicHeader from '../components/academic-header'
 import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
-import { academicRepository } from '../repository'
+import {
+  academicQueryErrorMessage,
+  academicRepository,
+} from '../repository'
 import { academicStorage } from '../storage'
 import {
   AcademicPreferences,
@@ -114,8 +117,13 @@ export default function GradesPage() {
           return { ...current, gradePeriodId: ALL_PERIOD_ID }
         })
       })
-      .catch(() => {
-        if (!cancelled) Taro.showToast({ title: '成绩加载失败', icon: 'none' })
+      .catch((error) => {
+        if (!cancelled) {
+          Taro.showToast({
+            title: academicQueryErrorMessage(error, '成绩加载失败'),
+            icon: 'none',
+          })
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

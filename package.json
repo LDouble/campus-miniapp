@@ -17,6 +17,7 @@
     "e2e:community": "npm run build:weapp && bash scripts/e2e-community.sh",
     "e2e:life-services": "npm run build:weapp && bash scripts/e2e-life-services.sh",
     "e2e:personal-records": "bash scripts/e2e-personal-records.sh",
+    "test:academic": "node --test -r ts-node/register/transpile-only tests/http-session/*.test.ts tests/academic-direct/*.test.ts",
     "build:weapp": "taro build --type weapp",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
@@ -61,8 +62,10 @@
     "@tarojs/runtime": "4.1.11",
     "@tarojs/shared": "4.1.11",
     "@tarojs/taro": "4.1.11",
+    "htmlparser2": "6.1.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "sm-crypto": "0.3.13"
   },
   "devDependencies": {
     "@babel/core": "^7.8.0",

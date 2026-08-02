@@ -1,3 +1,4 @@
+import Taro from '@tarojs/taro'
 import {
   listAcademicCourses,
   listAcademicCourseSelections,
@@ -5,6 +6,14 @@ import {
   listAcademicGrades,
   listAcademicPeriods,
 } from '../../api/academic'
+import { getCurrentUser } from '../../api/account'
+import {
+  AcademicCredentialMissingError,
+  loadAcademicCredential,
+} from '../../api/academic-credential'
+import { getAcademicQueryChannel } from '../../features/academic-direct/channel'
+import { academicDirectErrorMessage } from '../../features/academic-direct/errors'
+import { academicDirectProvider } from '../../features/academic-direct/provider'
 import type {
   AcademicCourse,
   AcademicCourseSelection,
@@ -115,26 +124,92 @@ export interface AcademicRepository {
   getCourseSelections: (periodId: string) => Promise<CourseSelectionRecord[]>
 }
 
+export const academicQueryErrorMessage = (
+  error: unknown,
+  fallback: string,
+) => (
+  getAcademicQueryChannel() === 'direct'
+    ? academicDirectErrorMessage(error)
+    : fallback
+)
+
 let pendingGradeRequest: Promise<GradeRecord[]> | null = null
+let pendingGradeChannel = ''
+
+const directContext = async () => {
+  const currentUser = await getCurrentUser()
+  try {
+    return {
+      platformUserId: currentUser.user.id,
+      credential: loadAcademicCredential(currentUser.user.id),
+    }
+  } catch (error) {
+    if (error instanceof AcademicCredentialMissingError) {
+      try {
+        await Taro.navigateTo({
+          url: '/pages/academic-verification/index?rebind=1',
+        })
+      } catch {
+        // 导航失败时仍抛出明确的凭据错误。
+      }
+    }
+    throw error
+  }
+}
+
+const listCourses = async (periodId: string) => (
+  getAcademicQueryChannel() === 'direct'
+    ? academicDirectProvider.listCourses(await directContext(), periodId)
+    : listAcademicCourses(periodId)
+)
+
+const listPeriods = async () => (
+  getAcademicQueryChannel() === 'direct'
+    ? academicDirectProvider.listPeriods(await directContext())
+    : listAcademicPeriods()
+)
+
+const listGrades = async () => (
+  getAcademicQueryChannel() === 'direct'
+    ? academicDirectProvider.listGrades(await directContext())
+    : listAcademicGrades()
+)
+
+const listExams = async (periodId: string) => (
+  getAcademicQueryChannel() === 'direct'
+    ? academicDirectProvider.listExams(await directContext(), periodId)
+    : listAcademicExams(periodId)
+)
+
+const listCourseSelections = async (periodId: string) => (
+  getAcademicQueryChannel() === 'direct'
+    ? academicDirectProvider.listSelections(await directContext(), periodId)
+    : listAcademicCourseSelections(periodId)
+)
 
 const getGrades = () => {
-  if (pendingGradeRequest) return pendingGradeRequest
+  const channel = getAcademicQueryChannel()
+  if (pendingGradeRequest && pendingGradeChannel === channel) return pendingGradeRequest
   let tracked: Promise<GradeRecord[]>
-  tracked = listAcademicGrades()
+  tracked = listGrades()
     .then((records) => records.map(mapGrade))
     .finally(() => {
-      if (pendingGradeRequest === tracked) pendingGradeRequest = null
+      if (pendingGradeRequest === tracked) {
+        pendingGradeRequest = null
+        pendingGradeChannel = ''
+      }
     })
   pendingGradeRequest = tracked
+  pendingGradeChannel = channel
   return tracked
 }
 
 export const academicRepository: AcademicRepository = {
-  getPeriods: async () => (await listAcademicPeriods()).map(mapPeriod),
-  getCourses: async (periodId) => (await listAcademicCourses(periodId)).map(mapCourse),
+  getPeriods: async () => (await listPeriods()).map(mapPeriod),
+  getCourses: async (periodId) => (await listCourses(periodId)).map(mapCourse),
   getGrades,
-  getExams: async (periodId) => (await listAcademicExams(periodId)).map(mapExam),
+  getExams: async (periodId) => (await listExams(periodId)).map(mapExam),
   getCourseSelections: async (periodId) => (
-    await listAcademicCourseSelections(periodId)
+    await listCourseSelections(periodId)
   ).map(mapCourseSelection),
 }

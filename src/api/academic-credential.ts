@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { clearAcademicDirectSession } from '../features/academic-direct/provider'
 
 const ACTIVE_USER_KEY = 'campus.academicCredential.activeUser.v1'
 const CREDENTIAL_KEY_PREFIX = 'campus.academicCredential.user.v1.'
@@ -42,6 +43,7 @@ export const isAcademicEducationLevel = (
 
 const removeUserCredential = (userId: number) => {
   if (!validUserId(userId)) return
+  clearAcademicDirectSession(userId)
   Taro.removeStorageSync(credentialKey(userId))
 }
 
@@ -65,6 +67,7 @@ export const saveAcademicCredential = (
   if (previousUserId && previousUserId !== platformUserId) {
     removeUserCredential(previousUserId)
   }
+  clearAcademicDirectSession(platformUserId)
 
   const value: StoredAcademicCredential = {
     version: 2,

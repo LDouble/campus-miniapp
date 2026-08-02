@@ -20,7 +20,7 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     plugins: ['@tarojs/plugin-html'],
     defineConstants: {
       __CAMPUS_API_BASE_URL__: JSON.stringify(
-        process.env.TARO_APP_API_BASE_URL || 'http://127.0.0.1:18080',
+        process.env.TARO_APP_API_BASE_URL || 'http://10.95.238.229:18080',
       ),
       __CAMPUS_WECHAT_APP_ID__: JSON.stringify(
         process.env.TARO_APP_WECHAT_APP_ID || 'wx0d9936d6708f44c0',

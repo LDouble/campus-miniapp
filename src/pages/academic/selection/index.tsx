@@ -6,7 +6,10 @@ import {
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
 import AcademicHeader from '../components/academic-header'
-import { academicRepository } from '../repository'
+import {
+  academicQueryErrorMessage,
+  academicRepository,
+} from '../repository'
 import { academicStorage } from '../storage'
 import { AcademicPeriod, AcademicPreferences, CourseSelectionRecord, CourseSelectionStatus } from '../types'
 import { getPeriodLabel, resolvePeriodId } from '../utils'
@@ -55,8 +58,11 @@ export default function SelectionPage() {
     try {
       const result = await academicRepository.getCourseSelections(preferences.schedulePeriodId)
       setRecords(result)
-    } catch {
-      Taro.showToast({ title: '选课结果加载失败', icon: 'none' })
+    } catch (error) {
+      Taro.showToast({
+        title: academicQueryErrorMessage(error, '选课结果加载失败'),
+        icon: 'none',
+      })
     }
   }, [preferences.schedulePeriodId])
 
@@ -72,9 +78,12 @@ export default function SelectionPage() {
             : { ...current, schedulePeriodId }
         })
       })
-      .catch(() => {
+      .catch((error) => {
         setLoading(false)
-        Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
+        Taro.showToast({
+          title: academicQueryErrorMessage(error, '学期信息加载失败'),
+          icon: 'none',
+        })
       })
   }, [])
   useEffect(() => {

@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import AcademicHeader from '../components/academic-header'
-import { academicRepository } from '../repository'
+import {
+  academicQueryErrorMessage,
+  academicRepository,
+} from '../repository'
 import { academicStorage } from '../storage'
 import {
   AcademicPeriod,
@@ -69,9 +72,12 @@ export default function ExamsPage() {
             : { ...current, examPeriodId }
         })
       })
-      .catch(() => {
+      .catch((error) => {
         setLoading(false)
-        Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
+        Taro.showToast({
+          title: academicQueryErrorMessage(error, '学期信息加载失败'),
+          icon: 'none',
+        })
       })
   }, [])
 
@@ -79,8 +85,11 @@ export default function ExamsPage() {
     try {
       const records = await academicRepository.getExams(preferences.examPeriodId)
       setExams(records)
-    } catch {
-      Taro.showToast({ title: '考试安排加载失败', icon: 'none' })
+    } catch (error) {
+      Taro.showToast({
+        title: academicQueryErrorMessage(error, '考试安排加载失败'),
+        icon: 'none',
+      })
     }
   }, [preferences.examPeriodId])
 

@@ -69,6 +69,83 @@ page {
   width: 100%;
 }
 
+.academic-channel-toolbar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10rpx;
+
+  > .academic-toolbar {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.academic-channel-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 8rpx;
+  min-width: 112rpx;
+  height: 72rpx;
+  padding: 0 14rpx;
+  color: #537780;
+  font-size: 22rpx;
+  font-weight: 680;
+  background: rgba(255, 255, 255, 0.84);
+  border: 2rpx solid rgba(91, 143, 153, 0.12);
+  border-radius: 22rpx;
+
+  > view {
+    width: 12rpx;
+    height: 12rpx;
+    background: #76949b;
+    border-radius: 50%;
+    box-shadow: 0 0 0 6rpx rgba(118, 148, 155, 0.1);
+  }
+
+  &--direct {
+    color: #a4614c;
+    background: rgba(255, 247, 239, 0.94);
+    border-color: rgba(201, 127, 91, 0.16);
+
+    > view {
+      background: #cf815f;
+      box-shadow: 0 0 0 6rpx rgba(207, 129, 95, 0.11);
+    }
+  }
+
+  &--compact {
+    min-width: 68rpx;
+    height: 56rpx;
+    padding: 0 9rpx;
+    font-size: 18rpx;
+    border-radius: 16rpx;
+
+    > view {
+      display: none;
+    }
+  }
+
+  &--disabled {
+    opacity: 0.55;
+  }
+
+  &--pressed {
+    transform: scale(0.97);
+  }
+}
+
+.academic-channel-toolbar--schedule {
+  justify-content: center;
+
+  > .academic-toolbar {
+    width: auto;
+    transform: none;
+  }
+}
+
 .academic-toolbar {
   display: flex;
   align-items: center;

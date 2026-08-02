@@ -16,7 +16,10 @@ import {
 } from '../../../features/life-services/marketplace-prefill'
 import AcademicHeader from '../components/academic-header'
 import { findCourseConflicts } from '../calculations'
-import { academicRepository } from '../repository'
+import {
+  academicQueryErrorMessage,
+  academicRepository,
+} from '../repository'
 import { academicStorage } from '../storage'
 import {
   AcademicPeriod,
@@ -223,7 +226,7 @@ export default function SchedulePage() {
         )
         applyPeriods(records)
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return
         if (initialScheduleCache && initialScheduleCache.periods.length) {
           applyPeriods(initialScheduleCache.periods)
@@ -231,7 +234,11 @@ export default function SchedulePage() {
           return
         }
         setLoading(false)
-        Taro.showToast({ title: '学期信息加载失败', icon: 'none' })
+        Taro.showToast({
+          title: academicQueryErrorMessage(error, '学期信息加载失败'),
+          icon: 'none',
+          duration: 5000,
+        })
       })
     return () => {
       active = false
@@ -269,8 +276,13 @@ export default function SchedulePage() {
         )
         if (active) setOfficialCourses(courses)
       })
-      .catch(() => {
-        if (active) Taro.showToast({ title: '课程表加载失败', icon: 'none' })
+      .catch((error) => {
+        if (active) {
+          Taro.showToast({
+            title: academicQueryErrorMessage(error, '课程表加载失败'),
+            icon: 'none',
+          })
+        }
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -316,8 +328,11 @@ export default function SchedulePage() {
         selectedWeekday: 1,
       }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
-    } catch {
-      Taro.showToast({ title: '课程表刷新失败', icon: 'none' })
+    } catch (error) {
+      Taro.showToast({
+        title: academicQueryErrorMessage(error, '课程表刷新失败'),
+        icon: 'none',
+      })
     } finally {
       setLoading(false)
     }
