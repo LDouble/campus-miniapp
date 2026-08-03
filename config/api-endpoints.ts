@@ -10,7 +10,8 @@ export type ApiEndpoints = {
 }
 
 const localApiBaseUrl = 'http://127.0.0.1:18080'
-export const defaultReviewApiBaseUrl = 'http://106.75.251.4:8080'
+export const defaultReviewApiBaseUrl = 'https://review.weouc.com'
+export const defaultProductionApiBaseUrl = 'https://product.weouc.com'
 
 const normalizeUrl = (value: string) => value.trim().replace(/\/+$/, '')
 
@@ -26,9 +27,7 @@ const validateIsolatedEndpoint = (name: keyof ApiEndpoints, value: string) => {
   } catch {
     throw new Error(`TARO_APP_${name.toUpperCase()}_API_BASE_URL must be an absolute URL`)
   }
-  const approvedPlaintextReview = name === 'review'
-    && canonicalEndpoint(value) === defaultReviewApiBaseUrl
-  if (parsed.protocol !== 'https:' && !approvedPlaintextReview) {
+  if (parsed.protocol !== 'https:') {
     throw new Error(`TARO_APP_${name.toUpperCase()}_API_BASE_URL must use HTTPS`)
   }
   if (parsed.username || parsed.password || parsed.search || parsed.hash) {
@@ -46,19 +45,13 @@ export const loadApiEndpoints = (
       environment.TARO_APP_REVIEW_API_BASE_URL
       || (requireIsolation ? defaultReviewApiBaseUrl : legacy),
     ),
-    production: normalizeUrl(environment.TARO_APP_PRODUCTION_API_BASE_URL || legacy),
+    production: normalizeUrl(
+      environment.TARO_APP_PRODUCTION_API_BASE_URL
+      || (requireIsolation ? defaultProductionApiBaseUrl : legacy),
+    ),
   }
 
   if (!requireIsolation) return endpoints
-
-  const missing = [
-    ['production', environment.TARO_APP_PRODUCTION_API_BASE_URL],
-  ].filter(([, value]) => !String(value || '').trim())
-  if (missing.length > 0) {
-    throw new Error(
-      `production builds require isolated API URLs: ${missing.map(([name]) => name).join(', ')}`,
-    )
-  }
 
   Object.entries(endpoints).forEach(([name, value]) => {
     validateIsolatedEndpoint(name as keyof ApiEndpoints, value)

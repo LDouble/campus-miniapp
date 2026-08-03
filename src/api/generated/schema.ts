@@ -575,6 +575,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic-verification/materials/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 确认学生证材料 COS 直传完成 */
+        post: operations["CompleteAcademicVerificationMaterialUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic-verification/materials/upload-target": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 获取学生证材料 COS 直传临时凭证 */
+        post: operations["InitiateAcademicVerificationMaterialUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic-verification/student-card": {
         parameters: {
             query?: never;
@@ -3836,6 +3870,37 @@ export interface components {
             data: components["schemas"]["AcademicVerificationStatus"];
             request_id: string;
         };
+        AcademicVerificationUploadTarget: {
+            /** Format: date-time */
+            expires_at: string;
+            /** @enum {string} */
+            file_field: "file";
+            form_fields: {
+                [key: string]: string;
+            };
+            headers: {
+                [key: string]: string;
+            };
+            storage_key: string;
+            temporary_credentials: components["schemas"]["COSTemporaryCredentials"] | null;
+            /** @enum {string} */
+            upload_method: "POST";
+            /** Format: uri */
+            upload_url: string;
+        };
+        AcademicVerificationUploadTargetResponseBody: {
+            data: components["schemas"]["AcademicVerificationUploadTarget"];
+            request_id: string;
+        };
+        COSTemporaryCredentials: {
+            /** Format: int64 */
+            expired_time: number;
+            secret_id: string;
+            secret_key: string;
+            session_token: string;
+            /** Format: int64 */
+            start_time: number;
+        };
         AccountCancellationBlocker: {
             /** Format: int64 */
             count: number;
@@ -4419,6 +4484,15 @@ export interface components {
         };
         /** @enum {string} */
         EducationLevel: "undergraduate" | "graduate" | "general";
+        MaterialCOSTemporaryCredentials: {
+            /** Format: int64 */
+            expired_time: number;
+            secret_id: string;
+            secret_key: string;
+            session_token: string;
+            /** Format: int64 */
+            start_time: number;
+        };
         MaterialCoursePage: {
             items: components["schemas"]["MaterialCourseView"][];
             page: number;
@@ -4593,6 +4667,7 @@ export interface components {
             headers: {
                 [key: string]: string;
             };
+            temporary_credentials: components["schemas"]["MaterialCOSTemporaryCredentials"] | null;
             /** @enum {string} */
             upload_method: "POST";
             /** Format: uri */
@@ -5639,6 +5714,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["AcademicVerificationStatusResponseBody"];
+            };
+        };
+        /** @description 学生证材料 COS 直传目标 */
+        AcademicVerificationUploadTargetResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicVerificationUploadTargetResponseBody"];
             };
         };
         /** @description 账号注销预检结果 */
@@ -6911,6 +6995,56 @@ export interface operations {
             201: components["responses"]["AcademicVerificationMaterialResponse"];
             400: components["responses"]["Error"];
             413: components["responses"]["Error"];
+        };
+    };
+    CompleteAcademicVerificationMaterialUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    storage_key: string;
+                    /** @enum {string} */
+                    mime_type: "image/jpeg" | "image/png" | "image/webp";
+                    /** Format: int64 */
+                    size_bytes: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicVerificationMaterialResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            413: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    InitiateAcademicVerificationMaterialUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    mime_type: "image/jpeg" | "image/png" | "image/webp";
+                    /** Format: int64 */
+                    size_bytes: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicVerificationUploadTargetResponse"];
+            400: components["responses"]["Error"];
+            413: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     SubmitStudentCardVerification: {

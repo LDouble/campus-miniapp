@@ -1,5 +1,6 @@
 import * as assert from 'node:assert/strict'
 import {
+  defaultProductionApiBaseUrl,
   defaultReviewApiBaseUrl,
   loadApiEndpoints,
 } from '../config/api-endpoints'
@@ -29,7 +30,10 @@ assert.deepEqual(loadApiEndpoints({
   review: defaultReviewApiBaseUrl,
   production: 'https://api.example.invalid',
 })
-assert.throws(() => loadApiEndpoints({}, true), /require isolated API URLs/)
+assert.deepEqual(loadApiEndpoints({}, true), {
+  review: defaultReviewApiBaseUrl,
+  production: defaultProductionApiBaseUrl,
+})
 assert.throws(() => loadApiEndpoints({
   TARO_APP_REVIEW_API_BASE_URL: 'http://review-api.example.invalid',
   TARO_APP_PRODUCTION_API_BASE_URL: endpoints.production,
