@@ -16,6 +16,7 @@ import type {
   MaterialUploadTarget,
 } from './types'
 import type { operations } from './generated/schema'
+import { uploadFileToObjectStorage } from './object-upload'
 
 type ListCourseMaterialsParameters = NonNullable<
 operations['ListCourseMaterials']['parameters']['query']
@@ -126,20 +127,7 @@ export const uploadMaterialFile = (
   filePath: string,
   onProgress: (progress: number) => void,
 ) => {
-  const task = Taro.uploadFile({
-    url: target.upload_url,
-    filePath,
-    name: target.file_field,
-    formData: target.form_fields,
-    header: target.headers,
-    timeout: 120_000,
-  })
-  task.progress((event) => onProgress(event.progress))
-  return task.then((result) => {
-    if (result.statusCode < 200 || result.statusCode >= 300) {
-      throw new Error('文件上传失败')
-    }
-  })
+  return uploadFileToObjectStorage(target, filePath, onProgress)
 }
 
 export const getMaterialDownload = (materialId: number, fileId: number) => (

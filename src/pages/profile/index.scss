@@ -159,6 +159,11 @@ page {
       background: rgba(233, 245, 242, 0.9);
     }
 
+    &--pending {
+      color: #8d704b;
+      background: rgba(250, 241, 222, 0.92);
+    }
+
     &--pressed {
       opacity: 0.76;
       transform: scale(0.98);

@@ -38,4 +38,5 @@ jobs:
       - name: Run checks
         run: yarn ci:check
         env:
-          TARO_APP_PRODUCTION_API_BASE_URL: https://api.example.invalid
+          TARO_APP_REVIEW_API_BASE_URL: https://review.weouc.com
+          TARO_APP_PRODUCTION_API_BASE_URL: https://product.weouc.com

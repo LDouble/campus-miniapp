@@ -97,10 +97,15 @@ export default function ProfilePage() {
   const identityMeta = identityVerified
     ? `已认证 · ${identity?.method === 'credentials' ? '教务账号' : '学生证'}`
     : identityPending
-      ? '学生证审核中'
+      ? '校园身份认证中'
       : latestRequest?.status === 'rejected'
         ? '认证未通过，点击处理'
         : '待认证'
+  const identityBadgeText = identityVerified
+    ? '已认证'
+    : identityPending
+      ? '认证中'
+      : '去认证'
   const studentNumber = identityVerified
     ? `${identity.student_no.slice(0, 2)}****${identity.student_no.slice(-2)}`
     : ''
@@ -129,13 +134,14 @@ export default function ProfilePage() {
             className={[
               'profile-card__badge',
               identityVerified ? 'profile-card__badge--verified' : '',
+              identityPending ? 'profile-card__badge--pending' : '',
             ].filter(Boolean).join(' ')}
             hoverClass='profile-card__badge--pressed'
             ariaRole='button'
             ariaLabel={`校园身份，${identityMeta}`}
             onClick={() => openMenu(identityMenu)}
           >
-            <Text>{identityVerified ? '已认证' : '去认证'}</Text>
+            <Text>{identityBadgeText}</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>

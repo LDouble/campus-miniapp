@@ -1,23 +1,19 @@
-import Taro from '@tarojs/taro'
 import {
-  apiUrl,
-  ensureAccessToken,
-  refreshAccessToken,
-} from './auth'
-import {
-  ApiError,
   apiRequest,
   createIdempotencyKey,
-  parseApiError,
 } from './client'
+import { uploadFileToObjectStorage } from './object-upload'
 import type { AcademicEducationLevel } from './academic-credential'
 import type {
   AcademicVerificationMaterial,
   AcademicVerificationRequest,
   AcademicVerificationStatus,
-  ApiErrorEnvelope,
-  ApiSuccessEnvelope,
+  AcademicVerificationUploadTarget,
 } from './types'
+import type { operations } from './generated/schema'
+
+type InitiateUploadRequest = operations['InitiateAcademicVerificationMaterialUpload']['requestBody']['content']['application/json']
+type CompleteUploadRequest = operations['CompleteAcademicVerificationMaterialUpload']['requestBody']['content']['application/json']
 
 export const getAcademicVerificationStatus = () => apiRequest<AcademicVerificationStatus>({
   path: '/api/v1/academic-verification',
@@ -58,46 +54,29 @@ export const submitStudentCardVerification = (
   skipAcademicVerificationGuard: true,
 })
 
-const parseUploadBody = (
-  statusCode: number,
-  raw: string,
-): ApiSuccessEnvelope<AcademicVerificationMaterial> | ApiErrorEnvelope => {
-  try {
-    return JSON.parse(raw) as ApiSuccessEnvelope<AcademicVerificationMaterial> | ApiErrorEnvelope
-  } catch {
-    throw new ApiError(statusCode, 'invalid_response', '校园服务返回了无效数据')
-  }
-}
-
-const uploadMaterialOnce = async (filePath: string, token: string) => {
-  const response = await Taro.uploadFile({
-    url: apiUrl('/api/v1/academic-verification/materials'),
-    filePath,
-    name: 'file',
-    timeout: 60_000,
-    header: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  })
-  const body = parseUploadBody(response.statusCode, response.data)
-  return { statusCode: response.statusCode, body }
-}
-
 export const uploadAcademicVerificationMaterial = async (
   filePath: string,
+  mimeType: InitiateUploadRequest['mime_type'],
+  sizeBytes: number,
 ): Promise<AcademicVerificationMaterial> => {
-  let token = await ensureAccessToken()
-  let result = await uploadMaterialOnce(filePath, token)
-  if (result.statusCode === 401) {
-    token = await refreshAccessToken()
-    result = await uploadMaterialOnce(filePath, token)
-  }
-  if (result.statusCode < 200 || result.statusCode >= 300) {
-    throw parseApiError(result.statusCode, result.body)
-  }
-  if (!('data' in result.body)) {
-    throw new ApiError(result.statusCode, 'invalid_response', '校园服务返回了无效数据')
-  }
-  return result.body.data
+  const target = await apiRequest<AcademicVerificationUploadTarget>({
+    path: '/api/v1/academic-verification/materials/upload-target',
+    method: 'POST',
+    data: { mime_type: mimeType, size_bytes: sizeBytes } satisfies InitiateUploadRequest,
+    skipAcademicVerificationGuard: true,
+  })
+  await uploadFileToObjectStorage(target, filePath)
+  console.info('[COS直传] 开始完成确认')
+  const material = await apiRequest<AcademicVerificationMaterial>({
+    path: '/api/v1/academic-verification/materials/complete',
+    method: 'POST',
+    data: {
+      storage_key: target.storage_key,
+      mime_type: mimeType,
+      size_bytes: sizeBytes,
+    } satisfies CompleteUploadRequest,
+    skipAcademicVerificationGuard: true,
+  })
+  console.info('[COS直传] 完成确认成功')
+  return material
 }

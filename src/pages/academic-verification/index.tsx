@@ -38,6 +38,7 @@ type VerificationState = 'unverified' | 'pending' | 'verified' | 'rejected' | 'r
 type SelectedMaterial = {
   path: string
   size: number
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp'
 }
 
 const MAX_MATERIAL_BYTES = 5 * 1024 * 1024
@@ -60,11 +61,16 @@ const maskStudentNo = (value?: string | null) => {
 const resolveVerificationState = (
   status: AcademicVerificationStatus | null,
 ): VerificationState => {
-  if (status?.identity?.status === 'verified') return 'verified'
-  if (status?.identity?.status === 'revoked') return 'revoked'
-  if (status?.latest_request?.status === 'pending') return 'pending'
-  if (status?.latest_request?.status === 'rejected') return 'rejected'
-  if (status?.latest_request?.status === 'revoked') return 'revoked'
+  const identityStatus = status && status.identity ? status.identity.status : null
+  const requestStatus = status && status.latest_request ? status.latest_request.status : null
+
+  // Re-authentication requests are still active while an old identity may be
+  // revoked. Let the current request drive the page state in that case.
+  if (identityStatus !== 'verified' && requestStatus === 'pending') return 'pending'
+  if (identityStatus !== 'verified' && requestStatus === 'rejected') return 'rejected'
+  if (identityStatus === 'verified') return 'verified'
+  if (identityStatus === 'revoked') return 'revoked'
+  if (requestStatus === 'revoked') return 'revoked'
   return 'unverified'
 }
 
@@ -80,8 +86,8 @@ const stateCopy: Record<VerificationState, {
   },
   pending: {
     eyebrow: 'UNDER REVIEW · 审核中',
-    title: '学生证材料审核中',
-    description: '审核结果会通过消息通知，你仍可继续浏览校园内容。',
+    title: '校园身份认证中',
+    description: '学生证申请已提交人工审核，结果会通过消息通知。',
   },
   verified: {
     eyebrow: 'VERIFIED · 已认证',
@@ -196,9 +202,23 @@ export default function AcademicVerificationPage() {
         Taro.showToast({ title: '图片不能超过 5 MiB', icon: 'none' })
         return
       }
+	  const imageInfo = await Taro.getImageInfo({ src: file.tempFilePath })
+	  const imageType = imageInfo.type?.toLowerCase()
+	  const mimeType = imageType === 'png'
+	    ? 'image/png'
+	    : imageType === 'webp'
+	      ? 'image/webp'
+	      : imageType === 'jpg' || imageType === 'jpeg'
+	        ? 'image/jpeg'
+	        : null
+	  if (!mimeType) {
+	    Taro.showToast({ title: '仅支持 JPEG、PNG 或 WebP 图片', icon: 'none' })
+	    return
+	  }
       setSelectedMaterial({
         path: file.tempFilePath,
         size: file.size,
+		mimeType,
       })
       setUploadedMaterial(null)
     } catch (chooseError) {
@@ -274,7 +294,11 @@ export default function AcademicVerificationPage() {
       let material = uploadedMaterial
       if (!material && selectedMaterial) {
         setWorkingText('正在安全上传材料')
-        material = await uploadAcademicVerificationMaterial(selectedMaterial.path)
+        material = await uploadAcademicVerificationMaterial(
+		  selectedMaterial.path,
+		  selectedMaterial.mimeType,
+		  selectedMaterial.size,
+		)
         setUploadedMaterial(material)
       }
       if (!material) throw new Error('material unavailable')
@@ -288,7 +312,9 @@ export default function AcademicVerificationPage() {
       Taro.showToast({ title: '已提交审核', icon: 'success' })
     } catch (submitError) {
       Taro.showToast({
-        title: isApiError(submitError) ? submitError.message : '提交失败，请重试',
+        title: isApiError(submitError) || submitError instanceof Error
+          ? submitError.message
+          : '提交失败，请重试',
         icon: 'none',
         duration: 2600,
       })
@@ -531,9 +557,10 @@ export default function AcademicVerificationPage() {
                       <View />
                       <View />
                     </View>
-                    <Text>材料已进入人工审核</Text>
+                    <Text>认证申请已提交</Text>
                     <Text>
-                      提交于 {formatDateTime(request?.created_at)}，审核结果会通过消息通知。
+                      学生证材料已进入人工审核，提交于 {formatDateTime(request?.created_at)}。
+                      审核结果会通过消息通知。
                     </Text>
                     <View onClick={() => setMethod('credentials')}>我可以使用教务账号验证</View>
                   </View>
