@@ -1,0 +1,557 @@
+page {
+  background: #f8f5ef;
+}
+
+.club-editor-page {
+  min-height: 100vh;
+  padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
+  color: #294740;
+  background:
+    radial-gradient(circle at 96% 7%, rgba(244, 188, 124, 0.16), transparent 22%),
+    #f8f5ef;
+}
+
+.club-editor-form {
+  padding: 18rpx 28rpx;
+}
+
+.club-editor-progress {
+  padding: 25rpx 26rpx 20rpx;
+  margin-bottom: 20rpx;
+  background: linear-gradient(135deg, #dcefe8, #f4eadc);
+  border: 2rpx solid rgba(255, 255, 255, 0.94);
+  border-radius: 32rpx;
+  box-shadow: 0 12rpx 30rpx rgba(48, 78, 69, 0.06);
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    > view {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-width: 0;
+
+      text:first-child {
+        color: #2c5349;
+        font-size: 28rpx;
+        font-weight: 800;
+      }
+
+      text:last-child {
+        margin-top: 6rpx;
+        overflow: hidden;
+        color: #526b65;
+        font-size: 22rpx;
+        line-height: 1.45;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    > text {
+      flex: none;
+      margin-left: 20rpx;
+      color: #315f53;
+      font-size: 31rpx;
+      font-weight: 850;
+    }
+  }
+
+  &__track {
+    height: 10rpx;
+    margin-top: 18rpx;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 99rpx;
+
+    > view {
+      height: 100%;
+      background: #3f7668;
+      border-radius: 99rpx;
+      transition: width 180ms ease;
+    }
+  }
+
+  &__nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10rpx;
+    margin-top: 14rpx;
+
+    > view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 72rpx;
+      color: #3f685d;
+      font-size: 22rpx;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.64);
+      border-radius: 18rpx;
+    }
+  }
+}
+
+.club-form-section {
+  padding: 26rpx;
+  margin-bottom: 20rpx;
+  scroll-margin-top: 24rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2rpx solid rgba(255, 255, 255, 0.98);
+  border-radius: 32rpx;
+  box-shadow: 0 11rpx 28rpx rgba(48, 78, 69, 0.05);
+
+  &__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 17rpx;
+    border-bottom: 2rpx solid #edf1ed;
+
+    text:first-child {
+      color: #2c5349;
+      font-size: 29rpx;
+      font-weight: 800;
+    }
+
+    text:last-child {
+      margin-left: 18rpx;
+      color: #60766f;
+      font-size: 21rpx;
+      text-align: right;
+    }
+  }
+
+  &__description {
+    display: block;
+    margin: 16rpx 0;
+    color: #526b65;
+    font-size: 23rpx;
+    line-height: 1.6;
+  }
+}
+
+.club-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16rpx;
+}
+
+.club-field {
+  display: flex;
+  flex-direction: column;
+  margin-top: 22rpx;
+
+  &__label {
+    margin-bottom: 10rpx;
+    color: #3d6057;
+    font-size: 24rpx;
+    font-weight: 750;
+  }
+
+  &__input,
+  &__picker {
+    box-sizing: border-box;
+    width: 100%;
+    height: 88rpx;
+    padding: 0 21rpx;
+    color: #2d5148;
+    font-size: 26rpx;
+    background: #f4f7f3;
+    border: 2rpx solid #dfe8e2;
+    border-radius: 21rpx;
+  }
+
+  &__picker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &--placeholder {
+      color: #667a74;
+    }
+
+    text {
+      font-size: 36rpx;
+    }
+  }
+
+  &__textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 300rpx;
+    padding: 20rpx 22rpx;
+    color: #2d5148;
+    font-size: 26rpx;
+    line-height: 1.65;
+    background: #f4f7f3;
+    border: 2rpx solid #dfe8e2;
+    border-radius: 21rpx;
+
+    &--short {
+      min-height: 184rpx;
+    }
+  }
+
+  &__hint {
+    align-self: flex-end;
+    margin-top: 8rpx;
+    color: #60766f;
+    font-size: 21rpx;
+  }
+}
+
+.club-image-fields {
+  display: grid;
+  grid-template-columns: 210rpx minmax(0, 1fr);
+  gap: 18rpx;
+}
+
+.club-image-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  margin-top: 20rpx;
+
+  &__single {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #eef4f0;
+    border: 2rpx dashed #a9c4ba;
+    border-radius: 24rpx;
+
+    > image {
+      width: 100%;
+      height: 100%;
+    }
+
+    > view:not(.club-image-field__progress) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #526b65;
+      font-size: 22rpx;
+
+      image {
+        width: 44rpx;
+        height: 44rpx;
+        margin-bottom: 9rpx;
+        opacity: 0.72;
+      }
+    }
+
+    &--logo {
+      height: 210rpx;
+    }
+
+    &--cover {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+  }
+
+  &__progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 10rpx;
+    background: rgba(255, 255, 255, 0.7);
+
+    > view {
+      height: 100%;
+      background: #3f7668;
+    }
+  }
+
+  &__remove,
+  &__error {
+    display: flex;
+    align-items: center;
+    min-height: 88rpx;
+    color: #93483e;
+    font-size: 21rpx;
+    line-height: 1.45;
+  }
+}
+
+.club-gallery-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.club-gallery-draft {
+  display: flex;
+  min-height: 198rpx;
+  padding: 14rpx;
+  background: #f4f7f3;
+  border: 2rpx solid #e7eee9;
+  border-radius: 24rpx;
+
+  &__preview {
+    position: relative;
+    flex: none;
+    width: 180rpx;
+    height: 180rpx;
+    overflow: hidden;
+    background: #e6eeea;
+    border-radius: 18rpx;
+
+    > image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__order {
+    position: absolute;
+    top: 9rpx;
+    left: 9rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40rpx;
+    height: 40rpx;
+    color: #fff;
+    font-size: 20rpx;
+    font-weight: 700;
+    background: rgba(35, 69, 60, 0.78);
+    border-radius: 50%;
+  }
+
+  &__progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 10rpx;
+    background: rgba(255, 255, 255, 0.72);
+
+    > view {
+      height: 100%;
+      background: #3f7668;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    margin-left: 15rpx;
+
+    input {
+      box-sizing: border-box;
+      width: 100%;
+      height: 88rpx;
+      padding: 0 16rpx;
+      color: #35574f;
+      font-size: 23rpx;
+      background: #fff;
+      border: 2rpx solid #e1e9e4;
+      border-radius: 18rpx;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6rpx;
+    margin-top: 8rpx;
+
+    > view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 88rpx;
+      height: 88rpx;
+      padding: 0 6rpx;
+      color: #3f6e62;
+      font-size: 21rpx;
+      border-radius: 17rpx;
+    }
+
+    .is-disabled {
+      color: #9caaa5;
+      pointer-events: none;
+    }
+
+    .is-danger {
+      color: #93483e;
+    }
+  }
+
+  &__error {
+    margin-top: 5rpx;
+    color: #93483e;
+    font-size: 21rpx;
+    line-height: 1.4;
+  }
+}
+
+.club-gallery-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 164rpx;
+  color: #3f6e62;
+  background: #eef5f1;
+  border: 2rpx dashed #a9c4ba;
+  border-radius: 24rpx;
+
+  image {
+    width: 42rpx;
+    height: 42rpx;
+    margin-bottom: 8rpx;
+    opacity: 0.72;
+  }
+
+  text:nth-of-type(1) {
+    font-size: 24rpx;
+    font-weight: 750;
+  }
+
+  text:nth-of-type(2) {
+    margin-top: 5rpx;
+    color: #60766f;
+    font-size: 21rpx;
+  }
+}
+
+.club-editor-rejection {
+  display: flex;
+  flex-direction: column;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  background: #fff0eb;
+  border-radius: 28rpx;
+
+  text:first-child {
+    color: #934d42;
+    font-size: 22rpx;
+    font-weight: 750;
+  }
+
+  text:last-child {
+    margin-top: 8rpx;
+    color: #744a43;
+    font-size: 24rpx;
+    line-height: 1.6;
+  }
+}
+
+.club-editor-notice {
+  padding: 22rpx 24rpx;
+  margin-bottom: 22rpx;
+  color: #675d53;
+  font-size: 22rpx;
+  line-height: 1.65;
+  background: #fff5e6;
+  border-radius: 24rpx;
+}
+
+.club-editor-actions {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  padding: 13rpx 28rpx calc(18rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 251, 247, 0.97);
+  border-top: 2rpx solid rgba(86, 119, 109, 0.1);
+  backdrop-filter: blur(20rpx);
+
+  &__status {
+    display: block;
+    margin-bottom: 9rpx;
+    color: #75685d;
+    font-size: 21rpx;
+    text-align: center;
+
+    &--ready {
+      color: #34695d;
+      font-weight: 700;
+    }
+  }
+
+  &__buttons {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 14rpx;
+
+    > view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 88rpx;
+      font-size: 26rpx;
+      font-weight: 750;
+      border-radius: 26rpx;
+    }
+  }
+
+  &__secondary {
+    color: #38685c;
+    background: #e7f1ed;
+  }
+
+  &__primary {
+    color: #fff;
+    background: #3f7668;
+    box-shadow: 0 9rpx 22rpx rgba(63, 118, 104, 0.22);
+  }
+}
+
+.club-editor-loading,
+.club-editor-state {
+  padding: 100rpx 44rpx;
+  color: #526b65;
+  font-size: 25rpx;
+  text-align: center;
+}
+
+.club-editor-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  &__title {
+    color: #31564d;
+    font-size: 30rpx;
+    font-weight: 750;
+  }
+
+  &__text {
+    margin-top: 13rpx;
+    line-height: 1.6;
+  }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 200rpx;
+    height: 88rpx;
+    margin-top: 28rpx;
+    color: #fff;
+    font-size: 25rpx;
+    font-weight: 700;
+    background: #3f7668;
+    border-radius: 26rpx;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .club-editor-progress__track > view {
+    transition: none;
+  }
+}

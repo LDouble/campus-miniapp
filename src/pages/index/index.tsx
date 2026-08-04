@@ -84,6 +84,7 @@ const icons = {
   arrow: require('../../assets/icons/arrow.svg'),
   comment: require('../../assets/community/comment.svg'),
   heart: require('../../assets/community/heart.svg'),
+  clubs: require('../../assets/icons/clubs.svg'),
 }
 
 const quickServices = [
@@ -118,6 +119,7 @@ const quickServices = [
   { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
   { key: 'carpool', name: '拼车', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
   { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
+  { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
 ]
 
 const homeServiceKeys = new Set([
@@ -133,6 +135,7 @@ const homeServiceKeys = new Set([
   'market',
   'errands',
   'carpool',
+  'clubs',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
 const serviceFeatureKeys: Record<string, string> = {
@@ -154,6 +157,7 @@ const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
   errands: 'errand',
   carpool: 'carpool',
   classroom: 'empty_classroom',
+  clubs: 'club',
 }
 const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   community: 'community',
