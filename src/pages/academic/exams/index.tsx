@@ -56,7 +56,7 @@ export default function ExamsPage() {
   const [exams, setExams] = useState<ExamRecord[]>(initialExams || [])
   const [loading, setLoading] = useState(!initialUpdatedAt)
   const [retrying, setRetrying] = useState(false)
-  const [loadError, setLoadError] = useState(false)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [usingCache, setUsingCache] = useState(false)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [sheet, setSheet] = useState<ExamSheet>(null)
@@ -88,13 +88,14 @@ export default function ExamsPage() {
             : { ...current, examPeriodId }
         })
       })
-      .catch(() => {
+      .catch((error) => {
         if (initialScheduleCache?.periods.length) {
+          setLoadError(error)
           Taro.showToast({ title: '已使用上次学期信息', icon: 'none' })
           return
         }
         setLoading(false)
-        setLoadError(true)
+        setLoadError(error)
       })
   }, [initialScheduleCache])
 
@@ -111,19 +112,20 @@ export default function ExamsPage() {
     }
     if (!updatedAt) setLoading(true)
     if (manual) setRetrying(true)
-    setLoadError(false)
+    setLoadError(null)
     try {
       const records = await academicRepository.getExams(periodId)
       academicStorage.setExamRecords(academicUserId, periodId, records)
       setExams(records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
-    } catch {
+    } catch (error) {
       if (updatedAt) {
         setUsingCache(true)
+        setLoadError(error)
         Taro.showToast({ title: '已展示上次考试安排', icon: 'none' })
       } else {
-        setLoadError(true)
+        setLoadError(error)
       }
     } finally {
       setLoading(false)
@@ -133,7 +135,7 @@ export default function ExamsPage() {
 
   const retryPage = useCallback(async () => {
     setRetrying(true)
-    setLoadError(false)
+    setLoadError(null)
     try {
       const records = await academicRepository.getPeriods()
       const periodId = resolvePeriodId(records, preferences.examPeriodId)
@@ -145,8 +147,8 @@ export default function ExamsPage() {
       } else {
         setLoading(true)
       }
-    } catch {
-      setLoadError(true)
+    } catch (error) {
+      setLoadError(error)
     } finally {
       setRetrying(false)
       setLoading(false)
@@ -254,11 +256,11 @@ export default function ExamsPage() {
             <View className='academic-state__loader' />
             <Text>正在整理考试安排…</Text>
           </View>
-        ) : loadError ? (
-          <AcademicLoadState retrying={retrying} onRetry={retryPage} />
+        ) : loadError && !usingCache ? (
+          <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : (
           <>
-            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} />}
+            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
             <View className='exam-hero'>
               <View>
                 <Text className='exam-hero__eyebrow'>考试日程</Text>

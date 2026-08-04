@@ -59,7 +59,7 @@ export default function SelectionPage() {
   const [records, setRecords] = useState<CourseSelectionRecord[]>(initialRecords || [])
   const [loading, setLoading] = useState(!initialUpdatedAt)
   const [retrying, setRetrying] = useState(false)
-  const [loadError, setLoadError] = useState(false)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [usingCache, setUsingCache] = useState(false)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [activeTab, setActiveTab] = useState<SelectionTab>('all')
@@ -92,7 +92,7 @@ export default function SelectionPage() {
     }
     if (!updatedAt) setLoading(true)
     if (manual) setRetrying(true)
-    setLoadError(false)
+    setLoadError(null)
     try {
       const result = await academicRepository.getCourseSelections(periodId)
       academicStorage.setSelectionRecords(
@@ -103,12 +103,13 @@ export default function SelectionPage() {
       setRecords(result)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
-    } catch {
+    } catch (error) {
       if (updatedAt) {
         setUsingCache(true)
+        setLoadError(error)
         Taro.showToast({ title: '已展示上次选课结果', icon: 'none' })
       } else {
-        setLoadError(true)
+        setLoadError(error)
       }
     } finally {
       setLoading(false)
@@ -118,7 +119,7 @@ export default function SelectionPage() {
 
   const retryPage = useCallback(async () => {
     setRetrying(true)
-    setLoadError(false)
+    setLoadError(null)
     try {
       const result = await academicRepository.getPeriods()
       const periodId = resolvePeriodId(result, preferences.schedulePeriodId)
@@ -130,8 +131,8 @@ export default function SelectionPage() {
       } else {
         setLoading(true)
       }
-    } catch {
-      setLoadError(true)
+    } catch (error) {
+      setLoadError(error)
     } finally {
       setRetrying(false)
       setLoading(false)
@@ -150,13 +151,14 @@ export default function SelectionPage() {
             : { ...current, schedulePeriodId }
         })
       })
-      .catch(() => {
+      .catch((error) => {
         if (initialScheduleCache?.periods.length) {
+          setLoadError(error)
           Taro.showToast({ title: '已使用上次学期信息', icon: 'none' })
           return
         }
         setLoading(false)
-        setLoadError(true)
+        setLoadError(error)
       })
   }, [initialScheduleCache])
   useEffect(() => {
@@ -219,10 +221,10 @@ export default function SelectionPage() {
       <View className='academic-page__glow academic-page__glow--two' />
       <AcademicHeader title='选课结果' toolbar={toolbar} />
       <View className='academic-content'>
-        {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : loadError ? (
-          <AcademicLoadState retrying={retrying} onRetry={retryPage} />
+        {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : loadError && !usingCache ? (
+          <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : <>
-          {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} />}
+          {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
           <View className='selection-hero'>
             <View><Text className='selection-hero__eyebrow'>本学期课程记录</Text><Text className='selection-hero__number'>{records.length}<Text> 门课程</Text></Text><Text className='selection-hero__copy'>完整展示教务系统返回的课程状态</Text></View>
             <View className='selection-hero__seal'><Text>课程</Text><Text>记录</Text></View>
