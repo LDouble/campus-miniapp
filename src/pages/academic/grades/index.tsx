@@ -67,7 +67,7 @@ export default function GradesPage() {
   )
   const [loading, setLoading] = useState(!hasInitialSnapshot)
   const [retrying, setRetrying] = useState(false)
-  const [loadError, setLoadError] = useState(false)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [hasSnapshot, setHasSnapshot] = useState(hasInitialSnapshot)
   const [usingCache, setUsingCache] = useState(false)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
@@ -139,7 +139,7 @@ export default function GradesPage() {
         setCacheUpdatedAt(Date.now())
         setHasSnapshot(true)
         setUsingCache(false)
-        setLoadError(false)
+        setLoadError(null)
         setPreferences((current) => {
           if (
             current.gradePeriodId === ALL_PERIOD_ID
@@ -148,13 +148,14 @@ export default function GradesPage() {
           return { ...current, gradePeriodId: ALL_PERIOD_ID }
         })
       })
-      .catch(() => {
+      .catch((error) => {
         if (cancelled) return
         if (hasInitialSnapshot) {
           setUsingCache(true)
+          setLoadError(error)
           Taro.showToast({ title: '已展示上次成绩', icon: 'none' })
         } else {
-          setLoadError(true)
+          setLoadError(error)
         }
       })
       .finally(() => {
@@ -167,7 +168,7 @@ export default function GradesPage() {
 
   const refreshGrades = useCallback(async () => {
     setRetrying(true)
-    setLoadError(false)
+    setLoadError(null)
     try {
       const records = await academicRepository.getGrades()
       academicStorage.setGradeRecords(academicUserId, records)
@@ -175,12 +176,13 @@ export default function GradesPage() {
       setCacheUpdatedAt(Date.now())
       setHasSnapshot(true)
       setUsingCache(false)
-    } catch {
+    } catch (error) {
       if (hasSnapshot) {
         setUsingCache(true)
+        setLoadError(error)
         Taro.showToast({ title: '刷新失败，继续展示上次成绩', icon: 'none' })
       } else {
-        setLoadError(true)
+        setLoadError(error)
       }
     } finally {
       setRetrying(false)
@@ -526,11 +528,11 @@ export default function GradesPage() {
             <View className='academic-state__loader' />
             <Text>正在整理成绩…</Text>
           </View>
-        ) : loadError ? (
-          <AcademicLoadState retrying={retrying} onRetry={refreshGrades} />
+        ) : loadError && !usingCache ? (
+          <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshGrades} />
         ) : (
           <>
-            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} />}
+            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
             <View className={`grade-summary ${simulationMode ? 'grade-summary--simulation' : 'grade-summary--original'}`}>
               <View className='grade-summary__lead'>
                 <Text className='grade-summary__eyebrow'>{simulationMode ? '模拟计算结果' : '原始成绩统计'}</Text>
