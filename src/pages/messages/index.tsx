@@ -3,6 +3,7 @@ import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { ScrollView, Text, View } from '@tarojs/components'
 import type { Notice } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { formatDateTime } from '../../features/life-services/format'
@@ -238,7 +239,7 @@ export default function MessagesPage() {
 
       {active && (
         <View className='message-overlay' onClick={() => setActive(null)}>
-          <View className='message-sheet' onClick={(event) => event.stopPropagation()}>
+          <View className='message-sheet' onClick={requestWechatSubscriptionAndStopPropagation}>
             <View className='message-sheet__handle' />
             <ScrollView
               className='message-sheet__scroll'

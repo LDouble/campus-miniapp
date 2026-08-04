@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { CarpoolTripView } from '../../../api/types'
+import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import {
   formatDateTime,
   formatStatus,
@@ -8,6 +9,7 @@ import {
 } from '../format'
 
 const openDetail = (id: number) => {
+  requestWechatSubscriptionForModule('carpool')
   Taro.navigateTo({ url: `/pages/carpool/detail?id=${id}` })
 }
 

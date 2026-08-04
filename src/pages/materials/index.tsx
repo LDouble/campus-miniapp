@@ -23,6 +23,7 @@ import {
 } from '../../api/course-materials'
 import { getCurrentUser } from '../../api/account'
 import { createIdempotencyKey } from '../../api/client'
+import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import type {
   CourseMaterialView,
   MaterialCourseView,
@@ -1029,7 +1030,7 @@ export default function MaterialsPage() {
             bottom: `${keyboardHeight}px`,
             maxHeight: `calc(100vh - ${keyboardHeight}px - 20px)`,
           } : undefined}
-          onClick={(event) => event.stopPropagation()}
+          onClick={requestWechatSubscriptionAndStopPropagation}
         >
           <View className='materials-sheet__handle' />
           {sheet !== 'upload-course' && (

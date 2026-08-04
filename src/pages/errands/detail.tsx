@@ -7,6 +7,7 @@ import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
   formatDateTime,
   formatMoney,
@@ -60,11 +61,15 @@ export default function ErrandDetailPage() {
 
   const updateFromAction = async (action: string) => {
     if (!item || working) return
+    if (action === 'submit_review') {
+      requestWechatSubscriptionForModule('errand')
+    }
     if (action === 'verify_academic') {
       await openAcademicVerification({ prompt: false })
       return
     }
     if (action === 'edit') {
+      requestWechatSubscriptionForModule('errand')
       Taro.navigateTo({ url: `/pages/publish/index?section=errands&mode=edit&id=${item.id}` })
       return
     }

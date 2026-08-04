@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { apiRequest } from '../../api/client'
 import type { components } from '../../api/generated/schema'
+import { requestWechatSubscription } from '../wechat-subscription/request'
 
 export type CampusSection = {
   start: string
@@ -71,6 +72,7 @@ export type MiniappRuntimeConfig = {
   campuses: Record<string, CampusRuntimeConfig>
   notes: Record<string, string>
   modules: Record<MiniappModuleKey, MiniappModuleConfig>
+  subscription_templates: Partial<Record<MiniappModuleKey, string[]>>
   slogan_interval_ms: number
   slogans: RuntimeSlogan[]
   banners: RuntimeBanner[]
@@ -158,6 +160,7 @@ export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
     其他校区: '崂山校区与鱼山校区上课时间一致。',
   },
   modules: conservativeModules,
+  subscription_templates: {},
   slogan_interval_ms: 5000,
   slogans: [
     {
@@ -272,6 +275,38 @@ const normalizeModules = (
   ])) as Record<MiniappModuleKey, MiniappModuleConfig>
 }
 
+const normalizeSubscriptionTemplates = (
+  value: unknown,
+): Partial<Record<MiniappModuleKey, string[]>> => {
+  if (!isRecord(value)) return {}
+  return Object.fromEntries(
+    MINIAPP_MODULE_KEYS.flatMap((key) => {
+      const rawTemplateIDs = value[key]
+      if (!Array.isArray(rawTemplateIDs)) return []
+      const templateIDs = Array.from(new Set(rawTemplateIDs
+        .filter((id): id is string => typeof id === 'string')
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0 && id.length <= 128)))
+        .slice(0, 3)
+      return templateIDs.length > 0 ? [[key, templateIDs]] : []
+    }),
+  )
+}
+
+const isSubscriptionTemplates = (value: unknown) => (
+  isRecord(value)
+  && Object.entries(value).every(([key, templateIDs]) => (
+    MINIAPP_MODULE_KEYS.includes(key as MiniappModuleKey)
+    && Array.isArray(templateIDs)
+    && templateIDs.length <= 3
+    && templateIDs.every((id) => (
+      typeof id === 'string'
+      && id.trim().length > 0
+      && id.length <= 128
+    ))
+  ))
+)
+
 const isRuntimeConfig = (value: unknown): value is MiniappRuntimeConfig => {
   if (!isRecord(value)) return false
   if (
@@ -283,6 +318,8 @@ const isRuntimeConfig = (value: unknown): value is MiniappRuntimeConfig => {
     || !isRecord(value.campuses)
     || !isRecord(value.notes)
     || (value.modules !== undefined && !isRecord(value.modules))
+    || (value.subscription_templates !== undefined
+      && !isSubscriptionTemplates(value.subscription_templates))
     || typeof value.slogan_interval_ms !== 'number'
     || !Array.isArray(value.slogans)
     || !Array.isArray(value.banners)
@@ -311,6 +348,7 @@ const normalizeRuntimeConfig = (
 ): MiniappRuntimeConfig => ({
   ...value,
   modules: normalizeModules(value.modules),
+  subscription_templates: normalizeSubscriptionTemplates(value.subscription_templates),
 })
 
 const storedRuntimeConfig = (): StoredRuntimeConfig | null => {
@@ -420,6 +458,7 @@ export const openMiniappModule = async (
     })
     return false
   }
+  requestWechatSubscription(config.subscription_templates[key])
   if (options.tab) await Taro.switchTab({ url })
   else await Taro.navigateTo({ url })
   return true

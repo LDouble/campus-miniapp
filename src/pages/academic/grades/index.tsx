@@ -8,6 +8,7 @@ import {
 } from '../../../features/life-services/marketplace-prefill'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
@@ -367,7 +368,7 @@ export default function GradesPage() {
     if (!sheet) return null
     return (
       <View className='academic-overlay' onClick={() => setSheet(null)}>
-        <View className={`academic-sheet academic-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}>
+        <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
           <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
           {sheet === 'period' && (
@@ -593,7 +594,7 @@ export default function GradesPage() {
                           <View
                             className={`academic-check__box ${selected ? 'academic-check__box--active' : ''}`}
                             onClick={(event) => {
-                              event.stopPropagation()
+                              requestWechatSubscriptionAndStopPropagation(event)
                               toggleGrade(grade.id)
                             }}
                           >
@@ -618,7 +619,7 @@ export default function GradesPage() {
                           {!simulationMode && <Text
                             className='grade-card__materials'
                             onClick={(event) => {
-                              event.stopPropagation()
+                              requestWechatSubscriptionAndStopPropagation(event)
                               openGradeMaterials(grade)
                             }}
                           >

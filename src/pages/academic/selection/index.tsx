@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import {
   openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
@@ -249,7 +250,7 @@ export default function SelectionPage() {
           {!displayedRecords.length && <View className='academic-empty'><View className='academic-empty__art'><View /><View /></View><Text className='academic-empty__title'>{activeTab === 'failed' ? '本学期没有未选记录' : '本学期暂无课程记录'}</Text><Text className='academic-empty__copy'>切换学期或下拉刷新再看看</Text></View>}
         </>}
       </View>
-      {sheet && <View className='academic-overlay' onClick={() => setSheet(null)}><View className={`academic-sheet academic-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}><View className='academic-sheet__handle' /><View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+      {sheet && <View className='academic-overlay' onClick={() => setSheet(null)}><View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}><View className='academic-sheet__handle' /><View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
         {sheet === 'period' && <View className='academic-sheet__body'><Text className='academic-sheet__title'>选择选课学期</Text><Text className='academic-sheet__subtitle'>查看不同学期的选课结果</Text><View className='period-options'>{periods.map((period) => <View key={period.id} className={`period-options__item ${preferences.schedulePeriodId === period.id ? 'period-options__item--active' : ''}`} onClick={() => { updatePeriod(period.id); setSheet(null) }}><View><Text>{period.label}</Text><Text>查看该学期选课记录</Text></View><View className='period-options__check'>{preferences.schedulePeriodId === period.id ? '✓' : ''}</View></View>)}</View></View>}
         {sheet === 'detail' && activeRecord && (
           <View className='academic-sheet__body'>

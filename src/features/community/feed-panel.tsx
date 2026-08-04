@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { lifeServicesRepository } from '../life-services/repository'
 import CommunityPostCard from './post-card'
@@ -137,6 +138,7 @@ export default function CommunityFeedPanel({
   }
 
   const openPost = (post: CampusCirclePostView) => {
+    requestWechatSubscriptionForModule('community')
     Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post` })
   }
 

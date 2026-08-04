@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 
 export type MarketplaceIntent = 'sell' | 'wanted'
 export type MarketplaceSource = 'manual' | 'course_selection' | 'grade' | 'schedule'
@@ -42,6 +43,7 @@ export const consumeMarketplaceSearchPrefill = () => {
 export const openCourseMarketplacePublisher = (
   prefill: MarketplacePublishPrefill,
 ) => {
+  requestWechatSubscriptionForModule('marketplace')
   saveMarketplacePublishPrefill(prefill)
   return Taro.navigateTo({
     url: `/pages/publish/index?section=market&intent=${prefill.intent}&course_prefill=1`,

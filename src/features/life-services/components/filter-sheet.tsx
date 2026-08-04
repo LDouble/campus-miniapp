@@ -1,6 +1,7 @@
 import { useEffect, type PropsWithChildren } from 'react'
 import { Text, View } from '@tarojs/components'
 import { setCustomTabBarHidden } from '../../../utils/tabbar'
+import { requestWechatSubscriptionAndStopPropagation } from '../../wechat-subscription'
 import './filters.scss'
 
 type Props = PropsWithChildren<{
@@ -34,7 +35,7 @@ export default function FilterSheet({
         className='filter-sheet'
         ariaRole='dialog'
         ariaLabel={title}
-        onClick={(event) => event.stopPropagation()}
+        onClick={requestWechatSubscriptionAndStopPropagation}
       >
         <View className='filter-sheet__handle' />
         <View className='filter-sheet__header'>

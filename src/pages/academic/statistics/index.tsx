@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro, { useRouter } from '@tarojs/taro'
 import { Canvas, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../../components/custom-navbar'
+import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import {
   CourseStatistics,
   getCourseStatistics,
@@ -405,7 +406,7 @@ export default function AcademicStatisticsPage() {
 
       {selectedTeacher && (
         <View className='statistics-overlay' onClick={() => setSelectedTeacher(null)}>
-          <View className='statistics-sheet' onClick={(event) => event.stopPropagation()}>
+          <View className='statistics-sheet' onClick={requestWechatSubscriptionAndStopPropagation}>
             <View className='statistics-sheet__handle' />
             <View className='statistics-sheet__close' onClick={() => setSelectedTeacher(null)}>×</View>
             <Text className='statistics-sheet__title'>{selectedTeacher.teacher_name}</Text>

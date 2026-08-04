@@ -2843,6 +2843,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notices/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登记微信订阅消息授权 */
+        post: operations["AcceptNoticeSubscriptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notices/unread-count": {
         parameters: {
             query?: never;
@@ -3147,6 +3164,9 @@ export interface components {
         WechatLoginRequest: {
             app_id: string;
             code: string;
+        };
+        AcceptNoticeSubscriptionsRequest: {
+            template_ids: string[];
         };
         RefreshRequest: {
             refresh_token: string;
@@ -6238,6 +6258,11 @@ export interface components {
         WechatLogin: {
             content: {
                 "application/json": components["schemas"]["WechatLoginRequest"];
+            };
+        };
+        AcceptNoticeSubscriptions: {
+            content: {
+                "application/json": components["schemas"]["AcceptNoticeSubscriptionsRequest"];
             };
         };
     };
@@ -10384,6 +10409,24 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: components["responses"]["UpdatedCountResponse"];
+        };
+    };
+    AcceptNoticeSubscriptions: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptNoticeSubscriptionsRequest"];
+            };
+        };
         responses: {
             200: components["responses"]["UpdatedCountResponse"];
         };

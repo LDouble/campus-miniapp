@@ -20,6 +20,7 @@ import {
   type MarketplaceSource,
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
 import './index.scss'
 
 type PublishSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -397,6 +398,7 @@ export default function PublishPage() {
 
   const selectSection = (next: PublishSection) => {
     if (mode !== 'create' || next === section) return
+    requestWechatSubscriptionForPublishSection(next)
     saveDraft(section, form)
     setSection(next)
     setForm(storedDrafts()[draftKey(next)] || emptyForm())
@@ -493,6 +495,7 @@ export default function PublishPage() {
       return
     }
     if (submitting) return
+    requestWechatSubscriptionForPublishSection(section)
     setSubmitting(true)
     try {
       let id = resourceId

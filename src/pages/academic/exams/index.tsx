@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
@@ -190,7 +191,7 @@ export default function ExamsPage() {
     if (!sheet) return null
     return (
       <View className='academic-overlay' onClick={() => setSheet(null)}>
-        <View className={`academic-sheet academic-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}>
+        <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
           <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
           {sheet === 'period' && (

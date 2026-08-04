@@ -15,6 +15,7 @@ import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { openContentReport } from '../../features/content-report'
 import { formatDateTime, formatStatus } from '../../features/life-services/format'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
   communityAuthorInitial,
   communityAuthorName,
@@ -161,6 +162,7 @@ export default function CommunityDetailPage() {
 
   const editPost = () => {
     if (!post) return
+    requestWechatSubscriptionForModule('community')
     Taro.navigateTo({
       url: `/pages/publish/index?section=community&mode=edit&id=${post.id}`,
     })

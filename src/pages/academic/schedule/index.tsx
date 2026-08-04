@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import {
   getMiniappRuntimeConfig,
   getSectionStartTime,
@@ -785,7 +786,7 @@ export default function SchedulePage() {
       const isConflict = activeSlotCourses.length > 1
       return (
         <View className='course-float-layer' onClick={closeCourseFloat}>
-          <View className='course-float-card course-float-card--bare' onClick={(event) => event.stopPropagation()}>
+          <View className='course-float-card course-float-card--bare' onClick={requestWechatSubscriptionAndStopPropagation}>
             {isConflict ? (
               <View className='course-conflict-list'>
                 {activeSlotCourses.map((course) => (
@@ -824,7 +825,7 @@ export default function SchedulePage() {
     }
     return (
       <View className='academic-overlay' onClick={() => setSheet(null)}>
-        <View className={`academic-sheet academic-sheet--${sheet}`} onClick={(event) => event.stopPropagation()}>
+        <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
           <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
           {sheet === 'period' && (
