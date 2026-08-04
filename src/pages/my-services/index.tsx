@@ -14,6 +14,11 @@ import type {
   TradeOrderView,
 } from '../../api/types'
 import { isApiError } from '../../api/client'
+import {
+  requestWechatSubscriptionAndStopPropagation,
+  requestWechatSubscriptionForModule,
+  requestWechatSubscriptionForPublishSection,
+} from '../../features/wechat-subscription'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import {
@@ -141,19 +146,29 @@ const recordSearchText = (item: RecordItem) => {
 
 const openBusinessRecord = (item: RecordItem) => {
   let url = ''
+  let module: 'community' | 'errand' | 'marketplace' | 'carpool'
   if ('order_no' in item) {
-    url = item.resource_type === 'marketplace_listing'
-      ? `/pages/marketplace/detail?id=${item.resource_id}`
-      : `/pages/errands/detail?id=${item.resource_id}`
+    if (item.resource_type === 'marketplace_listing') {
+      module = 'marketplace'
+      url = `/pages/marketplace/detail?id=${item.resource_id}`
+    } else {
+      module = 'errand'
+      url = `/pages/errands/detail?id=${item.resource_id}`
+    }
   } else if ('pickup_location' in item) {
+    module = 'errand'
     url = `/pages/errands/detail?id=${item.id}`
   } else if ('price_cents' in item) {
+    module = 'marketplace'
     url = `/pages/marketplace/detail?id=${item.id}`
   } else if ('departure_at' in item) {
+    module = 'carpool'
     url = `/pages/carpool/detail?id=${item.id}`
   } else {
+    module = 'community'
     url = `/pages/community/detail?id=${item.id}&mode=post`
   }
+  requestWechatSubscriptionForModule(module)
   Taro.navigateTo({ url })
 }
 
@@ -308,6 +323,7 @@ export default function MyServicesPage() {
         : view.section === 'carpool'
           ? 'carpool'
           : 'market'
+    requestWechatSubscriptionForPublishSection(section)
     Taro.navigateTo({ url: `/pages/publish/index?section=${section}` })
   }
 
@@ -484,7 +500,7 @@ export default function MyServicesPage() {
                       <View
                         className='my-record-actions__secondary'
                         onClick={(event) => {
-                          event.stopPropagation()
+                          requestWechatSubscriptionAndStopPropagation(event)
                           void runOrderAction(order, 'cancel')
                         }}
                       >
@@ -495,7 +511,7 @@ export default function MyServicesPage() {
                       <View
                         className='my-record-actions__primary'
                         onClick={(event) => {
-                          event.stopPropagation()
+                          requestWechatSubscriptionAndStopPropagation(event)
                           void runOrderAction(order, 'complete')
                         }}
                       >

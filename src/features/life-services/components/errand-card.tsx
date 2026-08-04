@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { ErrandView } from '../../../api/types'
+import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import {
   formatMoney,
   formatStatus,
@@ -8,6 +9,7 @@ import {
 } from '../format'
 
 const openDetail = (id: number) => {
+  requestWechatSubscriptionForModule('errand')
   Taro.navigateTo({ url: `/pages/errands/detail?id=${id}` })
 }
 

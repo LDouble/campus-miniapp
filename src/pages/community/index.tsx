@@ -33,6 +33,7 @@ import {
   resolveMiniappModule,
   type MiniappModuleKey,
 } from '../../features/runtime-config'
+import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
@@ -202,11 +203,13 @@ export default function CommunityPage() {
         Taro.showToast({ title: '暂无可发布的社区板块', icon: 'none' })
         return
       }
+      requestWechatSubscriptionForPublishSection('community', runtimeConfig)
       Taro.navigateTo({
         url: `/pages/publish/index?section=community&community_section_id=${activeCommunitySection.id}`,
       })
       return
     }
+    requestWechatSubscriptionForPublishSection(displayedSection, runtimeConfig)
     Taro.navigateTo({ url: `/pages/publish/index?section=${displayedSection}` })
   }
 

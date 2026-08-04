@@ -7,6 +7,7 @@ import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
   formatDateTime,
   formatStatus,
@@ -57,11 +58,15 @@ export default function CarpoolDetailPage() {
 
   const runAction = async (action: string) => {
     if (!item || working) return
+    if (action === 'submit_review') {
+      requestWechatSubscriptionForModule('carpool')
+    }
     if (action === 'verify_academic') {
       await openAcademicVerification({ prompt: false })
       return
     }
     if (action === 'edit') {
+      requestWechatSubscriptionForModule('carpool')
       Taro.navigateTo({ url: `/pages/publish/index?section=carpool&mode=edit&id=${item.id}` })
       return
     }

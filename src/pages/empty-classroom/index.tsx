@@ -24,6 +24,7 @@ import {
 import { loadAcademicCalendar } from '../../features/calendar/repository'
 import { resolveAcademicCalendarState } from '../../features/calendar/utils'
 import { isApiError } from '../../api/client'
+import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import './index.scss'
 
 const sectionNumbers = Array.from({ length: 12 }, (_, index) => index + 1)
@@ -455,7 +456,7 @@ export default function EmptyClassroomPage() {
           <View
             className='empty-classroom-report'
             style={{ bottom: `${keyboardHeight}px` }}
-            onClick={(event) => event.stopPropagation()}
+            onClick={requestWechatSubscriptionAndStopPropagation}
           >
             <View className='empty-classroom-report__handle' />
             <View className='empty-classroom-report__title'>

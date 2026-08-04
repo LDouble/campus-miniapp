@@ -7,6 +7,7 @@ import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import { formatMoney, formatStatus } from '../../features/life-services/format'
 import '../../features/life-services/detail.scss'
 import './detail.scss'
@@ -54,11 +55,15 @@ export default function MarketplaceDetailPage() {
 
   const runAction = async (action: string) => {
     if (!item || working) return
+    if (action === 'submit_review') {
+      requestWechatSubscriptionForModule('marketplace')
+    }
     if (action === 'verify_academic') {
       await openAcademicVerification({ prompt: false })
       return
     }
     if (action === 'edit') {
+      requestWechatSubscriptionForModule('marketplace')
       Taro.navigateTo({ url: `/pages/publish/index?section=market&mode=edit&id=${item.id}` })
       return
     }

@@ -1,10 +1,12 @@
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { MarketplaceListingView } from '../../../api/types'
+import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { formatMoney, formatStatus } from '../format'
 import './marketplace-card.scss'
 
 const openDetail = (id: number) => {
+  requestWechatSubscriptionForModule('marketplace')
   Taro.navigateTo({ url: `/pages/marketplace/detail?id=${id}` })
 }
 

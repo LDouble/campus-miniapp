@@ -1,3 +1,5 @@
+import { requestWechatSubscriptionForModule } from '../features/wechat-subscription'
+
 Component({
   data: {
     selected: 0,
@@ -64,11 +66,16 @@ Component({
 
       if (!item || index === this.data.selected) return
 
+      if (item.pagePath === 'pages/community/index') {
+        requestWechatSubscriptionForModule('community')
+      }
+
       this.setData({ selected: index })
       wx.switchTab({ url: `/${item.pagePath}` })
     },
 
     publish() {
+      requestWechatSubscriptionForModule('community')
       wx.navigateTo({ url: '/pages/publish/index' })
     }
   }
