@@ -53,6 +53,7 @@ export const MINIAPP_MODULE_KEYS = [
   'course_materials',
   'empty_classroom',
   'shuttle',
+  'club',
 ] as const
 
 export type MiniappModuleKey = typeof MINIAPP_MODULE_KEYS[number]
@@ -124,6 +125,7 @@ const conservativeModules: Record<MiniappModuleKey, MiniappModuleConfig> = {
   errand: { state: 'hidden' },
   carpool: { state: 'hidden' },
   course_materials: { state: 'hidden' },
+  club: { state: 'hidden' },
 }
 
 export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {

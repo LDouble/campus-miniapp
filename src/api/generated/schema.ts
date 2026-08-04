@@ -1470,6 +1470,331 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/club-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询全部社团分类 */
+        get: operations["ListAdminClubCategories"];
+        put?: never;
+        /** 创建社团分类 */
+        post: operations["CreateClubCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/club-categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 编辑社团分类 */
+        patch: operations["UpdateClubCategory"];
+        trace?: never;
+    };
+    "/api/v1/admin/club-categories/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 启用或归档社团分类 */
+        post: operations["SetClubCategoryStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/clubs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询社团 */
+        get: operations["ListAdminClubs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/clubs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询社团审核详情 */
+        get: operations["GetAdminClub"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/clubs/{id}/owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 变更社团维护人 */
+        post: operations["TransferClubOwner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/clubs/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核社团资料修订 */
+        post: operations["ReviewClub"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/clubs/{id}/sort-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 调整社团展示顺序 */
+        post: operations["SetClubSortOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/clubs/{id}/visibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 下架或恢复社团 */
+        post: operations["SetClubVisibility"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/club-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询启用的社团分类 */
+        get: operations["ListClubCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布社团 */
+        get: operations["ListClubs"];
+        put?: never;
+        /** 创建社团资料草稿 */
+        post: operations["CreateClub"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/directory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按首字母查询已发布社团目录 */
+        get: operations["ListClubDirectory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/media/upload-target": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建社团图片直传目标 */
+        post: operations["CreateClubMediaUploadTarget"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/media/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 完成社团图片上传 */
+        post: operations["CompleteClubMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的社团资料 */
+        get: operations["ListMyClubs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布社团详情 */
+        get: operations["GetClub"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/{id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 保存社团资料草稿 */
+        patch: operations["UpdateClubDraft"];
+        trace?: never;
+    };
+    "/api/v1/clubs/{id}/editor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询社团当前公开版本和工作版本 */
+        get: operations["GetClubEditor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/{id}/submit-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交社团资料审核 */
+        post: operations["SubmitClubReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/comments": {
         parameters: {
             query?: never;
@@ -4196,6 +4521,268 @@ export interface components {
         };
         /** @enum {string} */
         CarpoolViewerAction: "edit" | "submit_review" | "cancel" | "join" | "leave" | "verify_academic";
+        /** @enum {string} */
+        ClubAvailableAction: "edit" | "submit_review" | "verify_academic";
+        ClubCOSTemporaryCredentials: {
+            /** Format: int64 */
+            expired_time: number;
+            secret_id: string;
+            secret_key: string;
+            session_token: string;
+            /** Format: int64 */
+            start_time: number;
+        };
+        ClubCategory: {
+            /** Format: uint64 */
+            id: number;
+            name: string;
+            slug: string;
+            /** Format: int64 */
+            sort_order: number;
+            /** @enum {string} */
+            status: "active" | "archived";
+            /** Format: uint64 */
+            version: number;
+        };
+        ClubCategoryListResponseBody: {
+            data: components["schemas"]["ClubCategory"][];
+            request_id: string;
+        };
+        ClubCategoryResponseBody: {
+            data: components["schemas"]["ClubCategory"];
+            request_id: string;
+        };
+        ClubContentInput: {
+            /** Format: uint64 */
+            category_id: number;
+            /** Format: uint64 */
+            cover_media_id?: number;
+            description: string;
+            /** Format: int64 */
+            founded_year?: number;
+            gallery: components["schemas"]["ClubGalleryInput"][];
+            /** Format: uint64 */
+            logo_media_id: number;
+            short_name?: string;
+            slogan?: string;
+            summary: string;
+            supervising_unit?: string;
+        };
+        ClubCreateInput: components["schemas"]["ClubContentInput"] & {
+            name: string;
+        };
+        ClubDetail: components["schemas"]["ClubSummary"] & {
+            description: string;
+            /** Format: int64 */
+            founded_year: number | null;
+            gallery: components["schemas"]["ClubGalleryImage"][];
+            supervising_unit: string | null;
+        };
+        ClubDirectory: {
+            groups: components["schemas"]["ClubDirectoryGroup"][];
+            /** Format: int64 */
+            total: number;
+        };
+        ClubDirectoryGroup: {
+            /** Format: int64 */
+            count: number;
+            initial: string;
+            items: components["schemas"]["ClubDirectoryItem"][];
+        };
+        ClubDirectoryItem: {
+            category: components["schemas"]["ClubCategory"];
+            /** Format: uint64 */
+            id: number;
+            logo: components["schemas"]["ClubGalleryImage"];
+            name: string;
+            name_initial: string;
+            short_name: string | null;
+        };
+        ClubDirectoryResponseBody: {
+            data: components["schemas"]["ClubDirectory"];
+            request_id: string;
+        };
+        ClubDraftInput: components["schemas"]["ClubContentInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+            name?: string;
+        };
+        ClubEditorialPage: {
+            items: components["schemas"]["ClubEditorialView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClubEditorialPageResponseBody: {
+            data: components["schemas"]["ClubEditorialPage"];
+            request_id: string;
+        };
+        ClubEditorialResponseBody: {
+            data: components["schemas"]["ClubEditorialView"];
+            request_id: string;
+        };
+        ClubEditorialView: {
+            available_actions: components["schemas"]["ClubAvailableAction"][];
+            /** Format: uint64 */
+            creator_id: number;
+            /** Format: uint64 */
+            id: number;
+            name: string;
+            /** Format: uint64 */
+            owner_id: number;
+            published_revision?: components["schemas"]["ClubRevisionView"] | null;
+            /** Format: int64 */
+            sort_order: number;
+            /** Format: uint64 */
+            version: number;
+            visibility_status: components["schemas"]["ClubVisibilityStatus"];
+            working_revision?: components["schemas"]["ClubRevisionView"] | null;
+        };
+        ClubGalleryImage: {
+            caption: string | null;
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            /** Format: int64 */
+            sort_order: number;
+            url: string;
+            /** Format: int64 */
+            width: number;
+        };
+        ClubGalleryInput: {
+            caption?: string;
+            /** Format: uint64 */
+            media_id: number;
+            /** Format: int64 */
+            sort_order: number;
+        };
+        ClubMediaResponseBody: {
+            data: components["schemas"]["ClubMediaView"];
+            request_id: string;
+        };
+        ClubMediaUploadInput: {
+            /** @enum {string} */
+            mime_type: "image/jpeg" | "image/png" | "image/webp";
+            /** @enum {string} */
+            purpose: "logo" | "cover" | "gallery";
+            /** Format: int64 */
+            size: number;
+        };
+        ClubMediaView: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            id: number;
+            /** @enum {string} */
+            purpose: "logo" | "cover" | "gallery";
+            /** @enum {string} */
+            status: "pending" | "ready" | "bound" | "expired";
+            url: string;
+            /** Format: uint64 */
+            version: number;
+            /** Format: int64 */
+            width: number;
+        };
+        ClubMutationResponseBody: {
+            data: components["schemas"]["ClubMutationResult"];
+            request_id: string;
+        };
+        ClubMutationResult: {
+            updated: boolean;
+        };
+        ClubPage: {
+            items: components["schemas"]["ClubSummary"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClubPageResponseBody: {
+            data: components["schemas"]["ClubPage"];
+            request_id: string;
+        };
+        ClubResponseBody: {
+            data: components["schemas"]["ClubDetail"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClubRevisionStatus: "draft" | "pending_review" | "approved" | "rejected";
+        ClubRevisionView: {
+            category: components["schemas"]["ClubCategory"];
+            cover: components["schemas"]["ClubGalleryImage"] | null;
+            /** Format: date-time */
+            created_at: string;
+            description: string;
+            /** Format: int64 */
+            founded_year: number | null;
+            gallery: components["schemas"]["ClubGalleryImage"][];
+            /** Format: uint64 */
+            id: number;
+            logo: components["schemas"]["ClubGalleryImage"];
+            rejection_reason?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewed_by?: number | null;
+            /** Format: uint64 */
+            revision_no: number;
+            short_name: string | null;
+            slogan: string | null;
+            status: components["schemas"]["ClubRevisionStatus"];
+            /** Format: date-time */
+            submitted_at?: string | null;
+            summary: string;
+            supervising_unit: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        ClubSummary: {
+            category: components["schemas"]["ClubCategory"];
+            cover: components["schemas"]["ClubGalleryImage"] | null;
+            /** Format: uint64 */
+            id: number;
+            logo: components["schemas"]["ClubGalleryImage"];
+            name: string;
+            /** Format: date-time */
+            published_at: string | null;
+            short_name: string | null;
+            slogan: string | null;
+            /** Format: int64 */
+            sort_order: number;
+            summary: string;
+            /** Format: uint64 */
+            version: number;
+            visibility_status: components["schemas"]["ClubVisibilityStatus"];
+        };
+        ClubUploadTarget: {
+            /** Format: date-time */
+            expires_at: string;
+            /** @enum {string} */
+            file_field: "file";
+            form_fields: {
+                [key: string]: string;
+            };
+            headers: {
+                [key: string]: string;
+            };
+            /** Format: uint64 */
+            media_id: number;
+            temporary_credentials: components["schemas"]["ClubCOSTemporaryCredentials"] | null;
+            /** @enum {string} */
+            upload_method: "POST";
+            /** Format: uri */
+            upload_url: string;
+        };
+        ClubUploadTargetResponseBody: {
+            data: components["schemas"]["ClubUploadTarget"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ClubVisibilityStatus: "unpublished" | "published" | "suspended";
         CommentPage: {
             items: components["schemas"]["CommentView"][];
             page: number;
@@ -5851,6 +6438,96 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CarpoolTripResponseBody"];
+            };
+        };
+        /** @description 社团分类列表 */
+        ClubCategoryListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubCategoryListResponseBody"];
+            };
+        };
+        /** @description 社团分类 */
+        ClubCategoryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubCategoryResponseBody"];
+            };
+        };
+        /** @description 社团字母目录 */
+        ClubDirectoryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubDirectoryResponseBody"];
+            };
+        };
+        /** @description 社团编辑视图分页 */
+        ClubEditorialPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubEditorialPageResponseBody"];
+            };
+        };
+        /** @description 社团编辑视图 */
+        ClubEditorialResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubEditorialResponseBody"];
+            };
+        };
+        /** @description 社团媒体 */
+        ClubMediaResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubMediaResponseBody"];
+            };
+        };
+        /** @description 社团变更结果 */
+        ClubMutationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubMutationResponseBody"];
+            };
+        };
+        /** @description 社团分页 */
+        ClubPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubPageResponseBody"];
+            };
+        };
+        /** @description 社团详情 */
+        ClubResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubResponseBody"];
+            };
+        };
+        /** @description 社团图片上传目标 */
+        ClubUploadTargetResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubUploadTargetResponseBody"];
             };
         };
         /** @description 根评论分页 */
@@ -8427,6 +9104,431 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["CarpoolTripResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminClubCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubCategoryListResponse"];
+        };
+    };
+    CreateClubCategory: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    slug: string;
+                    name: string;
+                    /** Format: int64 */
+                    sort_order: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["ClubCategoryResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateClubCategory: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    name: string;
+                    /** Format: int64 */
+                    sort_order: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubCategoryResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    SetClubCategoryStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** @enum {string} */
+                    status: "active" | "archived";
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubCategoryResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminClubs: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                category_id?: number;
+                visibility_status?: "unpublished" | "published" | "suspended";
+                revision_status?: "draft" | "pending_review" | "approved" | "rejected";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubEditorialPageResponse"];
+        };
+    };
+    GetAdminClub: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    TransferClubOwner: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** Format: uint64 */
+                    owner_id: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ReviewClub: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    approved: boolean;
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    SetClubSortOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** Format: int64 */
+                    sort_order: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    SetClubVisibility: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** @enum {string} */
+                    status: "published" | "suspended";
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListClubCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubCategoryListResponse"];
+        };
+    };
+    ListClubs: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                category_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubPageResponse"];
+        };
+    };
+    CreateClub: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClubCreateInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClubEditorialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListClubDirectory: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                category_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubDirectoryResponse"];
+        };
+    };
+    CreateClubMediaUploadTarget: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClubMediaUploadInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ClubUploadTargetResponse"];
+            413: components["responses"]["Error"];
+        };
+    };
+    CompleteClubMedia: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubMediaResponse"];
+            409: components["responses"]["Error"];
+            413: components["responses"]["Error"];
+        };
+    };
+    ListMyClubs: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubEditorialPageResponse"];
+        };
+    };
+    GetClub: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateClubDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClubDraftInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetClubEditor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    SubmitClubReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["ClubEditorialResponse"];
             409: components["responses"]["Error"];
         };
     };

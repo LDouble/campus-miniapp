@@ -10,13 +10,14 @@
     "compileHotReLoad": false,
     "postcss": false,
     "preloadBackgroundData": false,
-    "minified": false,
+    "minified": true,
     "newFeature": true,
     "autoAudits": false,
     "coverView": true,
     "showShadowRootInWxmlPanel": false,
     "scopeDataCheck": false,
-    "useCompilerModule": false
+    "useCompilerModule": false,
+    "uglifyFileName": true
   },
   "compileType": "miniprogram",
   "simulatorType": "wechat",

@@ -25,6 +25,10 @@ const SAFE_PAGES = new Set([
   '/pages/academic/selection/index',
   '/pages/materials/index',
   '/pages/services/index',
+  '/pages/clubs/index',
+  '/pages/clubs/detail',
+  '/pages/clubs/edit',
+  '/pages/clubs/mine',
 ])
 
 type ReturnTarget = {

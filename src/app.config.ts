@@ -27,7 +27,11 @@ export default defineAppConfig({
     'pages/services/index',
     'pages/content-report/index',
     'pages/webview/index',
-    'pages/feature-unavailable/index'
+    'pages/feature-unavailable/index',
+    'pages/clubs/index',
+    'pages/clubs/detail',
+    'pages/clubs/edit',
+    'pages/clubs/mine'
   ],
   window: {
     backgroundTextStyle: 'dark',

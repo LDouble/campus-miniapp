@@ -1,0 +1,372 @@
+page {
+  background: #f8f5ef;
+}
+
+.my-clubs-page {
+  min-height: 100vh;
+  padding-bottom: calc(64rpx + env(safe-area-inset-bottom));
+  color: #294740;
+  background:
+    radial-gradient(circle at 98% 8%, rgba(244, 187, 122, 0.18), transparent 24%),
+    #f8f5ef;
+}
+
+.my-clubs-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx 28rpx;
+  margin: 18rpx 28rpx 22rpx;
+  background: linear-gradient(135deg, #dcefe8, #f3e7d7);
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
+  border-radius: 34rpx;
+  box-shadow: 0 14rpx 36rpx rgba(45, 77, 68, 0.07);
+
+  > view:first-child {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__title {
+    color: #295148;
+    font-size: 31rpx;
+    font-weight: 800;
+  }
+
+  &__text {
+    margin-top: 8rpx;
+    color: #526b65;
+    font-size: 23rpx;
+    line-height: 1.55;
+  }
+
+  &__meta {
+    margin-top: 9rpx;
+    color: #3f6e61;
+    font-size: 22rpx;
+    font-weight: 700;
+  }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 138rpx;
+    height: 88rpx;
+    margin-left: 18rpx;
+    color: #fff;
+    font-size: 24rpx;
+    font-weight: 750;
+    background: #3f7668;
+    border-radius: 24rpx;
+
+    text {
+      margin-right: 5rpx;
+      font-size: 28rpx;
+    }
+
+    &--pressed {
+      opacity: 0.76;
+    }
+  }
+}
+
+.my-clubs-list {
+  padding: 0 28rpx;
+}
+
+.my-club-card {
+  padding: 26rpx;
+  margin-bottom: 20rpx;
+  background: rgba(255, 255, 255, 0.93);
+  border: 2rpx solid rgba(255, 255, 255, 0.98);
+  border-radius: 32rpx;
+  box-shadow: 0 11rpx 30rpx rgba(49, 78, 70, 0.06);
+
+  &__head {
+    display: flex;
+    align-items: center;
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 88rpx;
+    height: 88rpx;
+    overflow: hidden;
+    background: #e9f3ee;
+    border-radius: 27rpx;
+
+    image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__identity {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    margin-left: 17rpx;
+  }
+
+  &__name {
+    display: -webkit-box;
+    overflow: hidden;
+    color: #294f46;
+    font-size: 29rpx;
+    font-weight: 800;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  &__category {
+    margin-top: 6rpx;
+    color: #526b65;
+    font-size: 22rpx;
+  }
+
+  &__status {
+    flex: none;
+    padding: 10rpx 16rpx;
+    margin-left: 12rpx;
+    font-size: 21rpx;
+    font-weight: 750;
+    border-radius: 99rpx;
+
+    &--draft {
+      color: #59655f;
+      background: #edf0eb;
+    }
+
+    &--pending {
+      color: #795426;
+      background: #fff0d8;
+    }
+
+    &--approved {
+      color: #2f695a;
+      background: #e0f2eb;
+    }
+
+    &--rejected {
+      color: #93483e;
+      background: #fce8e3;
+    }
+  }
+
+  &__progress {
+    display: flex;
+    align-items: flex-start;
+    padding: 19rpx 20rpx;
+    margin-top: 20rpx;
+    background: #f2f6f3;
+    border-radius: 21rpx;
+
+    &--pending {
+      background: #fff7e9;
+    }
+
+    &--rejected {
+      background: #fff2ee;
+    }
+  }
+
+  &__progress-mark {
+    flex: none;
+    width: 16rpx;
+    height: 16rpx;
+    margin: 8rpx 15rpx 0 0;
+    background: #688078;
+    border: 5rpx solid rgba(104, 128, 120, 0.17);
+    border-radius: 50%;
+    background-clip: padding-box;
+  }
+
+  &__progress--pending &__progress-mark {
+    background: #ad7b34;
+    border-color: rgba(173, 123, 52, 0.18);
+  }
+
+  &__progress--approved &__progress-mark {
+    background: #3f7a69;
+    border-color: rgba(63, 122, 105, 0.18);
+  }
+
+  &__progress--rejected &__progress-mark {
+    background: #a65449;
+    border-color: rgba(166, 84, 73, 0.18);
+  }
+
+  &__progress-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+
+    text:first-child {
+      color: #31594f;
+      font-size: 24rpx;
+      font-weight: 800;
+    }
+
+    text:last-child {
+      margin-top: 5rpx;
+      color: #526b65;
+      font-size: 22rpx;
+      line-height: 1.5;
+    }
+  }
+
+  &__reason {
+    display: flex;
+    flex-direction: column;
+    padding: 19rpx 20rpx;
+    margin-top: 14rpx;
+    background: #fff4f0;
+    border-radius: 20rpx;
+
+    text:first-child {
+      color: #934d42;
+      font-size: 21rpx;
+      font-weight: 750;
+    }
+
+    text:last-child {
+      margin-top: 7rpx;
+      color: #744b44;
+      font-size: 23rpx;
+      line-height: 1.55;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12rpx;
+    padding-top: 16rpx;
+    margin-top: 16rpx;
+    border-top: 2rpx solid #edf1ed;
+
+    > view {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-width: 154rpx;
+      height: 88rpx;
+      padding: 0 16rpx;
+      color: #38685c;
+      font-size: 23rpx;
+      font-weight: 750;
+      background: #edf5f1;
+      border-radius: 22rpx;
+    }
+  }
+
+  &__action--pressed {
+    opacity: 0.72;
+  }
+
+  &__primary {
+    color: #fff !important;
+    background: #3f7668 !important;
+
+    &--pressed {
+      opacity: 0.76;
+    }
+
+    &--disabled {
+      opacity: 0.58;
+    }
+  }
+}
+
+.my-clubs-state {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 82rpx 40rpx;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 34rpx;
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 108rpx;
+    height: 108rpx;
+    background: #e3f1eb;
+    border-radius: 38rpx;
+
+    image {
+      width: 56rpx;
+      height: 56rpx;
+    }
+  }
+
+  &__title {
+    margin-top: 24rpx;
+    color: #31564d;
+    font-size: 29rpx;
+    font-weight: 750;
+  }
+
+  &__text {
+    margin-top: 12rpx;
+    color: #526b65;
+    font-size: 24rpx;
+    line-height: 1.6;
+  }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 200rpx;
+    height: 88rpx;
+    margin-top: 28rpx;
+    color: #fff;
+    font-size: 25rpx;
+    font-weight: 700;
+    background: #3f7668;
+    border-radius: 26rpx;
+  }
+}
+
+.my-club-card--skeleton > view {
+  height: 30rpx;
+  margin: 20rpx 0;
+  background: linear-gradient(90deg, #e9eee9 25%, #f6f7f3 37%, #e9eee9 63%);
+  background-size: 400% 100%;
+  border-radius: 10rpx;
+  animation: my-clubs-loading 1.4s ease infinite;
+}
+
+.my-club-card--skeleton > view:first-child {
+  width: 55%;
+  height: 44rpx;
+}
+
+.my-club-card--skeleton > view:last-child {
+  width: 74%;
+}
+
+@keyframes my-clubs-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-club-card--skeleton > view {
+    animation: none;
+  }
+}

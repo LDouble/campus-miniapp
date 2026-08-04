@@ -23,6 +23,7 @@ const icons = {
   market: require('../../assets/icons/market.svg'),
   errands: require('../../assets/icons/errands.svg'),
   academic: require('../../assets/icons/academic.svg'),
+  clubs: require('../../assets/icons/clubs.svg'),
 }
 
 type ServiceItem = {
@@ -49,6 +50,7 @@ const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
   community: 'community',
   market: 'marketplace',
   errands: 'errand',
+  clubs: 'club',
 }
 
 const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> = [
@@ -81,6 +83,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'community', name: '校园社区', icon: icons.community, lifeSection: 'community' },
       { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
       { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
+      { key: 'clubs', name: '社团广场', icon: icons.clubs, route: '/pages/clubs/index' },
     ],
   },
 ]
