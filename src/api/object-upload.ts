@@ -5,13 +5,6 @@ export interface ObjectUploadTarget {
   file_field: string
   form_fields: Record<string, string>
   headers: Record<string, string>
-  temporary_credentials?: {
-    secret_id: string
-    secret_key: string
-    session_token: string
-    start_time: number
-    expired_time: number
-  } | null
 }
 
 const uploadErrorMessage = (error: unknown) => {
@@ -36,13 +29,9 @@ export const uploadFileToObjectStorage = (
   filePath: string,
   onProgress?: (progress: number) => void,
 ) => {
-  if (target.upload_url.includes('.myqcloud.com') && !target.temporary_credentials) {
-    throw new Error('COS 临时上传凭证缺失，请重新上传')
-  }
   console.info('[COS直传] 开始上传', {
     host: uploadHost(target.upload_url),
     fileField: target.file_field,
-    temporaryCredential: !!target.temporary_credentials,
   })
   const task = Taro.uploadFile({
     url: target.upload_url,

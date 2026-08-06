@@ -7,17 +7,31 @@ import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { isApiError } from '../../api/client'
 import { ensureClubEditorAccess } from '../../features/clubs/access'
 import { clubsRepository } from '../../features/clubs/repository'
-import type { ClubCategory, ClubDirectory, ClubSummary } from '../../features/clubs/types'
+import type {
+  ClubCategory,
+  ClubDirectoryBucket,
+  ClubDirectoryIndex,
+  ClubDirectoryItem,
+  ClubSummary,
+} from '../../features/clubs/types'
 import './index.scss'
 
 const PAGE_SIZE = 12
+const DIRECTORY_PAGE_SIZE = 20
 type ClubViewMode = 'card' | 'directory'
+
+type DirectoryBucketState = {
+  items: ClubDirectoryItem[]
+  nextCursor: string | null
+  loading: boolean
+  error: string
+}
 
 const directorySectionId = (initial: string) => (
   initial === '#' ? 'club-directory-section-other' : `club-directory-section-${initial}`
 )
 
-const mergeClubs = (current: ClubSummary[], incoming: ClubSummary[]) => {
+const mergeClubs = <T extends { id: number }>(current: T[], incoming: T[]) => {
   const seen = new Set(current.map((club) => club.id))
   return current.concat(incoming.filter((club) => {
     if (seen.has(club.id)) return false
@@ -38,7 +52,8 @@ export default function ClubsPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [viewMode, setViewMode] = useState<ClubViewMode>('card')
-  const [directory, setDirectory] = useState<ClubDirectory | null>(null)
+  const [directory, setDirectory] = useState<ClubDirectoryIndex | null>(null)
+  const [directoryBuckets, setDirectoryBuckets] = useState<Record<string, DirectoryBucketState>>({})
   const [directoryLoading, setDirectoryLoading] = useState(false)
   const [directoryError, setDirectoryError] = useState('')
   const [directoryQueryKey, setDirectoryQueryKey] = useState('')
@@ -46,6 +61,8 @@ export default function ClubsPage() {
   const [indexPrompt, setIndexPrompt] = useState('')
   const requestVersion = useRef(0)
   const directoryRequestVersion = useRef(0)
+  const directoryPageRequestSequence = useRef(0)
+  const directoryBucketRequestVersions = useRef<Record<string, number>>({})
   const indexRailBounds = useRef<{ top: number; height: number } | null>(null)
   const indexPromptTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -84,21 +101,84 @@ export default function ClubsPage() {
     }
   }
 
-  const loadDirectory = async (nextKeyword = keyword, nextCategory = categoryId) => {
+  const loadDirectoryBucket = async (
+    initial: string,
+    index: ClubDirectoryIndex,
+    nextCategory = categoryId,
+    reset = true,
+  ) => {
+    const previous = directoryBuckets[initial]
+    if (!reset && (!previous || !previous.nextCursor || previous.loading)) return
+    const requestKey = `${nextCategory}:${initial}`
+    const version = directoryPageRequestSequence.current + 1
+    directoryPageRequestSequence.current = version
+    directoryBucketRequestVersions.current[requestKey] = version
+    setDirectoryBuckets((current) => ({
+      ...current,
+      [initial]: {
+        items: reset ? [] : (current[initial]?.items || []),
+        nextCursor: reset ? null : (current[initial]?.nextCursor || null),
+        loading: true,
+        error: '',
+      },
+    }))
+    try {
+      const result = await clubsRepository.listDirectoryPage({
+        initial,
+        cursor: reset ? undefined : previous?.nextCursor || undefined,
+        pageSize: DIRECTORY_PAGE_SIZE,
+        categoryId: nextCategory || undefined,
+      })
+      if (directoryBucketRequestVersions.current[requestKey] !== version) return
+      if (result.version !== index.version) {
+        void loadDirectory(nextCategory)
+        return
+      }
+      setDirectoryBuckets((current) => ({
+        ...current,
+        [initial]: {
+          items: reset ? result.items : mergeClubs(current[initial]?.items || [], result.items),
+          nextCursor: result.next_cursor,
+          loading: false,
+          error: '',
+        },
+      }))
+    } catch (loadError) {
+      if (directoryBucketRequestVersions.current[requestKey] !== version) return
+      if (isApiError(loadError) && loadError.code === 'club_directory_version_changed') {
+        void loadDirectory(nextCategory)
+        return
+      }
+      setDirectoryBuckets((current) => ({
+        ...current,
+        [initial]: {
+          items: reset ? [] : (current[initial]?.items || []),
+          nextCursor: reset ? null : (current[initial]?.nextCursor || null),
+          loading: false,
+          error: isApiError(loadError) ? loadError.message : '社团索引加载失败，请稍后重试',
+        },
+      }))
+    }
+  }
+
+  const loadDirectory = async (nextCategory = categoryId) => {
     const version = directoryRequestVersion.current + 1
-    const queryKey = `${nextKeyword.trim()}::${nextCategory}`
+    const queryKey = String(nextCategory)
     directoryRequestVersion.current = version
     setDirectoryLoading(true)
     setDirectoryError('')
     try {
-      const result = await clubsRepository.listDirectory({
-        keyword: nextKeyword.trim() || undefined,
+      const result = await clubsRepository.getDirectoryIndex({
         categoryId: nextCategory || undefined,
       })
       if (version !== directoryRequestVersion.current) return
       setDirectory(result)
+      directoryBucketRequestVersions.current = {}
+      setDirectoryBuckets({})
       setDirectoryQueryKey(queryKey)
-      setActiveInitial(result.groups[0]?.initial || '')
+      const firstInitial = result.buckets[0]?.initial || ''
+      setActiveInitial(firstInitial)
+      if (firstInitial) void loadDirectoryBucket(firstInitial, result, nextCategory)
     } catch (loadError) {
       if (version === directoryRequestVersion.current) {
         setDirectoryError(isApiError(loadError) ? loadError.message : '社团索引加载失败，请稍后重试')
@@ -125,26 +205,31 @@ export default function ClubsPage() {
   usePullDownRefresh(() => {
     void Promise.all([
       clubsRepository.listCategories().then(setCategories),
-      viewMode === 'directory' ? loadDirectory(keyword, categoryId) : load(true),
+      viewMode === 'directory' ? loadDirectory(categoryId) : load(true),
     ]).catch(() => undefined).finally(() => Taro.stopPullDownRefresh())
   })
 
   useReachBottom(() => {
     if (viewMode === 'card') void load(false)
+    else if (directory && activeInitial) {
+      void loadDirectoryBucket(activeInitial, directory, categoryId, false)
+    }
   })
 
   const search = () => {
     const nextKeyword = query.trim()
     setKeyword(nextKeyword)
-    if (viewMode === 'directory') void loadDirectory(nextKeyword, categoryId)
-    else void load(true, nextKeyword, categoryId)
+    if (viewMode === 'directory' && nextKeyword) {
+      setViewMode('card')
+    }
+    void load(true, nextKeyword, categoryId)
   }
 
   const chooseCategory = (nextCategoryId: number) => {
     const nextKeyword = query.trim()
     setKeyword(nextKeyword)
     setCategoryId(nextCategoryId)
-    if (viewMode === 'directory') void loadDirectory(nextKeyword, nextCategoryId)
+    if (viewMode === 'directory') void loadDirectory(nextCategoryId)
     else void load(true, nextKeyword, nextCategoryId)
   }
 
@@ -152,7 +237,7 @@ export default function ClubsPage() {
     setQuery('')
     setKeyword('')
     setCategoryId(0)
-    if (viewMode === 'directory') void loadDirectory('', 0)
+    if (viewMode === 'directory') void loadDirectory(0)
     else void load(true, '', 0)
   }
 
@@ -160,8 +245,8 @@ export default function ClubsPage() {
     if (nextMode === viewMode) return
     setViewMode(nextMode)
     if (nextMode === 'directory') {
-      const queryKey = `${keyword}::${categoryId}`
-      if (!directory || directoryQueryKey !== queryKey) void loadDirectory(keyword, categoryId)
+      const queryKey = String(categoryId)
+      if (!directory || directoryQueryKey !== queryKey) void loadDirectory(categoryId)
     } else {
       // 目录视图可能已经修改过筛选条件，切回卡片时同步刷新，避免展示旧结果。
       void load(true, keyword, categoryId)
@@ -174,6 +259,10 @@ export default function ClubsPage() {
     setIndexPrompt(initial)
     if (indexPromptTimer.current) clearTimeout(indexPromptTimer.current)
     indexPromptTimer.current = setTimeout(() => setIndexPrompt(''), 520)
+    const bucket = directoryBuckets[initial]
+    if (directory && (!bucket || (!bucket.loading && bucket.items.length === 0))) {
+      void loadDirectoryBucket(initial, directory, categoryId)
+    }
     void Taro.pageScrollTo({
       selector: `#${directorySectionId(initial)}`,
       offsetTop: -12,
@@ -182,7 +271,7 @@ export default function ClubsPage() {
   }
 
   const jumpFromClientY = (clientY: number) => {
-    const initials = directory?.groups.map((group) => group.initial) || []
+    const initials = directory?.buckets.map((bucket) => bucket.initial) || []
     const bounds = indexRailBounds.current
     if (!initials.length || !bounds?.height) return
     const ratio = Math.max(0, Math.min(0.999, (clientY - bounds.top) / bounds.height))
@@ -248,7 +337,7 @@ export default function ClubsPage() {
               onClick={() => {
                 setQuery('')
                 setKeyword('')
-                if (viewMode === 'directory') void loadDirectory('', categoryId)
+                if (viewMode === 'directory') void loadDirectory(categoryId)
                 else void load(true, '', categoryId)
               }}
             >×</View>
@@ -411,11 +500,11 @@ export default function ClubsPage() {
           <View className='clubs-state clubs-state--error'>
             <Text className='clubs-state__title'>社团索引加载失败</Text>
             <Text className='clubs-state__text'>{directoryError}</Text>
-            <View className='clubs-state__action' onClick={() => void loadDirectory(keyword, categoryId)}>重新加载</View>
+            <View className='clubs-state__action' onClick={() => void loadDirectory(categoryId)}>重新加载</View>
           </View>
         )}
 
-        {!directoryLoading && !directoryError && !directory?.groups.length && (
+        {!directoryLoading && !directoryError && !directory?.buckets.length && (
           <View className='clubs-state'>
             <View className='clubs-state__icon'><Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' /></View>
             <Text className='clubs-state__title'>{keyword || categoryId ? '目录中没有匹配的社团' : '社团主页正在准备中'}</Text>
@@ -426,17 +515,19 @@ export default function ClubsPage() {
           </View>
         )}
 
-        {!directoryLoading && !directoryError && !!directory?.groups.length && (
+        {!directoryLoading && !directoryError && !!directory?.buckets.length && (
           <View className='club-directory__layout'>
             <View className='club-directory__groups'>
-              {directory.groups.map((group) => (
-                <View key={group.initial} id={directorySectionId(group.initial)} className='club-directory__section'>
+              {directory.buckets.map((bucket: ClubDirectoryBucket) => {
+                const bucketState = directoryBuckets[bucket.initial]
+                const items = bucketState?.items || []
+                return <View key={bucket.initial} id={directorySectionId(bucket.initial)} className='club-directory__section'>
                   <View className='club-directory__section-head'>
-                    <Text>{group.initial}</Text>
-                    <Text>{group.count} 个社团</Text>
+                    <Text>{bucket.initial}</Text>
+                    <Text>{bucket.count} 个社团</Text>
                   </View>
                   <View className='club-directory__section-list'>
-                    {group.items.map((club) => (
+                    {items.map((club) => (
                       <View
                         key={club.id}
                         id={`club-directory-row-${club.id}`}
@@ -458,9 +549,22 @@ export default function ClubsPage() {
                         <Text className='club-directory-row__arrow'>›</Text>
                       </View>
                     ))}
+                    {!!bucketState?.loading && <View className='clubs-list__footer'>正在加载 {bucket.initial} 索引</View>}
+                    {!bucketState?.loading && !!bucketState?.error && (
+                      <View className='clubs-inline-error'>
+                        {bucketState.error}
+                        <Text onClick={() => void loadDirectoryBucket(bucket.initial, directory, categoryId)}>重新加载</Text>
+                      </View>
+                    )}
+                    {!bucketState?.loading && !bucketState?.error && items.length === 0 && (
+                      <View className='clubs-list__footer'>点击右侧 {bucket.initial} 加载此索引</View>
+                    )}
+                    {!bucketState?.loading && !bucketState?.error && items.length > 0 && !bucketState.nextCursor && (
+                      <View className='clubs-list__footer'>{bucket.initial} 索引已全部加载</View>
+                    )}
                   </View>
                 </View>
-              ))}
+              })}
             </View>
             <View
               id='club-directory-index'
@@ -470,13 +574,13 @@ export default function ClubsPage() {
               onTouchStart={handleIndexTouchStart}
               onTouchMove={jumpFromIndexTouch}
             >
-              {directory.groups.map((group) => (
+              {directory.buckets.map((bucket) => (
                 <View
-                  key={group.initial}
-                  id={`club-index-${group.initial === '#' ? 'other' : group.initial}`}
-                  className={activeInitial === group.initial ? 'club-directory-index__item club-directory-index__item--active' : 'club-directory-index__item'}
-                  onClick={() => jumpToInitial(group.initial)}
-                >{group.initial}</View>
+                  key={bucket.initial}
+                  id={`club-index-${bucket.initial === '#' ? 'other' : bucket.initial}`}
+                  className={activeInitial === bucket.initial ? 'club-directory-index__item club-directory-index__item--active' : 'club-directory-index__item'}
+                  onClick={() => jumpToInitial(bucket.initial)}
+                >{bucket.initial}</View>
               ))}
             </View>
           </View>

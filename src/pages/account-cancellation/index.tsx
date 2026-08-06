@@ -4,7 +4,7 @@ import { Image, Text, View } from '@tarojs/components'
 import {
   cancelCurrentAccount,
   getAccountCancellationPreflight,
-  getCurrentUser,
+  getCurrentIdentity,
 } from '../../api/account'
 import {
   isAccountCancelled,
@@ -85,10 +85,10 @@ export default function AccountCancellationPage() {
     setLoading(true)
     try {
       const [account, result] = await Promise.all([
-        getCurrentUser(),
+        getCurrentIdentity(),
         getAccountCancellationPreflight(),
       ])
-      setUserId(account.user.id)
+      setUserId(account.user_id)
       setPreflight(result)
     } catch (error) {
       Taro.showToast({

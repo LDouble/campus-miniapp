@@ -21,7 +21,7 @@ import {
   uploadMaterialFile,
   withdrawCourseMaterial,
 } from '../../api/course-materials'
-import { getCurrentUser } from '../../api/account'
+import { getCurrentIdentity } from '../../api/account'
 import { createIdempotencyKey } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import type {
@@ -224,9 +224,9 @@ export default function MaterialsPage() {
 
   useEffect(() => {
     let active = true
-    getCurrentUser()
+    getCurrentIdentity()
       .then(async (current) => {
-        const userId = current.user.id
+        const userId = current.user_id
         const restored = await materialDraftStorage.read(userId)
         if (!active) return
         setDraftUserId(userId)
