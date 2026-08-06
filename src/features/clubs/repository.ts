@@ -4,7 +4,8 @@ import type { operations } from '../../api/generated/schema'
 import type {
   ClubCategory,
   ClubDetail,
-  ClubDirectory,
+  ClubDirectoryIndex,
+  ClubDirectoryPage,
   ClubDraftContentInput,
   ClubCreateInput,
   ClubEditorialView,
@@ -19,6 +20,7 @@ import type {
 } from './types'
 
 type ListClubsQuery = NonNullable<operations['ListClubs']['parameters']['query']>
+type GetClubDirectoryIndexQuery = NonNullable<operations['GetClubDirectoryIndex']['parameters']['query']>
 type ListClubDirectoryQuery = NonNullable<operations['ListClubDirectory']['parameters']['query']>
 
 export const clubsRepository = {
@@ -41,13 +43,24 @@ export const clubsRepository = {
     } satisfies ListClubsQuery,
   }),
 
-  listDirectory: (query: {
-    keyword?: string
+  getDirectoryIndex: (query: {
     categoryId?: number
-  }) => apiRequest<ClubDirectory>({
+  }) => apiRequest<ClubDirectoryIndex>({
+    path: '/api/v1/clubs/directory-index',
+    query: { category_id: query.categoryId } satisfies GetClubDirectoryIndexQuery,
+  }),
+
+  listDirectoryPage: (query: {
+    initial: string
+    cursor?: string
+    pageSize: number
+    categoryId?: number
+  }) => apiRequest<ClubDirectoryPage>({
     path: '/api/v1/clubs/directory',
     query: {
-      keyword: query.keyword,
+      initial: query.initial,
+      cursor: query.cursor,
+      page_size: query.pageSize,
       category_id: query.categoryId,
     } satisfies ListClubDirectoryQuery,
   }),

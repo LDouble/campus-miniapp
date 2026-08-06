@@ -10,6 +10,18 @@ export const getCurrentUser = () => apiRequest<CurrentUser>({
   skipAcademicVerificationGuard: true,
 })
 
+// CurrentIdentity is intentionally narrow: most mini-program flows only need
+// the user-scoped local-storage key and should not trigger the role/permission
+// projection exposed by /auth/me.
+export type CurrentIdentity = {
+  user_id: number
+}
+
+export const getCurrentIdentity = () => apiRequest<CurrentIdentity>({
+  path: '/api/v1/auth/identity',
+  skipAcademicVerificationGuard: true,
+})
+
 export const getAccountCancellationPreflight = () => (
   apiRequest<AccountCancellationPreflight>({
     path: '/api/v1/account/cancellation',

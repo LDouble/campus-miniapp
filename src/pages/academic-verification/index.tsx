@@ -11,7 +11,7 @@ import {
 } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
-import { getCurrentUser } from '../../api/account'
+import { getCurrentIdentity } from '../../api/account'
 import {
   isAcademicEducationLevel,
   loadAcademicCredential,
@@ -173,9 +173,9 @@ export default function AcademicVerificationPage() {
   })
   useDidShow(() => {
     void loadStatus()
-    void getCurrentUser()
+    void getCurrentIdentity()
       .then((currentUser) => {
-        const credential = loadAcademicCredential(currentUser.user.id)
+        const credential = loadAcademicCredential(currentUser.user_id)
         setStudentNo((current) => current || credential.studentNo)
         setEducationLevel((current) => current || credential.educationLevel)
       })
@@ -255,8 +255,8 @@ export default function AcademicVerificationPage() {
     setWorkingText('正在连接教务系统')
     try {
       await verifyAcademicCredentials(normalizedStudentNo, password, educationLevel)
-      const currentUser = await getCurrentUser()
-      saveAcademicCredential(currentUser.user.id, {
+      const currentUser = await getCurrentIdentity()
+      saveAcademicCredential(currentUser.user_id, {
         studentNo: normalizedStudentNo,
         password,
         educationLevel,
@@ -531,7 +531,7 @@ export default function AcademicVerificationPage() {
                         value={password}
                         password
                         maxlength={256}
-                        placeholder='将保存在当前小程序设备'
+                        placeholder='仅在本次运行中临时使用'
                         placeholderClass='verification-placeholder'
                         disabled={working}
                         onInput={(event) => setPassword(event.detail.value)}
@@ -544,8 +544,8 @@ export default function AcademicVerificationPage() {
                       {working && method === 'credentials' ? workingText : '验证并绑定'}
                     </View>
                     <Text className='verification-form__footnote'>
-                      账号密码仅保存在当前小程序设备，并随每次教务查询通过 HTTPS
-                      提交；服务端不持久化。请勿在公共设备上使用。
+                      账号密码仅在本次小程序运行期间临时保留，并随每次教务查询通过 HTTPS
+                      提交；服务端不持久化。关闭或重新启动小程序后需重新绑定。
                     </Text>
                   </View>
                 )}

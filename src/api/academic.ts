@@ -1,6 +1,6 @@
 import Taro from '@tarojs/taro'
 import { apiRequest, isApiError } from './client'
-import { getCurrentUser } from './account'
+import { getCurrentIdentity } from './account'
 import {
   AcademicCredentialMissingError,
   loadAcademicCredential,
@@ -30,9 +30,9 @@ type AcademicRequestBody = {
 }
 
 const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBody> => {
-  const currentUser = await getCurrentUser()
+  const currentUser = await getCurrentIdentity()
   try {
-    const credential = loadAcademicCredential(currentUser.user.id)
+    const credential = loadAcademicCredential(currentUser.user_id)
     return {
       student_no: credential.studentNo,
       password: credential.password,

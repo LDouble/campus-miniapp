@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAuthIdentity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me/password": {
         parameters: {
             query?: never;
@@ -1666,8 +1682,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 按首字母查询已发布社团目录 */
+        /** 按首字母分页查询已发布社团目录 */
         get: operations["ListClubDirectory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/clubs/directory-index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布社团的字母目录索引 */
+        get: operations["GetClubDirectoryIndex"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3453,6 +3486,10 @@ export interface components {
             roles: string[];
             permissions: string[];
         };
+        AuthIdentity: {
+            /** Format: uint64 */
+            user_id: number;
+        };
         UserPage: {
             items: components["schemas"]["User"][];
             page: number;
@@ -3719,6 +3756,10 @@ export interface components {
         };
         CurrentUserEnvelope: {
             data: components["schemas"]["CurrentUser"];
+            request_id: string;
+        };
+        AuthIdentityEnvelope: {
+            data: components["schemas"]["AuthIdentity"];
             request_id: string;
         };
         UserEnvelope: {
@@ -4227,7 +4268,6 @@ export interface components {
                 [key: string]: string;
             };
             storage_key: string;
-            temporary_credentials: components["schemas"]["COSTemporaryCredentials"] | null;
             /** @enum {string} */
             upload_method: "POST";
             /** Format: uri */
@@ -4236,15 +4276,6 @@ export interface components {
         AcademicVerificationUploadTargetResponseBody: {
             data: components["schemas"]["AcademicVerificationUploadTarget"];
             request_id: string;
-        };
-        COSTemporaryCredentials: {
-            /** Format: int64 */
-            expired_time: number;
-            secret_id: string;
-            secret_key: string;
-            session_token: string;
-            /** Format: int64 */
-            start_time: number;
         };
         AccountCancellationBlocker: {
             /** Format: int64 */
@@ -4523,15 +4554,6 @@ export interface components {
         CarpoolViewerAction: "edit" | "submit_review" | "cancel" | "join" | "leave" | "verify_academic";
         /** @enum {string} */
         ClubAvailableAction: "edit" | "submit_review" | "verify_academic";
-        ClubCOSTemporaryCredentials: {
-            /** Format: int64 */
-            expired_time: number;
-            secret_id: string;
-            secret_key: string;
-            session_token: string;
-            /** Format: int64 */
-            start_time: number;
-        };
         ClubCategory: {
             /** Format: uint64 */
             id: number;
@@ -4578,16 +4600,20 @@ export interface components {
             gallery: components["schemas"]["ClubGalleryImage"][];
             supervising_unit: string | null;
         };
-        ClubDirectory: {
-            groups: components["schemas"]["ClubDirectoryGroup"][];
-            /** Format: int64 */
-            total: number;
-        };
-        ClubDirectoryGroup: {
+        ClubDirectoryBucket: {
             /** Format: int64 */
             count: number;
             initial: string;
-            items: components["schemas"]["ClubDirectoryItem"][];
+        };
+        ClubDirectoryIndex: {
+            buckets: components["schemas"]["ClubDirectoryBucket"][];
+            /** Format: int64 */
+            total: number;
+            version: string;
+        };
+        ClubDirectoryIndexResponseBody: {
+            data: components["schemas"]["ClubDirectoryIndex"];
+            request_id: string;
         };
         ClubDirectoryItem: {
             category: components["schemas"]["ClubCategory"];
@@ -4598,8 +4624,14 @@ export interface components {
             name_initial: string;
             short_name: string | null;
         };
-        ClubDirectoryResponseBody: {
-            data: components["schemas"]["ClubDirectory"];
+        ClubDirectoryPage: {
+            initial: string;
+            items: components["schemas"]["ClubDirectoryItem"][];
+            next_cursor: string | null;
+            version: string;
+        };
+        ClubDirectoryPageResponseBody: {
+            data: components["schemas"]["ClubDirectoryPage"];
             request_id: string;
         };
         ClubDraftInput: components["schemas"]["ClubContentInput"] & {
@@ -4771,7 +4803,6 @@ export interface components {
             };
             /** Format: uint64 */
             media_id: number;
-            temporary_credentials: components["schemas"]["ClubCOSTemporaryCredentials"] | null;
             /** @enum {string} */
             upload_method: "POST";
             /** Format: uri */
@@ -5091,15 +5122,6 @@ export interface components {
         };
         /** @enum {string} */
         EducationLevel: "undergraduate" | "graduate" | "general";
-        MaterialCOSTemporaryCredentials: {
-            /** Format: int64 */
-            expired_time: number;
-            secret_id: string;
-            secret_key: string;
-            session_token: string;
-            /** Format: int64 */
-            start_time: number;
-        };
         MaterialCoursePage: {
             items: components["schemas"]["MaterialCourseView"][];
             page: number;
@@ -5256,7 +5278,7 @@ export interface components {
             id: number;
             material: components["schemas"]["CourseMaterialView"];
             /** @enum {string} */
-            status: "created" | "uploading" | "completed" | "expired" | "failed";
+            status: "created" | "promoting" | "cleaning" | "completed" | "expired" | "failed";
             uploads: components["schemas"]["MaterialUploadTarget"][];
             /** Format: uint64 */
             version: number;
@@ -5274,7 +5296,6 @@ export interface components {
             headers: {
                 [key: string]: string;
             };
-            temporary_credentials: components["schemas"]["MaterialCOSTemporaryCredentials"] | null;
             /** @enum {string} */
             upload_method: "POST";
             /** Format: uri */
@@ -6015,6 +6036,15 @@ export interface components {
                 "application/json": components["schemas"]["CurrentUserEnvelope"];
             };
         };
+        /** @description Lightweight current authenticated identity */
+        AuthIdentityResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AuthIdentityEnvelope"];
+            };
+        };
         /** @description User response */
         UserResponse: {
             headers: {
@@ -6458,13 +6488,22 @@ export interface components {
                 "application/json": components["schemas"]["ClubCategoryResponseBody"];
             };
         };
-        /** @description 社团字母目录 */
-        ClubDirectoryResponse: {
+        /** @description 社团字母目录索引 */
+        ClubDirectoryIndexResponse: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": components["schemas"]["ClubDirectoryResponseBody"];
+                "application/json": components["schemas"]["ClubDirectoryIndexResponseBody"];
+            };
+        };
+        /** @description 社团字母目录分页 */
+        ClubDirectoryPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClubDirectoryPageResponseBody"];
             };
         };
         /** @description 社团编辑视图分页 */
@@ -7036,6 +7075,18 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CurrentUserResponse"];
+        };
+    };
+    GetAuthIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AuthIdentityResponse"];
         };
     };
     ChangeMyPassword: {
@@ -9385,8 +9436,10 @@ export interface operations {
     };
     ListClubDirectory: {
         parameters: {
-            query?: {
-                keyword?: string;
+            query: {
+                initial: string;
+                cursor?: string;
+                page_size?: number;
                 category_id?: number;
             };
             header?: never;
@@ -9395,7 +9448,22 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["ClubDirectoryResponse"];
+            200: components["responses"]["ClubDirectoryPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetClubDirectoryIndex: {
+        parameters: {
+            query?: {
+                category_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClubDirectoryIndexResponse"];
         };
     };
     CreateClubMediaUploadTarget: {
@@ -10301,6 +10369,7 @@ export interface operations {
         responses: {
             201: components["responses"]["MaterialUploadSessionResponse"];
             400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     CompleteMaterialUploadSession: {
