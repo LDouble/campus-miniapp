@@ -9,6 +9,7 @@ import {
   View,
 } from '@tarojs/components'
 import { getCurrentUser } from '../../api/account'
+import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { isAccountCancelled } from '../../api/auth'
 import { getActiveAcademicUserId } from '../../api/academic-credential'
 import type {
@@ -195,23 +196,16 @@ const loadCachedAcademicLabel = () => {
   return getAcademicCalendarLabel(result.calendar)
 }
 
-const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
-  const periodsPromise = settle(academicRepository.getPeriods())
-  const userId = await userIdPromise
-  const cache = academicStorage.getScheduleCache(userId)
-  const periodsResult = await periodsPromise
-
-  if (!periodsResult.ok || !periodsResult.value.length) {
-    return cache
-  }
+const loadLatestAcademic = async (
+  userId: number,
+  cache: AcademicScheduleCache | null,
+) => {
+  const periodsResult = await settle(academicRepository.getPeriods())
+  if (!periodsResult.ok || !periodsResult.value.length) return cache
 
   const periods = periodsResult.value
   let coursesByPeriod = cache ? cache.coursesByPeriod : {}
-  academicStorage.setScheduleCache(
-    userId,
-    periods,
-    coursesByPeriod,
-  )
+  academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
 
   const { periodId } = resolveScheduleAnchor(periods)
   const anchoredPeriod = periods.find((period) => period.id === periodId)
@@ -219,8 +213,9 @@ const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
     && getCurrentAcademicWeek([anchoredPeriod]) !== null
   const hasCachedCourses = !!periodId
     && Object.prototype.hasOwnProperty.call(coursesByPeriod, periodId)
+  const hasRuntimeCredential = getActiveAcademicUserId() === userId
 
-  if (periodId && isCurrentPeriod && !hasCachedCourses) {
+  if (periodId && isCurrentPeriod && !hasCachedCourses && hasRuntimeCredential) {
     const coursesResult = await settle(academicRepository.getCourses(periodId))
     if (coursesResult.ok) {
       coursesByPeriod = {
@@ -231,13 +226,23 @@ const loadLatestAcademic = async (userIdPromise: Promise<number>) => {
     }
   }
 
-  const latestCache: AcademicScheduleCache = {
+  return {
     version: 1,
     platformUserId: userId,
     periods,
     coursesByPeriod,
-  }
-  return latestCache
+  } satisfies AcademicScheduleCache
+}
+
+const loadHomeAcademic = async (accountPromise: Promise<Settled<Awaited<ReturnType<typeof getCurrentUser>>>>) => {
+  const account = await accountPromise
+  const userId = account.ok ? account.value.user.id : getActiveAcademicUserId()
+  const cache = academicStorage.getScheduleCache(userId)
+  if (!account.ok) return cache
+
+  const verification = await settle(getAcademicVerificationStatus())
+  if (!verification.ok || verification.value.identity?.status !== 'verified') return cache
+  return loadLatestAcademic(userId, cache)
 }
 
 const latestCommunityPosts = (items: CampusCirclePostView[]) => (
@@ -293,12 +298,12 @@ function Index() {
       resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
     )
     const accountPromise = settle(getCurrentUser())
-    const academicUserIdPromise = accountPromise.then((account) => (
-      account.ok ? account.value.user.id : getActiveAcademicUserId()
-    ))
+    // 未认证用户只展示缓存；已认证用户才在后台刷新教务数据。
     const academicPromise = moduleEnabled('academic_schedule')
-      ? loadLatestAcademic(academicUserIdPromise)
-      : Promise.resolve(academicStorage.getScheduleCache(getActiveAcademicUserId()))
+      ? loadHomeAcademic(accountPromise)
+      : accountPromise.then((account) => academicStorage.getScheduleCache(
+        account.ok ? account.value.user.id : getActiveAcademicUserId(),
+      ))
     const calendarPromise = moduleEnabled('calendar')
       ? loadAcademicCalendar(getCalendarEducationLevel())
         .then((result) => getAcademicCalendarLabel(result.calendar))
