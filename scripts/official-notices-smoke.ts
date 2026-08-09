@@ -44,4 +44,12 @@ const homeSource = readFileSync(resolve(__dirname, '../src/pages/index/index.tsx
 assert.ok(homeSource.includes('pageSize: 2'), '首页只应获取两条最新全校通知')
 assert.ok(homeSource.includes("'/pages/official-notices/index'"), '首页应提供全校通知固定入口')
 
+const detailSource = readFileSync(resolve(__dirname, '../src/pages/official-notices/detail.tsx'), 'utf8')
+assert.ok(detailSource.includes('Taro.setClipboardData({ data: target })'), '学校原文应直接复制到剪贴板')
+assert.ok(detailSource.includes('复制原文地址'), '详情页应明确说明原文操作是复制地址')
+assert.ok(
+  !detailSource.includes("openExternal(notice.original_url || '')"),
+  '学校原文不得再尝试通过 WebView 打开',
+)
+
 process.stdout.write('official notices smoke: ok\n')
