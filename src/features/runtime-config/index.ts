@@ -2,6 +2,11 @@ import Taro from '@tarojs/taro'
 import { apiRequest } from '../../api/client'
 import type { components } from '../../api/generated/schema'
 import { requestWechatSubscription } from '../wechat-subscription/request'
+import {
+  DEFAULT_MIGRATION_GUIDE_COPY,
+  normalizeMigrationGuideCopy,
+  type MigrationGuideCopy,
+} from '../app-edition/migration-copy'
 
 export type CampusSection = {
   start: string
@@ -77,6 +82,7 @@ export type MiniappRuntimeConfig = {
   slogan_interval_ms: number
   slogans: RuntimeSlogan[]
   banners: RuntimeBanner[]
+  migration_guide: MigrationGuideCopy
 }
 
 type RuntimeConfigView = components['schemas']['RuntimeConfig']
@@ -207,6 +213,7 @@ export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
       enabled: true,
     },
   ],
+  migration_guide: DEFAULT_MIGRATION_GUIDE_COPY,
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -351,7 +358,16 @@ const normalizeRuntimeConfig = (
   ...value,
   modules: normalizeModules(value.modules),
   subscription_templates: normalizeSubscriptionTemplates(value.subscription_templates),
+  migration_guide: normalizeMigrationGuideCopy(value.migration_guide),
 })
+
+export const getMigrationGuideCopy = (
+  config: MiniappRuntimeConfig,
+): MigrationGuideCopy => (
+  __CAMPUS_APP_EDITION__ === 'qualification'
+    ? normalizeMigrationGuideCopy(config.migration_guide)
+    : DEFAULT_MIGRATION_GUIDE_COPY
+)
 
 const storedRuntimeConfig = (): StoredRuntimeConfig | null => {
   try {

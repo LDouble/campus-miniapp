@@ -1,6 +1,5 @@
 import Taro from '@tarojs/taro'
 import type { ApiErrorEnvelope, ApiSuccessEnvelope, TokenPair } from './types'
-import { clearAcademicCredential } from './academic-credential'
 import { resolveApiBaseUrl } from './environment'
 
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
@@ -50,7 +49,6 @@ const saveTokens = (tokens: TokenPair) => {
 }
 
 export const clearSession = () => {
-  clearAcademicCredential()
   Taro.removeStorageSync(ACCESS_TOKEN_KEY)
   Taro.removeStorageSync(REFRESH_TOKEN_KEY)
   Taro.removeStorageSync(TOKEN_EXPIRES_AT_KEY)

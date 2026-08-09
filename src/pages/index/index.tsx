@@ -11,22 +11,19 @@ import {
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { isAccountCancelled } from '../../api/auth'
-import { getActiveAcademicUserId } from '../../api/academic-credential'
+import {
+  getActiveAcademicUserId,
+  hasAcademicCredential,
+} from '../../api/academic-credential'
 import type {
   CampusCirclePostView,
   CampusCircleSectionView,
   MarketplaceListingView,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
-import {
-  getCachedAcademicCalendar,
-  getCalendarEducationLevel,
-  loadAcademicCalendar,
-} from '../../features/calendar/repository'
-import {
-  academicCalendarLabel as getAcademicCalendarLabel,
-} from '../../features/calendar/utils'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
+import { isQualificationEdition } from '../../features/app-edition'
+import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
 import {
   avatarText,
   resolveCoursePreview,
@@ -37,13 +34,12 @@ import {
   communityAuthorTone,
 } from '../../features/community/author'
 import { formatDateTime } from '../../features/life-services/format'
-import MarketplaceCard from '../../features/life-services/components/marketplace-card'
-import { lifeServicesRepository } from '../../features/life-services/repository'
 import { noticesRepository } from '../../features/notices/repository'
 import {
   activeBanners,
   activeSlogans,
   enabledCampuses,
+  getMigrationGuideCopy,
   getMiniappRuntimeConfig,
   getSelectedCampus,
   loadMiniappRuntimeConfig,
@@ -61,12 +57,21 @@ import {
   type AcademicScheduleCache,
 } from '../academic/storage'
 import {
+  getAcademicCalendarLabel,
   getCurrentAcademicWeek,
   resolveScheduleAnchor,
 } from '../academic/utils'
 import { normalizeWebViewUrl } from '../../features/webview/url'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
+
+const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
+  ? null
+  : require('../../features/life-services/repository').lifeServicesRepository as typeof import('../../features/life-services/repository').lifeServicesRepository
+
+const FullMarketplaceCard = __CAMPUS_APP_EDITION__ === 'qualification'
+  ? null
+  : require('../../features/life-services/components/marketplace-card').default as typeof import('../../features/life-services/components/marketplace-card').default
 
 const icons = {
   bell: require('../../assets/icons/bell.svg'),
@@ -139,6 +144,14 @@ const homeServiceKeys = new Set([
   'clubs',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
+const migratedHomeServiceKeys = new Set([
+  'materials',
+  'community',
+  'market',
+  'errands',
+  'carpool',
+  'clubs',
+])
 const serviceFeatureKeys: Record<string, string> = {
   classroom: 'classroom',
   shuttle: 'shuttle',
@@ -192,8 +205,8 @@ const loadCachedCoursePreview = (
 }
 
 const loadCachedAcademicLabel = () => {
-  const result = getCachedAcademicCalendar()
-  return getAcademicCalendarLabel(result.calendar)
+  const cache = academicStorage.getScheduleCache(getActiveAcademicUserId())
+  return getAcademicCalendarLabel(cache?.periods || [])
 }
 
 const loadLatestAcademic = async (
@@ -213,9 +226,9 @@ const loadLatestAcademic = async (
     && getCurrentAcademicWeek([anchoredPeriod]) !== null
   const hasCachedCourses = !!periodId
     && Object.prototype.hasOwnProperty.call(coursesByPeriod, periodId)
-  const hasRuntimeCredential = getActiveAcademicUserId() === userId
+  const hasCredential = hasAcademicCredential(userId)
 
-  if (periodId && isCurrentPeriod && !hasCachedCourses && hasRuntimeCredential) {
+  if (periodId && isCurrentPeriod && !hasCachedCourses && hasCredential) {
     const coursesResult = await settle(academicRepository.getCourses(periodId))
     if (coursesResult.ok) {
       coursesByPeriod = {
@@ -304,18 +317,20 @@ function Index() {
       : accountPromise.then((account) => academicStorage.getScheduleCache(
         account.ok ? account.value.user.id : getActiveAcademicUserId(),
       ))
-    const calendarPromise = moduleEnabled('calendar')
-      ? loadAcademicCalendar(getCalendarEducationLevel())
-        .then((result) => getAcademicCalendarLabel(result.calendar))
-      : Promise.resolve(loadCachedAcademicLabel())
-    const communityPromise = moduleEnabled('community')
-      ? settle(lifeServicesRepository.listCampusCirclePosts({ page: 1, pageSize: 8 }))
+    const communityPromise = !isQualificationEdition
+      && fullLifeServicesRepository
+      && moduleEnabled('community')
+      ? settle(fullLifeServicesRepository.listCampusCirclePosts({ page: 1, pageSize: 8 }))
       : Promise.resolve({ ok: false } as Settled<never>)
-    const communitySectionsPromise = moduleEnabled('community')
-      ? settle(lifeServicesRepository.listCampusCircleSections())
+    const communitySectionsPromise = !isQualificationEdition
+      && fullLifeServicesRepository
+      && moduleEnabled('community')
+      ? settle(fullLifeServicesRepository.listCampusCircleSections())
       : Promise.resolve({ ok: false } as Settled<never>)
-    const marketplacePromise = moduleEnabled('marketplace')
-      ? settle(lifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
+    const marketplacePromise = !isQualificationEdition
+      && fullLifeServicesRepository
+      && moduleEnabled('marketplace')
+      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
       : Promise.resolve({ ok: false } as Settled<never>)
     const [
       account,
@@ -324,7 +339,6 @@ function Index() {
       unread,
       marketplace,
       latestAcademic,
-      latestCalendarLabel,
     ] = await Promise.all([
       accountPromise,
       communityPromise,
@@ -332,7 +346,6 @@ function Index() {
       settle(noticesRepository.unreadCount()),
       marketplacePromise,
       academicPromise,
-      calendarPromise,
     ])
 
     const selectedCampus = getSelectedCampus(latestRuntimeConfig)
@@ -346,7 +359,7 @@ function Index() {
       selectedCampus,
     ))
     if (account.ok) setUsername(account.value.user.username)
-    setAcademicCalendarLabel(latestCalendarLabel)
+    setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))
     if (community.ok) {
       setCommunityPosts(latestCommunityPosts(community.value.items))
       setCommunityError(false)
@@ -378,7 +391,7 @@ function Index() {
   }, [campusName, runtimeConfig])
 
   useDidShow(() => {
-    syncCustomTabBar(0)
+    syncCustomTabBar('home')
     if (isAccountCancelled()) {
       void Taro.reLaunch({ url: '/pages/account-cancellation/index?success=1' })
       return
@@ -394,6 +407,11 @@ function Index() {
 
   const openLifeHub = async (section: LifeHubSection) => {
     const moduleKey = lifeSectionModules[section]
+    if (isQualificationEdition) {
+      const module = section === 'market' ? 'marketplace' : section === 'errands' ? 'errand' : section
+      await openMigratedFeaturePage({ module })
+      return
+    }
     if (resolveMiniappModule(runtimeConfig, moduleKey).state === 'enabled') {
       Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
     }
@@ -417,6 +435,10 @@ function Index() {
       'route' in item && item.route === route
     ))
     const moduleKey = service ? serviceModuleKeys[service.key] : undefined
+    if (isQualificationEdition && moduleKey === 'course_materials') {
+      void openMigratedFeaturePage({ module: 'course_materials' })
+      return
+    }
     if (moduleKey) {
       void openMiniappModule(moduleKey, route, { config: runtimeConfig })
       return
@@ -479,6 +501,7 @@ function Index() {
   )
   const campusConfig = runtimeConfig.campuses[campusName]
   const visibleHomeServices = homeServices.filter((service) => {
+    if (isQualificationEdition && migratedHomeServiceKeys.has(service.key)) return false
     const featureKey = serviceFeatureKeys[service.key]
     const moduleKey = serviceModuleKeys[service.key]
     return (
@@ -487,6 +510,7 @@ function Index() {
         || resolveMiniappModule(runtimeConfig, moduleKey, campusName).state !== 'hidden')
     )
   })
+  const migrationGuide = getMigrationGuideCopy(runtimeConfig)
   const visibleCommunityPosts = communityPosts.slice(0, 3)
 
   const openRuntimeBanner = (banner: RuntimeBanner) => {
@@ -650,6 +674,22 @@ function Index() {
         </View>
       </View>
 
+      {isQualificationEdition ? (
+        <View className='home-migrated motion-enter motion-enter--delay-3'>
+          <View className='home-migrated__eyebrow'>新版服务</View>
+          <Text className='home-migrated__title'>{migrationGuide.title}</Text>
+          <Text className='home-migrated__copy'>{migrationGuide.description}</Text>
+          <View
+            className='home-migrated__action'
+            hoverClass='home-migrated__action--pressed'
+            onClick={() => void openMigratedFeaturePage({ module: 'community' })}
+          >
+            <Text>{migrationGuide.entry_button_text}</Text>
+            <Image src={icons.arrow} mode='aspectFit' />
+          </View>
+          <Text className='home-migrated__hint'>{migrationGuide.hint}</Text>
+        </View>
+      ) : (<>
       <View
         className={[
           'hero-card',
@@ -861,8 +901,8 @@ function Index() {
           {!marketLoading && !marketError && marketItems.length === 0 && (
             <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
           )}
-          {!marketLoading && !marketError && marketItems.map((item) => (
-            <MarketplaceCard key={item.id} item={item} variant='compact' />
+          {!marketLoading && !marketError && FullMarketplaceCard && marketItems.map((item) => (
+            <FullMarketplaceCard key={item.id} item={item} variant='compact' />
           ))}
           <View className='market-card market-card--more' onClick={() => openModule('market')}>
             <View className='market-card__more-icon'>
@@ -872,6 +912,7 @@ function Index() {
           </View>
         </View>
       </ScrollView>
+      </>)}
 
     </View>
   )

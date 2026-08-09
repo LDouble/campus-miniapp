@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { isQualificationEdition } from '../app-edition'
 
 const VERIFICATION_PAGE = '/pages/academic-verification/index'
 const RETURN_TARGET_KEY = 'campus.academicVerification.returnTarget.v1'
@@ -6,29 +7,32 @@ const RETURN_TARGET_TTL = 30 * 60 * 1000
 
 const TAB_PAGES = new Set([
   '/pages/index/index',
-  '/pages/community/index',
+  ...(!isQualificationEdition ? ['/pages/community/index'] : []),
   '/pages/messages/index',
   '/pages/profile/index',
 ])
 
 const SAFE_PAGES = new Set([
   ...TAB_PAGES,
-  '/pages/community/detail',
-  '/pages/errands/detail',
-  '/pages/marketplace/detail',
-  '/pages/carpool/detail',
-  '/pages/my-services/index',
-  '/pages/publish/index',
+  ...(!isQualificationEdition ? [
+    '/pages/community/detail',
+    '/pages/errands/detail',
+    '/pages/marketplace/detail',
+    '/pages/carpool/detail',
+    '/pages/my-services/index',
+    '/pages/publish/index',
+    '/pages/materials/index',
+    '/pages/clubs/index',
+    '/pages/clubs/detail',
+    '/pages/clubs/edit',
+    '/pages/clubs/mine',
+  ] : []),
   '/pages/academic/schedule/index',
   '/pages/academic/grades/index',
   '/pages/academic/exams/index',
   '/pages/academic/selection/index',
-  '/pages/materials/index',
   '/pages/services/index',
-  '/pages/clubs/index',
-  '/pages/clubs/detail',
-  '/pages/clubs/edit',
-  '/pages/clubs/mine',
+  '/pages/feature-migrated/index',
 ])
 
 type ReturnTarget = {

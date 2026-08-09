@@ -2,8 +2,11 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import { useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
+import { isQualificationEdition } from '../../features/app-edition'
+import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
 import {
   getMiniappRuntimeConfig,
+  getMigrationGuideCopy,
   loadMiniappRuntimeConfig,
   openMiniappModule,
   resolveMiniappModule,
@@ -53,6 +56,15 @@ const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
   clubs: 'club',
 }
 
+const migratedServiceKeys = new Set([
+  'materials',
+  'carpool',
+  'community',
+  'market',
+  'errands',
+  'clubs',
+])
+
 const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> = [
   {
     title: '教务服务',
@@ -90,6 +102,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
 
 export default function Services() {
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
+  const migrationGuide = getMigrationGuideCopy(runtimeConfig)
 
   useDidShow(() => {
     void loadMiniappRuntimeConfig().then(setRuntimeConfig)
@@ -97,6 +110,21 @@ export default function Services() {
 
   const openService = (item: ServiceItem) => {
     const moduleKey = serviceModules[item.key]
+    if (isQualificationEdition && migratedServiceKeys.has(item.key)) {
+      const module = item.key === 'materials'
+        ? 'course_materials'
+        : item.key === 'market'
+          ? 'marketplace'
+          : item.key === 'errands'
+            ? 'errand'
+            : item.key === 'clubs'
+              ? 'club'
+              : item.key
+      void openMigratedFeaturePage({
+        module: module as 'community' | 'marketplace' | 'errand' | 'carpool' | 'course_materials' | 'club',
+      })
+      return
+    }
     if (item.lifeSection) {
       if (
         moduleKey
@@ -134,6 +162,7 @@ export default function Services() {
       <View className='services-page__content'>
         {groups.map((group) => {
           const items = group.items.filter((item) => {
+            if (isQualificationEdition && migratedServiceKeys.has(item.key)) return false
             const moduleKey = serviceModules[item.key]
             return !moduleKey
               || resolveMiniappModule(runtimeConfig, moduleKey).state !== 'hidden'
@@ -166,6 +195,21 @@ export default function Services() {
           </View>
           )
         })}
+        {isQualificationEdition && (
+          <View className='services-migrated'>
+            <View>
+              <Text className='services-migrated__title'>{migrationGuide.title}</Text>
+              <Text className='services-migrated__copy'>{migrationGuide.description}</Text>
+            </View>
+            <View
+              className='services-migrated__action'
+              hoverClass='services-migrated__action--pressed'
+              onClick={() => void openMigratedFeaturePage({ module: 'community' })}
+            >
+              {migrationGuide.entry_button_text}
+            </View>
+          </View>
+        )}
       </View>
     </View>
   )

@@ -531,7 +531,7 @@ export default function AcademicVerificationPage() {
                         value={password}
                         password
                         maxlength={256}
-                        placeholder='仅在本次运行中临时使用'
+                        placeholder='验证成功后仅保存在本机'
                         placeholderClass='verification-placeholder'
                         disabled={working}
                         onInput={(event) => setPassword(event.detail.value)}
@@ -544,8 +544,8 @@ export default function AcademicVerificationPage() {
                       {working && method === 'credentials' ? workingText : '验证并绑定'}
                     </View>
                     <Text className='verification-form__footnote'>
-                      账号密码仅在本次小程序运行期间临时保留，并随每次教务查询通过 HTTPS
-                      提交；服务端不持久化。关闭或重新启动小程序后需重新绑定。
+                      账号密码仅保存在本机小程序存储中，并随每次教务查询通过 HTTPS
+                      提交；服务端不持久化。更新绑定或注销账号时会清除本机记录。
                     </Text>
                   </View>
                 )}

@@ -3,6 +3,8 @@ import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
+import { isQualificationEdition } from '../../../features/app-edition'
+import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
 import {
   openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
@@ -174,6 +176,11 @@ export default function SelectionPage() {
   }
   const openCourseTrade = (intent: 'sell' | 'wanted') => {
     if (!activeRecord) return
+    if (isQualificationEdition) {
+      setSheet(null)
+      void openMigratedFeaturePage({ module: 'marketplace' })
+      return
+    }
     const courseName = activeRecord.courseName.trim()
     setSheet(null)
     const prefill = {
@@ -196,6 +203,10 @@ export default function SelectionPage() {
   const openCourseMaterialPage = (action?: 'upload') => {
     if (!activeRecord) return
     setSheet(null)
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'course_materials' })
+      return
+    }
     const context = {
       courseName: activeRecord.courseName,
       courseCode: activeRecord.courseCode,
@@ -285,14 +296,18 @@ export default function SelectionPage() {
             {activeRecord.status === 'selected' && (
               <View className='course-market-actions'>
                 <View>
-                  <Text>课程相关</Text>
-                  <Text>查资料，也可以求购或转卖教材</Text>
+                  <Text>{isQualificationEdition ? '新版课程服务' : '课程相关'}</Text>
+                  <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '查资料，也可以求购或转卖教材'}</Text>
                 </View>
                 <View className='course-market-actions__buttons'>
-                  <View onClick={() => openCourseMaterialPage()}>查找资料</View>
-                  <View onClick={() => openCourseMaterialPage('upload')}>分享资料</View>
-                  <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
-                  <View onClick={() => openCourseTrade('sell')}>转卖教材</View>
+                  {isQualificationEdition ? (
+                    <View onClick={() => openCourseMaterialPage()}>前往新版</View>
+                  ) : (<>
+                    <View onClick={() => openCourseMaterialPage()}>查找资料</View>
+                    <View onClick={() => openCourseMaterialPage('upload')}>分享资料</View>
+                    <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
+                    <View onClick={() => openCourseTrade('sell')}>转卖教材</View>
+                  </>)}
                 </View>
               </View>
             )}

@@ -1,13 +1,33 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import {
-  AcademicCredentialMissingError,
-  clearAcademicCredential,
-  getActiveAcademicUserId,
-  loadAcademicCredential,
-  saveAcademicCredential,
-} from '../src/api/academic-credential'
+
+let storedCredential: unknown = null
+const storageModulePath = require.resolve('../src/api/academic-credential-storage')
+require.cache[storageModulePath] = {
+  id: storageModulePath,
+  filename: storageModulePath,
+  loaded: true,
+  exports: {
+    readStoredAcademicCredential: () => storedCredential,
+    writeStoredAcademicCredential: (value: unknown) => {
+      storedCredential = JSON.parse(JSON.stringify(value))
+    },
+    removeStoredAcademicCredential: () => {
+      storedCredential = null
+    },
+  },
+  children: [],
+  paths: [],
+} as NodeModule
+
+const credentialModulePath = require.resolve('../src/api/academic-credential')
+const loadCredentialModule = () => {
+  delete require.cache[credentialModulePath]
+  return require('../src/api/academic-credential') as typeof import('../src/api/academic-credential')
+}
+
+let credentialModule = loadCredentialModule()
 
 const credential = {
   studentNo: '20260001',
@@ -17,38 +37,57 @@ const credential = {
 
 const expectMissing = (userId: number) => {
   assert.throws(
-    () => loadAcademicCredential(userId),
-    AcademicCredentialMissingError,
+    () => credentialModule.loadAcademicCredential(userId),
+    credentialModule.AcademicCredentialMissingError,
   )
 }
 
-clearAcademicCredential()
+credentialModule.clearAcademicCredential()
 expectMissing(1)
 
-saveAcademicCredential(1, credential)
-assert.equal(getActiveAcademicUserId(), 1)
-assert.deepEqual(loadAcademicCredential(1), credential)
+credentialModule.saveAcademicCredential(1, credential)
+assert.equal(credentialModule.getActiveAcademicUserId(), 1)
+assert.deepEqual(credentialModule.loadAcademicCredential(1), credential)
 
-// 平台账号切换必须清除前一账号的运行期凭据。
-saveAcademicCredential(2, { ...credential, studentNo: '20260002' })
-assert.equal(getActiveAcademicUserId(), 2)
-assert.equal(loadAcademicCredential(2).studentNo, '20260002')
+// 模拟小程序进程重启：运行时模块重载，但本地存储仍然存在。
+credentialModule = loadCredentialModule()
+assert.equal(credentialModule.getActiveAcademicUserId(), 0)
+assert.deepEqual(credentialModule.loadAcademicCredential(1), credential)
+assert.equal(credentialModule.getActiveAcademicUserId(), 1)
+
+// 平台账号切换必须清除前一账号的运行期及本地凭据。
+credentialModule.saveAcademicCredential(2, { ...credential, studentNo: '20260002' })
+assert.equal(credentialModule.getActiveAcademicUserId(), 2)
+assert.equal(credentialModule.loadAcademicCredential(2).studentNo, '20260002')
 expectMissing(1)
-assert.equal(getActiveAcademicUserId(), 0)
+assert.equal(credentialModule.getActiveAcademicUserId(), 0)
 expectMissing(2)
 
-saveAcademicCredential(2, credential)
-clearAcademicCredential(2)
-assert.equal(getActiveAcademicUserId(), 0)
+credentialModule.saveAcademicCredential(2, credential)
+credentialModule.clearAcademicCredential(2)
+assert.equal(credentialModule.getActiveAcademicUserId(), 0)
 expectMissing(2)
 
-saveAcademicCredential(3, credential)
-clearAcademicCredential()
-assert.equal(getActiveAcademicUserId(), 0)
+credentialModule.saveAcademicCredential(3, credential)
+credentialModule.clearAcademicCredential()
+assert.equal(credentialModule.getActiveAcademicUserId(), 0)
 expectMissing(3)
 
-const source = readFileSync(resolve(__dirname, '../src/api/academic-credential.ts'), 'utf8')
-assert.ok(!source.includes('@tarojs/taro'), '教务凭据模块不得依赖 Taro Storage')
-assert.ok(!source.includes('StorageSync'), '教务凭据不得写入或读取本地存储')
+storedCredential = { version: 1, platformUserId: 4, credential: { password: 'broken' } }
+credentialModule = loadCredentialModule()
+expectMissing(4)
+assert.equal(storedCredential, null)
 
-process.stdout.write('academic credential runtime-memory smoke: ok\n')
+const source = readFileSync(resolve(__dirname, '../src/api/academic-credential.ts'), 'utf8')
+assert.ok(source.includes('readStoredAcademicCredential'), '教务凭据必须支持从本地存储恢复')
+assert.ok(source.includes('writeStoredAcademicCredential'), '验证成功后必须持久化教务凭据')
+assert.ok(source.includes('removeStoredAcademicCredential'), '解绑或账号切换时必须清理本地凭据')
+
+const academicApiSource = readFileSync(resolve(__dirname, '../src/api/academic.ts'), 'utf8')
+assert.ok(
+  academicApiSource.includes("['invalid_academic_credentials', 'academic_password_expired']")
+    && academicApiSource.includes('clearAcademicCredential()'),
+  '校方拒绝或密码过期时必须清理本机旧凭据',
+)
+
+process.stdout.write('academic credential persistence smoke: ok\n')

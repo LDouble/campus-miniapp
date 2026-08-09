@@ -5,6 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import type { AcademicVerificationStatus } from '../../api/types'
 import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
+import { isQualificationEdition } from '../../features/app-edition'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -60,6 +61,10 @@ const menus = [
   },
 ] as const
 
+const visibleMenus = isQualificationEdition
+  ? menus.filter((item) => item.key === 'schedule')
+  : menus
+
 const identityMenu = {
   key: 'identity',
   name: '校园身份',
@@ -70,7 +75,7 @@ const identityMenu = {
 export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   useDidShow(() => {
-    syncCustomTabBar(3)
+    syncCustomTabBar('profile')
     void getAcademicVerificationStatus().then((status) => {
       setAcademicStatus(status)
     }).catch(() => {
@@ -152,7 +157,7 @@ export default function ProfilePage() {
             <Text className='profile-section__hint'>常用记录，一步直达</Text>
           </View>
           <View className='profile-menu'>
-            {menus.map((item) => (
+            {visibleMenus.map((item) => (
               <View
                 key={item.key}
                 className={`profile-menu__item profile-menu__item--${item.key}`}

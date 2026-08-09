@@ -15,6 +15,8 @@ import { ApiError, createIdempotencyKey, isApiError } from '../../api/client'
 import type { AccountCancellationPreflight } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
 import { clearCancelledAccountLocalData } from '../../features/account-cancellation/local'
+import { isQualificationEdition } from '../../features/app-edition'
+import { featureMigratedUrl } from '../../features/app-edition/navigation'
 import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
 import './index.scss'
 
@@ -59,6 +61,10 @@ const blockerMeta: Record<BlockerModule, {
     icon: icons.carpool,
   },
 }
+
+const qualificationBlockerRoute = (module: BlockerModule) => featureMigratedUrl({
+  module: module === 'trade_order' ? 'marketplace' : module,
+})
 
 const preflightFromError = (error: ApiError) => {
   const details = error.details
@@ -267,7 +273,11 @@ export default function AccountCancellationPage() {
                 <View
                   className='cancellation-blocker__action'
                   hoverClass='cancellation-blocker__action--pressed'
-                  onClick={() => Taro.navigateTo({ url: meta.route })}
+                  onClick={() => Taro.navigateTo({
+                    url: isQualificationEdition
+                      ? qualificationBlockerRoute(blocker.module)
+                      : meta.route,
+                  })}
                 >
                   <Text>去处理</Text><Image src={icons.arrow} mode='aspectFit' />
                 </View>

@@ -7,6 +7,7 @@ deploy_versions/
 .rn_temp/
 .playwright-mcp/
 node_modules/
+.env.local
 .DS_Store
 .swc
 project.private.config.json

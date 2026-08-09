@@ -1,5 +1,5 @@
 {
-  "miniprogramRoot": "dist/",
+  "miniprogramRoot": "dist/full/",
   "projectname": "campus-miniapp",
   "description": "",
   "appid": "wx0d9936d6708f44c0",
