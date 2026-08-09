@@ -1,0 +1,80 @@
+.feature-migrated {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 92% 8%, rgba(85, 184, 198, 0.16), transparent 30%),
+    radial-gradient(circle at 4% 85%, rgba(255, 190, 122, 0.12), transparent 32%),
+    #f4fafc;
+
+  &__content {
+    padding: 64rpx 36rpx 0;
+  }
+
+  &__card {
+    padding: 64rpx 40rpx 48rpx;
+    border: 2rpx solid rgba(48, 149, 182, 0.1);
+    border-radius: 36rpx;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 12rpx 20rpx 48rpx rgba(32, 92, 110, 0.08);
+    text-align: center;
+  }
+
+  &__mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88rpx;
+    height: 88rpx;
+    margin: 0 auto;
+    color: #fff;
+    font-size: 48rpx;
+    font-weight: 500;
+    line-height: 1;
+    background: linear-gradient(135deg, #58b8c4, #3095b6);
+    border-radius: 28rpx;
+    box-shadow: 0 12rpx 22rpx rgba(48, 149, 182, 0.2);
+  }
+
+  &__title,
+  &__message,
+  &__hint {
+    display: block;
+  }
+
+  &__title {
+    margin-top: 28rpx;
+    color: #173d49;
+    font-size: 38rpx;
+    font-weight: 700;
+  }
+
+  &__message {
+    margin-top: 18rpx;
+    color: #6f8790;
+    font-size: 27rpx;
+    line-height: 1.72;
+  }
+
+  &__action {
+    margin-top: 42rpx;
+    padding: 24rpx 0;
+    color: #fff;
+    font-size: 30rpx;
+    font-weight: 600;
+    background: #3095b6;
+    border-radius: 999rpx;
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+
+  &__action--pressed {
+    opacity: 0.82;
+    transform: scale(0.98);
+  }
+
+  &__hint {
+    margin-top: 22rpx;
+    color: #94a4a9;
+    font-size: 23rpx;
+  }
+}

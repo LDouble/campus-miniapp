@@ -1,35 +1,40 @@
 import { requestWechatSubscriptionForModule } from '../features/wechat-subscription'
 
+const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
+
+const fullTabs = [
+  {
+    pagePath: 'pages/index/index',
+    text: '首页',
+    iconPath: '/assets/tabbar/home.png',
+    selectedIconPath: '/assets/tabbar/home-active.png'
+  },
+  {
+    pagePath: 'pages/community/index',
+    text: '社区',
+    iconPath: '/assets/tabbar/community.png',
+    selectedIconPath: '/assets/tabbar/community-active.png'
+  },
+  {
+    pagePath: 'pages/messages/index',
+    text: '消息',
+    iconPath: '/assets/tabbar/messages.png',
+    selectedIconPath: '/assets/tabbar/messages-active.png'
+  },
+  {
+    pagePath: 'pages/profile/index',
+    text: '我的',
+    iconPath: '/assets/tabbar/profile.png',
+    selectedIconPath: '/assets/tabbar/profile-active.png'
+  }
+]
+
 Component({
   data: {
     selected: 0,
     hidden: false,
-    list: [
-      {
-        pagePath: 'pages/index/index',
-        text: '首页',
-        iconPath: '/assets/tabbar/home.png',
-        selectedIconPath: '/assets/tabbar/home-active.png'
-      },
-      {
-        pagePath: 'pages/community/index',
-        text: '社区',
-        iconPath: '/assets/tabbar/community.png',
-        selectedIconPath: '/assets/tabbar/community-active.png'
-      },
-      {
-        pagePath: 'pages/messages/index',
-        text: '消息',
-        iconPath: '/assets/tabbar/messages.png',
-        selectedIconPath: '/assets/tabbar/messages-active.png'
-      },
-      {
-        pagePath: 'pages/profile/index',
-        text: '我的',
-        iconPath: '/assets/tabbar/profile.png',
-        selectedIconPath: '/assets/tabbar/profile-active.png'
-      }
-    ]
+    qualification,
+    list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
   },
 
   lifetimes: {
@@ -75,6 +80,7 @@ Component({
     },
 
     publish() {
+      if (qualification) return
       requestWechatSubscriptionForModule('community')
       wx.navigateTo({ url: '/pages/publish/index' })
     }

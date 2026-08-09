@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Taro, {
   useDidHide,
   useDidShow,
+  useLoad,
   usePullDownRefresh,
   useShareAppMessage,
 } from '@tarojs/taro'
@@ -71,6 +72,12 @@ export default function CommunityPage() {
     triggerSelector: '.community-page__eyebrow',
     threshold: 52,
     releaseGap: 16,
+  })
+
+  useLoad((options) => {
+    if (!isLifeHubSection(options.section)) return
+    setActiveSection(options.section)
+    Taro.setStorageSync(LIFE_HUB_SECTION_KEY, options.section)
   })
 
   const visibleLifeSections = lifeBusinessThemeList.filter((section) => (
@@ -214,7 +221,7 @@ export default function CommunityPage() {
   }
 
   useDidShow(() => {
-    syncCustomTabBar(1)
+    syncCustomTabBar('community')
     setRefreshSignal((current) => current + 1)
     void loadMiniappRuntimeConfig().then((config) => {
       setRuntimeConfig(config)

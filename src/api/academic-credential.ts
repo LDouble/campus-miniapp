@@ -1,3 +1,10 @@
+import {
+  readStoredAcademicCredential,
+  removeStoredAcademicCredential,
+  writeStoredAcademicCredential,
+  type StoredAcademicCredential,
+} from './academic-credential-storage'
+
 export type AcademicCredential = {
   studentNo: string
   password: string
@@ -30,6 +37,52 @@ const clearRuntimeCredentials = () => {
   activeUserId = 0
 }
 
+const isAcademicCredential = (value: unknown): value is AcademicCredential => {
+  if (!value || typeof value !== 'object') return false
+  const credential = value as Partial<AcademicCredential>
+  return (
+    typeof credential.studentNo === 'string'
+    && !!credential.studentNo.trim()
+    && typeof credential.password === 'string'
+    && !!credential.password
+    && isAcademicEducationLevel(credential.educationLevel)
+  )
+}
+
+const isStoredAcademicCredential = (
+  value: unknown,
+): value is StoredAcademicCredential => {
+  if (!value || typeof value !== 'object') return false
+  const stored = value as Partial<StoredAcademicCredential>
+  return (
+    stored.version === 1
+    && typeof stored.platformUserId === 'number'
+    && validUserId(stored.platformUserId)
+    && isAcademicCredential(stored.credential)
+  )
+}
+
+const restoreAcademicCredential = (platformUserId: number) => {
+  const stored = readStoredAcademicCredential()
+  if (!isStoredAcademicCredential(stored)) {
+    if (stored) removeStoredAcademicCredential()
+    return null
+  }
+  if (stored.platformUserId !== platformUserId) {
+    removeStoredAcademicCredential()
+    return null
+  }
+
+  const credential = {
+    studentNo: stored.credential.studentNo.trim(),
+    password: stored.credential.password,
+    educationLevel: stored.credential.educationLevel,
+  }
+  credentialsByUser.set(platformUserId, credential)
+  activeUserId = platformUserId
+  return credential
+}
+
 export const getActiveAcademicUserId = () => (
   activeUserId && credentialsByUser.has(activeUserId) ? activeUserId : 0
 )
@@ -53,12 +106,18 @@ export const saveAcademicCredential = (
   // 小程序运行期间若平台账号发生切换，不能让新账号复用旧账号的凭据。
   if (activeUserId && activeUserId !== platformUserId) clearRuntimeCredentials()
 
-  credentialsByUser.set(platformUserId, {
+  const normalizedCredential: AcademicCredential = {
     studentNo,
     password: credential.password,
     educationLevel: credential.educationLevel,
-  })
+  }
+  credentialsByUser.set(platformUserId, normalizedCredential)
   activeUserId = platformUserId
+  writeStoredAcademicCredential({
+    version: 1,
+    platformUserId,
+    credential: normalizedCredential,
+  })
 }
 
 export const loadAcademicCredential = (platformUserId: number): AcademicCredential => {
@@ -66,23 +125,42 @@ export const loadAcademicCredential = (platformUserId: number): AcademicCredenti
 
   if (activeUserId && activeUserId !== platformUserId) {
     clearRuntimeCredentials()
+    removeStoredAcademicCredential()
     throw new AcademicCredentialMissingError()
   }
 
   const credential = credentialsByUser.get(platformUserId)
+    || restoreAcademicCredential(platformUserId)
   if (!credential) throw new AcademicCredentialMissingError()
 
   activeUserId = platformUserId
   return { ...credential }
 }
 
+export const hasAcademicCredential = (platformUserId: number) => {
+  try {
+    loadAcademicCredential(platformUserId)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export const clearAcademicCredential = (platformUserId?: number) => {
   if (!platformUserId) {
     clearRuntimeCredentials()
+    removeStoredAcademicCredential()
     return
   }
   if (!validUserId(platformUserId)) return
 
   credentialsByUser.delete(platformUserId)
   if (activeUserId === platformUserId) activeUserId = 0
+  const stored = readStoredAcademicCredential()
+  if (
+    !isStoredAcademicCredential(stored)
+    || stored.platformUserId === platformUserId
+  ) {
+    removeStoredAcademicCredential()
+  }
 }

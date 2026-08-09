@@ -23,5 +23,19 @@ declare namespace NodeJS {
      * @see https://taro-docs.jd.com/docs/next/env-mode-config#特殊环境变量-taro_app_id
      */
     TARO_APP_ID: string
+    /** 当前构建版本；未配置时保持完整版本兼容行为。 */
+    TARO_APP_EDITION?: 'full' | 'qualification'
+    /** 当前小程序登录所用 AppID，必须与 TARO_APP_ID 一致。 */
+    TARO_APP_WECHAT_APP_ID?: string
+    /** 新版小程序 AppID，仅资格版迁移入口使用。 */
+    TARO_APP_TARGET_WECHAT_APP_ID?: string
+    /** 新版小程序默认打开路径。 */
+    TARO_APP_TARGET_DEFAULT_PATH?: string
+    /** 非生产构建打开新版小程序时使用的环境版本。 */
+    TARO_APP_TARGET_MINIAPP_ENV_VERSION?: 'develop' | 'trial' | 'release'
+    /** 完整版构建脚本读取的当前小程序 AppID。 */
+    TARO_APP_FULL_WECHAT_APP_ID?: string
+    /** 资格版构建脚本读取的当前小程序 AppID。 */
+    TARO_APP_QUALIFICATION_WECHAT_APP_ID?: string
   }
 }

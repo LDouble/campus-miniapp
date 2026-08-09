@@ -4,6 +4,8 @@ import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
+import { isQualificationEdition } from '../../../features/app-edition'
+import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
 import {
   getMiniappRuntimeConfig,
   getSectionStartTime,
@@ -136,16 +138,16 @@ function CourseDetailCard({
         <View className='course-resource-actions course-resource-actions--course-card'>
           <View className='course-resource-actions__primary' onClick={onFindMaterials}>
             <View>
-              <Text>查看课程资料</Text>
-              <Text>已带入课程与当前学期</Text>
+              <Text>{isQualificationEdition ? '新版课程服务' : '查看课程资料'}</Text>
+              <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '已带入课程与当前学期'}</Text>
             </View>
             <Text>查看 ›</Text>
           </View>
-          <View className='course-resource-actions__secondary'>
+          {!isQualificationEdition && <View className='course-resource-actions__secondary'>
             <View onClick={onShareMaterials}>分享资料</View>
             <View onClick={onWanted}>求购教材</View>
             <View onClick={onSell}>转卖教材</View>
-          </View>
+          </View>}
         </View>
       </View>
     </View>
@@ -427,6 +429,10 @@ export default function SchedulePage() {
 
   const openCourseTrade = (course: Course, intent: MarketplaceIntent) => {
     closeCourseFloat()
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'marketplace' })
+      return
+    }
     const courseName = course.name.trim()
     const prefill = {
       intent,
@@ -447,6 +453,10 @@ export default function SchedulePage() {
   }
   const openCourseMaterialPage = (course: Course, action?: 'upload') => {
     setSheet(null)
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'course_materials' })
+      return
+    }
     const context = {
       courseName: course.name,
       courseCode: course.courseCode,

@@ -127,6 +127,56 @@ page {
 .services-group:nth-of-type(3) .services-group__icon { background: #fff0df; }
 .services-group:nth-of-type(4) .services-group__icon { background: #eee8fa; }
 
+.services-migrated {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 28rpx;
+  margin-top: 24rpx;
+  background: linear-gradient(135deg, #e8f5f2, #fff0df);
+  border: 2rpx solid rgba(255, 255, 255, 0.96);
+  border-radius: 32rpx;
+  box-shadow: 0 12rpx 30rpx rgba(50, 92, 84, 0.055);
+
+  > view:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title,
+  &__copy {
+    display: block;
+  }
+
+  &__title {
+    color: #2b5059;
+    font-size: 27rpx;
+    font-weight: 750;
+  }
+
+  &__copy {
+    margin-top: 8rpx;
+    color: #748d89;
+    font-size: 21rpx;
+    line-height: 1.55;
+  }
+
+  &__action {
+    flex: none;
+    padding: 18rpx 22rpx;
+    color: #fff;
+    font-size: 22rpx;
+    font-weight: 700;
+    background: #4d9786;
+    border-radius: 20rpx;
+
+    &--pressed {
+      opacity: 0.78;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .services-group__item {
     transition: none;

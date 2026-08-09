@@ -8,6 +8,8 @@ import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
+import { isQualificationEdition, type MigratedFeatureModule } from '../../features/app-edition'
+import { featureMigratedUrl } from '../../features/app-edition/navigation'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -48,6 +50,16 @@ const actionRoute = (path: string) => {
   return `/pages/community/detail?id=${id}&mode=post`
 }
 
+const migratedModuleForAction = (path: string): MigratedFeatureModule | null => {
+  if (/campus-circle|\/pages\/(community|publish)/.test(path)) return 'community'
+  if (/marketplace|\/pages\/marketplace/.test(path)) return 'marketplace'
+  if (/errands|\/pages\/errands/.test(path)) return 'errand'
+  if (/carpool|\/pages\/carpool/.test(path)) return 'carpool'
+  if (/materials|course-material/.test(path)) return 'course_materials'
+  if (/clubs|club/.test(path)) return 'club'
+  return null
+}
+
 export default function MessagesPage() {
   const [messages, setMessages] = useState<Notice[]>([])
   const [tab, setTab] = useState<Tab>('全部')
@@ -79,7 +91,7 @@ export default function MessagesPage() {
   }
 
   useDidShow(() => {
-    syncCustomTabBar(2)
+    syncCustomTabBar('messages')
     void load()
   })
 
@@ -133,6 +145,13 @@ export default function MessagesPage() {
   const goAction = (message: Notice) => {
     const route = actionRoute(message.action_path)
     setActive(null)
+    const migratedModule = migratedModuleForAction(message.action_path)
+    if (isQualificationEdition && migratedModule) {
+      Taro.navigateTo({
+        url: featureMigratedUrl({ module: migratedModule, path: route || undefined }),
+      })
+      return
+    }
     if (route) {
       Taro.navigateTo({ url: route })
       return

@@ -9,6 +9,8 @@ import {
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
+import { isQualificationEdition } from '../../../features/app-edition'
+import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
@@ -268,6 +270,10 @@ export default function GradesPage() {
 
   const openGradeMaterials = (grade: GradeRecord, action?: 'upload') => {
     setSheet(null)
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'course_materials' })
+      return
+    }
     const context = {
       courseName: grade.courseName,
       courseCode: grade.courseCode,
@@ -282,6 +288,11 @@ export default function GradesPage() {
 
   const openCourseTrade = (intent: 'sell' | 'wanted') => {
     if (!activeGrade) return
+    if (isQualificationEdition) {
+      setSheet(null)
+      void openMigratedFeaturePage({ module: 'marketplace' })
+      return
+    }
     const courseName = activeGrade.courseName.trim()
     setSheet(null)
     const prefill = {
@@ -501,16 +512,16 @@ export default function GradesPage() {
                   onClick={() => openGradeMaterials(activeGrade)}
                 >
                   <View>
-                    <Text>查看课程资料</Text>
-                    <Text>只带入课程和学期，不会带入成绩</Text>
+                    <Text>{isQualificationEdition ? '新版课程服务' : '查看课程资料'}</Text>
+                    <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '只带入课程和学期，不会带入成绩'}</Text>
                   </View>
                   <Text>查看 ›</Text>
                 </View>
-                <View className='course-resource-actions__secondary'>
+                {!isQualificationEdition && <View className='course-resource-actions__secondary'>
                   <View onClick={() => openGradeMaterials(activeGrade, 'upload')}>分享资料</View>
                   <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
                   <View onClick={() => openCourseTrade('sell')}>出售相关资料</View>
-                </View>
+                </View>}
               </View>
             </View>
           )}

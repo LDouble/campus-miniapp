@@ -3,6 +3,7 @@ import { apiRequest, isApiError } from './client'
 import { getCurrentIdentity } from './account'
 import {
   AcademicCredentialMissingError,
+  clearAcademicCredential,
   loadAcademicCredential,
 } from './academic-credential'
 import type {
@@ -70,6 +71,12 @@ const academicPost = async <T>(path: string, periodId?: string) => {
   try {
     return await request()
   } catch (error) {
+    if (
+      isApiError(error)
+      && ['invalid_academic_credentials', 'academic_password_expired'].includes(error.code)
+    ) {
+      clearAcademicCredential()
+    }
     const delay = retryDelay(error)
     if (!delay) throw error
     await wait(delay)

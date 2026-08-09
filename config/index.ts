@@ -6,6 +6,52 @@ import vitePluginImp from 'vite-plugin-imp'
 import { loadApiEndpoints } from './api-endpoints'
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+  const requestedEdition = process.env.TARO_APP_EDITION
+  const appEdition = requestedEdition || 'full'
+
+  if (appEdition !== 'full' && appEdition !== 'qualification') {
+    throw new Error(
+      `不支持的 TARO_APP_EDITION：${appEdition}。仅支持 full 或 qualification。`,
+    )
+  }
+
+  const configuredProjectAppId = process.env.TARO_APP_ID?.trim()
+  const configuredWechatAppId = process.env.TARO_APP_WECHAT_APP_ID?.trim()
+  if (
+    configuredProjectAppId &&
+    configuredWechatAppId &&
+    configuredProjectAppId !== configuredWechatAppId
+  ) {
+    throw new Error(
+      'TARO_APP_ID 必须与 TARO_APP_WECHAT_APP_ID 一致，避免微信项目配置和登录 AppID 不匹配。',
+    )
+  }
+
+  const currentWechatAppId =
+    configuredWechatAppId ||
+    configuredProjectAppId ||
+    (requestedEdition ? '' : 'wx0d9936d6708f44c0')
+  if (!currentWechatAppId) {
+    throw new Error(
+      `构建 ${appEdition} 版本时必须配置 TARO_APP_ID 和 TARO_APP_WECHAT_APP_ID。`,
+    )
+  }
+
+  const targetWechatAppId = process.env.TARO_APP_TARGET_WECHAT_APP_ID?.trim() || ''
+  const targetDefaultPath =
+    process.env.TARO_APP_TARGET_DEFAULT_PATH?.trim() || 'pages/index/index'
+  const requestedTargetMiniappEnvVersion =
+    process.env.TARO_APP_TARGET_MINIAPP_ENV_VERSION?.trim()
+  const targetMiniappEnvVersion =
+    process.env.NODE_ENV === 'production'
+      ? 'release'
+      : requestedTargetMiniappEnvVersion || 'release'
+  if (!['develop', 'trial', 'release'].includes(targetMiniappEnvVersion)) {
+    throw new Error(
+      `不支持的 TARO_APP_TARGET_MINIAPP_ENV_VERSION：${targetMiniappEnvVersion}。仅支持 develop、trial 或 release。`,
+    )
+  }
+  const outputRoot = `dist/${appEdition}`
   const apiEndpoints = loadApiEndpoints(
     process.env,
     process.env.NODE_ENV === 'production',
@@ -21,23 +67,25 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       828: 1.81 / 2
     },
     sourceRoot: 'src',
-    outputRoot: 'dist',
+    outputRoot,
     plugins: ['@tarojs/plugin-html'],
     defineConstants: {
       __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(apiEndpoints.review),
       __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(apiEndpoints.production),
-      __CAMPUS_WECHAT_APP_ID__: JSON.stringify(
-        process.env.TARO_APP_WECHAT_APP_ID || 'wx0d9936d6708f44c0',
-      ),
+      __CAMPUS_WECHAT_APP_ID__: JSON.stringify(currentWechatAppId),
       __CAMPUS_APP_RELEASE__: JSON.stringify(
         process.env.TARO_APP_RELEASE || process.env.npm_package_version || 'development',
       ),
+      __CAMPUS_APP_EDITION__: JSON.stringify(appEdition),
+      __CAMPUS_TARGET_WECHAT_APP_ID__: JSON.stringify(targetWechatAppId),
+      __CAMPUS_TARGET_DEFAULT_PATH__: JSON.stringify(targetDefaultPath),
+      __CAMPUS_TARGET_MINIAPP_ENV_VERSION__: JSON.stringify(targetMiniappEnvVersion),
     },
     copy: {
       patterns: [
         {
           from: 'src/assets/tabbar',
-          to: 'dist/assets/tabbar'
+          to: `${outputRoot}/assets/tabbar`
         }
       ],
       options: {
