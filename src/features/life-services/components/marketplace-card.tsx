@@ -30,6 +30,8 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
         isWanted ? 'marketplace-card--wanted' : 'marketplace-card--sell',
       ].filter(Boolean).join(' ')}
       hoverClass='marketplace-card--pressed'
+      ariaRole='button'
+      ariaLabel={`${isWanted ? '求购' : '出售'}，${item.description}，${formatMoney(item.price_cents)}`}
       onClick={() => openDetail(item.id)}
     >
       <View className={`marketplace-card__cover ${cover ? '' : 'marketplace-card__cover--placeholder'}`}>
@@ -37,15 +39,14 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
           <Image src={cover} mode='aspectFill' lazyLoad />
         ) : (
           <View className={`marketplace-card__placeholder marketplace-card__placeholder--tone-${placeholderTone}`}>
+            <Text className='marketplace-card__placeholder-kicker'>CAMPUS MARKET</Text>
             <Text className='marketplace-card__placeholder-quote'>“</Text>
             <Text className='marketplace-card__placeholder-headline'>
               {item.description}
             </Text>
           </View>
         )}
-        {cover && (
-          <Text className='marketplace-card__status'>{formatStatus(item.status)}</Text>
-        )}
+        <Text className='marketplace-card__status'>{formatStatus(item.status)}</Text>
       </View>
       <View className='marketplace-card__body'>
         {cover && (
@@ -57,10 +58,12 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
             {isWanted ? '预算 ' : ''}{formatMoney(item.price_cents)}
           </Text>
         </View>
-        {item.course_name && <Text className='marketplace-card__course'>{item.course_name}</Text>}
+        {variant === 'grid' && item.course_name && (
+          <Text className='marketplace-card__course'>{item.course_name}</Text>
+        )}
         <View className='marketplace-card__footer'>
-          <Text>校内面交</Text>
-          <Text>查看 ›</Text>
+          <Text>{variant === 'compact' ? item.course_name || '校园闲置' : '校内面交'}</Text>
+          <Text>{variant === 'compact' ? '校内面交' : '查看详情'}</Text>
         </View>
       </View>
     </View>
