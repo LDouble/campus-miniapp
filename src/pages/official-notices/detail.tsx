@@ -67,6 +67,19 @@ export default function OfficialNoticeDetailPage() {
     }
   }
 
+  const copyOriginalUrl = async (url: string) => {
+    const target = normalizeWebViewUrl(url)
+    if (!target) {
+      await Taro.showToast({ title: '原文地址无效', icon: 'none' })
+      return
+    }
+    try {
+      await Taro.setClipboardData({ data: target })
+    } catch {
+      await Taro.showToast({ title: '复制失败，请稍后重试', icon: 'none' })
+    }
+  }
+
   const blocks = notice ? parseOfficialNoticeMarkdown(notice.body) : []
 
   return (
@@ -121,7 +134,7 @@ export default function OfficialNoticeDetailPage() {
 
           <View className='official-notice-detail__actions'>
             {!!notice.original_url && (
-              <View onClick={() => void openExternal(notice.original_url || '')}>查看学校原文</View>
+              <View onClick={() => void copyOriginalUrl(notice.original_url || '')}>复制原文地址</View>
             )}
             <Button openType='share'>分享给同学</Button>
           </View>
