@@ -46,11 +46,9 @@ page { background: #f7faf8; }
   }
 
   &__date,
-  &__timezone,
   &__hint { position: relative; z-index: 1; display: block; }
 
   &__date { font-size: 38rpx; font-weight: 780; letter-spacing: 2rpx; }
-  &__timezone { margin-top: 8rpx; color: rgba(255, 255, 255, 0.7); font-size: 20rpx; }
   &__hint { margin-top: 18rpx; color: rgba(255, 255, 255, 0.68); font-size: 19rpx; line-height: 1.6; }
 
   &__summary {
