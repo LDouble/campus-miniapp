@@ -323,6 +323,7 @@ export default function PublishPage() {
         : 'create'
     const initialId = Number(options.id || 0)
     const initialCommunitySectionId = Number(options.community_section_id || 0)
+    const initialCommunityTopicId = Number(options.community_topic_id || 0)
     setSection(initialSection)
     setMode(initialMode)
     setResourceId(initialId)
@@ -350,11 +351,17 @@ export default function PublishPage() {
         academicPeriodLabel: prefill.academicPeriodLabel,
         marketSource: prefill.source,
       } : initialForm
-      setForm(
-        initialSection === 'community' && initialCommunitySectionId > 0
-          ? { ...nextForm, communitySectionId: initialCommunitySectionId }
-          : nextForm,
-      )
+      setForm(initialSection === 'community'
+        ? {
+          ...nextForm,
+          communitySectionId: Number.isInteger(initialCommunitySectionId) && initialCommunitySectionId > 0
+            ? initialCommunitySectionId
+            : nextForm.communitySectionId,
+          communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
+            ? initialCommunityTopicId
+            : nextForm.communityTopicId,
+        }
+        : nextForm)
     }
     void lifeServicesRepository.listCampusCircleSections()
       .then((result) => setSections(result.items))
