@@ -150,16 +150,6 @@ const homeServiceKeys = new Set([
   'clubs',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
-const featuredHomeServiceKeys = new Set([
-  'schedule',
-  'grades',
-  'exams',
-  'materials',
-  'calendar',
-  'shuttle',
-  'community',
-  'market',
-])
 const migratedHomeServiceKeys = new Set([
   'materials',
   'community',
@@ -544,10 +534,6 @@ function Index() {
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
   const visibleCommunityPosts = communityPosts.slice(0, 3)
-  const featuredHomeServices = [
-    ...visibleHomeServices.filter((service) => featuredHomeServiceKeys.has(service.key)),
-    ...visibleHomeServices.filter((service) => !featuredHomeServiceKeys.has(service.key)),
-  ].slice(0, 8)
 
   const openRuntimeBanner = (banner: RuntimeBanner) => {
     if (banner.action.type === 'miniapp_path' && banner.action.value) {
@@ -707,7 +693,7 @@ function Index() {
           </View>
         </View>
         <View className='service-panel__home-grid'>
-          {featuredHomeServices.map((item) => (
+          {visibleHomeServices.map((item) => (
             <View
               key={item.key}
               className={`service-panel__grid-item service-panel__grid-item--${item.tone}`}

@@ -742,7 +742,7 @@ page { background: #faf7f2; }
     align-items: center;
     justify-content: space-between;
     min-height: 72rpx;
-    padding: 0 4rpx 16rpx;
+    padding: 0 0 16rpx;
   }
 
   &__title-group {
@@ -1033,12 +1033,14 @@ page { background: #faf7f2; }
 
 .service-panel__home-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8rpx;
+  grid-template-columns: repeat(5, 104rpx);
+  justify-content: space-between;
+  gap: 10rpx 0;
+  margin: 0 -21rpx;
 
   .service-panel__grid-item {
     width: auto;
-    height: 128rpx;
+    height: 116rpx;
   }
 }
 
@@ -1077,7 +1079,7 @@ page { background: #faf7f2; }
   justify-content: center;
   width: 62rpx;
   height: 62rpx;
-  margin-bottom: 10rpx;
+  margin-bottom: 9rpx;
   background: #e2f3ee;
   border-radius: 18rpx;
   box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.86);
@@ -1121,7 +1123,7 @@ page { background: #faf7f2; }
   max-width: 100%;
   overflow: hidden;
   color: #31515b;
-  font-size: 23rpx;
+  font-size: 22rpx;
   font-weight: 650;
   text-align: center;
   text-overflow: ellipsis;
