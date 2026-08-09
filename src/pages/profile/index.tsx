@@ -150,40 +150,40 @@ export default function ProfilePage() {
               {studentNumber ? `学号 ${studentNumber}` : '中国海洋大学校园服务账号'}
             </Text>
           </View>
-          <View
-            className={[
-              'profile-card__badge',
-              identityVerified ? 'profile-card__badge--verified' : '',
-              identityPending ? 'profile-card__badge--pending' : '',
-            ].filter(Boolean).join(' ')}
-            hoverClass='profile-card__badge--pressed'
-            ariaRole='button'
-            ariaLabel={`校园身份，${identityMeta}`}
-            onClick={() => openMenu(identityMenu)}
-          >
-            <Text>{identityBadgeText}</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
-          </View>
-        </View>
-
-        <View
-          className='profile-checkin motion-enter motion-enter--delay-1'
-          hoverClass='profile-checkin--pressed'
-          ariaRole='button'
-          ariaLabel={checkinStatus?.checked_in ? '今日已签到，查看签到记录' : '前往每日签到'}
-          onClick={() => Taro.navigateTo({ url: '/pages/daily-checkin/index' })}
-        >
-          <View className='profile-checkin__mark'>签</View>
-          <View className='profile-checkin__main'>
-            <Text>每日签到</Text>
-            <Text>
-              {checkinStatus
-                ? `连续 ${checkinStatus.consecutive_days} 天 · ${checkinStatus.enabled ? `今日 ${checkinStatus.today_reward} 经验` : '暂未开放'}`
-                : '积累连续签到，获得成长经验'}
-            </Text>
-          </View>
-          <View className={checkinStatus?.checked_in ? 'profile-checkin__action is-done' : 'profile-checkin__action'}>
-            {checkinStatus?.checked_in ? '已签到' : checkinStatus?.enabled === false ? '查看' : '去签到'}
+          <View className='profile-card__actions'>
+            <View
+              className={[
+                'profile-card__badge',
+                identityVerified ? 'profile-card__badge--verified' : '',
+                identityPending ? 'profile-card__badge--pending' : '',
+              ].filter(Boolean).join(' ')}
+              hoverClass='profile-card__badge--pressed'
+              ariaRole='button'
+              ariaLabel={`校园身份，${identityMeta}`}
+              onClick={() => openMenu(identityMenu)}
+            >
+              <Text>{identityBadgeText}</Text>
+              <Image src={icons.arrow} mode='aspectFit' />
+            </View>
+            <View
+              className={[
+                'profile-card__checkin',
+                checkinStatus?.checked_in ? 'profile-card__checkin--done' : '',
+              ].filter(Boolean).join(' ')}
+              hoverClass='profile-card__checkin--pressed'
+              ariaRole='button'
+              ariaLabel={checkinStatus?.checked_in ? '今日已签到，查看签到记录' : '前往每日签到'}
+              onClick={() => Taro.navigateTo({ url: '/pages/daily-checkin/index' })}
+            >
+              <View />
+              <Text>
+                {checkinStatus?.checked_in
+                  ? '已签到'
+                  : checkinStatus?.enabled === false
+                    ? '签到'
+                    : '去签到'}
+              </Text>
+            </View>
           </View>
         </View>
 
