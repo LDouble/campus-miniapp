@@ -1594,7 +1594,7 @@ page { background: #faf7f2; }
 
   &--market {
     width: 280rpx;
-    min-height: 336rpx;
+    height: 356rpx;
     box-sizing: border-box;
     padding: 24rpx;
     white-space: normal;
@@ -1615,6 +1615,7 @@ page { background: #faf7f2; }
 
 .market-list {
   display: inline-flex;
+  align-items: stretch;
   gap: 18rpx;
   padding: 3rpx 24rpx 14rpx 0;
 }
@@ -1758,7 +1759,8 @@ page { background: #faf7f2; }
     align-items: center;
     justify-content: center;
     width: 184rpx;
-    min-height: 336rpx;
+    height: 356rpx;
+    min-height: 0;
     color: #708985;
     font-size: 25rpx;
     background: linear-gradient(145deg, rgba(238, 249, 246, 0.88), rgba(255, 255, 255, 0.9));

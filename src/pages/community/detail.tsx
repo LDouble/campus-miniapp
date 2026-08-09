@@ -15,6 +15,7 @@ import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { openContentReport } from '../../features/content-report'
 import { formatDateTime, formatStatus } from '../../features/life-services/format'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
   communityAuthorInitial,
@@ -107,6 +108,7 @@ export default function CommunityDetailPage() {
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
         : await lifeServicesRepository.likeCampusCirclePost(post.id)
       setPost(result)
+      markLifeHubSectionDirty('community')
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       Taro.showToast({
@@ -145,6 +147,7 @@ export default function CommunityDetailPage() {
           : current)
       }
       setComment('')
+      markLifeHubSectionDirty('community')
       closeCommentComposer()
       Taro.showToast({
         title: created.status === 'approved' ? '评论已发布' : '评论已提交审核',

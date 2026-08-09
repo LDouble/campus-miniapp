@@ -2,7 +2,7 @@ import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { MarketplaceListingView } from '../../../api/types'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
-import { formatMoney, formatStatus } from '../format'
+import { formatMoney } from '../format'
 import './marketplace-card.scss'
 
 const openDetail = (id: number) => {
@@ -46,14 +46,13 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
             </Text>
           </View>
         )}
-        <Text className='marketplace-card__status'>{formatStatus(item.status)}</Text>
+        <Text className='marketplace-card__intent'>{isWanted ? '求购' : '出售'}</Text>
       </View>
       <View className='marketplace-card__body'>
         {cover && (
           <Text className='marketplace-card__description'>{item.description}</Text>
         )}
         <View className='marketplace-card__price-line'>
-          <Text className='marketplace-card__intent'>{isWanted ? '求购' : '出售'}</Text>
           <Text className='marketplace-card__price'>
             {isWanted ? '预算 ' : ''}{formatMoney(item.price_cents)}
           </Text>

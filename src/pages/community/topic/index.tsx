@@ -10,6 +10,7 @@ import {
   topicPeriodLabel,
 } from '../../../features/community/topic'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
 import CommunityPostCard from '../../../features/community/post-card'
 import './index.scss'
 
@@ -52,6 +53,7 @@ export default function CommunityTopicPage() {
       ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
       : await lifeServicesRepository.likeCampusCirclePost(post.id)
     setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
+    markLifeHubSectionDirty('community')
   }
   const openPost = (post: CampusCirclePostView) => Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post` })
   const openPublisher = () => {

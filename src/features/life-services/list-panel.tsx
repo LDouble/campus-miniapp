@@ -14,6 +14,11 @@ import {
   type MarketplaceSearchPrefill,
 } from './marketplace-prefill'
 import { lifeServicesRepository } from './repository'
+import {
+  getLifeHubRefreshRevision,
+  isLifeHubCacheReusable,
+  markLifeHubSectionFresh,
+} from './refresh-policy'
 import CarpoolCard from './components/carpool-card'
 import CarpoolFilters, {
   type CarpoolFilterValue,
@@ -27,6 +32,24 @@ import './list-panel.scss'
 
 export type LifeServiceSection = Exclude<LifeHubSection, 'community'>
 type ServiceItem = ErrandView | MarketplaceListingView | CarpoolTripView
+type LifeServiceCacheEntry = {
+  items: ServiceItem[]
+  page: number
+  total: number
+  refreshedAt: number
+  revision: number
+}
+
+const lifeServiceCache = new Map<string, LifeServiceCacheEntry>()
+const LIFE_SERVICE_CACHE_LIMIT = 24
+
+const saveLifeServiceCache = (key: string, entry: LifeServiceCacheEntry) => {
+  lifeServiceCache.delete(key)
+  lifeServiceCache.set(key, entry)
+  if (lifeServiceCache.size <= LIFE_SERVICE_CACHE_LIMIT) return
+  const oldestKey = lifeServiceCache.keys().next().value
+  if (oldestKey) lifeServiceCache.delete(oldestKey)
+}
 
 type Props = {
   section: LifeServiceSection
@@ -101,6 +124,12 @@ export default function LifeServiceListPanel({
   const [courseSearch, setCourseSearch] = useState<MarketplaceSearchPrefill | null>(null)
   const requestSequence = useRef(0)
   const copy = lifeBusinessThemes[section]
+  const queryKey = useMemo(() => JSON.stringify({
+    section,
+    keyword,
+    marketFilters,
+    carpoolFilters,
+  }), [carpoolFilters, keyword, marketFilters, section])
 
   const load = useCallback(async (nextPage = 1, append = false) => {
     const requestId = ++requestSequence.current
@@ -127,11 +156,24 @@ export default function LifeServiceListPanel({
             page: nextPage,
           })
       if (requestId !== requestSequence.current) return
-      setItems((current) => append
-        ? mergeUniqueItems(current, result.items)
-        : result.items)
+      const refreshedAt = Date.now()
+      const revision = getLifeHubRefreshRevision(section)
+      setItems((current) => {
+        const nextItems = append
+          ? mergeUniqueItems(current, result.items)
+          : result.items
+        saveLifeServiceCache(queryKey, {
+          items: nextItems,
+          page: result.page,
+          total: Number(result.total),
+          refreshedAt,
+          revision,
+        })
+        return nextItems
+      })
       setPage(result.page)
       setTotal(Number(result.total))
+      markLifeHubSectionFresh(section, refreshedAt)
     } catch (loadError) {
       if (requestId !== requestSequence.current) return
       setError(isApiError(loadError)
@@ -153,6 +195,7 @@ export default function LifeServiceListPanel({
     marketFilters.intent,
     marketFilters.maxPriceCents,
     marketFilters.minPriceCents,
+    queryKey,
     section,
   ])
 
@@ -163,8 +206,25 @@ export default function LifeServiceListPanel({
   }, [section])
 
   useEffect(() => {
+    const cached = lifeServiceCache.get(queryKey)
+    if (
+      cached
+      && isLifeHubCacheReusable(
+        section,
+        cached.revision,
+        cached.refreshedAt,
+      )
+    ) {
+      setItems(cached.items)
+      setPage(cached.page)
+      setTotal(cached.total)
+      setError('')
+      setLoading(false)
+      markLifeHubSectionFresh(section, cached.refreshedAt)
+      return
+    }
     void load(1, false)
-  }, [load, refreshSignal])
+  }, [load, queryKey, refreshSignal, section])
 
   useEffect(() => {
     if (searchFocusSignal > 0) setSearchFocused(true)

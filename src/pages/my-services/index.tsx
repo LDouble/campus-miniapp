@@ -29,6 +29,7 @@ import {
   remainingSeats,
 } from '../../features/life-services/format'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import './index.scss'
 
 type Section = 'published' | 'errands' | 'orders' | 'carpool'
@@ -363,6 +364,7 @@ export default function MyServicesPage() {
       setItems((current) => current.map((item) => (
         'order_no' in item && item.id === updated.id ? updated : item
       )))
+      markLifeHubSectionDirty('market')
       Taro.showToast({ title: action === 'cancel' ? '订单已取消' : '订单已完成', icon: 'success' })
     } catch (actionError) {
       Taro.showToast({

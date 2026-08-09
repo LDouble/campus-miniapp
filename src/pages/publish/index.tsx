@@ -21,6 +21,7 @@ import {
   type MarketplaceSource,
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
 import './index.scss'
 
@@ -605,6 +606,7 @@ export default function PublishPage() {
           }
         }
       }
+      markLifeHubSectionDirty(section)
       await navigateAfterSubmit(id)
     } catch (error) {
       if (isApiError(error) && error.code === 'academic_verification_required') return
