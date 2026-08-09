@@ -1,0 +1,9 @@
+@use '../../../features/community/feed-panel.scss';
+
+.community-topic-page { min-height: 100vh; background: #f7f8f6; }
+.community-topic-page__content { padding: 150rpx 24rpx 36rpx; }
+.community-topic-page__hero { margin-bottom: 24rpx; padding: 28rpx; border-radius: 24rpx; background: #e8f5f1; }
+.community-topic-page__hero text { display: block; }
+.community-topic-page__hero text:first-child { color: #164e4b; font-size: 38rpx; font-weight: 600; }
+.community-topic-page__hero text:last-child { margin-top: 12rpx; color: #52706d; font-size: 26rpx; }
+.community-topic-page__state { padding: 70rpx 0; color: #778181; text-align: center; }

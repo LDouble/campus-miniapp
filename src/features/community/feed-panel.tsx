@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
-import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
+import { Image, Text, View } from '@tarojs/components'
+import type { CampusCircleHome, CampusCirclePostView, CampusCircleSectionView, CampusCircleTopicView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -57,6 +57,7 @@ export default function CommunityFeedPanel({
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
+  const [home, setHome] = useState<CampusCircleHome | null>(null)
   const [searchFocused, setSearchFocused] = useState(false)
   const requestSequence = useRef(0)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
@@ -118,6 +119,21 @@ export default function CommunityFeedPanel({
     if (!sectionsReady || !activeSectionId) return
     void load(1, false)
   }, [activeSectionId, load, refreshSignal, sectionsReady])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadHome = async () => {
+      try {
+        const result = await lifeServicesRepository.getCampusCircleHome()
+        if (!cancelled) setHome(result)
+      } catch {
+        // 首页聚合是增强信息，失败时保留原有最新流。
+        if (!cancelled) setHome(null)
+      }
+    }
+    void loadHome()
+    return () => { cancelled = true }
+  }, [refreshSignal])
 
   useEffect(() => {
     if (searchFocusSignal > 0) setSearchFocused(true)
@@ -182,6 +198,10 @@ export default function CommunityFeedPanel({
     hideSearchKeyboard()
   }
 
+  const openTopic = (topic: CampusCircleTopicView) => {
+    Taro.navigateTo({ url: `/pages/community/topic/index?id=${topic.id}` })
+  }
+
   return (
     <View className='api-community'>
       <View
@@ -236,6 +256,40 @@ export default function CommunityFeedPanel({
           </View>
         )}
       </View>
+
+      {!keyword && home && (
+        <View className='community-operations'>
+          {home.hot_topics.length > 0 && (
+            <View className='community-operations__block'>
+              <Text className='community-operations__title'>热门话题</Text>
+              <View className='community-operations__topics'>
+                {home.hot_topics.map((topic) => (
+                  <View key={topic.id} onClick={() => openTopic(topic)}>#{topic.name}</View>
+                ))}
+              </View>
+            </View>
+          )}
+          {home.campaigns.length > 0 && (
+            <View className='community-operations__block'>
+              <Text className='community-operations__title'>正在进行</Text>
+              {home.campaigns.map((campaign) => (
+                <View key={campaign.id} className='community-operations__campaign' onClick={() => openTopic(campaign)}>
+                  {campaign.cover_url && <Image src={campaign.cover_url} mode='aspectFill' />}
+                  <View><Text>{campaign.name}</Text><Text>{campaign.description || `${campaign.post_count} 条动态`}</Text></View>
+                </View>
+              ))}
+            </View>
+          )}
+          {home.featured_posts.length > 0 && <Text className='community-operations__title'>精选动态</Text>}
+          {home.featured_posts.slice(0, 2).map((post) => (
+            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNames.get(post.section_id) || '校园社区'} onToggleLike={toggleLike} onOpen={openPost} />
+          ))}
+          {home.recommended_posts.length > 0 && <Text className='community-operations__title'>推荐给你</Text>}
+          {home.recommended_posts.slice(0, 2).map((post) => (
+            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNames.get(post.section_id) || '校园社区'} onToggleLike={toggleLike} onOpen={openPost} />
+          ))}
+        </View>
+      )}
 
       <View className='api-community__heading'>
         <View>

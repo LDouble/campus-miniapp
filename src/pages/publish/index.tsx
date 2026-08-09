@@ -11,6 +11,7 @@ import { isApiError } from '../../api/client'
 import type {
   CarpoolTripView,
   CampusCircleSectionView,
+  CampusCircleTopicView,
   ErrandView,
   MarketplaceListingView,
 } from '../../api/types'
@@ -50,6 +51,7 @@ type PublisherForm = {
   contact: string
   imageUrls: string[]
   communitySectionId: number
+  communityTopicId: number
   version: number
 }
 
@@ -104,6 +106,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   contact: '',
   imageUrls: [],
   communitySectionId: 0,
+  communityTopicId: 0,
   version: 0,
 })
 
@@ -207,6 +210,7 @@ export default function PublishPage() {
   const [form, setForm] = useState<PublisherForm>(emptyForm)
   const [sections, setSections] = useState<CampusCircleSectionView[]>([])
   const [sectionsReady, setSectionsReady] = useState(false)
+  const [topics, setTopics] = useState<CampusCircleTopicView[]>([])
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -294,6 +298,7 @@ export default function PublishPage() {
           content: post.content || '',
           imageUrls: post.images.map((image) => image.url),
           communitySectionId: post.section_id,
+          communityTopicId: post.topic?.id || 0,
           version: post.version,
         })
       }
@@ -355,6 +360,9 @@ export default function PublishPage() {
       .then((result) => setSections(result.items))
       .catch(() => setSections([]))
       .finally(() => setSectionsReady(true))
+    void lifeServicesRepository.listCampusCircleTopics({ pageSize: 50 })
+      .then((result) => setTopics(result.items.filter((item) => item.status === 'active')))
+      .catch(() => setTopics([]))
   })
 
   const communitySectionOptions = useMemo(
@@ -506,6 +514,7 @@ export default function PublishPage() {
           section_id: sectionId,
           content: form.content.trim() || undefined,
           image_urls: form.imageUrls,
+          topic_id: form.communityTopicId || undefined,
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createCampusCirclePost(input)).id
@@ -802,6 +811,15 @@ export default function PublishPage() {
                       </View>
                     ))}
                   </View>
+                )}
+                {topics.length > 0 && (
+                  <>
+                    <SectionHeading title='关联话题（可选）' />
+                    <View className='publisher-community-sections'>
+                      <View className={`publisher-community-section ${form.communityTopicId === 0 ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', 0)}><Text>不关联话题</Text><Text>普通动态</Text></View>
+                      {topics.map((item) => <View key={item.id} className={`publisher-community-section ${form.communityTopicId === item.id ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', item.id)}><Text>#{item.name}</Text><Text>{item.kind === 'campaign' ? '活动' : '话题'}</Text></View>)}
+                    </View>
+                  </>
                 )}
               </View>
             )}

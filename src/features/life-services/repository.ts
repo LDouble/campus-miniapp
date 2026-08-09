@@ -4,6 +4,9 @@ import type {
   CarpoolTripView,
   CampusCirclePostView,
   CampusCirclePostViewPage,
+  CampusCircleHome,
+  CampusCircleTopicPage,
+  CampusCircleTopicView,
   CampusCircleSectionView,
   CarpoolTripViewPage,
   ErrandOptionalOrderResult,
@@ -79,6 +82,12 @@ export type CampusCircleSearch = PagingQuery & {
   keyword?: string
   sectionId?: number
   parentSectionId?: number
+  topicId?: number
+  sort?: NonNullable<operations['ListCampusCirclePosts']['parameters']['query']>['sort']
+}
+
+export type CampusCircleTopicSearch = PagingQuery & {
+  kind?: 'topic' | 'campaign'
 }
 
 const versionAction = <T>(path: string, version: number, scope: string) => (
@@ -108,6 +117,21 @@ export const lifeServicesRepository = {
     })
   },
 
+  getCampusCircleHome() {
+    return apiRequest<CampusCircleHome>({ path: '/api/v1/campus-circle/home' })
+  },
+
+  listCampusCircleTopics(search: CampusCircleTopicSearch = {}) {
+    return apiRequest<CampusCircleTopicPage>({
+      path: '/api/v1/campus-circle/topics',
+      query: { kind: search.kind, page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  getCampusCircleTopic(id: number) {
+    return apiRequest<CampusCircleTopicView>({ path: `/api/v1/campus-circle/topics/${id}` })
+  },
+
   listCampusCirclePosts(search: CampusCircleSearch = {}) {
     return apiRequest<CampusCirclePostViewPage>({
       path: '/api/v1/campus-circle/posts',
@@ -115,6 +139,8 @@ export const lifeServicesRepository = {
         section_id: search.sectionId,
         parent_section_id: search.parentSectionId,
         keyword: search.keyword,
+        topic_id: search.topicId,
+        sort: search.sort,
         page: search.page || 1,
         page_size: search.pageSize || 20,
       },
