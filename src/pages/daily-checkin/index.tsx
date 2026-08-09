@@ -172,7 +172,6 @@ export default function DailyCheckinPage() {
           <>
             <View className='daily-checkin-hero'>
               <Text className='daily-checkin-hero__date'>{status.server_date}</Text>
-              <Text className='daily-checkin-hero__timezone'>北京时间（Asia/Shanghai）为准</Text>
               <View className='daily-checkin-hero__summary'>
                 <View>
                   <Text>{status.consecutive_days}</Text>
