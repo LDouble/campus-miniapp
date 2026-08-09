@@ -10,6 +10,7 @@ const fullPages = [
   'pages/carpool/detail',
   'pages/profile/index',
   'pages/user-level/index',
+  'pages/daily-checkin/index',
   'pages/account-cancellation/index',
   'pages/my-services/index',
   'pages/publish/index',

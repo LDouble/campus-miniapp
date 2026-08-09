@@ -5,9 +5,11 @@ import CustomNavbar from '../../components/custom-navbar'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import type {
   AcademicVerificationStatus,
+  DailyCheckinStatus,
   UserLevelSummary,
 } from '../../api/types'
 import { getMyUserLevel } from '../../api/user-levels'
+import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
 import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
 import { isQualificationEdition } from '../../features/app-edition'
 import { syncCustomTabBar } from '../../utils/tabbar'
@@ -79,8 +81,10 @@ const identityMenu = {
 export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [userLevel, setUserLevel] = useState<UserLevelSummary | null>(null)
+  const [checkinStatus, setCheckinStatus] = useState<DailyCheckinStatus | null>(null)
   useDidShow(() => {
     syncCustomTabBar('profile')
+    setCheckinStatus(null)
     void getAcademicVerificationStatus().then((status) => {
       setAcademicStatus(status)
     }).catch(() => {
@@ -88,6 +92,9 @@ export default function ProfilePage() {
     })
     void getMyUserLevel().then(setUserLevel).catch(() => {
       // 等级信息不影响个人中心其余入口。
+    })
+    void getMyDailyCheckinStatus().then(setCheckinStatus).catch(() => {
+      // 签到状态失败时仍保留入口，详情页提供完整错误重试。
     })
   })
   const openMenu = (item: typeof menus[number] | typeof identityMenu) => {
@@ -156,6 +163,27 @@ export default function ProfilePage() {
           >
             <Text>{identityBadgeText}</Text>
             <Image src={icons.arrow} mode='aspectFit' />
+          </View>
+        </View>
+
+        <View
+          className='profile-checkin motion-enter motion-enter--delay-1'
+          hoverClass='profile-checkin--pressed'
+          ariaRole='button'
+          ariaLabel={checkinStatus?.checked_in ? '今日已签到，查看签到记录' : '前往每日签到'}
+          onClick={() => Taro.navigateTo({ url: '/pages/daily-checkin/index' })}
+        >
+          <View className='profile-checkin__mark'>签</View>
+          <View className='profile-checkin__main'>
+            <Text>每日签到</Text>
+            <Text>
+              {checkinStatus
+                ? `连续 ${checkinStatus.consecutive_days} 天 · ${checkinStatus.enabled ? `今日 ${checkinStatus.today_reward} 经验` : '暂未开放'}`
+                : '积累连续签到，获得成长经验'}
+            </Text>
+          </View>
+          <View className={checkinStatus?.checked_in ? 'profile-checkin__action is-done' : 'profile-checkin__action'}>
+            {checkinStatus?.checked_in ? '已签到' : checkinStatus?.enabled === false ? '查看' : '去签到'}
           </View>
         </View>
 

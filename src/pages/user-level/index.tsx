@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type {
+  DailyCheckinStatus,
   UserExperienceLedgerView,
   UserLevelSummary,
   UserLevelTask,
@@ -12,6 +13,7 @@ import {
   listMyUserLevelTasks,
 } from '../../api/user-levels'
 import { isApiError } from '../../api/client'
+import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
 import CustomNavbar from '../../components/custom-navbar'
 import { formatDateTime } from '../../features/life-services/format'
 import './index.scss'
@@ -24,12 +26,14 @@ const sourceLabels: Record<string, string> = {
   newcomer_comment_approved: '新手任务：初次回应',
   newcomer_post_approved: '新手任务：初次发声',
   post_approved: '帖子审核通过',
+  daily_checkin: '每日签到',
 }
 
 export default function UserLevelPage() {
   const [level, setLevel] = useState<UserLevelSummary | null>(null)
   const [ledger, setLedger] = useState<UserExperienceLedgerView[]>([])
   const [tasks, setTasks] = useState<UserLevelTask[]>([])
+  const [checkinStatus, setCheckinStatus] = useState<DailyCheckinStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -37,14 +41,16 @@ export default function UserLevelPage() {
     setLoading(true)
     setError('')
     try {
-      const [levelResult, ledgerResult, taskResult] = await Promise.all([
+      const [levelResult, ledgerResult, taskResult, checkinResult] = await Promise.all([
         getMyUserLevel(),
         listMyUserExperienceLedger(1, 50),
         listMyUserLevelTasks().catch(() => ({ items: [] })),
+        getMyDailyCheckinStatus().catch(() => null),
       ])
       setLevel(levelResult)
       setLedger(ledgerResult.items)
       setTasks(taskResult.items)
+      setCheckinStatus(checkinResult)
     } catch (loadError) {
       setError(isApiError(loadError) ? loadError.message : '等级信息加载失败')
     } finally {
@@ -90,6 +96,30 @@ export default function UserLevelPage() {
               <Text className='user-level-hero__message'>{level.upgrade_message}</Text>
             </View>
 
+            <View
+              className='user-level-checkin'
+              hoverClass='user-level-checkin--pressed'
+              ariaRole='button'
+              ariaLabel={checkinStatus?.checked_in ? '今日已签到，查看签到日历' : '前往每日签到'}
+              onClick={() => Taro.navigateTo({ url: '/pages/daily-checkin/index' })}
+            >
+              <View className='user-level-checkin__content'>
+                <Text>每日签到</Text>
+                <Text>
+                  {checkinStatus
+                    ? `连续 ${checkinStatus.consecutive_days} 天 · ${checkinStatus.checked_in
+                      ? `今日已获得 ${checkinStatus.today_reward} 经验`
+                      : checkinStatus.enabled
+                        ? `今日可得 ${checkinStatus.today_reward} 经验`
+                        : '签到暂未开放'}`
+                    : '每天签到一次，连续签到奖励逐步增加'}
+                </Text>
+              </View>
+              <View className={checkinStatus?.checked_in ? 'user-level-checkin__action is-done' : 'user-level-checkin__action'}>
+                {checkinStatus?.checked_in ? '已签到' : checkinStatus?.enabled === false ? '查看' : '去签到'}
+              </View>
+            </View>
+
             <View className='user-level-tasks'>
               <Text className='user-level-section-title'>新手任务</Text>
               {tasks.map((task) => (
@@ -116,11 +146,12 @@ export default function UserLevelPage() {
 
             <View className='user-level-rules'>
               <Text className='user-level-section-title'>如何获得经验</Text>
+              <View><Text>每日</Text><Text>每日签到</Text><Text>连续签到递增，有上限</Text></View>
               <View><Text>+20</Text><Text>首次完成学籍认证</Text><Text>仅一次</Text></View>
               <View><Text>+10</Text><Text>帖子审核通过</Text><Text>每日最多 3 次</Text></View>
               <View><Text>+3</Text><Text>评论或回复审核通过</Text><Text>每日最多 10 次</Text></View>
               <View><Text>+1</Text><Text>帖子收到有效点赞</Text><Text>每日最多 20 次</Text></View>
-              <Text className='user-level-rules__hint'>撤销审核或取消点赞时会自动扣回对应经验。等级仅展示社区贡献，不代表身份、权限或信用。</Text>
+              <Text className='user-level-rules__hint'>签到以北京时间（Asia/Shanghai）自然日为准，不支持补签。撤销审核或取消点赞时会自动扣回对应经验。等级仅展示社区贡献，不代表身份、权限或信用。</Text>
             </View>
 
             <View className='user-level-ledger'>

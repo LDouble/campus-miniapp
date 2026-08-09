@@ -52,6 +52,10 @@ export type UserExperienceLedgerView = components['schemas']['UserExperienceLedg
 export type UserExperienceLedgerPage = components['schemas']['UserExperienceLedgerPage']
 export type UserLevelTask = components['schemas']['UserLevelTask']
 export type UserLevelTaskList = components['schemas']['UserLevelTaskList']
+export type DailyCheckinStatus = components['schemas']['DailyCheckinStatus']
+export type DailyCheckinResult = components['schemas']['DailyCheckinResult']
+export type DailyCheckinHistory = components['schemas']['DailyCheckinHistory']
+export type DailyCheckinHistoryItem = components['schemas']['DailyCheckinHistoryItem']
 
 export type Notice = components['schemas']['Notice']
 export type NoticePage = components['schemas']['NoticePage']
