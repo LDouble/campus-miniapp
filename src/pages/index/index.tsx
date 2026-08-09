@@ -35,6 +35,12 @@ import {
 } from '../../features/community/author'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
+import { officialNoticesRepository } from '../../features/official-notices/repository'
+import {
+  formatOfficialNoticeDate,
+  officialNoticeSourceLabels,
+} from '../../features/official-notices/types'
+import type { OfficialNotice } from '../../features/official-notices/types'
 import {
   activeBanners,
   activeSlogans,
@@ -288,6 +294,7 @@ function Index() {
   const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
   const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
   const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
+  const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>([])
   const [communityLoading, setCommunityLoading] = useState(true)
   const [marketLoading, setMarketLoading] = useState(true)
   const [communityError, setCommunityError] = useState(false)
@@ -332,6 +339,10 @@ function Index() {
       && moduleEnabled('marketplace')
       ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
       : Promise.resolve({ ok: false } as Settled<never>)
+    const officialNoticesPromise = settle(officialNoticesRepository.list({
+      page: 1,
+      pageSize: 2,
+    }))
     const [
       account,
       community,
@@ -339,6 +350,7 @@ function Index() {
       unread,
       marketplace,
       latestAcademic,
+      latestOfficialNotices,
     ] = await Promise.all([
       accountPromise,
       communityPromise,
@@ -346,6 +358,7 @@ function Index() {
       settle(noticesRepository.unreadCount()),
       marketplacePromise,
       academicPromise,
+      officialNoticesPromise,
     ])
 
     const selectedCampus = getSelectedCampus(latestRuntimeConfig)
@@ -378,6 +391,7 @@ function Index() {
       setMarketItems([])
       setMarketError(moduleEnabled('marketplace'))
     }
+    setOfficialNotices(latestOfficialNotices.ok ? latestOfficialNotices.value.items : [])
     setCommunityLoading(false)
     setMarketLoading(false)
     Taro.stopPullDownRefresh()
@@ -490,6 +504,14 @@ function Index() {
   const openCommunityPost = (item: CampusCirclePostView) => {
     saveCommunityFeedPin(item)
     void openLifeHub('community')
+  }
+
+  const openOfficialNotices = () => {
+    void Taro.navigateTo({ url: '/pages/official-notices/index' })
+  }
+
+  const openOfficialNotice = (item: OfficialNotice) => {
+    void Taro.navigateTo({ url: `/pages/official-notices/detail?id=${item.id}` })
   }
 
   const banners = activeBanners(runtimeConfig, campusName)
@@ -672,6 +694,40 @@ function Index() {
             </View>
           ))}
         </View>
+      </View>
+
+      <View className='official-notices-home motion-enter motion-enter--delay-3'>
+        <View className='official-notices-home__head' onClick={openOfficialNotices}>
+          <View>
+            <Text className='official-notices-home__eyebrow'>OFFICIAL</Text>
+            <Text className='official-notices-home__title'>全校通知</Text>
+          </View>
+          <View className='official-notices-home__more'>
+            <Text>查看全部</Text>
+            <Image src={icons.arrow} mode='aspectFit' />
+          </View>
+        </View>
+        {officialNotices.length === 0 ? (
+          <View className='official-notices-home__empty' onClick={openOfficialNotices}>
+            暂无最新通知，点击进入通知中心
+          </View>
+        ) : officialNotices.map((item) => (
+          <View
+            key={item.id}
+            className='official-notices-home__item'
+            hoverClass='official-notices-home__item--pressed'
+            onClick={() => openOfficialNotice(item)}
+          >
+            <View className='official-notices-home__source'>
+              {officialNoticeSourceLabels[item.source]}
+            </View>
+            <View className='official-notices-home__copy'>
+              <Text>{item.title}</Text>
+              <Text>{item.publisher} · {formatOfficialNoticeDate(item.source_published_at)}</Text>
+            </View>
+            <Text className='official-notices-home__arrow'>›</Text>
+          </View>
+        ))}
       </View>
 
       {isQualificationEdition ? (

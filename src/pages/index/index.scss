@@ -524,6 +524,37 @@ page { background: #faf7f2; }
   }
 }
 
+.official-notices-home {
+  position: relative;
+  z-index: 1;
+  padding: 26rpx 24rpx 12rpx;
+  margin-top: 28rpx;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(238, 180, 105, 0.2), transparent 38%),
+    rgba(255, 255, 255, 0.92);
+  border: 2rpx solid rgba(68, 114, 102, 0.08);
+  border-radius: 30rpx;
+  box-shadow: 0 12rpx 30rpx rgba(54, 91, 82, 0.055);
+
+  &__head,
+  &__more,
+  &__item { display: flex; align-items: center; }
+  &__head { justify-content: space-between; padding: 0 4rpx 18rpx; }
+  &__eyebrow { display: block; color: #d18a51; font-size: 17rpx; font-weight: 750; letter-spacing: 2rpx; }
+  &__title { display: block; padding-top: 2rpx; color: #294d47; font-size: 30rpx; font-weight: 760; }
+  &__more { color: #65817a; font-size: 22rpx; }
+  &__more image { width: 22rpx; height: 22rpx; margin-left: 4rpx; opacity: 0.65; }
+  &__item { min-height: 92rpx; padding: 12rpx 4rpx; border-top: 2rpx solid #f0f2ee; transition: opacity 120ms ease, transform 120ms ease; }
+  &__item--pressed { opacity: 0.86; transform: scale(0.99); }
+  &__source { flex: none; padding: 7rpx 12rpx; color: #447c6e; font-size: 18rpx; background: #e6f1ed; border-radius: 999rpx; }
+  &__copy { flex: 1; min-width: 0; padding: 0 14rpx; }
+  &__copy text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__copy text:first-child { color: #36564f; font-size: 24rpx; font-weight: 680; }
+  &__copy text:last-child { padding-top: 6rpx; color: #98a39f; font-size: 18rpx; }
+  &__arrow { flex: none; color: #89a099; font-size: 32rpx; }
+  &__empty { padding: 30rpx 4rpx 34rpx; text-align: center; color: #8b9b97; font-size: 22rpx; border-top: 2rpx solid #f0f2ee; }
+}
+
 .home-migrated {
   position: relative;
   z-index: 1;

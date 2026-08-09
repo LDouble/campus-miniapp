@@ -3269,6 +3269,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/official-notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询全校通知 */
+        get: operations["ListAdminOfficialNotices"];
+        put?: never;
+        /** 创建全校通知草稿 */
+        post: operations["CreateAdminOfficialNotice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/official-notices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看全校通知 */
+        get: operations["GetAdminOfficialNotice"];
+        put?: never;
+        post?: never;
+        /** 删除全校通知草稿 */
+        delete: operations["DeleteAdminOfficialNotice"];
+        options?: never;
+        head?: never;
+        /** 修改全校通知草稿 */
+        patch: operations["UpdateAdminOfficialNotice"];
+        trace?: never;
+    };
+    "/api/v1/admin/official-notices/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布全校通知 */
+        post: operations["PublishAdminOfficialNotice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/official-notices/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回全校通知 */
+        post: operations["RevokeAdminOfficialNotice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/official-notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布全校通知 */
+        get: operations["ListOfficialNotices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/official-notices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看已发布全校通知 */
+        get: operations["GetOfficialNotice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/shuttle/routes": {
         parameters: {
             query?: never;
@@ -5246,7 +5351,7 @@ export interface components {
             reviewer_id: number;
         };
         /** @enum {string} */
-        MaterialScanStatus: "pending" | "scanning" | "clean" | "infected" | "failed";
+        MaterialScanStatus: "pending" | "scanning" | "clean" | "skipped" | "infected" | "failed";
         /** @enum {string} */
         MaterialStatus: "uploading" | "scanning" | "pending_review" | "published" | "rejected" | "withdrawn" | "taken_down" | "failed";
         /** @enum {string} */
@@ -5828,6 +5933,93 @@ export interface components {
         };
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
+        OfficialNoticeAttachment: {
+            mime_type?: string;
+            name: string;
+            url: string;
+        };
+        OfficialNoticeAttachmentInput: {
+            mime_type?: string;
+            name: string;
+            url: string;
+        };
+        /** @enum {string} */
+        OfficialNoticeCategory: "teaching" | "training" | "awards" | "campus" | "career" | "other";
+        OfficialNoticeDeleteResponseBody: {
+            data: components["schemas"]["OfficialNoticeDeleteResult"];
+            request_id: string;
+        };
+        OfficialNoticeDeleteResult: {
+            deleted: boolean;
+        };
+        OfficialNoticeInput: {
+            attachments?: components["schemas"]["OfficialNoticeAttachmentInput"][];
+            body: string;
+            category: components["schemas"]["OfficialNoticeCategory"];
+            original_url?: string;
+            priority: components["schemas"]["OfficialNoticePriority"];
+            publisher: string;
+            source: components["schemas"]["OfficialNoticeSource"];
+            /** Format: date-time */
+            source_published_at: string;
+            summary: string;
+            title: string;
+        };
+        OfficialNoticePage: {
+            items: components["schemas"]["OfficialNoticeView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        OfficialNoticePageResponseBody: {
+            data: components["schemas"]["OfficialNoticePage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        OfficialNoticePriority: "normal" | "important";
+        OfficialNoticeResponseBody: {
+            data: components["schemas"]["OfficialNoticeView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        OfficialNoticeSource: "school" | "undergraduate" | "graduate" | "department";
+        /** @enum {string} */
+        OfficialNoticeStatus: "draft" | "published" | "revoked";
+        OfficialNoticeUpdateInput: components["schemas"]["OfficialNoticeInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        OfficialNoticeVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        OfficialNoticeView: {
+            attachments: components["schemas"]["OfficialNoticeAttachment"][];
+            body: string;
+            category: components["schemas"]["OfficialNoticeCategory"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            original_url?: string | null;
+            priority: components["schemas"]["OfficialNoticePriority"];
+            /** Format: date-time */
+            published_at?: string | null;
+            publisher: string;
+            /** Format: date-time */
+            revoked_at?: string | null;
+            source: components["schemas"]["OfficialNoticeSource"];
+            /** Format: date-time */
+            source_published_at: string;
+            status: components["schemas"]["OfficialNoticeStatus"];
+            summary: string;
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
         ShuttleDateOverrideInput: {
             day_type: components["schemas"]["ShuttleDayType"];
             departure_times?: string[];
@@ -6900,6 +7092,33 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MarketplaceUpdatedResponseBody"];
+            };
+        };
+        /** @description 删除全校通知结果 */
+        OfficialNoticeDeleteResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["OfficialNoticeDeleteResponseBody"];
+            };
+        };
+        /** @description 全校通知分页 */
+        OfficialNoticePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["OfficialNoticePageResponseBody"];
+            };
+        };
+        /** @description 全校通知 */
+        OfficialNoticeResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["OfficialNoticeResponseBody"];
             };
         };
         /** @description 校车线路分页 */
@@ -10048,7 +10267,7 @@ export interface operations {
                 uploader_id?: number;
                 candidate_only?: boolean;
                 status?: "uploading" | "scanning" | "pending_review" | "published" | "rejected" | "withdrawn" | "taken_down" | "failed";
-                scan_status?: "pending" | "scanning" | "clean" | "infected" | "failed";
+                scan_status?: "pending" | "scanning" | "clean" | "skipped" | "infected" | "failed";
                 keyword?: string;
                 page?: number;
                 page_size?: number;
@@ -11640,6 +11859,180 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["ReadResultResponse"];
+        };
+    };
+    ListAdminOfficialNotices: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                source?: "school" | "undergraduate" | "graduate" | "department";
+                category?: "teaching" | "training" | "awards" | "campus" | "career" | "other";
+                status?: "draft" | "published" | "revoked";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OfficialNoticePageResponse"];
+        };
+    };
+    CreateAdminOfficialNotice: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfficialNoticeInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["OfficialNoticeResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetAdminOfficialNotice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OfficialNoticeResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    DeleteAdminOfficialNotice: {
+        parameters: {
+            query: {
+                expected_version: number;
+            };
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OfficialNoticeDeleteResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminOfficialNotice: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfficialNoticeUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["OfficialNoticeResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminOfficialNotice: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfficialNoticeVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["OfficialNoticeResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RevokeAdminOfficialNotice: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfficialNoticeVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["OfficialNoticeResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListOfficialNotices: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                source?: "school" | "undergraduate" | "graduate" | "department";
+                category?: "teaching" | "training" | "awards" | "campus" | "career" | "other";
+                published_since?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OfficialNoticePageResponse"];
+        };
+    };
+    GetOfficialNotice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OfficialNoticeResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminShuttleRoutes: {
