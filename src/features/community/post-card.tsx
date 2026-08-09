@@ -37,6 +37,12 @@ export default function CommunityPostCard({
   const visibleImages = post.images.slice(0, 3)
   const remainingImages = Math.max(0, post.images.length - visibleImages.length)
   const publishedAt = formatDateTime(post.published_at || post.created_at)
+  const operationBadges = [
+    post.is_pinned && '置顶',
+    post.is_featured && '精选',
+    post.is_recommended && '推荐',
+    post.topic?.kind === 'campaign' && '活动',
+  ].filter(Boolean) as string[]
 
   return (
     <View
@@ -82,8 +88,13 @@ export default function CommunityPostCard({
       >
         <View className='community-post__section-pill'>
           <Image src={communityIcons.topic} mode='aspectFit' />
-          <Text>{sectionName}</Text>
+          <Text>{post.topic?.name || sectionName}</Text>
         </View>
+        {operationBadges.length > 0 && (
+          <View className='community-post__badges'>
+            {operationBadges.map((badge) => <Text key={badge}>{badge}</Text>)}
+          </View>
+        )}
         {post.content && <Text className='community-post__content'>{post.content}</Text>}
         {post.content && post.content.length > 90 && (
           <Text className='community-post__expand'>展开全文</Text>

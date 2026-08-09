@@ -1089,6 +1089,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/posts/{id}/curation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 原子更新审核通过帖子的置顶、精选、推荐和排序 */
+        patch: operations["UpdateAdminCampusCirclePostCuration"];
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/posts/{id}/review": {
         parameters: {
             query?: never;
@@ -1186,6 +1203,93 @@ export interface paths {
         put?: never;
         /** 归档校园圈子模块 */
         post: operations["ArchiveCampusCircleSection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端分页查询校园话题和社区活动 */
+        get: operations["ListAdminCampusCircleTopics"];
+        put?: never;
+        /** 创建校园话题或社区活动草稿 */
+        post: operations["CreateAdminCampusCircleTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/topics/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询校园话题或社区活动详情 */
+        get: operations["GetAdminCampusCircleTopic"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 更新校园话题或社区活动 */
+        patch: operations["UpdateAdminCampusCircleTopic"];
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/topics/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 启用校园话题或社区活动 */
+        post: operations["ActivateAdminCampusCircleTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/topics/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 归档校园话题或社区活动 */
+        post: operations["ArchiveAdminCampusCircleTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取校园圈首页运营聚合 */
+        get: operations["GetCampusCircleHome"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1306,6 +1410,40 @@ export interface paths {
         };
         /** 查询服务端配置的启用校园圈板块树 */
         get: operations["ListCampusCircleSections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询当前可见的校园话题和社区活动 */
+        get: operations["ListCampusCircleTopics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/topics/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询校园话题或社区活动详情 */
+        get: operations["GetCampusCircleTopic"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3716,6 +3854,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/user-levels/me/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的新手任务状态 */
+        get: operations["ListMyUserLevelTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/user-levels/{user_id}": {
         parameters: {
             query?: never;
@@ -4697,6 +4852,27 @@ export interface components {
             registration_version: number;
             status: string;
         };
+        CampusCircleCurationInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            featured: boolean;
+            pinned: boolean;
+            /** Format: date-time */
+            pinned_until: string | null;
+            recommended: boolean;
+            /** Format: int64 */
+            sort_order: number;
+        };
+        CampusCircleHome: {
+            campaigns: components["schemas"]["CampusCircleTopicView"][];
+            featured_posts: components["schemas"]["CampusCirclePostView"][];
+            hot_topics: components["schemas"]["CampusCircleTopicView"][];
+            recommended_posts: components["schemas"]["CampusCirclePostView"][];
+        };
+        CampusCircleHomeResponseBody: {
+            data: components["schemas"]["CampusCircleHome"];
+            request_id: string;
+        };
         CampusCirclePostImageView: {
             /** Format: uint64 */
             id: number;
@@ -4720,6 +4896,8 @@ export interface components {
             request_id: string;
         };
         /** @enum {string} */
+        CampusCirclePostSort: "latest" | "curated" | "featured" | "recommended";
+        /** @enum {string} */
         CampusCirclePostStatus: "pending_review" | "approved" | "rejected" | "withdrawn";
         CampusCirclePostView: {
             author_deleted: boolean;
@@ -4739,9 +4917,17 @@ export interface components {
             /** Format: uint64 */
             id: number;
             images: components["schemas"]["CampusCirclePostImageView"][];
+            is_featured?: boolean;
+            is_pinned?: boolean;
+            is_recommended?: boolean;
             /** Format: int64 */
             like_count: number;
             liked: boolean;
+            /**
+             * Format: date-time
+             * @description 管理端运营置顶截止时间；未置顶或公开视图不返回
+             */
+            pinned_until?: string | null;
             /** Format: date-time */
             published_at: string | null;
             review_reason: string | null;
@@ -4751,7 +4937,13 @@ export interface components {
             reviewed_by: number | null;
             /** Format: uint64 */
             section_id: number;
+            /**
+             * Format: int64
+             * @description 管理端运营排序权重；公开视图不返回
+             */
+            sort_order?: number | null;
             status: components["schemas"]["CampusCirclePostStatus"];
+            topic?: components["schemas"]["CampusCircleTopicSummary"];
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -4787,6 +4979,77 @@ export interface components {
             /** Format: int64 */
             sort_order: number;
             status: components["schemas"]["CampusCircleSectionStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CampusCircleTopicInput: {
+            cover_url: string;
+            description: string;
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** Format: uint64 */
+            expected_version?: number;
+            is_hot: boolean;
+            kind: components["schemas"]["CampusCircleTopicKind"];
+            name: string;
+            slug: string;
+            /** Format: int64 */
+            sort_order: number;
+            /** Format: date-time */
+            starts_at?: string | null;
+        };
+        /** @enum {string} */
+        CampusCircleTopicKind: "topic" | "campaign";
+        CampusCircleTopicPage: {
+            items: components["schemas"]["CampusCircleTopicView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTopicPageResponseBody: {
+            data: components["schemas"]["CampusCircleTopicPage"];
+            request_id: string;
+        };
+        CampusCircleTopicResponseBody: {
+            data: components["schemas"]["CampusCircleTopicView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CampusCircleTopicStatus: "draft" | "active" | "archived";
+        CampusCircleTopicSummary: {
+            cover_url?: string | null;
+            /** Format: uint64 */
+            id: number;
+            is_hot: boolean;
+            kind: components["schemas"]["CampusCircleTopicKind"];
+            name: string;
+            slug: string;
+        } | null;
+        CampusCircleTopicView: {
+            cover_url: string | null;
+            /** Format: date-time */
+            created_at: string;
+            description: string | null;
+            /** Format: date-time */
+            ends_at: string | null;
+            /** Format: uint64 */
+            id: number;
+            is_hot: boolean;
+            kind: components["schemas"]["CampusCircleTopicKind"];
+            /** Format: date-time */
+            latest_participated_at: string | null;
+            name: string;
+            /** Format: int64 */
+            post_count: number;
+            slug: string;
+            /** Format: int64 */
+            sort_order: number;
+            /** Format: date-time */
+            starts_at: string | null;
+            status: components["schemas"]["CampusCircleTopicStatus"];
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -6478,6 +6741,25 @@ export interface components {
             theme: string;
             upgrade_message?: string;
         };
+        UserLevelTask: {
+            /** Format: date-time */
+            completed_at: string | null;
+            description: string;
+            /** @enum {string} */
+            key: "first_post_approved" | "first_comment_approved";
+            /** Format: int64 */
+            reward: number;
+            /** @enum {string} */
+            status: "pending" | "completed";
+            title: string;
+        };
+        UserLevelTaskList: {
+            items: components["schemas"]["UserLevelTask"][];
+        };
+        UserLevelTaskListResponseBody: {
+            data: components["schemas"]["UserLevelTaskList"];
+            request_id: string;
+        };
         UserLevelTierInput: {
             description: string;
             icon_url?: string;
@@ -6912,6 +7194,15 @@ export interface components {
                 "application/json": components["schemas"]["ActivityResponseBody"];
             };
         };
+        /** @description 校园圈首页运营聚合 */
+        CampusCircleHomeResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleHomeResponseBody"];
+            };
+        };
         /** @description 校园圈帖子分页 */
         CampusCirclePostPageResponse: {
             headers: {
@@ -6946,6 +7237,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CampusCircleSectionTreeResponseBody"];
+            };
+        };
+        /** @description 校园圈话题分页 */
+        CampusCircleTopicPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicPageResponseBody"];
+            };
+        };
+        /** @description 校园圈话题或社区活动 */
+        CampusCircleTopicResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicResponseBody"];
             };
         };
         /** @description 拼车行程分页 */
@@ -7495,6 +7804,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["UserLevelSchemeResponseBody"];
+            };
+        };
+        /** @description 当前用户的新手任务状态 */
+        UserLevelTaskListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserLevelTaskListResponseBody"];
             };
         };
     };
@@ -9069,6 +9387,28 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    UpdateAdminCampusCirclePostCuration: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleCurationInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ReviewCampusCirclePost: {
         parameters: {
             query?: never;
@@ -9243,12 +9583,149 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    ListAdminCampusCircleTopics: {
+        parameters: {
+            query?: {
+                kind?: "topic" | "campaign";
+                status?: "draft" | "active" | "archived";
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTopicPageResponse"];
+        };
+    };
+    CreateAdminCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ActivateAdminCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ArchiveAdminCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetCampusCircleHome: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleHomeResponse"];
+        };
+    };
     ListCampusCirclePosts: {
         parameters: {
             query?: {
                 section_id?: number;
                 parent_section_id?: number;
                 keyword?: string;
+                topic_id?: number;
+                sort?: "latest" | "curated" | "featured" | "recommended";
                 page?: number;
                 page_size?: number;
             };
@@ -9277,6 +9754,8 @@ export interface operations {
                     section_id: number;
                     content?: string;
                     image_urls?: string[];
+                    /** Format: uint64 */
+                    topic_id?: number;
                 };
             };
         };
@@ -9337,6 +9816,8 @@ export interface operations {
                     section_id: number;
                     content?: string;
                     image_urls?: string[];
+                    /** Format: uint64 */
+                    topic_id?: number;
                     /** Format: uint64 */
                     expected_version: number;
                 };
@@ -9436,6 +9917,37 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CampusCircleSectionTreeResponse"];
+        };
+    };
+    ListCampusCircleTopics: {
+        parameters: {
+            query?: {
+                kind?: "topic" | "campaign";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTopicPageResponse"];
+        };
+    };
+    GetCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminCarpoolTrips: {
@@ -12783,6 +13295,18 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["UserExperienceLedgerPageResponse"];
+        };
+    };
+    ListMyUserLevelTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserLevelTaskListResponse"];
         };
     };
     GetUserLevel: {

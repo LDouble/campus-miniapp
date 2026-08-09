@@ -4,6 +4,7 @@ const fullPages = [
   'pages/app-login/index',
   'pages/community/index',
   'pages/community/detail',
+  'pages/community/topic/index',
   'pages/errands/detail',
   'pages/marketplace/detail',
   'pages/carpool/detail',
@@ -40,6 +41,7 @@ const fullPages = [
 const qualificationExcludedPages = new Set([
   'pages/community/index',
   'pages/community/detail',
+  'pages/community/topic/index',
   'pages/errands/detail',
   'pages/marketplace/detail',
   'pages/carpool/detail',

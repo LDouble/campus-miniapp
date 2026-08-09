@@ -2,6 +2,7 @@ import { apiRequest } from './client'
 import type {
   UserExperienceLedgerPage,
   UserLevelSummary,
+  UserLevelTaskList,
 } from './types'
 
 export const getMyUserLevel = () => apiRequest<UserLevelSummary>({
@@ -14,3 +15,7 @@ export const listMyUserExperienceLedger = (page = 1, pageSize = 20) => (
     query: { page, page_size: pageSize },
   })
 )
+
+export const listMyUserLevelTasks = () => apiRequest<UserLevelTaskList>({
+  path: '/api/v1/user-levels/me/tasks',
+})
