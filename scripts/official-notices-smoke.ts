@@ -51,5 +51,11 @@ assert.ok(
   !detailSource.includes("openExternal(notice.original_url || '')"),
   '学校原文不得再尝试通过 WebView 打开',
 )
+assert.ok(detailSource.includes('Taro.downloadFile({ url: target })'), '附件应先下载到本地临时路径')
+assert.ok(detailSource.includes('Taro.openDocument({'), '附件应使用微信原生文档预览')
+assert.ok(detailSource.includes('showMenu: true'), '原生文档预览应允许用户转发或保存')
+assert.ok(detailSource.includes("result.statusCode < 200 || result.statusCode >= 300"), '附件下载应校验 HTTP 状态码')
+assert.ok(detailSource.includes("copyAttachmentUrl(target, '打开失败，附件地址已复制')"), '附件打开失败应复制地址兜底')
+assert.ok(!detailSource.includes('Taro.navigateTo({ url: `/pages/webview/index?url='), '附件不得再通过 WebView 打开')
 
 process.stdout.write('official notices smoke: ok\n')

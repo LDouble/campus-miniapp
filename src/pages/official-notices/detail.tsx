@@ -14,6 +14,19 @@ import type { OfficialNotice } from '../../features/official-notices/types'
 import { normalizeWebViewUrl } from '../../features/webview/url'
 import './detail.scss'
 
+type DocumentFileType = 'doc' | 'docx' | 'xls' | 'xlsx' | 'ppt' | 'pptx' | 'pdf'
+
+const documentFileTypes: DocumentFileType[] = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf']
+
+const getDocumentFileType = (name: string, url: string): DocumentFileType | undefined => {
+  const extension = [name, url].map((value) => (
+    value.split(/[?#]/)[0].split('.').pop()?.toLowerCase()
+  )).find((candidate): candidate is DocumentFileType => (
+    documentFileTypes.includes(candidate as DocumentFileType)
+  ))
+  return extension
+}
+
 const validNoticeId = (value?: string) => {
   const id = Number(value)
   return Number.isSafeInteger(id) && id > 0 ? id : 0
@@ -53,17 +66,43 @@ export default function OfficialNoticeDetailPage() {
     path: notice ? `/pages/official-notices/detail?id=${notice.id}` : '/pages/official-notices/index',
   }))
 
-  const openExternal = async (url: string) => {
-    const target = normalizeWebViewUrl(url)
+  const copyAttachmentUrl = async (target: string, title: string) => {
+    try {
+      await Taro.setClipboardData({ data: target })
+      await Taro.showToast({ title, icon: 'none' })
+    } catch {
+      await Taro.showToast({ title: '附件打开失败，请稍后重试', icon: 'none' })
+    }
+  }
+
+  const openAttachment = async (attachment: OfficialNotice['attachments'][number]) => {
+    const target = normalizeWebViewUrl(attachment.url)
     if (!target) {
-      await Taro.showToast({ title: '链接地址无效', icon: 'none' })
+      await Taro.showToast({ title: '附件地址无效', icon: 'none' })
       return
     }
+
+    const fileType = getDocumentFileType(attachment.name, target)
+    if (!fileType) {
+      await copyAttachmentUrl(target, '暂不支持预览，附件地址已复制')
+      return
+    }
+
+    await Taro.showLoading({ title: '正在下载附件', mask: true })
     try {
-      await Taro.navigateTo({ url: `/pages/webview/index?url=${encodeURIComponent(target)}` })
+      const result = await Taro.downloadFile({ url: target })
+      if (result.statusCode < 200 || result.statusCode >= 300) {
+        throw new Error(`附件下载失败：HTTP ${result.statusCode}`)
+      }
+      await Taro.openDocument({
+        filePath: result.tempFilePath,
+        fileType,
+        showMenu: true,
+      })
     } catch {
-      await Taro.setClipboardData({ data: target })
-      await Taro.showToast({ title: '链接已复制，请在校园网环境打开', icon: 'none' })
+      await copyAttachmentUrl(target, '打开失败，附件地址已复制')
+    } finally {
+      await Taro.hideLoading()
     }
   }
 
@@ -122,13 +161,13 @@ export default function OfficialNoticeDetailPage() {
             <View className='official-notice-attachments'>
               <Text className='official-notice-attachments__title'>附件下载</Text>
               {notice.attachments.map((attachment, index) => (
-                <View key={`${attachment.url}-${index}`} onClick={() => void openExternal(attachment.url)}>
+                <View key={`${attachment.url}-${index}`} onClick={() => void openAttachment(attachment)}>
                   <View>附</View>
                   <Text>{attachment.name}</Text>
-                  <Text>打开 ›</Text>
+                  <Text>预览 ›</Text>
                 </View>
               ))}
-              <Text className='official-notice-attachments__hint'>部分文件可能需要连接校园网或 VPN 后打开</Text>
+              <Text className='official-notice-attachments__hint'>附件将下载后使用微信原生文档预览打开</Text>
             </View>
           )}
 
