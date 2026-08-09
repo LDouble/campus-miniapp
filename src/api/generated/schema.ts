@@ -3546,6 +3546,193 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/user-level-schemes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 从当前方案创建新草稿 */
+        post: operations["CreateAdminUserLevelScheme"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/user-level-schemes/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询当前等级方案 */
+        get: operations["GetAdminUserLevelScheme"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/user-level-schemes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 修改等级方案草稿 */
+        patch: operations["UpdateAdminUserLevelScheme"];
+        trace?: never;
+    };
+    "/api/v1/admin/user-level-schemes/{id}/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 预览等级方案发布影响 */
+        get: operations["GetAdminUserLevelSchemeImpact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/user-level-schemes/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布等级方案 */
+        post: operations["PublishAdminUserLevelScheme"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/user-levels/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询用户等级 */
+        get: operations["GetAdminUserLevel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/user-levels/{user_id}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端调整用户经验 */
+        post: operations["CreateAdminUserExperienceAdjustment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/user-levels/{user_id}/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询用户经验流水 */
+        get: operations["ListAdminUserExperienceLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/user-levels/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的等级 */
+        get: operations["GetMyUserLevel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/user-levels/me/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的经验流水 */
+        get: operations["ListMyUserExperienceLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/user-levels/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询用户公开等级 */
+        get: operations["GetUserLevel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4538,6 +4725,7 @@ export interface components {
             author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
+            author_level: components["schemas"]["UserLevelSummary"];
             author_nickname: string;
             available_actions: components["schemas"]["CampusCircleViewerAction"][];
             /**
@@ -4948,6 +5136,7 @@ export interface components {
             author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
+            author_level: components["schemas"]["UserLevelSummary"];
             author_nickname: string;
             available_actions: components["schemas"]["CommentViewerAction"][];
             content: string;
@@ -6190,6 +6379,121 @@ export interface components {
         TradeOrderViewerAction: "view_resource" | "cancel" | "complete" | "verify_academic";
         /** @enum {string} */
         TradeOrderViewerRelation: "buyer" | "seller";
+        UserExperienceLedgerPage: {
+            items: components["schemas"]["UserExperienceLedgerView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        UserExperienceLedgerPageResponseBody: {
+            data: components["schemas"]["UserExperienceLedgerPage"];
+            request_id: string;
+        };
+        UserExperienceLedgerView: {
+            /** Format: int64 */
+            amount: number;
+            /** Format: int64 */
+            balance_after: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            note?: string | null;
+            /** Format: uint64 */
+            operator_id?: number | null;
+            source_date: string;
+            /** Format: uint64 */
+            source_id?: number | null;
+            source_type: string;
+        };
+        UserLevelAdjustmentInput: {
+            /** Format: int64 */
+            amount: number;
+            note: string;
+        };
+        UserLevelResponseBody: {
+            data: components["schemas"]["UserLevelSummary"];
+            request_id: string;
+        };
+        UserLevelSchemeImpact: {
+            /** Format: int64 */
+            downgraded_users: number;
+            /** Format: int64 */
+            total_users: number;
+            /** Format: int64 */
+            unchanged_users: number;
+            /** Format: int64 */
+            upgraded_users: number;
+        };
+        UserLevelSchemeImpactResponseBody: {
+            data: components["schemas"]["UserLevelSchemeImpact"];
+            request_id: string;
+        };
+        UserLevelSchemeInput: {
+            tiers: components["schemas"]["UserLevelTierInput"][];
+        };
+        UserLevelSchemeResponseBody: {
+            data: components["schemas"]["UserLevelSchemeView"];
+            request_id: string;
+        };
+        UserLevelSchemeView: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            created_by: number;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            published_at?: string | null;
+            /** Format: uint64 */
+            published_by?: number | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            tiers: components["schemas"]["UserLevelTierView"][];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        UserLevelSummary: {
+            /** Format: int64 */
+            current_threshold: number;
+            description?: string;
+            /** Format: int64 */
+            experience: number;
+            /** Format: int64 */
+            experience_to_next?: number | null;
+            icon_url?: string | null;
+            is_max_level: boolean;
+            /** Format: int64 */
+            level: number;
+            name: string;
+            /** Format: int64 */
+            next_threshold?: number | null;
+            /** Format: double */
+            progress_percent: number;
+            /** Format: uint64 */
+            scheme_version?: number;
+            theme: string;
+            upgrade_message?: string;
+        };
+        UserLevelTierInput: {
+            description: string;
+            icon_url?: string;
+            /** Format: int64 */
+            level: number;
+            name: string;
+            /** @enum {string} */
+            theme: "ocean" | "dawn" | "coral" | "deepsea" | "gold";
+            /** Format: int64 */
+            threshold: number;
+            upgrade_message: string;
+        };
+        UserLevelTierView: components["schemas"]["UserLevelTierInput"] & {
+            /** Format: uint64 */
+            id: number;
+        };
     };
     responses: {
         /** @description Successful response */
@@ -7155,6 +7459,42 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["TradeOrderResponseBody"];
+            };
+        };
+        /** @description 用户经验流水分页 */
+        UserExperienceLedgerPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserExperienceLedgerPageResponseBody"];
+            };
+        };
+        /** @description 用户等级信息 */
+        UserLevelResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserLevelResponseBody"];
+            };
+        };
+        /** @description 等级方案发布影响 */
+        UserLevelSchemeImpactResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserLevelSchemeImpactResponseBody"];
+            };
+        };
+        /** @description 等级方案 */
+        UserLevelSchemeResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserLevelSchemeResponseBody"];
             };
         };
     };
@@ -12276,6 +12616,187 @@ export interface operations {
         responses: {
             200: components["responses"]["TradeOrderResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    CreateAdminUserLevelScheme: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserLevelSchemeInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["UserLevelSchemeResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminUserLevelScheme: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserLevelSchemeResponse"];
+        };
+    };
+    UpdateAdminUserLevelScheme: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserLevelSchemeInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["UserLevelSchemeResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminUserLevelSchemeImpact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserLevelSchemeImpactResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    PublishAdminUserLevelScheme: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserLevelSchemeResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminUserLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserLevelResponse"];
+        };
+    };
+    CreateAdminUserExperienceAdjustment: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserLevelAdjustmentInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["UserLevelResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    ListAdminUserExperienceLedger: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserExperienceLedgerPageResponse"];
+        };
+    };
+    GetMyUserLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserLevelResponse"];
+        };
+    };
+    ListMyUserExperienceLedger: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserExperienceLedgerPageResponse"];
+        };
+    };
+    GetUserLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserLevelResponse"];
         };
     };
 }

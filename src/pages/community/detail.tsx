@@ -21,6 +21,7 @@ import {
   communityAuthorName,
   communityAuthorTone,
 } from '../../features/community/author'
+import CommunityLevelBadge from '../../features/community/level-badge'
 import './detail.scss'
 
 const communityDetailIcons = {
@@ -233,6 +234,7 @@ export default function CommunityDetailPage() {
                 <View className='community-detail-card__author'>
                   <View>
                     <Text>{communityAuthorName(post)}</Text>
+                    <CommunityLevelBadge level={post.author_level} />
                   </View>
                   <Text className='community-detail-card__time'>
                     {formatDateTime(post.published_at || post.created_at)}
@@ -360,6 +362,7 @@ export default function CommunityDetailPage() {
                   <View className='community-detail-comments__copy'>
                     <View className='community-detail-comments__author'>
                       <Text>{communityAuthorName(item)}</Text>
+                      <CommunityLevelBadge level={item.author_level} compact />
                     </View>
                     <Text className='community-comment__content'>{item.content}</Text>
                     <View className='community-detail-comments__meta'>

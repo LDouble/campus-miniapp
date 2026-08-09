@@ -208,6 +208,77 @@ page {
   }
 }
 
+.profile-level {
+  padding: 26rpx 28rpx;
+  margin-top: 24rpx;
+  color: #245669;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.72), transparent 38%),
+    linear-gradient(135deg, #e7f5f7, #edf8f4);
+  border: 2rpx solid rgba(255, 255, 255, 0.94);
+  border-radius: 32rpx;
+  box-shadow: 10rpx 14rpx 28rpx rgba(42, 103, 115, 0.08);
+  transition: opacity 140ms ease, transform 140ms ease;
+
+  &--pressed {
+    opacity: 0.82;
+    transform: scale(0.985);
+  }
+
+  &--coral { background: linear-gradient(135deg, #fff0e8, #fff8ef); }
+  &--deepsea { background: linear-gradient(135deg, #e7eff8, #eef5fa); }
+  &--gold { background: linear-gradient(135deg, #fff3d5, #fff9e9); }
+
+  &__head,
+  &__foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  &__head > view:first-child text {
+    display: block;
+
+    &:first-child { color: #789094; font-size: 20rpx; }
+    &:last-child { margin-top: 5rpx; font-size: 30rpx; font-weight: 750; }
+  }
+
+  &__experience {
+    text-align: right;
+
+    text { display: block; }
+    text:first-child { font-size: 32rpx; font-weight: 750; }
+    text:last-child { color: #819296; font-size: 18rpx; }
+  }
+
+  &__track {
+    height: 12rpx;
+    margin-top: 20rpx;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 999rpx;
+
+    view {
+      height: 100%;
+      background: linear-gradient(90deg, #55b7bd, #4c93b1);
+      border-radius: inherit;
+    }
+  }
+
+  &__foot {
+    margin-top: 12rpx;
+    color: #74878a;
+    font-size: 19rpx;
+
+    text:first-child {
+      max-width: 62%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
 .profile-menu {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
