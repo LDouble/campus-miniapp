@@ -12,6 +12,8 @@ const fullPages = [
   'pages/my-services/index',
   'pages/publish/index',
   'pages/messages/index',
+  'pages/official-notices/index',
+  'pages/official-notices/detail',
   'pages/academic-verification/index',
   'pages/academic/schedule/index',
   'pages/academic/grades/index',
