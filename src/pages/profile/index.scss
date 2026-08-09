@@ -108,6 +108,17 @@ page {
     min-width: 0;
   }
 
+  &__actions {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10rpx;
+    margin-left: 12rpx;
+  }
+
   &__name,
   &__school {
     display: block;
@@ -138,7 +149,6 @@ page {
     align-items: center;
     min-height: 48rpx;
     padding: 0 13rpx 0 16rpx;
-    margin-left: 12rpx;
     color: #9b714e;
     font-size: 21rpx;
     font-weight: 650;
@@ -169,10 +179,46 @@ page {
       transform: scale(0.98);
     }
   }
+
+  &__checkin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44rpx;
+    padding: 0 15rpx;
+    color: #397773;
+    font-size: 20rpx;
+    font-weight: 680;
+    background: rgba(235, 247, 243, 0.92);
+    border: 2rpx solid rgba(255, 255, 255, 0.82);
+    border-radius: 17rpx;
+    transition: opacity 120ms ease, transform 120ms ease;
+
+    > view {
+      width: 10rpx;
+      height: 10rpx;
+      margin-right: 8rpx;
+      background: #4ca0a4;
+      border-radius: 50%;
+    }
+
+    &--done {
+      color: #71817f;
+      background: rgba(247, 247, 243, 0.88);
+
+      > view { background: #91aaa4; }
+    }
+
+    &--pressed {
+      opacity: 0.76;
+      transform: scale(0.98);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .profile-card__badge,
+  .profile-card__checkin,
   .profile-menu__item,
   .profile-identity-entry {
     transition: none;

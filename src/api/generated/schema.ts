@@ -3820,6 +3820,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 完成今日签到 */
+        post: operations["CreateDailyCheckin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkins/me/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的月度签到历史 */
+        get: operations["ListMyDailyCheckinHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkins/me/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的每日签到状态 */
+        get: operations["GetMyDailyCheckinStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/user-levels/me": {
         parameters: {
             query?: never;
@@ -6642,6 +6693,65 @@ export interface components {
         TradeOrderViewerAction: "view_resource" | "cancel" | "complete" | "verify_academic";
         /** @enum {string} */
         TradeOrderViewerRelation: "buyer" | "seller";
+        DailyCheckinHistory: {
+            items: components["schemas"]["DailyCheckinHistoryItem"][];
+            month: string;
+            /** @enum {string} */
+            timezone: "Asia/Shanghai";
+            /** Format: int64 */
+            total: number;
+        };
+        DailyCheckinHistoryItem: {
+            /** Format: date-time */
+            checked_in_at: string;
+            /** Format: date */
+            date: string;
+            /** Format: int64 */
+            reward: number;
+        };
+        DailyCheckinHistoryResponseBody: {
+            data: components["schemas"]["DailyCheckinHistory"];
+            request_id: string;
+        };
+        DailyCheckinResponseBody: {
+            data: components["schemas"]["DailyCheckinResult"];
+            request_id: string;
+        };
+        DailyCheckinResult: {
+            already_checked_in: boolean;
+            /** Format: date-time */
+            checked_in_at: string;
+            /** Format: date */
+            checked_in_date: string;
+            /** Format: int64 */
+            consecutive_days: number;
+            /** Format: int64 */
+            experience_after: number;
+            /** Format: int64 */
+            reward: number;
+            user_level: components["schemas"]["UserLevelSummary"];
+        };
+        DailyCheckinStatus: {
+            checked_in: boolean;
+            /** Format: date-time */
+            checked_in_at: string | null;
+            /** Format: int64 */
+            consecutive_days: number;
+            enabled: boolean;
+            /** Format: int64 */
+            next_reward: number;
+            /** Format: date */
+            server_date: string;
+            /** @enum {string} */
+            timezone: "Asia/Shanghai";
+            /** Format: int64 */
+            today_reward: number;
+            user_level: components["schemas"]["UserLevelSummary"];
+        };
+        DailyCheckinStatusResponseBody: {
+            data: components["schemas"]["DailyCheckinStatus"];
+            request_id: string;
+        };
         UserExperienceLedgerPage: {
             items: components["schemas"]["UserExperienceLedgerView"][];
             page: number;
@@ -7768,6 +7878,33 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["TradeOrderResponseBody"];
+            };
+        };
+        /** @description 当前用户的月度签到历史 */
+        DailyCheckinHistoryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DailyCheckinHistoryResponseBody"];
+            };
+        };
+        /** @description 每日签到结果 */
+        DailyCheckinResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DailyCheckinResponseBody"];
+            };
+        };
+        /** @description 当前用户的每日签到状态 */
+        DailyCheckinStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DailyCheckinStatusResponseBody"];
             };
         };
         /** @description 用户经验流水分页 */
@@ -13268,6 +13405,46 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["UserExperienceLedgerPageResponse"];
+        };
+    };
+    CreateDailyCheckin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DailyCheckinResponse"];
+            403: components["responses"]["Error"];
+        };
+    };
+    ListMyDailyCheckinHistory: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DailyCheckinHistoryResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetMyDailyCheckinStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DailyCheckinStatusResponse"];
         };
     };
     GetMyUserLevel: {

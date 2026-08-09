@@ -5,9 +5,11 @@ import CustomNavbar from '../../components/custom-navbar'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import type {
   AcademicVerificationStatus,
+  DailyCheckinStatus,
   UserLevelSummary,
 } from '../../api/types'
 import { getMyUserLevel } from '../../api/user-levels'
+import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
 import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
 import { isQualificationEdition } from '../../features/app-edition'
 import { syncCustomTabBar } from '../../utils/tabbar'
@@ -79,8 +81,10 @@ const identityMenu = {
 export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [userLevel, setUserLevel] = useState<UserLevelSummary | null>(null)
+  const [checkinStatus, setCheckinStatus] = useState<DailyCheckinStatus | null>(null)
   useDidShow(() => {
     syncCustomTabBar('profile')
+    setCheckinStatus(null)
     void getAcademicVerificationStatus().then((status) => {
       setAcademicStatus(status)
     }).catch(() => {
@@ -88,6 +92,9 @@ export default function ProfilePage() {
     })
     void getMyUserLevel().then(setUserLevel).catch(() => {
       // 等级信息不影响个人中心其余入口。
+    })
+    void getMyDailyCheckinStatus().then(setCheckinStatus).catch(() => {
+      // 签到状态失败时仍保留入口，详情页提供完整错误重试。
     })
   })
   const openMenu = (item: typeof menus[number] | typeof identityMenu) => {
@@ -143,19 +150,40 @@ export default function ProfilePage() {
               {studentNumber ? `学号 ${studentNumber}` : '中国海洋大学校园服务账号'}
             </Text>
           </View>
-          <View
-            className={[
-              'profile-card__badge',
-              identityVerified ? 'profile-card__badge--verified' : '',
-              identityPending ? 'profile-card__badge--pending' : '',
-            ].filter(Boolean).join(' ')}
-            hoverClass='profile-card__badge--pressed'
-            ariaRole='button'
-            ariaLabel={`校园身份，${identityMeta}`}
-            onClick={() => openMenu(identityMenu)}
-          >
-            <Text>{identityBadgeText}</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
+          <View className='profile-card__actions'>
+            <View
+              className={[
+                'profile-card__badge',
+                identityVerified ? 'profile-card__badge--verified' : '',
+                identityPending ? 'profile-card__badge--pending' : '',
+              ].filter(Boolean).join(' ')}
+              hoverClass='profile-card__badge--pressed'
+              ariaRole='button'
+              ariaLabel={`校园身份，${identityMeta}`}
+              onClick={() => openMenu(identityMenu)}
+            >
+              <Text>{identityBadgeText}</Text>
+              <Image src={icons.arrow} mode='aspectFit' />
+            </View>
+            <View
+              className={[
+                'profile-card__checkin',
+                checkinStatus?.checked_in ? 'profile-card__checkin--done' : '',
+              ].filter(Boolean).join(' ')}
+              hoverClass='profile-card__checkin--pressed'
+              ariaRole='button'
+              ariaLabel={checkinStatus?.checked_in ? '今日已签到，查看签到记录' : '前往每日签到'}
+              onClick={() => Taro.navigateTo({ url: '/pages/daily-checkin/index' })}
+            >
+              <View />
+              <Text>
+                {checkinStatus?.checked_in
+                  ? '已签到'
+                  : checkinStatus?.enabled === false
+                    ? '签到'
+                    : '去签到'}
+              </Text>
+            </View>
           </View>
         </View>
 
