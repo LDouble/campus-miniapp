@@ -163,12 +163,29 @@ export const academicCalendarLabel = (
 export const calendarEventsForTerm = (
   calendar: AcademicCalendar | null,
   termID: string,
-) => [...(calendar?.events || [])]
-  .filter((event) => !event.period_id || event.period_id === termID)
-  .sort((left, right) => (
+) => {
+  const terms = [...(calendar?.terms || [])].sort((left, right) => (
     left.start_date.localeCompare(right.start_date)
-    || left.title.localeCompare(right.title)
+    || left.id.localeCompare(right.id)
   ))
+  const selectedIndex = terms.findIndex((term) => term.id === termID)
+  if (selectedIndex < 0) return []
+
+  const selected = terms[selectedIndex]
+  const next = terms.slice(selectedIndex + 1)
+    .find((term) => term.start_date > selected.start_date)
+
+  return [...(calendar?.events || [])]
+    .filter((event) => {
+      if (event.period_id) return event.period_id === termID
+      return event.end_date >= selected.start_date
+        && (!next || event.start_date < next.start_date)
+    })
+    .sort((left, right) => (
+      left.start_date.localeCompare(right.start_date)
+      || left.title.localeCompare(right.title)
+    ))
+}
 
 export const calendarEventsAfter = (
   events: AcademicCalendarEvent[],

@@ -14,7 +14,7 @@
     "api:generate": "openapi-typescript ../campus_backend/api/openapi.yaml -o src/api/generated/schema.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
-    "ci:check": "yarn lint && yarn typecheck && yarn test:api-environment && yarn test:course-materials && yarn test:academic-credential && yarn test:home-guest && yarn test:migration-guide-copy && yarn test:webview-url && yarn test:wechat-subscription && yarn test:clubs && yarn build:weapp",
+    "ci:check": "yarn lint && yarn typecheck && yarn test:api-environment && yarn test:course-materials && yarn test:academic-credential && yarn test:home-guest && yarn test:migration-guide-copy && yarn test:webview-url && yarn test:wechat-subscription && yarn test:clubs && yarn test:calendar && yarn build:weapp",
     "test:api-environment": "ts-node --transpile-only scripts/api-environment-smoke.ts",
     "test:course-materials": "ts-node --transpile-only scripts/course-materials-smoke.ts",
     "test:academic-credential": "ts-node --transpile-only scripts/academic-credential-smoke.ts",
