@@ -150,6 +150,16 @@ const homeServiceKeys = new Set([
   'clubs',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
+const featuredHomeServiceKeys = new Set([
+  'schedule',
+  'grades',
+  'exams',
+  'materials',
+  'calendar',
+  'shuttle',
+  'community',
+  'market',
+])
 const migratedHomeServiceKeys = new Set([
   'materials',
   'community',
@@ -534,6 +544,10 @@ function Index() {
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
   const visibleCommunityPosts = communityPosts.slice(0, 3)
+  const featuredHomeServices = [
+    ...visibleHomeServices.filter((service) => featuredHomeServiceKeys.has(service.key)),
+    ...visibleHomeServices.filter((service) => !featuredHomeServiceKeys.has(service.key)),
+  ].slice(0, 8)
 
   const openRuntimeBanner = (banner: RuntimeBanner) => {
     if (banner.action.type === 'miniapp_path' && banner.action.value) {
@@ -577,9 +591,15 @@ function Index() {
           </View>
           <View className='campus__identity-copy'>
             <Text className='campus__eyebrow'>{academicCalendarLabel}</Text>
-            <View className='campus__school' onClick={chooseCampus}>
+            <View
+              className='campus__school'
+              hoverClass='campus__school--pressed'
+              ariaRole='button'
+              ariaLabel={`切换校区，当前为${campusName}`}
+              onClick={chooseCampus}
+            >
               <Text>中国海洋大学 · {campusName}</Text>
-              <Text className='campus__chevron'>⌄</Text>
+              <Image className='campus__chevron' src={icons.arrow} mode='aspectFit' />
             </View>
           </View>
         </View>
@@ -589,6 +609,8 @@ function Index() {
             hoverClass='motion-press--active'
             hoverStartTime={20}
             hoverStayTime={100}
+            ariaRole='button'
+            ariaLabel={unreadCount > 0 ? `消息，${unreadCount} 条未读` : '消息'}
             onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}
           >
             <Image src={icons.bell} mode='aspectFit' />
@@ -598,10 +620,12 @@ function Index() {
       </View>
 
       <View
-        className='schedule-card motion-enter motion-enter--delay-1 motion-press'
+        className='schedule-card motion-enter motion-enter--delay-2 motion-press'
         hoverClass='motion-press--active'
         hoverStartTime={20}
         hoverStayTime={100}
+        ariaRole='button'
+        ariaLabel={`查看课表，${coursePreview.dayLabel}${coursePreview.total}节课`}
         onClick={openSchedule}
       >
         <View className='schedule-card__header'>
@@ -665,9 +689,12 @@ function Index() {
         )}
       </View>
 
-      <View className='service-panel motion-enter motion-enter--delay-2'>
+      <View className='service-panel motion-enter motion-enter--delay-3'>
         <View className='service-panel__simple-head'>
-          <Text>校园服务</Text>
+          <View className='service-panel__title-group'>
+            <Text className='service-panel__title'>常用服务</Text>
+            <Text className='service-panel__subtitle'>学习生活，一触即达</Text>
+          </View>
           <View
             className='service-panel__all'
             hoverClass='service-panel__all--pressed'
@@ -680,11 +707,13 @@ function Index() {
           </View>
         </View>
         <View className='service-panel__home-grid'>
-          {visibleHomeServices.map((item) => (
+          {featuredHomeServices.map((item) => (
             <View
               key={item.key}
               className={`service-panel__grid-item service-panel__grid-item--${item.tone}`}
               hoverClass='service-panel__item--pressed'
+              ariaRole='button'
+              ariaLabel={item.name}
               onClick={() => openQuickService(item)}
             >
               <View className='service-panel__grid-icon'>
@@ -696,8 +725,14 @@ function Index() {
         </View>
       </View>
 
-      <View className='official-notices-home motion-enter motion-enter--delay-3'>
-        <View className='official-notices-home__head' onClick={openOfficialNotices}>
+      <View className='official-notices-home motion-enter motion-enter--delay-4'>
+        <View
+          className='official-notices-home__head'
+          hoverClass='official-notices-home__head--pressed'
+          ariaRole='button'
+          ariaLabel='查看全部官方通知'
+          onClick={openOfficialNotices}
+        >
           <View>
             <Text className='official-notices-home__eyebrow'>OFFICIAL</Text>
             <Text className='official-notices-home__title'>全校通知</Text>
@@ -725,13 +760,13 @@ function Index() {
               <Text>{item.title}</Text>
               <Text>{item.publisher} · {formatOfficialNoticeDate(item.source_published_at)}</Text>
             </View>
-            <Text className='official-notices-home__arrow'>›</Text>
+            <Image className='official-notices-home__arrow' src={icons.arrow} mode='aspectFit' />
           </View>
         ))}
       </View>
 
       {isQualificationEdition ? (
-        <View className='home-migrated motion-enter motion-enter--delay-3'>
+        <View className='home-migrated motion-enter motion-enter--delay-1'>
           <View className='home-migrated__eyebrow'>新版服务</View>
           <Text className='home-migrated__title'>{migrationGuide.title}</Text>
           <Text className='home-migrated__copy'>{migrationGuide.description}</Text>
@@ -750,7 +785,7 @@ function Index() {
         className={[
           'hero-card',
           'motion-enter',
-          'motion-enter--delay-3',
+          'motion-enter--delay-1',
           'motion-press',
           runtimeBanner ? 'hero-card--notice' : '',
           runtimeBanner?.image_url ? 'hero-card--image' : '',
@@ -758,6 +793,8 @@ function Index() {
         hoverClass='motion-press--active'
         hoverStartTime={20}
         hoverStayTime={100}
+        ariaRole={!runtimeBanner || bannerActionable ? 'button' : undefined}
+        ariaLabel={runtimeBanner?.title || '发现校园新鲜事'}
         onClick={() => runtimeBanner
           ? openRuntimeBanner(runtimeBanner)
           : openModule('community')}
@@ -846,18 +883,25 @@ function Index() {
         )}
       </View>
 
-      <View className='section-heading section-heading--compact'>
-        <View>
-          <Text className='section-heading__title'>校园新鲜事</Text>
-          <Text className='section-heading__sub'>看看同学们正在聊什么</Text>
+      <View className='community-panel'>
+        <View className='section-heading section-heading--community'>
+          <View>
+            <Text className='section-heading__eyebrow'>CAMPUS</Text>
+            <Text className='section-heading__title'>校园新鲜事</Text>
+          </View>
+          <View
+            className='section-heading__more'
+            hoverClass='section-heading__more--pressed'
+            ariaRole='button'
+            ariaLabel='查看更多校园动态'
+            onClick={() => openLifeHub('community')}
+          >
+            <Text>查看更多</Text>
+            <Image src={icons.arrow} mode='aspectFit' />
+          </View>
         </View>
-        <View className='section-heading__more' onClick={() => openLifeHub('community')}>
-          <Text>更多</Text>
-          <Image src={icons.arrow} mode='aspectFit' />
-        </View>
-      </View>
 
-      <View className='news-card'>
+        <View className='news-card'>
         {communityLoading && <View className='home-section-state'>正在加载校园动态</View>}
         {!communityLoading && communityError && (
           <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
@@ -883,36 +927,36 @@ function Index() {
             ariaLabel={`查看${communityAuthorName(item)}发布的动态`}
             onClick={() => openCommunityPost(item)}
           >
-            <View className='news-card__topline'>
-              <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                <Text>{communityAuthorInitial(item)}</Text>
+            {index === 0 ? (<>
+              <View className='news-card__topline'>
+                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
+                  <Text>{communityAuthorInitial(item)}</Text>
+                </View>
+                <View className='news-card__author'>
+                  <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
+                  <Text className='news-card__time'>
+                    {formatDateTime(item.published_at || item.created_at)}
+                  </Text>
+                </View>
+                <View className='news-card__tag'>
+                  <Text>{sectionNames[item.section_id] || '社区'}</Text>
+                </View>
               </View>
-              <View className='news-card__author'>
-                <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
-                <Text className='news-card__time'>
-                  {formatDateTime(item.published_at || item.created_at)}
+
+              <View className='news-card__body'>
+                <Text className='news-card__title'>
+                  {item.content?.trim() || '分享了一组校园图片'}
                 </Text>
+                {item.images[0] && (
+                  <Image
+                    className='news-card__cover'
+                    src={item.images[0].url}
+                    mode='aspectFill'
+                    lazyLoad
+                  />
+                )}
               </View>
-              <View className='news-card__tag'>
-                <Text>{sectionNames[item.section_id] || '社区'}</Text>
-              </View>
-            </View>
 
-            <View className='news-card__body'>
-              <Text className='news-card__title'>
-                {item.content?.trim() || '分享了一组校园图片'}
-              </Text>
-              {index === 0 && item.images[0] && (
-                <Image
-                  className='news-card__cover'
-                  src={item.images[0].url}
-                  mode='aspectFill'
-                  lazyLoad
-                />
-              )}
-            </View>
-
-            {index === 0 && (
               <View className='news-card__footer'>
                 <View className='news-card__metric'>
                   <Image src={icons.heart} mode='aspectFit' />
@@ -927,47 +971,78 @@ function Index() {
                   <Image src={icons.arrow} mode='aspectFit' />
                 </View>
               </View>
+            </>) : (
+              <View className='news-card__compact-main'>
+                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
+                  <Text>{communityAuthorInitial(item)}</Text>
+                </View>
+                <View className='news-card__compact-copy'>
+                  <View className='news-card__compact-meta'>
+                    <Text>{communityAuthorName(item)} · {sectionNames[item.section_id] || '社区'}</Text>
+                    <Text>{formatDateTime(item.published_at || item.created_at)}</Text>
+                  </View>
+                  <Text className='news-card__compact-title'>
+                    {item.content?.trim() || '分享了一组校园图片'}
+                  </Text>
+                </View>
+                <Image className='news-card__compact-arrow' src={icons.arrow} mode='aspectFit' />
+              </View>
             )}
           </View>
         ))}
-      </View>
-
-      <View className='section-heading section-heading--compact'>
-        <View>
-          <Text className='section-heading__title'>同学们在淘</Text>
-          <Text className='section-heading__sub'>校内面交，放心又便捷</Text>
-        </View>
-        <View className='section-heading__more' onClick={() => openModule('market')}>
-          <Text>逛一逛</Text>
-          <Image src={icons.arrow} mode='aspectFit' />
         </View>
       </View>
 
-      <ScrollView className='market-scroll' scrollX enhanced showScrollbar={false}>
-        <View className='market-list'>
-          {marketLoading && <View className='home-section-state home-section-state--market'>正在加载校内闲置</View>}
-          {!marketLoading && marketError && (
-            <View
-              className='home-section-state home-section-state--market home-section-state--error'
-              onClick={() => void loadHome()}
-            >
-              闲置加载失败，点击重试
-            </View>
-          )}
-          {!marketLoading && !marketError && marketItems.length === 0 && (
-            <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
-          )}
-          {!marketLoading && !marketError && FullMarketplaceCard && marketItems.map((item) => (
-            <FullMarketplaceCard key={item.id} item={item} variant='compact' />
-          ))}
-          <View className='market-card market-card--more' onClick={() => openModule('market')}>
-            <View className='market-card__more-icon'>
-              <Image src={icons.arrow} mode='aspectFit' />
-            </View>
-            <Text>查看更多好物</Text>
+      <View className='market-panel'>
+        <View className='section-heading section-heading--market'>
+          <View>
+            <Text className='section-heading__eyebrow section-heading__eyebrow--market'>MARKET</Text>
+            <Text className='section-heading__title'>同学们在淘</Text>
+          </View>
+          <View
+            className='section-heading__more'
+            hoverClass='section-heading__more--pressed'
+            ariaRole='button'
+            ariaLabel='查看更多二手好物'
+            onClick={() => openModule('market')}
+          >
+            <Text>逛一逛</Text>
+            <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
-      </ScrollView>
+
+        <ScrollView className='market-scroll' scrollX enhanced showScrollbar={false}>
+          <View className='market-list'>
+            {marketLoading && <View className='home-section-state home-section-state--market'>正在加载校内闲置</View>}
+            {!marketLoading && marketError && (
+              <View
+                className='home-section-state home-section-state--market home-section-state--error'
+                onClick={() => void loadHome()}
+              >
+                闲置加载失败，点击重试
+              </View>
+            )}
+            {!marketLoading && !marketError && marketItems.length === 0 && (
+              <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
+            )}
+            {!marketLoading && !marketError && FullMarketplaceCard && marketItems.map((item) => (
+              <FullMarketplaceCard key={item.id} item={item} variant='compact' />
+            ))}
+            <View
+              className='market-card market-card--more'
+              hoverClass='market-card--pressed'
+              ariaRole='button'
+              ariaLabel='查看更多二手好物'
+              onClick={() => openModule('market')}
+            >
+              <View className='market-card__more-icon'>
+                <Image src={icons.arrow} mode='aspectFit' />
+              </View>
+              <Text>查看更多好物</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
       </>)}
 
     </View>
