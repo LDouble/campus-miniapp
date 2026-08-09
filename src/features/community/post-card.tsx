@@ -6,6 +6,7 @@ import {
   communityAuthorName,
   communityAuthorTone,
 } from './author'
+import CommunityLevelBadge from './level-badge'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -62,6 +63,7 @@ export default function CommunityPostCard({
         <View className='community-post__author'>
           <View className='community-post__author-line'>
             <Text>{authorName}</Text>
+            <CommunityLevelBadge level={post.author_level} compact />
           </View>
           <View className='community-post__meta'>
             <Text>{publishedAt}</Text>

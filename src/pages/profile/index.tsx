@@ -3,7 +3,11 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
-import type { AcademicVerificationStatus } from '../../api/types'
+import type {
+  AcademicVerificationStatus,
+  UserLevelSummary,
+} from '../../api/types'
+import { getMyUserLevel } from '../../api/user-levels'
 import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
 import { isQualificationEdition } from '../../features/app-edition'
 import { syncCustomTabBar } from '../../utils/tabbar'
@@ -74,12 +78,16 @@ const identityMenu = {
 
 export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
+  const [userLevel, setUserLevel] = useState<UserLevelSummary | null>(null)
   useDidShow(() => {
     syncCustomTabBar('profile')
     void getAcademicVerificationStatus().then((status) => {
       setAcademicStatus(status)
     }).catch(() => {
       // 个人页保留可用，认证页会提供完整错误重试。
+    })
+    void getMyUserLevel().then(setUserLevel).catch(() => {
+      // 等级信息不影响个人中心其余入口。
     })
   })
   const openMenu = (item: typeof menus[number] | typeof identityMenu) => {
@@ -151,7 +159,39 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        <View className='profile-section motion-enter motion-enter--delay-1'>
+        {userLevel && (
+          <View
+            className={`profile-level profile-level--${userLevel.theme} motion-enter motion-enter--delay-1`}
+            hoverClass='profile-level--pressed'
+            ariaRole='button'
+            ariaLabel={`社区等级，Lv.${userLevel.level} ${userLevel.name}`}
+            onClick={() => Taro.navigateTo({ url: '/pages/user-level/index' })}
+          >
+            <View className='profile-level__head'>
+              <View>
+                <Text>社区贡献等级</Text>
+                <Text>Lv.{userLevel.level} · {userLevel.name}</Text>
+              </View>
+              <View className='profile-level__experience'>
+                <Text>{userLevel.experience}</Text>
+                <Text>经验</Text>
+              </View>
+            </View>
+            <View className='profile-level__track'>
+              <View style={{ width: `${Math.max(0, Math.min(100, userLevel.progress_percent))}%` }} />
+            </View>
+            <View className='profile-level__foot'>
+              <Text>{userLevel.description}</Text>
+              <Text>
+                {userLevel.is_max_level
+                  ? '已达最高等级'
+                  : `还差 ${userLevel.experience_to_next} 经验升级`}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        <View className='profile-section motion-enter motion-enter--delay-2'>
           <View className='profile-section__head'>
             <Text className='profile-section__title'>我的服务</Text>
             <Text className='profile-section__hint'>常用记录，一步直达</Text>
@@ -175,7 +215,7 @@ export default function ProfilePage() {
           </View>
         </View>
 
-        <View className='profile-section motion-enter motion-enter--delay-2'>
+        <View className='profile-section motion-enter motion-enter--delay-3'>
           <Text className='profile-section__title'>账号与身份</Text>
           <View className='profile-account-list'>
             <View
