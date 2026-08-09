@@ -5,6 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import type { MarketplaceListingView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
@@ -89,6 +90,7 @@ export default function MarketplaceDetailPage() {
       } else if (action === 'withdraw') {
         await lifeServicesRepository.withdrawMarketplaceListing(item.id, item.version)
       }
+      markLifeHubSectionDirty('market')
       await load()
       Taro.showToast({ title: '状态已更新', icon: 'success' })
     } catch (actionError) {

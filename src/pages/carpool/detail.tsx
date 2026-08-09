@@ -5,6 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import type { CarpoolTripView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
@@ -89,6 +90,7 @@ export default function CarpoolDetailPage() {
       else if (action === 'leave') setItem(await lifeServicesRepository.leaveCarpoolTrip(item.id, item.version))
       else if (action === 'cancel') setItem(await lifeServicesRepository.cancelCarpoolTrip(item.id, item.version))
       else if (action === 'submit_review') setItem(await lifeServicesRepository.submitCarpoolReview(item.id, item.version))
+      markLifeHubSectionDirty('carpool')
       Taro.showToast({ title: '状态已更新', icon: 'success' })
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return

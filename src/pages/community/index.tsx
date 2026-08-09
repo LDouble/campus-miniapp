@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Taro, {
   useDidHide,
   useDidShow,
@@ -21,6 +21,10 @@ import {
   type LifeHubSection,
 } from '../../features/life-services/business-theme'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import {
+  isLifeHubSectionRefreshRequired,
+  markLifeHubSectionDirty,
+} from '../../features/life-services/refresh-policy'
 import LifeServiceListPanel, {
   type LifeServiceSection,
 } from '../../features/life-services/list-panel'
@@ -44,6 +48,7 @@ const icons = {
 }
 
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
+const COMMUNITY_SECTIONS_FRESH_MS = 5 * 60_000
 const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   community: 'community',
   errands: 'errand',
@@ -66,6 +71,9 @@ export default function CommunityPage() {
   const [marketplaceSearchPrefill, setMarketplaceSearchPrefill] = useState<
     MarketplaceSearchPrefill | null
   >(null)
+  const hasShown = useRef(false)
+  const communitySectionsFreshAt = useRef(0)
+  const communitySectionsRequest = useRef(0)
   const navbarMetrics = getNavbarMetrics()
   const navbarHeight = navbarMetrics.statusBarHeight + navbarMetrics.navigationBarHeight
   const headerCollapsed = useCollapsingHeader({
@@ -118,10 +126,17 @@ export default function CommunityPage() {
     }
     : baseCopy
 
-  const loadCommunitySections = async () => {
+  const loadCommunitySections = async (force = false) => {
+    if (
+      !force
+      && communitySectionsReady
+      && Date.now() - communitySectionsFreshAt.current < COMMUNITY_SECTIONS_FRESH_MS
+    ) return
+    const requestId = ++communitySectionsRequest.current
     setCommunitySectionsError('')
     try {
       const result = await lifeServicesRepository.listCampusCircleSections()
+      if (requestId !== communitySectionsRequest.current) return
       const roots = result.items.filter(
         (item) => item.parent_id === null && item.status === 'active',
       )
@@ -134,12 +149,16 @@ export default function CommunityPage() {
         if (available.some((item) => item.id === current)) return current
         return roots[0]?.id || 0
       })
+      communitySectionsFreshAt.current = Date.now()
     } catch {
+      if (requestId !== communitySectionsRequest.current) return
       setCommunityRoots([])
       setActiveCommunitySectionId(0)
       setCommunitySectionsError('社区板块加载失败，请稍后重试')
     } finally {
-      setCommunitySectionsReady(true)
+      if (requestId === communitySectionsRequest.current) {
+        setCommunitySectionsReady(true)
+      }
     }
   }
 
@@ -222,7 +241,13 @@ export default function CommunityPage() {
 
   useDidShow(() => {
     syncCustomTabBar('community')
-    setRefreshSignal((current) => current + 1)
+    if (
+      hasShown.current
+      && isLifeHubSectionRefreshRequired(displayedSection)
+    ) {
+      setRefreshSignal((current) => current + 1)
+    }
+    hasShown.current = true
     void loadMiniappRuntimeConfig().then((config) => {
       setRuntimeConfig(config)
       const availableSections = lifeBusinessThemeList.filter((section) => (
@@ -287,9 +312,10 @@ export default function CommunityPage() {
 
   usePullDownRefresh(() => {
     setPinnedCommunityPost(null)
+    markLifeHubSectionDirty(displayedSection)
     setRefreshSignal((current) => current + 1)
     if (resolveMiniappModule(runtimeConfig, 'community').state === 'enabled') {
-      void loadCommunitySections().finally(() => Taro.stopPullDownRefresh())
+      void loadCommunitySections(true).finally(() => Taro.stopPullDownRefresh())
       return
     }
     Taro.stopPullDownRefresh()

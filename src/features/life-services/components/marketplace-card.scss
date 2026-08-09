@@ -11,7 +11,7 @@
 .marketplace-card--compact {
   display: inline-flex;
   width: 280rpx;
-  min-height: 336rpx;
+  height: 356rpx;
   flex: 0 0 280rpx;
   flex-direction: column;
   vertical-align: top;
@@ -41,7 +41,8 @@
 }
 
 .marketplace-card--compact .marketplace-card__cover {
-  height: 188rpx;
+  flex: 0 0 176rpx;
+  height: 176rpx;
 }
 
 .marketplace-card__cover--placeholder {
@@ -49,7 +50,7 @@
 }
 
 .marketplace-card--compact .marketplace-card__cover--placeholder {
-  height: 188rpx;
+  height: 176rpx;
 }
 
 .marketplace-card__cover image {
@@ -140,27 +141,29 @@
   -webkit-line-clamp: 2;
 }
 
-.marketplace-card__status {
+.marketplace-card__intent {
   position: absolute;
   top: 12rpx;
-  left: 12rpx;
+  right: 12rpx;
   display: inline-flex;
   min-height: 42rpx;
   padding: 0 13rpx;
   align-items: center;
   border: 2rpx solid rgba(255, 255, 255, 0.74);
   border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.9);
-  color: #a94739;
+  background: rgba(217, 109, 88, 0.92);
+  color: #fff;
   font-size: 19rpx;
   font-weight: 700;
   backdrop-filter: blur(8rpx);
 }
 
-.marketplace-card--compact .marketplace-card__status {
-  right: 12rpx;
-  left: auto;
+.marketplace-card--compact .marketplace-card__intent {
   backdrop-filter: none;
+}
+
+.marketplace-card--wanted .marketplace-card__intent {
+  background: rgba(78, 142, 132, 0.92);
 }
 
 .marketplace-card__body {
@@ -168,6 +171,10 @@
 }
 
 .marketplace-card--compact .marketplace-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   padding: 15rpx 16rpx 12rpx;
 }
 
@@ -218,24 +225,11 @@
 }
 
 .marketplace-card--compact .marketplace-card__price {
+  min-width: 0;
+  overflow: hidden;
   font-size: 32rpx;
-}
-
-.marketplace-card--compact .marketplace-card__intent {
-  font-size: 19rpx;
-}
-
-.marketplace-card__intent {
-  padding: 5rpx 10rpx;
-  color: #fff;
-  font-size: 18rpx;
-  font-weight: 720;
-  background: #d96d58;
-  border-radius: 999rpx;
-}
-
-.marketplace-card--wanted .marketplace-card__intent {
-  background: #4e8e84;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .marketplace-card--wanted .marketplace-card__price {
@@ -264,6 +258,7 @@
 .marketplace-card--compact .marketplace-card__footer {
   min-height: 42rpx;
   align-items: center;
+  margin-top: auto;
   color: #687d77;
   font-size: 19rpx;
 }

@@ -5,6 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import type { ErrandView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
@@ -102,6 +103,7 @@ export default function ErrandDetailPage() {
       } else if (action === 'submit_review') {
         setItem(await lifeServicesRepository.submitErrandReview(item.id, item.version))
       }
+      markLifeHubSectionDirty('errands')
       Taro.showToast({ title: '状态已更新', icon: 'success' })
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return

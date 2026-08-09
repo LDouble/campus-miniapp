@@ -6,6 +6,12 @@ import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { lifeServicesRepository } from '../life-services/repository'
+import {
+  getLifeHubRefreshRevision,
+  isLifeHubCacheReusable,
+  markLifeHubSectionDirty,
+  markLifeHubSectionFresh,
+} from '../life-services/refresh-policy'
 import CommunityPostCard from './post-card'
 import './feed-panel.scss'
 
@@ -21,6 +27,32 @@ type Props = {
   filterLabel?: string
   canFilter?: boolean
   onOpenFilter?: () => void
+}
+
+type CommunityFeedCacheEntry = {
+  posts: CampusCirclePostView[]
+  page: number
+  total: number
+  refreshedAt: number
+  revision: number
+}
+
+type CommunityHomeCacheEntry = {
+  value: CampusCircleHome
+  refreshedAt: number
+  revision: number
+}
+
+const communityFeedCache = new Map<string, CommunityFeedCacheEntry>()
+const COMMUNITY_FEED_CACHE_LIMIT = 20
+let communityHomeCache: CommunityHomeCacheEntry | null = null
+
+const saveCommunityFeedCache = (key: string, entry: CommunityFeedCacheEntry) => {
+  communityFeedCache.delete(key)
+  communityFeedCache.set(key, entry)
+  if (communityFeedCache.size <= COMMUNITY_FEED_CACHE_LIMIT) return
+  const oldestKey = communityFeedCache.keys().next().value
+  if (oldestKey) communityFeedCache.delete(oldestKey)
 }
 
 const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionView[] => (
@@ -76,6 +108,11 @@ export default function CommunityFeedPanel({
   )
   const activeSectionId = activeSection?.id
   const activeParentSectionId = activeSection?.parent_id
+  const queryKey = useMemo(() => JSON.stringify({
+    activeSectionId,
+    activeParentSectionId,
+    keyword,
+  }), [activeParentSectionId, activeSectionId, keyword])
   const load = useCallback(async (nextPage = 1, append = false) => {
     if (!activeSectionId) return
     const requestId = ++requestSequence.current
@@ -96,12 +133,25 @@ export default function CommunityFeedPanel({
       const incoming = pinned
         ? [pinned, ...result.items.filter((item) => item.id !== pinned.id)]
         : result.items
-      setPosts((current) => append
-        ? mergeUniquePosts(current, incoming)
-        : incoming)
+      const refreshedAt = Date.now()
+      const revision = getLifeHubRefreshRevision('community')
+      setPosts((current) => {
+        const nextPosts = append
+          ? mergeUniquePosts(current, incoming)
+          : incoming
+        saveCommunityFeedCache(queryKey, {
+          posts: nextPosts,
+          page: result.page,
+          total: Number(result.total),
+          refreshedAt,
+          revision,
+        })
+        return nextPosts
+      })
       if (pinned) pendingPinnedPost.current = null
       setPage(result.page)
       setTotal(Number(result.total))
+      markLifeHubSectionFresh('community', refreshedAt)
     } catch (loadError) {
       if (requestId !== requestSequence.current) return
       setError(isApiError(loadError)
@@ -113,19 +163,58 @@ export default function CommunityFeedPanel({
         setLoadingMore(false)
       }
     }
-  }, [activeParentSectionId, activeSectionId, keyword])
+  }, [activeParentSectionId, activeSectionId, keyword, queryKey])
 
   useEffect(() => {
     if (!sectionsReady || !activeSectionId) return
+    const cached = communityFeedCache.get(queryKey)
+    if (
+      cached
+      && isLifeHubCacheReusable(
+        'community',
+        cached.revision,
+        cached.refreshedAt,
+      )
+    ) {
+      const pinned = pendingPinnedPost.current
+      setPosts(pinned
+        ? [pinned, ...cached.posts.filter((item) => item.id !== pinned.id)]
+        : cached.posts)
+      pendingPinnedPost.current = null
+      setPage(cached.page)
+      setTotal(cached.total)
+      setError('')
+      setLoading(false)
+      markLifeHubSectionFresh('community', cached.refreshedAt)
+      return
+    }
     void load(1, false)
-  }, [activeSectionId, load, refreshSignal, sectionsReady])
+  }, [activeSectionId, load, queryKey, refreshSignal, sectionsReady])
 
   useEffect(() => {
     let cancelled = false
     const loadHome = async () => {
+      if (
+        communityHomeCache
+        && isLifeHubCacheReusable(
+          'community',
+          communityHomeCache.revision,
+          communityHomeCache.refreshedAt,
+        )
+      ) {
+        setHome(communityHomeCache.value)
+        return
+      }
       try {
         const result = await lifeServicesRepository.getCampusCircleHome()
-        if (!cancelled) setHome(result)
+        if (!cancelled) {
+          communityHomeCache = {
+            value: result,
+            refreshedAt: Date.now(),
+            revision: getLifeHubRefreshRevision('community'),
+          }
+          setHome(result)
+        }
       } catch {
         // 首页聚合是增强信息，失败时保留原有最新流。
         if (!cancelled) setHome(null)
@@ -145,6 +234,7 @@ export default function CommunityFeedPanel({
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
         : await lifeServicesRepository.likeCampusCirclePost(post.id)
       setPosts((current) => current.map((item) => item.id === post.id ? updated : item))
+      markLifeHubSectionDirty('community')
     } catch (toggleError) {
       Taro.showToast({
         title: isApiError(toggleError) ? toggleError.message : '操作失败',
