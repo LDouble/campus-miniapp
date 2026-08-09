@@ -87,7 +87,8 @@ page { background: #f4fafc; }
 }
 
 .user-level-rules,
-.user-level-ledger {
+.user-level-ledger,
+.user-level-tasks {
   padding: 28rpx;
   margin-top: 26rpx;
   background: rgba(255, 255, 255, 0.94);
@@ -141,9 +142,63 @@ page { background: #f4fafc; }
   &__amount--minus { color: #c96d5f; }
   &__empty { padding: 44rpx 10rpx; color: #93a0a3; font-size: 21rpx; text-align: center; }
 }
-.user-level-task { display: flex; justify-content: space-between; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid #edf0ee; }
-.user-level-task > view { display: flex; flex-direction: column; gap: 6rpx; }
-.user-level-task > view:first-child text:last-child { color: #7f8d8a; font-size: 23rpx; }
-.user-level-task > view:last-child { align-items: flex-end; color: #287c73; font-weight: 600; }
-.user-level-task > view:last-child text:last-child { color: #83938f; font-size: 22rpx; }
-.user-level-task--completed { opacity: .65; }
+
+.user-level-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 96rpx;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #edf0ee;
+
+  &:last-child { border-bottom: 0; }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    padding-right: 24rpx;
+  }
+
+  &__title,
+  &__description,
+  &__reward,
+  &__status { display: block; }
+
+  &__title {
+    color: #355967;
+    font-size: 25rpx;
+    font-weight: 650;
+    line-height: 1.45;
+  }
+
+  &__description {
+    margin-top: 7rpx;
+    color: #7f8d8a;
+    font-size: 21rpx;
+    line-height: 1.55;
+  }
+
+  &__progress {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    width: 104rpx;
+  }
+
+  &__reward {
+    color: #287c73;
+    font-size: 25rpx;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  &__status {
+    margin-top: 6rpx;
+    color: #83938f;
+    font-size: 20rpx;
+    line-height: 1.4;
+  }
+
+  &--completed { opacity: 0.65; }
+}

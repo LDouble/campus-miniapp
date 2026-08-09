@@ -90,12 +90,27 @@ export default function UserLevelPage() {
               <Text className='user-level-hero__message'>{level.upgrade_message}</Text>
             </View>
 
-            <View className='user-level-rules user-level-tasks'>
+            <View className='user-level-tasks'>
               <Text className='user-level-section-title'>新手任务</Text>
-              {tasks.map((task) => <View key={task.key} className={task.status === 'completed' ? 'user-level-task user-level-task--completed' : 'user-level-task'}>
-                <View><Text>{task.title}</Text><Text>{task.description}</Text></View>
-                <View><Text>+{task.reward}</Text><Text>{task.status === 'completed' ? '已完成' : '待完成'}</Text></View>
-              </View>)}
+              {tasks.map((task) => (
+                <View
+                  key={task.key}
+                  className={task.status === 'completed'
+                    ? 'user-level-task user-level-task--completed'
+                    : 'user-level-task'}
+                >
+                  <View className='user-level-task__content'>
+                    <Text className='user-level-task__title'>{task.title}</Text>
+                    <Text className='user-level-task__description'>{task.description}</Text>
+                  </View>
+                  <View className='user-level-task__progress'>
+                    <Text className='user-level-task__reward'>+{task.reward}</Text>
+                    <Text className='user-level-task__status'>
+                      {task.status === 'completed' ? '已完成' : '待完成'}
+                    </Text>
+                  </View>
+                </View>
+              ))}
               {tasks.length === 0 && <View className='user-level-ledger__empty'>完成首次发帖或评论审核后，这里会展示任务进度</View>}
             </View>
 
