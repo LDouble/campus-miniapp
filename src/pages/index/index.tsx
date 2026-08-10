@@ -10,6 +10,13 @@ import {
 } from '@tarojs/components'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
+import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
+import { listMyUserLevelTasks } from '../../api/user-levels'
+import {
+  deleteMyCalendarReminder,
+  listMyCalendarReminders,
+  putMyCalendarReminder,
+} from '../../api/calendar-reminders'
 import { isAccountCancelled } from '../../api/auth'
 import {
   getActiveAcademicUserId,
@@ -19,6 +26,9 @@ import type {
   CampusCirclePostView,
   CampusCircleSectionView,
   MarketplaceListingView,
+  CalendarReminderView,
+  DailyCheckinStatus,
+  UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
@@ -68,6 +78,15 @@ import {
   resolveScheduleAnchor,
 } from '../academic/utils'
 import { normalizeWebViewUrl } from '../../features/webview/url'
+import {
+  calendarEventDateLabel,
+  resolveTodayTask,
+  upcomingHomeCalendarEvents,
+} from '../../features/home/today'
+import {
+  getCalendarEducationLevel,
+  loadAcademicCalendar,
+} from '../../features/calendar/repository'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -98,6 +117,10 @@ const icons = {
   heart: require('../../assets/community/heart.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
 }
+
+const homeFeatureFlags = {
+  todayTask: false,
+} as const
 
 const quickServices = [
   {
@@ -295,6 +318,10 @@ function Index() {
   const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
   const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
   const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>([])
+  const [calendar, setCalendar] = useState<Awaited<ReturnType<typeof loadAcademicCalendar>>['calendar']>(null)
+  const [calendarReminders, setCalendarReminders] = useState<CalendarReminderView[]>([])
+  const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinStatus | null>(null)
+  const [userLevelTasks, setUserLevelTasks] = useState<UserLevelTask[]>([])
   const [communityLoading, setCommunityLoading] = useState(true)
   const [marketLoading, setMarketLoading] = useState(true)
   const [communityError, setCommunityError] = useState(false)
@@ -342,6 +369,22 @@ function Index() {
     const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
     }))
+    const calendarPromise = moduleEnabled('calendar')
+      ? loadAcademicCalendar(getCalendarEducationLevel())
+      : Promise.resolve({ calendar: null, source: 'unavailable' as const, updatedAt: 0 })
+    const checkinPromise = homeFeatureFlags.todayTask
+      ? accountPromise.then((account) => (
+        account.ok ? settle(getMyDailyCheckinStatus()) : { ok: false } as Settled<never>
+      ))
+      : Promise.resolve({ ok: false } as Settled<never>)
+    const tasksPromise = homeFeatureFlags.todayTask
+      ? accountPromise.then((account) => (
+        account.ok ? settle(listMyUserLevelTasks()) : { ok: false } as Settled<never>
+      ))
+      : Promise.resolve({ ok: false } as Settled<never>)
+    const remindersPromise = accountPromise.then((account) => (
+      account.ok ? settle(listMyCalendarReminders()) : { ok: false } as Settled<never>
+    ))
     const [
       account,
       community,
@@ -350,6 +393,10 @@ function Index() {
       marketplace,
       latestAcademic,
       latestOfficialNotices,
+      latestCalendar,
+      latestCheckin,
+      latestTasks,
+      latestReminders,
     ] = await Promise.all([
       accountPromise,
       communityPromise,
@@ -358,6 +405,10 @@ function Index() {
       marketplacePromise,
       academicPromise,
       officialNoticesPromise,
+      calendarPromise,
+      checkinPromise,
+      tasksPromise,
+      remindersPromise,
     ])
 
     const selectedCampus = getSelectedCampus(latestRuntimeConfig)
@@ -391,6 +442,10 @@ function Index() {
       setMarketError(moduleEnabled('marketplace'))
     }
     setOfficialNotices(latestOfficialNotices.ok ? latestOfficialNotices.value.items : [])
+    setCalendar(latestCalendar.calendar)
+    setDailyCheckin(latestCheckin.ok ? latestCheckin.value : null)
+    setUserLevelTasks(latestTasks.ok ? latestTasks.value.items : [])
+    setCalendarReminders(latestReminders.ok ? latestReminders.value.items : [])
     setCommunityLoading(false)
     setMarketLoading(false)
     Taro.stopPullDownRefresh()
@@ -489,6 +544,10 @@ function Index() {
     )
   }
 
+  const openCalendar = () => {
+    void openMiniappModule('calendar', '/pages/calendar/index', { config: runtimeConfig })
+  }
+
   const chooseCampus = async () => {
     const campuses = enabledCampuses(runtimeConfig)
     const result = await Taro.showActionSheet({ itemList: campuses })
@@ -533,6 +592,53 @@ function Index() {
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
   const visibleCommunityPosts = communityPosts.slice(0, 3)
+  const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
+  const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
+
+  const toggleCalendarReminder = async (eventId: string) => {
+    const existing = calendarReminders.find((item) => item.event_id === eventId)
+    try {
+      if (existing) {
+        const result = await Taro.showActionSheet({ itemList: ['取消提醒'] })
+        if (result.tapIndex !== 0) return
+        await deleteMyCalendarReminder(existing.id)
+        setCalendarReminders((items) => items.filter((item) => item.id !== existing.id))
+        Taro.showToast({ title: '已取消提醒', icon: 'success' })
+        return
+      }
+      const choices = [
+        { days: 0 as const, label: '当天提醒' },
+        { days: 1 as const, label: '提前 1 天' },
+        { days: 3 as const, label: '提前 3 天' },
+        { days: 7 as const, label: '提前 7 天' },
+      ]
+      const result = await Taro.showActionSheet({ itemList: choices.map((item) => item.label) })
+      const choice = choices[result.tapIndex]
+      if (!choice) return
+      const reminder = await putMyCalendarReminder({
+        advance_days: choice.days,
+        education_level: getCalendarEducationLevel(),
+        event_id: eventId,
+      })
+      setCalendarReminders((items) => [
+        reminder,
+        ...items.filter((item) => item.event_id !== eventId),
+      ])
+      Taro.showToast({ title: '提醒已设置', icon: 'success' })
+    } catch (error) {
+      if ((error as { errMsg?: string })?.errMsg?.includes('cancel')) return
+      Taro.showToast({ title: '提醒设置失败，请稍后重试', icon: 'none' })
+    }
+  }
+
+  const openTodayTask = () => {
+    if (!todayTask) return
+    if (todayTask.route === '/pages/community/index') {
+      void openLifeHub('community')
+      return
+    }
+    void Taro.navigateTo({ url: todayTask.route })
+  }
 
   const openRuntimeBanner = (banner: RuntimeBanner) => {
     if (banner.action.type === 'miniapp_path' && banner.action.value) {
@@ -604,30 +710,25 @@ function Index() {
         </View>
       </View>
 
-      <View
-        className='schedule-card motion-enter motion-enter--delay-2 motion-press'
-        hoverClass='motion-press--active'
-        hoverStartTime={20}
-        hoverStayTime={100}
-        ariaRole='button'
-        ariaLabel={`查看课表，${coursePreview.dayLabel}${coursePreview.total}节课`}
-        onClick={openSchedule}
-      >
+      <View className='schedule-card today-card motion-enter motion-enter--delay-2'>
         <View className='schedule-card__header'>
           <View className='schedule-card__date'>
-            <Text className='schedule-card__day-label'>{coursePreview.dayLabel}</Text>
+            <Text className='schedule-card__day-label'>今天</Text>
             <Text className='schedule-card__date-label'>{coursePreview.dateLabel}</Text>
           </View>
-          <View className='schedule-card__summary'>
-            <Text>{coursePreview.total
-              ? `共 ${coursePreview.total} 节`
-              : '查看课表'}
-            </Text>
+          <View
+            className='schedule-card__summary'
+            hoverClass='schedule-card__summary--pressed'
+            ariaRole='button'
+            ariaLabel='查看完整校历'
+            onClick={openCalendar}
+          >
+            <Text>全部日程</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
 
-        {coursePreview.items.length > 0 ? (
+        {(coursePreview.items.length > 0 || todayCalendarEvents.length > 0) ? (
           <View className='schedule-card__courses'>
             {coursePreview.items.map((item, index) => (
               <View
@@ -638,6 +739,10 @@ function Index() {
                     ? 'schedule-card__course-row--ongoing'
                     : '',
                 ].filter(Boolean).join(' ')}
+                hoverClass='today-card__row--pressed'
+                ariaRole='button'
+                ariaLabel={`查看课表：${item.course.name}`}
+                onClick={openSchedule}
               >
                 <Text className='schedule-card__section'>
                   第 {item.course.startSection}-{item.course.endSection} 节
@@ -667,14 +772,88 @@ function Index() {
                   )}
               </View>
             ))}
+            {todayCalendarEvents.map((event) => {
+              const reminder = calendarReminders.find((item) => item.event_id === event.id)
+              return (
+                <View
+                  key={`calendar-${event.id}`}
+                  className={[
+                    'schedule-card__course-row',
+                    'today-card__event-row',
+                    event.priority === 'important' ? 'today-card__event-row--important' : '',
+                  ].filter(Boolean).join(' ')}
+                  hoverClass='today-card__row--pressed'
+                  ariaRole='button'
+                  ariaLabel={`查看校历：${event.title}`}
+                  onClick={openCalendar}
+                >
+                  <View className='today-card__event-date'>
+                    <Text>{calendarEventDateLabel(event)}</Text>
+                    <Text>{event.type === 'registration' ? '教务' : '校历'}</Text>
+                  </View>
+                  <View className='schedule-card__course-copy'>
+                    <View className='today-card__event-title-line'>
+                      <Text className='schedule-card__course-name'>{event.title}</Text>
+                      {event.priority === 'important' && <Text className='today-card__important'>重要</Text>}
+                    </View>
+                    <View className='schedule-card__meta'>
+                      <Text>{event.description || '查看校历详情'}</Text>
+                    </View>
+                  </View>
+                  {event.remindable && (
+                    <View
+                      className={[
+                        'today-card__reminder',
+                        reminder ? 'today-card__reminder--active' : '',
+                      ].filter(Boolean).join(' ')}
+                      hoverClass='today-card__reminder--pressed'
+                      ariaRole='button'
+                      ariaLabel={reminder ? '取消提醒' : '设置提醒'}
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation()
+                        void toggleCalendarReminder(event.id)
+                      }}
+                    >
+                      {reminder ? `已设 ${reminder.advance_days} 天` : '提醒我'}
+                    </View>
+                  )}
+                </View>
+              )
+            })}
           </View>
         ) : (
           <View className='schedule-card__empty'>
-            <Text>{coursePreview.emptyText}</Text>
-            <Text>{coursePreview.emptyHint}</Text>
+            <Text>今天没有待办日程</Text>
+            <Text>课程、考试和推荐校历事件会汇总在这里</Text>
           </View>
         )}
       </View>
+
+      {homeFeatureFlags.todayTask && todayTask && (
+        <View
+          className={[
+            'today-task',
+            'motion-enter',
+            'motion-enter--delay-3',
+            todayTask.completed ? 'today-task--completed' : '',
+          ].filter(Boolean).join(' ')}
+          hoverClass='today-task--pressed'
+          ariaRole='button'
+          ariaLabel={`${todayTask.title}，${todayTask.actionLabel}`}
+          onClick={openTodayTask}
+        >
+          <View className='today-task__marker'>1</View>
+          <View className='today-task__copy'>
+            <Text className='today-task__eyebrow'>今日一件事</Text>
+            <Text className='today-task__title'>{todayTask.title}</Text>
+            <Text className='today-task__description'>{todayTask.description}</Text>
+          </View>
+          <View className='today-task__action'>
+            <Text>{todayTask.actionLabel}</Text>
+            <Image src={icons.arrow} mode='aspectFit' />
+          </View>
+        </View>
+      )}
 
       <View className='service-panel motion-enter motion-enter--delay-3'>
         <View className='service-panel__simple-head'>
