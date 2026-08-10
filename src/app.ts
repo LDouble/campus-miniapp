@@ -17,7 +17,7 @@ import './app.scss'
 
 function App(props) {
   useLaunch(() => {
-    registerWechatAiHandoff()
+    if (__CAMPUS_WECHAT_AI_ENABLED__) registerWechatAiHandoff()
   })
 
   // 可以使用所有的 React Hooks

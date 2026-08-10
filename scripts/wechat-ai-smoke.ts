@@ -20,15 +20,6 @@ type MiniProgramAppConfig = {
   }>
 }
 
-type ProjectConfig = {
-  packOptions?: {
-    include?: Array<{
-      type?: string
-      value?: string
-    }>
-  }
-}
-
 type McpConfig = {
   apis?: Array<{
     name?: string
@@ -87,7 +78,6 @@ const assertFile = (filePath: string, message: string) => {
 }
 
 const fullAppConfig = readJson<MiniProgramAppConfig>(join(fullOutputRoot, 'app.json'))
-const fullProjectConfig = readJson<ProjectConfig>(join(fullOutputRoot, 'project.config.json'))
 const fullSkill = fullAppConfig.agent?.skills?.find((skill) => skill.path === expectedSkillPath)
 const fullSkillsPackage = fullAppConfig.subPackages?.find((subpackage) => subpackage.root === 'skills')
 
@@ -113,13 +103,6 @@ if (
 
 if (fullAppConfig.agent?.pageMetadata !== 'page-meta.json') {
   fail('完整版 app.json 必须将 agent.pageMetadata 指向 page-meta.json。')
-}
-
-const includesSkills = fullProjectConfig.packOptions?.include?.some(
-  (item) => item.type === 'folder' && item.value === 'skills',
-)
-if (!includesSkills) {
-  fail('完整版 project.config.json 的 packOptions.include 必须包含 skills 目录。')
 }
 
 assertFile(join(fullOutputRoot, 'page-meta.json'), '完整版缺少 page-meta.json。')

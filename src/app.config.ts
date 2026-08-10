@@ -1,4 +1,5 @@
 const isQualificationEdition = __CAMPUS_APP_EDITION__ === 'qualification'
+const isWechatAiEnabled = __CAMPUS_WECHAT_AI_ENABLED__
 const fullPages = [
   'pages/index/index',
   'pages/app-login/index',
@@ -96,9 +97,8 @@ const tabBarList = isQualificationEdition
 
 const targetMiniProgramAppId = __CAMPUS_TARGET_WECHAT_APP_ID__.trim()
 
-const wechatAiModeConfig = isQualificationEdition
-  ? {}
-  : {
+const wechatAiModeConfig = isWechatAiEnabled
+  ? {
       lazyCodeLoading: 'requiredComponents' as const,
       subPackages: [
         {
@@ -118,6 +118,7 @@ const wechatAiModeConfig = isQualificationEdition
         pageMetadata: 'page-meta.json'
       }
     }
+  : {}
 
 export default defineAppConfig({
   pages,

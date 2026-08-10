@@ -20,12 +20,7 @@
     "uglifyFileName": true
   },
   "packOptions": {
-    "include": [
-      {
-        "type": "folder",
-        "value": "skills"
-      }
-    ]
+    "include": []
   },
   "compileType": "miniprogram",
   "simulatorType": "wechat",
