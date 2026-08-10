@@ -35,8 +35,8 @@ assert.ok(
   '首页标签必须与课表卡片使用同一次教务学期结果',
 )
 assert.ok(
-  !homeSource.includes('loadAcademicCalendar('),
-  '首页标签不得再混用公共校历数据源',
+  homeSource.includes('setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))'),
+  '首页学期标签不得改用公共校历数据源',
 )
 assert.ok(
   homeDataSource.includes('getCampusSections(config, selectedCampus)'),

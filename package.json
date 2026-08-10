@@ -33,6 +33,7 @@
     "e2e:personal-records": "bash scripts/e2e-personal-records.sh",
     "test:calendar": "ts-node --transpile-only scripts/test-calendar.ts",
     "test:daily-checkin": "ts-node --transpile-only scripts/daily-checkin-smoke.ts",
+    "test:today-home": "ts-node --transpile-only scripts/today-home-smoke.ts",
     "test:wechat-ai": "ts-node --transpile-only scripts/wechat-ai-smoke.ts",
     "test:wechat-ai-evaluation-dataset": "ts-node --transpile-only scripts/wechat-ai-evaluation-dataset-smoke.ts",
     "build:weapp": "taro build --type weapp",

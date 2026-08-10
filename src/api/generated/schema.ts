@@ -1055,6 +1055,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/calendar/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的校历事件提醒 */
+        get: operations["ListMyCalendarReminders"];
+        /** 创建或更新校历事件提醒 */
+        put: operations["PutMyCalendarReminder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/calendar/reminders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 取消我的校历事件提醒 */
+        delete: operations["DeleteMyCalendarReminder"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/posts": {
         parameters: {
             query?: never;
@@ -4356,13 +4391,20 @@ export interface components {
             description: string;
             /** Format: date */
             end_date: string;
+            /** @description 是否推荐进入首页“今天”时间线。 */
+            homepage_recommended: boolean;
             id: string;
             period_id: string;
+            priority: components["schemas"]["AcademicCalendarEventPriority"];
+            /** @description 是否允许用户为该事件设置站内提醒。 */
+            remindable: boolean;
             /** Format: date */
             start_date: string;
             title: string;
             type: components["schemas"]["AcademicCalendarEventType"];
         };
+        /** @enum {string} */
+        AcademicCalendarEventPriority: "normal" | "important";
         /** @enum {string} */
         AcademicCalendarEventType: "term_start" | "teaching" | "exam" | "holiday" | "makeup" | "registration" | "other";
         AcademicCalendarResponseBody: {
@@ -4902,6 +4944,33 @@ export interface components {
             /** Format: uint64 */
             registration_version: number;
             status: string;
+        };
+        CalendarReminderList: {
+            items: components["schemas"]["CalendarReminderView"][];
+        };
+        CalendarReminderListResponseBody: {
+            data: components["schemas"]["CalendarReminderList"];
+            request_id: string;
+        };
+        CalendarReminderResponseBody: {
+            data: components["schemas"]["CalendarReminderView"];
+            request_id: string;
+        };
+        CalendarReminderView: {
+            /** Format: int64 */
+            advance_days: number;
+            /** Format: date-time */
+            created_at: string;
+            education_level: components["schemas"]["AcademicEducationLevel"];
+            event_id: string;
+            /** Format: uint64 */
+            id: number;
+            /** @enum {string} */
+            status: "active" | "cancelled";
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
         };
         CampusCircleCurationInput: {
             /** Format: uint64 */
@@ -7304,6 +7373,24 @@ export interface components {
                 "application/json": components["schemas"]["ActivityResponseBody"];
             };
         };
+        /** @description 我的校历事件提醒 */
+        CalendarReminderListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CalendarReminderListResponseBody"];
+            };
+        };
+        /** @description 校历事件提醒 */
+        CalendarReminderResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CalendarReminderResponseBody"];
+            };
+        };
         /** @description 校园圈首页运营聚合 */
         CampusCircleHomeResponse: {
             headers: {
@@ -9486,6 +9573,57 @@ export interface operations {
         responses: {
             200: components["responses"]["ActivityResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListMyCalendarReminders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CalendarReminderListResponse"];
+        };
+    };
+    PutMyCalendarReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate";
+                    event_id: string;
+                    /** Format: int64 */
+                    advance_days: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CalendarReminderResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    DeleteMyCalendarReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CalendarReminderResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminCampusCirclePosts: {
