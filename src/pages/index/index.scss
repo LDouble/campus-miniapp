@@ -1219,11 +1219,11 @@ page { background: #faf7f2; }
     }
   }
 
-  &__time {
+  &__section {
     flex: none;
-    width: 82rpx;
+    width: 126rpx;
     color: #53857f;
-    font-size: 23rpx;
+    font-size: 21rpx;
     font-weight: 700;
   }
 
@@ -1282,7 +1282,7 @@ page { background: #faf7f2; }
     }
   }
 
-  &__course-row--ongoing &__time {
+  &__course-row--ongoing &__section {
     color: #2f8f8b;
   }
 

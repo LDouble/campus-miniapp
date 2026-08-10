@@ -16,8 +16,6 @@ export type CoursePreviewItem = {
   course: Course
   startsAt: Date
   endsAt: Date
-  startTime: string
-  endTime: string
   status: 'ongoing' | 'upcoming'
   statusText: string
 }
@@ -107,10 +105,7 @@ const coursesOnDate = (
       && course.weeks.includes(week)
     ))
     .map((course): CoursePreviewItem | null => {
-      const sections = getCampusSections(
-        config,
-        course.campus || selectedCampus,
-      )
+      const sections = getCampusSections(config, selectedCampus)
       const startTime = sections[String(course.startSection)]?.start || ''
       const endTime = sections[String(course.endSection)]?.end || ''
       if (!startTime || !endTime) return null
@@ -120,8 +115,6 @@ const coursesOnDate = (
         course,
         startsAt,
         endsAt,
-        startTime,
-        endTime,
         status: 'upcoming',
         statusText: '',
       }
