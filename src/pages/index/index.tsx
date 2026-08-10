@@ -640,7 +640,9 @@ function Index() {
                     : '',
                 ].filter(Boolean).join(' ')}
               >
-                <Text className='schedule-card__time'>{item.startTime}</Text>
+                <Text className='schedule-card__section'>
+                  第 {item.course.startSection}-{item.course.endSection} 节
+                </Text>
                 <View className='schedule-card__course-copy'>
                   <Text className='schedule-card__course-name'>
                     {item.course.name}

@@ -8,6 +8,10 @@ const homeSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.tsx'),
   'utf8',
 )
+const homeDataSource = readFileSync(
+  resolve(__dirname, '../src/features/home/data.ts'),
+  'utf8',
+)
 
 assert.ok(
   homeSource.includes('getAcademicVerificationStatus()'),
@@ -33,6 +37,22 @@ assert.ok(
 assert.ok(
   !homeSource.includes('loadAcademicCalendar('),
   '首页标签不得再混用公共校历数据源',
+)
+assert.ok(
+  homeDataSource.includes('getCampusSections(config, selectedCampus)'),
+  '首页课程状态与排序必须使用首页当前选择校区的时间表',
+)
+assert.ok(
+  !homeDataSource.includes('course.campus || selectedCampus'),
+  '课程记录中的校区不得覆盖首页当前选择校区的时间表',
+)
+assert.ok(
+  homeSource.includes('第 {item.course.startSection}-{item.course.endSection} 节'),
+  '首页课程卡片必须展示具体节次',
+)
+assert.ok(
+  !homeSource.includes('{item.startTime}'),
+  '首页课程卡片不得展示具体上课时间',
 )
 
 const periods: AcademicPeriod[] = [{
