@@ -4,6 +4,7 @@ import { Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import type { MarketplaceListingView } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { isWechatPaymentCancelled, payTradeOrder } from '../../api/payments'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
@@ -72,8 +73,8 @@ export default function MarketplaceDetailPage() {
       title: actionLabels[action] || '确认操作',
       content: action === 'purchase' || action === 'respond'
         ? item.intent === 'wanted'
-          ? `确认响应这条求购吗？预算 ${formatMoney(item.price_cents)}，双方在线下沟通交易。`
-          : `确认预订这件商品吗？售价 ${formatMoney(item.price_cents)}，交易在线下完成。`
+          ? `确认响应这条求购吗？预算 ${formatMoney(item.price_cents)}，交付后由平台结算。`
+          : `确认购买这件商品吗？将通过微信支付 ${formatMoney(item.price_cents)}，确认收货后平台向卖家结算。`
         : action === 'withdraw'
           ? '撤回后其他同学将无法继续浏览或预订。'
           : '提交后商品会进入校园内容审核。',
@@ -84,7 +85,10 @@ export default function MarketplaceDetailPage() {
     setWorking(true)
     try {
       if (action === 'purchase' || action === 'respond') {
-        await lifeServicesRepository.respondMarketplaceListing(item.id)
+        const order = await lifeServicesRepository.respondMarketplaceListing(item.id)
+        if (item.intent !== 'wanted') {
+          await payTradeOrder(order.id)
+        }
       } else if (action === 'submit_review') {
         await lifeServicesRepository.submitMarketplaceListing(item.id, item.version)
       } else if (action === 'withdraw') {
@@ -92,8 +96,16 @@ export default function MarketplaceDetailPage() {
       }
       markLifeHubSectionDirty('market')
       await load()
-      Taro.showToast({ title: '状态已更新', icon: 'success' })
+      Taro.showToast({
+        title: action === 'purchase' ? '支付成功' : '状态已更新',
+        icon: 'success',
+      })
     } catch (actionError) {
+	  if (isWechatPaymentCancelled(actionError)) {
+		await load()
+		Taro.showToast({ title: '已取消支付', icon: 'none' })
+		return
+	  }
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       if (isApiError(actionError) && actionError.statusCode === 409) await load()
       Taro.showToast({
@@ -165,8 +177,8 @@ export default function MarketplaceDetailPage() {
                 <View className='market-detail-price'>
                   <Text>{item.intent === 'wanted' ? '预算 ' : ''}{formatMoney(item.price_cents)}</Text>
                   <View>
-                    <Text>校内面交</Text>
-                    <Text>见面验货后付款</Text>
+                    <Text>微信支付</Text>
+                    <Text>确认收货后平台结算</Text>
                   </View>
                 </View>
                 {item.image_urls.length > 0 && (

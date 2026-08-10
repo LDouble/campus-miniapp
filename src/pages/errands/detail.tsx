@@ -146,7 +146,7 @@ export default function ErrandDetailPage() {
               <View className='detail-overview__summary detail-overview__summary--primary'>
                 <View>
                   <Text>任务报酬</Text>
-                  <Text>{item.currency === 'CNY' ? '线下结算' : item.currency}</Text>
+                  <Text>{item.currency === 'CNY' ? '平台担保支付' : item.currency}</Text>
                 </View>
                 <Text>{formatMoney(item.reward_cents)}</Text>
               </View>
