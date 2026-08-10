@@ -1,0 +1,236 @@
+/* 色源：src/pages/official-notices/index.scss 的 #f7f8f4、#4d8d7c、#294c48、#71847f；差异：源页面是可滚动的完整筛选列表，本卡片只展示接口返回的前三条，并由微信 AI 平台提供接力入口。 */
+.official-notice-list-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-top: 3.2vw;
+  padding-right: 3.2vw;
+  padding-bottom: 3.2vw;
+  padding-left: 3.2vw;
+  overflow: hidden;
+  background-color: #fbfcf8;
+  border-top-left-radius: 1.07vw;
+  border-top-right-radius: 1.07vw;
+  border-bottom-right-radius: 1.07vw;
+  border-bottom-left-radius: 1.07vw;
+}
+
+.official-notice-list-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.13vw;
+}
+
+.official-notice-list-title {
+  color: #294c48;
+  font-size: 4.53vw;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.official-notice-list-count {
+  max-width: 35vw;
+  color: #71847f;
+  font-size: 3.2vw;
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.official-notice-list-items {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.official-notice-list-item {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding-top: 2.13vw;
+  padding-right: 2.13vw;
+  padding-bottom: 2.13vw;
+  padding-left: 2.13vw;
+  margin-bottom: 1.6vw;
+  overflow: hidden;
+  background-color: #f4f7f3;
+  border-left-width: 0.8vw;
+  border-left-style: solid;
+  border-left-color: #77a796;
+  border-top-left-radius: 1.07vw;
+  border-top-right-radius: 1.07vw;
+  border-bottom-right-radius: 1.07vw;
+  border-bottom-left-radius: 1.07vw;
+}
+
+.official-notice-list-item-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  overflow: hidden;
+}
+
+.official-notice-list-source {
+  flex-shrink: 1;
+  min-width: 0;
+  color: #39796b;
+  font-size: 3.2vw;
+  line-height: 1.4;
+}
+
+.official-notice-list-category {
+  flex-shrink: 1;
+  max-width: 22vw;
+  padding-top: 0.27vw;
+  padding-right: 1.07vw;
+  padding-bottom: 0.27vw;
+  padding-left: 1.07vw;
+  margin-left: 1.33vw;
+  overflow: hidden;
+  color: #4d8d7c;
+  font-size: 3.2vw;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: #e5f2ed;
+  border-top-left-radius: 0.8vw;
+  border-top-right-radius: 0.8vw;
+  border-bottom-right-radius: 0.8vw;
+  border-bottom-left-radius: 0.8vw;
+}
+
+.official-notice-list-date {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: #71847f;
+  font-size: 3.2vw;
+  line-height: 1.4;
+}
+
+.official-notice-list-item-title {
+  margin-top: 1.07vw;
+  color: #294c48;
+  font-size: 4vw;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.official-notice-list-summary {
+  margin-top: 0.8vw;
+  color: #71847f;
+  font-size: 3.2vw;
+  line-height: 1.4;
+}
+
+.official-notice-list-more {
+  padding-top: 0.53vw;
+  color: #71847f;
+  font-size: 3.2vw;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.official-notice-list-handoff {
+  padding-top: 2.13vw;
+  color: #4d8d7c;
+  font-size: 3.2vw;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.official-notice-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 7.47vw;
+  padding-bottom: 7.47vw;
+  text-align: center;
+}
+
+.official-notice-list-empty-title {
+  color: #294c48;
+  font-size: 4vw;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.official-notice-list-empty-subtitle {
+  margin-top: 1.6vw;
+  color: #71847f;
+  font-size: 3.2vw;
+  line-height: 1.4;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.text-clamp-2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .official-notice-list-card {
+    background-color: #1f2926;
+  }
+
+  .official-notice-list-title {
+    color: #e0ece7;
+  }
+
+  .official-notice-list-count {
+    color: #9bacA6;
+  }
+
+  .official-notice-list-item {
+    background-color: #293734;
+    border-left-color: #78aa99;
+  }
+
+  .official-notice-list-source {
+    color: #96c8b8;
+  }
+
+  .official-notice-list-category {
+    color: #a6d3c5;
+    background-color: #344943;
+  }
+
+  .official-notice-list-date {
+    color: #9baca6;
+  }
+
+  .official-notice-list-item-title {
+    color: #e0ece7;
+  }
+
+  .official-notice-list-summary {
+    color: #a9b9b3;
+  }
+
+  .official-notice-list-more {
+    color: #a9b9b3;
+  }
+
+  .official-notice-list-handoff {
+    color: #96c8b8;
+  }
+
+  .official-notice-list-empty-title {
+    color: #e0ece7;
+  }
+
+  .official-notice-list-empty-subtitle {
+    color: #a9b9b3;
+  }
+}

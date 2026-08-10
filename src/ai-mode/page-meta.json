@@ -1,0 +1,29 @@
+{
+  "pages": [
+    {
+      "path": "pages/official-notices/index",
+      "name": "官方通知",
+      "description": "查看已发布的学校、学院和部门官方通知，可按关键词、来源和分类筛选。"
+    },
+    {
+      "path": "pages/official-notices/detail",
+      "name": "通知详情",
+      "description": "查看一条官方通知的完整正文、附件和原文链接。"
+    },
+    {
+      "path": "pages/shuttle/index",
+      "name": "校园校车",
+      "description": "按校区和日期查看已发布校车线路与当天班次。"
+    },
+    {
+      "path": "pages/shuttle/detail",
+      "name": "校车线路详情",
+      "description": "查看一条校车线路的停靠站、发车时间和运营说明。"
+    },
+    {
+      "path": "pages/empty-classroom/index",
+      "name": "空教室",
+      "description": "按校区、日期和节次查询课表与已确认占用之外的可用教室。"
+    }
+  ]
+}

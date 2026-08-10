@@ -1,0 +1,208 @@
+/* ratio=1:1；样式参考：src/pages/empty-classroom/index.scss。
+ * 色源：app.config.ts window.backgroundColor #f4fafc、tabBar.selectedColor #3095b6，
+ *       源页主文字 #21465c、强调色 #469cae、米白/蓝绿卡片语义。
+ * 暗黑：源项目无 darkmode；#f4fafc 背景按 HSL 明度降至约 12% 得 #172326，
+ *       描边提升至约 30% 明度 #3f5960，文字翻转为白系。
+ * 源样式差异：圆角统一 1.07vw；列表压缩为最多 3 间以满足 100vw 容器。
+ */
+.classroom-card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 3.2vw;
+  overflow: hidden;
+  background-color: #f4fafc;
+  background-image: linear-gradient(135deg, #e2f3ee 0%, #fff8ee 100%);
+  border-top-width: 1px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: #c7e2e3;
+  border-right-color: #c7e2e3;
+  border-bottom-color: #c7e2e3;
+  border-left-color: #c7e2e3;
+  border-top-left-radius: 1.07vw;
+  border-top-right-radius: 1.07vw;
+  border-bottom-right-radius: 1.07vw;
+  border-bottom-left-radius: 1.07vw;
+  color: rgba(33, 70, 92, 0.9);
+}
+
+.classroom-card__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 2.13vw;
+}
+
+.classroom-card__query {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.classroom-card__eyebrow,
+.classroom-card__date,
+.classroom-card__total-label,
+.classroom-card__building,
+.classroom-card__room-meta,
+.classroom-card__facilities,
+.classroom-card__empty-hint,
+.classroom-card__omitted,
+.classroom-card__notice,
+.classroom-card__source,
+.classroom-card__handoff {
+  font-size: 3.2vw;
+  line-height: 4.27vw;
+}
+
+.classroom-card__eyebrow {
+  color: #3095b6;
+  font-weight: 600;
+}
+
+.classroom-card__campus,
+.classroom-card__empty-title {
+  font-size: 4.53vw;
+  line-height: 5.87vw;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.classroom-card__date,
+.classroom-card__building,
+.classroom-card__room-meta,
+.classroom-card__facilities,
+.classroom-card__empty-hint,
+.classroom-card__notice,
+.classroom-card__source {
+  color: rgba(33, 70, 92, 0.45);
+}
+
+.classroom-card__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 4.27vw;
+}
+
+.classroom-card__total-number {
+  font-size: 4.53vw;
+  line-height: 5.87vw;
+  font-weight: 600;
+  color: #3095b6;
+}
+
+.classroom-card__list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.classroom-card__room {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-top: 2.13vw;
+  padding-bottom: 2.13vw;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: #d9e9e8;
+  overflow: hidden;
+}
+
+.classroom-card__room-main {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.classroom-card__room-name {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 4vw;
+  line-height: 5.33vw;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.classroom-card__building {
+  flex-shrink: 0;
+  max-width: 32vw;
+  margin-left: 2.13vw;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.classroom-card__room-meta,
+.classroom-card__facilities,
+.classroom-card__source {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.classroom-card__empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 8vw;
+  padding-bottom: 8vw;
+  text-align: center;
+}
+
+.classroom-card__footer {
+  display: flex;
+  flex-direction: column;
+  padding-top: 2.13vw;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: #d9e9e8;
+}
+
+.classroom-card__omitted,
+.classroom-card__handoff {
+  color: #3095b6;
+  font-weight: 500;
+}
+
+@media (prefers-color-scheme: dark) {
+  .classroom-card {
+    background-color: #172326;
+    background-image: linear-gradient(135deg, #18302d 0%, #2a241d 100%);
+    border-top-color: #3f5960;
+    border-right-color: #3f5960;
+    border-bottom-color: #3f5960;
+    border-left-color: #3f5960;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .classroom-card__date,
+  .classroom-card__building,
+  .classroom-card__room-meta,
+  .classroom-card__facilities,
+  .classroom-card__empty-hint,
+  .classroom-card__notice,
+  .classroom-card__source {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .classroom-card__room,
+  .classroom-card__footer {
+    border-top-color: #3f5960;
+  }
+}

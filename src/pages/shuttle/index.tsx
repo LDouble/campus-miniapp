@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import Taro, { usePullDownRefresh } from '@tarojs/taro'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import {
@@ -14,6 +14,7 @@ import {
   ShuttleLoadResult,
   ShuttleRoute,
 } from '../../features/shuttle/repository'
+import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
 import './index.scss'
 
 type ServiceFilter = 'all' | 'campus_loop' | 'intercampus'
@@ -48,25 +49,35 @@ const sourceText = (source: ShuttleLoadResult['source']) => {
   return ''
 }
 
+const validServiceDate = (value?: string) => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
+  const date = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(date.getTime()) || shuttleDateKey(date) !== value) return undefined
+  return date.getFullYear() >= 2020 && date.getFullYear() <= 2100 ? value : undefined
+}
+
+const validCampus = (value?: string) => {
+  const normalized = value?.trim() || ''
+  return normalized && normalized.length <= 40 ? normalized : undefined
+}
+
+const validServiceFilter = (value?: string): ServiceFilter | undefined => (
+  value === 'campus_loop' || value === 'intercampus' ? value : undefined
+)
+
 export default function ShuttlePage() {
   const bootstrap = getMiniappRuntimeConfig()
   const [campuses, setCampuses] = useState(() => enabledCampuses(bootstrap))
   const [campus, setCampus] = useState(() => getSelectedCampus(bootstrap))
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all')
-  const [dateOffset, setDateOffset] = useState(0)
+  const [serviceDate, setServiceDate] = useState(() => shuttleDateKey(new Date()))
   const [result, setResult] = useState<ShuttleLoadResult>({
     items: [],
     source: 'network',
     updatedAt: 0,
   })
   const [loading, setLoading] = useState(true)
-
-  const serviceDate = useMemo(() => {
-    const date = new Date()
-    date.setHours(0, 0, 0, 0)
-    date.setDate(date.getDate() + dateOffset)
-    return date
-  }, [dateOffset])
+  const handoffCampus = useRef<string>()
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -74,7 +85,7 @@ export default function ShuttlePage() {
       const next = await loadShuttleRoutes({
         campus: campus === '全部校区' ? undefined : campus,
         serviceType: serviceFilter === 'all' ? undefined : serviceFilter,
-        date: shuttleDateKey(serviceDate),
+        date: serviceDate,
       })
       setResult(next)
     } finally {
@@ -82,15 +93,35 @@ export default function ShuttlePage() {
     }
   }, [campus, serviceDate, serviceFilter])
 
+  useLoad((options) => {
+    const handoffQuery = takeWechatAiHandoffQuery(options, 'pages/shuttle/index')
+    const nextDate = validServiceDate(handoffQuery.date)
+    const nextCampus = validCampus(handoffQuery.campus)
+    const nextServiceFilter = validServiceFilter(handoffQuery.serviceType)
+    if (nextDate) setServiceDate(nextDate)
+    if (nextServiceFilter) setServiceFilter(nextServiceFilter)
+    if (nextCampus) {
+      handoffCampus.current = nextCampus
+      if (campuses.includes(nextCampus)) {
+        setCampus(nextCampus)
+        handoffCampus.current = undefined
+      }
+    }
+  })
+
   useEffect(() => {
     loadMiniappRuntimeConfig().then((config) => {
       const available = enabledCampuses(config)
+      const requestedCampus = handoffCampus.current
       setCampuses(available)
       setCampus((current) => (
-        current === '全部校区' || available.includes(current)
+        requestedCampus && available.includes(requestedCampus)
+          ? requestedCampus
+          : current === '全部校区' || available.includes(current)
           ? current
           : getSelectedCampus(config)
       ))
+      handoffCampus.current = undefined
     })
   }, [])
 
@@ -114,7 +145,7 @@ export default function ShuttlePage() {
 
   const openRoute = (route: ShuttleRoute) => {
     Taro.navigateTo({
-      url: `/pages/shuttle/detail?id=${route.id}&date=${shuttleDateKey(serviceDate)}`,
+      url: `/pages/shuttle/detail?id=${route.id}&date=${serviceDate}`,
     })
   }
 
@@ -175,8 +206,8 @@ export default function ShuttlePage() {
             return (
               <View
                 key={offset}
-                className={dateOffset === offset ? 'shuttle-date-tabs__active' : ''}
-                onClick={() => setDateOffset(offset)}
+                className={serviceDate === shuttleDateKey(date) ? 'shuttle-date-tabs__active' : ''}
+                onClick={() => setServiceDate(shuttleDateKey(date))}
               >
                 <Text>{dayLabel(date, offset)}</Text>
                 <Text>{date.getMonth() + 1}月{date.getDate()}日</Text>

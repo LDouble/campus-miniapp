@@ -1,0 +1,207 @@
+/* 样式参考：src/pages/shuttle/index.scss（.shuttle-route-card / .shuttle-hero）。色源：卡片 #fff、主文字 #294653、品牌深色 #21465c、页面浅底 #faf7f2；暗黑由浅色底降明度至 #242424，描边使用 #3d4548，主文字翻转为白系。ratio=1:1（最多三条紧凑校车线路）。差异：原页面的渐变英雄区、筛选器和交互路线卡在 AI 摘要卡中省略，仅保留只读班次信息。 */
+.shuttle-card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 3.2vw;
+  overflow: hidden;
+  color: rgba(41, 70, 83, 0.9);
+  background-color: #ffffff;
+  border: 1px solid rgba(79, 103, 110, 0.12);
+  border-radius: 1.07vw;
+}
+
+.shuttle-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.13vw;
+}
+
+.shuttle-card__title {
+  color: rgba(41, 70, 83, 0.9);
+  font-size: 4.53vw;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.shuttle-card__count {
+  max-width: 32vw;
+  color: rgba(41, 70, 83, 0.45);
+  font-size: 3.2vw;
+  line-height: 1.35;
+}
+
+.shuttle-card__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.shuttle-card__item {
+  display: flex;
+  flex-direction: column;
+  padding: 1.6vw 0;
+  border-bottom: 1px solid rgba(79, 103, 110, 0.1);
+}
+
+.shuttle-card__item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shuttle-card__route {
+  flex-grow: 1;
+  min-width: 0;
+  color: rgba(41, 70, 83, 0.9);
+  font-size: 4vw;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.shuttle-card__type {
+  flex: none;
+  max-width: 22vw;
+  margin-left: 2.13vw;
+  color: #21465c;
+  font-size: 3.2vw;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.shuttle-card__direction {
+  margin-top: 0.53vw;
+  color: rgba(41, 70, 83, 0.45);
+  font-size: 3.2vw;
+  line-height: 1.35;
+}
+
+.shuttle-card__schedule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.8vw;
+}
+
+.shuttle-card__status,
+.shuttle-card__next,
+.shuttle-card__times,
+.shuttle-card__muted {
+  flex-grow: 1;
+  min-width: 0;
+  color: rgba(41, 70, 83, 0.9);
+  font-size: 3.2vw;
+  line-height: 1.35;
+}
+
+.shuttle-card__status {
+  color: #21465c;
+  font-weight: 500;
+}
+
+.shuttle-card__muted {
+  color: rgba(41, 70, 83, 0.3);
+}
+
+.shuttle-card__date {
+  flex: none;
+  max-width: 27vw;
+  margin-left: 2.13vw;
+  color: rgba(41, 70, 83, 0.3);
+  font-size: 3.2vw;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.shuttle-card__note {
+  margin-top: 0.53vw;
+  color: rgba(41, 70, 83, 0.3);
+  font-size: 3.2vw;
+  line-height: 1.35;
+}
+
+.shuttle-card__empty {
+  display: flex;
+  flex-direction: column;
+  padding: 8vw 0;
+  text-align: center;
+}
+
+.shuttle-card__empty-title {
+  color: rgba(41, 70, 83, 0.9);
+  font-size: 4vw;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.shuttle-card__empty-description {
+  margin-top: 1.6vw;
+  color: rgba(41, 70, 83, 0.45);
+  font-size: 3.2vw;
+  line-height: 1.35;
+}
+
+.shuttle-card__more {
+  margin-top: 2.13vw;
+  color: rgba(41, 70, 83, 0.3);
+  font-size: 3.2vw;
+  line-height: 1.35;
+}
+
+.shuttle-card__handoff {
+  margin-top: 2.13vw;
+  color: #21465c;
+  font-size: 3.2vw;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  .shuttle-card {
+    color: rgba(255, 255, 255, 0.9);
+    background-color: #242424;
+    border-color: #3d4548;
+  }
+
+  .shuttle-card__title,
+  .shuttle-card__route,
+  .shuttle-card__status,
+  .shuttle-card__next,
+  .shuttle-card__times,
+  .shuttle-card__empty-title {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .shuttle-card__count,
+  .shuttle-card__direction,
+  .shuttle-card__empty-description {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .shuttle-card__date,
+  .shuttle-card__note,
+  .shuttle-card__more,
+  .shuttle-card__muted {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .shuttle-card__type {
+    color: #9ccfd2;
+  }
+
+  .shuttle-card__handoff {
+    color: #9ccfd2;
+  }
+
+  .shuttle-card__item {
+    border-bottom-color: #3d4548;
+  }
+}

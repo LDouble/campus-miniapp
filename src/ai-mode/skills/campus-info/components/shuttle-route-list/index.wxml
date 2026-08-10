@@ -1,0 +1,32 @@
+<view class="shuttle-card">
+  <view class="shuttle-card__header">
+    <text class="shuttle-card__title">校车安排</text>
+    <text class="shuttle-card__count">共 {{totalCount}} 条</text>
+  </view>
+
+  <view wx:if="{{hasResults}}" class="shuttle-card__list">
+    <view wx:for="{{visibleItems}}" wx:key="id" class="shuttle-card__item">
+      <view class="shuttle-card__item-head">
+        <text class="shuttle-card__route text-ellipsis">{{item.name}}</text>
+        <text class="shuttle-card__type text-ellipsis">{{item.serviceTypeLabel}}</text>
+      </view>
+      <text class="shuttle-card__direction text-ellipsis">{{item.routeDirection}}</text>
+      <view class="shuttle-card__schedule">
+        <text wx:if="{{item.suspended}}" class="shuttle-card__status text-ellipsis">当日停运</text>
+        <text wx:elif="{{item.nextDeparture}}" class="shuttle-card__next text-ellipsis">下一班 {{item.nextDeparture}}</text>
+        <text wx:elif="{{item.departureTimes}}" class="shuttle-card__times text-ellipsis">{{item.departureTimes}}</text>
+        <text wx:else class="shuttle-card__muted text-ellipsis">暂无可用班次</text>
+        <text wx:if="{{item.serviceDate}}" class="shuttle-card__date text-ellipsis">{{item.serviceDate}}</text>
+      </view>
+      <text wx:if="{{item.scheduleNote}}" class="shuttle-card__note text-ellipsis">{{item.scheduleNote}}</text>
+    </view>
+  </view>
+
+  <view wx:else class="shuttle-card__empty">
+    <text class="shuttle-card__empty-title">暂无校车安排</text>
+    <text class="shuttle-card__empty-description">请调整校区、日期或线路类型后再试</text>
+  </view>
+
+  <text wx:if="{{omittedCount > 0}}" class="shuttle-card__more text-ellipsis">还有 {{omittedCount}} 条未展示</text>
+  <text class="shuttle-card__handoff text-ellipsis">通过卡片右上角进入小程序查看完整校车安排</text>
+</view>

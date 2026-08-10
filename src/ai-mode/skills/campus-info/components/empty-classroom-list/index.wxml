@@ -1,0 +1,36 @@
+<view class="classroom-card">
+  <view class="classroom-card__header">
+    <view class="classroom-card__query">
+      <text class="classroom-card__eyebrow">空教室</text>
+      <text class="classroom-card__campus">{{campus}}</text>
+      <text class="classroom-card__date">{{serviceDate}} {{sectionText}}</text>
+    </view>
+    <view class="classroom-card__total">
+      <text class="classroom-card__total-number">{{total}}</text>
+      <text class="classroom-card__total-label">间可用</text>
+    </view>
+  </view>
+
+  <view wx:if="{{hasItems}}" class="classroom-card__list">
+    <view wx:for="{{visibleRooms}}" wx:key="key" class="classroom-card__room">
+      <view class="classroom-card__room-main">
+        <text class="classroom-card__room-name">{{item.displayName}}</text>
+        <text class="classroom-card__building">{{item.building}}</text>
+      </view>
+      <text class="classroom-card__room-meta">{{item.meta}}</text>
+      <text class="classroom-card__facilities">{{item.facilities}}</text>
+    </view>
+  </view>
+
+  <view wx:else class="classroom-card__empty">
+    <text class="classroom-card__empty-title">这个时段暂时没有空教室</text>
+    <text class="classroom-card__empty-hint">可以调整日期或节次后再查询</text>
+  </view>
+
+  <view class="classroom-card__footer">
+    <text wx:if="{{hasOmitted}}" class="classroom-card__omitted">还有 {{omittedCount}} 间未展示</text>
+    <text class="classroom-card__notice">基于课表和已确认占用，不代表实时状态</text>
+    <text class="classroom-card__source">{{dataSourceNotice}}</text>
+    <text class="classroom-card__handoff">通过卡片右上角进入小程序查看完整教室列表</text>
+  </view>
+</view>
