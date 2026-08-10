@@ -339,8 +339,7 @@ function Index() {
       && moduleEnabled('marketplace')
       ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
       : Promise.resolve({ ok: false } as Settled<never>)
-    const officialNoticesPromise = settle(officialNoticesRepository.list({
-      page: 1,
+    const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
     }))
     const [

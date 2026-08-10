@@ -3495,6 +3495,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/official-notices/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 游标查询已发布全校通知 */
+        get: operations["ListOfficialNoticeFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/official-notices/{id}": {
         parameters: {
             query?: never;
@@ -6455,6 +6472,15 @@ export interface components {
         OfficialNoticeDeleteResult: {
             deleted: boolean;
         };
+        OfficialNoticeFeed: {
+            has_more: boolean;
+            items: components["schemas"]["OfficialNoticeView"][];
+            next_cursor: string | null;
+        };
+        OfficialNoticeFeedResponseBody: {
+            data: components["schemas"]["OfficialNoticeFeed"];
+            request_id: string;
+        };
         OfficialNoticeInput: {
             attachments?: components["schemas"]["OfficialNoticeAttachmentInput"][];
             body: string;
@@ -7824,6 +7850,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeDeleteResponseBody"];
+            };
+        };
+        /** @description 全校通知游标列表 */
+        OfficialNoticeFeedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["OfficialNoticeFeedResponseBody"];
             };
         };
         /** @description 全校通知分页 */
@@ -13007,6 +13042,25 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["OfficialNoticePageResponse"];
+        };
+    };
+    ListOfficialNoticeFeed: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                source?: "school" | "undergraduate" | "graduate" | "department";
+                category?: "teaching" | "training" | "awards" | "campus" | "career" | "other";
+                published_since?: string;
+                cursor?: string;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OfficialNoticeFeedResponse"];
         };
     };
     GetOfficialNotice: {

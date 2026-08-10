@@ -6,6 +6,10 @@ import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { isApiError } from '../../api/client'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
 import {
+  canLoadOfficialNoticeFeed,
+  mergeOfficialNoticeFeed,
+} from '../../features/official-notices/feed'
+import {
   formatOfficialNoticeDate,
   officialNoticeCategoryLabels,
   officialNoticeSourceLabels,
@@ -62,11 +66,6 @@ const handoffTimeIndex = (value?: string) => {
   return timeOptions.findIndex((item) => item.days === days)
 }
 
-const mergeNotices = (current: OfficialNotice[], incoming: OfficialNotice[]) => {
-  const ids = new Set(current.map((item) => item.id))
-  return current.concat(incoming.filter((item) => !ids.has(item.id)))
-}
-
 export default function OfficialNoticesPage() {
   const [items, setItems] = useState<OfficialNotice[]>([])
   const [query, setQuery] = useState('')
@@ -74,12 +73,14 @@ export default function OfficialNoticesPage() {
   const [source, setSource] = useState<OfficialNoticeSource | undefined>()
   const [category, setCategory] = useState<OfficialNoticeCategory | undefined>()
   const [timeIndex, setTimeIndex] = useState(0)
-  const [page, setPage] = useState(0)
-  const [total, setTotal] = useState(0)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const requestVersion = useRef(0)
+  const resetRequestVersion = useRef(0)
+  const loadingMoreRef = useRef(false)
   const handoffLoadStarted = useRef(false)
 
   const publishedSince = (index = timeIndex) => {
@@ -94,35 +95,45 @@ export default function OfficialNoticesPage() {
     nextCategory = category,
     nextTimeIndex = timeIndex,
   ) => {
-    if (!reset && (loadingMore || items.length >= total)) return
-    const targetPage = reset ? 1 : page + 1
+    const feedBusy = loadingMoreRef.current || resetRequestVersion.current !== 0
+    if (!reset && !canLoadOfficialNoticeFeed(feedBusy, hasMore, nextCursor)) return
     const version = reset ? requestVersion.current + 1 : requestVersion.current
     if (reset) {
       requestVersion.current = version
+      resetRequestVersion.current = version
+      setNextCursor(null)
+      setHasMore(true)
       setLoading(true)
       setError('')
-    } else setLoadingMore(true)
+    } else {
+      loadingMoreRef.current = true
+      setLoadingMore(true)
+    }
     try {
-      const result = await officialNoticesRepository.list({
+      const result = await officialNoticesRepository.feed({
         keyword: nextKeyword,
         source: nextSource,
         category: nextCategory,
         publishedSince: publishedSince(nextTimeIndex),
-        page: targetPage,
+        cursor: reset ? undefined : nextCursor || undefined,
         pageSize: PAGE_SIZE,
       })
       if (requestVersion.current !== version) return
-      setItems((current) => reset ? result.items : mergeNotices(current, result.items))
-      setPage(result.page)
-      setTotal(result.total)
+      setItems((current) => reset ? result.items : mergeOfficialNoticeFeed(current, result.items))
+      setNextCursor(result.next_cursor)
+      setHasMore(result.has_more)
     } catch (loadError) {
       if (requestVersion.current === version) {
         setError(isApiError(loadError) ? loadError.message : '通知加载失败，请稍后重试')
       }
     } finally {
-      if (requestVersion.current === version) {
-        setLoading(false)
+      if (!reset) {
+        loadingMoreRef.current = false
         setLoadingMore(false)
+      }
+      if (requestVersion.current === version) {
+        if (resetRequestVersion.current === version) resetRequestVersion.current = 0
+        setLoading(false)
       }
       Taro.stopPullDownRefresh()
     }
@@ -226,7 +237,7 @@ export default function OfficialNoticesPage() {
         <View onClick={() => void chooseTime()}>
           {timeOptions[timeIndex].label} <Text>⌄</Text>
         </View>
-        <Text>{total} 条通知</Text>
+        <Text>{hasMore ? `已加载 ${items.length} 条` : `${items.length} 条通知`}</Text>
       </View>
 
       {loading && (
@@ -265,7 +276,7 @@ export default function OfficialNoticesPage() {
         </View>
       ))}
       {loadingMore && <View className='official-notices-more'>正在加载更多…</View>}
-      {!loading && items.length > 0 && items.length >= total && (
+      {!loading && items.length > 0 && !hasMore && (
         <View className='official-notices-more'>已展示全部通知</View>
       )}
     </View>
