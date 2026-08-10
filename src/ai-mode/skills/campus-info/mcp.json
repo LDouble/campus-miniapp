@@ -1,0 +1,191 @@
+{
+  "apis": [
+    {
+      "name": "searchOfficialNotices",
+      "description": "查询已发布的官方通知。可按用户明确表达的关键词、来源、分类和发布时间下限过滤；仅返回已发布内容。用户未说明筛选条件时不要编造，直接查询近期通知。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "description": "选填，来自用户原话的通知关键词，最多 128 个字符。"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["school", "undergraduate", "graduate", "department"],
+            "description": "选填，通知来源；仅当用户明确指定来源时填写。"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["teaching", "training", "awards", "campus", "career", "other"],
+            "description": "选填，通知分类；仅当用户明确指定类别时填写。"
+          },
+          "days": {
+            "type": "integer",
+            "enum": [0, 7, 30, 90],
+            "description": "选填，通知时间范围：0 为不限，7/30/90 分别为最近对应天数；仅按用户明确表达选择。"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "number" },
+                "title": { "type": "string" },
+                "summary": { "type": "string" },
+                "source": { "type": "string" },
+                "publisher": { "type": "string" },
+                "category": { "type": "string" },
+                "priority": { "type": "string" },
+                "sourcePublishedAt": { "type": "string" }
+              }
+            }
+          },
+          "total": { "type": "number" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      },
+      "_meta": {
+        "ui": {
+          "pagePath": "/pages/official-notices/index",
+          "componentPath": "components/official-notice-list/index"
+        }
+      }
+    },
+    {
+      "name": "queryShuttleSchedule",
+      "description": "查询已发布校园校车线路及指定日期班次。date 仅可使用用户给出的精确 YYYY-MM-DD 日期；用户未给日期时留空，由服务端按当天计算。campus 和 serviceType 仅在用户明确说明时填写，不得编造。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "campus": {
+            "type": "string",
+            "description": "选填，用户明确说出的校区名称。"
+          },
+          "date": {
+            "type": "string",
+            "description": "选填，YYYY-MM-DD 格式的服务日期；没有精确日期时留空。"
+          },
+          "serviceType": {
+            "type": "string",
+            "enum": ["campus_loop", "intercampus"],
+            "description": "选填，campus_loop 为校区循环线，intercampus 为校区间线路。"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "number" },
+                "name": { "type": "string" },
+                "serviceType": { "type": "string" },
+                "origin": { "type": "string" },
+                "destination": { "type": "string" },
+                "campuses": { "type": "array", "items": { "type": "string" } },
+                "referenceDurationMinutes": { "type": "number" },
+                "resolvedSchedule": {
+                  "type": "object",
+                  "description": "服务端按指定日期解析的最终班次，含 serviceDate、dayType、suspended、departureTimes、note、nextDepartureAt。"
+                }
+              }
+            }
+          },
+          "total": { "type": "number" },
+          "hasMore": { "type": "boolean" }
+        },
+        "required": ["items", "total", "hasMore"]
+      },
+      "_meta": {
+        "ui": {
+          "pagePath": "/pages/shuttle/index",
+          "componentPath": "components/shuttle-route-list/index"
+        }
+      }
+    },
+    {
+      "name": "findEmptyClassrooms",
+      "description": "按校区、日期和节次查询可用教室。四个参数均为必填，缺少校区、精确日期或起止节次时必须先向用户追问；结果依据课表、管理端占用和已审核反馈，不代表实时状态。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "campus": {
+            "type": "string",
+            "description": "用户明确指定的校区名称。"
+          },
+          "date": {
+            "type": "string",
+            "description": "YYYY-MM-DD 格式的查询日期。"
+          },
+          "startSection": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "开始节次。"
+          },
+          "endSection": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "结束节次，必须不小于开始节次。"
+          }
+        },
+        "required": ["campus", "date", "startSection", "endSection"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "campus": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "startSection": { "type": "number" },
+          "endSection": { "type": "number" },
+          "teachingWeek": { "type": "number" },
+          "dataSourceNotice": { "type": "string" },
+          "refreshedAt": { "type": "string" },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "building": { "type": "string" },
+                "classrooms": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          },
+          "total": { "type": "number" }
+        },
+        "required": ["campus", "serviceDate", "startSection", "endSection", "groups", "total"]
+      },
+      "_meta": {
+        "ui": {
+          "pagePath": "/pages/empty-classroom/index",
+          "componentPath": "components/empty-classroom-list/index"
+        }
+      }
+    }
+  ],
+  "components": [
+    {
+      "path": "components/official-notice-list/index",
+      "relatedPage": "/pages/official-notices/index"
+    },
+    {
+      "path": "components/shuttle-route-list/index",
+      "relatedPage": "/pages/shuttle/index"
+    },
+    {
+      "path": "components/empty-classroom-list/index",
+      "relatedPage": "/pages/empty-classroom/index"
+    }
+  ]
+}

@@ -96,6 +96,29 @@ const tabBarList = isQualificationEdition
 
 const targetMiniProgramAppId = __CAMPUS_TARGET_WECHAT_APP_ID__.trim()
 
+const wechatAiModeConfig = isQualificationEdition
+  ? {}
+  : {
+      lazyCodeLoading: 'requiredComponents' as const,
+      subPackages: [
+        {
+          root: 'skills',
+          pages: [],
+          independent: true
+        }
+      ],
+      agent: {
+        skills: [
+          {
+            name: 'campus-info',
+            description: '查询校园通知、校车安排和空教室',
+            path: 'skills/campus-info'
+          }
+        ],
+        pageMetadata: 'page-meta.json'
+      }
+    }
+
 export default defineAppConfig({
   pages,
   window: {
@@ -116,5 +139,6 @@ export default defineAppConfig({
   },
   ...(isQualificationEdition && targetMiniProgramAppId
     ? { navigateToMiniProgramAppIdList: [targetMiniProgramAppId] }
-    : {})
+    : {}),
+  ...wechatAiModeConfig
 })

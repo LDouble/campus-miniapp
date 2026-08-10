@@ -1,0 +1,28 @@
+<view class="official-notice-list-card">
+  <view class="official-notice-list-header">
+    <view class="official-notice-list-title">官方通知</view>
+    <view wx:if="{{totalCount > 0}}" class="official-notice-list-count">共 {{totalCount}} 条</view>
+  </view>
+
+  <block wx:if="{{hasItems}}">
+    <view class="official-notice-list-items">
+      <view wx:for="{{visibleItems}}" wx:key="id" class="official-notice-list-item">
+        <view class="official-notice-list-item-top">
+          <view class="official-notice-list-source text-ellipsis">{{item.source || item.publisher || '官方发布'}}</view>
+          <view wx:if="{{item.category}}" class="official-notice-list-category text-ellipsis">{{item.category}}</view>
+          <view wx:if="{{item.sourcePublishedAt}}" class="official-notice-list-date">{{item.sourcePublishedAt}}</view>
+        </view>
+        <view class="official-notice-list-item-title text-clamp-2">{{item.title}}</view>
+        <view wx:if="{{item.summary}}" class="official-notice-list-summary text-ellipsis">{{item.summary}}</view>
+      </view>
+    </view>
+    <view wx:if="{{omittedCount > 0}}" class="official-notice-list-more">还有 {{omittedCount}} 条未展示</view>
+  </block>
+
+  <view wx:else class="official-notice-list-empty">
+    <view class="official-notice-list-empty-title">暂无匹配的官方通知</view>
+    <view class="official-notice-list-empty-subtitle">可调整关键词或筛选条件后再试</view>
+  </view>
+
+  <view class="official-notice-list-handoff">通过卡片右上角进入小程序查看完整通知列表</view>
+</view>

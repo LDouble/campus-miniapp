@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import Taro, { usePullDownRefresh } from '@tarojs/taro'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Picker, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import {
@@ -25,6 +25,7 @@ import { loadAcademicCalendar } from '../../features/calendar/repository'
 import { resolveAcademicCalendarState } from '../../features/calendar/utils'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
+import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
 import './index.scss'
 
 const sectionNumbers = Array.from({ length: 12 }, (_, index) => index + 1)
@@ -48,6 +49,33 @@ const dateKey = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+const validServiceDate = (value?: string) => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
+  const date = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(date.getTime()) || dateKey(date) !== value) return undefined
+  return date.getFullYear() >= 2020 && date.getFullYear() <= 2100 ? value : undefined
+}
+
+const validCampus = (value?: string) => {
+  const normalized = value?.trim() || ''
+  return normalized && normalized.length <= 40 ? normalized : undefined
+}
+
+const validSectionRange = (start?: string, end?: string) => {
+  if (!/^(?:[1-9]|1[0-2])$/.test(start || '') || !/^(?:[1-9]|1[0-2])$/.test(end || '')) {
+    return undefined
+  }
+  const startSection = Number(start)
+  const endSection = Number(end)
+  return Number.isInteger(startSection)
+    && Number.isInteger(endSection)
+    && startSection >= 1
+    && endSection <= 12
+    && startSection <= endSection
+    ? { startSection, endSection }
+    : undefined
 }
 
 const dateFromOffset = (offset: number) => {
@@ -116,6 +144,8 @@ export default function EmptyClassroomPage() {
   const [submitting, setSubmitting] = useState(false)
   const [customRangeOpen, setCustomRangeOpen] = useState(false)
   const { keyboardHeight, onKeyboardVisibilityChange } = useKeyboardInset()
+  const handoffCampus = useRef<string>()
+  const handoffHasDate = useRef(false)
 
   const campuses = useMemo(() => enabledCampuses(config), [config])
   const campusSections = useMemo(
@@ -151,6 +181,28 @@ export default function EmptyClassroomPage() {
     }
   }, [campus, endSection, serviceDate, startSection])
 
+  useLoad((options) => {
+    const handoffQuery = takeWechatAiHandoffQuery(options, 'pages/empty-classroom/index')
+    const nextCampus = validCampus(handoffQuery.campus)
+    const nextDate = validServiceDate(handoffQuery.date)
+    const nextRange = validSectionRange(handoffQuery.startSection, handoffQuery.endSection)
+    if (nextCampus) {
+      handoffCampus.current = nextCampus
+      if (enabledCampuses(bootstrap).includes(nextCampus)) {
+        setCampus(nextCampus)
+        handoffCampus.current = undefined
+      }
+    }
+    if (nextDate) {
+      handoffHasDate.current = true
+      setServiceDate(nextDate)
+    }
+    if (nextRange) {
+      setStartSection(nextRange.startSection)
+      setEndSection(nextRange.endSection)
+    }
+  })
+
   useEffect(() => {
     let active = true
     Promise.all([
@@ -160,7 +212,9 @@ export default function EmptyClassroomPage() {
       if (!active) return
       setConfig(next)
       const available = enabledCampuses(next)
+      const requestedCampus = handoffCampus.current
       setCampus((current) => {
+        if (requestedCampus && available.includes(requestedCampus)) return requestedCampus
         if (available.includes(current)) return current
         const fallback = getSelectedCampus(next)
         const search = defaultSearch(next, fallback)
@@ -171,11 +225,12 @@ export default function EmptyClassroomPage() {
       })
 
       const calendarState = resolveAcademicCalendarState(calendarResult.calendar)
-      if (calendarState.kind === 'upcoming') {
+      if (!handoffHasDate.current && calendarState.kind === 'upcoming') {
         setServiceDate(calendarState.term.start_date)
         setStartSection(1)
         setEndSection(2)
       }
+      handoffCampus.current = undefined
       setQueryReady(true)
     }).catch(() => {
       if (active) setQueryReady(true)

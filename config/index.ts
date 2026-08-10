@@ -52,6 +52,18 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     )
   }
   const outputRoot = `dist/${appEdition}`
+  const wechatAiModeCopyPatterns = appEdition === 'full'
+    ? [
+        {
+          from: 'src/ai-mode/skills',
+          to: `${outputRoot}/skills`
+        },
+        {
+          from: 'src/ai-mode/page-meta.json',
+          to: `${outputRoot}/page-meta.json`
+        }
+      ]
+    : []
   const apiEndpoints = loadApiEndpoints(
     process.env,
     process.env.NODE_ENV === 'production',
@@ -86,7 +98,8 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
         {
           from: 'src/assets/tabbar',
           to: `${outputRoot}/assets/tabbar`
-        }
+        },
+        ...wechatAiModeCopyPatterns
       ],
       options: {
       }

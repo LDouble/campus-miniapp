@@ -19,6 +19,14 @@
     "useCompilerModule": false,
     "uglifyFileName": true
   },
+  "packOptions": {
+    "include": [
+      {
+        "type": "folder",
+        "value": "skills"
+      }
+    ]
+  },
   "compileType": "miniprogram",
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},

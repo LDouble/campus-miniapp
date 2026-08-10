@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import Taro, { usePullDownRefresh, useReachBottom } from '@tarojs/taro'
+import Taro, { useLoad, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -15,6 +15,7 @@ import type {
   OfficialNoticeCategory,
   OfficialNoticeSource,
 } from '../../features/official-notices/types'
+import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
 import './index.scss'
 
 const PAGE_SIZE = 15
@@ -39,6 +40,28 @@ const timeOptions = [
   { label: '最近 90 天', days: 90 },
 ]
 
+const validKeyword = (value?: string) => {
+  const normalized = value?.trim() || ''
+  return normalized && normalized.length <= 100 ? normalized : undefined
+}
+
+const validSource = (value?: string): OfficialNoticeSource | undefined => (
+  value && Object.prototype.hasOwnProperty.call(officialNoticeSourceLabels, value)
+    ? value as OfficialNoticeSource
+    : undefined
+)
+
+const validCategory = (value?: string): OfficialNoticeCategory | undefined => (
+  value && Object.prototype.hasOwnProperty.call(officialNoticeCategoryLabels, value)
+    ? value as OfficialNoticeCategory
+    : undefined
+)
+
+const handoffTimeIndex = (value?: string) => {
+  const days = Number(value)
+  return timeOptions.findIndex((item) => item.days === days)
+}
+
 const mergeNotices = (current: OfficialNotice[], incoming: OfficialNotice[]) => {
   const ids = new Set(current.map((item) => item.id))
   return current.concat(incoming.filter((item) => !ids.has(item.id)))
@@ -57,6 +80,7 @@ export default function OfficialNoticesPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const requestVersion = useRef(0)
+  const handoffLoadStarted = useRef(false)
 
   const publishedSince = (index = timeIndex) => {
     const days = timeOptions[index]?.days || 0
@@ -104,6 +128,24 @@ export default function OfficialNoticesPage() {
     }
   }
 
+  useLoad((options) => {
+    const handoffQuery = takeWechatAiHandoffQuery(options, 'pages/official-notices/index')
+    const nextKeyword = validKeyword(handoffQuery.keyword)
+    const nextSource = validSource(handoffQuery.source)
+    const nextCategory = validCategory(handoffQuery.category)
+    const nextTimeIndex = handoffTimeIndex(handoffQuery.days)
+    if (!nextKeyword && !nextSource && !nextCategory && nextTimeIndex < 0) return
+    handoffLoadStarted.current = true
+    const resolvedKeyword = nextKeyword || ''
+    const resolvedTimeIndex = nextTimeIndex >= 0 ? nextTimeIndex : 0
+    setQuery(resolvedKeyword)
+    setKeyword(resolvedKeyword)
+    setSource(nextSource)
+    setCategory(nextCategory)
+    setTimeIndex(resolvedTimeIndex)
+    void load(true, resolvedKeyword, nextSource, nextCategory, resolvedTimeIndex)
+  })
+
   useEffect(() => {
     const timer = setTimeout(() => {
       const nextKeyword = query.trim()
@@ -116,7 +158,7 @@ export default function OfficialNoticesPage() {
   }, [query])
 
   useEffect(() => {
-    void load(true)
+    if (!handoffLoadStarted.current) void load(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

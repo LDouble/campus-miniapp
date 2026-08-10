@@ -1,5 +1,5 @@
 import { createElement, useEffect } from 'react'
-import Taro, { useDidShow, useDidHide } from '@tarojs/taro'
+import Taro, { useDidShow, useDidHide, useLaunch } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import {
   loadMiniappRuntimeConfig,
@@ -7,6 +7,7 @@ import {
 } from './features/runtime-config'
 import { installGlobalErrorReporting } from './features/error-reporting'
 import { requestWechatSubscriptionForCurrentPage } from './features/wechat-subscription'
+import { registerWechatAiHandoff } from './features/wechat-ai/handoff'
 import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
@@ -15,6 +16,10 @@ import {
 import './app.scss'
 
 function App(props) {
+  useLaunch(() => {
+    registerWechatAiHandoff()
+  })
+
   // 可以使用所有的 React Hooks
   useEffect(() => {
     installGlobalErrorReporting()
