@@ -2,6 +2,10 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parseOfficialNoticeMarkdown } from '../src/features/official-notices/markdown'
+import {
+  canLoadOfficialNoticeFeed,
+  mergeOfficialNoticeFeed,
+} from '../src/features/official-notices/feed'
 
 const blocks = parseOfficialNoticeMarkdown([
   '# 重要安排',
@@ -32,9 +36,31 @@ assert.ok(
 )
 assert.equal(
   (repositorySource.match(/skipAcademicVerificationGuard: true/g) || []).length,
-  2,
-  '通知列表和详情不得触发学籍绑定守卫',
+  3,
+  '通知页码列表、游标列表和详情不得触发学籍绑定守卫',
 )
+assert.ok(repositorySource.includes("path: '/api/v1/official-notices/feed'"), '通知列表应使用游标 feed 契约')
+
+const feedItems = [
+  { id: 1 },
+  { id: 2 },
+] as Parameters<typeof mergeOfficialNoticeFeed>[0]
+const mergedFeed = mergeOfficialNoticeFeed(feedItems, [
+  { id: 2 },
+  { id: 3 },
+] as Parameters<typeof mergeOfficialNoticeFeed>[1])
+assert.deepEqual(mergedFeed.map((item) => item.id), [1, 2, 3], '加载更多应按 ID 去重')
+assert.equal(canLoadOfficialNoticeFeed(false, true, 'cursor'), true)
+assert.equal(canLoadOfficialNoticeFeed(true, true, 'cursor'), false, '并发加载更多必须被阻止')
+assert.equal(canLoadOfficialNoticeFeed(false, false, null), false, '末页不得继续请求')
+
+const listPageSource = readFileSync(
+  resolve(__dirname, '../src/pages/official-notices/index.tsx'),
+  'utf8',
+)
+assert.ok(listPageSource.includes('officialNoticesRepository.feed({'))
+assert.ok(listPageSource.includes('requestVersion.current !== version'), '筛选刷新必须忽略过期响应')
+assert.ok(!listPageSource.includes('result.total'), '游标列表不得依赖精确总数')
 
 const appConfigSource = readFileSync(resolve(__dirname, '../src/app.config.ts'), 'utf8')
 assert.ok(appConfigSource.includes("'pages/official-notices/index'"))
@@ -42,6 +68,7 @@ assert.ok(appConfigSource.includes("'pages/official-notices/detail'"))
 
 const homeSource = readFileSync(resolve(__dirname, '../src/pages/index/index.tsx'), 'utf8')
 assert.ok(homeSource.includes('pageSize: 2'), '首页只应获取两条最新全校通知')
+assert.ok(homeSource.includes('officialNoticesRepository.feed({'), '首页最新通知不得触发精确总数查询')
 assert.ok(homeSource.includes("'/pages/official-notices/index'"), '首页应提供全校通知固定入口')
 
 const detailSource = readFileSync(resolve(__dirname, '../src/pages/official-notices/detail.tsx'), 'utf8')

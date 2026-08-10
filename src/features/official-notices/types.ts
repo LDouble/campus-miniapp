@@ -2,6 +2,7 @@ import type { components } from '../../api/generated/schema'
 
 export type OfficialNotice = components['schemas']['OfficialNoticeView']
 export type OfficialNoticePage = components['schemas']['OfficialNoticePage']
+export type OfficialNoticeFeed = components['schemas']['OfficialNoticeFeed']
 export type OfficialNoticeSource = components['schemas']['OfficialNoticeSource']
 export type OfficialNoticeCategory = components['schemas']['OfficialNoticeCategory']
 
