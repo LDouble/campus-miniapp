@@ -1,5 +1,7 @@
 # 微信 AI `campus-info` 评测文件
 
+> 当前微信 AI Skill 暂不参与小程序提测。常规构建和 CI 会排除 `agent` 配置、Skill 分包与页面元数据；本目录仅保留评测数据，供后续恢复能力时使用。
+
 ## 文件说明
 
 - `campus-info.testcases.json`：用于微信开发者工具评测插件上传的自定义 Intent 集。
@@ -42,6 +44,18 @@
 yarn test:wechat-ai-evaluation-dataset
 ```
 
+常规提测请使用以下命令，生成的 `dist/full` 不包含微信 AI Skill：
+
+```bash
+yarn build:weapp:full
+```
+
+仅在后续明确恢复微信 AI 联调时，才使用显式启用命令：
+
+```bash
+yarn build:weapp:full:ai
+```
+
 校验内容：
 
 1. 顶层只包含 `cases` 和 `entities`；
@@ -52,6 +66,8 @@ yarn test:wechat-ai-evaluation-dataset
 6. 三个接口覆盖率为 100%，复杂 Intent 比例不低于 30%。
 
 ## 在微信开发者工具中使用
+
+以下流程目前暂停，仅在微信 AI Skill 恢复提测后执行：
 
 1. 使用最新 Nightly 微信开发者工具；
 2. 切换到“小程序 AI 编译”，调试基础库使用 3.16.2 或以上；

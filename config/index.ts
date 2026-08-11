@@ -52,7 +52,11 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     )
   }
   const outputRoot = `dist/${appEdition}`
-  const wechatAiModeCopyPatterns = appEdition === 'full'
+  const wechatAiEnabled = appEdition === 'full'
+    && ['1', 'true'].includes(
+      String(process.env.TARO_APP_WECHAT_AI_ENABLED || '').trim().toLowerCase(),
+    )
+  const wechatAiModeCopyPatterns = wechatAiEnabled
     ? [
         {
           from: 'src/ai-mode/skills',
@@ -89,6 +93,7 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
         process.env.TARO_APP_RELEASE || process.env.npm_package_version || 'development',
       ),
       __CAMPUS_APP_EDITION__: JSON.stringify(appEdition),
+      __CAMPUS_WECHAT_AI_ENABLED__: JSON.stringify(wechatAiEnabled),
       __CAMPUS_TARGET_WECHAT_APP_ID__: JSON.stringify(targetWechatAppId),
       __CAMPUS_TARGET_DEFAULT_PATH__: JSON.stringify(targetDefaultPath),
       __CAMPUS_TARGET_MINIAPP_ENV_VERSION__: JSON.stringify(targetMiniappEnvVersion),
