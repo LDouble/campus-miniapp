@@ -25,32 +25,55 @@ export const queryTradeOrderPayment = (orderId: number) => (
   })
 )
 
+const PAYMENT_ATTEMPT_TTL_MS = 10 * 60 * 1000
+const paymentAttempts = new Map<number, { key: string; createdAt: number }>()
+
 export const payTradeOrder = async (orderId: number) => {
-  const params = await apiRequest<WechatPayParams>({
-    path: `/api/v1/orders/${orderId}/wechat-pay`,
-    method: 'POST',
-    idempotencyKey: createIdempotencyKey(`order:${orderId}:wechat-pay`),
-  })
-	let cancelled = false
-	try {
-		await Taro.requestPayment({
-			timeStamp: params.time_stamp,
-			nonceStr: params.nonce_str,
-			package: params.package,
-			signType: params.sign_type,
-			paySign: params.pay_sign,
-		})
-	} catch (error) {
-		const message = error && typeof error === 'object' && 'errMsg' in error
-			? String(error.errMsg)
-			: String(error)
-		cancelled = message.toLowerCase().includes('cancel')
-		if (!cancelled) throw error
-	}
-	const status = await queryTradeOrderPayment(orderId)
-	if (status.status === 'succeeded') return params.intent_no
-	if (cancelled) throw new WechatPaymentCancelledError()
-	throw new Error('支付结果确认中，请稍后刷新订单')
+  const now = Date.now()
+  const existingAttempt = paymentAttempts.get(orderId)
+  const attempt = existingAttempt && now - existingAttempt.createdAt < PAYMENT_ATTEMPT_TTL_MS
+    ? existingAttempt
+    : { key: createIdempotencyKey(`order:${orderId}:wechat-pay`), createdAt: now }
+  paymentAttempts.set(orderId, attempt)
+  let params: WechatPayParams
+  try {
+    params = await apiRequest<WechatPayParams>({
+      path: `/api/v1/orders/${orderId}/wechat-pay`,
+      method: 'POST',
+      idempotencyKey: attempt.key,
+    })
+  } catch (error) {
+    paymentAttempts.delete(orderId)
+    throw error
+  }
+  let cancelled = false
+  try {
+    await Taro.requestPayment({
+      timeStamp: params.time_stamp,
+      nonceStr: params.nonce_str,
+      package: params.package,
+      signType: params.sign_type,
+      paySign: params.pay_sign,
+    })
+  } catch (error) {
+    const message = error && typeof error === 'object' && 'errMsg' in error
+      ? String(error.errMsg)
+      : String(error)
+    cancelled = message.toLowerCase().includes('cancel')
+  }
+  let status: PaymentStatusView
+  try {
+    status = await queryTradeOrderPayment(orderId)
+  } catch {
+    if (cancelled) throw new WechatPaymentCancelledError()
+    throw new Error('支付结果确认中，请稍后刷新订单，请勿重复支付')
+  }
+  if (status.status === 'succeeded') {
+    paymentAttempts.delete(orderId)
+    return params.intent_no
+  }
+  if (cancelled) throw new WechatPaymentCancelledError()
+  throw new Error('支付结果确认中，请稍后刷新订单，请勿重复支付')
 }
 
 export const listMySettlementPayables = (

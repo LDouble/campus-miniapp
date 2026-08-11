@@ -217,17 +217,17 @@ export default function MarketplaceDetailPage() {
                 </View>
                 <Text className='market-detail-contact__copy'>复制</Text>
               </View>
-              <Text className='detail-contact__tip'>{item.intent === 'wanted' ? '响应后' : '预订后'}可查看完整联系方式，公开页面会自动隐藏敏感信息。</Text>
+              <Text className='detail-contact__tip'>微信支付确认后可查看完整联系方式，公开页面会自动隐藏敏感信息。</Text>
             </View>
 
             <View className='detail-section market-detail-section'>
-              <View className='detail-section__heading'><Text>交易步骤</Text><Text>线下付款</Text></View>
+              <View className='detail-section__heading'><Text>交易步骤</Text><Text>微信支付</Text></View>
               <View className='market-detail-steps'>
                 <View><Text>1</Text><View><Text>{item.intent === 'wanted' ? '核对资料' : '核对实物'}</Text><Text>{item.intent === 'wanted' ? '确认课程、版本和资料范围' : '当面检查外观、配件和功能'}</Text></View></View>
-                <View><Text>2</Text><View><Text>确认价格</Text><Text>交易前再次确认内容和金额</Text></View></View>
-                <View><Text>3</Text><View><Text>完成交易</Text><Text>确认无误后再线下支付</Text></View></View>
+                <View><Text>2</Text><View><Text>微信支付</Text><Text>由买方在订单中完成平台支付</Text></View></View>
+                <View><Text>3</Text><View><Text>完成交易</Text><Text>确认收货后平台向卖方结算</Text></View></View>
               </View>
-              <Text className='detail-safety'>平台仅提供信息撮合，不代收款，也不会索要验证码。</Text>
+              <Text className='detail-safety'>请只通过订单内微信支付完成付款；平台不会索要验证码，也不要向对方重复线下付款。</Text>
             </View>
 
             {item.viewer_relation !== 'owner' && (

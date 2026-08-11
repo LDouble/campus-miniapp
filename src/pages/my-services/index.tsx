@@ -236,6 +236,7 @@ export default function MyServicesPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [actionOrderId, setActionOrderId] = useState(0)
+  const actionOrderRef = useRef(0)
   const requestVersion = useRef(0)
   const firstDidShow = useRef(true)
 
@@ -349,20 +350,22 @@ export default function MyServicesPage() {
     order: TradeOrderView,
     action: 'pay' | 'cancel' | 'complete',
   ) => {
-    const modal = await Taro.showModal({
-      title: action === 'pay' ? '微信支付' : action === 'cancel' ? '取消订单' : '确认完成',
-      content: action === 'pay'
-        ? `确认支付 ${formatMoney(order.amount_cents)} 吗？支付成功后才能开始履约。`
-        : action === 'cancel'
-          ? order.paid_at
-            ? '取消后将按原支付渠道退款，并同步释放订单，是否继续？'
-            : '取消后将同步更新对应业务状态，是否继续？'
-          : '请确认已经完成交付；确认后平台会向收款方结算。',
-      confirmText: action === 'pay' ? '去支付' : action === 'cancel' ? '确认取消' : '确认完成',
-    })
-    if (!modal.confirm) return
-    setActionOrderId(order.id)
+    if (actionOrderRef.current) return
+    actionOrderRef.current = order.id
     try {
+      const modal = await Taro.showModal({
+        title: action === 'pay' ? '微信支付' : action === 'cancel' ? '取消订单' : '确认完成',
+        content: action === 'pay'
+          ? `确认支付 ${formatMoney(order.amount_cents)} 吗？支付成功后才能开始履约。`
+          : action === 'cancel'
+            ? order.paid_at
+              ? '退款提交后需等待微信确认，退款完成后再次取消订单。是否继续？'
+              : '取消前会先关闭尚未支付的微信订单，是否继续？'
+            : '请确认已经完成交付；确认后平台会向收款方结算。',
+        confirmText: action === 'pay' ? '去支付' : action === 'cancel' ? '确认取消' : '确认完成',
+      })
+      if (!modal.confirm) return
+      setActionOrderId(order.id)
       if (action === 'pay') {
         await payTradeOrder(order.id)
         await load(viewRef.current, true)
@@ -378,16 +381,17 @@ export default function MyServicesPage() {
       markLifeHubSectionDirty('market')
       Taro.showToast({ title: action === 'cancel' ? '订单已取消' : '订单已完成', icon: 'success' })
     } catch (actionError) {
-	  if (isWechatPaymentCancelled(actionError)) {
-		await load(viewRef.current, true)
-		Taro.showToast({ title: '已取消支付', icon: 'none' })
-		return
-	  }
+      if (isWechatPaymentCancelled(actionError)) {
+        await load(viewRef.current, true)
+        Taro.showToast({ title: '已取消支付', icon: 'none' })
+        return
+      }
       Taro.showToast({
         title: isApiError(actionError) ? actionError.message : '订单操作失败',
         icon: 'none',
       })
     } finally {
+      actionOrderRef.current = 0
       setActionOrderId(0)
     }
   }

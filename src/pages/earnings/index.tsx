@@ -54,8 +54,16 @@ export default function EarningsPage() {
   const load = async () => {
     setError('')
     try {
-      const page = await listMySettlementPayables(undefined, 1, 100)
-      setItems(page.items)
+      const firstPage = await listMySettlementPayables(undefined, 1, 100)
+      const allItems = [...firstPage.items]
+      let pageNumber = 2
+      while (allItems.length < firstPage.total) {
+        const nextPage = await listMySettlementPayables(undefined, pageNumber, 100)
+        if (nextPage.items.length === 0) break
+        allItems.push(...nextPage.items)
+        pageNumber += 1
+      }
+      setItems(allItems)
     } catch (loadError) {
       setError(isApiError(loadError) ? loadError.message : '收益记录加载失败')
     } finally {

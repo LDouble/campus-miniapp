@@ -79,7 +79,9 @@ export default function ErrandDetailPage() {
       content: action === 'accept'
         ? `确认接下这个任务吗？完成后可获得 ${formatMoney(item.reward_cents)}。`
         : action === 'cancel'
-          ? '取消后任务将停止流转，请确认是否继续。'
+          ? item.trade_order_id
+            ? '未支付订单会先关闭微信支付；已支付订单需原路退款完成后才会取消。是否继续？'
+            : '取消后任务将停止流转，请确认是否继续。'
           : '请确认当前进度真实无误。',
       confirmColor: action === 'cancel' ? '#bd6657' : '#3f8f83',
     })
@@ -193,7 +195,7 @@ export default function ErrandDetailPage() {
 
             <View className='detail-section'>
               <View className='detail-section__heading'><Text>安全提示</Text><Text>线下互助</Text></View>
-              <Text className='detail-safety'>取送前请核对物品和地点，不代收验证码、不垫付高额费用。报酬为线下结算，平台不代收款。</Text>
+              <Text className='detail-safety'>取送前请核对物品和地点，不代收验证码、不垫付高额费用。任务报酬由发布者通过微信支付，确认完成后平台向跑腿员结算。</Text>
             </View>
 
             {item.viewer_relation !== 'publisher' && (
