@@ -13,7 +13,18 @@ import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
-import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
+import {
+  calculateGradeSummary,
+  fiveLevelOptions,
+  getCanonicalGradeLevel,
+  getGradeDisplay,
+  getGradeLevelRule,
+  getGradePoint,
+  getGradePointForGrade,
+  getGradeScore,
+  isTwoLevelGrade,
+  twoLevelOptions,
+} from '../calculations'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
 import {
@@ -47,8 +58,14 @@ const defaultPreferences: AcademicPreferences = {
 
 type GradeSheet = 'period' | 'grade-edit' | 'course-services' | null
 
-const formatGradePoint = (score?: number) => (
-  score === undefined ? '—' : getGradePoint(score).toFixed(1)
+const formatGradePoint = (gradePoint?: number) => (
+  gradePoint === undefined
+    ? '—'
+    : Number.isInteger(gradePoint * 10) ? gradePoint.toFixed(1) : String(gradePoint)
+)
+
+const formatCredits = (credits: number) => (
+  Number.isInteger(credits) ? credits.toFixed(1) : String(credits)
 )
 
 export default function GradesPage() {
@@ -81,6 +98,7 @@ export default function GradesPage() {
   const [editingGrade, setEditingGrade] = useState<GradeRecord | null>(null)
   const [activeGrade, setActiveGrade] = useState<GradeRecord | null>(null)
   const [gradeScore, setGradeScore] = useState('')
+  const [gradePoint, setGradePoint] = useState('')
   const [gradeCredit, setGradeCredit] = useState('')
   const [gradeLevel, setGradeLevel] = useState<GradeLevel>('优秀')
 
@@ -123,6 +141,12 @@ export default function GradesPage() {
   )
   const allSelected = grades.length > 0
     && grades.every((grade) => currentSimulation.selectedIds.includes(grade.id))
+  const editingGradeLevel = editingGrade
+    ? currentSimulation.overrides[editingGrade.id]?.gradeLevel || editingGrade.gradeLevel
+    : undefined
+  const gradeLevelOptions = isTwoLevelGrade(editingGradeLevel)
+    ? twoLevelOptions
+    : fiveLevelOptions
 
   useEffect(() => {
     rememberCourseSuggestions(allGrades.map((grade) => ({
@@ -255,11 +279,26 @@ export default function GradesPage() {
     if (!simulationMode) return
     const override = currentSimulation.overrides[grade.id]
     const score = getGradeScore(grade, override)
+    const point = getGradePointForGrade(grade, override)
     setEditingGrade(grade)
     setGradeScore(score === undefined ? '' : String(score))
-    setGradeLevel(override?.gradeLevel || grade.gradeLevel || '优秀')
+    setGradePoint(point === undefined ? '' : String(point))
+    setGradeLevel(getCanonicalGradeLevel(override?.gradeLevel || grade.gradeLevel) || '优秀')
     setGradeCredit(String(override?.credit ?? grade.credit))
     setSheet('grade-edit')
+  }
+
+  const updateGradeLevel = (level: GradeLevel) => {
+    const rule = getGradeLevelRule(level)
+    setGradeLevel(level)
+    setGradeScore(rule ? String(rule.score) : '')
+    setGradePoint(rule ? String(rule.gradePoint) : '')
+  }
+
+  const updateGradeScore = (value: string) => {
+    setGradeScore(value)
+    const score = Number(value)
+    setGradePoint(value !== '' && Number.isFinite(score) ? String(getGradePoint(score)) : '')
   }
 
   const openGradeServices = (grade: GradeRecord) => {
@@ -317,12 +356,17 @@ export default function GradesPage() {
     if (!editingGrade) return
     const credit = Number(gradeCredit)
     const score = Number(gradeScore)
-    if (!Number.isFinite(score) || score < 0 || score > 100) {
+    const point = Number(gradePoint)
+    if (gradeScore.trim() === '' || !Number.isFinite(score) || score < 0 || score > 100) {
       Taro.showToast({ title: '成绩请输入 0 至 100', icon: 'none' })
       return
     }
-    if (!Number.isFinite(credit) || credit < 0.5 || credit > 20) {
-      Taro.showToast({ title: '学分请输入 0.5 至 20', icon: 'none' })
+    if (gradePoint.trim() === '' || !Number.isFinite(point) || point < 0 || point > 4) {
+      Taro.showToast({ title: '绩点请输入 0 至 4', icon: 'none' })
+      return
+    }
+    if (!Number.isFinite(credit) || credit <= 0) {
+      Taro.showToast({ title: '学分请输入大于 0 的数值', icon: 'none' })
       return
     }
     updateSimulation((simulation) => ({
@@ -331,7 +375,9 @@ export default function GradesPage() {
         : [...simulation.selectedIds, editingGrade.id],
       overrides: {
         ...simulation.overrides,
-        [editingGrade.id]: editingGrade.gradeType === 'level' ? { gradeLevel, score, credit } : { score, credit },
+        [editingGrade.id]: editingGrade.gradeType === 'level'
+          ? { gradeLevel, score, gradePoint: point, credit }
+          : { score, gradePoint: point, credit },
       },
     }))
     setSheet(null)
@@ -442,7 +488,7 @@ export default function GradesPage() {
                 <View><Text>原始学分</Text><Text>{editingGrade.credit}</Text></View>
                 <View>
                   <Text>原始绩点</Text>
-                  <Text>{formatGradePoint(getGradeScore(editingGrade))}</Text>
+                  <Text>{formatGradePoint(getGradePointForGrade(editingGrade))}</Text>
                 </View>
               </View>
               {editingGrade.gradeType === 'level' ? (
@@ -450,11 +496,11 @@ export default function GradesPage() {
                   <View className='academic-field'>
                     <Text className='academic-field__label'>模拟等级</Text>
                     <View className='grade-level-options'>
-                      {(Object.keys(gradeLevelScores) as GradeLevel[]).map((level) => (
+                      {gradeLevelOptions.map((level) => (
                         <View
                           key={level}
                           className={gradeLevel === level ? 'grade-level-options__item--active' : ''}
-                          onClick={() => setGradeLevel(level)}
+                          onClick={() => updateGradeLevel(level)}
                         >
                           {level}
                         </View>
@@ -466,8 +512,8 @@ export default function GradesPage() {
                     <KeyboardSafeInput
                       type='digit'
                       value={gradeScore}
-                      placeholder='例如：优秀折算为 95'
-                      onInput={(event) => setGradeScore(event.detail.value)}
+                      placeholder='例如：优秀折算为 90'
+                      onInput={(event) => updateGradeScore(event.detail.value)}
                     />
                   </View>
                 </>
@@ -478,12 +524,21 @@ export default function GradesPage() {
                     type='digit'
                     value={gradeScore}
                     placeholder='请输入模拟成绩'
-                    onInput={(event) => setGradeScore(event.detail.value)}
+                    onInput={(event) => updateGradeScore(event.detail.value)}
                   />
                 </View>
               )}
               <View className='academic-field'>
-                <Text className='academic-field__label'>模拟学分（0.5–20）</Text>
+                <Text className='academic-field__label'>模拟绩点（0–4）</Text>
+                <KeyboardSafeInput
+                  type='digit'
+                  value={gradePoint}
+                  placeholder='按成绩自动映射，也可手动修改'
+                  onInput={(event) => setGradePoint(event.detail.value)}
+                />
+              </View>
+              <View className='academic-field'>
+                <Text className='academic-field__label'>模拟学分（大于 0）</Text>
                 <KeyboardSafeInput
                   type='digit'
                   value={gradeCredit}
@@ -553,7 +608,7 @@ export default function GradesPage() {
               </View>
               <View className='grade-summary__stats'>
                 <View><Text>{summary.gpa.toFixed(2)}</Text><Text>平均 GPA</Text></View>
-                <View><Text>{summary.credits.toFixed(1)}</Text><Text>已选学分</Text></View>
+                <View><Text>{formatCredits(summary.credits)}</Text><Text>已选学分</Text></View>
                 <View><Text>{summary.selectedCount}</Text><Text>门课程</Text></View>
               </View>
             </View>
@@ -561,7 +616,7 @@ export default function GradesPage() {
               <>
                 <View className='grade-simulation-tip'>
                   <Text>模拟模式</Text>
-                  <Text>可勾选课程参与计算，点击课程修改成绩或学分。</Text>
+                  <Text>可勾选课程参与计算，点击课程修改成绩、绩点或学分。</Text>
                 </View>
                 <View className='grade-list-heading'>
                   <View
@@ -593,6 +648,7 @@ export default function GradesPage() {
                     const selected = displayedSimulation.selectedIds.includes(grade.id)
                     const override = simulationMode ? currentSimulation.overrides[grade.id] : undefined
                     const score = getGradeScore(grade, override)
+                    const point = getGradePointForGrade(grade, override)
                     const credit = override?.credit ?? grade.credit
                     return (
                       <View
@@ -626,7 +682,11 @@ export default function GradesPage() {
                           {grade.gradeType === 'level' && score === undefined && (
                             <Text className='grade-card__converted'>文字成绩仅展示，不参与加权平均</Text>
                           )}
-                          {override && <Text className='grade-card__original'>原始：{getGradeDisplay(grade)} · {grade.credit} 学分</Text>}
+                          {override && (
+                            <Text className='grade-card__original'>
+                              原始：{getGradeDisplay(grade)} · 绩点 {formatGradePoint(getGradePointForGrade(grade))} · {grade.credit} 学分
+                            </Text>
+                          )}
                           {!simulationMode && <Text
                             className='grade-card__materials'
                             onClick={(event) => {
@@ -639,7 +699,7 @@ export default function GradesPage() {
                         </View>
                         <View className='grade-card__result'>
                           <Text>{getGradeDisplay(grade, override)}</Text>
-                          <Text>绩点 {formatGradePoint(score)}</Text>
+                          <Text>绩点 {formatGradePoint(point)}</Text>
                         </View>
                       </View>
                     )
