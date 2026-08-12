@@ -65,6 +65,7 @@ export type GradeLevel = string
 
 export interface GradeOverride {
   score?: number
+  gradePoint?: number
   gradeLevel?: GradeLevel
   credit: number
 }
