@@ -2755,6 +2755,23 @@ export interface paths {
         patch: operations["UpdateAdminClassroom"];
         trace?: never;
     };
+    "/api/v1/classrooms/availability/day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按学期周次和星期查询全天空教室 */
+        get: operations["GetClassroomDayAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/classrooms/available": {
         parameters: {
             query?: never;
@@ -6005,6 +6022,15 @@ export interface components {
             building: string;
             classrooms: components["schemas"]["ClassroomAvailabilityItem"][];
         };
+        ClassroomDayAvailabilityItem: {
+            /** @description 当天 1 至 12 节中无已知占用的节次。 */
+            available_sections: number[];
+            classroom: components["schemas"]["ClassroomView"];
+        };
+        ClassroomDayBuildingGroup: {
+            building: string;
+            classrooms: components["schemas"]["ClassroomDayAvailabilityItem"][];
+        };
         ClassroomInput: {
             building: string;
             campus: string;
@@ -6055,10 +6081,17 @@ export interface components {
             description?: string;
             /** Format: int64 */
             end_section: number;
+            /** Format: int64 */
+            end_teaching_week?: number;
+            period_id?: string;
             /** Format: date */
-            service_date: string;
+            service_date?: string;
             /** Format: int64 */
             start_section: number;
+            /** Format: int64 */
+            start_teaching_week?: number;
+            /** Format: int64 */
+            weekday?: number;
         };
         ClassroomOccupancyReportPage: {
             items: components["schemas"]["ClassroomOccupancyReportView"][];
@@ -6091,10 +6124,13 @@ export interface components {
             description?: string | null;
             /** Format: int64 */
             end_section: number;
+            /** Format: int64 */
+            end_teaching_week?: number | null;
             /** Format: date-time */
             expires_at?: string | null;
             /** Format: uint64 */
             id: number;
+            period_id?: string | null;
             /** Format: uint64 */
             reporter_id?: number | null;
             review_reason?: string | null;
@@ -6106,11 +6142,15 @@ export interface components {
             service_date: string;
             /** Format: int64 */
             start_section: number;
+            /** Format: int64 */
+            start_teaching_week?: number | null;
             status: components["schemas"]["ClassroomReportStatus"];
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
             version: number;
+            /** Format: int64 */
+            weekday?: number | null;
         };
         ClassroomOccupancyResponseBody: {
             data: components["schemas"]["ClassroomOccupancyView"];
@@ -6212,6 +6252,31 @@ export interface components {
         };
         EmptyClassroomAvailabilityResponseBody: {
             data: components["schemas"]["EmptyClassroomAvailability"];
+            request_id: string;
+        };
+        EmptyClassroomDayAvailability: {
+            campus: string;
+            data_source_notice: string;
+            groups: components["schemas"]["ClassroomDayBuildingGroup"][];
+            /**
+             * Format: int64
+             * @enum {integer}
+             */
+            max_section: 12;
+            period_id: string;
+            /** Format: date-time */
+            refreshed_at: string;
+            /** @description 该学期是否已同步至少一条有效课表占用。 */
+            schedule_data_ready: boolean;
+            /** Format: date */
+            service_date: string;
+            /** Format: int64 */
+            teaching_week: number;
+            /** Format: int64 */
+            weekday: number;
+        };
+        EmptyClassroomDayAvailabilityResponseBody: {
+            data: components["schemas"]["EmptyClassroomDayAvailability"];
             request_id: string;
         };
         ErrandOptionalOrderResponseBody: {
@@ -7820,6 +7885,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["EmptyClassroomAvailabilityResponseBody"];
+            };
+        };
+        /** @description 全天空教室查询结果 */
+        EmptyClassroomDayAvailabilityResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["EmptyClassroomDayAvailabilityResponseBody"];
             };
         };
         /** @description 跑腿任务及可能存在的交易订单 */
@@ -12048,6 +12122,25 @@ export interface operations {
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    GetClassroomDayAvailability: {
+        parameters: {
+            query: {
+                campus: string;
+                period_id: string;
+                teaching_week: number;
+                weekday: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["EmptyClassroomDayAvailabilityResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     ListAvailableClassrooms: {
