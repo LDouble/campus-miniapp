@@ -30,6 +30,7 @@ import type {
   AcademicVerificationStatus,
 } from '../../api/types'
 import { finishAcademicVerification } from '../../features/academic-verification/guard'
+import { getSelectedTempFiles } from '../../utils/file-selection'
 import './index.scss'
 
 type VerificationMethod = 'credentials' | 'student_card'
@@ -196,7 +197,7 @@ export default function AcademicVerificationPage() {
         sourceType: ['album', 'camera'],
         sizeType: ['compressed'],
       })
-      const file = result.tempFiles[0]
+      const file = getSelectedTempFiles(result)[0]
       if (!file) return
       if (file.size > MAX_MATERIAL_BYTES) {
         Taro.showToast({ title: '图片不能超过 5 MiB', icon: 'none' })

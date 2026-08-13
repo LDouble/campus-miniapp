@@ -5,6 +5,7 @@ import {
   validateClubImage,
 } from './model'
 import type { ClubImageDraft, ClubMediaPurpose } from './types'
+import { getSelectedTempFiles } from '../../utils/file-selection'
 
 let localImageSequence = 0
 
@@ -32,7 +33,9 @@ export const chooseClubImages = async (
       sourceType: ['album', 'camera'],
       sizeType: ['compressed'],
     })
-    const resolved = await Promise.all(result.tempFiles.map(async (file) => {
+    const files = getSelectedTempFiles(result)
+    if (!files.length) return []
+    const resolved = await Promise.all(files.map(async (file) => {
       let localPath = file.tempFilePath
       let sizeBytes = file.size
       if (purpose === 'logo') {
