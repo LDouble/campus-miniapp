@@ -68,7 +68,7 @@ const sectionOptions: Array<{
   { key: 'community', label: '动态', title: '分享校园动态' },
   { key: 'errands', label: '跑腿', title: '发布跑腿需求' },
   { key: 'market', label: '二手', title: '发布二手交易' },
-  { key: 'carpool', label: '拼车', title: '发布拼车行程' },
+  { key: 'carpool', label: '找同行', title: '发布同行计划' },
 ]
 
 const isSection = (value?: string): value is PublishSection => (
@@ -482,7 +482,7 @@ export default function PublishPage() {
     if (section === 'carpool') {
       if (!form.origin.trim() || !form.destination.trim()) return '请填写出发地和目的地'
       const seats = Number(form.totalSeats)
-      if (!Number.isInteger(seats) || seats < 1 || seats > 20) return '座位数必须为 1–20'
+      if (!Number.isInteger(seats) || seats < 1 || seats > 20) return '同行名额必须为 1–20 人'
       if (!toIso(form.departureDate, form.departureTime)) return '请选择有效出发时间'
     }
     if (!form.contact.trim()) return '请填写联系方式'
@@ -771,7 +771,7 @@ export default function PublishPage() {
 
             {section === 'carpool' && (
               <View className='publisher-section'>
-                <SectionHeading title='行程信息' />
+                <SectionHeading title='同行计划' />
                 <InputField inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('origin', value)} />
                 <InputField inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('destination', value)} />
                 <View className='publisher-field'>
@@ -781,7 +781,7 @@ export default function PublishPage() {
                     <Picker mode='time' value={form.departureTime} onChange={(event) => update('departureTime', String(event.detail.value))}><View>{form.departureTime}</View></Picker>
                   </View>
                 </View>
-                <InputField inputId='publisher-total-seats' label='可加入人数' value={form.totalSeats} type='number' maxlength={2} placeholder='1–20' suffix='人' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('totalSeats', value)} />
+                <InputField inputId='publisher-total-seats' label='同行名额' value={form.totalSeats} type='number' maxlength={2} placeholder='希望有几位同学一起' suffix='人' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('totalSeats', value)} />
               </View>
             )}
 

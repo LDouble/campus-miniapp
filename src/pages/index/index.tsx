@@ -152,7 +152,7 @@ const quickServices = [
   { key: 'community', name: '社区', icon: icons.community, tone: 'purple', tab: '/pages/community/index' },
   { key: 'market', name: '二手', icon: icons.market, tone: 'orange', module: 'market' },
   { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
-  { key: 'carpool', name: '拼车', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
+  { key: 'carpool', name: '找同行', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
   { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
   { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
 ]

@@ -40,7 +40,7 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
         </View>
         <View className='carpool-seat'>
           <Text>{seats}</Text>
-          <Text>个余座</Text>
+          <Text>人可同行</Text>
         </View>
       </View>
 
@@ -63,7 +63,7 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
       {item.description && <Text className='carpool-card__description'>{item.description}</Text>}
       <View className='carpool-card__footer'>
         <Text>{formatStatus(item.status, item.review_status)}</Text>
-        <Text>{item.occupied_seats}/{item.total_seats} 人已加入</Text>
+        <Text>{item.occupied_seats}/{item.total_seats} 人已响应</Text>
         <Text>详情 ›</Text>
       </View>
     </View>

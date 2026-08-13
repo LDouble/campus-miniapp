@@ -40,12 +40,12 @@ export const lifeBusinessThemes: Record<LifeHubSection, LifeBusinessTheme> = {
   },
   carpool: {
     key: 'carpool',
-    label: '拼车',
-    title: '同路拼车',
-    subtitle: '先看时间路线，再决定同行',
+    label: '找同行',
+    title: '校园找同行',
+    subtitle: '找同时间、同方向的同学一起出发',
     eyebrow: '同路同行',
-    searchHint: '搜索起点、终点或行程',
-    publishLabel: '发拼车',
+    searchHint: '搜索出发地、目的地或同行计划',
+    publishLabel: '发布计划',
   },
 }
 

@@ -56,7 +56,7 @@ const blockerMeta: Record<BlockerModule, {
     icon: icons.errands,
   },
   carpool: {
-    label: '进行中的拼车行程',
+    label: '进行中的同行计划',
     route: '/pages/my-services/index?section=carpool&relation=all',
     icon: icons.carpool,
   },
