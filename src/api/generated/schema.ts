@@ -6081,10 +6081,17 @@ export interface components {
             description?: string;
             /** Format: int64 */
             end_section: number;
+            /** Format: int64 */
+            end_teaching_week?: number;
+            period_id?: string;
             /** Format: date */
-            service_date: string;
+            service_date?: string;
             /** Format: int64 */
             start_section: number;
+            /** Format: int64 */
+            start_teaching_week?: number;
+            /** Format: int64 */
+            weekday?: number;
         };
         ClassroomOccupancyReportPage: {
             items: components["schemas"]["ClassroomOccupancyReportView"][];
@@ -6117,10 +6124,13 @@ export interface components {
             description?: string | null;
             /** Format: int64 */
             end_section: number;
+            /** Format: int64 */
+            end_teaching_week?: number | null;
             /** Format: date-time */
             expires_at?: string | null;
             /** Format: uint64 */
             id: number;
+            period_id?: string | null;
             /** Format: uint64 */
             reporter_id?: number | null;
             review_reason?: string | null;
@@ -6132,11 +6142,15 @@ export interface components {
             service_date: string;
             /** Format: int64 */
             start_section: number;
+            /** Format: int64 */
+            start_teaching_week?: number | null;
             status: components["schemas"]["ClassroomReportStatus"];
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
             version: number;
+            /** Format: int64 */
+            weekday?: number | null;
         };
         ClassroomOccupancyResponseBody: {
             data: components["schemas"]["ClassroomOccupancyView"];

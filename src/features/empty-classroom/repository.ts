@@ -29,14 +29,23 @@ export const normalizeEmptyClassroomDayAvailability = (
   groups: normalizeDayAvailabilityGroups(value.groups),
 })
 
-export type ClassroomReportInput = {
+type ClassroomReportBaseInput = {
   classroomId: number
-  serviceDate: string
   startSection: number
   endSection: number
   category: ClassroomReportCategory
   description?: string
 }
+
+export type ClassroomReportInput = ClassroomReportBaseInput & (
+  | { serviceDate: string }
+  | {
+      periodId: string
+      startTeachingWeek: number
+      endTeachingWeek: number
+      weekday: number
+    }
+)
 
 export const loadAvailableClassrooms = (query: EmptyClassroomQuery) => (
   apiRequest<EmptyClassroomAvailability>({
@@ -69,7 +78,14 @@ export const createClassroomOccupancyReport = (input: ClassroomReportInput) => (
     idempotencyKey: createIdempotencyKey('classroom-report'),
     data: {
       classroom_id: input.classroomId,
-      service_date: input.serviceDate,
+      ...('serviceDate' in input
+        ? { service_date: input.serviceDate }
+        : {
+            period_id: input.periodId,
+            start_teaching_week: input.startTeachingWeek,
+            end_teaching_week: input.endTeachingWeek,
+            weekday: input.weekday,
+          }),
       start_section: input.startSection,
       end_section: input.endSection,
       category: input.category,

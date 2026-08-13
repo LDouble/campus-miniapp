@@ -107,6 +107,8 @@ export default function EmptyClassroomPage() {
   const [reportCategory, setReportCategory] = useState<ClassroomReportCategory>('class_in_progress')
   const [reportDescription, setReportDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [reportStartWeek, setReportStartWeek] = useState(1)
+  const [reportEndWeek, setReportEndWeek] = useState(1)
   const [reportStartSection, setReportStartSection] = useState(1)
   const [reportEndSection, setReportEndSection] = useState(12)
   const { keyboardHeight, onKeyboardVisibilityChange } = useKeyboardInset()
@@ -135,6 +137,22 @@ export default function EmptyClassroomPage() {
   const buildings = useMemo(() => sourceGroups.map((group) => group.building), [sourceGroups])
   const filteredGroups = useMemo(() => filterDayViewBuilding(sourceGroups, building), [building, sourceGroups])
   const total = filteredGroups.reduce((sum, group) => sum + group.classrooms.length, 0)
+  const reportStartDate = useMemo(() => {
+    if (!calendarSelection) return serviceDate
+    return academicWeekdayToDate(
+      calendarSelection.term,
+      reportStartWeek,
+      calendarSelection.weekday,
+    ) || serviceDate
+  }, [calendarSelection, reportStartWeek, serviceDate])
+  const reportEndDate = useMemo(() => {
+    if (!calendarSelection) return serviceDate
+    return academicWeekdayToDate(
+      calendarSelection.term,
+      reportEndWeek,
+      calendarSelection.weekday,
+    ) || serviceDate
+  }, [calendarSelection, reportEndWeek, serviceDate])
 
   const refresh = useCallback(async () => {
     const version = ++requestVersion.current
@@ -256,17 +274,26 @@ export default function EmptyClassroomPage() {
     setReportingClassroom(classroom)
     setReportCategory('class_in_progress')
     setReportDescription('')
+    setReportStartWeek(calendarSelection?.week || 1)
+    setReportEndWeek(calendarSelection?.week || 1)
     setReportStartSection(1)
     setReportEndSection(12)
   }
 
   const submitReport = async () => {
     if (!reportingClassroom || submitting) return
+    if (!calendarSelection) {
+      Taro.showToast({ title: '当前教学周不可用', icon: 'none' })
+      return
+    }
     setSubmitting(true)
     try {
       await createClassroomOccupancyReport({
         classroomId: reportingClassroom.id,
-        serviceDate,
+        periodId: calendarSelection.term.id,
+        startTeachingWeek: reportStartWeek,
+        endTeachingWeek: reportEndWeek,
+        weekday: calendarSelection.weekday,
         startSection: reportStartSection,
         endSection: reportEndSection,
         category: reportCategory,
@@ -274,7 +301,12 @@ export default function EmptyClassroomPage() {
       })
       setReportingClassroom(null)
       setReportDescription('')
-      Taro.showToast({ title: '已提交，等待审核', icon: 'success' })
+      Taro.showToast({
+        title: reportStartWeek === reportEndWeek
+          ? `已提交第 ${reportStartWeek} 周反馈`
+          : `已提交第 ${reportStartWeek}—${reportEndWeek} 周反馈`,
+        icon: 'success',
+      })
     } catch (error) {
       Taro.showToast({
         title: isApiError(error) ? error.message : '提交失败，请稍后重试',
@@ -447,21 +479,53 @@ export default function EmptyClassroomPage() {
                 const availableSections = dayDataReady
                   ? normalizeAvailableSections(item.available_sections)
                   : []
+                const availabilityLabel = !dayDataReady
+                  ? '课表待同步'
+                  : availableSections.length === sectionNumbers.length
+                    ? '全天空闲'
+                    : availableSections.length > 0
+                      ? `空闲 ${availableSections.length} 节`
+                      : '暂无空闲'
+                const availabilityTone = !dayDataReady
+                  ? 'pending'
+                  : availableSections.length === sectionNumbers.length
+                    ? 'all'
+                    : availableSections.length > 0
+                      ? 'partial'
+                      : 'none'
                 return (
                 <View key={classroom.id} className='empty-classroom-row'>
-                  <View className='empty-classroom-row__main'>
-                    <Text>{classroom.room}</Text>
-                    <Text>
-                      {dayDataReady
-                        ? formatAvailableSectionRanges(availableSections)
-                        : '课表待同步，暂不判断'}
-                    </Text>
-                  </View>
-                  <View className='empty-classroom-row__aside'>
-                    <View className='empty-classroom-day-grid'>
-                      {sectionNumbers.map((section) => <View key={section} className={dayDataReady && availableSections.includes(section) ? 'empty-classroom-day-grid__free' : ''}>{section}</View>)}
+                  <View className='empty-classroom-row__header'>
+                    <View className='empty-classroom-row__main'>
+                      <Text>{classroom.room}</Text>
+                      <Text className={`empty-classroom-row__status empty-classroom-row__status--${availabilityTone}`}>
+                        {availabilityLabel}
+                      </Text>
                     </View>
-                    <Text onClick={() => openReport(classroom)}>反馈占用</Text>
+                    <View
+                      className='empty-classroom-row__report'
+                      hoverClass='empty-classroom-row__report--pressed'
+                      role='button'
+                      ariaLabel={`反馈 ${classroom.room} 的占用情况`}
+                      onClick={() => openReport(classroom)}
+                    >
+                      <Text>反馈占用</Text>
+                    </View>
+                  </View>
+                  <View
+                    className='empty-classroom-day-grid'
+                    ariaLabel={dayDataReady
+                      ? `${classroom.room} 空闲节次：${formatAvailableSectionRanges(availableSections)}`
+                      : `${classroom.room} 课表待同步`}
+                  >
+                    {sectionNumbers.map((section) => (
+                      <View
+                        key={section}
+                        className={dayDataReady && availableSections.includes(section) ? 'empty-classroom-day-grid__free' : ''}
+                      >
+                        {section}
+                      </View>
+                    ))}
                   </View>
                 </View>
                 )
@@ -492,12 +556,99 @@ export default function EmptyClassroomPage() {
             <View className='empty-classroom-report__title'>
               <View>
                 <Text>反馈教室已被占用</Text>
-                <Text>{reportingClassroom.display_name} · 第 {reportStartSection}—{reportEndSection} 节</Text>
+                <Text>{reportingClassroom.display_name}</Text>
               </View>
               <Text onClick={() => setReportingClassroom(null)}>取消</Text>
             </View>
             <View className='empty-classroom-report__hint'>
               反馈需要后台审核，通过前不会影响其他同学的查询结果
+            </View>
+            <View className='empty-classroom-report__field'>
+              <View className='empty-classroom-report__field-label'>
+                <Text>占用周次</Text>
+                <Text>
+                  {calendarSelection ? `${weekdays[calendarSelection.weekday - 1]} · ${dateLabel(reportStartDate)}${reportStartWeek === reportEndWeek ? '' : `—${dateLabel(reportEndDate)}`}` : dateLabel(reportStartDate)}
+                </Text>
+              </View>
+              <View className='empty-classroom-report__sections'>
+                <Picker
+                  className='empty-classroom-report__start-week-picker'
+                  mode='selector'
+                  range={weekOptions.map((week) => `第 ${week} 周`)}
+                  value={Math.max(0, weekOptions.indexOf(reportStartWeek))}
+                  disabled={weekOptions.length === 0}
+                  onChange={(event) => {
+                    const next = weekOptions[Number(event.detail.value)] || reportStartWeek
+                    setReportStartWeek(next)
+                    if (reportEndWeek < next) setReportEndWeek(next)
+                  }}
+                >
+                  <View className='empty-classroom-report__picker'>
+                    <Text>第 {reportStartWeek} 周</Text>
+                    <Text>›</Text>
+                  </View>
+                </Picker>
+                <Text>至</Text>
+                <Picker
+                  className='empty-classroom-report__end-week-picker'
+                  mode='selector'
+                  range={weekOptions.map((week) => `第 ${week} 周`)}
+                  value={Math.max(0, weekOptions.indexOf(reportEndWeek))}
+                  disabled={weekOptions.length === 0}
+                  onChange={(event) => {
+                    const next = weekOptions[Number(event.detail.value)] || reportStartWeek
+                    setReportEndWeek(Math.max(reportStartWeek, next))
+                  }}
+                >
+                  <View className='empty-classroom-report__picker'>
+                    <Text>第 {reportEndWeek} 周</Text>
+                    <Text>›</Text>
+                  </View>
+                </Picker>
+              </View>
+            </View>
+            <View className='empty-classroom-report__field'>
+              <View className='empty-classroom-report__field-label'>
+                <Text>占用节次</Text>
+                <Text>请选择连续的起止节次</Text>
+              </View>
+              <View className='empty-classroom-report__sections'>
+                <Picker
+                  className='empty-classroom-report__start-section-picker'
+                  mode='selector'
+                  range={sectionNumbers.map((section) => `第 ${section} 节`)}
+                  value={reportStartSection - 1}
+                  onChange={(event) => {
+                    const next = sectionNumbers[Number(event.detail.value)] || 1
+                    setReportStartSection(next)
+                    if (reportEndSection < next) setReportEndSection(next)
+                  }}
+                >
+                  <View className='empty-classroom-report__picker'>
+                    <Text>第 {reportStartSection} 节</Text>
+                    <Text>›</Text>
+                  </View>
+                </Picker>
+                <Text>至</Text>
+                <Picker
+                  className='empty-classroom-report__end-section-picker'
+                  mode='selector'
+                  range={sectionNumbers.map((section) => `第 ${section} 节`)}
+                  value={reportEndSection - 1}
+                  onChange={(event) => {
+                    const next = sectionNumbers[Number(event.detail.value)] || reportStartSection
+                    setReportEndSection(Math.max(reportStartSection, next))
+                  }}
+                >
+                  <View className='empty-classroom-report__picker'>
+                    <Text>第 {reportEndSection} 节</Text>
+                    <Text>›</Text>
+                  </View>
+                </Picker>
+              </View>
+            </View>
+            <View className='empty-classroom-report__field-label empty-classroom-report__field-label--category'>
+              <Text>占用类型</Text>
             </View>
             <View className='empty-classroom-report__categories'>
               {reportCategories.map(([value, label]) => (
@@ -509,28 +660,6 @@ export default function EmptyClassroomPage() {
                   {label}
                 </View>
               ))}
-            </View>
-            <View className='empty-classroom-report__sections'>
-              <Picker
-                mode='selector'
-                range={sectionNumbers}
-                value={reportStartSection - 1}
-                onChange={(event) => {
-                  const next = sectionNumbers[Number(event.detail.value)] || 1
-                  setReportStartSection(next)
-                  if (reportEndSection < next) setReportEndSection(next)
-                }}
-              ><View>第 {reportStartSection} 节</View></Picker>
-              <Text>至</Text>
-              <Picker
-                mode='selector'
-                range={sectionNumbers}
-                value={reportEndSection - 1}
-                onChange={(event) => {
-                  const next = sectionNumbers[Number(event.detail.value)] || reportStartSection
-                  setReportEndSection(Math.max(reportStartSection, next))
-                }}
-              ><View>第 {reportEndSection} 节</View></Picker>
             </View>
             <KeyboardSafeTextarea
               className='empty-classroom-report__textarea'
