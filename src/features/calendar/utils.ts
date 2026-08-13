@@ -21,6 +21,105 @@ export const calendarDateKey = (date = new Date()) => {
   return `${year}-${month}-${day}`
 }
 
+const strictDateOrdinal = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return Number.NaN
+  const date = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(date.getTime()) || calendarDateKey(date) !== value) return Number.NaN
+  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+const ordinalDateKey = (ordinal: number) => {
+  if (!Number.isFinite(ordinal)) return null
+  const date = new Date(ordinal)
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
+}
+
+type ValidAcademicTerm = {
+  term: AcademicCalendarTerm
+  start: number
+  end: number
+}
+
+const validAcademicTerm = (term: AcademicCalendarTerm): ValidAcademicTerm | null => {
+  const start = strictDateOrdinal(term.start_date)
+  const endDate = strictDateOrdinal(term.end_date)
+  if (
+    !Number.isFinite(start)
+    || !Number.isFinite(endDate)
+    || !Number.isInteger(term.week_count)
+    || term.week_count < 1
+    || endDate < start
+    || new Date(start).getUTCDay() !== 1
+  ) return null
+
+  // A term cannot extend beyond its configured teaching-week count, even if a
+  // source accidentally supplies a later end date.
+  return {
+    term,
+    start,
+    end: Math.min(endDate, start + term.week_count * 7 * DAY - DAY),
+  }
+}
+
+export type AcademicWeekdayDate = {
+  term: AcademicCalendarTerm
+  week: number
+  /** Monday is 1 and Sunday is 7. */
+  weekday: number
+  date: string
+}
+
+/**
+ * Converts a teaching week and weekday to a calendar date. Teaching week one
+ * starts on the term's `start_date`, which must be Monday.
+ */
+export const academicWeekdayToDate = (
+  term: AcademicCalendarTerm,
+  week: number,
+  weekday: number,
+) => {
+  const validTerm = validAcademicTerm(term)
+  if (
+    !validTerm
+    || !Number.isInteger(week)
+    || !Number.isInteger(weekday)
+    || week < 1
+    || week > term.week_count
+    || weekday < 1
+    || weekday > 7
+  ) return null
+
+  const date = validTerm.start + ((week - 1) * 7 + weekday - 1) * DAY
+  if (date > validTerm.end) return null
+  return ordinalDateKey(date)
+}
+
+/**
+ * Resolves a date to its teaching term, week and weekday. The matching term's
+ * `start_date` is Monday, so Monday is represented as 1 and Sunday as 7.
+ */
+export const resolveAcademicWeekday = (
+  calendar: AcademicCalendar | null,
+  value: string,
+): AcademicWeekdayDate | null => {
+  const date = strictDateOrdinal(value)
+  if (!Number.isFinite(date)) return null
+
+  const matches = (calendar?.terms || [])
+    .map(validAcademicTerm)
+    .filter((term): term is ValidAcademicTerm => !!term)
+    .filter((term) => date >= term.start && date <= term.end)
+    .sort((left, right) => right.start - left.start)
+  const match = matches[0]
+  if (!match) return null
+
+  const offset = Math.floor((date - match.start) / DAY)
+  const week = Math.floor(offset / 7) + 1
+  const weekday = offset % 7 + 1
+  if (week > match.term.week_count) return null
+  return { term: match.term, week, weekday, date: value }
+}
+
 export const formatCalendarDate = (value: string) => {
   const ordinal = dateOrdinal(value)
   if (!Number.isFinite(ordinal)) return value

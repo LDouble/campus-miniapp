@@ -12,37 +12,44 @@ import {
   getSelectedCampus,
   loadMiniappRuntimeConfig,
   saveSelectedCampus,
-  type MiniappRuntimeConfig,
 } from '../../features/runtime-config'
 import {
   createClassroomOccupancyReport,
-  loadAvailableClassrooms,
+  loadClassroomDayAvailability,
   type ClassroomReportCategory,
   type ClassroomView,
-  type EmptyClassroomAvailability,
+  type EmptyClassroomDayAvailability,
 } from '../../features/empty-classroom/repository'
 import { loadAcademicCalendar } from '../../features/calendar/repository'
-import { resolveAcademicCalendarState } from '../../features/calendar/utils'
+import {
+  academicWeekdayToDate,
+  resolveAcademicCalendarState,
+  resolveAcademicWeekday,
+} from '../../features/calendar/utils'
+import type { AcademicCalendar } from '../../api/types'
+import {
+  filterDayViewBuilding,
+  formatAvailableSectionRanges,
+  normalizeAvailableSections,
+} from '../../features/empty-classroom/day-view'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
 import './index.scss'
 
 const sectionNumbers = Array.from({ length: 12 }, (_, index) => index + 1)
-const quickRanges = [
-  [1, 2],
-  [3, 4],
-  [5, 6],
-  [7, 8],
-  [9, 10],
-  [11, 12],
-] as Array<[number, number]>
 const reportCategories: Array<[ClassroomReportCategory, string]> = [
   ['class_in_progress', '正在上课'],
   ['event', '临时活动'],
   ['maintenance', '维修维护'],
   ['other', '其他占用'],
 ]
+const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+const INITIAL_BUILDING_ROWS = 12
+type ClassroomDisplayGroup = {
+  building: string
+  classrooms: Array<{ classroom: ClassroomView; available_sections?: number[] }>
+}
 
 const dateKey = (date: Date) => {
   const year = date.getFullYear()
@@ -63,53 +70,10 @@ const validCampus = (value?: string) => {
   return normalized && normalized.length <= 40 ? normalized : undefined
 }
 
-const validSectionRange = (start?: string, end?: string) => {
-  if (!/^(?:[1-9]|1[0-2])$/.test(start || '') || !/^(?:[1-9]|1[0-2])$/.test(end || '')) {
-    return undefined
-  }
-  const startSection = Number(start)
-  const endSection = Number(end)
-  return Number.isInteger(startSection)
-    && Number.isInteger(endSection)
-    && startSection >= 1
-    && endSection <= 12
-    && startSection <= endSection
-    ? { startSection, endSection }
-    : undefined
-}
-
-const dateFromOffset = (offset: number) => {
-  const date = new Date()
-  date.setHours(0, 0, 0, 0)
-  date.setDate(date.getDate() + offset)
-  return date
-}
-
 const dateLabel = (value: string) => {
-  const today = dateKey(dateFromOffset(0))
-  const tomorrow = dateKey(dateFromOffset(1))
-  if (value === today) return '今天'
-  if (value === tomorrow) return '明天'
   const parsed = new Date(`${value}T00:00:00`)
   if (Number.isNaN(parsed.getTime())) return value
   return `${parsed.getMonth() + 1}月${parsed.getDate()}日`
-}
-
-const defaultSearch = (config: MiniappRuntimeConfig, campus: string) => {
-  const sections = config.campuses[campus]?.sections || {}
-  const now = new Date()
-  const clock = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-  const nextSection = sectionNumbers.find((section) => {
-    const slot = sections[String(section)]
-    return slot && clock < slot.end
-  })
-  if (nextSection) {
-    const [startSection, endSection] = quickRanges.find(([start, end]) => (
-      nextSection >= start && nextSection <= end
-    )) || [nextSection, nextSection]
-    return { date: dateKey(now), startSection, endSection }
-  }
-  return { date: dateKey(dateFromOffset(1)), startSection: 1, endSection: 2 }
 }
 
 const sourceErrorText = (error: unknown) => {
@@ -122,19 +86,20 @@ const sourceErrorText = (error: unknown) => {
     }
     return error.message
   }
+  if (error instanceof Error && error.message === '所选日期不在教学周内') return error.message
   return '空教室服务暂时不可用'
 }
 
 export default function EmptyClassroomPage() {
   const bootstrap = getMiniappRuntimeConfig()
   const initialCampus = getSelectedCampus(bootstrap)
-  const initialSearch = defaultSearch(bootstrap, initialCampus)
   const [config, setConfig] = useState(bootstrap)
   const [campus, setCampus] = useState(initialCampus)
-  const [serviceDate, setServiceDate] = useState(initialSearch.date)
-  const [startSection, setStartSection] = useState(initialSearch.startSection)
-  const [endSection, setEndSection] = useState(initialSearch.endSection)
-  const [result, setResult] = useState<EmptyClassroomAvailability | null>(null)
+  const [serviceDate, setServiceDate] = useState(dateKey(new Date()))
+  const [dayResult, setDayResult] = useState<EmptyClassroomDayAvailability | null>(null)
+  const [calendar, setCalendar] = useState<AcademicCalendar | null>(null)
+  const [building, setBuilding] = useState('all')
+  const [expandedBuildings, setExpandedBuildings] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(true)
   const [queryReady, setQueryReady] = useState(false)
   const [errorText, setErrorText] = useState('')
@@ -142,50 +107,62 @@ export default function EmptyClassroomPage() {
   const [reportCategory, setReportCategory] = useState<ClassroomReportCategory>('class_in_progress')
   const [reportDescription, setReportDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [customRangeOpen, setCustomRangeOpen] = useState(false)
+  const [reportStartSection, setReportStartSection] = useState(1)
+  const [reportEndSection, setReportEndSection] = useState(12)
   const { keyboardHeight, onKeyboardVisibilityChange } = useKeyboardInset()
   const handoffCampus = useRef<string>()
   const handoffHasDate = useRef(false)
+  const requestVersion = useRef(0)
 
   const campuses = useMemo(() => enabledCampuses(config), [config])
-  const campusSections = useMemo(
-    () => config.campuses[campus]?.sections || {},
-    [campus, config],
+  const calendarSelection = useMemo(
+    () => resolveAcademicWeekday(calendar, serviceDate),
+    [calendar, serviceDate],
   )
-  const total = result?.groups.reduce((sum, group) => sum + group.classrooms.length, 0) || 0
-  const customRangeSelected = !quickRanges.some(
-    ([start, end]) => start === startSection && end === endSection,
-  )
-  const timeText = useMemo(() => {
-    const start = campusSections[String(startSection)]?.start
-    const end = campusSections[String(endSection)]?.end
-    return start && end ? `${start}—${end}` : `第 ${startSection}—${endSection} 节`
-  }, [campusSections, endSection, startSection])
+  const weekOptions = useMemo(() => (
+    calendarSelection?.term
+      ? Array.from({ length: calendarSelection.term.week_count }, (_, index) => index + 1)
+      : []
+  ), [calendarSelection?.term])
+  const sourceGroups = useMemo<ClassroomDisplayGroup[]>(() => {
+    const groups = dayResult?.groups
+    if (!Array.isArray(groups)) return []
+    return groups.map((group) => ({
+      ...group,
+      classrooms: Array.isArray(group.classrooms) ? group.classrooms : [],
+    }))
+  }, [dayResult])
+  const buildings = useMemo(() => sourceGroups.map((group) => group.building), [sourceGroups])
+  const filteredGroups = useMemo(() => filterDayViewBuilding(sourceGroups, building), [building, sourceGroups])
+  const total = filteredGroups.reduce((sum, group) => sum + group.classrooms.length, 0)
 
   const refresh = useCallback(async () => {
+    const version = ++requestVersion.current
     setLoading(true)
     setErrorText('')
     try {
-      const next = await loadAvailableClassrooms({
+      if (!calendarSelection) throw new Error('所选日期不在教学周内')
+      const next = await loadClassroomDayAvailability({
         campus,
-        date: serviceDate,
-        startSection,
-        endSection,
+        periodId: calendarSelection.term.id,
+        teachingWeek: calendarSelection.week,
+        weekday: calendarSelection.weekday,
       })
-      setResult(next)
+      if (version !== requestVersion.current) return
+      setDayResult(next)
     } catch (error) {
-      setResult(null)
+      if (version !== requestVersion.current) return
+      setDayResult(null)
       setErrorText(sourceErrorText(error))
     } finally {
-      setLoading(false)
+      if (version === requestVersion.current) setLoading(false)
     }
-  }, [campus, endSection, serviceDate, startSection])
+  }, [calendarSelection, campus])
 
   useLoad((options) => {
     const handoffQuery = takeWechatAiHandoffQuery(options, 'pages/empty-classroom/index')
     const nextCampus = validCampus(handoffQuery.campus)
     const nextDate = validServiceDate(handoffQuery.date)
-    const nextRange = validSectionRange(handoffQuery.startSection, handoffQuery.endSection)
     if (nextCampus) {
       handoffCampus.current = nextCampus
       if (enabledCampuses(bootstrap).includes(nextCampus)) {
@@ -197,38 +174,37 @@ export default function EmptyClassroomPage() {
       handoffHasDate.current = true
       setServiceDate(nextDate)
     }
-    if (nextRange) {
-      setStartSection(nextRange.startSection)
-      setEndSection(nextRange.endSection)
-    }
   })
 
   useEffect(() => {
     let active = true
     Promise.all([
-      loadMiniappRuntimeConfig(),
-      loadAcademicCalendar('undergraduate'),
+      loadMiniappRuntimeConfig().catch(() => getMiniappRuntimeConfig()),
+      loadAcademicCalendar('undergraduate').catch(() => null),
     ]).then(([next, calendarResult]) => {
       if (!active) return
       setConfig(next)
+      const nextCalendar = calendarResult?.calendar || null
+      setCalendar(nextCalendar)
       const available = enabledCampuses(next)
       const requestedCampus = handoffCampus.current
       setCampus((current) => {
         if (requestedCampus && available.includes(requestedCampus)) return requestedCampus
         if (available.includes(current)) return current
         const fallback = getSelectedCampus(next)
-        const search = defaultSearch(next, fallback)
-        setServiceDate(search.date)
-        setStartSection(search.startSection)
-        setEndSection(search.endSection)
         return fallback
       })
 
-      const calendarState = resolveAcademicCalendarState(calendarResult.calendar)
-      if (!handoffHasDate.current && calendarState.kind === 'upcoming') {
-        setServiceDate(calendarState.term.start_date)
-        setStartSection(1)
-        setEndSection(2)
+      const calendarState = resolveAcademicCalendarState(nextCalendar)
+      if (!handoffHasDate.current) {
+        if (calendarState.kind === 'upcoming') {
+          setServiceDate(calendarState.term.start_date)
+        } else if (calendarState.kind === 'finished') {
+          setServiceDate(
+            academicWeekdayToDate(calendarState.term, calendarState.term.week_count, 1)
+              || calendarState.term.start_date,
+          )
+        }
       }
       handoffCampus.current = undefined
       setQueryReady(true)
@@ -254,18 +230,34 @@ export default function EmptyClassroomPage() {
     if (value === campus) return
     saveSelectedCampus(value)
     setCampus(value)
+    setBuilding('all')
+    setExpandedBuildings({})
   }
 
-  const chooseRange = (start: number, end: number) => {
-    setStartSection(start)
-    setEndSection(end)
-    setCustomRangeOpen(false)
+  const chooseDate = (value: string) => {
+    setServiceDate(value)
+    setBuilding('all')
+    setExpandedBuildings({})
+  }
+
+  const chooseWeek = (week: number) => {
+    if (!calendarSelection) return
+    const value = academicWeekdayToDate(calendarSelection.term, week, calendarSelection.weekday)
+    if (value) chooseDate(value)
+  }
+
+  const chooseWeekday = (weekday: number) => {
+    if (!calendarSelection) return
+    const value = academicWeekdayToDate(calendarSelection.term, calendarSelection.week, weekday)
+    if (value) chooseDate(value)
   }
 
   const openReport = (classroom: ClassroomView) => {
     setReportingClassroom(classroom)
     setReportCategory('class_in_progress')
     setReportDescription('')
+    setReportStartSection(1)
+    setReportEndSection(12)
   }
 
   const submitReport = async () => {
@@ -275,8 +267,8 @@ export default function EmptyClassroomPage() {
       await createClassroomOccupancyReport({
         classroomId: reportingClassroom.id,
         serviceDate,
-        startSection,
-        endSection,
+        startSection: reportStartSection,
+        endSection: reportEndSection,
         category: reportCategory,
         description: reportDescription.trim() || undefined,
       })
@@ -302,133 +294,94 @@ export default function EmptyClassroomPage() {
           <View className='empty-classroom-overview__summary'>
             <Text>{campus}</Text>
             <Text>
-              {dateLabel(serviceDate)} · 第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节 · {timeText}
+              {calendarSelection
+                ? `第 ${calendarSelection.week} 周 · ${weekdays[calendarSelection.weekday - 1]} · ${dateLabel(serviceDate)}`
+                : `${dateLabel(serviceDate)} · 全天`}
             </Text>
           </View>
           <View className='empty-classroom-overview__metric'>
             <Text>{loading ? '—' : total}</Text>
-            <Text>间可用</Text>
+            <Text>间教室</Text>
           </View>
         </View>
 
         <View className='empty-classroom-filters'>
-          <ScrollView className='empty-classroom-scope' scrollX enhanced showScrollbar={false}>
-            <View className='empty-classroom-scope__track'>
-              <Text className='empty-classroom-scope__label'>校区</Text>
+          <View className='empty-classroom-filter-section'>
+            <View className='empty-classroom-filter-title'>
+              <Text>校区</Text>
+              <Text>选择上课区域</Text>
+            </View>
+            <View className='empty-classroom-campus-options'>
               {campuses.map((item) => (
                 <View
                   key={item}
                   className={[
-                    'empty-classroom-scope__chip',
-                    campus === item ? 'empty-classroom-scope__chip--active' : '',
+                    'empty-classroom-filter-chip',
+                    campus === item ? 'empty-classroom-filter-chip--active' : '',
                   ].filter(Boolean).join(' ')}
                   onClick={() => chooseCampus(item)}
                 >
                   {item.replace('校区', '')}
                 </View>
               ))}
-              <View className='empty-classroom-scope__divider' />
-              <Text className='empty-classroom-scope__label'>日期</Text>
-              {[0, 1].map((offset) => {
-                const date = dateFromOffset(offset)
-                const value = dateKey(date)
-                return (
-                  <View
-                    key={value}
-                    className={[
-                      'empty-classroom-scope__chip',
-                      serviceDate === value ? 'empty-classroom-scope__chip--active' : '',
-                    ].filter(Boolean).join(' ')}
-                    onClick={() => setServiceDate(value)}
-                  >
-                    {offset === 0 ? '今天' : '明天'}
-                  </View>
-                )
-              })}
-              <Picker
-                mode='date'
-                value={serviceDate}
-                onChange={(event) => setServiceDate(String(event.detail.value))}
-              >
-                <View
-                  className={[
-                    'empty-classroom-scope__chip',
-                    ![dateKey(dateFromOffset(0)), dateKey(dateFromOffset(1))].includes(serviceDate)
-                      ? 'empty-classroom-scope__chip--active'
-                      : '',
-                  ].filter(Boolean).join(' ')}
-                >
-                  {![dateKey(dateFromOffset(0)), dateKey(dateFromOffset(1))].includes(serviceDate)
-                    ? dateLabel(serviceDate)
-                    : '其他'}
-                </View>
-              </Picker>
             </View>
-          </ScrollView>
-
-          <View className='empty-classroom-period__head'>
-            <Text>节次</Text>
-            <Text>{timeText}</Text>
           </View>
-          <ScrollView className='empty-classroom-period' scrollX enhanced showScrollbar={false}>
-            <View className='empty-classroom-period__track'>
-              {quickRanges.map(([start, end]) => (
-                <View
-                  key={`${start}-${end}`}
-                  className={[
-                    'empty-classroom-period__chip',
-                    startSection === start && endSection === end
-                      ? 'empty-classroom-period__chip--active'
-                      : '',
-                  ].filter(Boolean).join(' ')}
-                  onClick={() => chooseRange(start, end)}
-                >
-                  {start}—{end}节
+
+          {calendarSelection && (
+            <View className='empty-classroom-filter-section empty-classroom-filter-section--time'>
+              <View className='empty-classroom-filter-title empty-classroom-filter-title--time'>
+                <View>
+                  <Text>教学时间</Text>
+                  <Text>{calendarSelection.term.short_label} · {dateLabel(serviceDate)}</Text>
                 </View>
-              ))}
-              <View
-                className={[
-                  'empty-classroom-period__chip',
-                  customRangeSelected ? 'empty-classroom-period__chip--active' : '',
-                ].filter(Boolean).join(' ')}
-                onClick={() => setCustomRangeOpen((current) => !current)}
-              >
-                {customRangeSelected
-                  ? `${startSection}${startSection === endSection ? '' : `—${endSection}`}节`
-                  : '自定义'}
+                <Picker
+                  mode='selector'
+                  range={weekOptions.map((week) => `第 ${week} 周`)}
+                  value={Math.max(0, calendarSelection.week - 1)}
+                  onChange={(event) => chooseWeek(weekOptions[Number(event.detail.value)] || 1)}
+                >
+                  <View className='empty-classroom-week-control'>
+                    <Text>第 {calendarSelection.week} 周</Text>
+                    <Text>切换</Text>
+                  </View>
+                </Picker>
+              </View>
+              <View className='empty-classroom-weekdays'>
+                {weekdays.map((label, index) => (
+                  <View
+                    key={label}
+                    className={[
+                      'empty-classroom-weekdays__item',
+                      calendarSelection.weekday === index + 1 ? 'empty-classroom-weekdays__active' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => chooseWeekday(index + 1)}
+                  >{label}</View>
+                ))}
               </View>
             </View>
-          </ScrollView>
+          )}
 
-          {customRangeOpen && (
-            <View className='empty-classroom-custom-panel'>
-              <Text>自定义节次</Text>
-              <View className='empty-classroom-custom-panel__pickers'>
-                <Picker
-                  mode='selector'
-                  range={sectionNumbers}
-                  value={Math.max(0, startSection - 1)}
-                  onChange={(event) => {
-                    const next = sectionNumbers[Number(event.detail.value)] || 1
-                    setStartSection(next)
-                    if (endSection < next) setEndSection(next)
-                  }}
-                >
-                  <View>第 {startSection} 节</View>
-                </Picker>
-                <Text>至</Text>
-                <Picker
-                  mode='selector'
-                  range={sectionNumbers}
-                  value={Math.max(0, endSection - 1)}
-                  onChange={(event) => {
-                    const next = sectionNumbers[Number(event.detail.value)] || startSection
-                    setEndSection(Math.max(startSection, next))
-                  }}
-                >
-                  <View>第 {endSection} 节</View>
-                </Picker>
+          {buildings.length > 0 && (
+            <View className='empty-classroom-filter-section empty-classroom-filter-section--building'>
+              <View className='empty-classroom-filter-title'>
+                <Text>楼栋</Text>
+                <Text>{buildings.length} 栋可选</Text>
               </View>
+              <ScrollView className='empty-classroom-building-options' scrollX enhanced showScrollbar={false}>
+                <View className='empty-classroom-building-options__track'>
+                  {['all', ...buildings].map((item) => (
+                    <View
+                      key={item}
+                      className={[
+                        'empty-classroom-filter-chip',
+                        'empty-classroom-filter-chip--building',
+                        building === item ? 'empty-classroom-filter-chip--active' : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => setBuilding(item)}
+                    >{item === 'all' ? '全部楼栋' : item}</View>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
           )}
         </View>
@@ -440,10 +393,10 @@ export default function EmptyClassroomPage() {
 
         <View className='empty-classroom-heading'>
           <View>
-            <Text>可用教室</Text>
-            <Text>{dateLabel(serviceDate)} · 第 {startSection}{startSection === endSection ? '' : `—${endSection}`} 节</Text>
+            <Text>教室全天情况</Text>
+            <Text>{dateLabel(serviceDate)} · 1—12 节</Text>
           </View>
-          <Text>{loading ? '查询中' : `${result?.groups.length || 0} 栋`}</Text>
+          <Text>{loading ? '查询中' : `${filteredGroups.length} 栋`}</Text>
         </View>
 
         {loading && (
@@ -465,41 +418,63 @@ export default function EmptyClassroomPage() {
           </View>
         )}
 
+        {!loading && !errorText && dayResult && !dayResult.schedule_data_ready && (
+          <View className='empty-classroom-warning'>课表占用数据尚未同步，暂不判断全天空闲情况。</View>
+        )}
+
         {!loading && !errorText && total === 0 && (
           <View className='empty-classroom-empty'>
             <View className='empty-classroom-empty__door'><View /></View>
-            <Text>这个时段暂时没有空教室</Text>
-            <Text>切换节次、日期或校区再看看</Text>
+            <Text>当前范围暂无教室</Text>
+            <Text>切换教学周、星期、校区或楼栋再看看</Text>
           </View>
         )}
 
-        {!loading && result?.groups.map((group) => (
+        {!loading && filteredGroups.map((group) => {
+          const visibleRows = expandedBuildings[group.building]
+            ? group.classrooms
+            : group.classrooms.slice(0, INITIAL_BUILDING_ROWS)
+          return (
           <View key={group.building} className='empty-classroom-building'>
             <View className='empty-classroom-building__head'>
               <Text>{group.building}</Text>
               <Text>{group.classrooms.length} 间</Text>
             </View>
             <View className='empty-classroom-building__list'>
-              {group.classrooms.map(({ classroom }) => (
+              {visibleRows.map((item) => {
+                const classroom = item.classroom
+                const dayDataReady = dayResult?.schedule_data_ready !== false
+                const availableSections = dayDataReady
+                  ? normalizeAvailableSections(item.available_sections)
+                  : []
+                return (
                 <View key={classroom.id} className='empty-classroom-row'>
                   <View className='empty-classroom-row__main'>
                     <Text>{classroom.room}</Text>
                     <Text>
-                      {classroom.room_type || '普通教室'}
-                      {classroom.capacity ? ` · ${classroom.capacity} 人` : ''}
+                      {dayDataReady
+                        ? formatAvailableSectionRanges(availableSections)
+                        : '课表待同步，暂不判断'}
                     </Text>
                   </View>
                   <View className='empty-classroom-row__aside'>
-                    {(classroom.facilities || []).length > 0 && (
-                      <Text>{(classroom.facilities || []).slice(0, 2).join('、')}</Text>
-                    )}
+                    <View className='empty-classroom-day-grid'>
+                      {sectionNumbers.map((section) => <View key={section} className={dayDataReady && availableSections.includes(section) ? 'empty-classroom-day-grid__free' : ''}>{section}</View>)}
+                    </View>
                     <Text onClick={() => openReport(classroom)}>反馈占用</Text>
                   </View>
                 </View>
-              ))}
+                )
+              })}
+              {group.classrooms.length > INITIAL_BUILDING_ROWS && (
+                <View className='empty-classroom-building__more' onClick={() => setExpandedBuildings((current) => ({ ...current, [group.building]: !current[group.building] }))}>
+                  {expandedBuildings[group.building] ? '收起' : `展开其余 ${group.classrooms.length - INITIAL_BUILDING_ROWS} 间`}
+                </View>
+              )}
             </View>
           </View>
-        ))}
+          )
+        })}
 
         <View className='empty-classroom-disclaimer'>
           查询结果仅供参考，请以门牌、现场课程和管理人员安排为准
@@ -517,7 +492,7 @@ export default function EmptyClassroomPage() {
             <View className='empty-classroom-report__title'>
               <View>
                 <Text>反馈教室已被占用</Text>
-                <Text>{reportingClassroom.display_name} · 第 {startSection}—{endSection} 节</Text>
+                <Text>{reportingClassroom.display_name} · 第 {reportStartSection}—{reportEndSection} 节</Text>
               </View>
               <Text onClick={() => setReportingClassroom(null)}>取消</Text>
             </View>
@@ -534,6 +509,28 @@ export default function EmptyClassroomPage() {
                   {label}
                 </View>
               ))}
+            </View>
+            <View className='empty-classroom-report__sections'>
+              <Picker
+                mode='selector'
+                range={sectionNumbers}
+                value={reportStartSection - 1}
+                onChange={(event) => {
+                  const next = sectionNumbers[Number(event.detail.value)] || 1
+                  setReportStartSection(next)
+                  if (reportEndSection < next) setReportEndSection(next)
+                }}
+              ><View>第 {reportStartSection} 节</View></Picker>
+              <Text>至</Text>
+              <Picker
+                mode='selector'
+                range={sectionNumbers}
+                value={reportEndSection - 1}
+                onChange={(event) => {
+                  const next = sectionNumbers[Number(event.detail.value)] || reportStartSection
+                  setReportEndSection(Math.max(reportStartSection, next))
+                }}
+              ><View>第 {reportEndSection} 节</View></Picker>
             </View>
             <KeyboardSafeTextarea
               className='empty-classroom-report__textarea'
