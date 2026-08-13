@@ -131,7 +131,7 @@ export default function CarpoolFilters({ value, onChange }: Props) {
 
       <FilterSheet
         visible={sheetVisible}
-        title='筛选拼车'
+        title='筛选同行计划'
         onClose={() => setSheetVisible(false)}
         onReset={() => {
           onChange({})
@@ -209,7 +209,7 @@ export default function CarpoolFilters({ value, onChange }: Props) {
         </View>
 
         <View className='filter-section'>
-          <Text className='filter-section__title'>需要座位</Text>
+          <Text className='filter-section__title'>同行人数</Text>
           <View className='seat-filter-options'>
             {[
               { label: '不限', value: undefined },

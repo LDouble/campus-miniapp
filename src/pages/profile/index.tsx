@@ -61,7 +61,7 @@ const menus = [
   },
   {
     key: 'carpool',
-    name: '我的拼车',
+    name: '我的同行',
     icon: icons.carpool,
     route: '/pages/my-services/index?section=carpool&relation=all',
   },

@@ -98,7 +98,7 @@ const emptyCopy: Record<LifeServiceSection, { title: string; subtitle: string }>
     subtitle: '试试调整关键词或价格范围',
   },
   carpool: {
-    title: '没有匹配的拼车行程',
+    title: '没有匹配的同行计划',
     subtitle: '调整日期、路线或人数后再试试',
   },
 }
@@ -267,7 +267,7 @@ export default function LifeServiceListPanel({
       ? '全校待接任务'
       : section === 'market'
         ? marketFilters.intent === 'wanted' ? '最新求购' : marketFilters.intent === 'sell' ? '最新出售' : '最新交易'
-        : '近期行程'
+        : '近期同行'
 
   const carpoolGroups = useMemo(() => {
     if (section !== 'carpool') return []
@@ -402,7 +402,7 @@ export default function LifeServiceListPanel({
             <View key={group.key} className='carpool-group'>
               <View className='carpool-group__heading'>
                 <Text>{group.label}</Text>
-                <Text>{group.trips.length} 个行程</Text>
+                <Text>{group.trips.length} 个计划</Text>
               </View>
               <View className='carpool-list'>
                 {group.trips.map((item) => (

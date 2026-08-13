@@ -61,14 +61,14 @@ const sections: Array<{ key: Section; label: string }> = [
   { key: 'published', label: '发布' },
   { key: 'errands', label: '接单' },
   { key: 'orders', label: '订单' },
-  { key: 'carpool', label: '拼车' },
+  { key: 'carpool', label: '同行' },
 ]
 
 const publishedTypes: Array<{ key: PublishedType; label: string }> = [
   { key: 'community', label: '动态' },
   { key: 'errands', label: '跑腿' },
   { key: 'market', label: '二手' },
-  { key: 'carpool', label: '拼车' },
+  { key: 'carpool', label: '同行' },
 ]
 
 const relationOptions: Record<Exclude<Section, 'published'>, Array<{ key: string; label: string }>> = {
@@ -381,7 +381,7 @@ export default function MyServicesPage() {
     : view.section === 'orders'
       ? ['还没有交易订单', '完成接单或二手预订后会显示在这里']
       : view.section === 'carpool'
-        ? ['还没有相关拼车', '可以发起或加入一段行程']
+        ? ['还没有同行计划', '可以发布计划或响应同路同学']
         : ['还没有发布记录', '从统一发布器创建第一条内容']
 
   return (
@@ -564,7 +564,7 @@ export default function MyServicesPage() {
             return (
               <View key={`carpool:${trip.id}`} className='my-record-card my-record-card--carpool' onClick={() => openBusinessRecord(trip)}>
                 <View className='my-record-card__top'>
-                  <Text>{trip.viewer_relation === 'participant' ? '我参与的拼车' : '我发起的拼车'}</Text>
+                  <Text>{trip.viewer_relation === 'participant' ? '我参与的同行' : '我发起的同行'}</Text>
                   <Text>{formatStatus(trip.status, trip.review_status)}</Text>
                 </View>
                 <View className='my-record-route'>
@@ -573,7 +573,7 @@ export default function MyServicesPage() {
                 {trip.description && <Text className='my-record-card__body'>{trip.description}</Text>}
                 <View className='my-record-card__footer'>
                   <Text>{formatDateTime(trip.departure_at)}</Text>
-                  <Text>{remainingSeats(trip.total_seats, trip.occupied_seats)} 个空位 ›</Text>
+                  <Text>{remainingSeats(trip.total_seats, trip.occupied_seats)} 人可同行 ›</Text>
                 </View>
               </View>
             )
