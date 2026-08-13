@@ -24,6 +24,7 @@ import {
 import { getCurrentIdentity } from '../../api/account'
 import { createIdempotencyKey } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
+import { getSelectedTempFiles } from '../../utils/file-selection'
 import type {
   CourseMaterialView,
   MaterialCourseView,
@@ -58,9 +59,9 @@ import {
   isMaterialUploadSessionReusable,
   materialExtension,
   MAX_MATERIAL_FILES,
-  MAX_MATERIAL_FILE_SIZE,
   mimeTypes,
   resolveMaterialCourse,
+  selectSupportedMaterialFiles,
   supportedMaterialExtensions,
   validateMaterialDrafts,
 } from '../../features/course-materials/validation'
@@ -579,16 +580,10 @@ export default function MaterialsPage() {
         type: 'file',
         extension: [...supportedMaterialExtensions],
       })
-      const selected = result.tempFiles
-        .filter((file) => (
-          file.size > 0
-          && file.size <= MAX_MATERIAL_FILE_SIZE
-          && supportedMaterialExtensions.includes(
-            materialExtension(file.name) as typeof supportedMaterialExtensions[number],
-          )
-        ))
-        .slice(0, MAX_MATERIAL_FILES)
-      if (selected.length < result.tempFiles.length) {
+      const returnedFiles = getSelectedTempFiles(result)
+      if (!returnedFiles.length) return
+      const selected = selectSupportedMaterialFiles(returnedFiles)
+      if (selected.length < returnedFiles.length) {
         Taro.showToast({ title: '已跳过格式不支持或超过 50MB 的文件', icon: 'none' })
       }
       if (!selected.length) return
@@ -645,9 +640,13 @@ export default function MaterialsPage() {
         Taro.showToast({ title: '存储空间不足，退出后需重新选择部分文件', icon: 'none' })
       }
     } catch (error) {
-      if (error instanceof Error) {
-        Taro.showToast({ title: error.message, icon: 'none' })
-      }
+      const message = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error && 'errMsg' in error
+          ? String(error.errMsg)
+          : ''
+      if (/cancel/i.test(message)) return
+      Taro.showToast({ title: '文件选择失败，请重试', icon: 'none' })
     }
   }
 
