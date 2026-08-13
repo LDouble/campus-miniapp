@@ -22,6 +22,7 @@ const icons = {
   published: require('../../assets/icons/community.svg'),
   accepted: require('../../assets/icons/errands.svg'),
   orders: require('../../assets/icons/market.svg'),
+  earnings: require('../../assets/icons/result.svg'),
   carpool: require('../../assets/icons/shuttle.svg'),
   identity: require('../../assets/icons/academic.svg'),
   privacy: require('../../assets/icons/study.svg'),
@@ -58,6 +59,12 @@ const menus = [
     name: '我的订单',
     icon: icons.orders,
     route: '/pages/my-services/index?section=orders&relation=all',
+  },
+  {
+    key: 'earnings',
+    name: '我的收益',
+    icon: icons.earnings,
+    route: '/pages/earnings/index',
   },
   {
     key: 'carpool',

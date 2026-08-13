@@ -3581,6 +3581,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{id}/wechat-pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 为本人待支付订单创建微信小程序支付 */
+        post: operations["CreateWechatPay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/wechat-pay/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 主动查询并同步本人订单的微信支付状态 */
+        post: operations["QueryWechatPay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信支付结果通知 */
+        post: operations["HandleWechatPayCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/refund-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信原路退款结果通知 */
+        post: operations["HandleWechatRefundCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/transfer-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信商家转账结果通知 */
+        post: operations["HandleWechatTransferCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settlements/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人可提现收益 */
+        get: operations["ListMySettlementPayables"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settlements/{id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 将本人可提现收益发起微信商家转账 */
+        post: operations["CreateMerchantTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/shuttle/routes": {
         parameters: {
             query?: never;
@@ -6683,6 +6802,88 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        MerchantTransferResponseBody: {
+            data: components["schemas"]["MerchantTransferView"];
+            request_id: string;
+        };
+        MerchantTransferView: {
+            /** Format: int64 */
+            amount_cents: number;
+            app_id: string | null;
+            confirmation_package: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            merchant_id: string | null;
+            /** Format: uint64 */
+            payable_id: number;
+            /** @enum {string} */
+            status: "processing" | "awaiting_user_confirmation" | "succeeded" | "failed";
+            transfer_no: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        PaymentStatusResponseBody: {
+            data: components["schemas"]["PaymentStatusView"];
+            request_id: string;
+        };
+        PaymentStatusView: {
+            /** Format: date-time */
+            paid_at?: string | null;
+            /** @enum {string} */
+            status: "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
+        };
+        SettlementPayablePage: {
+            items: components["schemas"]["SettlementPayableView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SettlementPayablePageResponseBody: {
+            data: components["schemas"]["SettlementPayablePage"];
+            request_id: string;
+        };
+        SettlementPayableView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: date-time */
+            available_at: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            order_id: number;
+            payable_no: string;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+            /** @enum {string} */
+            source_type: "errand" | "marketplace";
+            /** @enum {string} */
+            status: "available" | "transferring" | "paid" | "blocked";
+            /** Format: uint64 */
+            version: number;
+        };
+        WechatCallbackAck: {
+            /** @enum {string} */
+            code: "SUCCESS";
+            message: string;
+        };
+        WechatPayParams: {
+            intent_no: string;
+            nonce_str: string;
+            package: string;
+            pay_sign: string;
+            /** @enum {string} */
+            sign_type: "RSA";
+            time_stamp: string;
+        };
+        WechatPayResponseBody: {
+            data: components["schemas"]["WechatPayParams"];
+            request_id: string;
+        };
         ShuttleDateOverrideInput: {
             day_type: components["schemas"]["ShuttleDayType"];
             departure_times?: string[];
@@ -6825,7 +7026,10 @@ export interface components {
             order_no: string;
             /** @enum {string} */
             order_type: "marketplace" | "errand";
-            payment_mode: string;
+            /** Format: date-time */
+            paid_at: string | null;
+            /** @enum {string} */
+            payment_mode: "offline" | "wechat";
             /** Format: uint64 */
             resource_id: number;
             resource_snapshot: {
@@ -6835,7 +7039,7 @@ export interface components {
             resource_type: "marketplace_listing" | "errand_task";
             title_snapshot: string;
             /** @enum {string} */
-            trade_status: "confirmed" | "completed" | "cancelled" | "expired";
+            trade_status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -6850,7 +7054,7 @@ export interface components {
             total: number;
         };
         /** @enum {string} */
-        TradeOrderViewerAction: "view_resource" | "cancel" | "complete" | "verify_academic";
+        TradeOrderViewerAction: "view_resource" | "pay" | "cancel" | "complete" | "verify_academic";
         /** @enum {string} */
         TradeOrderViewerRelation: "buyer" | "seller";
         DailyCheckinHistory: {
@@ -8038,6 +8242,51 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeResponseBody"];
+            };
+        };
+        /** @description 商家转账结果 */
+        MerchantTransferResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MerchantTransferResponseBody"];
+            };
+        };
+        /** @description 微信支付权威状态 */
+        PaymentStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PaymentStatusResponseBody"];
+            };
+        };
+        /** @description 我的待结算收益 */
+        SettlementPayablePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SettlementPayablePageResponseBody"];
+            };
+        };
+        /** @description 微信支付回调确认 */
+        WechatCallbackResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatCallbackAck"];
+            };
+        };
+        /** @description 微信小程序支付参数 */
+        WechatPayResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatPayResponseBody"];
             };
         };
         /** @description 校车线路分页 */
@@ -13309,6 +13558,123 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    CreateWechatPay: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: components["responses"]["WechatPayResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    QueryWechatPay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PaymentStatusResponse"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatPayCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatRefundCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatTransferCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListMySettlementPayables: {
+        parameters: {
+            query?: {
+                status?: "available" | "transferring" | "paid" | "blocked";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SettlementPayablePageResponse"];
+        };
+    };
+    CreateMerchantTransfer: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["MerchantTransferResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     ListAdminShuttleRoutes: {
         parameters: {
             query?: {
@@ -13475,7 +13841,7 @@ export interface operations {
             query?: {
                 relation?: "all" | "buyer" | "seller";
                 order_type?: "marketplace" | "errand";
-                trade_status?: "confirmed" | "completed" | "cancelled" | "expired";
+                trade_status?: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
                 fulfillment_status?: "not_started" | "in_progress" | "delivered";
                 page?: number;
                 page_size?: number;

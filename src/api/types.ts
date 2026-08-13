@@ -34,6 +34,11 @@ export type MarketplaceListingViewPage = components['schemas']['MarketplaceListi
 export type MarketplaceTradeOrder = components['schemas']['MarketplaceTradeOrder']
 export type TradeOrderView = components['schemas']['TradeOrderView']
 export type TradeOrderViewPage = components['schemas']['TradeOrderViewPage']
+export type WechatPayParams = components['schemas']['WechatPayParams']
+export type PaymentStatusView = components['schemas']['PaymentStatusView']
+export type SettlementPayableView = components['schemas']['SettlementPayableView']
+export type SettlementPayablePage = components['schemas']['SettlementPayablePage']
+export type MerchantTransferView = components['schemas']['MerchantTransferView']
 
 export type CarpoolTripView = components['schemas']['CarpoolTripView']
 export type CarpoolTripViewPage = components['schemas']['CarpoolTripViewPage']
