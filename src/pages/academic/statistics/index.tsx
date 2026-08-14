@@ -9,6 +9,10 @@ import {
   getInstructorStatisticsTrend,
   InstructorPassRate,
 } from '../../../features/academic-statistics/repository'
+import {
+  academicStatisticsTermKey,
+  formatAcademicStatisticsTerm,
+} from '../../../features/academic-statistics/term-label'
 import type { AcademicPassRateTrend } from '../../../api/types'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './index.scss'
@@ -36,13 +40,6 @@ const decodeParam = (value?: string) => {
 }
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`
-
-const formatTerm = (termCode: string) => {
-  const parts = termCode.split('-')
-  if (parts.length !== 3) return termCode
-  const season = parts[2] === '1' ? '秋' : parts[2] === '2' ? '春' : parts[2]
-  return `${parts[0].slice(-2)}-${parts[1].slice(-2)} ${season}`
-}
 
 const normalizeTeacher = (value: string) => value.replace(/\s+/g, '')
 
@@ -317,17 +314,20 @@ export default function AcademicStatisticsPage() {
                       />
                       <View className='trend-chart__touches'>
                         {points.map((point, index) => (
-                          <View key={point.term_code} onClick={() => setSelectedPoint(index)} />
+                          <View
+                            key={academicStatisticsTermKey(point)}
+                            onClick={() => setSelectedPoint(index)}
+                          />
                         ))}
                       </View>
                     </View>
                     <View className='trend-labels'>
                       {points.map((point, index) => (
                         <Text
-                          key={point.term_code}
+                          key={academicStatisticsTermKey(point)}
                           className={index === selectedPoint ? 'trend-labels__active' : ''}
                         >
-                          {formatTerm(point.term_code)}
+                          {formatAcademicStatisticsTerm(point)}
                         </Text>
                       ))}
                     </View>
@@ -338,7 +338,7 @@ export default function AcademicStatisticsPage() {
                 {activePoint && (
                   <View className='trend-detail'>
                     <View>
-                      <Text>{formatTerm(activePoint.term_code)}</Text>
+                      <Text>{formatAcademicStatisticsTerm(activePoint)}</Text>
                       <Text>{activePoint.valid_count} 份有效成绩</Text>
                     </View>
                     <View>
@@ -427,8 +427,8 @@ export default function AcademicStatisticsPage() {
             {!teacherTrendLoading && teacherTrend && teacherTrend.points.length > 0 && (
               <View className='teacher-trend-list'>
                 {teacherTrend.points.map((point) => (
-                  <View key={point.term_code}>
-                    <Text>{formatTerm(point.term_code)}</Text>
+                  <View key={academicStatisticsTermKey(point)}>
+                    <Text>{formatAcademicStatisticsTerm(point)}</Text>
                     <Text>{formatPercent(point.pass_rate)}</Text>
                     <Text>{point.average_score === undefined ? '等级制' : `${point.average_score.toFixed(1)} 分`}</Text>
                     <Text>{point.valid_count} 份</Text>
