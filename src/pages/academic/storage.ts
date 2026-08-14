@@ -8,6 +8,7 @@ import {
   GradeRecord,
   GradeSimulation,
 } from './types'
+import { sanitizeCoursesByPeriod } from './schedule-courses'
 
 const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
 const PREFERENCES_KEY = 'academic.preferences.v1'
@@ -231,7 +232,12 @@ export const academicStorage = {
   getScheduleCache: (platformUserId: number) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
     const value = safeRead<unknown>(scheduleCacheKey(platformUserId), null)
-    return validScheduleCache(value, platformUserId) ? value : null
+    return validScheduleCache(value, platformUserId)
+      ? {
+        ...value,
+        coursesByPeriod: sanitizeCoursesByPeriod(value.coursesByPeriod),
+      }
+      : null
   },
   setScheduleCache: (
     platformUserId: number,
@@ -243,7 +249,7 @@ export const academicStorage = {
       version: 1,
       platformUserId,
       periods,
-      coursesByPeriod,
+      coursesByPeriod: sanitizeCoursesByPeriod(coursesByPeriod),
       updatedAt: Date.now(),
     })
   },

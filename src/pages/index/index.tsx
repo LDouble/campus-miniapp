@@ -69,6 +69,10 @@ import {
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { academicRepository } from '../academic/repository'
 import {
+  requireCoursesForPeriod,
+  setCoursesForPeriod,
+} from '../academic/schedule-courses'
+import {
   academicStorage,
   type AcademicScheduleCache,
 } from '../academic/storage'
@@ -260,11 +264,16 @@ const loadLatestAcademic = async (
   if (periodId && isCurrentPeriod && !hasCachedCourses && hasCredential) {
     const coursesResult = await settle(academicRepository.getCourses(periodId))
     if (coursesResult.ok) {
-      coursesByPeriod = {
-        ...coursesByPeriod,
-        [periodId]: coursesResult.value,
+      try {
+        coursesByPeriod = setCoursesForPeriod(
+          coursesByPeriod,
+          periodId,
+          requireCoursesForPeriod(coursesResult.value, periodId),
+        )
+        academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
+      } catch {
+        // 串学期响应不得污染首页课表缓存；课表页会继续提供显式重试入口。
       }
-      academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
     }
   }
 
