@@ -609,13 +609,6 @@ page {
   &:last-child {
     border-bottom: 0;
   }
-
-  &.community-comment--pending_review {
-    padding: 17rpx 12rpx;
-    border-color: rgba(233, 140, 112, 0.12);
-    border-radius: 18rpx;
-    background: rgba(255, 240, 220, 0.62);
-  }
 }
 
 .community-comment__reply-avatar {
