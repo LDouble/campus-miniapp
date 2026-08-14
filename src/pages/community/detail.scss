@@ -378,9 +378,10 @@ page {
     color: #9a95a0;
     font-size: 20rpx;
 
-    view {
+    &-separator {
       width: 5rpx;
       height: 5rpx;
+      flex: none;
       margin: 0 9rpx;
       border-radius: 50%;
       background: #bbb5bf;
@@ -388,6 +389,11 @@ page {
 
     text:last-child {
       color: #a77b58;
+    }
+
+    text.community-comment__delete {
+      color: #d87567;
+      font-weight: 650;
     }
   }
 
@@ -543,8 +549,31 @@ page {
   font-size: 26rpx;
 }
 
+.community-detail-card__delete {
+  display: flex;
+  min-height: 64rpx;
+  margin-left: auto;
+  padding: 0 12rpx;
+  align-items: center;
+  color: #d87567;
+  font-size: 24rpx;
+  font-weight: 650;
+  transition: opacity 160ms ease;
+}
+
 .community-comment__report {
   padding: 12rpx 8rpx;
   color: #7b9199;
   font-size: 24rpx;
+}
+
+.community-comment__delete {
+  display: inline-flex;
+  width: auto;
+  min-height: 48rpx;
+  padding: 12rpx 8rpx;
+  align-items: center;
+  color: #d87567;
+  font-size: 24rpx;
+  font-weight: 650;
 }
