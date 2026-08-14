@@ -48,6 +48,10 @@ type CommentThreadState = {
   loading: boolean
 }
 
+const displayableComments = (items: CommentView[]) => (
+  items.filter((item) => item.status !== 'withdrawn')
+)
+
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
@@ -63,6 +67,8 @@ export default function CommunityDetailPage() {
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [deletingPost, setDeletingPost] = useState(false)
+  const [deletingCommentId, setDeletingCommentId] = useState(0)
   const [error, setError] = useState('')
 
   const load = async (id: number) => {
@@ -86,7 +92,7 @@ export default function CommunityDetailPage() {
             pageSize: 20,
           },
         )
-        setComments(commentResult.items)
+        setComments(displayableComments(commentResult.items))
         setCommentPage(commentResult.page)
         setCommentTotal(Number(commentResult.total))
       } else {
@@ -306,6 +312,96 @@ export default function CommunityDetailPage() {
     })
   }
 
+  const deletePost = async () => {
+    if (!post || deletingPost) return
+    const confirmation = await Taro.showModal({
+      title: '删除动态',
+      content: '删除后这条动态和评论将不再公开展示，且无法恢复。确认删除吗？',
+      confirmText: '删除',
+      confirmColor: '#d87567',
+    })
+    if (!confirmation.confirm) return
+
+    setDeletingPost(true)
+    try {
+      await lifeServicesRepository.withdrawCampusCirclePost(post.id, post.version)
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: '动态已删除', icon: 'success' })
+      void Taro.switchTab({ url: '/pages/community/index' })
+    } catch (actionError) {
+      if (isApiError(actionError) && actionError.statusCode === 409) {
+        await load(post.id)
+      }
+      Taro.showToast({
+        title: isApiError(actionError) ? actionError.message : '删除失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setDeletingPost(false)
+    }
+  }
+
+  const deleteComment = async (item: CommentView) => {
+    if (deletingCommentId) return
+    const isReply = Boolean(item.parent_id)
+    const confirmation = await Taro.showModal({
+      title: isReply ? '删除回复' : '删除评论',
+      content: `删除后这条${isReply ? '回复' : '评论'}将不再展示，且无法恢复。确认删除吗？`,
+      confirmText: '删除',
+      confirmColor: '#d87567',
+    })
+    if (!confirmation.confirm) return
+
+    setDeletingCommentId(item.id)
+    try {
+      await lifeServicesRepository.withdrawComment(item.id, item.version)
+      if (isReply) {
+        const rootId = commentRootId(item)
+        setCommentThreads((current) => {
+          const thread = current[rootId]
+          if (!thread) return current
+          return {
+            ...current,
+            [rootId]: {
+              ...thread,
+              descendants: thread.descendants.filter((reply) => reply.id !== item.id),
+            },
+          }
+        })
+        setComments((current) => current.map((commentItem) => (
+          commentItem.id === rootId
+            ? { ...commentItem, reply_count: Math.max(0, commentItem.reply_count - 1) }
+            : commentItem
+        )))
+        if (replyTarget?.id === item.id) cancelReply()
+      } else {
+        setComments((current) => current.filter((commentItem) => commentItem.id !== item.id))
+        setCommentThreads((current) => {
+          const { [item.id]: _removedThread, ...remaining } = current
+          return remaining
+        })
+        setCommentTotal((current) => Math.max(0, current - 1))
+        if (item.status === 'approved') {
+          setPost((current) => current
+            ? { ...current, comment_count: Math.max(0, current.comment_count - 1) }
+            : current)
+        }
+      }
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: `${isReply ? '回复' : '评论'}已删除`, icon: 'success' })
+    } catch (actionError) {
+      if (isApiError(actionError) && actionError.statusCode === 409 && postId) {
+        await load(postId)
+      }
+      Taro.showToast({
+        title: isApiError(actionError) ? actionError.message : '删除失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setDeletingCommentId(0)
+    }
+  }
+
   const previewPostImage = (current: string) => {
     if (!post || post.images.length === 0) return
     void Taro.previewImage({
@@ -330,9 +426,10 @@ export default function CommunityDetailPage() {
         post.id,
         { page: commentPage + 1, pageSize: 20 },
       )
+      const resultItems = displayableComments(result.items)
       setComments((current) => {
         const byId = new Map(current.map((item) => [item.id, item]))
-        result.items.forEach((item) => byId.set(item.id, item))
+        resultItems.forEach((item) => byId.set(item.id, item))
         return [...byId.values()]
       })
       setCommentPage(result.page)
@@ -452,6 +549,18 @@ export default function CommunityDetailPage() {
                     <Image src={communityDetailIcons.edit} mode='aspectFit' />
                   </View>
                 )}
+                {post.available_actions.includes('withdraw') && (
+                  <View
+                    id='community-detail-delete'
+                    className='community-detail-card__delete'
+                    hoverClass='community-detail-card__action--pressed'
+                    ariaRole='button'
+                    ariaLabel={deletingPost ? '正在删除这条动态' : '删除这条动态'}
+                    onClick={() => void deletePost()}
+                  >
+                    {deletingPost ? '删除中' : '删除动态'}
+                  </View>
+                )}
                 {post.viewer_relation !== 'owner'
                   && post.viewer_relation !== 'admin' && (
                   <View
@@ -510,7 +619,7 @@ export default function CommunityDetailPage() {
                           <Text>{formatDateTime(item.created_at)}</Text>
                           {item.status !== 'approved' && (
                             <>
-                              <View />
+                              <View className='community-detail-comments__meta-separator' />
                               <Text className='community-comment__status'>
                                 {formatStatus(item.status)}
                               </Text>
@@ -518,7 +627,7 @@ export default function CommunityDetailPage() {
                           )}
                           {item.available_actions.includes('reply') && (
                             <>
-                              <View />
+                              <View className='community-detail-comments__meta-separator' />
                               <Text
                                 id={`community-comment-reply-${item.id}`}
                                 className='community-comment__reply-action'
@@ -531,7 +640,7 @@ export default function CommunityDetailPage() {
                           {item.viewer_relation !== 'author'
                             && item.viewer_relation !== 'admin' && (
                             <>
-                              <View />
+                              <View className='community-detail-comments__meta-separator' />
                               <Text
                                 className='community-comment__report'
                                 onClick={() => void openContentReport({
@@ -542,6 +651,22 @@ export default function CommunityDetailPage() {
                               >
                                 举报
                               </Text>
+                            </>
+                          )}
+                          {item.available_actions.includes('withdraw') && (
+                            <>
+                              <View className='community-detail-comments__meta-separator' />
+                              <View
+                                id={`community-comment-delete-${item.id}`}
+                                className='community-comment__delete'
+                                ariaRole='button'
+                                ariaLabel={deletingCommentId === item.id
+                                  ? '正在删除这条评论'
+                                  : '删除这条评论'}
+                                onClick={() => void deleteComment(item)}
+                              >
+                                {deletingCommentId === item.id ? '删除中' : '删除'}
+                              </View>
                             </>
                           )}
                         </View>
@@ -602,7 +727,7 @@ export default function CommunityDetailPage() {
                                   <Text>{formatDateTime(reply.created_at)}</Text>
                                   {reply.status !== 'approved' && (
                                     <>
-                                      <View />
+                                      <View className='community-detail-comments__meta-separator' />
                                       <Text className='community-comment__status'>
                                         {formatStatus(reply.status)}
                                       </Text>
@@ -610,7 +735,7 @@ export default function CommunityDetailPage() {
                                   )}
                                   {reply.available_actions.includes('reply') && (
                                     <>
-                                      <View />
+                                      <View className='community-detail-comments__meta-separator' />
                                       <Text
                                         id={`community-comment-reply-${reply.id}`}
                                         className='community-comment__reply-action'
@@ -623,7 +748,7 @@ export default function CommunityDetailPage() {
                                   {reply.viewer_relation !== 'author'
                                     && reply.viewer_relation !== 'admin' && (
                                     <>
-                                      <View />
+                                      <View className='community-detail-comments__meta-separator' />
                                       <Text
                                         className='community-comment__report'
                                         onClick={() => void openContentReport({
@@ -634,6 +759,22 @@ export default function CommunityDetailPage() {
                                       >
                                         举报
                                       </Text>
+                                    </>
+                                  )}
+                                  {reply.available_actions.includes('withdraw') && (
+                                    <>
+                                      <View className='community-detail-comments__meta-separator' />
+                                      <View
+                                        id={`community-comment-delete-${reply.id}`}
+                                        className='community-comment__delete'
+                                        ariaRole='button'
+                                        ariaLabel={deletingCommentId === reply.id
+                                          ? '正在删除这条回复'
+                                          : '删除这条回复'}
+                                        onClick={() => void deleteComment(reply)}
+                                      >
+                                        {deletingCommentId === reply.id ? '删除中' : '删除'}
+                                      </View>
                                     </>
                                   )}
                                 </View>

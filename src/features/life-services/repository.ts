@@ -184,6 +184,14 @@ export const lifeServicesRepository = {
     })
   },
 
+  withdrawCampusCirclePost(id: number, version: number) {
+    return versionAction<CampusCirclePostView>(
+      `/api/v1/campus-circle/posts/${id}/withdraw`,
+      version,
+      `campus-circle:${id}:withdraw`,
+    )
+  },
+
   likeCampusCirclePost(id: number) {
     return apiRequest<CampusCirclePostView>({
       path: `/api/v1/campus-circle/posts/${id}/like`,
@@ -229,6 +237,14 @@ export const lifeServicesRepository = {
     return apiRequest<CommentThread>({
       path: `/api/v1/comments/${id}/thread`,
     })
+  },
+
+  withdrawComment(id: number, version: number) {
+    return versionAction<CommentView>(
+      `/api/v1/comments/${id}/withdraw`,
+      version,
+      `comment:${id}:withdraw`,
+    )
   },
 
   listErrands(search: ErrandSearch = {}) {
