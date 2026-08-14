@@ -34,6 +34,10 @@ const communityDetailIcons = {
   share: require('../../assets/community/share.svg'),
 }
 
+const displayableComments = (items: CommentView[]) => (
+  items.filter((item) => item.status !== 'withdrawn')
+)
+
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
@@ -65,7 +69,7 @@ export default function CommunityDetailPage() {
           pageSize: 20,
           },
         )
-        setComments(commentResult.items)
+        setComments(displayableComments(commentResult.items))
         setCommentPage(commentResult.page)
         setCommentTotal(Number(commentResult.total))
       } else {
@@ -262,9 +266,10 @@ export default function CommunityDetailPage() {
         post.id,
         { page: commentPage + 1, pageSize: 20 },
       )
+      const resultItems = displayableComments(result.items)
       setComments((current) => {
         const byId = new Map(current.map((item) => [item.id, item]))
-        result.items.forEach((item) => byId.set(item.id, item))
+        resultItems.forEach((item) => byId.set(item.id, item))
         return [...byId.values()]
       })
       setCommentPage(result.page)
@@ -473,7 +478,7 @@ export default function CommunityDetailPage() {
                       {item.available_actions.includes('withdraw') && (
                         <>
                           <View />
-                          <Text
+                          <View
                             id={`community-comment-delete-${item.id}`}
                             className='community-comment__delete'
                             ariaRole='button'
@@ -483,7 +488,7 @@ export default function CommunityDetailPage() {
                             onClick={() => void deleteComment(item)}
                           >
                             {deletingCommentId === item.id ? '删除中' : '删除'}
-                          </Text>
+                          </View>
                         </>
                       )}
                     </View>
