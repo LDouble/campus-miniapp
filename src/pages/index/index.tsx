@@ -175,6 +175,7 @@ const homeServiceKeys = new Set([
   'market',
   'errands',
   'carpool',
+  'classroom',
   'clubs',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
