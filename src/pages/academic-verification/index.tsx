@@ -252,7 +252,7 @@ export default function AcademicVerificationPage() {
       return
     }
     if (!normalizedStudentNo || !password) {
-      Taro.showToast({ title: '请填写学号和教务密码', icon: 'none' })
+      Taro.showToast({ title: '请填写信息门户账号和密码', icon: 'none' })
       return
     }
     if (working) return
@@ -444,7 +444,7 @@ export default function AcademicVerificationPage() {
                     <View className='verification-method__icon'>校</View>
                     <View>
                       <Text>教务账号</Text>
-                      <Text>在线验证，立即生效</Text>
+                      <Text>使用信息门户账号密码</Text>
                     </View>
                   </View>
                   <View
@@ -464,11 +464,7 @@ export default function AcademicVerificationPage() {
                     <View className='verification-form__heading'>
                       <View>
                         <Text>教务账号验证</Text>
-                        <Text>
-                          {forceCredentialBinding
-                            ? '验证成功后更新本机教务凭据'
-                            : '验证成功后立即获得校园成员权限'}
-                        </Text>
+                        <Text>本科生、研究生均使用信息门户账号密码</Text>
                       </View>
                       <View className='verification-form__tag'>推荐</View>
                     </View>
@@ -482,12 +478,12 @@ export default function AcademicVerificationPage() {
                           {
                             value: 'undergraduate',
                             label: '本科生',
-                            description: '本科教务系统',
+                            description: '信息门户账号密码',
                           },
                           {
                             value: 'graduate',
                             label: '研究生',
-                            description: '研究生教务系统',
+                            description: '信息门户账号密码',
                           },
                         ] as const).map((item) => (
                           <View
@@ -520,18 +516,18 @@ export default function AcademicVerificationPage() {
                       </View>
                     </View>
                     <View className='verification-field'>
-                      <Text>学号</Text>
+                      <Text>信息门户账号（学号）</Text>
                       <KeyboardSafeInput
                         value={studentNo}
                         maxlength={64}
-                        placeholder='请输入教务系统学号'
+                        placeholder='请输入信息门户账号'
                         placeholderClass='verification-placeholder'
                         disabled={working}
                         onInput={(event) => setStudentNo(event.detail.value)}
                       />
                     </View>
                     <View className='verification-field'>
-                      <Text>教务密码</Text>
+                      <Text>信息门户密码</Text>
                       <KeyboardSafeInput
                         value={password}
                         password
@@ -549,7 +545,7 @@ export default function AcademicVerificationPage() {
                       {working && method === 'credentials' ? workingText : '验证并绑定'}
                     </View>
                     <Text className='verification-form__footnote'>
-                      账号密码仅保存在本机小程序存储中，并随每次教务查询通过 HTTPS
+                      信息门户账号密码仅保存在本机小程序存储中，并随每次教务查询通过 HTTPS
                       提交；服务端不持久化。更新绑定或注销账号时会清除本机记录。
                     </Text>
                   </View>
