@@ -12,9 +12,12 @@ PARENT_CONTENT="$PARENT_MARKER 父模块真实 UI 发布、审核与聚合列表
 CHILD_CONTENT="$CHILD_MARKER 子模块真实 UI 发布、驳回、撤销与列表隔离验证"
 CHILD_EDITED_CONTENT="$CHILD_MARKER 子模块驳回后通过真实 UI 编辑并重新送审"
 COMMENT_CONTENT="$RUN_ID-COMMENT"
+REPLY_CONTENT="$RUN_ID-REPLY"
+CANCELLED_REPLY_CONTENT="$RUN_ID-CANCELLED-REPLY"
 SCREENSHOT_DIR="$MINIAPP_DIR/.local/e2e-community"
 PARENT_SCREENSHOT="$SCREENSHOT_DIR/parent-list.png"
 COMMENT_SCREENSHOT="$SCREENSHOT_DIR/comment-approved.png"
+REPLY_SCREENSHOT="$SCREENSHOT_DIR/comment-reply-pending.png"
 PAGINATION_SCREENSHOT="$SCREENSHOT_DIR/pagination.png"
 NETWORK_EVIDENCE=''
 
@@ -582,6 +585,37 @@ wechat simulator_screenshot \
   --path "$COMMENT_SCREENSHOT" \
   --wait-for-selector "#community-comment-$COMMENT_ID" >/dev/null
 
+# 回复：取消回复会清空目标；重新回复时请求携带直接父评论 ID，待审核内容本地可见。
+step "评论回复目标、取消状态与待审核线程"
+tap "#community-comment-reply-$COMMENT_ID"
+assert_present "#community-replying-to-$COMMENT_ID"
+input_text '#community-comment-input' "$CANCELLED_REPLY_CONTENT"
+tap '#community-comment-cancel-reply'
+assert_absent "#community-replying-to-$COMMENT_ID"
+tap '#community-comment-submit'
+cancelled_reply_count="$(mysql_query "SELECT COUNT(*) FROM comments WHERE content = '$CANCELLED_REPLY_CONTENT';")"
+if [[ "$cancelled_reply_count" != "0" ]]; then
+  echo "取消回复后不应把回复草稿误发为根评论。" >&2
+  exit 1
+fi
+
+tap "#community-comment-reply-$COMMENT_ID"
+input_text '#community-comment-input' "$REPLY_CONTENT"
+tap '#community-comment-submit'
+
+REPLY_ID="$(mysql_query "SELECT id FROM comments WHERE content = '$REPLY_CONTENT' ORDER BY id DESC LIMIT 1;")"
+reply_row="$(mysql_query "SELECT CONCAT(parent_id, ':', root_id, ':', status, ':', version) FROM comments WHERE id = $REPLY_ID;")"
+if [[ "$reply_row" != "$COMMENT_ID:$COMMENT_ID:pending_review:1" ]]; then
+  echo "评论回复的父级、根节点或审核状态错误：$reply_row" >&2
+  exit 1
+fi
+capture_network POST /api/v1/comments 201
+assert_present "#community-comment-$REPLY_ID.community-comment--pending_review"
+wechat simulator_screenshot \
+  --project "$MINIAPP_DIR" \
+  --path "$REPLY_SCREENSHOT" \
+  --wait-for-selector "#community-comment-$REPLY_ID" >/dev/null
+
 # 列表分页与搜索使用隔离夹具，业务板块仍来自服务端。
 step "列表分页与搜索"
 mysql_query "
@@ -674,4 +708,5 @@ echo "社区上线级 E2E 通过：动态板块、父/子模块发帖、审核�
 echo "取证截图："
 echo "- $PARENT_SCREENSHOT"
 echo "- $COMMENT_SCREENSHOT"
+echo "- $REPLY_SCREENSHOT"
 echo "- $PAGINATION_SCREENSHOT"

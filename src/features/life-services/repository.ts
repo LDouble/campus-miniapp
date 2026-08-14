@@ -20,6 +20,7 @@ import type {
   TradeOrderViewPage,
   CommentView,
   CommentViewPage,
+  CommentThread,
 } from '../../api/types'
 
 type CreateErrandBody = operations['CreateErrand']['requestBody']['content']['application/json']
@@ -226,9 +227,15 @@ export const lifeServicesRepository = {
       path: '/api/v1/comments',
       method: 'POST',
       idempotencyKey: createIdempotencyKey(
-        `comment:${input.target_type}:${input.target_id}:create`,
+        `comment:${input.target_type}:${input.target_id}:${input.parent_id ? `reply:${input.parent_id}` : 'create'}`,
       ),
       data: input,
+    })
+  },
+
+  getCommentThread(id: number) {
+    return apiRequest<CommentThread>({
+      path: `/api/v1/comments/${id}/thread`,
     })
   },
 

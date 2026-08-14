@@ -1,0 +1,62 @@
+import { strict as assert } from 'node:assert'
+import {
+  buildCampusCircleCommentInput,
+  commentReplyTargetName,
+  commentRootId,
+  mergeLocalThreadReply,
+} from '../src/features/community/comments'
+
+const root = {
+  id: 41,
+  root_id: 41,
+  parent_id: null,
+  reply_to_user_id: null,
+  reply_count: 1,
+  author_id: 7,
+  author_nickname: '海风同学',
+}
+const firstReply = {
+  id: 43,
+  root_id: 41,
+  parent_id: 41,
+  reply_to_user_id: 7,
+  reply_count: 0,
+  author_id: 9,
+  author_nickname: '木棉同学',
+}
+const pendingReply = {
+  id: 44,
+  root_id: 41,
+  parent_id: 43,
+  reply_to_user_id: 9,
+  reply_count: 0,
+  author_id: 7,
+  author_nickname: '海风同学',
+}
+
+assert.deepEqual(
+  buildCampusCircleCommentInput(12, '  回复内容  ', firstReply),
+  {
+    target_type: 'campus_circle_post',
+    target_id: 12,
+    parent_id: 43,
+    content: '回复内容',
+  },
+)
+assert.deepEqual(
+  buildCampusCircleCommentInput(12, '  根评论  ', null),
+  {
+    target_type: 'campus_circle_post',
+    target_id: 12,
+    content: '根评论',
+  },
+)
+assert.equal(commentRootId(firstReply), 41)
+assert.equal(commentReplyTargetName(firstReply, [root, firstReply]), '海风同学')
+
+const merged = mergeLocalThreadReply([firstReply], pendingReply)
+assert.deepEqual(merged.map((item) => item.id), [43, 44])
+assert.equal(merged[0].reply_count, 1)
+assert.strictEqual(mergeLocalThreadReply(merged, pendingReply), merged)
+
+console.log('comment reply smoke: ok')
