@@ -4,7 +4,6 @@ import Taro, {
   useDidShow,
   useLoad,
   usePullDownRefresh,
-  useShareAppMessage,
 } from '@tarojs/taro'
 import { ScrollView, Text, View } from '@tarojs/components'
 import type {
@@ -39,6 +38,7 @@ import {
   type MiniappModuleKey,
 } from '../../features/runtime-config'
 import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
+import { useCampusShare } from '../../features/share'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
@@ -321,7 +321,7 @@ export default function CommunityPage() {
     Taro.stopPullDownRefresh()
   })
 
-  useShareAppMessage((event) => {
+  useCampusShare((event) => {
     const target = event.target as {
       dataset?: Record<string, string | number>
     } | undefined
@@ -335,9 +335,10 @@ export default function CommunityPage() {
       : ''
     const result = {
       title: shareTitle,
-      path: postId > 0
-        ? `/pages/community/detail?id=${postId}&mode=post`
-        : '/pages/community/index',
+      path: postId > 0 ? '/pages/community/detail' : '/pages/community/index',
+      query: postId > 0
+        ? { id: postId, mode: 'post' }
+        : { section: displayedSection },
     }
     return shareImage ? { ...result, imageUrl: shareImage } : result
   })

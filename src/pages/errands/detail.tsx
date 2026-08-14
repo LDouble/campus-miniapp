@@ -9,6 +9,7 @@ import { markLifeHubSectionDirty } from '../../features/life-services/refresh-po
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import { useCampusShare } from '../../features/share'
 import {
   formatDateTime,
   formatMoney,
@@ -59,6 +60,14 @@ export default function ErrandDetailPage() {
     }
   })
   usePullDownRefresh(() => void load())
+
+  useCampusShare(() => ({
+    title: item
+      ? `${item.pickup_location} → ${item.dropoff_location}｜校园跑腿`
+      : '校园跑腿｜海大校园',
+    path: id ? '/pages/errands/detail' : '/pages/community/index',
+    query: id ? { id } : { section: 'errands' },
+  }))
 
   const updateFromAction = async (action: string) => {
     if (!item || working) return

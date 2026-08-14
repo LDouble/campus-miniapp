@@ -21,6 +21,7 @@ import {
   resolveAcademicCalendarState,
   resolveAcademicCalendarTerm,
 } from '../../features/calendar/utils'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 type EventFilter = 'all' | 'exam' | 'holiday' | 'makeup'
@@ -104,6 +105,10 @@ export default function CalendarPage() {
     () => resolveAcademicCalendarTerm(result.calendar, selectedTermID),
     [result.calendar, selectedTermID],
   )
+  useCampusShare(() => ({
+    title: `${level === 'graduate' ? '研究生' : '本科生'}校历｜海大校园`,
+    path: '/pages/calendar/index',
+  }))
   const state = useMemo(() => (
     activeTerm && result.calendar
       ? resolveAcademicCalendarState({

@@ -15,6 +15,7 @@ import {
   ShuttleRoute,
 } from '../../features/shuttle/repository'
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
+import { useCampusShare } from '../../features/share'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
 import './index.scss'
 
@@ -78,6 +79,16 @@ export default function ShuttlePage() {
   })
   const [loading, setLoading] = useState(true)
   const handoffCampus = useRef<string>()
+
+  useCampusShare(() => ({
+    title: `校园校车｜${campus}`,
+    path: '/pages/shuttle/index',
+    query: {
+      campus: campus === '全部校区' ? undefined : campus,
+      date: serviceDate,
+      serviceType: serviceFilter === 'all' ? undefined : serviceFilter,
+    },
+  }))
 
   const refresh = useCallback(async () => {
     setLoading(true)

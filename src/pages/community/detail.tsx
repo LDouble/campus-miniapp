@@ -2,7 +2,6 @@ import { useState } from 'react'
 import Taro, {
   useLoad,
   usePullDownRefresh,
-  useShareAppMessage,
 } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
 import type {
@@ -29,6 +28,7 @@ import {
   mergeLocalThreadReply,
 } from '../../features/community/comments'
 import CommunityLevelBadge from '../../features/community/level-badge'
+import { useCampusShare } from '../../features/share'
 import './detail.scss'
 
 const communityDetailIcons = {
@@ -124,9 +124,10 @@ export default function CommunityDetailPage() {
     else Taro.stopPullDownRefresh()
   })
 
-  useShareAppMessage(() => ({
+  useCampusShare(() => ({
     title: post?.content?.trim().slice(0, 28) || '海大校园动态',
-    path: `/pages/community/detail?id=${postId}&mode=post`,
+    path: '/pages/community/detail',
+    query: { id: postId, mode: 'post' },
     imageUrl: post?.images[0]?.url,
   }))
 

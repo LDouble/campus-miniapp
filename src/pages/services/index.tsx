@@ -12,6 +12,7 @@ import {
   resolveMiniappModule,
   type MiniappModuleKey,
 } from '../../features/runtime-config'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 const icons = {
@@ -101,6 +102,11 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
 ]
 
 export default function Services() {
+  useCampusShare(() => ({
+    title: '海大校园服务｜学业、出行与校园生活',
+    path: '/pages/services/index',
+  }))
+
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
 

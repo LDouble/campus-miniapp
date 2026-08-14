@@ -93,6 +93,7 @@ import {
   loadAcademicCalendar,
 } from '../../features/calendar/repository'
 import { syncCustomTabBar } from '../../utils/tabbar'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
@@ -319,6 +320,11 @@ const communitySectionNames = (sections: CampusCircleSectionView[]) => (
 )
 
 function Index() {
+  useCampusShare(() => ({
+    title: '海大校园｜一站式校园生活',
+    path: '/pages/index/index',
+  }))
+
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())

@@ -35,6 +35,7 @@ import {
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 const sectionNumbers = Array.from({ length: 12 }, (_, index) => index + 1)
@@ -115,6 +116,12 @@ export default function EmptyClassroomPage() {
   const handoffCampus = useRef<string>()
   const handoffHasDate = useRef(false)
   const requestVersion = useRef(0)
+
+  useCampusShare(() => ({
+    title: `${campus}·${dateLabel(serviceDate)}空教室`,
+    path: '/pages/empty-classroom/index',
+    query: { campus, date: serviceDate },
+  }))
 
   const campuses = useMemo(() => enabledCampuses(config), [config])
   const calendarSelection = useMemo(
