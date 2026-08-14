@@ -1,12 +1,21 @@
-import { apiRequest } from './client'
+import { apiRequest, createIdempotencyKey } from './client'
 import type {
   AccountCancellationPreflight,
   AccountCancellationResult,
   CurrentUser,
+  User,
 } from './types'
 
 export const getCurrentUser = () => apiRequest<CurrentUser>({
   path: '/api/v1/auth/me',
+  skipAcademicVerificationGuard: true,
+})
+
+export const updateCurrentUsername = (username: string) => apiRequest<User>({
+  path: '/api/v1/auth/me',
+  method: 'PATCH',
+  data: { username },
+  idempotencyKey: createIdempotencyKey('profile-username'),
   skipAcademicVerificationGuard: true,
 })
 
