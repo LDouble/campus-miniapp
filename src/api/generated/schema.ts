@@ -5612,7 +5612,7 @@ export interface components {
             available_actions: components["schemas"]["CampusCircleViewerAction"][];
             /**
              * Format: int64
-             * @description 审核通过且公开可见的根评论数量
+             * @description 审核通过且公开可见的评论及回复总数
              */
             comment_count: number;
             content: string | null;
@@ -6118,6 +6118,8 @@ export interface components {
             pinned: boolean;
             /** Format: int64 */
             reply_count: number;
+            /** @description 根评论列表中默认展示的前两条可见回复；其他场景为空数组 */
+            reply_preview: components["schemas"]["CommentView"][];
             /** Format: uint64 */
             reply_to_user_id?: number | null;
             review_reason?: string | null;
