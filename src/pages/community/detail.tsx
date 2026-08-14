@@ -52,6 +52,22 @@ const displayableComments = (items: CommentView[]) => (
   items.filter((item) => item.status !== 'withdrawn')
 )
 
+const previewThreadStates = (items: CommentView[]) => items.reduce<
+Record<number, CommentThreadState>
+>((result, item) => {
+  const replyPreview = item.reply_preview || []
+  if (item.reply_count > 0 || replyPreview.length > 0) {
+    result[item.id] = {
+      descendants: displayableComments(replyPreview),
+      error: '',
+      expanded: false,
+      loaded: item.reply_count <= replyPreview.length,
+      loading: false,
+    }
+  }
+  return result
+}, {})
+
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
@@ -64,6 +80,7 @@ export default function CommunityDetailPage() {
   const [replyTarget, setReplyTarget] = useState<CommentView | null>(null)
   const [commentComposerOpen, setCommentComposerOpen] = useState(false)
   const [commentInputFocused, setCommentInputFocused] = useState(false)
+  const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -71,7 +88,7 @@ export default function CommunityDetailPage() {
   const [deletingCommentId, setDeletingCommentId] = useState(0)
   const [error, setError] = useState('')
 
-  const load = async (id: number) => {
+  const load = async (id: number, commentId = 0) => {
     setLoading(true)
     setError('')
     setCommentThreads({})
@@ -92,9 +109,44 @@ export default function CommunityDetailPage() {
             pageSize: 20,
           },
         )
-        setComments(displayableComments(commentResult.items))
+        let nextComments = displayableComments(commentResult.items)
+        let nextThreads = previewThreadStates(nextComments)
+        if (commentId > 0) {
+          try {
+            const focusedThread = await lifeServicesRepository.getCommentThread(commentId)
+            nextComments = [focusedThread.root, ...nextComments.filter(
+              (item) => item.id !== focusedThread.root.id,
+            )]
+            nextThreads = {
+              ...nextThreads,
+              [focusedThread.root.id]: {
+                descendants: displayableComments(focusedThread.descendants),
+                error: '',
+                expanded: true,
+                loaded: true,
+                loading: false,
+              },
+            }
+          } catch (focusError) {
+            Taro.showToast({
+              title: isApiError(focusError) ? focusError.message : '对应评论暂时无法查看',
+              icon: 'none',
+            })
+          }
+        }
+        setComments(nextComments)
+        setCommentThreads(nextThreads)
         setCommentPage(commentResult.page)
         setCommentTotal(Number(commentResult.total))
+        setFocusedCommentId(commentId)
+        if (commentId > 0) {
+          setTimeout(() => {
+            void Taro.pageScrollTo({
+              selector: `#community-comment-${commentId}`,
+              duration: 260,
+            })
+          }, 120)
+        }
       } else {
         setComments([])
         setCommentPage(1)
@@ -110,17 +162,18 @@ export default function CommunityDetailPage() {
 
   useLoad((options) => {
     const id = Number(options.id)
+    const commentId = Number(options.comment_id)
     if (!Number.isFinite(id) || id <= 0) {
       setLoading(false)
       setError('动态地址无效')
       return
     }
     setPostId(id)
-    void load(id)
+    void load(id, Number.isFinite(commentId) && commentId > 0 ? commentId : 0)
   })
 
   usePullDownRefresh(() => {
-    if (postId) void load(postId)
+    if (postId) void load(postId, focusedCommentId)
     else Taro.stopPullDownRefresh()
   })
 
@@ -279,7 +332,7 @@ export default function CommunityDetailPage() {
           : [...current, created])
         setCommentTotal((current) => current + 1)
       }
-      if (created.status === 'approved' && !activeReplyTarget) {
+      if (created.status === 'approved') {
         setPost((current) => current
           ? { ...current, comment_count: current.comment_count + 1 }
           : current)
@@ -375,6 +428,11 @@ export default function CommunityDetailPage() {
             : commentItem
         )))
         if (replyTarget?.id === item.id) cancelReply()
+        if (item.status === 'approved') {
+          setPost((current) => current
+            ? { ...current, comment_count: Math.max(0, current.comment_count - 1) }
+            : current)
+        }
       } else {
         setComments((current) => current.filter((commentItem) => commentItem.id !== item.id))
         setCommentThreads((current) => {
@@ -382,10 +440,8 @@ export default function CommunityDetailPage() {
           return remaining
         })
         setCommentTotal((current) => Math.max(0, current - 1))
-        if (item.status === 'approved') {
-          setPost((current) => current
-            ? { ...current, comment_count: Math.max(0, current.comment_count - 1) }
-            : current)
+        if (postId) {
+          setPost(await lifeServicesRepository.getCampusCirclePost(postId))
         }
       }
       markLifeHubSectionDirty('community')
@@ -433,6 +489,10 @@ export default function CommunityDetailPage() {
         resultItems.forEach((item) => byId.set(item.id, item))
         return [...byId.values()]
       })
+      setCommentThreads((current) => ({
+        ...previewThreadStates(resultItems),
+        ...current,
+      }))
       setCommentPage(result.page)
       setCommentTotal(Number(result.total))
     } catch (loadError) {
@@ -597,13 +657,23 @@ export default function CommunityDetailPage() {
               </View>
               {comments.map((item) => {
                 const threadState = commentThreads[item.id]
-                const descendants = threadState?.descendants || []
-                const threadMembers = [item, ...descendants]
+                const allDescendants = threadState?.descendants || item.reply_preview || []
+                const descendants = threadState?.expanded
+                  ? allDescendants
+                  : allDescendants.slice(0, 2)
+                const threadMembers = [item, ...allDescendants]
+                const hasThreadAction = Boolean(threadState?.expanded)
+                  || item.reply_count > Math.min(allDescendants.length, 2)
                 return (
                   <View key={item.id} className='community-comment-thread'>
                     <View
                       id={`community-comment-${item.id}`}
-                      className={`community-detail-comments__item community-comment community-comment--${item.status}`}
+                      className={[
+                        'community-detail-comments__item',
+                        'community-comment',
+                        `community-comment--${item.status}`,
+                        focusedCommentId === item.id ? 'community-comment--focused' : '',
+                      ].filter(Boolean).join(' ')}
                     >
                       <View
                         className={`community-detail-comments__avatar community-detail-comments__avatar--tone-${communityAuthorTone(item)}`}
@@ -613,6 +683,9 @@ export default function CommunityDetailPage() {
                       <View className='community-detail-comments__copy'>
                         <View className='community-detail-comments__author'>
                           <Text>{communityAuthorName(item)}</Text>
+                          {item.author_id === post.author_id && (
+                            <Text className='community-comment__author-badge'>作者</Text>
+                          )}
                           <CommunityLevelBadge level={item.author_level} compact />
                         </View>
                         <Text className='community-comment__content'>{item.content}</Text>
@@ -671,7 +744,7 @@ export default function CommunityDetailPage() {
                             </>
                           )}
                         </View>
-                        {(item.reply_count > 0 || threadState) && (
+                        {hasThreadAction && (
                           <View
                             id={`community-comment-thread-${item.id}`}
                             className='community-comment__thread-action'
@@ -683,7 +756,7 @@ export default function CommunityDetailPage() {
                               ? '加载回复中…'
                               : threadState?.expanded
                                 ? '收起回复'
-                                : `查看 ${item.reply_count} 条回复`}
+                                : `查看全部 ${item.reply_count} 条回复`}
                           </View>
                         )}
                       </View>
@@ -698,7 +771,7 @@ export default function CommunityDetailPage() {
                       </View>
                     )}
 
-                    {threadState?.expanded && descendants.length > 0 && (
+                    {descendants.length > 0 && (
                       <View className='community-comment__replies'>
                         {descendants.map((reply) => {
                           const replyToName = commentReplyTargetName(reply, threadMembers)
@@ -706,7 +779,12 @@ export default function CommunityDetailPage() {
                             <View
                               id={`community-comment-${reply.id}`}
                               key={reply.id}
-                              className={`community-comment__reply community-comment community-comment--${reply.status}`}
+                              className={[
+                                'community-comment__reply',
+                                'community-comment',
+                                `community-comment--${reply.status}`,
+                                focusedCommentId === reply.id ? 'community-comment--focused' : '',
+                              ].filter(Boolean).join(' ')}
                             >
                               <View
                                 className={`community-comment__reply-avatar community-detail-comments__avatar--tone-${communityAuthorTone(reply)}`}
@@ -716,8 +794,13 @@ export default function CommunityDetailPage() {
                               <View className='community-comment__reply-copy'>
                                 <View className='community-comment__reply-author'>
                                   <Text>{communityAuthorName(reply)}</Text>
+                                  {reply.author_id === post.author_id && (
+                                    <Text className='community-comment__author-badge'>作者</Text>
+                                  )}
                                   {replyToName && (
-                                    <Text>回复 @{replyToName}</Text>
+                                    <Text className='community-comment__reply-target'>
+                                      ▸ {replyToName}
+                                    </Text>
                                   )}
                                   <CommunityLevelBadge level={reply.author_level} compact />
                                 </View>

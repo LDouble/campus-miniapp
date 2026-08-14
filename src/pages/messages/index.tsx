@@ -8,6 +8,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
+import { noticeActionRoute } from '../../features/notices/action-route'
 import { isQualificationEdition, type MigratedFeatureModule } from '../../features/app-edition'
 import { featureMigratedUrl } from '../../features/app-edition/navigation'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
@@ -22,7 +23,12 @@ const categoryType = (category: string): MessageType => {
   if (value.includes('academic') || value.includes('course') || value.includes('exam')) {
     return '教务'
   }
-  if (value.includes('comment') || value.includes('social') || value.includes('circle')) {
+  if (
+    value.includes('comment')
+    || value.includes('social')
+    || value.includes('circle')
+    || value.includes('community')
+  ) {
     return '互动'
   }
   if (
@@ -34,20 +40,6 @@ const categoryType = (category: string): MessageType => {
     return '服务'
   }
   return '系统'
-}
-
-const actionRoute = (path: string) => {
-  if (!path) return ''
-  if (path.startsWith('/pages/')) return path
-  const match = path.match(
-    /^\/api\/v1\/(errands|marketplace\/listings|carpool\/trips|campus-circle\/posts)\/(\d+)/,
-  )
-  if (!match) return ''
-  const id = match[2]
-  if (match[1] === 'errands') return `/pages/errands/detail?id=${id}`
-  if (match[1] === 'marketplace/listings') return `/pages/marketplace/detail?id=${id}`
-  if (match[1] === 'carpool/trips') return `/pages/carpool/detail?id=${id}`
-  return `/pages/community/detail?id=${id}&mode=post`
 }
 
 const migratedModuleForAction = (path: string): MigratedFeatureModule | null => {
@@ -143,7 +135,7 @@ export default function MessagesPage() {
   }
 
   const goAction = (message: Notice) => {
-    const route = actionRoute(message.action_path)
+    const route = noticeActionRoute(message.action_path)
     setActive(null)
     const migratedModule = migratedModuleForAction(message.action_path)
     if (isQualificationEdition && migratedModule) {
@@ -278,7 +270,7 @@ export default function MessagesPage() {
               </View>
             </ScrollView>
             <View className='message-sheet__actions'>
-              {actionRoute(active.action_path) && (
+              {noticeActionRoute(active.action_path) && (
                 <View
                   className='message-sheet__button message-sheet__button--primary motion-press'
                   hoverClass='motion-press--active'
