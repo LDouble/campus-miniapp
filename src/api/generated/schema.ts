@@ -113,7 +113,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["UpdateMe"];
         trace?: never;
     };
     "/api/v1/auth/identity": {
@@ -432,6 +432,178 @@ export interface paths {
         put?: never;
         /** 查询本人可用教务学期 */
         post: operations["ListAcademicPeriods"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询课程目录采集批次 */
+        get: operations["ListAdminAcademicCourseCatalogBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程目录采集批次详情 */
+        get: operations["GetAdminAcademicCourseCatalogBatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/batches/{batch_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 归档非当前有效的终态课程目录批次 */
+        post: operations["ArchiveAdminAcademicCourseCatalogBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询采集账号脱敏状态 */
+        get: operations["ListAdminAcademicCourseCatalogCredentials"];
+        /** 验证并保存或轮换采集账号 */
+        put: operations["SaveAdminAcademicCourseCatalogCredential"];
+        post?: never;
+        /** 停用采集账号并撤销教务会话 */
+        delete: operations["DeleteAdminAcademicCourseCatalogCredential"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询已发布课程目录 */
+        get: operations["ListAdminAcademicCourseCatalogEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按学历和学期触发课程目录采集 */
+        post: operations["TriggerAdminAcademicCourseCatalogRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/schedule-mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询逐课程排课映射汇总 */
+        get: operations["ListAdminAcademicCourseCatalogScheduleMappings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/schedule-occurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询逐周次节次排课映射明细 */
+        get: operations["ListAdminAcademicCourseCatalogScheduleOccurrences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/schedule-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询聚合周次后的逻辑排课槽位 */
+        get: operations["ListAdminAcademicCourseCatalogScheduleSlots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-catalog/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 搜索当前有效课程目录 */
+        get: operations["ListMemberCourseCatalogCourses"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4108,6 +4280,9 @@ export interface components {
             username?: string;
             password?: string;
         };
+        UpdateMeRequest: {
+            username: string;
+        };
         ChangeMyPasswordRequest: {
             current_password: string;
             new_password: string;
@@ -4564,6 +4739,374 @@ export interface components {
         AcademicPeriodListResponseBody: {
             data: components["schemas"]["AcademicPeriod"][];
             request_id: string;
+        };
+        AcademicCourseCatalogBatch: {
+            archive_reason?: string | null;
+            archived: boolean;
+            /** Format: date-time */
+            archived_at?: string | null;
+            /** Format: uint64 */
+            archived_by?: number | null;
+            /** Format: int64 */
+            calendar_mapped_occurrence_count: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            created_entry_count: number;
+            /** Format: uint64 */
+            credential_version: number;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            error_summary?: string | null;
+            failure_category?: string | null;
+            /** Format: date-time */
+            finished_at?: string | null;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            matched_occurrence_count: number;
+            /** Format: int64 */
+            normalized_record_count: number;
+            /** Format: int64 */
+            occurrence_count: number;
+            /** Format: int64 */
+            outside_calendar_occurrence_count: number;
+            /** Format: int64 */
+            page_count: number;
+            /** Format: int64 */
+            parsed_entry_count: number;
+            /** Format: int64 */
+            parsed_slot_count: number;
+            period_id: string;
+            /** Format: int64 */
+            projected_occupancy_count: number;
+            /** @enum {string} */
+            projection_status: "not_ready" | "ready" | "partial" | "retained_previous";
+            /** Format: date-time */
+            published_at?: string | null;
+            /** Format: int64 */
+            source_record_count: number;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** @enum {string} */
+            status: "queued" | "running" | "failed" | "published";
+            trigger_note?: string | null;
+            trigger_task_id?: string | null;
+            /** Format: uint64 */
+            triggered_by?: number | null;
+            /** Format: int64 */
+            unmatched_occurrence_count: number;
+            /** Format: int64 */
+            unparsed_entry_count: number;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: int64 */
+            updated_entry_count: number;
+            /** Format: uint64 */
+            version: number;
+            /** Format: int64 */
+            withdrawn_entry_count: number;
+        };
+        AcademicCourseCatalogBatchPage: {
+            items: components["schemas"]["AcademicCourseCatalogBatch"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicCourseCatalogBatchPageResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogBatchPage"];
+            request_id: string;
+        };
+        AcademicCourseCatalogBatchResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogBatch"];
+            request_id: string;
+        };
+        AcademicCourseCatalogCredentialResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogCredentialStatus"];
+            request_id: string;
+        };
+        AcademicCourseCatalogCredentialStatus: {
+            configured: boolean;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** @enum {string} */
+            status: "active" | "disabled" | "absent";
+            /** Format: date-time */
+            updated_at: string;
+            username_masked?: string;
+            /** Format: date-time */
+            verified_at?: string | null;
+            /** Format: uint64 */
+            version: number;
+        };
+        AcademicCourseCatalogCredentials: {
+            items: components["schemas"]["AcademicCourseCatalogCredentialStatus"][];
+        };
+        AcademicCourseCatalogCredentialsResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogCredentials"];
+            request_id: string;
+        };
+        AcademicCourseCatalogEntry: {
+            campus?: string | null;
+            /** Format: int64 */
+            capacity?: number | null;
+            class_name?: string | null;
+            content_hash: string;
+            course_category?: string | null;
+            course_code?: string | null;
+            course_name: string;
+            /** Format: date-time */
+            created_at: string;
+            credits?: string | null;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: int64 */
+            enrolled_count?: number | null;
+            /** Format: uint64 */
+            first_seen_batch_id: number;
+            /** Format: uint64 */
+            id: number;
+            instruction_language?: string | null;
+            /** Format: uint64 */
+            last_seen_batch_id: number;
+            location_text?: string | null;
+            offering_id: string;
+            offering_unit?: string | null;
+            /** Format: int64 */
+            parsed_schedule_slot_count: number;
+            period_id: string;
+            remarks?: string | null;
+            schedule_parse_reason?: string | null;
+            /** @enum {string} */
+            schedule_parse_status: "no_schedule" | "parsed" | "partial" | "unparsed";
+            schedule_text?: string | null;
+            source_key: string;
+            /** @enum {string} */
+            status: "active" | "withdrawn";
+            teachers?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        AcademicCourseCatalogEntryPage: {
+            items: components["schemas"]["AcademicCourseCatalogEntry"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicCourseCatalogEntryPageResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogEntryPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCourseCatalogMappingOutcome: "no_schedule" | "matched" | "partial" | "unmatched" | "outside_calendar" | "unparsed";
+        AcademicCourseCatalogMappingPage: {
+            items: components["schemas"]["AcademicCourseCatalogMappingSummary"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicCourseCatalogMappingPageResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogMappingPage"];
+            request_id: string;
+        };
+        AcademicCourseCatalogMappingSummary: {
+            /** Format: uint64 */
+            batch_id: number;
+            /** Format: uint64 */
+            catalog_entry_id: number;
+            course_code?: string | null;
+            course_name: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            location_text?: string | null;
+            mapping_outcome: components["schemas"]["AcademicCourseCatalogMappingOutcome"];
+            /** Format: int64 */
+            matched_occurrence_count: number;
+            /** Format: int64 */
+            occurrence_count: number;
+            offering_unit?: string | null;
+            /** Format: int64 */
+            outside_calendar_occurrence_count: number;
+            /** Format: int64 */
+            parsed_schedule_slot_count: number;
+            reason_codes: string[];
+            schedule_parse_reason?: string | null;
+            /** @enum {string} */
+            schedule_parse_status: "no_schedule" | "parsed" | "partial" | "unparsed";
+            schedule_text?: string | null;
+            source_period_id: string;
+            teachers?: string | null;
+            /** Format: int64 */
+            unmatched_occurrence_count: number;
+        };
+        AcademicCourseCatalogOccurrencePage: {
+            items: components["schemas"]["AcademicCourseCatalogScheduleOccurrenceView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicCourseCatalogOccurrencePageResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogOccurrencePage"];
+            request_id: string;
+        };
+        AcademicCourseCatalogRunAccepted: {
+            /** Format: uint64 */
+            batch_id: number;
+            /** Format: date-time */
+            queued_at: string;
+            task_id: string;
+        };
+        AcademicCourseCatalogRunAcceptedResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogRunAccepted"];
+            request_id: string;
+        };
+        AcademicCourseCatalogScheduleOccurrenceView: {
+            /** Format: uint64 */
+            batch_id: number;
+            building?: string | null;
+            campus?: string | null;
+            /** Format: uint64 */
+            catalog_entry_id: number;
+            classroom?: components["schemas"]["ClassroomView"];
+            course_code?: string | null;
+            course_name: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: int64 */
+            end_section: number;
+            /** Format: uint64 */
+            id: number;
+            /** @enum {string} */
+            match_status: "matched" | "unmatched" | "outside_calendar";
+            offering_unit?: string | null;
+            parse_status: string;
+            raw_location?: string | null;
+            reason_code?: string | null;
+            room?: string | null;
+            /** Format: uint64 */
+            schedule_slot_id: number;
+            /** Format: date */
+            service_date: string;
+            source_period_id: string;
+            /** Format: int64 */
+            source_teaching_week: number;
+            /** Format: int64 */
+            source_weekday: number;
+            /** Format: int64 */
+            start_section: number;
+            target_period_id?: string | null;
+            /** Format: int64 */
+            target_teaching_week?: number | null;
+            /** Format: int64 */
+            target_weekday?: number | null;
+            teachers?: string | null;
+        };
+        AcademicCourseCatalogScheduleSlotPage: {
+            items: components["schemas"]["AcademicCourseCatalogScheduleSlotView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicCourseCatalogScheduleSlotPageResponseBody: {
+            data: components["schemas"]["AcademicCourseCatalogScheduleSlotPage"];
+            request_id: string;
+        };
+        AcademicCourseCatalogScheduleSlotView: {
+            /** Format: uint64 */
+            batch_id: number;
+            building?: string | null;
+            campus?: string | null;
+            /** Format: uint64 */
+            catalog_entry_id: number;
+            class_name?: string | null;
+            classroom?: components["schemas"]["ClassroomView"];
+            course_code?: string | null;
+            course_name: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: int64 */
+            end_section: number;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            mapped_occurrence_count: number;
+            /** Format: int64 */
+            matched_occurrence_count: number;
+            /** Format: int64 */
+            occurrence_count: number;
+            offering_id: string;
+            offering_unit?: string | null;
+            raw_location?: string | null;
+            reason_codes: string[];
+            room?: string | null;
+            source_period_id: string;
+            /** Format: int64 */
+            source_weekday: number;
+            source_weeks: number[];
+            /** Format: int64 */
+            start_section: number;
+            teachers?: string | null;
+        };
+        ArchiveAcademicCourseCatalogBatchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            reason: string;
+        };
+        MemberCourseCatalogCourse: {
+            campus?: string | null;
+            class_name?: string | null;
+            course_category?: string | null;
+            course_code?: string | null;
+            course_name: string;
+            credits?: string | null;
+            /** @description 当前课程快照内容版本 */
+            data_version: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            instruction_language?: string | null;
+            location_text?: string | null;
+            offering_id: string;
+            offering_unit?: string | null;
+            period_id: string;
+            /** @enum {string} */
+            schedule_parse_status: "no_schedule" | "parsed" | "partial" | "unparsed";
+            schedule_text?: string | null;
+            slots: components["schemas"]["MemberCourseCatalogScheduleSlot"][];
+            teachers: string[];
+        };
+        MemberCourseCatalogCoursePage: {
+            items: components["schemas"]["MemberCourseCatalogCourse"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MemberCourseCatalogCoursePageResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogCoursePage"];
+            request_id: string;
+        };
+        MemberCourseCatalogScheduleSlot: {
+            building?: string | null;
+            campus?: string | null;
+            /** Format: uint64 */
+            classroom_id?: number | null;
+            /** Format: int64 */
+            end_section: number;
+            /** Format: uint64 */
+            id: number;
+            location_parsed: boolean;
+            raw_location?: string | null;
+            room?: string | null;
+            /** Format: int64 */
+            start_section: number;
+            /** Format: int64 */
+            weekday: number;
+            weeks: number[];
         };
         AcademicCoursePassRatePage: {
             items: components["schemas"]["AcademicCoursePassRateView"][];
@@ -6043,6 +6586,18 @@ export interface components {
         };
         /** @enum {string} */
         ClassroomOccupancyAdminSource: "schedule" | "admin";
+        ClassroomOccupancyCourseCatalogDetails: {
+            /** Format: int64 */
+            course_count: number;
+            courses: components["schemas"]["ClassroomOccupancyCourseSummary"][];
+            truncated: boolean;
+        };
+        ClassroomOccupancyCourseSummary: {
+            code?: string | null;
+            /** Format: uint64 */
+            id: number;
+            name: string;
+        };
         ClassroomOccupancyInput: {
             /** Format: uint64 */
             classroom_id: number;
@@ -6157,12 +6712,14 @@ export interface components {
             request_id: string;
         };
         /** @enum {string} */
-        ClassroomOccupancySource: "schedule" | "admin" | "student_report";
+        ClassroomOccupancySource: "schedule" | "course_catalog" | "admin" | "student_report";
         /** @enum {string} */
         ClassroomOccupancyStatus: "active" | "disabled" | "expired";
         ClassroomOccupancyView: {
+            classroom?: components["schemas"]["ClassroomView"];
             /** Format: uint64 */
             classroom_id: number;
+            course_catalog?: components["schemas"]["ClassroomOccupancyCourseCatalogDetails"];
             /** Format: date-time */
             created_at: string;
             /** Format: int64 */
@@ -7329,6 +7886,96 @@ export interface components {
                 "application/json": components["schemas"]["AcademicPeriodListResponseBody"];
             };
         };
+        /** @description 课程目录采集批次分页 */
+        AcademicCourseCatalogBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogBatchPageResponseBody"];
+            };
+        };
+        /** @description 课程目录采集批次 */
+        AcademicCourseCatalogBatchResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogBatchResponseBody"];
+            };
+        };
+        /** @description 一个采集账号的脱敏配置状态 */
+        AcademicCourseCatalogCredentialResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogCredentialResponseBody"];
+            };
+        };
+        /** @description 两类采集账号的脱敏配置状态 */
+        AcademicCourseCatalogCredentialsResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogCredentialsResponseBody"];
+            };
+        };
+        /** @description 已发布课程目录分页 */
+        AcademicCourseCatalogEntryPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogEntryPageResponseBody"];
+            };
+        };
+        /** @description 课程排课映射汇总分页 */
+        AcademicCourseCatalogMappingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogMappingPageResponseBody"];
+            };
+        };
+        /** @description 课程排课 occurrence 明细分页 */
+        AcademicCourseCatalogOccurrencePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogOccurrencePageResponseBody"];
+            };
+        };
+        /** @description 课程目录采集任务已入队 */
+        AcademicCourseCatalogRunAcceptedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogRunAcceptedResponseBody"];
+            };
+        };
+        /** @description 聚合后的逻辑排课槽位分页 */
+        AcademicCourseCatalogScheduleSlotPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseCatalogScheduleSlotPageResponseBody"];
+            };
+        };
+        /** @description 已认证 member 可搜索的当前课程目录 */
+        MemberCourseCatalogCoursePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberCourseCatalogCoursePageResponseBody"];
+            };
+        };
         /** @description 课程通过率分页 */
         AcademicCoursePassRatePageResponse: {
             headers: {
@@ -8181,6 +8828,11 @@ export interface components {
                 "application/json": components["schemas"]["UpdateUserRequest"];
             };
         };
+        UpdateMe: {
+            content: {
+                "application/json": components["schemas"]["UpdateMeRequest"];
+            };
+        };
         WechatLogin: {
             content: {
                 "application/json": components["schemas"]["WechatLoginRequest"];
@@ -8285,6 +8937,22 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CurrentUserResponse"];
+        };
+    };
+    UpdateMe: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["UpdateMe"];
+        responses: {
+            200: components["responses"]["UserResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     GetAuthIdentity: {
@@ -8788,6 +9456,268 @@ export interface operations {
             200: components["responses"]["AcademicPeriodListResponse"];
             403: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicCourseCatalogBatches: {
+        parameters: {
+            query?: {
+                education_level?: "undergraduate" | "graduate";
+                period_id?: string;
+                status?: "queued" | "running" | "failed" | "published";
+                include_archived?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogBatchPageResponse"];
+        };
+    };
+    GetAdminAcademicCourseCatalogBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogBatchResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ArchiveAdminAcademicCourseCatalogBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogBatchResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicCourseCatalogCredentials: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogCredentialsResponse"];
+        };
+    };
+    SaveAdminAcademicCourseCatalogCredential: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate";
+                    username: string;
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogCredentialResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    DeleteAdminAcademicCourseCatalogCredential: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+            };
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicCourseCatalogEntries: {
+        parameters: {
+            query?: {
+                education_level?: "undergraduate" | "graduate";
+                period_id?: string;
+                course_code?: string;
+                keyword?: string;
+                offering_unit?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogEntryPageResponse"];
+        };
+    };
+    TriggerAdminAcademicCourseCatalogRun: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate";
+                    period_id: string;
+                    confirmation: string;
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicCourseCatalogRunAcceptedResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicCourseCatalogScheduleMappings: {
+        parameters: {
+            query?: {
+                batch_id?: number;
+                education_level?: "undergraduate" | "graduate";
+                source_period_id?: string;
+                keyword?: string;
+                schedule_parse_status?: "no_schedule" | "parsed" | "partial" | "unparsed";
+                mapping_outcome?: "no_schedule" | "matched" | "partial" | "unmatched" | "outside_calendar" | "unparsed";
+                reason_code?: string;
+                has_unmapped_occurrences?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogMappingPageResponse"];
+        };
+    };
+    ListAdminAcademicCourseCatalogScheduleOccurrences: {
+        parameters: {
+            query?: {
+                batch_id?: number;
+                catalog_entry_id?: number;
+                schedule_slot_id?: number;
+                occupancy_id?: number;
+                match_status?: "matched" | "unmatched" | "outside_calendar";
+                reason_code?: string;
+                classroom_id?: number;
+                target_period_id?: string;
+                target_teaching_week?: number;
+                target_weekday?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogOccurrencePageResponse"];
+        };
+    };
+    ListAdminAcademicCourseCatalogScheduleSlots: {
+        parameters: {
+            query?: {
+                batch_id?: number;
+                education_level?: "undergraduate" | "graduate";
+                source_period_id?: string;
+                keyword?: string;
+                teacher?: string;
+                source_week?: number;
+                source_weekday?: number;
+                section?: number;
+                classroom_id?: number;
+                has_unmapped_occurrences?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCourseCatalogScheduleSlotPageResponse"];
+        };
+    };
+    ListMemberCourseCatalogCourses: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+                keyword?: string;
+                course_code?: string;
+                teacher?: string;
+                offering_unit?: string;
+                campus?: string;
+                teaching_week?: number;
+                weekday?: number;
+                section?: number;
+                only_parsed_location?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberCourseCatalogCoursePageResponse"];
         };
     };
     ListAcademicCoursePassRates: {
@@ -11987,7 +12917,7 @@ export interface operations {
                 classroom_id?: number;
                 period_id?: string;
                 service_date?: string;
-                source_type?: "schedule" | "admin" | "student_report";
+                source_type?: "schedule" | "course_catalog" | "admin" | "student_report";
                 status?: "active" | "disabled" | "expired";
                 page?: number;
                 page_size?: number;

@@ -2,15 +2,24 @@ import { useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { getCurrentUser, updateCurrentUsername } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
+import { isApiError } from '../../api/client'
 import type {
   AcademicVerificationStatus,
+  CurrentUser,
   DailyCheckinStatus,
   UserLevelSummary,
 } from '../../api/types'
 import { getMyUserLevel } from '../../api/user-levels'
 import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
 import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
+import {
+  normalizeUsername,
+  USERNAME_MAX_LENGTH,
+  validateUsername,
+} from '../../features/profile/username'
 import { isQualificationEdition } from '../../features/app-edition'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
@@ -80,11 +89,31 @@ const identityMenu = {
 
 export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [accountLoaded, setAccountLoaded] = useState(false)
   const [userLevel, setUserLevel] = useState<UserLevelSummary | null>(null)
   const [checkinStatus, setCheckinStatus] = useState<DailyCheckinStatus | null>(null)
+  const [editingUsername, setEditingUsername] = useState(false)
+  const [usernameDraft, setUsernameDraft] = useState('')
+  const [savingUsername, setSavingUsername] = useState(false)
+  const loadCurrentUser = async (showError = false) => {
+    setAccountLoaded(false)
+    try {
+      const account = await getCurrentUser()
+      setCurrentUser(account)
+      setUsernameDraft(account.user.username)
+    } catch {
+      if (showError) {
+        Taro.showToast({ title: '账号信息加载失败，请稍后重试', icon: 'none' })
+      }
+    } finally {
+      setAccountLoaded(true)
+    }
+  }
   useDidShow(() => {
     syncCustomTabBar('profile')
     setCheckinStatus(null)
+    void loadCurrentUser()
     void getAcademicVerificationStatus().then((status) => {
       setAcademicStatus(status)
     }).catch(() => {
@@ -110,6 +139,51 @@ export default function ProfilePage() {
       })
     }
   }
+  const beginUsernameEdit = () => {
+    if (!currentUser) {
+      if (accountLoaded) {
+        void loadCurrentUser(true)
+      } else {
+        Taro.showToast({ title: '账号信息加载中', icon: 'none' })
+      }
+      return
+    }
+    setUsernameDraft(currentUser.user.username)
+    setEditingUsername(true)
+  }
+  const cancelUsernameEdit = () => {
+    if (savingUsername) return
+    setUsernameDraft(currentUser?.user.username || '')
+    setEditingUsername(false)
+  }
+  const saveUsername = async () => {
+    if (!currentUser || savingUsername) return
+    const message = validateUsername(usernameDraft)
+    if (message) {
+      Taro.showToast({ title: message, icon: 'none' })
+      return
+    }
+    const username = normalizeUsername(usernameDraft)
+    if (username === currentUser.user.username) {
+      setEditingUsername(false)
+      return
+    }
+    setSavingUsername(true)
+    try {
+      const updated = await updateCurrentUsername(username)
+      setCurrentUser((account) => account ? { ...account, user: updated } : account)
+      setUsernameDraft(updated.username)
+      setEditingUsername(false)
+      Taro.showToast({ title: '昵称已更新', icon: 'success' })
+    } catch (error) {
+      Taro.showToast({
+        title: isApiError(error) ? error.message : '昵称更新失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setSavingUsername(false)
+    }
+  }
   const identity = academicStatus?.identity
   const latestRequest = academicStatus?.latest_request
   const identityVerified = identity?.status === 'verified'
@@ -129,6 +203,10 @@ export default function ProfilePage() {
   const studentNumber = identityVerified
     ? `${identity.student_no.slice(0, 2)}****${identity.student_no.slice(-2)}`
     : ''
+  const displayName = currentUser?.user.username || identity?.real_name || '海大同学'
+  const accountDescription = identityVerified
+    ? `${identity.real_name} · 学号 ${studentNumber}`
+    : '中国海洋大学校园服务账号'
 
   return (
     <View className='profile-page'>
@@ -139,15 +217,15 @@ export default function ProfilePage() {
       <View className='profile-page__content'>
         <View className='profile-card motion-enter'>
           <View className='profile-card__avatar'>
-            <Text>{(identity?.real_name || '海大同学').slice(0, 1)}</Text>
+            <Text>{displayName.slice(0, 1)}</Text>
             <View className='profile-card__status' />
           </View>
           <View className='profile-card__main'>
             <Text className='profile-card__name'>
-              {identity?.real_name || '海大同学'}
+              {displayName}
             </Text>
             <Text className='profile-card__school'>
-              {studentNumber ? `学号 ${studentNumber}` : '中国海洋大学校园服务账号'}
+              {accountDescription}
             </Text>
           </View>
           <View className='profile-card__actions'>
@@ -246,6 +324,68 @@ export default function ProfilePage() {
         <View className='profile-section motion-enter motion-enter--delay-3'>
           <Text className='profile-section__title'>账号与身份</Text>
           <View className='profile-account-list'>
+            <View
+              className='profile-identity-entry'
+              hoverClass='profile-identity-entry--pressed'
+              ariaRole='button'
+              ariaLabel={`编辑昵称，当前为${currentUser?.user.username || '加载中'}`}
+              onClick={beginUsernameEdit}
+            >
+              <View className='profile-identity-entry__icon'>
+                <Image src={icons.account} mode='aspectFit' />
+              </View>
+              <View className='profile-identity-entry__main'>
+                <Text>昵称</Text>
+                <Text>{currentUser?.user.username || (accountLoaded ? '点击重试' : '加载中')}</Text>
+              </View>
+              <Image
+                className='profile-identity-entry__arrow'
+                src={icons.arrow}
+                mode='aspectFit'
+              />
+            </View>
+
+            {editingUsername && (
+              <View className='profile-username-editor'>
+                <View className='profile-username-editor__field'>
+                  <KeyboardSafeInput
+                    value={usernameDraft}
+                    maxlength={USERNAME_MAX_LENGTH}
+                    confirmType='done'
+                    focus
+                    placeholder='输入 2–32 个字符'
+                    onInput={(event) => setUsernameDraft(event.detail.value)}
+                    onConfirm={() => void saveUsername()}
+                  />
+                  <Text>{normalizeUsername(usernameDraft).length}/{USERNAME_MAX_LENGTH}</Text>
+                </View>
+                <Text className='profile-username-editor__hint'>
+                  支持中文、字母、数字、点、下划线和短横线，社区内容将同步展示新昵称。
+                </Text>
+                <View className='profile-username-editor__actions'>
+                  <View
+                    className='profile-username-editor__cancel'
+                    ariaRole='button'
+                    ariaLabel='取消修改昵称'
+                    onClick={cancelUsernameEdit}
+                  >
+                    <Text>取消</Text>
+                  </View>
+                  <View
+                    className={[
+                      'profile-username-editor__save',
+                      savingUsername ? 'profile-username-editor__save--disabled' : '',
+                    ].filter(Boolean).join(' ')}
+                    ariaRole='button'
+                    ariaLabel={savingUsername ? '正在保存昵称' : '保存昵称'}
+                    onClick={() => void saveUsername()}
+                  >
+                    <Text>{savingUsername ? '保存中' : '保存'}</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
             <View
               className='profile-identity-entry'
               hoverClass='profile-identity-entry--pressed'
