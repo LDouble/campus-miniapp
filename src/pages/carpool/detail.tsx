@@ -9,6 +9,7 @@ import { markLifeHubSectionDirty } from '../../features/life-services/refresh-po
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import { useCampusShare } from '../../features/share'
 import {
   formatDateTime,
   formatStatus,
@@ -56,6 +57,14 @@ export default function CarpoolDetailPage() {
     }
   })
   usePullDownRefresh(() => void load())
+
+  useCampusShare(() => ({
+    title: item
+      ? `${item.origin} → ${item.destination}｜校园同行`
+      : '校园找同行｜海大校园',
+    path: id ? '/pages/carpool/detail' : '/pages/community/index',
+    query: id ? { id } : { section: 'carpool' },
+  }))
 
   const runAction = async (action: string) => {
     if (!item || working) return

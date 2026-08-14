@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useLoad, useShareAppMessage } from '@tarojs/taro'
+import { useLoad } from '@tarojs/taro'
 import { Button, Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import { isApiError } from '../../api/client'
 import { publicShareImage } from '../../features/clubs/model'
 import { clubsRepository } from '../../features/clubs/repository'
 import type { ClubDetail } from '../../features/clubs/types'
+import { useCampusShare } from '../../features/share'
 import './detail.scss'
 
 const validClubId = (value?: string) => {
@@ -45,11 +46,12 @@ export default function ClubDetailPage() {
     void load(id)
   })
 
-  useShareAppMessage(() => {
+  useCampusShare(() => {
     const imageUrl = club ? publicShareImage(club) : ''
     return {
       title: club ? `${club.name}｜海大社团` : '海大社团广场',
-      path: club ? `/pages/clubs/detail?id=${club.id}` : '/pages/clubs/index',
+      path: club ? '/pages/clubs/detail' : '/pages/clubs/index',
+      query: club ? { id: club.id } : undefined,
       imageUrl: imageUrl || require('../../assets/tabbar/community.png'),
     }
   })

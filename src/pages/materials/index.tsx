@@ -25,6 +25,7 @@ import { getCurrentIdentity } from '../../api/account'
 import { createIdempotencyKey } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import { getSelectedTempFiles } from '../../utils/file-selection'
+import { useCampusShare } from '../../features/share'
 import type {
   CourseMaterialView,
   MaterialCourseView,
@@ -192,6 +193,20 @@ export default function MaterialsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>(
     routeContext.view === 'mine' ? 'mine' : 'browse',
   )
+  useCampusShare(() => ({
+    title: routeContext.courseName
+      ? `${routeContext.courseName}｜海大课程资料`
+      : '海大课程资料库',
+    path: '/pages/materials/index',
+    query: viewMode === 'browse'
+      ? {
+          courseName: routeContext.courseName,
+          courseCode: routeContext.courseCode,
+          periodId: routeContext.periodId,
+          periodLabel: routeContext.periodLabel,
+        }
+      : undefined,
+  }))
   const [sheet, setSheet] = useState<Sheet>(
     routeContext.action === 'upload' ? 'upload' : null,
   )

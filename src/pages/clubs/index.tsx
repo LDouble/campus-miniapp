@@ -14,6 +14,7 @@ import type {
   ClubDirectoryItem,
   ClubSummary,
 } from '../../features/clubs/types'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 const PAGE_SIZE = 12
@@ -41,6 +42,11 @@ const mergeClubs = <T extends { id: number }>(current: T[], incoming: T[]) => {
 }
 
 export default function ClubsPage() {
+  useCampusShare(() => ({
+    title: '海大社团广场｜发现喜欢的校园社团',
+    path: '/pages/clubs/index',
+  }))
+
   const [categories, setCategories] = useState<ClubCategory[]>([])
   const [clubs, setClubs] = useState<ClubSummary[]>([])
   const [query, setQuery] = useState('')

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Taro, { useLoad, useShareAppMessage } from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
 import { Button, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { isApiError } from '../../api/client'
@@ -12,6 +12,7 @@ import {
 } from '../../features/official-notices/types'
 import type { OfficialNotice } from '../../features/official-notices/types'
 import { normalizeWebViewUrl } from '../../features/webview/url'
+import { useCampusShare } from '../../features/share'
 import './detail.scss'
 
 type DocumentFileType = 'doc' | 'docx' | 'xls' | 'xlsx' | 'ppt' | 'pptx' | 'pdf'
@@ -61,9 +62,10 @@ export default function OfficialNoticeDetailPage() {
     void load(id)
   })
 
-  useShareAppMessage(() => ({
+  useCampusShare(() => ({
     title: notice?.title || '全校通知',
-    path: notice ? `/pages/official-notices/detail?id=${notice.id}` : '/pages/official-notices/index',
+    path: notice ? '/pages/official-notices/detail' : '/pages/official-notices/index',
+    query: notice ? { id: notice.id } : undefined,
   }))
 
   const copyAttachmentUrl = async (target: string, title: string) => {

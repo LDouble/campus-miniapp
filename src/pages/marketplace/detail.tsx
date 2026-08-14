@@ -9,6 +9,7 @@ import { markLifeHubSectionDirty } from '../../features/life-services/refresh-po
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import { useCampusShare } from '../../features/share'
 import { formatMoney, formatStatus } from '../../features/life-services/format'
 import '../../features/life-services/detail.scss'
 import './detail.scss'
@@ -53,6 +54,15 @@ export default function MarketplaceDetailPage() {
     }
   })
   usePullDownRefresh(() => void load())
+
+  useCampusShare(() => ({
+    title: item
+      ? `${item.intent === 'wanted' ? '求购' : '闲置'}｜${item.description}`
+      : '校园二手｜海大校园',
+    path: id ? '/pages/marketplace/detail' : '/pages/community/index',
+    query: id ? { id } : { section: 'market' },
+    imageUrl: item?.image_urls[0],
+  }))
 
   const runAction = async (action: string) => {
     if (!item || working) return

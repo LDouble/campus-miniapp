@@ -12,6 +12,7 @@ import {
 import { lifeServicesRepository } from '../../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
 import CommunityPostCard from '../../../features/community/post-card'
+import { useCampusShare } from '../../../features/share'
 import './index.scss'
 
 export default function CommunityTopicPage() {
@@ -47,6 +48,13 @@ export default function CommunityTopicPage() {
     setTopicId(id); void load(id)
   })
   usePullDownRefresh(() => { void load(topicId) })
+
+  useCampusShare(() => ({
+    title: topic ? `#${topic.name}｜海大校园话题` : '海大校园话题',
+    path: topicId ? '/pages/community/topic/index' : '/pages/community/index',
+    query: topicId ? { id: topicId } : undefined,
+    imageUrl: topic?.cover_url || undefined,
+  }))
 
   const toggleLike = async (post: CampusCirclePostView) => {
     const updated = post.liked

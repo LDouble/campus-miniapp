@@ -20,6 +20,7 @@ import type {
   OfficialNoticeSource,
 } from '../../features/official-notices/types'
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 const PAGE_SIZE = 15
@@ -67,6 +68,11 @@ const handoffTimeIndex = (value?: string) => {
 }
 
 export default function OfficialNoticesPage() {
+  useCampusShare(() => ({
+    title: '全校通知｜海大校园',
+    path: '/pages/official-notices/index',
+  }))
+
   const [items, setItems] = useState<OfficialNotice[]>([])
   const [query, setQuery] = useState('')
   const [keyword, setKeyword] = useState('')

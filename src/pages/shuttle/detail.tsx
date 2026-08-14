@@ -8,6 +8,7 @@ import {
   ShuttleLoadResult,
   ShuttleRoute,
 } from '../../features/shuttle/repository'
+import { useCampusShare } from '../../features/share'
 import './detail.scss'
 
 const dayTypeLabels: Record<string, string> = {
@@ -36,6 +37,14 @@ export default function ShuttleDetailPage() {
   const [source, setSource] = useState<ShuttleLoadResult['source']>('network')
   const [serviceDate, setServiceDate] = useState('')
   const [loading, setLoading] = useState(true)
+
+  useCampusShare(() => ({
+    title: route
+      ? `${route.name}｜${route.origin} → ${route.destination}`
+      : '校园校车｜海大校园',
+    path: route ? '/pages/shuttle/detail' : '/pages/shuttle/index',
+    query: route ? { id: route.id, date: serviceDate } : undefined,
+  }))
 
   const load = async (id: number, date?: string) => {
     setLoading(true)
