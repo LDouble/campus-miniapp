@@ -335,6 +335,68 @@ page {
   }
 }
 
+.schedule-refresh-guide {
+  position: absolute;
+  top: 18rpx;
+  left: 50%;
+  z-index: 18;
+  display: flex;
+  height: 58rpx;
+  padding: 0 20rpx 0 13rpx;
+  align-items: center;
+  gap: 10rpx;
+  color: #3f6f76;
+  font-size: 21rpx;
+  font-weight: 720;
+  white-space: nowrap;
+  pointer-events: none;
+  background: rgba(249, 253, 252, 0.96);
+  border: 2rpx solid rgba(83, 143, 146, 0.16);
+  border-radius: 999rpx;
+  box-shadow: 0 10rpx 28rpx rgba(52, 101, 106, 0.16);
+  transform: translateX(-50%);
+  animation: schedule-refresh-guide-lifecycle 3s ease both;
+
+  &__gesture {
+    display: flex;
+    width: 34rpx;
+    height: 34rpx;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(88, 161, 158, 0.13);
+    border-radius: 50%;
+    animation: schedule-refresh-guide-pull 1s ease-in-out 2;
+  }
+
+  &__arrow {
+    width: 10rpx;
+    height: 10rpx;
+    margin-top: -5rpx;
+    border-right: 3rpx solid #4f9697;
+    border-bottom: 3rpx solid #4f9697;
+    transform: rotate(45deg);
+  }
+}
+
+@keyframes schedule-refresh-guide-lifecycle {
+  0% { opacity: 0; transform: translate(-50%, -10rpx); }
+  10%, 78% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 5rpx); }
+}
+
+@keyframes schedule-refresh-guide-pull {
+  0%, 100% { opacity: 0.45; transform: translateY(-5rpx); }
+  55% { opacity: 1; transform: translateY(5rpx); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-refresh-guide,
+  .schedule-refresh-guide__gesture {
+    animation: none;
+  }
+}
+
 .schedule-overview {
   display: flex;
   align-items: flex-end;
@@ -486,6 +548,7 @@ page {
 }
 
 .timetable-course {
+  position: relative;
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -538,13 +601,45 @@ page {
     background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.24), transparent 45%);
   }
 
+  &--related {
+    border-style: solid;
+    box-shadow:
+      3rpx 3rpx 0 rgba(255, 255, 255, 0.9),
+      6rpx 6rpx 0 rgba(118, 151, 154, 0.2);
+  }
+
+  &__preview-head {
+    display: flex;
+    min-height: 26rpx;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 5rpx;
+  }
+
+  &__related-count {
+    display: flex;
+    min-width: 28rpx;
+    height: 26rpx;
+    padding: 0 5rpx;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    color: #fff;
+    font-size: 14rpx;
+    font-weight: 760;
+    line-height: 1;
+    background: #78979b;
+    border-radius: 999rpx;
+  }
+
   &__conflict-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 4rpx;
     margin-bottom: 6rpx;
-    color: #c56858;
+    color: #b85043;
     font-size: 16rpx;
     font-weight: 760;
     line-height: 1;
@@ -560,7 +655,7 @@ page {
     padding: 0 5rpx;
     color: #fff;
     font-size: 15rpx;
-    background: #e78370;
+    background: #dd6d5b;
     border-radius: 999rpx;
 
     &--quiet {
@@ -574,21 +669,25 @@ page {
   }
 
   &__status {
-    display: flex;
+    display: inline-flex;
+    height: 26rpx;
+    padding: 0 7rpx;
     align-items: center;
-    margin-bottom: 5rpx;
-    color: #7d898b;
-    font-size: 15rpx;
-    font-weight: 680;
+    justify-content: center;
+    min-width: 0;
+    margin-bottom: 0;
+    color: #647a7d;
+    font-size: 14rpx;
+    font-weight: 720;
     line-height: 1;
+    background: rgba(112, 140, 143, 0.13);
+    border-radius: 999rpx;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     &::before {
-      width: 6rpx;
-      height: 6rpx;
-      margin-right: 5rpx;
-      content: '';
-      background: #a4afb0;
-      border-radius: 50%;
+      content: none;
     }
   }
 
@@ -1551,7 +1650,7 @@ page {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 0 26rpx calc(34rpx + env(safe-area-inset-bottom));
+  padding: 0 22rpx calc(22rpx + env(safe-area-inset-bottom));
   background: rgba(49, 57, 57, 0.18);
   backdrop-filter: blur(7rpx);
   animation: academic-fade 160ms ease;
@@ -1559,39 +1658,59 @@ page {
 
 .course-float-card {
   position: relative;
+  display: flex;
   width: 100%;
-  max-width: 660rpx;
-  max-height: 70vh;
-  padding: 30rpx;
-  overflow-y: auto;
-  background: rgba(255, 253, 249, 0.97);
+  max-width: 690rpx;
+  max-height: 78vh;
+  padding: 16rpx 16rpx 18rpx;
+  overflow: hidden;
+  flex-direction: column;
+  background: rgba(249, 252, 252, 0.98);
   border: 2rpx solid rgba(255, 255, 255, 0.86);
-  border-radius: 34rpx;
+  border-radius: 34rpx 34rpx 28rpx 28rpx;
   box-shadow: 0 22rpx 62rpx rgba(61, 58, 51, 0.2);
   animation: course-float-in 180ms ease;
 
-  &--bare {
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+  &__handle {
+    width: 68rpx;
+    height: 7rpx;
+    flex: none;
+    margin: 0 auto 12rpx;
+    background: #d5e1e2;
+    border-radius: 999rpx;
+  }
+
+  &__toolbar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18rpx;
+    padding: 0 8rpx 14rpx;
+
+    > view:first-child {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .course-float-card__title,
+    .course-float-card__copy {
+      padding-right: 0;
+    }
   }
 
   &__close {
-    position: absolute;
-    top: 20rpx;
-    right: 20rpx;
-    z-index: 2;
     display: flex;
+    width: 80rpx;
+    height: 80rpx;
+    flex: none;
     align-items: center;
     justify-content: center;
-    width: 54rpx;
-    height: 54rpx;
     color: #7f8e8e;
-    font-size: 35rpx;
+    font-size: 38rpx;
     line-height: 1;
-    background: #f3f0ea;
-    border-radius: 18rpx;
+    background: #edf4f4;
+    border-radius: 22rpx;
   }
 
   &__eyebrow,
@@ -1610,26 +1729,87 @@ page {
 
   &__title {
     color: #314e55;
-    font-size: 29rpx;
+    font-size: 28rpx;
     font-weight: 760;
     line-height: 1.35;
   }
 
   &__copy {
-    margin-top: 8rpx;
+    margin-top: 5rpx;
     color: #879798;
-    font-size: 22rpx;
+    font-size: 20rpx;
     line-height: 1.45;
+  }
+
+  &__scroll {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
 .course-conflict-list {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  max-height: 70vh;
   padding: 2rpx;
-  overflow-y: auto;
+}
+
+.course-switcher {
+  width: 100%;
+  flex: none;
+  margin-bottom: 14rpx;
+
+  &__inner {
+    display: inline-flex;
+    min-width: 100%;
+    gap: 10rpx;
+    padding: 0 3rpx 2rpx;
+    white-space: nowrap;
+  }
+
+  &__item {
+    display: flex;
+    min-width: 210rpx;
+    min-height: 88rpx;
+    padding: 12rpx 17rpx;
+    flex-direction: column;
+    justify-content: center;
+    color: #597176;
+    background: #edf3f3;
+    border: 2rpx solid transparent;
+    border-radius: 20rpx;
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+
+    text {
+      display: block;
+      max-width: 250rpx;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    text:first-child {
+      font-size: 23rpx;
+      font-weight: 720;
+    }
+
+    text:last-child {
+      margin-top: 5rpx;
+      color: #86989b;
+      font-size: 18rpx;
+    }
+
+    &--active {
+      color: #2f5961;
+      background: #e3f3f3;
+      border-color: rgba(76, 156, 166, 0.3);
+
+      text:last-child {
+        color: #64858a;
+      }
+    }
+  }
 }
 
 .course-conflict-card {
@@ -1752,6 +1932,63 @@ page {
 
     > view:first-child {
       color: #b66362;
+    }
+  }
+
+  .course-reference {
+    padding: 18rpx;
+    margin-top: 17rpx;
+    border-radius: 22rpx;
+
+    &__title {
+      font-size: 24rpx;
+    }
+
+    &__hint {
+      font-size: 18rpx;
+    }
+
+    &__arrow {
+      font-size: 34rpx;
+    }
+
+    &__metrics {
+      margin-top: 15rpx;
+
+      > view {
+        gap: 3rpx;
+
+        > text:first-child {
+          font-size: 27rpx;
+        }
+
+        > text:last-child {
+          font-size: 17rpx;
+        }
+      }
+    }
+
+    &__skeleton {
+      margin-top: 15rpx;
+
+      > view {
+        height: 44rpx;
+      }
+    }
+
+    &__empty {
+      margin-top: 14rpx;
+      font-size: 20rpx;
+    }
+  }
+
+  .course-resource-actions {
+    &__primary {
+      min-height: 78rpx;
+    }
+
+    &__secondary > view {
+      min-height: 60rpx;
     }
   }
 }
