@@ -1,14 +1,14 @@
 page {
-  background: #f4f6fa;
+  background: #faf7f2;
 }
 
 .community-detail {
   min-height: 100vh;
-  color: #292530;
+  color: #294653;
   background:
-    radial-gradient(circle at 96% 3%, rgba(126, 111, 222, 0.13), transparent 30%),
-    radial-gradient(circle at 3% 52%, rgba(92, 183, 190, 0.09), transparent 29%),
-    linear-gradient(180deg, #f6f5fc 0%, #f1f6f8 55%, #f5f7fa 100%);
+    radial-gradient(circle at 12% 9%, rgba(244, 187, 118, 0.13), transparent 29%),
+    radial-gradient(circle at 96% 24%, rgba(129, 201, 194, 0.12), transparent 28%),
+    linear-gradient(180deg, #fffdf9 0%, #f8f6f1 100%);
 
   &__content {
     padding: 22rpx 28rpx calc(190rpx + env(safe-area-inset-bottom));
@@ -23,17 +23,13 @@ page {
   justify-content: center;
   box-sizing: border-box;
   flex-direction: column;
-  border: 2rpx solid rgba(255, 255, 255, 0.84);
+  border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 30rpx;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.94),
-    rgba(249, 252, 255, 0.84)
-  );
+  background: rgba(255, 255, 255, 0.9);
   box-shadow:
     -7rpx -7rpx 20rpx rgba(255, 255, 255, 0.72),
-    0 13rpx 30rpx rgba(73, 92, 121, 0.09);
-  color: #77727e;
+    0 13rpx 30rpx rgba(50, 92, 84, 0.08);
+  color: #71817f;
   font-size: 25rpx;
   text-align: center;
   backdrop-filter: blur(18rpx);
@@ -46,23 +42,19 @@ page {
     align-items: center;
     justify-content: center;
     border-radius: 22rpx;
-    background: #eeecff;
-    color: #5c52ca;
+    background: #e2f3ee;
+    color: #469cae;
     font-weight: 720;
   }
 }
 
 .community-detail-card,
 .community-detail-comments {
-  border: 2rpx solid rgba(255, 255, 255, 0.84);
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.94),
-    rgba(249, 252, 255, 0.84)
-  );
+  border: 2rpx solid rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.9);
   box-shadow:
     -7rpx -7rpx 20rpx rgba(255, 255, 255, 0.74),
-    0 13rpx 30rpx rgba(73, 92, 121, 0.09),
+    0 13rpx 30rpx rgba(50, 92, 84, 0.075),
     inset 0 2rpx 0 rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(18rpx);
 }
@@ -125,7 +117,7 @@ page {
 
     > view text:first-child {
       overflow: hidden;
-      color: #292630;
+      color: #21465c;
       font-size: 25rpx;
       font-weight: 720;
       text-overflow: ellipsis;
@@ -136,7 +128,7 @@ page {
 
   &__time {
     margin-top: 5rpx;
-    color: #918c98;
+    color: #809693;
     font-size: 19rpx;
   }
 
@@ -147,7 +139,7 @@ page {
     margin-left: 10rpx;
     overflow: hidden;
     align-items: center;
-    color: #756d80;
+    color: #71817f;
     font-size: 20rpx;
     font-weight: 600;
 
@@ -179,7 +171,7 @@ page {
 
   &__body {
     padding-top: 8rpx;
-    color: #55515d;
+    color: #31515b;
     font-size: 29rpx;
     line-height: 1.72;
     white-space: pre-wrap;
@@ -218,7 +210,7 @@ page {
     justify-content: flex-start;
     border: 0;
     background: transparent;
-    color: #6b6671;
+    color: #5d7e8c;
     font-size: 21rpx;
     line-height: 1;
     transition: opacity 160ms ease;
@@ -279,7 +271,7 @@ page {
   border-radius: 30rpx;
   box-shadow:
     -5rpx -5rpx 17rpx rgba(255, 255, 255, 0.68),
-    0 11rpx 26rpx rgba(73, 92, 121, 0.075),
+    0 11rpx 26rpx rgba(50, 92, 84, 0.065),
     inset 0 2rpx 0 rgba(255, 255, 255, 0.88);
 
   &__heading {
@@ -299,14 +291,14 @@ page {
       }
 
       text {
-        color: #292630;
+        color: #21465c;
         font-size: 29rpx;
         font-weight: 780;
       }
     }
 
     > text {
-      color: #8e8995;
+      color: #809693;
       font-size: 21rpx;
     }
   }
@@ -315,7 +307,6 @@ page {
     display: flex;
     gap: 15rpx;
     padding: 22rpx 0;
-    border-bottom: 2rpx solid rgba(229, 226, 234, 0.7);
   }
 
   &__avatar {
@@ -357,7 +348,7 @@ page {
     align-items: center;
 
     text:first-child {
-      color: #5f5965;
+      color: #31515b;
       font-size: 22rpx;
       font-weight: 690;
     }
@@ -366,7 +357,7 @@ page {
 
   .community-comment__content {
     margin-top: 7rpx;
-    color: #39353f;
+    color: #31515b;
     font-size: 26rpx;
     line-height: 1.58;
   }
@@ -375,7 +366,7 @@ page {
     display: flex;
     margin-top: 9rpx;
     align-items: center;
-    color: #9a95a0;
+    color: #8a9997;
     font-size: 20rpx;
 
     &-separator {
@@ -384,11 +375,11 @@ page {
       flex: none;
       margin: 0 9rpx;
       border-radius: 50%;
-      background: #bbb5bf;
+      background: #b4c3bf;
     }
 
     text:last-child {
-      color: #a77b58;
+      color: #a56d4e;
     }
 
     text.community-comment__delete {
@@ -443,7 +434,7 @@ page {
     min-height: 82rpx;
     align-items: center;
     justify-content: center;
-    color: #6258ca;
+    color: #469cae;
     font-size: 23rpx;
     font-weight: 680;
   }
@@ -455,12 +446,13 @@ page {
     left: 0;
     z-index: 40;
     display: flex;
-    gap: 13rpx;
+    gap: 10rpx;
     padding: 15rpx 28rpx calc(15rpx + env(safe-area-inset-bottom));
+    flex-direction: column;
     border-top: 2rpx solid rgba(255, 255, 255, 0.82);
-    background: rgba(255, 255, 255, 0.84);
+    background: rgba(255, 253, 249, 0.9);
     box-shadow:
-      0 -12rpx 30rpx rgba(50, 62, 82, 0.075),
+      0 -12rpx 30rpx rgba(50, 92, 84, 0.075),
       inset 0 2rpx 0 rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(22rpx);
 
@@ -471,11 +463,11 @@ page {
       flex: 1;
       border: 2rpx solid rgba(255, 255, 255, 0.76);
       border-radius: 23rpx;
-      background: linear-gradient(145deg, #eef0f6, #f7f8fc);
+      background: #f4f8f6;
       box-shadow:
-        inset 4rpx 4rpx 10rpx rgba(87, 97, 118, 0.08),
+        inset 4rpx 4rpx 10rpx rgba(65, 111, 104, 0.07),
         inset -4rpx -4rpx 10rpx rgba(255, 255, 255, 0.8);
-      color: #36323c;
+      color: #31515b;
       font-size: 25rpx;
     }
   }
@@ -486,6 +478,38 @@ page {
     box-shadow:
       0 -18rpx 42rpx rgba(42, 47, 63, 0.16),
       inset 0 2rpx 0 rgba(255, 255, 255, 0.9);
+  }
+
+  &__composer-main {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 13rpx;
+  }
+
+  &__replying {
+    display: flex;
+    min-height: 48rpx;
+    padding: 0 8rpx;
+    align-items: center;
+    justify-content: space-between;
+    color: #53857f;
+    font-size: 22rpx;
+
+    text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    view {
+      min-width: 76rpx;
+      padding: 10rpx 0 10rpx 18rpx;
+      flex: none;
+      color: #d87567;
+      font-weight: 700;
+      text-align: right;
+    }
   }
 
   &__composer-backdrop {
@@ -500,7 +524,7 @@ page {
   }
 
   &__placeholder {
-    color: #98939e;
+    color: #94a4a2;
   }
 
   &__send {
@@ -512,9 +536,9 @@ page {
     justify-content: center;
     border: 2rpx solid rgba(255, 255, 255, 0.76);
     border-radius: 50%;
-    background: linear-gradient(145deg, #7569e5, #5c53d2);
+    background: linear-gradient(135deg, #55b7bd, #469cae 58%, #e98c70);
     box-shadow:
-      0 10rpx 23rpx rgba(79, 70, 190, 0.22),
+      0 10rpx 23rpx rgba(70, 156, 174, 0.2),
       inset 0 2rpx 3rpx rgba(255, 255, 255, 0.25);
     transition: opacity 160ms ease;
 
@@ -531,6 +555,108 @@ page {
   &__send--pressed {
     opacity: 0.64;
   }
+}
+
+.community-comment-thread {
+  border-bottom: 2rpx solid rgba(83, 133, 127, 0.1);
+}
+
+.community-comment__status {
+  color: #a56d4e !important;
+}
+
+.community-comment__reply-action,
+.community-comment__report {
+  padding: 12rpx 4rpx;
+  color: #53857f !important;
+  font-weight: 680;
+}
+
+.community-comment__report {
+  color: #7b9199 !important;
+}
+
+.community-comment__thread-action {
+  display: flex;
+  min-height: 56rpx;
+  margin-top: 3rpx;
+  align-items: center;
+  color: #469cae;
+  font-size: 21rpx;
+  font-weight: 680;
+}
+
+.community-comment__thread-error {
+  padding: 8rpx 0 18rpx 73rpx;
+  color: #d87567;
+  font-size: 21rpx;
+}
+
+.community-comment__replies {
+  padding: 4rpx 14rpx 15rpx 73rpx;
+}
+
+.community-comment__reply {
+  display: flex;
+  gap: 12rpx;
+  padding: 17rpx 18rpx;
+  margin-bottom: 10rpx;
+  border: 2rpx solid rgba(83, 133, 127, 0.08);
+  border-radius: 22rpx;
+  background: rgba(233, 245, 242, 0.72);
+
+  &.community-comment--pending_review {
+    border-color: rgba(233, 140, 112, 0.16);
+    background: rgba(255, 240, 220, 0.72);
+  }
+}
+
+.community-comment__reply-avatar {
+  display: flex;
+  width: 48rpx;
+  height: 48rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #53857f;
+  color: #fff;
+  font-size: 17rpx;
+  font-weight: 740;
+}
+
+.community-comment__reply-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.community-comment__reply-author {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7rpx;
+
+  > text:first-child {
+    color: #31515b;
+    font-size: 21rpx;
+    font-weight: 700;
+  }
+
+  > text:nth-child(2) {
+    color: #71817f;
+    font-size: 19rpx;
+  }
+}
+
+.community-comment__reply-content {
+  margin-top: 6rpx;
+  color: #31515b;
+  font-size: 24rpx;
+  line-height: 1.55;
+  white-space: pre-wrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -562,8 +688,7 @@ page {
 }
 
 .community-comment__report {
-  padding: 12rpx 8rpx;
-  color: #7b9199;
+  padding: 12rpx 4rpx;
   font-size: 24rpx;
 }
 
