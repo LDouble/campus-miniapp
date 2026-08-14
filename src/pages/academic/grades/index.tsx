@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
@@ -101,6 +101,56 @@ export default function GradesPage() {
   const [gradePoint, setGradePoint] = useState('')
   const [gradeCredit, setGradeCredit] = useState('')
   const [gradeLevel, setGradeLevel] = useState<GradeLevel>('优秀')
+  const pageScrollTopRef = useRef(0)
+  const sheetScrollTopRef = useRef(0)
+  const sheetActiveRef = useRef(false)
+  const sheetTransitionRef = useRef(0)
+
+  Taro.usePageScroll(({ scrollTop }) => {
+    if (!sheetActiveRef.current && Number.isFinite(scrollTop)) {
+      pageScrollTopRef.current = scrollTop
+    }
+  })
+
+  const openSheet = (nextSheet: Exclude<GradeSheet, null>) => {
+    sheetTransitionRef.current += 1
+    sheetScrollTopRef.current = pageScrollTopRef.current
+    sheetActiveRef.current = true
+    setSheet(nextSheet)
+  }
+
+  const closeSheet = useCallback(() => {
+    const scrollTop = sheetScrollTopRef.current
+    const transition = sheetTransitionRef.current + 1
+    sheetTransitionRef.current = transition
+    setSheet(null)
+
+    return new Promise<boolean>((resolve) => {
+      Taro.nextTick(() => {
+        if (sheetTransitionRef.current !== transition) {
+          resolve(false)
+          return
+        }
+        void Taro.pageScrollTo({ scrollTop, duration: 0 })
+          .catch(() => undefined)
+          .then(() => {
+            if (sheetTransitionRef.current === transition) {
+              pageScrollTopRef.current = scrollTop
+              sheetActiveRef.current = false
+            }
+            resolve(true)
+          })
+      })
+    })
+  }, [])
+
+  const runAfterClosingSheet = useCallback((action: () => unknown) => {
+    if (!sheetActiveRef.current) {
+      void action()
+      return
+    }
+    void closeSheet().then((closed) => closed ? action() : undefined)
+  }, [closeSheet])
 
   const periods = useMemo(() => deriveGradePeriods(allGrades), [allGrades])
   const grades = useMemo(() => (
@@ -285,7 +335,7 @@ export default function GradesPage() {
     setGradePoint(point === undefined ? '' : String(point))
     setGradeLevel(getCanonicalGradeLevel(override?.gradeLevel || grade.gradeLevel) || '优秀')
     setGradeCredit(String(override?.credit ?? grade.credit))
-    setSheet('grade-edit')
+    openSheet('grade-edit')
   }
 
   const updateGradeLevel = (level: GradeLevel) => {
@@ -304,36 +354,34 @@ export default function GradesPage() {
   const openGradeServices = (grade: GradeRecord) => {
     if (simulationMode) return
     setActiveGrade(grade)
-    setSheet('course-services')
+    openSheet('course-services')
   }
 
   const openGradeMaterials = (grade: GradeRecord, action?: 'upload') => {
-    setSheet(null)
-    if (isQualificationEdition) {
-      void openMigratedFeaturePage({ module: 'course_materials' })
-      return
-    }
-    const context = {
-      courseName: grade.courseName,
-      courseCode: grade.courseCode,
-      periodId: grade.periodId,
-      periodLabel: getGradePeriodLabel(periods, grade.periodId),
-      source: 'grades' as const,
-    }
-    void (action === 'upload'
-      ? shareCourseMaterials(context)
-      : openCourseMaterials(context))
+    runAfterClosingSheet(() => {
+      if (isQualificationEdition) {
+        return openMigratedFeaturePage({ module: 'course_materials' })
+      }
+      const context = {
+        courseName: grade.courseName,
+        courseCode: grade.courseCode,
+        periodId: grade.periodId,
+        periodLabel: getGradePeriodLabel(periods, grade.periodId),
+        source: 'grades' as const,
+      }
+      return action === 'upload'
+        ? shareCourseMaterials(context)
+        : openCourseMaterials(context)
+    })
   }
 
   const openCourseTrade = (intent: 'sell' | 'wanted') => {
     if (!activeGrade) return
     if (isQualificationEdition) {
-      setSheet(null)
-      void openMigratedFeaturePage({ module: 'marketplace' })
+      runAfterClosingSheet(() => openMigratedFeaturePage({ module: 'marketplace' }))
       return
     }
     const courseName = activeGrade.courseName.trim()
-    setSheet(null)
     const prefill = {
       intent,
       description: intent === 'wanted'
@@ -346,10 +394,10 @@ export default function GradesPage() {
       source: 'grade',
     } as const
     if (intent === 'wanted') {
-      void openCourseMarketplaceSearch(prefill)
+      runAfterClosingSheet(() => openCourseMarketplaceSearch(prefill))
       return
     }
-    void openCourseMarketplacePublisher(prefill)
+    runAfterClosingSheet(() => openCourseMarketplacePublisher(prefill))
   }
 
   const saveOverride = () => {
@@ -380,7 +428,7 @@ export default function GradesPage() {
           : { score, gradePoint: point, credit },
       },
     }))
-    setSheet(null)
+    void closeSheet()
     Taro.showToast({ title: '模拟成绩已保存', icon: 'success' })
   }
 
@@ -403,7 +451,7 @@ export default function GradesPage() {
 
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
-      <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
+      <View className='academic-toolbar__period' onClick={() => openSheet('period')}>
         <Text className='academic-toolbar__label'>成绩范围</Text>
         <View>
           <Text>{preferences.gradePeriodId === ALL_PERIOD_ID ? '全部学期' : getGradePeriodLabel(periods, preferences.gradePeriodId)}</Text>
@@ -424,10 +472,10 @@ export default function GradesPage() {
   const renderSheet = () => {
     if (!sheet) return null
     return (
-      <View className='academic-overlay' onClick={() => setSheet(null)}>
+      <View className='academic-overlay' onClick={() => void closeSheet()}>
         <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
-          <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+          <View className='academic-sheet__close' onClick={() => void closeSheet()}>×</View>
           {sheet === 'period' && (
             <View className='academic-sheet__body'>
               <Text className='academic-sheet__title'>选择成绩学期</Text>
@@ -437,7 +485,7 @@ export default function GradesPage() {
                   className={`period-options__item ${preferences.gradePeriodId === ALL_PERIOD_ID ? 'period-options__item--active' : ''}`}
                   onClick={() => {
                     updatePreferences({ gradePeriodId: ALL_PERIOD_ID })
-                    setSheet(null)
+                    void closeSheet()
                   }}
                 >
                   <View>
@@ -454,7 +502,7 @@ export default function GradesPage() {
                     className={`period-options__item ${preferences.gradePeriodId === period.id ? 'period-options__item--active' : ''}`}
                     onClick={() => {
                       updatePreferences({ gradePeriodId: period.id })
-                      setSheet(null)
+                      void closeSheet()
                     }}
                   >
                     <View>

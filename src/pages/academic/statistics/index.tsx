@@ -196,12 +196,12 @@ export default function AcademicStatisticsPage() {
   const activePoint = points[selectedPoint] || null
 
   useEffect(() => {
-    if (!statistics || statistics.trend.points.length < 2) return
+    if (selectedTeacher || !statistics || statistics.trend.points.length < 2) return
     const timer = setTimeout(() => {
       drawTrend(statistics.trend, metric, selectedPoint)
     }, 80)
     return () => clearTimeout(timer)
-  }, [metric, selectedPoint, statistics])
+  }, [metric, selectedPoint, selectedTeacher, statistics])
 
   const openTeacher = (teacher: InstructorPassRate) => {
     setSelectedTeacher(teacher)
@@ -307,20 +307,22 @@ export default function AcademicStatisticsPage() {
               <View className='trend-card'>
                 {points.length >= 2 ? (
                   <>
-                    <View className='trend-chart'>
-                      <Canvas
-                        className='trend-chart__canvas'
-                        canvasId='academic-pass-rate-chart'
-                      />
-                      <View className='trend-chart__touches'>
-                        {points.map((point, index) => (
-                          <View
-                            key={academicStatisticsTermKey(point)}
-                            onClick={() => setSelectedPoint(index)}
-                          />
-                        ))}
+                    {!selectedTeacher && (
+                      <View className='trend-chart'>
+                        <Canvas
+                          className='trend-chart__canvas'
+                          canvasId='academic-pass-rate-chart'
+                        />
+                        <View className='trend-chart__touches'>
+                          {points.map((point, index) => (
+                            <View
+                              key={academicStatisticsTermKey(point)}
+                              onClick={() => setSelectedPoint(index)}
+                            />
+                          ))}
+                        </View>
                       </View>
-                    </View>
+                    )}
                     <View className='trend-labels'>
                       {points.map((point, index) => (
                         <Text
