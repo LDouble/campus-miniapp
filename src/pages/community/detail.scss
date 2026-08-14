@@ -378,9 +378,10 @@ page {
     color: #9a95a0;
     font-size: 20rpx;
 
-    view {
+    &-separator {
       width: 5rpx;
       height: 5rpx;
+      flex: none;
       margin: 0 9rpx;
       border-radius: 50%;
       background: #bbb5bf;
@@ -567,7 +568,12 @@ page {
 }
 
 .community-comment__delete {
+  display: inline-flex;
+  width: auto;
   min-height: 48rpx;
   padding: 12rpx 8rpx;
+  align-items: center;
+  color: #d87567;
   font-size: 24rpx;
+  font-weight: 650;
 }

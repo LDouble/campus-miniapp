@@ -455,14 +455,14 @@ export default function CommunityDetailPage() {
                       <Text>{formatDateTime(item.created_at)}</Text>
                       {item.status !== 'approved' && (
                         <>
-                          <View />
+                          <View className='community-detail-comments__meta-separator' />
                           <Text>{formatStatus(item.status)}</Text>
                         </>
                       )}
                       {item.viewer_relation !== 'author'
                         && item.viewer_relation !== 'admin' && (
                         <>
-                          <View />
+                          <View className='community-detail-comments__meta-separator' />
                           <Text
                             className='community-comment__report'
                             onClick={() => void openContentReport({
@@ -477,7 +477,7 @@ export default function CommunityDetailPage() {
                       )}
                       {item.available_actions.includes('withdraw') && (
                         <>
-                          <View />
+                          <View className='community-detail-comments__meta-separator' />
                           <View
                             id={`community-comment-delete-${item.id}`}
                             className='community-comment__delete'
