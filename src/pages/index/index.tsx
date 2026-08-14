@@ -32,6 +32,7 @@ import type {
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
+import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
 import {
@@ -567,9 +568,9 @@ function Index() {
 
   const chooseCampus = async () => {
     const campuses = enabledCampuses(runtimeConfig)
-    const result = await Taro.showActionSheet({ itemList: campuses })
-    if (typeof result.tapIndex !== 'number') return
-    const selectedCampus = campuses[result.tapIndex]
+    const tapIndex = await showActionSheetSelection(campuses)
+    if (tapIndex === null) return
+    const selectedCampus = campuses[tapIndex]
     setCampusName(selectedCampus)
     setBannerIndex(0)
     saveSelectedCampus(selectedCampus)

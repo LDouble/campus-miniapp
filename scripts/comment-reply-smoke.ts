@@ -5,6 +5,7 @@ import {
   commentRootId,
   mergeLocalThreadReply,
 } from '../src/features/community/comments'
+import { noticeActionRoute } from '../src/features/notices/action-route'
 
 const root = {
   id: 41,
@@ -58,5 +59,10 @@ const merged = mergeLocalThreadReply([firstReply], pendingReply)
 assert.deepEqual(merged.map((item) => item.id), [43, 44])
 assert.equal(merged[0].reply_count, 1)
 assert.strictEqual(mergeLocalThreadReply(merged, pendingReply), merged)
+
+assert.equal(
+  noticeActionRoute('/api/v1/campus-circle/posts/12?comment_id=44'),
+  '/pages/community/detail?id=12&mode=post&comment_id=44',
+)
 
 console.log('comment reply smoke: ok')

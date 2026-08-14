@@ -18,6 +18,43 @@ export const parseDate = (value: string) => new Date(value.replace(/-/g, '/'))
 
 export const formatMonthDay = (date: Date) => `${pad(date.getMonth() + 1)}.${pad(date.getDate())}`
 
+export const formatCourseWeeks = (weeks: readonly number[]) => {
+  const normalizedWeeks = [...new Set(weeks.filter((week) => (
+    Number.isInteger(week) && week > 0
+  )))].sort((left, right) => left - right)
+  if (!normalizedWeeks.length) return '未设置'
+
+  const ranges: string[] = []
+  let index = 0
+  while (index < normalizedWeeks.length) {
+    const start = normalizedWeeks[index]
+    const next = normalizedWeeks[index + 1]
+    const step = next - start === 1 ? 1 : next - start === 2 ? 2 : 0
+    let end = start
+
+    if (step) {
+      while (
+        index + 1 < normalizedWeeks.length
+        && normalizedWeeks[index + 1] - normalizedWeeks[index] === step
+      ) {
+        index += 1
+        end = normalizedWeeks[index]
+      }
+    }
+
+    if (end === start) {
+      ranges.push(`${start} 周`)
+    } else if (step === 1) {
+      ranges.push(`${start}-${end} 周`)
+    } else {
+      ranges.push(`${start}-${end} 周（${start % 2 === 1 ? '单' : '双'}）`)
+    }
+    index += 1
+  }
+
+  return `第 ${ranges.join('、')}`
+}
+
 export const formatDateLabel = (date: Date) => `${date.getMonth() + 1}月${date.getDate()}日`
 
 export const formatExamDate = (value: string) => {
