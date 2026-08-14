@@ -430,7 +430,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 查询本人可用教务学期 */
+        /** 查询当前身份可用教务学期 */
         post: operations["ListAcademicPeriods"];
         delete?: never;
         options?: never;
@@ -5127,6 +5127,7 @@ export interface components {
             course_code: string;
             course_name: string;
             distribution: components["schemas"]["AcademicGradeDistribution"];
+            education_level: components["schemas"]["AcademicStatisticsEducationLevel"];
             /** Format: int64 */
             fail_count: number;
             /** Format: int64 */
@@ -5183,6 +5184,7 @@ export interface components {
             course_code: string;
             course_name: string;
             distribution: components["schemas"]["AcademicGradeDistribution"];
+            education_level: components["schemas"]["AcademicStatisticsEducationLevel"];
             /** Format: int64 */
             fail_count: number;
             /** Format: int64 */
@@ -5213,6 +5215,7 @@ export interface components {
             average_score?: number;
             confidence: components["schemas"]["AcademicStatisticsConfidence"];
             distribution: components["schemas"]["AcademicGradeDistribution"];
+            education_level: components["schemas"]["AcademicStatisticsEducationLevel"];
             /** Format: int64 */
             fail_count: number;
             /** Format: int64 */
@@ -5221,7 +5224,9 @@ export interface components {
             pass_count: number;
             /** Format: double */
             pass_rate: number;
+            period_id: string;
             term_code: string;
+            term_label: string;
             /** Format: int64 */
             valid_count: number;
         };
@@ -5274,6 +5279,8 @@ export interface components {
         };
         /** @enum {string} */
         AcademicStatisticsConfidence: "sample_limited" | "reference" | "sufficient";
+        /** @enum {string} */
+        AcademicStatisticsEducationLevel: "undergraduate" | "graduate";
         AcademicStatisticsMetadata: {
             /** Format: uint64 */
             batch_id: number;
@@ -9454,7 +9461,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AcademicPeriodListResponse"];
-            403: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -9726,6 +9732,7 @@ export interface operations {
                 keyword?: string;
                 course_code?: string;
                 term_code?: string;
+                education_level?: "undergraduate" | "graduate";
                 page?: number;
                 page_size?: number;
             };
@@ -9745,6 +9752,7 @@ export interface operations {
                 course_code: string;
                 teacher_name?: string;
                 term_code?: string;
+                education_level?: "undergraduate" | "graduate";
                 page?: number;
                 page_size?: number;
             };
