@@ -603,12 +603,12 @@ export default function GradesPage() {
             <View className={`grade-summary ${simulationMode ? 'grade-summary--simulation' : 'grade-summary--original'}`}>
               <View className='grade-summary__lead'>
                 <Text className='grade-summary__eyebrow'>{simulationMode ? '模拟计算结果' : '原始成绩统计'}</Text>
-                <Text className='grade-summary__score'>{summary.weightedScore.toFixed(2)}</Text>
+                <Text className='grade-summary__score'>{summary.weightedScore.toFixed(3)}</Text>
                 <Text className='grade-summary__caption'>学分加权平均分</Text>
               </View>
               <View className='grade-summary__stats'>
-                <View><Text>{summary.gpa.toFixed(2)}</Text><Text>平均 GPA</Text></View>
-                <View><Text>{formatCredits(summary.credits)}</Text><Text>已选学分</Text></View>
+                <View><Text>{summary.gpa.toFixed(3)}</Text><Text>平均 GPA</Text></View>
+                <View><Text>{formatCredits(summary.credits)}</Text><Text>已修学分</Text></View>
                 <View><Text>{summary.selectedCount}</Text><Text>门课程</Text></View>
               </View>
             </View>

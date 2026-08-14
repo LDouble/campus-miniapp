@@ -112,23 +112,28 @@ export const calculateGradeSummary = (
   const selected = grades.filter((grade) => simulation.selectedIds.includes(grade.id))
   const totals = selected.reduce((result, grade) => {
     const override = simulation.overrides[grade.id]
-    const score = getGradeScore(grade, override)
-    const gradePoint = getGradePointForGrade(grade, override)
-    if (score === undefined || gradePoint === undefined) return result
     const credit = override?.credit ?? grade.credit
     if (!Number.isFinite(credit) || credit <= 0) return result
+    const score = getGradeScore(grade, override)
+    const gradePoint = getGradePointForGrade(grade, override)
+    const hasWeightedScore = typeof score === 'number' && Number.isFinite(score) && score > 0
+    const hasGradePoint = typeof gradePoint === 'number' && Number.isFinite(gradePoint) && gradePoint > 0
 
     return {
       selectedCount: result.selectedCount + 1,
       credits: result.credits + credit,
-      weightedScore: result.weightedScore + score * credit,
-      weightedPoint: result.weightedPoint + gradePoint * credit,
+      weightedScoreCredits: result.weightedScoreCredits + (hasWeightedScore ? credit : 0),
+      weightedScoreTotal: result.weightedScoreTotal + (hasWeightedScore ? score * credit : 0),
+      gpaCredits: result.gpaCredits + (hasGradePoint ? credit : 0),
+      weightedPointTotal: result.weightedPointTotal + (hasGradePoint ? gradePoint * credit : 0),
     }
   }, {
     selectedCount: 0,
     credits: 0,
-    weightedScore: 0,
-    weightedPoint: 0,
+    weightedScoreCredits: 0,
+    weightedScoreTotal: 0,
+    gpaCredits: 0,
+    weightedPointTotal: 0,
   })
 
   if (!totals.credits) {
@@ -138,8 +143,12 @@ export const calculateGradeSummary = (
   return {
     selectedCount: totals.selectedCount,
     credits: Number(totals.credits.toPrecision(12)),
-    weightedScore: Number((totals.weightedScore / totals.credits).toFixed(2)),
-    gpa: Number((totals.weightedPoint / totals.credits).toFixed(2)),
+    weightedScore: totals.weightedScoreCredits
+      ? Number((totals.weightedScoreTotal / totals.weightedScoreCredits).toFixed(3))
+      : 0,
+    gpa: totals.gpaCredits
+      ? Number((totals.weightedPointTotal / totals.gpaCredits).toFixed(3))
+      : 0,
   }
 }
 
