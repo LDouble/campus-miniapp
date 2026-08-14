@@ -46,6 +46,8 @@ export default function CommunityDetailPage() {
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [deletingPost, setDeletingPost] = useState(false)
+  const [deletingCommentId, setDeletingCommentId] = useState(0)
   const [error, setError] = useState('')
 
   const load = async (id: number) => {
@@ -170,6 +172,70 @@ export default function CommunityDetailPage() {
     Taro.navigateTo({
       url: `/pages/publish/index?section=community&mode=edit&id=${post.id}`,
     })
+  }
+
+  const deletePost = async () => {
+    if (!post || deletingPost) return
+    const confirmation = await Taro.showModal({
+      title: '删除动态',
+      content: '删除后这条动态和评论将不再公开展示，且无法恢复。确认删除吗？',
+      confirmText: '删除',
+      confirmColor: '#d87567',
+    })
+    if (!confirmation.confirm) return
+
+    setDeletingPost(true)
+    try {
+      await lifeServicesRepository.withdrawCampusCirclePost(post.id, post.version)
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: '动态已删除', icon: 'success' })
+      void Taro.switchTab({ url: '/pages/community/index' })
+    } catch (actionError) {
+      if (isApiError(actionError) && actionError.statusCode === 409) {
+        await load(post.id)
+      }
+      Taro.showToast({
+        title: isApiError(actionError) ? actionError.message : '删除失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setDeletingPost(false)
+    }
+  }
+
+  const deleteComment = async (item: CommentView) => {
+    if (deletingCommentId) return
+    const confirmation = await Taro.showModal({
+      title: '删除评论',
+      content: '删除后这条评论将不再展示，且无法恢复。确认删除吗？',
+      confirmText: '删除',
+      confirmColor: '#d87567',
+    })
+    if (!confirmation.confirm) return
+
+    setDeletingCommentId(item.id)
+    try {
+      await lifeServicesRepository.withdrawComment(item.id, item.version)
+      setComments((current) => current.filter((commentItem) => commentItem.id !== item.id))
+      setCommentTotal((current) => Math.max(0, current - 1))
+      if (item.status === 'approved') {
+        setPost((current) => current
+          ? { ...current, comment_count: Math.max(0, current.comment_count - 1) }
+          : current)
+      }
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: '评论已删除', icon: 'success' })
+    } catch (actionError) {
+      if (isApiError(actionError) && actionError.statusCode === 409 && postId) {
+        await load(postId)
+      }
+      Taro.showToast({
+        title: isApiError(actionError) ? actionError.message : '删除失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setDeletingCommentId(0)
+    }
   }
 
   const previewPostImage = (current: string) => {
@@ -318,6 +384,18 @@ export default function CommunityDetailPage() {
                     <Image src={communityDetailIcons.edit} mode='aspectFit' />
                   </View>
                 )}
+                {post.available_actions.includes('withdraw') && (
+                  <View
+                    id='community-detail-delete'
+                    className='community-detail-card__delete'
+                    hoverClass='community-detail-card__action--pressed'
+                    ariaRole='button'
+                    ariaLabel={deletingPost ? '正在删除这条动态' : '删除这条动态'}
+                    onClick={() => void deletePost()}
+                  >
+                    {deletingPost ? '删除中' : '删除动态'}
+                  </View>
+                )}
                 {post.viewer_relation !== 'owner'
                   && post.viewer_relation !== 'admin' && (
                   <View
@@ -389,6 +467,22 @@ export default function CommunityDetailPage() {
                             })}
                           >
                             举报
+                          </Text>
+                        </>
+                      )}
+                      {item.available_actions.includes('withdraw') && (
+                        <>
+                          <View />
+                          <Text
+                            id={`community-comment-delete-${item.id}`}
+                            className='community-comment__delete'
+                            ariaRole='button'
+                            ariaLabel={deletingCommentId === item.id
+                              ? '正在删除这条评论'
+                              : '删除这条评论'}
+                            onClick={() => void deleteComment(item)}
+                          >
+                            {deletingCommentId === item.id ? '删除中' : '删除'}
                           </Text>
                         </>
                       )}
