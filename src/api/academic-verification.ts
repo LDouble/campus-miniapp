@@ -66,7 +66,7 @@ export const uploadAcademicVerificationMaterial = async (
     skipAcademicVerificationGuard: true,
   })
   await uploadFileToObjectStorage(target, filePath)
-  console.info('[COS直传] 开始完成确认')
+  console.info('[对象存储直传] 开始完成确认')
   const material = await apiRequest<AcademicVerificationMaterial>({
     path: '/api/v1/academic-verification/materials/complete',
     method: 'POST',
@@ -77,6 +77,6 @@ export const uploadAcademicVerificationMaterial = async (
     } satisfies CompleteUploadRequest,
     skipAcademicVerificationGuard: true,
   })
-  console.info('[COS直传] 完成确认成功')
+  console.info('[对象存储直传] 完成确认成功')
   return material
 }

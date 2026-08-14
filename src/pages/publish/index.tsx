@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
 import { Picker, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import MediaImageEditor from '../../components/media-image-editor'
 import {
   KeyboardSafeInput,
   KeyboardSafeTextarea,
   useKeyboardInset,
 } from '../../components/keyboard-safe-input'
 import { isApiError } from '../../api/client'
+import { uploadMediaImage } from '../../api/media'
 import type {
   CarpoolTripView,
   CampusCircleSectionView,
@@ -22,6 +24,14 @@ import {
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import {
+  MAX_PUBLISH_IMAGES,
+  mediaImageValidationError,
+  moveMediaImage,
+  serverMediaImageDraft,
+} from '../../features/media/images'
+import type { MediaImageDraft } from '../../features/media/images'
+import { chooseMediaImages } from '../../features/media/selection'
 import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
 import {
   apiDateTimeCampusParts,
@@ -54,13 +64,14 @@ type PublisherForm = {
   totalSeats: string
   contactType: 'wechat' | 'phone' | 'qq'
   contact: string
-  imageUrls: string[]
+  images: MediaImageDraft[]
   communitySectionId: number
   communityTopicId: number
   version: number
 }
 
-const DRAFT_KEY = 'lifePublisher.drafts.v3'
+const DRAFT_KEY = 'lifePublisher.drafts.v4'
+const LEGACY_DRAFT_KEY = 'lifePublisher.drafts.v3'
 const CONTACT_LABELS = ['微信', '手机号', 'QQ']
 const CONTACT_VALUES: PublisherForm['contactType'][] = ['wechat', 'phone', 'qq']
 
@@ -109,7 +120,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   totalSeats: '2',
   contactType: 'wechat',
   contact: '',
-  imageUrls: [],
+  images: [],
   communitySectionId: 0,
   communityTopicId: 0,
   version: 0,
@@ -119,9 +130,28 @@ const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionV
   items.flatMap((item) => [item, ...flattenSections(item.children || [])])
 )
 
-const storedDrafts = () => (
-  Taro.getStorageSync<Partial<Record<string, PublisherForm>>>(DRAFT_KEY) || {}
-)
+type LegacyPublisherForm = Omit<PublisherForm, 'images'> & { imageUrls: string[] }
+
+const storedDrafts = () => {
+  const stored = Taro.getStorageSync<Partial<Record<string, PublisherForm>>>(DRAFT_KEY) || {}
+  if (Object.keys(stored).length > 0) return stored
+  const legacy = Taro.getStorageSync<Partial<Record<string, LegacyPublisherForm>>>(
+    LEGACY_DRAFT_KEY,
+  ) || {}
+  const migrated = Object.fromEntries(Object.entries(legacy).map(([key, value]) => {
+    if (!value) return [key, value]
+    const { imageUrls, ...form } = value
+    return [key, {
+      ...form,
+      images: (imageUrls || []).map((url) => serverMediaImageDraft({ url })),
+    } satisfies PublisherForm]
+  })) as Partial<Record<string, PublisherForm>>
+  if (Object.keys(migrated).length > 0) {
+    Taro.setStorageSync(DRAFT_KEY, migrated)
+    Taro.removeStorageSync(LEGACY_DRAFT_KEY)
+  }
+  return migrated
+}
 
 const draftKey = (section: PublishSection, intent: MarketplaceIntent = 'sell') => (
   section === 'market' ? `${section}:${intent}` : section
@@ -154,6 +184,17 @@ const toIso = campusDateTimeToISOString
 const yuanValue = (cents: number) => {
   const value = cents / 100
   return Number.isInteger(value) ? String(value) : value.toFixed(2)
+}
+
+const marketplaceImageDrafts = (item: MarketplaceListingView) => {
+  const media = item.images
+  if (media?.length) {
+    return media.map((image) => serverMediaImageDraft({
+      url: image.url,
+      mediaId: image.media_id || undefined,
+    }))
+  }
+  return item.image_urls.map((url) => serverMediaImageDraft({ url }))
 }
 
 const InputField = ({
@@ -234,7 +275,7 @@ export default function PublishPage() {
       form.origin,
       form.destination,
       form.contact,
-    ].some((value) => value.trim().length > 0) || form.imageUrls.length > 0
+    ].some((value) => value.trim().length > 0) || form.images.length > 0
   ), [form])
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
@@ -270,7 +311,7 @@ export default function PublishPage() {
     priceYuan: yuanValue(item.price_cents),
     contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
     contact: item.contact.includes('*') ? '' : item.contact,
-    imageUrls: [...item.image_urls],
+    images: marketplaceImageDrafts(item),
     version: item.version,
   })
 
@@ -304,7 +345,10 @@ export default function PublishPage() {
         setForm({
           ...emptyForm(),
           content: post.content || '',
-          imageUrls: post.images.map((image) => image.url),
+          images: post.images.map((image) => serverMediaImageDraft({
+            url: image.url,
+            mediaId: image.media_id || undefined,
+          })),
           communitySectionId: post.section_id,
           communityTopicId: post.topic?.id || 0,
           version: post.version,
@@ -421,6 +465,10 @@ export default function PublishPage() {
 
   const selectSection = (next: PublishSection) => {
     if (mode !== 'create' || next === section) return
+    if (form.images.some((image) => image.status === 'uploading')) {
+      Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
+      return
+    }
     requestWechatSubscriptionForPublishSection(next)
     saveDraft(section, form)
     setSection(next)
@@ -429,6 +477,10 @@ export default function PublishPage() {
 
   const selectMarketIntent = (intent: MarketplaceIntent) => {
     if (form.marketIntent === intent) return
+    if (form.images.some((image) => image.status === 'uploading')) {
+      Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
+      return
+    }
     if (mode === 'create') {
       saveDraft(section, form)
       setForm(storedDrafts()[draftKey('market', intent)] || emptyForm(intent))
@@ -466,14 +518,107 @@ export default function PublishPage() {
     }))
   }
 
+  const updateImage = (
+    key: string,
+    updater: (image: MediaImageDraft) => MediaImageDraft,
+  ) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      images: currentForm.images.map((image) => image.key === key ? updater(image) : image),
+    }))
+  }
+
+  const uploadImage = async (
+    image: MediaImageDraft,
+    purpose: 'community' | 'marketplace' = section === 'market' ? 'marketplace' : 'community',
+  ) => {
+    if (!image.localPath) {
+      updateImage(image.key, (currentImage) => ({
+        ...currentImage,
+        status: 'failed',
+        error: '本地临时图片已失效，请删除后重新选择',
+      }))
+      return
+    }
+    updateImage(image.key, (currentImage) => ({
+      ...currentImage,
+      status: 'uploading',
+      progress: 0,
+      error: '',
+    }))
+    try {
+      const uploaded = await uploadMediaImage({
+        purpose,
+        filePath: image.localPath,
+        mimeType: image.mimeType,
+        sizeBytes: image.sizeBytes,
+        onProgress: (progress) => updateImage(image.key, (currentImage) => ({
+          ...currentImage,
+          progress,
+        })),
+      })
+      updateImage(image.key, (currentImage) => ({
+        ...currentImage,
+        mediaId: uploaded.id,
+        width: uploaded.width || currentImage.width,
+        height: uploaded.height || currentImage.height,
+        status: 'uploaded',
+        progress: 100,
+        error: '',
+      }))
+    } catch (uploadError) {
+      updateImage(image.key, (currentImage) => ({
+        ...currentImage,
+        status: 'failed',
+        error: isApiError(uploadError)
+          ? uploadError.message
+          : uploadError instanceof Error ? uploadError.message : '图片上传失败',
+      }))
+    }
+  }
+
+  const chooseImages = async () => {
+    const replacingLegacy = form.images.some((image) => Boolean(image.legacyUrl))
+    if (replacingLegacy) {
+      const result = await Taro.showModal({
+        title: '替换原图片',
+        content: '历史图片与新媒体不能混用。继续后将移除全部原图片，再选择新的图片。',
+        confirmText: '替换',
+        confirmColor: '#d87567',
+      })
+      if (!result.confirm) return
+    }
+    const existingImages = replacingLegacy ? [] : form.images
+    const remaining = MAX_PUBLISH_IMAGES - existingImages.length
+    if (remaining <= 0) {
+      Taro.showToast({ title: '图片最多上传 9 张', icon: 'none' })
+      return
+    }
+    const purpose = section === 'market' ? 'marketplace' : 'community'
+    try {
+      const selected = await chooseMediaImages({ count: remaining })
+      if (!selected.length) return
+      setForm((currentForm) => ({
+        ...currentForm,
+        images: replacingLegacy ? selected : [...currentForm.images, ...selected],
+      }))
+      selected.forEach((image) => void uploadImage(image, purpose))
+    } catch (chooseError) {
+      Taro.showToast({
+        title: chooseError instanceof Error ? chooseError.message : '图片选择失败',
+        icon: 'none',
+      })
+    }
+  }
+
   const validationError = useMemo(() => {
     if (section === 'community') {
-      if (!form.content.trim() && form.imageUrls.length === 0) return '请填写动态内容或添加图片'
+      if (!form.content.trim() && form.images.length === 0) return '请填写动态内容或添加图片'
       if (!sectionsReady) return '社区板块正在加载'
       if (!communitySectionOptions.some((item) => item.id === form.communitySectionId)) {
         return '请选择服务端启用的社区板块'
       }
-      return ''
+      return mediaImageValidationError(form.images)
     }
     if (!form.content.trim() && section !== 'carpool') return '请补充详细说明'
     if (section === 'errands') {
@@ -482,6 +627,8 @@ export default function PublishPage() {
       if (!toIso(form.deadlineDate, form.deadlineTime)) return '请选择有效截止时间'
     }
     if (section === 'market') {
+      const imageError = mediaImageValidationError(form.images)
+      if (imageError) return imageError
       if (toCents(form.priceYuan) <= 0) {
         return form.marketIntent === 'wanted' ? '求购预算必须大于 0 元' : '商品价格必须大于 0 元'
       }
@@ -528,7 +675,8 @@ export default function PublishPage() {
         const input = {
           section_id: sectionId,
           content: form.content.trim() || undefined,
-          image_urls: form.imageUrls,
+          media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
+          image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
           topic_id: form.communityTopicId || undefined,
         }
         if (mode === 'create') {
@@ -574,7 +722,8 @@ export default function PublishPage() {
           source: form.marketSource,
           contact_type: form.contactType,
           contact: form.contact.trim(),
-          image_urls: form.imageUrls,
+          media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
+          image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
         }
         if (mode === 'create') {
           const created = await lifeServicesRepository.createMarketplaceListing(input)
@@ -628,6 +777,10 @@ export default function PublishPage() {
   }
 
   const saveAndLeave = () => {
+    if (form.images.some((image) => image.status === 'uploading')) {
+      Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
+      return
+    }
     saveDraft(section, form)
     Taro.showToast({ title: '草稿已保存', icon: 'success' })
     setTimeout(() => Taro.navigateBack(), 350)
@@ -738,6 +891,17 @@ export default function PublishPage() {
               </View>
             </View>
 
+            {(section === 'community' || section === 'market') && (
+              <MediaImageEditor
+                images={form.images}
+                maxCount={MAX_PUBLISH_IMAGES}
+                onAdd={() => void chooseImages()}
+                onMove={(index, direction) => update('images', moveMediaImage(form.images, index, direction))}
+                onRemove={(key) => update('images', form.images.filter((image) => image.key !== key))}
+                onRetry={(image) => void uploadImage(image)}
+              />
+            )}
+
             {section === 'errands' && (
               <View className='publisher-section'>
                 <SectionHeading title='任务信息' />
@@ -768,9 +932,9 @@ export default function PublishPage() {
                   onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                   onInput={(value) => update('priceYuan', value)}
                 />
-                {form.imageUrls.length > 0 && (
+                {form.images.length > 0 && (
                   <View className='publisher-note publisher-note--compact'>
-                    <Text>已保留 {form.imageUrls.length} 张原图片</Text>
+                    <Text>已添加 {form.images.length} 张图片，首图作为封面</Text>
                   </View>
                 )}
               </View>

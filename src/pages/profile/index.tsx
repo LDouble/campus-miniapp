@@ -3,9 +3,10 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
-import { getCurrentUser, updateCurrentUsername } from '../../api/account'
+import { getCurrentUser, updateCurrentAvatar, updateCurrentUsername } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { isApiError } from '../../api/client'
+import { uploadMediaImage } from '../../api/media'
 import type {
   AcademicVerificationStatus,
   CurrentUser,
@@ -21,6 +22,8 @@ import {
   validateUsername,
 } from '../../features/profile/username'
 import { isQualificationEdition } from '../../features/app-edition'
+import type { MediaImageDraft } from '../../features/media/images'
+import { chooseMediaImages } from '../../features/media/selection'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -87,6 +90,10 @@ const identityMenu = {
   route: '/pages/academic-verification/index',
 } as const
 
+const userAvatarUrl = (user?: CurrentUser['user'] | null) => (
+  user?.avatar_url || ''
+)
+
 export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -96,6 +103,8 @@ export default function ProfilePage() {
   const [editingUsername, setEditingUsername] = useState(false)
   const [usernameDraft, setUsernameDraft] = useState('')
   const [savingUsername, setSavingUsername] = useState(false)
+  const [avatarDraft, setAvatarDraft] = useState<MediaImageDraft | null>(null)
+  const [savingAvatar, setSavingAvatar] = useState(false)
   const loadCurrentUser = async (showError = false) => {
     setAccountLoaded(false)
     try {
@@ -184,6 +193,57 @@ export default function ProfilePage() {
       setSavingUsername(false)
     }
   }
+  const applyAvatar = async (draft: MediaImageDraft) => {
+    if (savingAvatar) return
+    setSavingAvatar(true)
+    setAvatarDraft({ ...draft, status: 'uploading', error: '' })
+    try {
+      const mediaId = draft.mediaId || (await uploadMediaImage({
+        purpose: 'avatar',
+        filePath: draft.localPath,
+        mimeType: draft.mimeType,
+        sizeBytes: draft.sizeBytes,
+        onProgress: (progress) => setAvatarDraft((currentDraft) => (
+          currentDraft?.key === draft.key
+            ? { ...currentDraft, status: 'uploading', progress }
+            : currentDraft
+        )),
+      })).id
+      setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
+        ? { ...currentDraft, mediaId, status: 'uploading', progress: 100 }
+        : currentDraft)
+      const updated = await updateCurrentAvatar(mediaId)
+      setCurrentUser((account) => account ? { ...account, user: updated } : account)
+      setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
+        ? { ...currentDraft, mediaId, status: 'uploaded', progress: 100, error: '' }
+        : currentDraft)
+      Taro.showToast({ title: '头像已更新', icon: 'success' })
+    } catch (error) {
+      setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
+        ? {
+          ...currentDraft,
+          status: 'failed',
+          error: isApiError(error) ? error.message : '头像更新失败，请重试',
+        }
+        : currentDraft)
+    } finally {
+      setSavingAvatar(false)
+    }
+  }
+  const chooseAvatar = async () => {
+    if (savingAvatar) return
+    try {
+      const [selected] = await chooseMediaImages({ count: 1, cropSquare: true })
+      if (!selected) return
+      setAvatarDraft(selected)
+      await applyAvatar(selected)
+    } catch (error) {
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '头像选择失败',
+        icon: 'none',
+      })
+    }
+  }
   const identity = academicStatus?.identity
   const latestRequest = academicStatus?.latest_request
   const identityVerified = identity?.status === 'verified'
@@ -207,6 +267,7 @@ export default function ProfilePage() {
   const accountDescription = identityVerified
     ? `${identity.real_name} · 学号 ${studentNumber}`
     : '中国海洋大学校园服务账号'
+  const avatarUrl = avatarDraft?.previewUrl || userAvatarUrl(currentUser?.user)
 
   return (
     <View className='profile-page'>
@@ -216,8 +277,18 @@ export default function ProfilePage() {
 
       <View className='profile-page__content'>
         <View className='profile-card motion-enter'>
-          <View className='profile-card__avatar'>
-            <Text>{displayName.slice(0, 1)}</Text>
+          <View
+            className='profile-card__avatar'
+            ariaRole='button'
+            ariaLabel={savingAvatar ? '头像正在上传' : '更换头像'}
+            onClick={() => void chooseAvatar()}
+          >
+            {avatarUrl
+              ? <Image src={avatarUrl} mode='aspectFill' />
+              : <Text>{displayName.slice(0, 1)}</Text>}
+            <Text className='profile-card__avatar-action'>
+              {savingAvatar ? `${avatarDraft?.progress || 0}%` : '更换'}
+            </Text>
             <View className='profile-card__status' />
           </View>
           <View className='profile-card__main'>
@@ -264,6 +335,13 @@ export default function ProfilePage() {
             </View>
           </View>
         </View>
+
+        {avatarDraft?.status === 'failed' && (
+          <View className='profile-avatar-error'>
+            <Text>{avatarDraft.error}</Text>
+            <Text onClick={() => void applyAvatar(avatarDraft)}>重试</Text>
+          </View>
+        )}
 
         {userLevel && (
           <View
