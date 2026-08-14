@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { apiRequest } from '../../api/client'
 import type { components } from '../../api/generated/schema'
+import { apiDateTimeTimestamp } from '../../utils/date-time'
 import { requestWechatSubscription } from '../wechat-subscription/request'
 import {
   DEFAULT_MIGRATION_GUIDE_COPY,
@@ -530,8 +531,8 @@ export const activeBanners = (
   .filter((banner) => {
     if (!banner.enabled) return false
     if (banner.campuses.length && !banner.campuses.includes(campusName)) return false
-    const startsAt = banner.starts_at ? new Date(banner.starts_at).getTime() : 0
-    const endsAt = banner.ends_at ? new Date(banner.ends_at).getTime() : Number.MAX_SAFE_INTEGER
+    const startsAt = banner.starts_at ? apiDateTimeTimestamp(banner.starts_at) : 0
+    const endsAt = banner.ends_at ? apiDateTimeTimestamp(banner.ends_at) : Number.MAX_SAFE_INTEGER
     return now.getTime() >= startsAt && now.getTime() < endsAt
   })
   .sort((left, right) => right.priority - left.priority)

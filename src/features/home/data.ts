@@ -2,6 +2,7 @@ import type { MarketplaceListingView, Notice } from '../../api/types'
 import type { AcademicScheduleCache } from '../../pages/academic/storage'
 import type { AcademicPeriod, Course } from '../../pages/academic/types'
 import { parseDate } from '../../pages/academic/utils'
+import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
 import {
   getCampusSections,
   MiniappRuntimeConfig,
@@ -261,7 +262,7 @@ export const noticeCategory = (notice: Notice) => {
 }
 
 export const relativeTime = (value: string, now = Date.now()) => {
-  const timestamp = new Date(value).getTime()
+  const timestamp = apiDateTimeTimestamp(value)
   if (Number.isNaN(timestamp)) return '时间待确认'
   const seconds = Math.max(0, Math.floor((now - timestamp) / 1000))
   if (seconds < 60) return '刚刚'
@@ -271,8 +272,9 @@ export const relativeTime = (value: string, now = Date.now()) => {
   if (hours < 24) return `${hours}小时前`
   const days = Math.floor(hours / 24)
   if (days < 7) return `${days}天前`
-  const date = new Date(timestamp)
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+  const parts = apiDateTimeCampusParts(value)
+  if (!parts) return '时间待确认'
+  return `${parts.month}月${parts.day}日`
 }
 
 export const noticeTime = (notice: Notice) => (

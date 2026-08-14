@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { ErrandView } from '../../../api/types'
+import { apiDateTimeTimestamp } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import {
   formatMoney,
@@ -15,7 +16,7 @@ const openDetail = (id: number) => {
 
 const isUrgent = (deadline?: string | null) => {
   if (!deadline) return false
-  const timestamp = new Date(deadline.replace(/-/g, '/')).getTime()
+  const timestamp = apiDateTimeTimestamp(deadline)
   const remaining = timestamp - Date.now()
   return remaining > 0 && remaining <= 6 * 60 * 60 * 1000
 }

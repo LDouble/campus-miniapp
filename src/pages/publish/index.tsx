@@ -23,6 +23,10 @@ import {
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
+import {
+  apiDateTimeCampusParts,
+  campusDateTimeToISOString,
+} from '../../utils/date-time'
 import './index.scss'
 
 type PublishSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -145,10 +149,7 @@ const toCents = (value: string) => {
   return Number.isFinite(amount) ? Math.round(amount * 100) : 0
 }
 
-const toIso = (date: string, time: string) => {
-  const result = new Date(`${date}T${time}:00`)
-  return Number.isNaN(result.getTime()) ? '' : result.toISOString()
-}
+const toIso = campusDateTimeToISOString
 
 const yuanValue = (cents: number) => {
   const value = cents / 100
@@ -240,18 +241,21 @@ export default function PublishPage() {
     setForm((draft) => ({ ...draft, [key]: value }))
   }
 
-  const mapErrand = (item: ErrandView): PublisherForm => ({
-    ...emptyForm(),
-    content: item.description,
-    pickupLocation: item.pickup_location,
-    dropoffLocation: item.dropoff_location,
-    rewardYuan: yuanValue(item.reward_cents),
-    deadlineDate: item.deadline.slice(0, 10),
-    deadlineTime: item.deadline.slice(11, 16),
-    contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
-    contact: item.contact.includes('*') ? '' : item.contact,
-    version: item.version,
-  })
+  const mapErrand = (item: ErrandView): PublisherForm => {
+    const deadline = apiDateTimeCampusParts(item.deadline)
+    return {
+      ...emptyForm(),
+      content: item.description,
+      pickupLocation: item.pickup_location,
+      dropoffLocation: item.dropoff_location,
+      rewardYuan: yuanValue(item.reward_cents),
+      deadlineDate: deadline ? deadline.date : item.deadline.slice(0, 10),
+      deadlineTime: deadline ? deadline.time : item.deadline.slice(11, 16),
+      contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
+      contact: item.contact.includes('*') ? '' : item.contact,
+      version: item.version,
+    }
+  }
 
   const mapMarketplace = (item: MarketplaceListingView): PublisherForm => ({
     ...emptyForm(item.intent),
@@ -270,18 +274,21 @@ export default function PublishPage() {
     version: item.version,
   })
 
-  const mapCarpool = (item: CarpoolTripView): PublisherForm => ({
-    ...emptyForm(),
-    content: item.description || '',
-    origin: item.origin,
-    destination: item.destination,
-    departureDate: item.departure_at.slice(0, 10),
-    departureTime: item.departure_at.slice(11, 16),
-    totalSeats: String(item.total_seats),
-    contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
-    contact: item.contact.includes('*') ? '' : item.contact,
-    version: item.version,
-  })
+  const mapCarpool = (item: CarpoolTripView): PublisherForm => {
+    const departure = apiDateTimeCampusParts(item.departure_at)
+    return {
+      ...emptyForm(),
+      content: item.description || '',
+      origin: item.origin,
+      destination: item.destination,
+      departureDate: departure ? departure.date : item.departure_at.slice(0, 10),
+      departureTime: departure ? departure.time : item.departure_at.slice(11, 16),
+      totalSeats: String(item.total_seats),
+      contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
+      contact: item.contact.includes('*') ? '' : item.contact,
+      version: item.version,
+    }
+  }
 
   const loadEdit = async (targetSection: PublishSection, id: number) => {
     setLoadingEdit(true)

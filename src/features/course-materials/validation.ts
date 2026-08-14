@@ -1,4 +1,5 @@
 import type { MaterialCourseView, MaterialUploadFileInput } from '../../api/types'
+import { apiDateTimeTimestamp } from '../../utils/date-time'
 import type {
   MaterialCourseSuggestion,
   MaterialUploadBatch,
@@ -74,7 +75,7 @@ export const isMaterialUploadSessionReusable = (
   !!batch.sessionId
   && batch.sessionVersion !== undefined
   && !!batch.sessionExpiresAt
-  && Date.parse(batch.sessionExpiresAt) > now + 5_000
+  && apiDateTimeTimestamp(batch.sessionExpiresAt) > now + 5_000
   && drafts.every((draft) => (
     !!draft.uploadTarget
     && !!draft.fileId

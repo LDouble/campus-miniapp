@@ -10,9 +10,15 @@ import {
   InstructorPassRate,
 } from '../../../features/academic-statistics/repository'
 import type { AcademicPassRateTrend } from '../../../api/types'
+import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './index.scss'
 
 type TrendMetric = 'pass_rate' | 'average_score'
+
+const formatPublishedDate = (value: string) => {
+  const parts = apiDateTimeCampusParts(value)
+  return parts ? `${parts.year}/${parts.month}/${parts.day}` : '时间待确认'
+}
 
 const confidenceText = {
   sample_limited: '样本较少',
@@ -398,7 +404,7 @@ export default function AcademicStatisticsPage() {
             <View className='statistics-privacy'>
               <Text>数据说明</Text>
               <Text>数据来自历史成绩的匿名聚合，仅供选课和复习参考，不代表教师教学质量。平均分仅统计百分制成绩。</Text>
-              <Text>统计更新于 {new Date(statistics.publishedAt).toLocaleDateString()}</Text>
+              <Text>统计更新于 {formatPublishedDate(statistics.publishedAt)}</Text>
             </View>
           </>
         )}

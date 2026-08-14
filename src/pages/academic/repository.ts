@@ -12,6 +12,7 @@ import type {
   AcademicGrade,
   AcademicPeriod as AcademicPeriodDTO,
 } from '../../api/types'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 import {
   AcademicPeriod,
   Course,
@@ -30,9 +31,9 @@ const stableColor = (id: string) => {
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  const parts = apiDateTimeCampusParts(value)
+  if (!parts) return value
+  return `${parts.year}/${pad(parts.month)}/${pad(parts.day)} ${pad(parts.hour)}:${pad(parts.minute)}`
 }
 
 const mapPeriod = (period: AcademicPeriodDTO): AcademicPeriod => ({

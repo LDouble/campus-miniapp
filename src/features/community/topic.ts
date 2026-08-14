@@ -1,4 +1,5 @@
 import type { CampusCircleTopicView } from '../../api/types'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 
 export const parsePositiveId = (value: unknown) => {
   const id = Number(value)
@@ -10,9 +11,9 @@ export const communityTopicPublisherUrl = (topicId: number) => (
 )
 
 const formatTopicDate = (value: string) => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+  const parts = apiDateTimeCampusParts(value)
+  if (!parts) return value
+  return `${parts.month}月${parts.day}日`
 }
 
 export const topicPeriodLabel = (

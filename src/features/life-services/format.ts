@@ -1,3 +1,5 @@
+import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
+
 export const formatMoney = (cents: number) => {
   const amount = cents / 100
   return Number.isInteger(amount) ? `¥${amount}` : `¥${amount.toFixed(2)}`
@@ -5,18 +7,18 @@ export const formatMoney = (cents: number) => {
 
 export const formatDateTime = (value?: string | null) => {
   if (!value) return '时间待确认'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hour = String(date.getHours()).padStart(2, '0')
-  const minute = String(date.getMinutes()).padStart(2, '0')
+  const parts = apiDateTimeCampusParts(value)
+  if (!parts) return value
+  const month = String(parts.month).padStart(2, '0')
+  const day = String(parts.day).padStart(2, '0')
+  const hour = String(parts.hour).padStart(2, '0')
+  const minute = String(parts.minute).padStart(2, '0')
   return `${month}月${day}日 ${hour}:${minute}`
 }
 
 export const relativeDeadline = (value?: string | null, now = Date.now()) => {
   if (!value) return '截止时间待确认'
-  const timestamp = new Date(value).getTime()
+  const timestamp = apiDateTimeTimestamp(value)
   if (Number.isNaN(timestamp)) return formatDateTime(value)
   const diff = timestamp - now
   if (diff <= 0) return '已截止'

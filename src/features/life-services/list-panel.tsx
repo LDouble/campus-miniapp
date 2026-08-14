@@ -7,6 +7,7 @@ import type {
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { lifeBusinessThemes } from './business-theme'
 import type { LifeHubSection } from './business-theme'
 import {
@@ -67,12 +68,8 @@ const mergeUniqueItems = (current: ServiceItem[], incoming: ServiceItem[]) => {
 
 const dateKey = (value?: string | null) => {
   if (!value) return 'unknown'
-  const parsed = new Date(value.replace(/-/g, '/'))
-  if (Number.isNaN(parsed.getTime())) return value.slice(0, 10)
-  const year = parsed.getFullYear()
-  const month = String(parsed.getMonth() + 1).padStart(2, '0')
-  const day = String(parsed.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  const parts = apiDateTimeCampusParts(value)
+  return parts ? parts.date : value.slice(0, 10)
 }
 
 const dateGroupLabel = (key: string) => {
