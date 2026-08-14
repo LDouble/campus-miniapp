@@ -207,9 +207,15 @@
   flex: none;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border-radius: 50%;
   background: #397c74;
   color: #fff;
+}
+
+.community-post__avatar-image {
+  width: 100%;
+  height: 100%;
 }
 
 .community-post__avatar--tone-1 {
@@ -259,6 +265,26 @@
   overflow: hidden;
   color: #929692;
   font-size: 20rpx;
+}
+
+.community-post__review-status {
+  margin-left: 10rpx;
+  padding: 1rpx 9rpx;
+  flex: none;
+  border-radius: 999rpx;
+  font-size: 18rpx;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.community-post__review-status--pending {
+  color: #9a6518;
+  background: #fff3d8;
+}
+
+.community-post__review-status--rejected {
+  color: #ad4e4e;
+  background: #fff0f0;
 }
 
 .community-post__meta-divider {
@@ -335,6 +361,18 @@
   min-width: 0;
   overflow: hidden;
   background: #f0ede7;
+}
+
+.community-post__image-reviewing {
+  align-items: center;
+  background: #f3f5f8;
+  color: #7a8493;
+  display: flex;
+  font-size: 24rpx;
+  height: 100%;
+  justify-content: center;
+  min-height: 220rpx;
+  width: 100%;
 }
 
 .community-post__image-frame image {

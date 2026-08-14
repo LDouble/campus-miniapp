@@ -16,6 +16,15 @@ const wasCancelled = (error: unknown) => String(
       : error || '',
 ).toLowerCase().includes('cancel')
 
+const mediaApiErrorMessage = (error: unknown, fallback: string) => {
+  const message = error && typeof error === 'object' && 'errMsg' in error
+    ? String(error.errMsg || '')
+    : error instanceof Error
+      ? error.message
+      : String(error || '')
+  return message || fallback
+}
+
 const fileSize = async (filePath: string) => {
   const info = await Taro.getFileInfo({ filePath })
   return 'size' in info ? Number(info.size) : 0
@@ -29,11 +38,24 @@ const prepareImage = async (input: {
 }): Promise<MediaImageDraft> => {
   let localPath = input.filePath
   if (input.cropSquare) {
-    const cropped = await Taro.cropImage({ src: localPath, cropScale: '1:1' })
-    localPath = cropped.tempFilePath
+    try {
+      const cropped = await Taro.cropImage({ src: localPath, cropScale: '1:1' })
+      localPath = cropped.tempFilePath
+    } catch (error) {
+      if (wasCancelled(error)) throw error
+      console.warn('[图片处理] 裁剪不可用，使用已选择的图片', {
+        message: mediaApiErrorMessage(error, '未知错误'),
+      })
+    }
   }
-  const compressed = await Taro.compressImage({ src: localPath, quality: 82 })
-  localPath = compressed.tempFilePath
+  try {
+    const compressed = await Taro.compressImage({ src: localPath, quality: 82 })
+    localPath = compressed.tempFilePath
+  } catch (error) {
+    console.warn('[图片处理] 二次压缩不可用，使用当前图片', {
+      message: mediaApiErrorMessage(error, '未知错误'),
+    })
+  }
   const [info, sizeBytes] = await Promise.all([
     Taro.getImageInfo({ src: localPath }),
     fileSize(localPath),
@@ -69,6 +91,6 @@ export const chooseMediaImages = async (input: {
     })))
   } catch (error) {
     if (wasCancelled(error)) return []
-    throw error
+    throw new Error(mediaApiErrorMessage(error, '图片选择失败，请重试'))
   }
 }

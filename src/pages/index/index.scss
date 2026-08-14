@@ -78,6 +78,7 @@ page { background: #faf7f2; }
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     flex: none;
     width: 72rpx;
     height: 72rpx;
@@ -129,6 +130,11 @@ page { background: #faf7f2; }
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+  }
+
+  &__avatar-image {
+    width: 100%;
+    height: 100%;
   }
 
   &__chevron {
@@ -1563,6 +1569,7 @@ page { background: #faf7f2; }
     flex: none;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     width: 52rpx;
     height: 52rpx;
     margin-right: 13rpx;
@@ -1588,6 +1595,11 @@ page { background: #faf7f2; }
     &--tone-3 {
       background: #ad8054;
     }
+  }
+
+  &__avatar-image {
+    width: 100%;
+    height: 100%;
   }
 
   &__author {

@@ -40,6 +40,7 @@ import {
   resolveCoursePreview,
 } from '../../features/home/data'
 import {
+  communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
   communityAuthorTone,
@@ -1114,7 +1115,9 @@ function Index() {
             {index === 0 ? (<>
               <View className='news-card__topline'>
                 <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <Text>{communityAuthorInitial(item)}</Text>
+                  {communityAuthorAvatarUrl(item)
+                    ? <Image className='news-card__avatar-image' src={communityAuthorAvatarUrl(item)} mode='aspectFill' lazyLoad />
+                    : <Text>{communityAuthorInitial(item)}</Text>}
                 </View>
                 <View className='news-card__author'>
                   <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
@@ -1158,7 +1161,9 @@ function Index() {
             </>) : (
               <View className='news-card__compact-main'>
                 <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <Text>{communityAuthorInitial(item)}</Text>
+                  {communityAuthorAvatarUrl(item)
+                    ? <Image className='news-card__avatar-image' src={communityAuthorAvatarUrl(item)} mode='aspectFill' lazyLoad />
+                    : <Text>{communityAuthorInitial(item)}</Text>}
                 </View>
                 <View className='news-card__compact-copy'>
                   <View className='news-card__compact-meta'>

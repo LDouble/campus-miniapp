@@ -3,7 +3,6 @@ export const MAX_MEDIA_IMAGE_BYTES = 5 * 1024 * 1024
 export const MEDIA_IMAGE_MIME_TYPES = [
   'image/jpeg',
   'image/png',
-  'image/webp',
 ] as const
 
 export type MediaImageMimeType = typeof MEDIA_IMAGE_MIME_TYPES[number]
@@ -35,7 +34,6 @@ export const mediaImageMimeFromType = (type?: string): MediaImageMimeType | null
   const normalized = String(type || '').toLowerCase()
   if (normalized === 'jpg' || normalized === 'jpeg') return 'image/jpeg'
   if (normalized === 'png') return 'image/png'
-  if (normalized === 'webp') return 'image/webp'
   return null
 }
 
@@ -44,7 +42,7 @@ export const validateMediaImage = (input: {
   sizeBytes: number
 }) => {
   if (!input.mimeType || !MEDIA_IMAGE_MIME_TYPES.includes(input.mimeType as MediaImageMimeType)) {
-    return '仅支持 JPEG、PNG 或 WebP 图片'
+    return '仅支持 JPEG 或 PNG 图片'
   }
   if (input.sizeBytes <= 0) return '图片文件无效，请重新选择'
   if (input.sizeBytes > MAX_MEDIA_IMAGE_BYTES) return '单张图片不能超过 5 MiB'

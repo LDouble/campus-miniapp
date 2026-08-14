@@ -11,9 +11,10 @@ import {
 } from '../src/features/media/images'
 
 assert.equal(mediaImageMimeFromType('JPG'), 'image/jpeg')
-assert.equal(mediaImageMimeFromType('webp'), 'image/webp')
+assert.equal(mediaImageMimeFromType('webp'), null)
 assert.equal(mediaImageMimeFromType('gif'), null)
 assert.match(validateMediaImage({ mimeType: 'image/gif', sizeBytes: 100 }), /仅支持/)
+assert.match(validateMediaImage({ mimeType: 'image/webp', sizeBytes: 100 }), /仅支持/)
 assert.match(validateMediaImage({
   mimeType: 'image/png',
   sizeBytes: MAX_MEDIA_IMAGE_BYTES + 1,

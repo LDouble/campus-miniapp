@@ -4232,6 +4232,8 @@ export interface components {
             username: string;
             /** Format: uri */
             avatar_url?: string | null;
+            /** @enum {string|null} */
+            avatar_moderation_status?: "pending" | "manual_review" | null;
             /** @enum {string} */
             status: "active" | "disabled" | "deleted";
             /** Format: date-time */
@@ -5644,6 +5646,7 @@ export interface components {
         /** @enum {string} */
         CampusCirclePostStatus: "pending_review" | "approved" | "rejected" | "withdrawn";
         CampusCirclePostView: {
+            author_avatar_url: string | null;
             author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
@@ -6140,6 +6143,7 @@ export interface components {
             request_id: string;
         };
         CommentView: {
+            author_avatar_url: string | null;
             author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
@@ -7209,7 +7213,7 @@ export interface components {
         };
         MediaUploadInput: {
             /** @enum {string} */
-            mime_type: "image/jpeg" | "image/png" | "image/webp";
+            mime_type: "image/jpeg" | "image/png";
             purpose: components["schemas"]["MediaPurpose"];
             /** Format: int64 */
             size: number;
@@ -7243,6 +7247,8 @@ export interface components {
             height: number;
             /** Format: uint64 */
             id: number;
+            /** @enum {string} */
+            moderation_status: "pending" | "checking" | "passed" | "manual_review" | "rejected" | "error" | "manual_approved" | "manual_rejected";
             purpose: components["schemas"]["MediaPurpose"];
             /** @enum {string} */
             status: "pending" | "promoting" | "ready" | "expired";

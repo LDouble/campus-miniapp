@@ -80,6 +80,7 @@ page {
     flex: none;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     border-radius: 50%;
     background: #655e8d;
     box-shadow:
@@ -92,6 +93,11 @@ page {
 
   &__avatar--tone-1 {
     background: #4f8580;
+  }
+
+  &__avatar-image {
+    width: 100%;
+    height: 100%;
   }
 
   &__avatar--tone-2 {
@@ -316,6 +322,7 @@ page {
     flex: none;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     border-radius: 50%;
     background: #655e8d;
     color: #fff;
@@ -325,6 +332,11 @@ page {
 
   &__avatar--tone-1 {
     background: #4f8580;
+  }
+
+  &__avatar-image {
+    width: 100%;
+    height: 100%;
   }
 
   &__avatar--tone-2 {
@@ -618,11 +630,17 @@ page {
   flex: none;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border-radius: 50%;
   background: #53857f;
   color: #fff;
   font-size: 17rpx;
   font-weight: 740;
+}
+
+.community-comment__reply-avatar-image {
+  width: 100%;
+  height: 100%;
 }
 
 .community-comment__reply-copy {

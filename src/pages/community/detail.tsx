@@ -17,6 +17,7 @@ import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
+  communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
   communityAuthorTone,
@@ -524,7 +525,9 @@ export default function CommunityDetailPage() {
                 <View
                   className={`community-detail-card__avatar community-detail-card__avatar--tone-${communityAuthorTone(post)}`}
                 >
-                  {communityAuthorInitial(post)}
+                  {communityAuthorAvatarUrl(post)
+                    ? <Image className='community-detail-card__avatar-image' src={communityAuthorAvatarUrl(post)} mode='aspectFill' lazyLoad />
+                    : communityAuthorInitial(post)}
                 </View>
                 <View className='community-detail-card__author'>
                   <View>
@@ -678,7 +681,9 @@ export default function CommunityDetailPage() {
                       <View
                         className={`community-detail-comments__avatar community-detail-comments__avatar--tone-${communityAuthorTone(item)}`}
                       >
-                        {communityAuthorInitial(item)}
+                        {communityAuthorAvatarUrl(item)
+                          ? <Image className='community-detail-comments__avatar-image' src={communityAuthorAvatarUrl(item)} mode='aspectFill' lazyLoad />
+                          : communityAuthorInitial(item)}
                       </View>
                       <View className='community-detail-comments__copy'>
                         <View className='community-detail-comments__author'>
@@ -789,7 +794,9 @@ export default function CommunityDetailPage() {
                               <View
                                 className={`community-comment__reply-avatar community-detail-comments__avatar--tone-${communityAuthorTone(reply)}`}
                               >
-                                {communityAuthorInitial(reply)}
+                                {communityAuthorAvatarUrl(reply)
+                                  ? <Image className='community-comment__reply-avatar-image' src={communityAuthorAvatarUrl(reply)} mode='aspectFill' lazyLoad />
+                                  : communityAuthorInitial(reply)}
                               </View>
                               <View className='community-comment__reply-copy'>
                                 <View className='community-comment__reply-author'>

@@ -217,7 +217,7 @@ export default function ProfilePage() {
       setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
         ? { ...currentDraft, mediaId, status: 'uploaded', progress: 100, error: '' }
         : currentDraft)
-      Taro.showToast({ title: '头像已更新', icon: 'success' })
+      Taro.showToast({ title: '头像审核中', icon: 'none' })
     } catch (error) {
       setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
         ? {
@@ -287,7 +287,11 @@ export default function ProfilePage() {
               ? <Image src={avatarUrl} mode='aspectFill' />
               : <Text>{displayName.slice(0, 1)}</Text>}
             <Text className='profile-card__avatar-action'>
-              {savingAvatar ? `${avatarDraft?.progress || 0}%` : '更换'}
+              {savingAvatar
+                ? `${avatarDraft?.progress || 0}%`
+                : avatarDraft?.status === 'uploaded' || currentUser?.user.avatar_moderation_status
+                  ? '审核中'
+                  : '更换'}
             </Text>
             <View className='profile-card__status' />
           </View>
