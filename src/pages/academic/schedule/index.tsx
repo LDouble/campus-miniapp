@@ -26,6 +26,13 @@ import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
+import {
+  CoursesByPeriod,
+  getCoursesForPeriod,
+  requireCoursesForPeriod,
+  sanitizeCoursesByPeriod,
+  setCoursesForPeriod,
+} from '../schedule-courses'
 import { academicStorage } from '../storage'
 import {
   AcademicPeriod,
@@ -171,11 +178,18 @@ export default function SchedulePage() {
   const [periods, setPeriods] = useState<AcademicPeriod[]>(
     initialScheduleCache ? initialScheduleCache.periods : [],
   )
-  const initialCourses = initialScheduleCache
-    ?.coursesByPeriod[preferences.schedulePeriodId]
-  const [officialCourses, setOfficialCourses] = useState<Course[]>(initialCourses || [])
+  const initialCoursesByPeriod = sanitizeCoursesByPeriod(
+    initialScheduleCache?.coursesByPeriod || {},
+  )
+  const hasInitialCourses = Object.prototype.hasOwnProperty.call(
+    initialCoursesByPeriod,
+    preferences.schedulePeriodId,
+  )
+  const [officialCoursesByPeriod, setOfficialCoursesByPeriod] = useState<CoursesByPeriod>(
+    initialCoursesByPeriod,
+  )
   const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
-  const [loading, setLoading] = useState(initialCourses === undefined)
+  const [loading, setLoading] = useState(!hasInitialCourses)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [usingCache, setUsingCache] = useState(false)
@@ -195,6 +209,10 @@ export default function SchedulePage() {
     getSectionStartTime(runtimeConfig, campusName, index + 1)
   ))
   const weekDates = getWeekDates(schedulePeriod, preferences.week)
+  const officialCourses = getCoursesForPeriod(
+    officialCoursesByPeriod,
+    preferences.schedulePeriodId,
+  )
   const allCourses = useMemo(() => [
     ...officialCourses,
     ...customCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
@@ -274,17 +292,21 @@ export default function SchedulePage() {
 
   useEffect(() => {
     if (!initialized) return
-    if (!periods.some((period) => period.id === preferences.schedulePeriodId)) return
+    const periodId = preferences.schedulePeriodId
+    if (!periods.some((period) => period.id === periodId)) return
     const cache = academicStorage.getScheduleCache(academicUserId)
     const hasCachedCourses = Boolean(
       cache
       && Object.prototype.hasOwnProperty.call(
         cache.coursesByPeriod,
-        preferences.schedulePeriodId,
+        periodId,
       )
     )
     if (hasCachedCourses && cache) {
-      setOfficialCourses(cache.coursesByPeriod[preferences.schedulePeriodId])
+      const cachedCourses = getCoursesForPeriod(cache.coursesByPeriod, periodId)
+      setOfficialCoursesByPeriod((current) => (
+        setCoursesForPeriod(current, periodId, cachedCourses)
+      ))
       setCacheUpdatedAt(cache.updatedAt || 0)
       setLoading(false)
     }
@@ -292,19 +314,23 @@ export default function SchedulePage() {
     let active = true
     if (!hasCachedCourses) setLoading(true)
     setLoadError(null)
-    academicRepository.getCourses(preferences.schedulePeriodId)
-      .then((courses) => {
+    academicRepository.getCourses(periodId)
+      .then((records) => {
+        const courses = requireCoursesForPeriod(records, periodId)
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         academicStorage.setScheduleCache(
           academicUserId,
           periods,
-          {
-            ...(currentCache ? currentCache.coursesByPeriod : {}),
-            [preferences.schedulePeriodId]: courses,
-          },
+          setCoursesForPeriod(
+            currentCache ? currentCache.coursesByPeriod : {},
+            periodId,
+            courses,
+          ),
         )
         if (active) {
-          setOfficialCourses(courses)
+          setOfficialCoursesByPeriod((current) => (
+            setCoursesForPeriod(current, periodId, courses)
+          ))
           setCacheUpdatedAt(Date.now())
           setUsingCache(false)
         }
@@ -350,20 +376,30 @@ export default function SchedulePage() {
       const records = await academicRepository.getPeriods()
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
       const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
-      const courses = schedulePeriodId
+      const courseRecords = schedulePeriodId
         ? await academicRepository.getCourses(schedulePeriodId)
+        : []
+      const courses = schedulePeriodId
+        ? requireCoursesForPeriod(courseRecords, schedulePeriodId)
         : []
       const currentCache = academicStorage.getScheduleCache(academicUserId)
       academicStorage.setScheduleCache(
         academicUserId,
         records,
-        {
-          ...(currentCache ? currentCache.coursesByPeriod : {}),
-          ...(schedulePeriodId ? { [schedulePeriodId]: courses } : {}),
-        },
+        schedulePeriodId
+          ? setCoursesForPeriod(
+            currentCache ? currentCache.coursesByPeriod : {},
+            schedulePeriodId,
+            courses,
+          )
+          : sanitizeCoursesByPeriod(currentCache?.coursesByPeriod || {}),
       )
       setPeriods(records)
-      setOfficialCourses(courses)
+      if (schedulePeriodId) {
+        setOfficialCoursesByPeriod((current) => (
+          setCoursesForPeriod(current, schedulePeriodId, courses)
+        ))
+      }
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
       setPreferences((current) => ({
