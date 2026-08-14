@@ -2,6 +2,15 @@ import { Course } from './types'
 
 export type CoursesByPeriod = Record<string, Course[]>
 
+export const getCourseScheduleKey = (course: Course) => [
+  course.periodId,
+  course.id,
+  course.weekday,
+  course.startSection,
+  course.endSection,
+  course.weeks.join(','),
+].join(':')
+
 export const filterCoursesForPeriod = (
   courses: Course[],
   periodId: string,
@@ -30,6 +39,11 @@ export const getCoursesForPeriod = (
   coursesByPeriod: CoursesByPeriod,
   periodId: string,
 ) => filterCoursesForPeriod(coursesByPeriod[periodId] || [], periodId)
+
+export const getCoursesForWeek = (
+  courses: Course[],
+  week: number,
+) => courses.filter((course) => course.weeks.includes(week))
 
 export const setCoursesForPeriod = (
   coursesByPeriod: CoursesByPeriod,

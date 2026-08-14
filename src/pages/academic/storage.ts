@@ -13,6 +13,7 @@ import { sanitizeCoursesByPeriod } from './schedule-courses'
 const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
 const PREFERENCES_KEY = 'academic.preferences.v1'
 const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
+const SCHEDULE_REFRESH_GUIDE_KEY = 'academic.scheduleRefreshGuide.v2'
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
 
@@ -50,6 +51,12 @@ const safeWrite = <T>(key: string, value: T) => {
     Taro.showToast({ title: '本地保存失败，请稍后重试', icon: 'none' })
   }
 }
+
+const getLocalDayKey = (date = new Date()) => [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, '0'),
+  String(date.getDate()).padStart(2, '0'),
+].join('-')
 
 const validPeriod = (value: unknown): value is AcademicPeriod => {
   if (!value || typeof value !== 'object') return false
@@ -215,6 +222,16 @@ const validScheduleCache = (
 }
 
 export const academicStorage = {
+  hasSeenScheduleRefreshGuideToday: () => (
+    safeRead<string>(SCHEDULE_REFRESH_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markScheduleRefreshGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(SCHEDULE_REFRESH_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
   getCustomCourses: () => safeRead<Course[]>(CUSTOM_COURSES_KEY, []),
   setCustomCourses: (courses: Course[]) => safeWrite(CUSTOM_COURSES_KEY, courses),
   getPreferences: (fallback: AcademicPreferences) => (

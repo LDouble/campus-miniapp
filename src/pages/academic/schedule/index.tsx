@@ -28,7 +28,9 @@ import { findCourseConflicts } from '../calculations'
 import { academicRepository } from '../repository'
 import {
   CoursesByPeriod,
+  getCourseScheduleKey,
   getCoursesForPeriod,
+  getCoursesForWeek,
   requireCoursesForPeriod,
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
@@ -42,6 +44,7 @@ import {
 } from '../types'
 import {
   courseColors,
+  formatCourseWeeks,
   formatPeriodStartDate,
   formatMonthDay,
   getCurrentTeachingWeek,
@@ -126,7 +129,7 @@ function CourseDetailCard({
         <View className='course-conflict-card__details'>
           <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
-          <View><Text>周次</Text><Text>第 {course.weeks.join('、')} 周</Text></View>
+          <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
           <View><Text>来源</Text><Text>{course.source === 'custom' ? '自定义课程' : '教务课程'}</Text></View>
         </View>
         {course.source === 'official' && course.courseCode && (
@@ -193,6 +196,9 @@ export default function SchedulePage() {
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [usingCache, setUsingCache] = useState(false)
+  const [showRefreshGuide, setShowRefreshGuide] = useState(() => (
+    !academicStorage.hasSeenScheduleRefreshGuideToday()
+  ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache?.updatedAt || 0,
   )
@@ -217,16 +223,18 @@ export default function SchedulePage() {
     ...officialCourses,
     ...customCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
   ], [customCourses, officialCourses, preferences.schedulePeriodId])
+  const weekCourses = useMemo(
+    () => getCoursesForWeek(allCourses, preferences.week),
+    [allCourses, preferences.week],
+  )
   const dayCourses = useMemo(
-    () => allCourses
+    () => weekCourses
       .filter((course) => course.weekday === preferences.selectedWeekday)
       .sort((left, right) => (
         left.startSection - right.startSection
-        || Number(isCourseInWeek(right, preferences.week))
-          - Number(isCourseInWeek(left, preferences.week))
         || left.id.localeCompare(right.id)
       )),
-    [allCourses, preferences.selectedWeekday, preferences.week],
+    [preferences.selectedWeekday, weekCourses],
   )
 
   useEffect(() => {
@@ -356,6 +364,15 @@ export default function SchedulePage() {
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
   useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
 
+  useEffect(() => {
+    if (!showRefreshGuide || loading || sheet) return undefined
+    const timer = setTimeout(() => {
+      setShowRefreshGuide(false)
+      academicStorage.markScheduleRefreshGuideSeenToday()
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [loading, sheet, showRefreshGuide])
+
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
   }
@@ -426,6 +443,8 @@ export default function SchedulePage() {
   }
 
   Taro.usePullDownRefresh(() => {
+    setShowRefreshGuide(false)
+    academicStorage.markScheduleRefreshGuideSeenToday()
     refreshSchedule().finally(() => Taro.stopPullDownRefresh())
   })
 
@@ -666,18 +685,15 @@ export default function SchedulePage() {
         {Array.from({ length: 84 }, (_, index) => {
           const weekday = (index % 7) + 1
           const section = Math.floor(index / 7) + 1
-          const slotCourses = allCourses.filter((course) => (
+          const slotCourses = weekCourses.filter((course) => (
             course.weekday === weekday
             && course.startSection <= section
             && course.endSection >= section
           ))
-          const currentSlotCourses = slotCourses.filter((course) => (
-            isCourseInWeek(course, preferences.week)
-          ))
           return (
             <View
               key={`cell-${index}`}
-              className={`timetable__cell ${currentSlotCourses.length > 1 ? 'timetable__cell--conflict' : ''}`}
+              className={`timetable__cell ${slotCourses.length > 1 ? 'timetable__cell--conflict' : ''}`}
               style={{
                 gridColumn: String(weekday + 1),
                 gridRow: String(section),
@@ -689,71 +705,83 @@ export default function SchedulePage() {
         {allCourses.map((course) => {
           const overlappingCourses = allCourses
             .filter((item) => isCourseOverlap(item, course))
-            .sort((left, right) => (
-              Number(isCourseInWeek(right, preferences.week))
-                - Number(isCourseInWeek(left, preferences.week))
-              || left.id.localeCompare(right.id)
-            ))
-          const overlapIndex = overlappingCourses.findIndex((item) => item.id === course.id)
+            .sort((left, right) => {
+              const leftCurrent = isCourseInWeek(left, preferences.week)
+              const rightCurrent = isCourseInWeek(right, preferences.week)
+              if (leftCurrent !== rightCurrent) return Number(rightCurrent) - Number(leftCurrent)
+              const leftNextWeek = Math.min(
+                ...left.weeks.filter((week) => week >= preferences.week),
+                Number.POSITIVE_INFINITY,
+              )
+              const rightNextWeek = Math.min(
+                ...right.weeks.filter((week) => week >= preferences.week),
+                Number.POSITIVE_INFINITY,
+              )
+              return leftNextWeek - rightNextWeek || left.id.localeCompare(right.id)
+            })
+          const primaryCourse = overlappingCourses[0]
+          if (course !== primaryCourse) return null
           const overlapCount = overlappingCourses.length
-          const currentOverlapCount = overlappingCourses.filter((item) => (
+          const currentCourses = overlappingCourses.filter((item) => (
             isCourseInWeek(item, preferences.week)
-          )).length
-          const inactiveOverlapCount = overlapCount - currentOverlapCount
+          ))
+          const currentCourseCount = currentCourses.length
           const isCurrentWeek = isCourseInWeek(course, preferences.week)
-          const hasConflict = currentOverlapCount > 1
-          if (overlapCount > 1 && overlapIndex !== 0) return null
+          const hasConflict = currentCourseCount > 1
+          const relatedCount = overlapCount - 1
+          const nextCourseWeek = Math.min(
+            ...course.weeks.filter((week) => week > preferences.week),
+            Number.POSITIVE_INFINITY,
+          )
           return (
             <View
-              key={course.id}
+              key={getCourseScheduleKey(course)}
               className={[
                 'timetable-course',
                 `timetable-course--${course.color}`,
                 isCurrentWeek ? '' : 'timetable-course--inactive',
                 hasConflict ? 'timetable-course--conflict' : '',
-                overlapCount > 1 ? 'timetable-course--stacked' : '',
+                hasConflict ? 'timetable-course--stacked' : '',
+                !hasConflict && relatedCount > 0 ? 'timetable-course--related' : '',
               ].filter(Boolean).join(' ')}
               style={{
                 gridColumn: String(course.weekday + 1),
                 gridRow: `${course.startSection} / span ${course.endSection - course.startSection + 1}`,
               }}
+              ariaRole='button'
+              ariaLabel={hasConflict
+                ? `时间冲突，共 ${currentCourseCount} 门课程，点击查看详情`
+                : relatedCount > 0
+                  ? `${course.name}，同一时段另有 ${relatedCount} 门其他周次课程`
+                  : `${course.name}，第 ${course.startSection} 到 ${course.endSection} 节`}
               hoverClass='timetable-course--pressed'
               onClick={() => openCourse(course)}
             >
-              {overlapCount > 1 ? (
+              {hasConflict ? (
                 <>
-                  <View className={[
-                    'timetable-course__conflict-head',
-                    hasConflict ? '' : 'timetable-course__conflict-head--quiet',
-                  ].filter(Boolean).join(' ')}
-                  >
-                    <Text>{hasConflict ? '冲突' : '非本周'}</Text>
-                    <Text className={[
-                      'timetable-course__conflict-count',
-                      hasConflict ? '' : 'timetable-course__conflict-count--quiet',
-                    ].filter(Boolean).join(' ')}
-                    >
-                      {hasConflict
-                        ? currentOverlapCount
-                        : isCurrentWeek ? inactiveOverlapCount : overlapCount} 门
-                    </Text>
+                  <View className='timetable-course__conflict-head'>
+                    <Text>冲突</Text>
+                    <Text className='timetable-course__conflict-count'>{currentCourseCount} 门</Text>
                   </View>
                   <Text className='timetable-course__name'>{course.name} 等</Text>
-                  <Text className='timetable-course__location'>
-                    {hasConflict
-                      ? inactiveOverlapCount
-                        ? `含 ${inactiveOverlapCount} 门非本周课程`
-                        : '点击查看冲突课程'
-                      : '点击查看全部课程'}
-                  </Text>
+                  <Text className='timetable-course__location'>点按查看详情</Text>
                 </>
               ) : (
                 <>
-                  {!isCurrentWeek && (
-                    <Text className='timetable-course__status'>非本周</Text>
-                  )}
+                  <View className='timetable-course__preview-head'>
+                    {!isCurrentWeek && Number.isFinite(nextCourseWeek) ? (
+                      <Text className='timetable-course__status'>
+                        第{nextCourseWeek}周
+                        {relatedCount > 0 ? ` +${relatedCount}` : ''}
+                      </Text>
+                    ) : isCurrentWeek && relatedCount > 0 ? (
+                      <Text className='timetable-course__related-count'>+{relatedCount}</Text>
+                    ) : null}
+                  </View>
                   <Text className='timetable-course__name'>{course.name}</Text>
-                  <Text className='timetable-course__location'>{course.location}</Text>
+                  <Text className='timetable-course__location'>
+                    {isCurrentWeek ? course.location : formatCourseWeeks(course.weeks)}
+                  </Text>
                 </>
               )}
             </View>
@@ -783,11 +811,10 @@ export default function SchedulePage() {
       {dayCourses.length ? (
         <View className='day-course-list'>
           {dayCourses.map((course) => {
-            const isCurrentWeek = isCourseInWeek(course, preferences.week)
             return (
               <View
-                key={course.id}
-                className={`day-course ${isCurrentWeek ? '' : 'day-course--inactive'}`}
+                key={getCourseScheduleKey(course)}
+                className='day-course'
                 hoverClass='day-course--pressed'
                 onClick={() => openCourse(course)}
               >
@@ -805,7 +832,6 @@ export default function SchedulePage() {
                 <View className='day-course__main'>
                   <View className='day-course__title-line'>
                     <Text className='day-course__name'>{course.name}</Text>
-                    {!isCurrentWeek && <Text className='day-course__status'>非本周</Text>}
                   </View>
                   <Text className='day-course__meta'>
                     {[course.location, course.teacher].filter(Boolean).join(' · ') || '自定义课程'}
@@ -829,42 +855,89 @@ export default function SchedulePage() {
   const renderSheet = () => {
     if (!sheet) return null
     if (sheet === 'course-detail' && activeCourse) {
-      const isConflict = activeSlotCourses.length > 1
+      const currentSlotCourses = activeSlotCourses.filter((course) => (
+        isCourseInWeek(course, preferences.week)
+      ))
+      const isConflict = currentSlotCourses.length > 1
+      const hasRelatedCourses = activeSlotCourses.length > 1
       return (
         <View className='course-float-layer' onClick={closeCourseFloat}>
-          <View className='course-float-card course-float-card--bare' onClick={requestWechatSubscriptionAndStopPropagation}>
-            {isConflict ? (
-              <View className='course-conflict-list'>
-                {activeSlotCourses.map((course) => (
-                  <CourseDetailCard
-                    key={course.id}
-                    course={course}
-                    currentWeek={preferences.week}
-                    onDelete={() => deleteCourse(course)}
-                    onEdit={() => openCourseForm(course)}
-                    onWanted={() => openCourseTrade(course, 'wanted')}
-                    onSell={() => openCourseTrade(course, 'sell')}
-                    onFindMaterials={() => openCourseMaterialPage(course)}
-                    onShareMaterials={() => openCourseMaterialPage(course, 'upload')}
-                  />
-                ))}
+          <View
+            className='course-float-card course-float-card--detail'
+            onClick={requestWechatSubscriptionAndStopPropagation}
+          >
+            <View className='course-float-card__handle' />
+            <View className='course-float-card__toolbar'>
+              <View>
+                <Text className='course-float-card__title'>
+                  {isConflict
+                    ? `${currentSlotCourses.length} 门课程时间冲突`
+                    : hasRelatedCourses
+                      ? `同一时段还有 ${activeSlotCourses.length - 1} 门课程`
+                      : '课程详情'}
+                </Text>
+                <Text className='course-float-card__copy'>
+                  {isConflict
+                    ? '切换课程查看冲突详情与学习服务'
+                    : hasRelatedCourses
+                      ? '课程周次不同，可切换查看具体安排'
+                      : '查看课程安排与相关服务'}
+                </Text>
               </View>
-            ) : (
-              <>
-                <View className='course-conflict-list'>
-                  <CourseDetailCard
-                    course={activeCourse}
-                    currentWeek={preferences.week}
-                    onDelete={() => deleteCourse()}
-                    onEdit={() => openCourseForm(activeCourse)}
-                    onWanted={() => openCourseTrade(activeCourse, 'wanted')}
-                    onSell={() => openCourseTrade(activeCourse, 'sell')}
-                    onFindMaterials={() => openCourseMaterialPage(activeCourse)}
-                    onShareMaterials={() => openCourseMaterialPage(activeCourse, 'upload')}
-                  />
+              <View
+                className='course-float-card__close'
+                ariaRole='button'
+                ariaLabel='关闭课程详情'
+                onClick={(event) => {
+                  event.stopPropagation()
+                  closeCourseFloat()
+                }}
+              >
+                ×
+              </View>
+            </View>
+            {hasRelatedCourses && (
+              <ScrollView className='course-switcher' scrollX showScrollbar={false}>
+                <View className='course-switcher__inner'>
+                  {activeSlotCourses.map((course) => {
+                    const active = course === activeCourse
+                    return (
+                      <View
+                        key={getCourseScheduleKey(course)}
+                        className={`course-switcher__item ${active ? 'course-switcher__item--active' : ''}`}
+                        ariaRole='button'
+                        ariaLabel={`查看${course.name}课程详情`}
+                        onClick={() => setActiveCourse(course)}
+                      >
+                        <Text>{course.name}</Text>
+                        <Text>
+                          {isCourseInWeek(course, preferences.week)
+                            ? '本周'
+                            : formatCourseWeeks(course.weeks)}
+                          {' · '}第 {course.startSection}-{course.endSection} 节
+                          {course.location ? ` · ${course.location}` : ''}
+                        </Text>
+                      </View>
+                    )
+                  })}
                 </View>
-              </>
+              </ScrollView>
             )}
+            <View className='course-float-card__scroll'>
+              <View className='course-conflict-list'>
+                <CourseDetailCard
+                  key={getCourseScheduleKey(activeCourse)}
+                  course={activeCourse}
+                  currentWeek={preferences.week}
+                  onDelete={() => deleteCourse(activeCourse)}
+                  onEdit={() => openCourseForm(activeCourse)}
+                  onWanted={() => openCourseTrade(activeCourse, 'wanted')}
+                  onSell={() => openCourseTrade(activeCourse, 'sell')}
+                  onFindMaterials={() => openCourseMaterialPage(activeCourse)}
+                  onShareMaterials={() => openCourseMaterialPage(activeCourse, 'upload')}
+                />
+              </View>
+            </View>
           </View>
         </View>
       )
@@ -1030,7 +1103,22 @@ export default function SchedulePage() {
     <View className={`academic-page academic-page--schedule academic-page--schedule-${preferences.scheduleView} ${sheet ? 'academic-page--locked' : ''}`}>
       <View className='academic-page__glow academic-page__glow--one' />
       <AcademicHeader title='课程表' toolbar={toolbar} variant='schedule' />
-      <View className={`academic-content academic-content--schedule academic-content--schedule-${preferences.scheduleView}`}>
+      <View
+        key={preferences.schedulePeriodId}
+        className={`academic-content academic-content--schedule academic-content--schedule-${preferences.scheduleView}`}
+      >
+        {showRefreshGuide && !loading && !sheet && (
+          <View
+            className='schedule-refresh-guide'
+            ariaRole='status'
+            ariaLabel='下拉可以更新课表'
+          >
+            <View className='schedule-refresh-guide__gesture'>
+              <View className='schedule-refresh-guide__arrow' />
+            </View>
+            <Text>下拉更新课表</Text>
+          </View>
+        )}
         {loading ? (
           <View className='academic-state'>
             <View className='academic-state__loader' />
