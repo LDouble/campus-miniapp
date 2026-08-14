@@ -22,6 +22,12 @@ import {
   communityAuthorName,
   communityAuthorTone,
 } from '../../features/community/author'
+import {
+  buildCampusCircleCommentInput,
+  commentReplyTargetName,
+  commentRootId,
+  mergeLocalThreadReply,
+} from '../../features/community/comments'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import './detail.scss'
 
@@ -34,6 +40,14 @@ const communityDetailIcons = {
   share: require('../../assets/community/share.svg'),
 }
 
+type CommentThreadState = {
+  descendants: CommentView[]
+  error: string
+  expanded: boolean
+  loaded: boolean
+  loading: boolean
+}
+
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
@@ -41,8 +55,11 @@ export default function CommunityDetailPage() {
   const [commentPage, setCommentPage] = useState(1)
   const [commentTotal, setCommentTotal] = useState(0)
   const [loadingMoreComments, setLoadingMoreComments] = useState(false)
+  const [commentThreads, setCommentThreads] = useState<Record<number, CommentThreadState>>({})
   const [comment, setComment] = useState('')
+  const [replyTarget, setReplyTarget] = useState<CommentView | null>(null)
   const [commentComposerOpen, setCommentComposerOpen] = useState(false)
+  const [commentInputFocused, setCommentInputFocused] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -51,6 +68,12 @@ export default function CommunityDetailPage() {
   const load = async (id: number) => {
     setLoading(true)
     setError('')
+    setCommentThreads({})
+    setReplyTarget(null)
+    setComment('')
+    setCommentComposerOpen(false)
+    setCommentInputFocused(false)
+    setKeyboardHeight(0)
     try {
       const postResult = await lifeServicesRepository.getCampusCirclePost(id)
       setPost(postResult)
@@ -59,8 +82,8 @@ export default function CommunityDetailPage() {
           'campus_circle_post',
           id,
           {
-          page: 1,
-          pageSize: 20,
+            page: 1,
+            pageSize: 20,
           },
         )
         setComments(commentResult.items)
@@ -120,8 +143,95 @@ export default function CommunityDetailPage() {
 
   const closeCommentComposer = () => {
     setCommentComposerOpen(false)
+    setCommentInputFocused(false)
     setKeyboardHeight(0)
     void Taro.hideKeyboard()
+  }
+
+  const cancelReply = () => {
+    setReplyTarget(null)
+    setComment('')
+    closeCommentComposer()
+  }
+
+  const loadCommentThread = async (rootId: number) => {
+    setCommentThreads((current) => ({
+      ...current,
+      [rootId]: {
+        descendants: current[rootId]?.descendants || [],
+        error: '',
+        expanded: true,
+        loaded: current[rootId]?.loaded || false,
+        loading: true,
+      },
+    }))
+    try {
+      const result = await lifeServicesRepository.getCommentThread(rootId)
+      setComments((current) => current.map((item) => (
+        item.id === result.root.id
+          ? {
+            ...result.root,
+            reply_count: Math.max(item.reply_count, result.root.reply_count),
+          }
+          : item
+      )))
+      setCommentThreads((current) => {
+        const descendants = new Map(
+          (current[result.root.id]?.descendants || []).map((item) => [item.id, item]),
+        )
+        result.descendants.forEach((item) => descendants.set(item.id, item))
+        return {
+          ...current,
+          [result.root.id]: {
+            descendants: [...descendants.values()].sort((left, right) => left.id - right.id),
+            error: '',
+            expanded: true,
+            loaded: true,
+            loading: false,
+          },
+        }
+      })
+    } catch (loadError) {
+      setCommentThreads((current) => ({
+        ...current,
+        [rootId]: {
+          descendants: current[rootId]?.descendants || [],
+          error: isApiError(loadError) ? loadError.message : '回复加载失败，请稍后重试',
+          expanded: true,
+          loaded: current[rootId]?.loaded || false,
+          loading: false,
+        },
+      }))
+    }
+  }
+
+  const toggleCommentThread = (root: CommentView) => {
+    const current = commentThreads[root.id]
+    if (!current?.loaded) {
+      if (!current?.loading) void loadCommentThread(root.id)
+      return
+    }
+    setCommentThreads((threads) => ({
+      ...threads,
+      [root.id]: { ...threads[root.id], expanded: !threads[root.id].expanded },
+    }))
+  }
+
+  const startReply = (target: CommentView) => {
+    const rootId = commentRootId(target)
+    setReplyTarget(target)
+    setComment('')
+    setCommentComposerOpen(true)
+    setCommentInputFocused(true)
+    setCommentThreads((current) => current[rootId]
+      ? {
+        ...current,
+        [rootId]: { ...current[rootId], expanded: true },
+      }
+      : current)
+    if (!commentThreads[rootId]?.loaded && !commentThreads[rootId]?.loading) {
+      void loadCommentThread(rootId)
+    }
   }
 
   const submitComment = async () => {
@@ -130,27 +240,51 @@ export default function CommunityDetailPage() {
       if (!value) Taro.showToast({ title: '请输入评论内容', icon: 'none' })
       return
     }
+    const activeReplyTarget = replyTarget
     setSubmitting(true)
     try {
-      const created = await lifeServicesRepository.createComment({
-        target_type: 'campus_circle_post',
-        target_id: post.id,
-        content: value,
-      })
-      setComments((current) => current.some((item) => item.id === created.id)
-        ? current
-        : [...current, created])
-      setCommentTotal((current) => current + 1)
-      if (created.status === 'approved') {
+      const created = await lifeServicesRepository.createComment(
+        buildCampusCircleCommentInput(post.id, value, activeReplyTarget),
+      )
+      if (activeReplyTarget) {
+        const rootId = commentRootId(activeReplyTarget)
+        setComments((current) => current.map((item) => (
+          item.id === rootId
+            ? { ...item, reply_count: item.reply_count + 1 }
+            : item
+        )))
+        setCommentThreads((current) => ({
+          ...current,
+          [rootId]: {
+            descendants: mergeLocalThreadReply(
+              current[rootId]?.descendants || [],
+              created,
+            ),
+            error: '',
+            expanded: true,
+            loaded: current[rootId]?.loaded || false,
+            loading: current[rootId]?.loading || false,
+          },
+        }))
+      } else {
+        setComments((current) => current.some((item) => item.id === created.id)
+          ? current
+          : [...current, created])
+        setCommentTotal((current) => current + 1)
+      }
+      if (created.status === 'approved' && !activeReplyTarget) {
         setPost((current) => current
           ? { ...current, comment_count: current.comment_count + 1 }
           : current)
       }
       setComment('')
+      setReplyTarget(null)
       markLifeHubSectionDirty('community')
       closeCommentComposer()
       Taro.showToast({
-        title: created.status === 'approved' ? '评论已发布' : '评论已提交审核',
+        title: created.status === 'approved'
+          ? activeReplyTarget ? '回复已发布' : '评论已发布'
+          : activeReplyTarget ? '回复已提交审核' : '评论已提交审核',
         icon: 'success',
       })
     } catch (actionError) {
@@ -351,51 +485,167 @@ export default function CommunityDetailPage() {
                 </View>
                 <Text>{post.comment_count} 条已发布</Text>
               </View>
-              {comments.map((item) => (
-                <View
-                  id={`community-comment-${item.id}`}
-                  key={item.id}
-                  className={`community-detail-comments__item community-comment community-comment--${item.status}`}
-                >
-                  <View
-                    className={`community-detail-comments__avatar community-detail-comments__avatar--tone-${communityAuthorTone(item)}`}
-                  >
-                    {communityAuthorInitial(item)}
-                  </View>
-                  <View className='community-detail-comments__copy'>
-                    <View className='community-detail-comments__author'>
-                      <Text>{communityAuthorName(item)}</Text>
-                      <CommunityLevelBadge level={item.author_level} compact />
-                    </View>
-                    <Text className='community-comment__content'>{item.content}</Text>
-                    <View className='community-detail-comments__meta'>
-                      <Text>{formatDateTime(item.created_at)}</Text>
-                      {item.status !== 'approved' && (
-                        <>
-                          <View />
-                          <Text>{formatStatus(item.status)}</Text>
-                        </>
-                      )}
-                      {item.viewer_relation !== 'author'
-                        && item.viewer_relation !== 'admin' && (
-                        <>
-                          <View />
-                          <Text
-                            className='community-comment__report'
-                            onClick={() => void openContentReport({
-                              resourceType: 'comment',
-                              resourceId: item.id,
-                              resourceVersion: item.version,
-                            })}
+              {comments.map((item) => {
+                const threadState = commentThreads[item.id]
+                const descendants = threadState?.descendants || []
+                const threadMembers = [item, ...descendants]
+                return (
+                  <View key={item.id} className='community-comment-thread'>
+                    <View
+                      id={`community-comment-${item.id}`}
+                      className={`community-detail-comments__item community-comment community-comment--${item.status}`}
+                    >
+                      <View
+                        className={`community-detail-comments__avatar community-detail-comments__avatar--tone-${communityAuthorTone(item)}`}
+                      >
+                        {communityAuthorInitial(item)}
+                      </View>
+                      <View className='community-detail-comments__copy'>
+                        <View className='community-detail-comments__author'>
+                          <Text>{communityAuthorName(item)}</Text>
+                          <CommunityLevelBadge level={item.author_level} compact />
+                        </View>
+                        <Text className='community-comment__content'>{item.content}</Text>
+                        <View className='community-detail-comments__meta'>
+                          <Text>{formatDateTime(item.created_at)}</Text>
+                          {item.status !== 'approved' && (
+                            <>
+                              <View />
+                              <Text className='community-comment__status'>
+                                {formatStatus(item.status)}
+                              </Text>
+                            </>
+                          )}
+                          {item.available_actions.includes('reply') && (
+                            <>
+                              <View />
+                              <Text
+                                id={`community-comment-reply-${item.id}`}
+                                className='community-comment__reply-action'
+                                onClick={() => startReply(item)}
+                              >
+                                回复
+                              </Text>
+                            </>
+                          )}
+                          {item.viewer_relation !== 'author'
+                            && item.viewer_relation !== 'admin' && (
+                            <>
+                              <View />
+                              <Text
+                                className='community-comment__report'
+                                onClick={() => void openContentReport({
+                                  resourceType: 'comment',
+                                  resourceId: item.id,
+                                  resourceVersion: item.version,
+                                })}
+                              >
+                                举报
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                        {(item.reply_count > 0 || threadState) && (
+                          <View
+                            id={`community-comment-thread-${item.id}`}
+                            className='community-comment__thread-action'
+                            ariaRole='button'
+                            ariaLabel={threadState?.expanded ? '收起回复' : '查看回复'}
+                            onClick={() => toggleCommentThread(item)}
                           >
-                            举报
-                          </Text>
-                        </>
-                      )}
+                            {threadState?.loading
+                              ? '加载回复中…'
+                              : threadState?.expanded
+                                ? '收起回复'
+                                : `查看 ${item.reply_count} 条回复`}
+                          </View>
+                        )}
+                      </View>
                     </View>
+
+                    {threadState?.error && (
+                      <View
+                        className='community-comment__thread-error'
+                        onClick={() => void loadCommentThread(item.id)}
+                      >
+                        {threadState.error}，点击重试
+                      </View>
+                    )}
+
+                    {threadState?.expanded && descendants.length > 0 && (
+                      <View className='community-comment__replies'>
+                        {descendants.map((reply) => {
+                          const replyToName = commentReplyTargetName(reply, threadMembers)
+                          return (
+                            <View
+                              id={`community-comment-${reply.id}`}
+                              key={reply.id}
+                              className={`community-comment__reply community-comment community-comment--${reply.status}`}
+                            >
+                              <View
+                                className={`community-comment__reply-avatar community-detail-comments__avatar--tone-${communityAuthorTone(reply)}`}
+                              >
+                                {communityAuthorInitial(reply)}
+                              </View>
+                              <View className='community-comment__reply-copy'>
+                                <View className='community-comment__reply-author'>
+                                  <Text>{communityAuthorName(reply)}</Text>
+                                  {replyToName && (
+                                    <Text>回复 @{replyToName}</Text>
+                                  )}
+                                  <CommunityLevelBadge level={reply.author_level} compact />
+                                </View>
+                                <Text className='community-comment__reply-content'>
+                                  {reply.content}
+                                </Text>
+                                <View className='community-detail-comments__meta'>
+                                  <Text>{formatDateTime(reply.created_at)}</Text>
+                                  {reply.status !== 'approved' && (
+                                    <>
+                                      <View />
+                                      <Text className='community-comment__status'>
+                                        {formatStatus(reply.status)}
+                                      </Text>
+                                    </>
+                                  )}
+                                  {reply.available_actions.includes('reply') && (
+                                    <>
+                                      <View />
+                                      <Text
+                                        id={`community-comment-reply-${reply.id}`}
+                                        className='community-comment__reply-action'
+                                        onClick={() => startReply(reply)}
+                                      >
+                                        回复
+                                      </Text>
+                                    </>
+                                  )}
+                                  {reply.viewer_relation !== 'author'
+                                    && reply.viewer_relation !== 'admin' && (
+                                    <>
+                                      <View />
+                                      <Text
+                                        className='community-comment__report'
+                                        onClick={() => void openContentReport({
+                                          resourceType: 'comment',
+                                          resourceId: reply.id,
+                                          resourceVersion: reply.version,
+                                        })}
+                                      >
+                                        举报
+                                      </Text>
+                                    </>
+                                  )}
+                                </View>
+                              </View>
+                            </View>
+                          )
+                        })}
+                      </View>
+                    )}
                   </View>
-                </View>
-              ))}
+                )
+              })}
               {comments.length === 0 && (
                 <View className='community-detail-comments__empty'>
                   <View>
@@ -427,8 +677,8 @@ export default function CommunityDetailPage() {
                     className='community-detail-comments__composer-backdrop'
                     catchMove
                     ariaRole='button'
-                    ariaLabel='关闭评论输入'
-                    onClick={closeCommentComposer}
+                    ariaLabel={replyTarget ? '取消回复' : '关闭评论输入'}
+                    onClick={replyTarget ? cancelReply : closeCommentComposer}
                   />
                 )}
                 <View
@@ -440,43 +690,74 @@ export default function CommunityDetailPage() {
                   ].filter(Boolean).join(' ')}
                   style={{ bottom: `${keyboardHeight}px` }}
                 >
-                  <KeyboardSafeInput
-                    id='community-comment-input'
-                    value={comment}
-                    disabled={submitting}
-                    maxlength={300}
-                    confirmType='send'
-                    cursorSpacing={18}
-                    keepVisibleOnKeyboard={false}
-                    placeholder='友善交流，分享你的想法'
-                    placeholderClass='community-detail-comments__placeholder'
-                    onFocus={(event) => {
-                      setCommentComposerOpen(true)
-                      setKeyboardHeight(Math.max(0, event.detail.height || 0))
-                    }}
-                    onKeyboardHeightChange={(event) => {
-                      const height = Math.max(0, event.detail.height || 0)
-                      setKeyboardHeight(height)
-                      if (height === 0) setCommentComposerOpen(false)
-                    }}
-                    onInput={(event) => setComment(event.detail.value)}
-                    onConfirm={() => void submitComment()}
-                  />
-                  <View
-                    id='community-comment-submit'
-                    className={
-                      submitting || !comment.trim()
-                        ? 'community-detail-comments__send community-detail-comments__send--disabled'
-                        : 'community-detail-comments__send'
-                    }
-                    hoverClass='community-detail-comments__send--pressed'
-                    hoverStartTime={20}
-                    hoverStayTime={120}
-                    ariaRole='button'
-                    ariaLabel={submitting ? '评论发送中' : '发送评论'}
-                    onClick={() => void submitComment()}
-                  >
-                    <Image src={communityDetailIcons.send} mode='aspectFit' />
+                  {replyTarget && (
+                    <View
+                      id={`community-replying-to-${replyTarget.id}`}
+                      className='community-detail-comments__replying'
+                    >
+                      <Text>正在回复 @{communityAuthorName(replyTarget)}</Text>
+                      <View
+                        id='community-comment-cancel-reply'
+                        ariaRole='button'
+                        ariaLabel='取消回复'
+                        onClick={submitting ? undefined : cancelReply}
+                      >
+                        取消
+                      </View>
+                    </View>
+                  )}
+                  <View className='community-detail-comments__composer-main'>
+                    <KeyboardSafeInput
+                      id='community-comment-input'
+                      value={comment}
+                      focus={commentInputFocused}
+                      disabled={submitting}
+                      maxlength={300}
+                      confirmType='send'
+                      cursorSpacing={18}
+                      keepVisibleOnKeyboard={false}
+                      placeholder={replyTarget
+                        ? `回复 @${communityAuthorName(replyTarget)}`
+                        : '友善交流，分享你的想法'}
+                      placeholderClass='community-detail-comments__placeholder'
+                      onFocus={(event) => {
+                        setCommentInputFocused(true)
+                        setCommentComposerOpen(true)
+                        setKeyboardHeight(Math.max(0, event.detail.height || 0))
+                      }}
+                      onBlur={() => {
+                        setCommentInputFocused(false)
+                        setKeyboardHeight(0)
+                      }}
+                      onKeyboardHeightChange={(event) => {
+                        const height = Math.max(0, event.detail.height || 0)
+                        setKeyboardHeight(height)
+                        if (height === 0) {
+                          setCommentInputFocused(false)
+                          setCommentComposerOpen(false)
+                        }
+                      }}
+                      onInput={(event) => setComment(event.detail.value)}
+                      onConfirm={() => void submitComment()}
+                    />
+                    <View
+                      id='community-comment-submit'
+                      className={
+                        submitting || !comment.trim()
+                          ? 'community-detail-comments__send community-detail-comments__send--disabled'
+                          : 'community-detail-comments__send'
+                      }
+                      hoverClass='community-detail-comments__send--pressed'
+                      hoverStartTime={20}
+                      hoverStayTime={120}
+                      ariaRole='button'
+                      ariaLabel={submitting
+                        ? replyTarget ? '回复发送中' : '评论发送中'
+                        : replyTarget ? '发送回复' : '发送评论'}
+                      onClick={() => void submitComment()}
+                    >
+                      <Image src={communityDetailIcons.send} mode='aspectFit' />
+                    </View>
                   </View>
                 </View>
               </>
