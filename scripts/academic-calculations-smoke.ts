@@ -112,10 +112,78 @@ const unknownSummary = calculateGradeSummary(
   emptySimulation([unknownGrade.id]),
 )
 assert.deepEqual(unknownSummary, {
-  selectedCount: 0,
-  credits: 0,
+  selectedCount: 1,
+  credits: 1,
   weightedScore: 0,
   gpa: 0,
+}, '未知文字成绩仍计入已修学分，但不参与平均值')
+
+const independentGrades: GradeRecord[] = [
+  {
+    id: 'passed',
+    periodId: '2025-2026-2',
+    courseName: '已通过课程',
+    courseType: '必修',
+    credit: 2,
+    score: 90,
+  },
+  {
+    id: 'failed',
+    periodId: '2025-2026-2',
+    courseName: '不及格课程',
+    courseType: '必修',
+    credit: 3,
+    score: 0,
+  },
+  {
+    ...unknownGrade,
+    id: 'unknown',
+    credit: 4,
+  },
+  {
+    id: 'grade-point-only',
+    periodId: '2025-2026-2',
+    courseName: '仅模拟绩点课程',
+    courseType: '选修',
+    credit: 1,
+  },
+]
+const independentSummary = calculateGradeSummary(independentGrades, {
+  selectedIds: independentGrades.map((grade) => grade.id),
+  overrides: {
+    'grade-point-only': { credit: 1, gradePoint: 3 },
+  },
 })
+assert.deepEqual(independentSummary, {
+  selectedCount: 4,
+  credits: 10,
+  weightedScore: 90,
+  gpa: 3.6,
+}, '已修学分、加权平均分和平均 GPA 应分别使用独立纳入条件及分母')
+
+const precisionGrades: GradeRecord[] = [
+  {
+    id: 'precision-one',
+    periodId: '2025-2026-2',
+    courseName: '精度课程一',
+    courseType: '选修',
+    credit: 1,
+    score: 91,
+  },
+  {
+    id: 'precision-two',
+    periodId: '2025-2026-2',
+    courseName: '精度课程二',
+    courseType: '选修',
+    credit: 2,
+    score: 92,
+  },
+]
+const precisionSummary = calculateGradeSummary(
+  precisionGrades,
+  emptySimulation(precisionGrades.map((grade) => grade.id)),
+)
+assert.equal(precisionSummary.weightedScore, 91.667, '加权平均分应保留三位小数')
+assert.equal(precisionSummary.gpa, 3.9)
 
 process.stdout.write('academic calculations smoke: ok\n')
