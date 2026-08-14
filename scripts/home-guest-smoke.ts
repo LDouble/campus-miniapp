@@ -12,6 +12,14 @@ const homeDataSource = readFileSync(
   resolve(__dirname, '../src/features/home/data.ts'),
   'utf8',
 )
+const homeServiceKeysSource = homeSource.match(
+  /const homeServiceKeys = new Set\(\[([\s\S]*?)\]\)/,
+)?.[1] || ''
+
+assert.ok(
+  homeServiceKeysSource.includes("'classroom'"),
+  '首页常用服务白名单必须包含空教室入口',
+)
 
 assert.ok(
   homeSource.includes('getAcademicVerificationStatus()'),
