@@ -38,6 +38,7 @@ import {
   type MiniappModuleKey,
 } from '../../features/runtime-config'
 import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
+import { showActionSheetSelection } from '../../utils/action-sheet'
 import { useCampusShare } from '../../features/share'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
@@ -185,10 +186,11 @@ export default function CommunityPage() {
   const chooseCommunitySection = async () => {
     if (!activeCommunityRoot || activeCommunityChildren.length === 0) return
     const options = [activeCommunityRoot, ...activeCommunityChildren]
-    const result = await Taro.showActionSheet({
-      itemList: options.map((item, index) => index === 0 ? '全部' : item.name),
-    })
-    const selected = options[result.tapIndex]
+    const tapIndex = await showActionSheetSelection(
+      options.map((item, index) => index === 0 ? '全部' : item.name),
+    )
+    if (tapIndex === null) return
+    const selected = options[tapIndex]
     if (selected) setActiveCommunitySectionId(selected.id)
   }
 

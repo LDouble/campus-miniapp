@@ -21,6 +21,7 @@ import type {
 } from '../../features/official-notices/types'
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
 import { useCampusShare } from '../../features/share'
+import { showActionSheetSelection } from '../../utils/action-sheet'
 import './index.scss'
 
 const PAGE_SIZE = 15
@@ -188,15 +189,16 @@ export default function OfficialNoticesPage() {
   }
 
   const chooseCategory = async () => {
-    const result = await Taro.showActionSheet({ itemList: categoryOptions.map((item) => item.label) })
-    const next = categoryOptions[result.tapIndex]?.value
+    const tapIndex = await showActionSheetSelection(categoryOptions.map((item) => item.label))
+    if (tapIndex === null) return
+    const next = categoryOptions[tapIndex]?.value
     setCategory(next)
     void load(true, keyword, source, next)
   }
 
   const chooseTime = async () => {
-    const result = await Taro.showActionSheet({ itemList: timeOptions.map((item) => item.label) })
-    const next = result.tapIndex
+    const next = await showActionSheetSelection(timeOptions.map((item) => item.label))
+    if (next === null) return
     setTimeIndex(next)
     void load(true, keyword, source, category, next)
   }
