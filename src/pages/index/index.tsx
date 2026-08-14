@@ -67,6 +67,7 @@ import {
   saveSelectedCampus,
 } from '../../features/runtime-config'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
+import { apiDateTimeTimestamp } from '../../utils/date-time'
 import { academicRepository } from '../academic/repository'
 import {
   requireCoursesForPeriod,
@@ -300,8 +301,8 @@ const latestCommunityPosts = (items: CampusCirclePostView[]) => (
   [...items]
     .filter((item) => item.status === 'approved')
     .sort((left, right) => (
-      new Date(right.published_at || right.created_at).getTime()
-      - new Date(left.published_at || left.created_at).getTime()
+      apiDateTimeTimestamp(right.published_at || right.created_at)
+      - apiDateTimeTimestamp(left.published_at || left.created_at)
     ))
     .slice(0, 3)
 )

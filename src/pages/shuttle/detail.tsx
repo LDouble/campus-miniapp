@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 import {
   loadShuttleRoute,
   ShuttleLoadResult,
@@ -26,9 +27,8 @@ const formatDate = (value: string) => {
 
 const formatNextDeparture = (value?: string | null) => {
   if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  const parts = apiDateTimeCampusParts(value)
+  return parts ? parts.time : ''
 }
 
 export default function ShuttleDetailPage() {

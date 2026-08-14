@@ -15,6 +15,7 @@ import {
   ShuttleRoute,
 } from '../../features/shuttle/repository'
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
+import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
 import './index.scss'
 
 type ServiceFilter = 'all' | 'campus_loop' | 'intercampus'
@@ -30,15 +31,14 @@ const dayLabel = (date: Date, offset: number) => (
 const nextTime = (route: ShuttleRoute) => {
   const value = route.resolved_schedule.next_departure_at
   if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  const parts = apiDateTimeCampusParts(value)
+  return parts ? parts.time : ''
 }
 
 const minutesUntil = (route: ShuttleRoute) => {
   const value = route.resolved_schedule.next_departure_at
   if (!value) return null
-  const milliseconds = new Date(value).getTime() - Date.now()
+  const milliseconds = apiDateTimeTimestamp(value) - Date.now()
   if (!Number.isFinite(milliseconds) || milliseconds < 0) return null
   return Math.max(1, Math.ceil(milliseconds / 60000))
 }
@@ -138,8 +138,8 @@ export default function ShuttlePage() {
     result.items
       .filter((item) => item.resolved_schedule.next_departure_at)
       .sort((left, right) => (
-        new Date(left.resolved_schedule.next_departure_at || 0).getTime()
-        - new Date(right.resolved_schedule.next_departure_at || 0).getTime()
+        apiDateTimeTimestamp(left.resolved_schedule.next_departure_at)
+        - apiDateTimeTimestamp(right.resolved_schedule.next_departure_at)
       ))[0]
   ), [result.items])
 

@@ -30,6 +30,7 @@ import type {
   AcademicVerificationStatus,
 } from '../../api/types'
 import { finishAcademicVerification } from '../../features/academic-verification/guard'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { getSelectedTempFiles } from '../../utils/file-selection'
 import './index.scss'
 
@@ -50,7 +51,10 @@ const educationIcons: Record<AcademicEducationLevel, string> = {
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
-  return value.slice(0, 16).replace('T', ' ')
+  const parts = apiDateTimeCampusParts(value)
+  if (!parts) return value
+  const pad = (part: number) => String(part).padStart(2, '0')
+  return `${parts.year}-${pad(parts.month)}-${pad(parts.day)} ${pad(parts.hour)}:${pad(parts.minute)}`
 }
 
 const maskStudentNo = (value?: string | null) => {

@@ -6,6 +6,7 @@ import { listAcademicCoursePassRates } from '../../../api/academic-statistics'
 import CustomNavbar from '../../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { openCourseStatistics } from '../../../features/academic-statistics/navigation'
+import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './courses.scss'
 
 type CoursePassRate = AcademicCoursePassRatePage['items'][number]
@@ -23,9 +24,9 @@ const formatPercent = (value: number) => `${Math.round(value * 100)}%`
 
 const formatPublishedAt = (value: string) => {
   if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`
+  const parts = apiDateTimeCampusParts(value)
+  if (!parts) return ''
+  return `${parts.year}.${String(parts.month).padStart(2, '0')}.${String(parts.day).padStart(2, '0')}`
 }
 
 export default function AcademicStatisticsCoursesPage() {
