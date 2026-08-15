@@ -4,6 +4,7 @@ import type { MarketplaceListingView } from '../../../api/types'
 import UserAvatarImage from '../../../components/user-avatar-image'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { formatMoney } from '../format'
+import { campusLabel } from '../campus'
 import './marketplace-card.scss'
 
 const openDetail = (id: number) => {
@@ -77,7 +78,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
             </View>
             <Text>{authorName}</Text>
           </View>
-          <Text>校内面交</Text>
+          <Text>{campusLabel(item.campus)}</Text>
         </View>
       </View>
     </View>

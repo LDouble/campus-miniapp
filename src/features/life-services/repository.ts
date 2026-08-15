@@ -16,12 +16,14 @@ import type {
   MarketplaceListingView,
   MarketplaceListingViewPage,
   MarketplaceTradeOrder,
+  PublicUserProfile,
   TradeOrderView,
   TradeOrderViewPage,
   CommentView,
   CommentViewPage,
   CommentThread,
 } from '../../api/types'
+import type { CampusName } from './campus'
 
 type CreateErrandBody = operations['CreateErrand']['requestBody']['content']['application/json']
 type UpdateErrandBody = operations['UpdateErrand']['requestBody']['content']['application/json']
@@ -41,6 +43,7 @@ export type PagingQuery = {
 
 export type ErrandSearch = PagingQuery & {
   keyword?: string
+  campus?: CampusName
 }
 
 export type MyErrandSearch = PagingQuery & {
@@ -51,6 +54,7 @@ export type MyErrandSearch = PagingQuery & {
 
 export type MarketplaceSearch = PagingQuery & {
   keyword?: string
+  campus?: CampusName
   intent?: 'sell' | 'wanted'
   category?: 'general' | 'course_material'
   minPriceCents?: number
@@ -59,6 +63,7 @@ export type MarketplaceSearch = PagingQuery & {
 
 export type CarpoolSearch = PagingQuery & {
   keyword?: string
+  campus?: CampusName
   origin?: string
   destination?: string
   departureDate?: string
@@ -101,6 +106,38 @@ const versionAction = <T>(path: string, version: number, scope: string) => (
 )
 
 export const lifeServicesRepository = {
+  getUserProfile(userId: number) {
+    return apiRequest<PublicUserProfile>({ path: `/api/v1/users/${userId}/profile` })
+  },
+
+  listUserCampusCirclePosts(userId: number, search: PagingQuery = {}) {
+    return apiRequest<CampusCirclePostViewPage>({
+      path: `/api/v1/users/${userId}/campus-circle/posts`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  listUserErrands(userId: number, search: PagingQuery = {}) {
+    return apiRequest<ErrandViewPage>({
+      path: `/api/v1/users/${userId}/errands`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  listUserMarketplaceListings(userId: number, search: PagingQuery = {}) {
+    return apiRequest<MarketplaceListingViewPage>({
+      path: `/api/v1/users/${userId}/marketplace/listings`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  listUserCarpoolTrips(userId: number, search: PagingQuery = {}) {
+    return apiRequest<CarpoolTripViewPage>({
+      path: `/api/v1/users/${userId}/carpool/trips`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
   createContentReport(input: CreateContentReportBody) {
     return apiRequest<operations['CreateContentReport']['responses'][201]['content']['application/json']['data']>({
       path: '/api/v1/content-reports',
@@ -252,6 +289,7 @@ export const lifeServicesRepository = {
       path: '/api/v1/errands',
       query: {
         keyword: search.keyword,
+        campus: search.campus,
         page: search.page || 1,
         page_size: search.pageSize || 20,
       },
@@ -346,6 +384,7 @@ export const lifeServicesRepository = {
       path: '/api/v1/marketplace/listings',
       query: {
         keyword: search.keyword,
+        campus: search.campus,
         intent: search.intent,
         category: search.category,
         min_price_cents: search.minPriceCents,
@@ -420,6 +459,7 @@ export const lifeServicesRepository = {
       path: '/api/v1/carpool/trips',
       query: {
         keyword: search.keyword,
+        campus: search.campus,
         origin: search.origin,
         destination: search.destination,
         departure_date: search.departureDate,

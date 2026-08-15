@@ -78,6 +78,10 @@ page {
   &__main {
     min-width: 0;
     flex: 1;
+
+    &--pressed {
+      opacity: 0.68;
+    }
   }
 
   &__name,
@@ -86,6 +90,14 @@ page {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  &__public-link {
+    display: block;
+    margin-top: 9rpx;
+    color: #2f7f8d;
+    font-size: 20rpx;
+    font-weight: 680;
   }
 
   &__name {

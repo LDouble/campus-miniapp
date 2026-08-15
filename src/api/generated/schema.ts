@@ -198,6 +198,24 @@ export interface paths {
         patch: operations["UpdateUser"];
         trace?: never;
     };
+    "/api/v1/users/{id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["ID"];
+            };
+            cookie?: never;
+        };
+        get: operations["GetUserProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{id}/status": {
         parameters: {
             query?: never;
@@ -1659,6 +1677,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{id}/campus-circle/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询用户主页中公开可见的校园圈帖子 */
+        get: operations["ListUserCampusCirclePosts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/carpool/trips": {
         parameters: {
             query?: never;
@@ -1825,6 +1860,23 @@ export interface paths {
         put?: never;
         /** 重新提交拼车行程审核 */
         post: operations["SubmitCarpoolTripReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{id}/carpool/trips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询用户主页中公开可见的拼车发布 */
+        get: operations["ListUserCarpoolTrips"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3201,6 +3253,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{id}/errands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询用户主页中公开可见的跑腿发布 */
+        get: operations["ListUserErrands"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/error-reports": {
         parameters: {
             query?: never;
@@ -3418,6 +3487,23 @@ export interface paths {
         put?: never;
         /** 原子保留商品并创建订单 */
         post: operations["CreateMarketplaceOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{id}/marketplace/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询用户主页中公开可见的二手发布 */
+        get: operations["ListUserMarketplaceListings"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4274,6 +4360,29 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        UserProfileCounts: {
+            /** Format: int64 */
+            community_posts: number;
+            /** Format: int64 */
+            errands: number;
+            /** Format: int64 */
+            marketplace_listings: number;
+            /** Format: int64 */
+            carpool_trips: number;
+        };
+        UserPublicProfile: {
+            /** Format: uint64 */
+            id: number;
+            nickname: string;
+            /** Format: uri */
+            avatar_url: string | null;
+            level: components["schemas"]["UserLevelSummary"];
+        };
+        UserProfile: {
+            user: components["schemas"]["UserPublicProfile"];
+            is_self: boolean;
+            counts: components["schemas"]["UserProfileCounts"];
+        };
         RolePage: {
             items: components["schemas"]["Role"][];
             page: number;
@@ -4538,6 +4647,10 @@ export interface components {
         };
         CurrentUserEnvelope: {
             data: components["schemas"]["CurrentUser"];
+            request_id: string;
+        };
+        UserProfileEnvelope: {
+            data: components["schemas"]["UserProfile"];
             request_id: string;
         };
         AuthIdentityEnvelope: {
@@ -5818,6 +5931,7 @@ export interface components {
             author_avatar_url: string | null;
             author_nickname: string;
             available_actions: components["schemas"]["CarpoolViewerAction"][];
+            campus: string | null;
             contact: string;
             contact_type: string;
             /** Format: date-time */
@@ -6956,6 +7070,7 @@ export interface components {
             author_avatar_url: string | null;
             author_nickname: string;
             available_actions: components["schemas"]["ErrandViewerAction"][];
+            campus: string | null;
             /** Format: date-time */
             cancelled_at: string | null;
             /** Format: date-time */
@@ -7115,6 +7230,7 @@ export interface components {
             author_avatar_url: string | null;
             author_nickname: string;
             available_actions: components["schemas"]["MarketplaceViewerAction"][];
+            campus: string | null;
             /** @enum {string} */
             category: "general" | "course_material";
             contact: string;
@@ -7794,6 +7910,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["UserPageEnvelope"];
+            };
+        };
+        /** @description Public user profile summary and visible publication counts */
+        UserProfileResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserProfileEnvelope"];
             };
         };
         /** @description Direct user roles */
@@ -9202,6 +9327,21 @@ export interface operations {
         requestBody: components["requestBodies"]["UpdateUser"];
         responses: {
             200: components["responses"]["UserResponse"];
+        };
+    };
+    GetUserProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["ID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserProfileResponse"];
+            404: components["responses"]["Error"];
         };
     };
     SetUserStatus: {
@@ -11413,6 +11553,24 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    ListUserCampusCirclePosts: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCirclePostPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     ListAdminCarpoolTrips: {
         parameters: {
             query?: {
@@ -11490,6 +11648,7 @@ export interface operations {
                 keyword?: string;
                 origin?: string;
                 destination?: string;
+                campus?: string;
                 departure_date?: string;
                 seats_needed?: number;
                 page?: number;
@@ -11518,6 +11677,7 @@ export interface operations {
                 "application/json": {
                     origin: string;
                     destination: string;
+                    campus?: string;
                     description?: string;
                     /** Format: date-time */
                     departure_at: string;
@@ -11581,6 +11741,7 @@ export interface operations {
                 "application/json": {
                     origin: string;
                     destination: string;
+                    campus?: string;
                     description?: string;
                     /** Format: date-time */
                     departure_at: string;
@@ -11690,6 +11851,24 @@ export interface operations {
         responses: {
             200: components["responses"]["CarpoolTripResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListUserCarpoolTrips: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CarpoolTripPageResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminClubCategories: {
@@ -13354,6 +13533,7 @@ export interface operations {
         parameters: {
             query?: {
                 keyword?: string;
+                campus?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -13383,6 +13563,7 @@ export interface operations {
                     reward_cents: number;
                     pickup_location: string;
                     dropoff_location: string;
+                    campus?: string;
                     /** Format: date-time */
                     deadline: string;
                     contact_type: string;
@@ -13447,6 +13628,7 @@ export interface operations {
                     reward_cents: number;
                     pickup_location: string;
                     dropoff_location: string;
+                    campus?: string;
                     /** Format: date-time */
                     deadline: string;
                     contact_type?: string;
@@ -13605,6 +13787,24 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    ListUserErrands: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ErrandPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     ListAdminErrorReports: {
         parameters: {
             query?: {
@@ -13753,6 +13953,7 @@ export interface operations {
             query?: {
                 intent?: "sell" | "wanted";
                 category?: "general" | "course_material";
+                campus?: string;
                 keyword?: string;
                 min_price_cents?: number;
                 max_price_cents?: number;
@@ -13787,6 +13988,7 @@ export interface operations {
                     price_cents: number;
                     /** @enum {string} */
                     category: "general" | "course_material";
+                    campus?: string;
                     course_name?: string;
                     course_code?: string;
                     academic_period_id?: string;
@@ -13860,6 +14062,7 @@ export interface operations {
                     price_cents: number;
                     /** @enum {string} */
                     category: "general" | "course_material";
+                    campus?: string;
                     course_name?: string;
                     course_code?: string;
                     academic_period_id?: string;
@@ -13946,6 +14149,24 @@ export interface operations {
         responses: {
             201: components["responses"]["MarketplaceOrderResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListUserMarketplaceListings: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MarketplaceListingPageResponse"];
+            404: components["responses"]["Error"];
         };
     };
     CreateMediaUploadTarget: {

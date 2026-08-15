@@ -1,5 +1,6 @@
 import { Text, View } from '@tarojs/components'
 import UserAvatarImage from '../../../components/user-avatar-image'
+import { openPublicProfile } from '../../profile/public-profile'
 
 type DetailAuthorNavbarProps = {
   avatarUrl?: string | null
@@ -16,7 +17,13 @@ export default function DetailAuthorNavbar({
   const [fallback = '同'] = Array.from(name)
 
   return (
-    <View className='business-detail-author'>
+    <View
+      className='business-detail-author'
+      hoverClass='business-detail-author--pressed'
+      ariaRole='button'
+      ariaLabel={`查看${name}的个人主页`}
+      onClick={() => void openPublicProfile(userId)}
+    >
       <View className='business-detail-author__avatar'>
         <UserAvatarImage
           src={avatarUrl?.trim() || ''}

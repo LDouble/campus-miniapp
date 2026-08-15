@@ -23,6 +23,7 @@ type Props = {
   motionDelay?: number
   onToggleLike: (post: CampusCirclePostView) => void
   onOpen: (post: CampusCirclePostView) => void
+  onOpenAuthor?: (post: CampusCirclePostView) => void
 }
 
 export default function CommunityPostCard({
@@ -31,6 +32,7 @@ export default function CommunityPostCard({
   motionDelay = 0,
   onToggleLike,
   onOpen,
+  onOpenAuthor,
 }: Props) {
   const authorName = communityAuthorName(post)
   const authorInitial = communityAuthorInitial(post)
@@ -71,8 +73,12 @@ export default function CommunityPostCard({
         hoverStartTime={20}
         hoverStayTime={120}
         ariaRole='button'
-        ariaLabel={`查看${authorName}发布的动态`}
-        onClick={() => onOpen(post)}
+        ariaLabel={onOpenAuthor && !post.author_deleted
+          ? `查看${authorName}的个人主页`
+          : `查看${authorName}发布的动态`}
+        onClick={() => (
+          !post.author_deleted && onOpenAuthor ? onOpenAuthor(post) : onOpen(post)
+        )}
       >
         <View className={`community-post__avatar community-post__avatar--tone-${avatarTone}`}>
           <UserAvatarImage
