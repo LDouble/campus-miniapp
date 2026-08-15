@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Picker, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
+import {
+  getRecentRouteValues,
+  rememberRoutePair,
+  ROUTE_SHORTCUTS,
+  type RouteHistoryKind,
+} from '../route-history'
 import FilterSheet from './filter-sheet'
 import './filters.scss'
 
@@ -33,6 +39,50 @@ const activeFilterCount = (value: CarpoolFilterValue) => (
     value.seatsNeeded,
   ].filter((item) => item !== undefined && item !== '').length
 )
+
+const RouteFilterSuggestions = ({
+  kind,
+  value,
+  onSelect,
+}: {
+  kind: RouteHistoryKind
+  value?: string
+  onSelect: (value: string) => void
+}) => {
+  const recent = getRecentRouteValues(kind).filter(
+    (item) => !ROUTE_SHORTCUTS.some((shortcut) => shortcut === item),
+  )
+  const options = [...ROUTE_SHORTCUTS, ...recent]
+
+  return (
+    <View className='route-filter-suggestions'>
+      <Text>{kind === 'origin' ? '起点常用' : '终点常用'}</Text>
+      <ScrollView
+        className='route-filter-suggestions__scroll'
+        scrollX
+        enhanced
+        showScrollbar={false}
+      >
+        <View className='route-filter-suggestions__row'>
+          {options.map((item) => (
+            <View
+              key={item}
+              className={value === item
+                ? 'route-filter-suggestion route-filter-suggestion--active'
+                : 'route-filter-suggestion'}
+              hoverClass='route-filter-suggestion--pressed'
+              ariaRole='button'
+              ariaLabel={`将${kind === 'origin' ? '起点' : '终点'}设为${item}`}
+              onClick={() => onSelect(item)}
+            >
+              {item}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  )
+}
 
 export default function CarpoolFilters({ value, onChange }: Props) {
   const [sheetVisible, setSheetVisible] = useState(false)
@@ -138,9 +188,12 @@ export default function CarpoolFilters({ value, onChange }: Props) {
           setSheetVisible(false)
         }}
         onApply={() => {
+          const origin = draft.origin?.trim() || ''
+          const destination = draft.destination?.trim() || ''
+          rememberRoutePair(origin, destination)
           onChange({
-            origin: draft.origin?.trim() || undefined,
-            destination: draft.destination?.trim() || undefined,
+            origin: origin || undefined,
+            destination: destination || undefined,
             departureDate: draft.departureDate,
             seatsNeeded: draft.seatsNeeded,
           })
@@ -163,7 +216,11 @@ export default function CarpoolFilters({ value, onChange }: Props) {
                 }))}
               />
             </View>
-            <View className='route-filter-rail' />
+            <RouteFilterSuggestions
+              kind='origin'
+              value={draft.origin}
+              onSelect={(origin) => setDraft((current) => ({ ...current, origin }))}
+            />
             <View className='route-filter-field route-filter-field--destination'>
               <Text>终</Text>
               <KeyboardSafeInput
@@ -176,6 +233,11 @@ export default function CarpoolFilters({ value, onChange }: Props) {
                 }))}
               />
             </View>
+            <RouteFilterSuggestions
+              kind='destination'
+              value={draft.destination}
+              onSelect={(destination) => setDraft((current) => ({ ...current, destination }))}
+            />
           </View>
         </View>
 

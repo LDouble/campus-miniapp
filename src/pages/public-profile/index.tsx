@@ -55,7 +55,7 @@ const tabOptions: Array<{ key: ProfileTab; label: string }> = [
   { key: 'community', label: '社区' },
   { key: 'errands', label: '跑腿' },
   { key: 'marketplace', label: '二手' },
-  { key: 'carpool', label: '拼车' },
+  { key: 'carpool', label: '找同行' },
 ]
 
 const mergeUnique = (current: ProfileItem[], incoming: ProfileItem[]) => {

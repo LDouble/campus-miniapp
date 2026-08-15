@@ -1,3 +1,5 @@
+@use '../../../styles/tokens' as token;
+
 .campus-selector {
   width: 100%;
   white-space: nowrap;
@@ -6,33 +8,40 @@
 .campus-selector__row {
   display: inline-flex;
   min-width: 100%;
-  gap: 12rpx;
-  padding: 2rpx 0 18rpx;
+  gap: token.$space-2;
+  padding: 2rpx 0 token.$space-2;
   box-sizing: border-box;
 }
 
 .campus-selector__item {
   display: inline-flex;
-  min-height: 68rpx;
-  padding: 0 23rpx;
+  min-height: token.$touch-target-min;
+  padding: 0 26rpx;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid rgba(83, 133, 127, 0.12);
-  border-radius: 22rpx;
-  background: rgba(255, 255, 255, 0.78);
-  color: #5d7778;
+  box-sizing: border-box;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-pill;
+  background: token.$color-surface;
+  color: token.$color-text-body;
   font-size: 23rpx;
-  font-weight: 650;
-  transition: opacity 150ms ease, background-color 150ms ease;
+  font-weight: 600;
+  transition: opacity token.$motion-press ease, background-color token.$motion-state ease;
 }
 
 .campus-selector__item--active {
-  border-color: rgba(70, 156, 174, 0.22);
-  background: #dff2ef;
-  color: #2f7180;
-  box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.88);
+  border-color: token.$color-border-strong;
+  background: token.$color-surface-primary;
+  color: token.$color-primary-strong;
+  font-weight: 700;
 }
 
 .campus-selector__item--pressed {
-  opacity: 0.7;
+  opacity: 0.72;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-selector__item {
+    transition: none;
+  }
 }

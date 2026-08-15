@@ -8,10 +8,10 @@ export type RouteHistoryKind = 'origin' | 'destination'
 export const ROUTE_SHORTCUTS = [
   '崂山校区',
   '鱼山校区',
-  '西海岸校区',
+  '西海岸',
   '浮山校区',
   '机场',
-  '青岛北站',
+  '青岛北',
   '青岛站',
 ] as const
 

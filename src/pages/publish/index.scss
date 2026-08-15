@@ -128,16 +128,16 @@ page { background: #f4f7fb; }
 
 .publisher-route-suggestions {
   margin: 4rpx 0 11rpx;
-  padding: 17rpx 18rpx 13rpx;
-  border: 2rpx solid rgba(83, 137, 132, 0.08);
-  border-radius: 20rpx;
-  background: rgba(242, 248, 246, 0.76);
+  padding: 18rpx;
+  border: 2rpx solid #f1f5f9;
+  border-radius: 22rpx;
+  background: #f8fafc;
 }
 
 .publisher-route-suggestions__label {
   display: block;
   margin: 0 2rpx 10rpx;
-  color: #71817f;
+  color: #62748e;
   font-size: 20rpx;
 }
 
@@ -153,19 +153,23 @@ page { background: #f4f7fb; }
 
 .publisher-route-suggestions__items > view {
   display: flex;
-  min-height: 58rpx;
-  padding: 0 18rpx;
+  min-height: 88rpx;
+  padding: 0 22rpx;
   align-items: center;
-  border-radius: 18rpx;
-  background: rgba(255, 255, 255, 0.92);
-  color: #315f66;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2rpx solid #f1f5f9;
+  border-radius: 999rpx;
+  background: #fff;
+  color: #45556c;
   font-size: 22rpx;
-  font-weight: 620;
+  font-weight: 600;
 }
 
 .publisher-route-suggestions__items--recent > view {
-  background: #fff3e9;
-  color: #a26754;
+  border-color: #dbeafe;
+  background: #eff6ff;
+  color: #155dfc;
 }
 
 .publisher-section {

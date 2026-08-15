@@ -1,31 +1,28 @@
+@use '../../styles/tokens' as token;
+
 page {
-  background: #f8f6f1;
+  background: token.$color-page;
 }
 
 .public-profile-page {
   min-height: 100vh;
-  color: #294653;
-  background:
-    radial-gradient(circle at 12% 9%, rgba(244, 187, 118, 0.16), transparent 29%),
-    radial-gradient(circle at 96% 24%, rgba(129, 201, 194, 0.14), transparent 28%),
-    linear-gradient(180deg, #fffdf9 0%, #f8f6f1 100%);
+  color: token.$color-text-body;
+  background: token.$color-page;
 }
 
 .public-profile-page__content {
-  padding: 22rpx 28rpx calc(80rpx + env(safe-area-inset-bottom));
+  padding: 24rpx token.$space-4 calc(96rpx + env(safe-area-inset-bottom));
 }
 
 .public-profile-hero {
   display: flex;
-  min-height: 188rpx;
-  padding: 28rpx;
+  min-height: 184rpx;
+  padding: token.$space-4;
   align-items: center;
-  border: 2rpx solid rgba(255, 255, 255, 0.96);
-  border-radius: 38rpx;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(246, 200, 144, 0.18), transparent 35%),
-    rgba(255, 255, 255, 0.9);
-  box-shadow: 12rpx 16rpx 34rpx rgba(50, 92, 84, 0.07);
+  box-sizing: border-box;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
 }
 
 .public-profile-hero__avatar {
@@ -33,12 +30,14 @@ page {
   height: 112rpx;
   flex: none;
   overflow: hidden;
-  border: 5rpx solid rgba(217, 243, 240, 0.92);
+  box-sizing: border-box;
+  border: 4rpx solid token.$color-border-strong;
   border-radius: 50%;
-  background: #e9f5f2;
+  background: token.$color-surface-primary;
 }
 
 .public-profile-hero__avatar-image {
+  display: block;
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -46,31 +45,33 @@ page {
 
 .public-profile-hero__identity {
   min-width: 0;
-  margin-left: 23rpx;
+  margin-left: token.$space-3;
   flex: 1;
 }
 
 .public-profile-hero__name-line {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 12rpx;
 }
 
 .public-profile-hero__name-line > text:first-child {
   overflow: hidden;
-  color: #21465c;
-  font-size: 35rpx;
-  font-weight: 750;
+  color: token.$color-text-heading;
+  font-size: 36rpx;
+  font-weight: 760;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .public-profile-hero__name-line > text:last-child:not(:first-child) {
-  padding: 5rpx 12rpx;
+  padding: 7rpx 14rpx;
   flex: none;
-  border-radius: 14rpx;
-  background: #fff0dc;
-  color: #b66b4e;
+  border-radius: token.$radius-pill;
+  background: token.$color-surface-primary;
+  color: token.$color-primary-strong;
   font-size: 18rpx;
   font-weight: 700;
 }
@@ -81,68 +82,79 @@ page {
 }
 
 .public-profile-hero__level {
-  margin-top: 7rpx;
-  color: #469cae;
+  margin-top: 8rpx;
+  color: token.$color-primary-strong;
   font-size: 23rpx;
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .public-profile-hero__hint {
-  margin-top: 7rpx;
-  color: #809693;
-  font-size: 20rpx;
-  line-height: 1.45;
+  margin-top: 8rpx;
+  color: token.$color-text-secondary;
+  font-size: 22rpx;
+  line-height: 1.5;
 }
 
 .public-profile-tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8rpx;
-  margin-top: 22rpx;
+  margin-top: token.$space-3;
   padding: 8rpx;
-  border: 2rpx solid rgba(255, 255, 255, 0.96);
-  border-radius: 28rpx;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 8rpx 12rpx 28rpx rgba(49, 101, 119, 0.05);
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-lg;
+  background: token.$color-surface;
 }
 
 .public-profile-tab {
   display: flex;
-  min-height: 78rpx;
+  min-width: 0;
+  min-height: token.$touch-target-min;
   padding: 8rpx 4rpx;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 21rpx;
-  color: #71817f;
+  box-sizing: border-box;
+  border-radius: token.$radius-md;
+  color: token.$color-text-body;
+  transition: opacity token.$motion-press ease, background-color token.$motion-state ease;
 }
 
 .public-profile-tab text:first-child {
   font-size: 23rpx;
-  font-weight: 680;
+  font-weight: 650;
 }
 
 .public-profile-tab text:last-child {
-  margin-top: 2rpx;
+  margin-top: 3rpx;
+  color: token.$color-text-muted;
   font-size: 19rpx;
+  font-weight: 600;
 }
 
 .public-profile-tab--active {
-  background: #dff2ef;
-  color: #2f7180;
-  box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, token.$color-primary, token.$color-primary-cyan);
+  color: token.$color-surface;
+}
+
+.public-profile-tab--active text:last-child {
+  color: rgba(255, 255, 255, 0.84);
 }
 
 .public-profile-tab--pressed {
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .public-profile-section-heading {
   display: flex;
-  min-height: 90rpx;
-  padding: 23rpx 3rpx 14rpx;
+  min-height: 96rpx;
+  padding: 28rpx 2rpx 16rpx;
   align-items: center;
   justify-content: space-between;
+}
+
+.public-profile-section-heading > view {
+  min-width: 0;
 }
 
 .public-profile-section-heading > view text {
@@ -150,15 +162,15 @@ page {
 }
 
 .public-profile-section-heading > view text:first-child {
-  color: #244a57;
+  color: token.$color-text-heading;
   font-size: 30rpx;
-  font-weight: 750;
+  font-weight: 720;
 }
 
 .public-profile-section-heading > view text:last-child,
 .public-profile-section-heading > text {
-  margin-top: 2rpx;
-  color: #809693;
+  margin-top: 4rpx;
+  color: token.$color-text-muted;
   font-size: 20rpx;
 }
 
@@ -167,59 +179,102 @@ page {
 .public-profile-page .carpool-list {
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+  gap: 20rpx;
 }
 
 .public-profile-state {
   display: flex;
-  min-height: 220rpx;
-  padding: 30rpx;
+  min-height: 240rpx;
+  padding: token.$space-4;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid rgba(255, 255, 255, 0.94);
-  border-radius: 32rpx;
-  background: rgba(255, 255, 255, 0.8);
-  color: #71817f;
+  box-sizing: border-box;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
+  color: token.$color-text-secondary;
   font-size: 24rpx;
+  line-height: 1.6;
   text-align: center;
 }
 
 .public-profile-state > view {
-  margin-top: 20rpx;
-  padding: 13rpx 24rpx;
-  border-radius: 18rpx;
-  background: #dff2ef;
-  color: #2f7180;
+  display: flex;
+  min-height: token.$touch-target-min;
+  margin-top: token.$space-3;
+  padding: 0 token.$space-3;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: token.$radius-md;
+  background: token.$color-surface-primary;
+  color: token.$color-primary-strong;
   font-weight: 700;
 }
 
 .public-profile-state--error {
-  color: #a45d52;
-  background: rgba(255, 243, 233, 0.88);
+  border-color: rgba(255, 32, 86, 0.12);
+  background: #fff1f2;
+  color: #c70036;
 }
 
 .public-profile-state--empty text:first-child {
-  color: #46676b;
+  color: token.$color-text-heading;
   font-size: 27rpx;
   font-weight: 700;
 }
 
 .public-profile-state--empty text:last-child {
   margin-top: 8rpx;
-  color: #8a9997;
+  color: token.$color-text-muted;
   font-size: 22rpx;
 }
 
 .public-profile-load-more {
   display: flex;
-  min-height: 82rpx;
-  margin-top: 20rpx;
+  min-height: token.$touch-target-min;
+  margin-top: token.$space-3;
   align-items: center;
   justify-content: center;
-  border-radius: 23rpx;
-  background: rgba(255, 255, 255, 0.86);
-  color: #469cae;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-lg;
+  background: token.$color-surface;
+  color: token.$color-primary-strong;
   font-size: 24rpx;
   font-weight: 700;
+}
+
+@media (max-width: 360px) {
+  .public-profile-page__content {
+    padding-right: 24rpx;
+    padding-left: 24rpx;
+  }
+
+  .public-profile-hero {
+    padding: 24rpx;
+  }
+
+  .public-profile-hero__avatar {
+    width: 96rpx;
+    height: 96rpx;
+  }
+
+  .public-profile-hero__identity {
+    margin-left: 20rpx;
+  }
+
+  .public-profile-hero__name-line > text:first-child {
+    font-size: 32rpx;
+  }
+
+  .public-profile-tab text:first-child {
+    font-size: 21rpx;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-profile-tab {
+    transition: none;
+  }
 }

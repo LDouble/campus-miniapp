@@ -13,6 +13,18 @@ const repository = readFileSync(resolve(__dirname, '../src/features/life-service
 const profile = readFileSync(resolve(__dirname, '../src/pages/public-profile/index.tsx'), 'utf8')
 const publisher = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
 const lifeList = readFileSync(resolve(__dirname, '../src/features/life-services/list-panel.tsx'), 'utf8')
+const carpoolFilters = readFileSync(resolve(
+  __dirname,
+  '../src/features/life-services/components/carpool-filters.tsx',
+), 'utf8')
+const routeHistory = readFileSync(resolve(
+  __dirname,
+  '../src/features/life-services/route-history.ts',
+), 'utf8')
+const profileStyles = readFileSync(resolve(
+  __dirname,
+  '../src/pages/public-profile/index.scss',
+), 'utf8')
 const profileEntry = readFileSync(resolve(__dirname, '../src/pages/profile/index.tsx'), 'utf8')
 const generatedSchema = readFileSync(resolve(__dirname, '../src/api/generated/schema.ts'), 'utf8')
 
@@ -34,11 +46,31 @@ assert.ok(profile.includes('profile.counts.community_posts'))
 assert.ok(profile.includes('profile.counts.errands'))
 assert.ok(profile.includes('profile.counts.marketplace_listings'))
 assert.ok(profile.includes('profile.counts.carpool_trips'))
+assert.ok(profile.includes("{ key: 'carpool', label: '找同行' }"))
+assert.ok(profileStyles.includes("@use '../../styles/tokens' as token;"))
+assert.ok(profileStyles.includes('background: token.$color-page;'))
+assert.equal(profileStyles.includes('#f8f6f1'), false)
 
 assert.equal((publisher.match(/campus: selectedCampus/g) || []).length, 3)
 assert.ok(publisher.includes('ROUTE_SHORTCUTS.map'))
 assert.ok(publisher.includes('rememberRoutePair(form.pickupLocation, form.dropoffLocation)'))
 assert.ok(publisher.includes('rememberRoutePair(form.origin, form.destination)'))
+for (const shortcut of [
+  '崂山校区',
+  '鱼山校区',
+  '西海岸',
+  '浮山校区',
+  '机场',
+  '青岛北',
+  '青岛站',
+]) {
+  assert.ok(routeHistory.includes(`'${shortcut}'`), `常用地点缺少 ${shortcut}`)
+}
+assert.ok(carpoolFilters.includes("kind='origin'"))
+assert.ok(carpoolFilters.includes("kind='destination'"))
+assert.ok(carpoolFilters.includes('ROUTE_SHORTCUTS'))
+assert.ok(carpoolFilters.includes('getRecentRouteValues(kind)'))
+assert.ok(carpoolFilters.includes('rememberRoutePair(origin, destination)'))
 assert.ok(lifeList.includes('<CampusSelector value={campus} allowAll onChange={setCampus} />'))
 assert.ok(profileEntry.includes('openPublicProfile(currentUser.user.id)'))
 assert.ok(generatedSchema.includes('UserProfile: {'))
