@@ -156,6 +156,9 @@ export default function CalendarPage() {
             <View
               key={value}
               className={level === value ? 'calendar-level-switch__active' : ''}
+              hoverClass='calendar-level-switch__pressed'
+              role='button'
+              ariaLabel={`切换至${label}校历`}
               onClick={() => chooseLevel(value)}
             >
               {label}
@@ -176,6 +179,9 @@ export default function CalendarPage() {
                 className={activeTerm?.id === term.id
                   ? 'calendar-term-switch__active'
                   : ''}
+                hoverClass='calendar-term-switch__pressed'
+                role='button'
+                ariaLabel={`查看${term.label}`}
                 onClick={() => chooseTerm(term.id)}
               >
                 <Text>{term.short_label}</Text>
@@ -312,6 +318,9 @@ export default function CalendarPage() {
             <View
               key={value}
               className={filter === value ? 'calendar-filters__active' : ''}
+              hoverClass='calendar-filters__pressed'
+              role='button'
+              ariaLabel={`筛选${label}安排`}
               onClick={() => setFilter(value)}
             >
               {label}

@@ -160,6 +160,8 @@ export default function MessagesPage() {
           <View
             className='motion-press'
             hoverClass='motion-press--active'
+            ariaRole='button'
+            ariaLabel='将全部消息标记为已读'
             onClick={() => void readAll()}
           >
             全部已读
@@ -175,7 +177,15 @@ export default function MessagesPage() {
             placeholder='搜索标题或消息内容'
             onInput={(event) => setKeyword(event.detail.value)}
           />
-          {keyword && <Text onClick={() => setKeyword('')}>清除</Text>}
+          {keyword && (
+            <View
+              className='messages-search__clear'
+              hoverClass='messages-search__clear--pressed'
+              ariaRole='button'
+              ariaLabel='清除搜索内容'
+              onClick={() => setKeyword('')}
+            >清除</View>
+          )}
         </View>
 
         <View className='messages-tabs motion-enter motion-enter--delay-2'>
@@ -187,6 +197,8 @@ export default function MessagesPage() {
                 tab === item ? 'messages-tabs__active' : '',
               ].filter(Boolean).join(' ')}
               hoverClass='motion-press--active'
+              ariaRole='button'
+              ariaLabel={`筛选${item}消息`}
               onClick={() => setTab(item)}
             >
               {item}
@@ -198,7 +210,7 @@ export default function MessagesPage() {
         {!loading && error && (
           <View className='messages-state messages-state--error'>
             <Text>{error}</Text>
-            <View onClick={() => void load()}>重新加载</View>
+            <View className='messages-state__retry' hoverClass='messages-state__retry--pressed' ariaRole='button' ariaLabel='重新加载消息' onClick={() => void load()}>重新加载</View>
           </View>
         )}
 
@@ -222,6 +234,8 @@ export default function MessagesPage() {
                 unread ? 'message-card--unread' : '',
               ].filter(Boolean).join(' ')}
               hoverClass='message-card--pressed'
+              ariaRole='button'
+              ariaLabel={`查看${message.title}`}
               onClick={() => void open(message)}
             >
               <View className={`message-card__icon message-card__icon--${iconTone}`}>
@@ -274,6 +288,8 @@ export default function MessagesPage() {
                 <View
                   className='message-sheet__button message-sheet__button--primary motion-press'
                   hoverClass='motion-press--active'
+                  ariaRole='button'
+                  ariaLabel='查看相关内容'
                   onClick={() => goAction(active)}
                 >
                   查看相关内容
@@ -282,6 +298,8 @@ export default function MessagesPage() {
               <View
                 className='message-sheet__button motion-press'
                 hoverClass='motion-press--active'
+                ariaRole='button'
+                ariaLabel='关闭消息详情'
                 onClick={() => setActive(null)}
               >
                 知道了

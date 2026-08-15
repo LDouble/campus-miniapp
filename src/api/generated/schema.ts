@@ -7361,14 +7361,14 @@ export interface components {
         };
         ShuttleDateOverrideInput: {
             day_type: components["schemas"]["ShuttleDayType"];
-            departure_times?: string[];
             note?: string;
             /** Format: date */
             service_date: string;
             suspended: boolean;
+            trips?: components["schemas"]["ShuttleTripInput"][];
         };
         /** @enum {string} */
-        ShuttleDayType: "workday" | "weekend" | "holiday" | "vacation" | "special";
+        ShuttleDayType: "workday" | "saturday" | "sunday" | "holiday" | "vacation" | "special";
         /** @enum {string} */
         ShuttleResolutionSource: "date_override" | "special_period" | "weekly_rule";
         ShuttleResolvedSchedule: {
@@ -7381,6 +7381,7 @@ export interface components {
             service_date: string;
             source: components["schemas"]["ShuttleResolutionSource"];
             suspended: boolean;
+            trips: components["schemas"]["ShuttleTripInput"][];
         };
         ShuttleRouteInput: {
             campuses: string[];
@@ -7447,20 +7448,20 @@ export interface components {
         };
         ShuttleScheduleInput: {
             day_type: components["schemas"]["ShuttleDayType"];
-            departure_times: string[];
             note?: string;
+            trips: components["schemas"]["ShuttleTripInput"][];
         };
         /** @enum {string} */
         ShuttleServiceType: "campus_loop" | "intercampus";
         ShuttleSpecialPeriodInput: {
             day_type: components["schemas"]["ShuttleDayType"];
-            departure_times?: string[];
             /** Format: date */
             end_date: string;
             note?: string;
             /** Format: date */
             start_date: string;
             suspended: boolean;
+            trips?: components["schemas"]["ShuttleTripInput"][];
         };
         ShuttleStopInput: {
             campus: string;
@@ -7468,6 +7469,14 @@ export interface components {
             note?: string;
             /** Format: int32 */
             offset_minutes: number;
+        };
+        ShuttleTripInput: {
+            label?: string;
+            stop_times: components["schemas"]["ShuttleTripStopTimeInput"][];
+        };
+        ShuttleTripStopTimeInput: {
+            stop_name: string;
+            time: string;
         };
         ShuttleVersionInput: {
             /** Format: uint64 */

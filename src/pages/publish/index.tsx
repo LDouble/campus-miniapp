@@ -804,6 +804,7 @@ export default function PublishPage() {
             <View
               key={item.key}
               className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
+              hoverClass={mode === 'create' ? 'publisher-type--pressed' : 'none'}
               ariaRole='button'
               ariaLabel={`${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
               onClick={() => selectSection(item.key)}
@@ -841,12 +842,14 @@ export default function PublishPage() {
                 <View className='publisher-market-intents'>
                   <View
                     className={form.marketIntent === 'sell' ? 'publisher-market-intent--active' : ''}
+                    hoverClass='publisher-market-intent--pressed'
                     onClick={() => selectMarketIntent('sell')}
                   >
                     我要出售
                   </View>
                   <View
                     className={form.marketIntent === 'wanted' ? 'publisher-market-intent--active' : ''}
+                    hoverClass='publisher-market-intent--pressed'
                     onClick={() => selectMarketIntent('wanted')}
                   >
                     我要求购
@@ -983,6 +986,7 @@ export default function PublishPage() {
                             ? 'publisher-community-section--active'
                             : ''
                         }`}
+                        hoverClass='publisher-community-section--pressed'
                         onClick={() => update('communitySectionId', item.id)}
                       >
                         <Text>{item.name}</Text>
@@ -995,8 +999,8 @@ export default function PublishPage() {
                   <>
                     <SectionHeading title='关联话题（可选）' />
                     <View className='publisher-community-sections'>
-                      <View className={`publisher-community-section ${form.communityTopicId === 0 ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', 0)}><Text>不关联话题</Text><Text>普通动态</Text></View>
-                      {topics.map((item) => <View key={item.id} className={`publisher-community-section ${form.communityTopicId === item.id ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', item.id)}><Text>#{item.name}</Text><Text>{item.kind === 'campaign' ? '活动' : '话题'}</Text></View>)}
+                      <View className={`publisher-community-section ${form.communityTopicId === 0 ? 'publisher-community-section--active' : ''}`} hoverClass='publisher-community-section--pressed' onClick={() => update('communityTopicId', 0)}><Text>不关联话题</Text><Text>普通动态</Text></View>
+                      {topics.map((item) => <View key={item.id} className={`publisher-community-section ${form.communityTopicId === item.id ? 'publisher-community-section--active' : ''}`} hoverClass='publisher-community-section--pressed' onClick={() => update('communityTopicId', item.id)}><Text>#{item.name}</Text><Text>{item.kind === 'campaign' ? '活动' : '话题'}</Text></View>)}
                     </View>
                   </>
                 )}

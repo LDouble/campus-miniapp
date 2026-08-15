@@ -258,3 +258,63 @@ page { background: #f4f8f7; }
   .community-topic-hero__action,
   .community-topic-empty__action { transition: none; }
 }
+
+/* 话题页：保留封面层次，同时统一为蓝灰白信息流界面。 */
+page { background: #f4f7fb; }
+
+.community-topic-page {
+  color: #1d293d;
+  background: #f4f7fb;
+}
+
+.community-topic-page__content { padding-bottom: calc(76rpx + env(safe-area-inset-bottom)); }
+
+.community-topic-hero {
+  border-color: #dce9fb;
+  background: linear-gradient(138deg, #e3efff 0%, #f4f8ff 58%, #eef5ff 100%);
+  box-shadow: 0 18rpx 42rpx rgba(30, 64, 110, .11);
+
+  &__glow { background: rgba(255, 255, 255, .52); }
+  &--covered::after { background: linear-gradient(100deg, rgba(18, 54, 100, .9), rgba(27, 83, 153, .68) 62%, rgba(43, 127, 255, .32)); }
+  &__eyebrow { flex-wrap: wrap; }
+  &__eyebrow text { max-width: 100%; overflow: hidden; color: #2b7fff; text-overflow: ellipsis; white-space: nowrap; }
+  &__title { color: #1d293d; overflow-wrap: anywhere; }
+  &__description { color: #45556c; overflow-wrap: anywhere; }
+  &__footer { align-items: flex-end; }
+  &__meta text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__meta { color: #45556c; }
+  &__action { min-width: 176rpx; color: #fff; background: #2b7fff; box-shadow: 0 11rpx 22rpx rgba(43, 127, 255, .24); white-space: nowrap; }
+  &--covered &__action { color: #fff; }
+}
+
+.community-topic-feed-heading {
+  gap: 16rpx;
+
+  > view { min-width: 0; }
+  > view text:first-child { color: #1d293d; }
+  > view text:last-child,
+  > text { color: #90a1b9; }
+  > text { flex: none; white-space: nowrap; }
+}
+
+.community-topic-page__state,
+.community-topic-empty {
+  border-color: #e1eaf6;
+  color: #45556c;
+  background: #fff;
+  box-shadow: 0 12rpx 30rpx rgba(30, 64, 110, .07);
+}
+
+.community-topic-page__state--error {
+  view,
+  .community-topic-page__retry { color: #2b7fff; background: #e8f1ff; }
+}
+
+.community-topic-page__retry--pressed { opacity: .68; }
+
+.community-topic-empty {
+  > view:first-child { color: #2b7fff; background: #e8f1ff; }
+  > text:nth-child(2) { color: #1d293d; }
+  > text:nth-child(3) { color: #45556c; }
+  &__action { color: #fff; background: #2b7fff; }
+}

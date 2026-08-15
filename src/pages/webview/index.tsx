@@ -28,7 +28,13 @@ export default function WebViewPage() {
       <View className='webview-error__mark'>!</View>
       <Text className='webview-error__title'>暂时无法打开网页</Text>
       <Text className='webview-error__description'>{error || '链接正在加载'}</Text>
-      <View className='webview-error__action' onClick={() => Taro.navigateBack()}>
+      <View
+        className='webview-error__action'
+        hoverClass='webview-error__action--pressed'
+        ariaRole='button'
+        ariaLabel='返回上一页'
+        onClick={() => Taro.navigateBack()}
+      >
         返回上一页
       </View>
     </View>

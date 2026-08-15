@@ -1,60 +1,60 @@
 .app-login {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 12% 18%, rgba(110, 174, 151, 0.16), transparent 34%),
-    radial-gradient(circle at 88% 72%, rgba(240, 164, 126, 0.12), transparent 30%),
-    #f8fbf8;
+    radial-gradient(circle at 8% 12%, rgba(43, 127, 255, 0.11), transparent 31%),
+    radial-gradient(circle at 96% 70%, rgba(144, 161, 185, 0.13), transparent 28%),
+    #f4f7fb;
 }
 
 .app-login__content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 92rpx 38rpx 48rpx;
+  padding: 72rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
 }
 
 .app-login__mark {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 116rpx;
-  height: 116rpx;
+  width: 112rpx;
+  height: 112rpx;
   color: #fff;
   font-size: 46rpx;
   font-weight: 800;
-  background: linear-gradient(145deg, #75ad9a, #4d8d79);
-  border: 6rpx solid rgba(255, 255, 255, 0.86);
-  border-radius: 38rpx;
-  box-shadow: 0 22rpx 54rpx rgba(63, 116, 97, 0.2);
+  background: linear-gradient(145deg, #4b92ff, #2b7fff);
+  border: 6rpx solid rgba(255, 255, 255, 0.92);
+  border-radius: 32rpx;
+  box-shadow: 0 18rpx 42rpx rgba(43, 127, 255, 0.24);
 }
 
 .app-login__title {
   margin-top: 38rpx;
-  color: #31585e;
-  font-size: 42rpx;
+  color: #1d293d;
+  font-size: 40rpx;
   font-weight: 800;
 }
 
 .app-login__subtitle {
   margin-top: 10rpx;
-  color: #829692;
+  color: #90a1b9;
   font-size: 25rpx;
 }
 
 .app-login__panel {
   width: 100%;
-  margin-top: 52rpx;
-  padding: 8rpx 30rpx;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1rpx solid rgba(75, 124, 111, 0.08);
-  border-radius: 34rpx;
-  box-shadow: 0 20rpx 48rpx rgba(70, 106, 95, 0.08);
+  margin-top: 46rpx;
+  padding: 8rpx 26rpx;
+  background: #fff;
+  border: 2rpx solid #e4ebf5;
+  border-radius: 28rpx;
+  box-shadow: 0 10rpx 26rpx rgba(29, 41, 61, 0.05);
 }
 
 .app-login__row {
   display: flex;
   align-items: center;
-  min-height: 126rpx;
+  min-height: 118rpx;
 }
 
 .app-login__row > view {
@@ -65,14 +65,14 @@
 }
 
 .app-login__row > view text:first-child {
-  color: #3f6466;
-  font-size: 29rpx;
+  color: #1d293d;
+  font-size: 28rpx;
   font-weight: 700;
 }
 
 .app-login__row > view text:last-child {
   margin-top: 5rpx;
-  color: #8b9c98;
+  color: #90a1b9;
   font-size: 22rpx;
 }
 
@@ -85,14 +85,14 @@
   color: #fff;
   font-size: 24rpx;
   font-weight: 700;
-  background: #68a48f;
-  border-radius: 18rpx;
+  background: #2b7fff;
+  border-radius: 16rpx;
 }
 
 .app-login__divider {
   height: 1rpx;
   margin-left: 78rpx;
-  background: #e8efec;
+  background: #edf1f6;
 }
 
 .app-login__message {
@@ -102,7 +102,7 @@
   justify-content: center;
   min-height: 80rpx;
   margin-top: 28rpx;
-  color: #6e8580;
+  color: #45556c;
   font-size: 23rpx;
 }
 
@@ -110,16 +110,16 @@
   width: 12rpx;
   height: 12rpx;
   margin-right: 12rpx;
-  background: #72af91;
+  background: #2b7fff;
   border-radius: 50%;
 }
 
 .app-login__message--error {
-  color: #b56f62;
+  color: #c65b63;
 }
 
 .app-login__message--error > view {
-  background: #d48978;
+  background: #c65b63;
 }
 
 .app-login__button {
@@ -132,9 +132,9 @@
   color: #fff;
   font-size: 29rpx;
   font-weight: 700;
-  background: linear-gradient(135deg, #66a58f, #4d9079);
-  border-radius: 32rpx;
-  box-shadow: 0 18rpx 34rpx rgba(69, 135, 112, 0.22);
+  background: linear-gradient(135deg, #3b8cff, #2b7fff);
+  border-radius: 24rpx;
+  box-shadow: 0 16rpx 30rpx rgba(43, 127, 255, 0.22);
 }
 
 .app-login__button--pressed {
@@ -161,14 +161,20 @@
   align-items: center;
   justify-content: center;
   margin-top: 24rpx;
-  color: #a0aeaa;
+  color: #90a1b9;
   font-size: 20rpx;
   text-align: center;
 }
 
 .app-login__privacy text:last-child {
   margin-left: 7rpx;
-  color: #4d9079;
+  color: #2b7fff;
+}
+
+@media (max-width: 360px) {
+  .app-login__content { padding-right: 22rpx; padding-left: 22rpx; }
+  .app-login__title { font-size: 36rpx; }
+  .app-login__row > view { margin-left: 18rpx; }
 }
 
 @keyframes app-login-spin {

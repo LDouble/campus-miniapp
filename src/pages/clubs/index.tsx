@@ -318,7 +318,7 @@ export default function ClubsPage() {
           <Text className='clubs-hero__subtitle'>浏览校园社团的故事、文化与精彩瞬间</Text>
         </View>
         <View className='clubs-hero__mark'>
-          <Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' />
+          <Image src={require('../../assets/icons/clubs-white.svg')} mode='aspectFit' />
         </View>
       </View>
 

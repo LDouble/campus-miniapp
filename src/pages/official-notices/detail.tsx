@@ -130,7 +130,7 @@ export default function OfficialNoticeDetailPage() {
       {!loading && error && (
         <View className='official-notice-detail-state'>
           <Text>{error}</Text>
-          {!!noticeId && <View onClick={() => void load(noticeId)}>重新加载</View>}
+          {!!noticeId && <View className='official-notice-detail-state__retry' hoverClass='official-notice-detail-state__retry--pressed' ariaRole='button' ariaLabel='重新加载通知' onClick={() => void load(noticeId)}>重新加载</View>}
         </View>
       )}
       {!loading && notice && (
@@ -163,7 +163,13 @@ export default function OfficialNoticeDetailPage() {
             <View className='official-notice-attachments'>
               <Text className='official-notice-attachments__title'>附件下载</Text>
               {notice.attachments.map((attachment, index) => (
-                <View key={`${attachment.url}-${index}`} onClick={() => void openAttachment(attachment)}>
+                <View
+                  key={`${attachment.url}-${index}`}
+                  hoverClass='official-notice-attachments__item--pressed'
+                  ariaRole='button'
+                  ariaLabel={`预览附件：${attachment.name}`}
+                  onClick={() => void openAttachment(attachment)}
+                >
                   <View>附</View>
                   <Text>{attachment.name}</Text>
                   <Text>预览 ›</Text>
@@ -175,7 +181,12 @@ export default function OfficialNoticeDetailPage() {
 
           <View className='official-notice-detail__actions'>
             {!!notice.original_url && (
-              <View onClick={() => void copyOriginalUrl(notice.original_url || '')}>复制原文地址</View>
+              <View
+                hoverClass='official-notice-detail__action--pressed'
+                ariaRole='button'
+                ariaLabel='复制原文地址'
+                onClick={() => void copyOriginalUrl(notice.original_url || '')}
+              >复制原文地址</View>
             )}
             <Button openType='share'>分享给同学</Button>
           </View>
