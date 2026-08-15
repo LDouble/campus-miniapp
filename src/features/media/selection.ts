@@ -2,8 +2,10 @@ import Taro from '@tarojs/taro'
 import { getSelectedTempFiles } from '../../utils/file-selection'
 import {
   createLocalMediaImageDraft,
+  DEFAULT_MEDIA_IMAGE_QUALITY,
   MAX_PUBLISH_IMAGES,
   mediaImageMimeFromType,
+  scaledMediaImageDimensions,
   validateMediaImage,
 } from './images'
 import type { MediaImageDraft } from './images'
@@ -35,6 +37,8 @@ const prepareImage = async (input: {
   fallbackWidth?: number
   fallbackHeight?: number
   cropSquare?: boolean
+  maxDimension?: number
+  quality?: number
 }): Promise<MediaImageDraft> => {
   let localPath = input.filePath
   if (input.cropSquare) {
@@ -49,7 +53,22 @@ const prepareImage = async (input: {
     }
   }
   try {
-    const compressed = await Taro.compressImage({ src: localPath, quality: 82 })
+    const maxDimension = input.maxDimension
+    const dimensions = maxDimension
+      ? await Taro.getImageInfo({ src: localPath }).then((info) => scaledMediaImageDimensions({
+        width: Number(info.width),
+        height: Number(info.height),
+        maxDimension,
+      }))
+      : null
+    const compressed = await Taro.compressImage({
+      src: localPath,
+      quality: input.quality ?? DEFAULT_MEDIA_IMAGE_QUALITY,
+      ...(dimensions ? {
+        compressedWidth: dimensions.width,
+        compressedHeight: dimensions.height,
+      } : {}),
+    })
     localPath = compressed.tempFilePath
   } catch (error) {
     console.warn('[图片处理] 二次压缩不可用，使用当前图片', {
@@ -75,6 +94,8 @@ const prepareImage = async (input: {
 export const chooseMediaImages = async (input: {
   count: number
   cropSquare?: boolean
+  maxDimension?: number
+  quality?: number
 }): Promise<MediaImageDraft[]> => {
   try {
     const result = await Taro.chooseMedia({
@@ -88,6 +109,8 @@ export const chooseMediaImages = async (input: {
       fallbackWidth: file.width,
       fallbackHeight: file.height,
       cropSquare: input.cropSquare,
+      maxDimension: input.maxDimension,
+      quality: input.quality,
     })))
   } catch (error) {
     if (wasCancelled(error)) return []

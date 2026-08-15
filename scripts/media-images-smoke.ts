@@ -2,13 +2,29 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  AVATAR_IMAGE_MAX_DIMENSION,
+  AVATAR_IMAGE_QUALITY,
   MAX_MEDIA_IMAGE_BYTES,
   mediaImageMimeFromType,
   mediaImageValidationError,
   moveMediaImage,
   serverMediaImageDraft,
+  scaledMediaImageDimensions,
   validateMediaImage,
 } from '../src/features/media/images'
+
+assert.equal(AVATAR_IMAGE_MAX_DIMENSION, 512)
+assert.equal(AVATAR_IMAGE_QUALITY, 80)
+assert.equal(scaledMediaImageDimensions({ width: 256, height: 256, maxDimension: 512 }), null)
+assert.equal(scaledMediaImageDimensions({ width: 512, height: 512, maxDimension: 512 }), null)
+assert.deepEqual(
+  scaledMediaImageDimensions({ width: 2000, height: 2000, maxDimension: 512 }),
+  { width: 512, height: 512 },
+)
+assert.deepEqual(
+  scaledMediaImageDimensions({ width: 1024, height: 768, maxDimension: 512 }),
+  { width: 512, height: 384 },
+)
 
 assert.equal(mediaImageMimeFromType('JPG'), 'image/jpeg')
 assert.equal(mediaImageMimeFromType('webp'), null)
@@ -59,9 +75,15 @@ assert.ok(publishSource.includes("title: '替换原图片'"))
 
 const profileSource = readFileSync(resolve(__dirname, '../src/pages/profile/index.tsx'), 'utf8')
 assert.ok(profileSource.includes('cropSquare: true'))
+assert.ok(profileSource.includes('maxDimension: AVATAR_IMAGE_MAX_DIMENSION'))
+assert.ok(profileSource.includes('quality: AVATAR_IMAGE_QUALITY'))
 assert.ok(profileSource.includes("purpose: 'avatar'"))
 assert.ok(profileSource.includes('updateCurrentAvatar(mediaId)'))
 const accountSource = readFileSync(resolve(__dirname, '../src/api/account.ts'), 'utf8')
 assert.ok(accountSource.includes('avatar_media_id: mediaId'))
+
+const selectionSource = readFileSync(resolve(__dirname, '../src/features/media/selection.ts'), 'utf8')
+assert.ok(selectionSource.includes('compressedWidth: dimensions.width'))
+assert.ok(selectionSource.includes('compressedHeight: dimensions.height'))
 
 process.stdout.write('media images semantic smoke: ok\n')

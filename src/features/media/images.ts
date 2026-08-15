@@ -1,5 +1,8 @@
 export const MAX_PUBLISH_IMAGES = 9
 export const MAX_MEDIA_IMAGE_BYTES = 5 * 1024 * 1024
+export const DEFAULT_MEDIA_IMAGE_QUALITY = 82
+export const AVATAR_IMAGE_MAX_DIMENSION = 512
+export const AVATAR_IMAGE_QUALITY = 80
 export const MEDIA_IMAGE_MIME_TYPES = [
   'image/jpeg',
   'image/png',
@@ -47,6 +50,25 @@ export const validateMediaImage = (input: {
   if (input.sizeBytes <= 0) return '图片文件无效，请重新选择'
   if (input.sizeBytes > MAX_MEDIA_IMAGE_BYTES) return '单张图片不能超过 5 MiB'
   return ''
+}
+
+export const scaledMediaImageDimensions = (input: {
+  width: number
+  height: number
+  maxDimension: number
+}) => {
+  const width = Math.floor(input.width)
+  const height = Math.floor(input.height)
+  const maxDimension = Math.floor(input.maxDimension)
+  const longestDimension = Math.max(width, height)
+  if (width <= 0 || height <= 0 || maxDimension <= 0 || longestDimension <= maxDimension) {
+    return null
+  }
+  const scale = maxDimension / longestDimension
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  }
 }
 
 export const moveMediaImage = (

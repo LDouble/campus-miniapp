@@ -22,6 +22,10 @@ import {
   validateUsername,
 } from '../../features/profile/username'
 import { isQualificationEdition } from '../../features/app-edition'
+import {
+  AVATAR_IMAGE_MAX_DIMENSION,
+  AVATAR_IMAGE_QUALITY,
+} from '../../features/media/images'
 import type { MediaImageDraft } from '../../features/media/images'
 import { chooseMediaImages } from '../../features/media/selection'
 import { syncCustomTabBar } from '../../utils/tabbar'
@@ -233,7 +237,12 @@ export default function ProfilePage() {
   const chooseAvatar = async () => {
     if (savingAvatar) return
     try {
-      const [selected] = await chooseMediaImages({ count: 1, cropSquare: true })
+      const [selected] = await chooseMediaImages({
+        count: 1,
+        cropSquare: true,
+        maxDimension: AVATAR_IMAGE_MAX_DIMENSION,
+        quality: AVATAR_IMAGE_QUALITY,
+      })
       if (!selected) return
       setAvatarDraft(selected)
       await applyAvatar(selected)
