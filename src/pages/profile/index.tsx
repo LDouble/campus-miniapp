@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import UserAvatarImage from '../../components/user-avatar-image'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { getCurrentUser, updateCurrentAvatar, updateCurrentUsername } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
@@ -292,9 +293,11 @@ export default function ProfilePage() {
             ariaLabel={savingAvatar ? '头像正在上传' : '更换头像'}
             onClick={() => void chooseAvatar()}
           >
-            {avatarUrl
-              ? <Image src={avatarUrl} mode='aspectFill' />
-              : <Text>{displayName.slice(0, 1)}</Text>}
+            <UserAvatarImage
+              src={avatarUrl}
+              className='profile-card__avatar-image'
+              fallback={displayName.slice(0, 1)}
+            />
             <Text className='profile-card__avatar-action'>
               {savingAvatar
                 ? `${avatarDraft?.progress || 0}%`

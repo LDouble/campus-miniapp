@@ -78,7 +78,6 @@ page { background: #faf7f2; }
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     flex: none;
     width: 72rpx;
     height: 72rpx;
@@ -89,7 +88,7 @@ page { background: #faf7f2; }
     font-weight: 700;
     background: linear-gradient(145deg, #fff3e9, #ffe4d4);
     border: 4rpx solid rgba(255, 255, 255, 0.92);
-    border-radius: 24rpx;
+    border-radius: 50%;
     box-shadow: 8rpx 10rpx 24rpx rgba(54, 117, 139, 0.08), -8rpx -8rpx 22rpx #fff;
   }
 
@@ -133,8 +132,11 @@ page { background: #faf7f2; }
   }
 
   &__avatar-image {
+    display: block;
     width: 100%;
     height: 100%;
+    background: #eef3f2;
+    border-radius: 50%;
   }
 
   &__chevron {
@@ -1576,7 +1578,7 @@ page { background: #faf7f2; }
     color: #fff;
     background: #397c74;
     border: 3rpx solid rgba(255, 255, 255, 0.86);
-    border-radius: 18rpx;
+    border-radius: 50%;
     box-shadow: 5rpx 7rpx 14rpx rgba(48, 92, 84, 0.11);
 
     text {
@@ -1598,8 +1600,11 @@ page { background: #faf7f2; }
   }
 
   &__avatar-image {
+    display: block;
     width: 100%;
     height: 100%;
+    background: #eef3f2;
+    border-radius: 50%;
   }
 
   &__author {

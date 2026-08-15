@@ -8,6 +8,7 @@ import {
   communityAuthorTone,
 } from './author'
 import CommunityLevelBadge from './level-badge'
+import UserAvatarImage from '../../components/user-avatar-image'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -75,9 +76,12 @@ export default function CommunityPostCard({
         onClick={() => onOpen(post)}
       >
         <View className={`community-post__avatar community-post__avatar--tone-${avatarTone}`}>
-          {authorAvatarUrl
-            ? <Image className='community-post__avatar-image' src={authorAvatarUrl} mode='aspectFill' lazyLoad />
-            : <Text>{authorInitial}</Text>}
+          <UserAvatarImage
+            src={authorAvatarUrl}
+            className='community-post__avatar-image'
+            fallback={authorInitial}
+            lazyLoad
+          />
         </View>
         <View className='community-post__author'>
           <View className='community-post__author-line'>

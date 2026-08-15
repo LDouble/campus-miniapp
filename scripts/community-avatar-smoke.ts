@@ -34,6 +34,7 @@ assert.ok(feedStyleSource.includes('.community-post__review-status--pending'))
 assert.ok(feedStyleSource.includes('.community-post__review-status--rejected'))
 assert.ok(feedStyleSource.includes('.community-post__image-reviewing'))
 assert.ok(feedStyleSource.includes('.community-post__image-reviewing--overlay'))
+assert.match(feedStyleSource, /\.community-post__avatar-image[\s\S]*?background: #eef3f2;[\s\S]*?border-radius: 50%;/)
 
 const detailSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.tsx'), 'utf8')
 assert.equal((detailSource.match(/communityAuthorAvatarUrl\(/g) || []).length >= 3, true)
@@ -44,6 +45,7 @@ assert.ok(detailSource.includes('community-detail-card__image-reviewing--overlay
 
 const detailStyleSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.scss'), 'utf8')
 assert.ok(detailStyleSource.includes('&__image-reviewing--overlay'))
+assert.equal((detailStyleSource.match(/background: #eef3f2;\n\s+border-radius: 50%;/g) || []).length >= 3, true)
 
 const publishSource = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
 assert.ok(publishSource.includes('`/pages/community/detail?id=${id}&mode=post`'))
@@ -55,6 +57,20 @@ assert.ok(marketplaceCardSource.includes('marketplace-card__reviewing'))
 const homeSource = readFileSync(resolve(__dirname, '../src/pages/index/index.tsx'), 'utf8')
 assert.ok((homeSource.match(/communityAuthorAvatarUrl\(item\)/g) || []).length >= 2)
 assert.ok(homeSource.includes("className='news-card__avatar-image'"))
+assert.ok(homeSource.includes("className='campus__avatar-image'"))
+assert.ok(homeSource.includes("setAvatarUrl(account.value.user.avatar_url || '')"))
+
+const homeStyleSource = readFileSync(resolve(__dirname, '../src/pages/index/index.scss'), 'utf8')
+assert.equal((homeStyleSource.match(/&__avatar-image \{/g) || []).length >= 2, true)
+assert.equal((homeStyleSource.match(/background: #eef3f2;\n\s+border-radius: 50%;/g) || []).length >= 2, true)
+
+const profileStyleSource = readFileSync(resolve(__dirname, '../src/pages/profile/index.scss'), 'utf8')
+assert.match(profileStyleSource, /&-image \{[\s\S]*?background: #eef3f2;[\s\S]*?border-radius: 50%;/)
+
+const avatarImageSource = readFileSync(resolve(__dirname, '../src/components/user-avatar-image/index.tsx'), 'utf8')
+assert.ok(avatarImageSource.includes("mode='aspectFill'"))
+assert.ok(avatarImageSource.includes('onError={() => setFailedSrc(normalizedSrc)}'))
+assert.ok(avatarImageSource.includes('return <Text>{fallback}</Text>'))
 
 const schemaSource = readFileSync(resolve(__dirname, '../src/api/generated/schema.ts'), 'utf8')
 assert.match(schemaSource, /CampusCirclePostView: \{\n\s+author_avatar_url: string \| null;/)

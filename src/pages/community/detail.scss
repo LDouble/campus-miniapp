@@ -96,8 +96,11 @@ page {
   }
 
   &__avatar-image {
+    display: block;
     width: 100%;
     height: 100%;
+    background: #eef3f2;
+    border-radius: 50%;
   }
 
   &__avatar--tone-2 {
@@ -364,8 +367,11 @@ page {
   }
 
   &__avatar-image {
+    display: block;
     width: 100%;
     height: 100%;
+    background: #eef3f2;
+    border-radius: 50%;
   }
 
   &__avatar--tone-2 {
@@ -668,8 +674,11 @@ page {
 }
 
 .community-comment__reply-avatar-image {
+  display: block;
   width: 100%;
   height: 100%;
+  background: #eef3f2;
+  border-radius: 50%;
 }
 
 .community-comment__reply-copy {

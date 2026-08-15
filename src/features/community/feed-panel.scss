@@ -214,8 +214,11 @@
 }
 
 .community-post__avatar-image {
+  display: block;
   width: 100%;
   height: 100%;
+  background: #eef3f2;
+  border-radius: 50%;
 }
 
 .community-post__avatar--tone-1 {
