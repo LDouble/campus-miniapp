@@ -1,5 +1,5 @@
 page {
-  background: #f4f7fb;
+  background: var(--campus-page, #f4f7fb);
 }
 
 .webview-error {
@@ -7,8 +7,8 @@ page {
   padding: 220rpx 40rpx calc(80rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   background:
-    linear-gradient(180deg, #eff6ff 0, rgba(239, 246, 255, 0) 460rpx),
-    #f4f7fb;
+    linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 460rpx),
+    var(--campus-page, #f4f7fb);
   text-align: center;
 
   &__mark {
@@ -16,8 +16,8 @@ page {
     height: 92rpx;
     margin: 0 auto 26rpx;
     border-radius: 26rpx;
-    background: #eff6ff;
-    color: #2b7fff;
+    background: var(--campus-surface-primary, #eff6ff);
+    color: var(--campus-primary, #2b7fff);
     font-size: 44rpx;
     font-weight: 750;
     line-height: 92rpx;
@@ -30,7 +30,7 @@ page {
   }
 
   &__title {
-    color: #1d293d;
+    color: var(--campus-text-heading, #1d293d);
     font-size: 34rpx;
     font-weight: 800;
   }
@@ -38,7 +38,7 @@ page {
   &__description {
     margin-top: 14rpx;
     overflow-wrap: anywhere;
-    color: #62748e;
+    color: var(--campus-text-secondary, #62748e);
     font-size: 24rpx;
     line-height: 1.65;
   }
@@ -51,7 +51,7 @@ page {
     align-items: center;
     justify-content: center;
     border-radius: 22rpx;
-    background: #2b7fff;
+    background: var(--campus-primary, #2b7fff);
     color: #fff;
     font-size: 24rpx;
     font-weight: 700;

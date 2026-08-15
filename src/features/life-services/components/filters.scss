@@ -86,7 +86,7 @@
 
 .market-price-trigger__separator {
   margin: 0 6rpx;
-  color: #cbd5e1;
+  color: var(--campus-border, #cbd5e1);
   font-size: 20rpx;
 }
 
@@ -211,7 +211,7 @@
 
 .carpool-more-trigger__separator {
   margin: 0 6rpx;
-  color: #cbd5e1;
+  color: var(--campus-border, #cbd5e1);
 }
 
 .carpool-more-trigger--active {
@@ -284,7 +284,7 @@
 .filter-chip--market-active {
   color: #9333ea;
   font-weight: 700;
-  background: #faf5ff;
+  background: var(--campus-surface-marketplace, #faf5ff);
   border-color: rgba(173, 70, 255, 0.2);
   box-shadow: inset 0 -4rpx 0 token.$color-marketplace;
 }
@@ -292,7 +292,7 @@
 .filter-chip--carpool-active {
   color: #008f82;
   font-weight: 700;
-  background: #f0fdfa;
+  background: var(--campus-surface-success, #f0fdfa);
   border-color: rgba(0, 187, 167, 0.22);
   box-shadow: inset 0 -4rpx 0 token.$color-carpool;
 }
@@ -318,7 +318,7 @@
   align-items: center;
   gap: token.$space-1;
   color: #9333ea;
-  background: #faf5ff;
+  background: var(--campus-surface-marketplace, #faf5ff);
   border-radius: token.$radius-sm;
 }
 
@@ -329,7 +329,7 @@
 
 .filter-applied--carpool .filter-applied__item {
   color: #008f82;
-  background: #f0fdfa;
+  background: var(--campus-surface-success, #f0fdfa);
 }
 
 .filter-applied__remove,
@@ -383,7 +383,7 @@
 }
 
 .filter-sheet__apply {
-  color: token.$color-surface;
+  color: token.$color-on-accent;
   background: linear-gradient(135deg, token.$color-primary, token.$color-primary-cyan);
   box-shadow: token.$shadow-card;
 }
@@ -497,7 +497,7 @@
   color: #008f82;
   font-size: 21rpx;
   font-weight: 760;
-  background: #f0fdfa;
+  background: var(--campus-surface-success, #f0fdfa);
   border-radius: 50%;
 }
 
@@ -507,7 +507,7 @@
 
 .route-filter-field--destination > text {
   color: token.$color-danger;
-  background: #fff1f2;
+  background: var(--campus-surface-danger, #fff1f2);
 }
 
 .route-filter-suggestions {
@@ -557,7 +557,7 @@
 .route-filter-suggestion--active {
   color: #008f82;
   font-weight: 700;
-  background: #f0fdfa;
+  background: var(--campus-surface-success, #f0fdfa);
   border-color: rgba(0, 187, 167, 0.22);
 }
 
@@ -613,7 +613,7 @@
 
 .seat-filter-option--active {
   color: #008f82;
-  background: #f0fdfa;
+  background: var(--campus-surface-success, #f0fdfa);
   border-color: rgba(0, 187, 167, 0.22);
 }
 

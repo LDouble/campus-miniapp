@@ -2,7 +2,7 @@
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  color: #294653;
+  color: var(--campus-text-heading, #294653);
   background:
     radial-gradient(circle at 12% 9%, rgba(244, 187, 118, 0.14), transparent 29%),
     radial-gradient(circle at 96% 24%, rgba(129, 201, 194, 0.12), transparent 28%),
@@ -46,22 +46,22 @@
     text:first-child {
       font-size: 30rpx;
       font-weight: 720;
-      color: #21465c;
+      color: var(--campus-text-heading, #21465c);
     }
 
     text:last-child {
       font-size: 21rpx;
-      color: #809693;
+      color: var(--campus-text-muted, #809693);
     }
   }
 }
 
 // Current campus visual system overrides.
 .statistics-courses {
-  color: #1d293d;
+  color: var(--campus-text-heading, #1d293d);
   background:
-    linear-gradient(180deg, #eff6ff 0, rgba(239, 246, 255, 0) 500rpx),
-    #f4f7fb;
+    linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 500rpx),
+    var(--campus-page, #f4f7fb);
 
   &__glow--warm {
     background: rgba(43, 127, 255, 0.07);
@@ -72,18 +72,18 @@
   }
 
   &__heading text:first-child {
-    color: #1d293d;
+    color: var(--campus-text-heading, #1d293d);
   }
 
   &__heading text:last-child {
-    color: #90a1b9;
+    color: var(--campus-text-muted, #90a1b9);
   }
 }
 
 .statistics-search__field,
 .statistics-course-card {
-  border-color: #edf2f7;
-  background: rgba(255, 255, 255, 0.97);
+  border-color: var(--campus-border, #edf2f7);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   box-shadow: 0 7rpx 22rpx rgba(15, 23, 42, 0.04);
 }
 
@@ -91,7 +91,7 @@
 .statistics-course-card__name,
 .statistics-course-card__metrics > view text:first-child,
 .statistics-courses-empty__title {
-  color: #1d293d;
+  color: var(--campus-text-heading, #1d293d);
 }
 
 .statistics-search__placeholder,
@@ -102,12 +102,12 @@
 .statistics-course-list__footer,
 .statistics-courses-state,
 .statistics-courses-empty__copy {
-  color: #90a1b9;
+  color: var(--campus-text-muted, #90a1b9);
 }
 
 .statistics-search__button {
   color: #fff;
-  background: linear-gradient(100deg, #2b7fff, #00b8e6);
+  background: linear-gradient(100deg, var(--campus-primary, #2b7fff), #00b8e6);
   box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.18);
 
   &--pressed {
@@ -118,51 +118,51 @@
 
 /* 课程通过率列表最终覆盖层：确保早期视觉覆盖不被旧规则反向覆盖。 */
 .statistics-courses {
-  color: #1d293d;
+  color: var(--campus-text-heading, #1d293d);
   overflow: visible;
-  background: linear-gradient(180deg, #eff6ff 0, rgba(239, 246, 255, 0) 500rpx), #f4f7fb;
+  background: linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 500rpx), var(--campus-page, #f4f7fb);
 }
 
 .statistics-courses__content { padding-bottom: calc(88rpx + env(safe-area-inset-bottom)); }
 .statistics-courses__heading { min-width: 0; gap: 16rpx; }
-.statistics-courses__heading text:first-child { min-width: 0; overflow: hidden; color: #1d293d; text-overflow: ellipsis; white-space: nowrap; }
-.statistics-courses__heading text:last-child { flex: none; color: #90a1b9; white-space: nowrap; }
+.statistics-courses__heading text:first-child { min-width: 0; overflow: hidden; color: var(--campus-text-heading, #1d293d); text-overflow: ellipsis; white-space: nowrap; }
+.statistics-courses__heading text:last-child { flex: none; color: var(--campus-text-muted, #90a1b9); white-space: nowrap; }
 
 .statistics-search {
-  &__field { border-color: #e1eaf6; background: #fff; box-shadow: 0 7rpx 22rpx rgba(15, 23, 42, .04); }
-  &__field input { color: #1d293d; }
-  &__placeholder { color: #90a1b9; }
-  &__clear { display: flex; min-height: 72rpx; padding: 0 2rpx 0 14rpx; align-items: center; color: #2b7fff; }
+  &__field { border-color: var(--campus-border, #e1eaf6); background: var(--campus-surface, #fff); box-shadow: 0 7rpx 22rpx rgba(15, 23, 42, .04); }
+  &__field input { color: var(--campus-text-heading, #1d293d); }
+  &__placeholder { color: var(--campus-text-muted, #90a1b9); }
+  &__clear { display: flex; min-height: 72rpx; padding: 0 2rpx 0 14rpx; align-items: center; color: var(--campus-primary, #2b7fff); }
   &__clear--pressed { opacity: .68; }
-  &__button { min-width: 112rpx; color: #fff; background: linear-gradient(135deg, #2b7fff, #5b9dff); box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, .18); }
+  &__button { min-width: 112rpx; color: #fff; background: linear-gradient(135deg, var(--campus-primary, #2b7fff), #5b9dff); box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, .18); }
 }
 
 .statistics-course-card {
-  border-color: #edf2f7;
-  background: #fff;
+  border-color: var(--campus-border, #edf2f7);
+  background: var(--campus-surface, #fff);
   box-shadow: 0 7rpx 22rpx rgba(15, 23, 42, .04);
 
   &__head { gap: 16rpx; }
-  &__name { display: -webkit-box; color: #1d293d; overflow-wrap: anywhere; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-  &__code { overflow: hidden; color: #90a1b9; text-overflow: ellipsis; white-space: nowrap; }
+  &__name { display: -webkit-box; color: var(--campus-text-heading, #1d293d); overflow-wrap: anywhere; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  &__code { overflow: hidden; color: var(--campus-text-muted, #90a1b9); text-overflow: ellipsis; white-space: nowrap; }
   &__rate { min-width: 108rpx; }
-  &__rate text:first-child { color: #2b7fff; }
-  &__rate text:last-child { color: #90a1b9; }
-  &__metrics { gap: 0; justify-content: space-between; border-top-color: #edf2f7; }
+  &__rate text:first-child { color: var(--campus-primary, #2b7fff); }
+  &__rate text:last-child { color: var(--campus-text-muted, #90a1b9); }
+  &__metrics { gap: 0; justify-content: space-between; border-top-color: var(--campus-border, #edf2f7); }
   &__metrics > view { min-width: 0; }
-  &__metrics > view text:first-child { color: #45556c; }
-  &__metrics > view text:last-child { color: #90a1b9; white-space: nowrap; }
-  &__confidence { flex: none; margin-left: 12rpx; color: #155dfc; background: #dbeafe; white-space: nowrap; }
-  &__confidence--sample_limited { color: #9a3412; background: #fff7ed; }
-  &__confidence--sufficient { color: #155dfc; background: #dbeafe; }
+  &__metrics > view text:first-child { color: var(--campus-text-body, #45556c); }
+  &__metrics > view text:last-child { color: var(--campus-text-muted, #90a1b9); white-space: nowrap; }
+  &__confidence { flex: none; margin-left: 12rpx; color: var(--campus-primary-strong, #155dfc); background: var(--campus-border-strong, #dbeafe); white-space: nowrap; }
+  &__confidence--sample_limited { color: #9a3412; background: var(--campus-surface-errand, #fff7ed); }
+  &__confidence--sufficient { color: var(--campus-primary-strong, #155dfc); background: var(--campus-border-strong, #dbeafe); }
 }
 
 .statistics-courses-state,
-.statistics-courses-empty { color: #62748e; }
-.statistics-courses-empty__title { color: #1d293d; }
+.statistics-courses-empty { color: var(--campus-text-secondary, #62748e); }
+.statistics-courses-empty__title { color: var(--campus-text-heading, #1d293d); }
 .statistics-courses-empty__copy,
-.statistics-course-list__footer { color: #90a1b9; }
-.statistics-courses-empty__action { color: #155dfc; background: #eff6ff; }
+.statistics-course-list__footer { color: var(--campus-text-muted, #90a1b9); }
+.statistics-courses-empty__action { color: var(--campus-primary-strong, #155dfc); background: var(--campus-surface-primary, #eff6ff); }
 .statistics-courses-empty__action--pressed { opacity: .7; }
 
 .statistics-course-card--pressed {
@@ -171,21 +171,21 @@
 }
 
 .statistics-course-card__rate text:first-child {
-  color: #2b7fff;
+  color: var(--campus-primary, #2b7fff);
 }
 
 .statistics-course-card__metrics {
-  border-top-color: #f1f5f9;
+  border-top-color: var(--campus-border, #f1f5f9);
 }
 
 .statistics-courses-state__loader {
   border-color: rgba(43, 127, 255, 0.16);
-  border-top-color: #2b7fff;
+  border-top-color: var(--campus-primary, #2b7fff);
 }
 
 .statistics-courses-empty__action {
-  background: #eff6ff;
-  color: #155dfc;
+  background: var(--campus-surface-primary, #eff6ff);
+  color: var(--campus-primary-strong, #155dfc);
 }
 
 .statistics-search {
@@ -203,7 +203,7 @@
     gap: 14rpx;
     border: 2rpx solid rgba(255, 255, 255, 0.96);
     border-radius: 24rpx;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     box-shadow:
       10rpx 14rpx 30rpx rgba(50, 92, 84, 0.06),
       inset 0 2rpx 0 rgba(255, 255, 255, 0.94);
@@ -220,7 +220,7 @@
       min-width: 0;
       height: 88rpx;
       font-size: 25rpx;
-      color: #31515b;
+      color: var(--campus-text-body, #31515b);
     }
   }
 
@@ -232,7 +232,7 @@
     flex: none;
     padding: 16rpx 0 16rpx 14rpx;
     font-size: 21rpx;
-    color: #71817f;
+    color: var(--campus-text-muted, #71817f);
   }
 
   &__button {
@@ -263,7 +263,7 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  color: #71817f;
+  color: var(--campus-text-muted, #71817f);
   text-align: center;
 }
 
@@ -291,14 +291,14 @@
   &__title {
     font-size: 29rpx;
     font-weight: 720;
-    color: #294653;
+    color: var(--campus-text-heading, #294653);
   }
 
   &__copy {
     margin-top: 12rpx;
     font-size: 23rpx;
     line-height: 1.6;
-    color: #809693;
+    color: var(--campus-text-muted, #809693);
   }
 
   &__action {
@@ -329,7 +329,7 @@
   padding: 26rpx 28rpx 24rpx;
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 32rpx;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   box-shadow:
     12rpx 16rpx 34rpx rgba(50, 92, 84, 0.065),
     inset 0 2rpx 0 rgba(255, 255, 255, 0.94);
@@ -360,14 +360,14 @@
     font-size: 29rpx;
     font-weight: 720;
     line-height: 1.45;
-    color: #21465c;
+    color: var(--campus-text-heading, #21465c);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__code {
     font-size: 21rpx;
-    color: #809693;
+    color: var(--campus-text-muted, #809693);
   }
 
   &__rate {
@@ -386,7 +386,7 @@
     text:last-child {
       margin-top: 7rpx;
       font-size: 19rpx;
-      color: #809693;
+      color: var(--campus-text-muted, #809693);
     }
   }
 
@@ -407,7 +407,7 @@
       text:first-child {
         font-size: 25rpx;
         font-weight: 680;
-        color: #31515b;
+        color: var(--campus-text-body, #31515b);
       }
 
       text:last-child {

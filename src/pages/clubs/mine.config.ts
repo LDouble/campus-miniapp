@@ -1,7 +1,7 @@
 export default definePageConfig({
   navigationStyle: 'custom',
   navigationBarTitleText: '我的社团资料',
-  backgroundColor: '#f8f5ef',
-  backgroundTextStyle: 'dark',
+  backgroundColor: '@backgroundColor',
+  backgroundTextStyle: '@backgroundTextStyle' as 'dark',
   enablePullDownRefresh: true,
 })

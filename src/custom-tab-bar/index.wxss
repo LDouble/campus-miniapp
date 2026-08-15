@@ -150,3 +150,32 @@
     transition: none;
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  .tab-bar__dock {
+    color: #8494aa;
+    background: rgba(17, 24, 39, 0.9);
+    border-color: rgba(148, 163, 184, 0.16);
+    box-shadow: 0 16rpx 64rpx rgba(0, 0, 0, 0.34);
+  }
+
+  .tab-bar__highlight {
+    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.24), transparent);
+  }
+
+  .tab-bar__text {
+    color: #8494aa;
+  }
+
+  .tab-bar__item--active .tab-bar__text {
+    color: #60a5fa;
+  }
+
+  .tab-bar__publish-button {
+    border-color: #0b1220;
+    background: linear-gradient(135deg, #3b82f6, #0891b2);
+    box-shadow:
+      0 16rpx 24rpx rgba(37, 99, 235, 0.38),
+      inset 0 3rpx 5rpx rgba(255, 255, 255, 0.18);
+  }
+}

@@ -35,8 +35,8 @@
   padding: 8rpx 22rpx 8rpx 10rpx;
   align-items: center;
   overflow: hidden;
-  color: #314158;
-  background: rgba(255, 255, 255, 0.94);
+  color: var(--campus-text-body, #314158);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 1rpx solid rgba(219, 234, 254, 0.92);
   border-radius: 999rpx;
   box-shadow: 0 10rpx 28rpx rgba(43, 127, 255, 0.14);
@@ -45,7 +45,7 @@
 }
 
 .fresh-barrage__item--pressed {
-  background: #eff6ff;
+  background: var(--campus-surface-primary, #eff6ff);
 }
 
 .fresh-barrage__avatar {
@@ -57,11 +57,11 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  color: #155dfc;
+  color: var(--campus-primary-strong, #155dfc);
   font-size: 20rpx;
   font-weight: 700;
-  background: #eff6ff;
-  border: 1rpx solid #dbeafe;
+  background: var(--campus-surface-primary, #eff6ff);
+  border: 1rpx solid var(--campus-border-strong, #dbeafe);
   border-radius: 50%;
 }
 

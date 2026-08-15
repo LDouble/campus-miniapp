@@ -41,7 +41,7 @@ page {
     background-color token.$motion-state ease;
 
   &--active {
-    color: token.$color-surface;
+    color: token.$color-on-accent;
     font-weight: 700;
     background: token.$color-primary;
   }
@@ -326,7 +326,7 @@ page {
   }
 
   &--active {
-    color: token.$color-surface;
+    color: token.$color-on-accent;
     background: token.$color-primary;
     border-color: token.$color-primary;
   }
@@ -385,7 +385,7 @@ page {
   }
 
   .publisher-market-intent--active {
-    color: token.$color-surface;
+    color: token.$color-on-accent;
     background: token.$color-marketplace;
   }
 
@@ -590,13 +590,13 @@ page {
 
   &__submit {
     flex: 1;
-    color: token.$color-surface;
+    color: token.$color-on-accent;
     background: linear-gradient(135deg, token.$color-community, token.$color-community-end);
     box-shadow: token.$shadow-card;
   }
 
   &__submit--disabled {
-    color: token.$color-surface;
+    color: token.$color-on-accent;
     background: token.$color-text-muted !important;
     box-shadow: none;
     opacity: 0.72;

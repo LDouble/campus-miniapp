@@ -1,11 +1,11 @@
 page {
-  background: #f4f7fb;
+  background: var(--campus-page, #f4f7fb);
 }
 
 .services-page {
   min-height: 100vh;
-  color: #1d293d;
-  background: #f4f7fb;
+  color: var(--campus-text-heading, #1d293d);
+  background: var(--campus-page, #f4f7fb);
 
   &__content {
     padding: 22rpx 28rpx calc(60rpx + env(safe-area-inset-bottom));
@@ -18,7 +18,7 @@ page {
   height: 86rpx;
   padding: 0 24rpx;
   margin-bottom: 24rpx;
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 28rpx;
   box-shadow: 0 10rpx 28rpx rgba(50, 92, 84, 0.06);
@@ -46,7 +46,7 @@ page {
 .services-group {
   padding: 25rpx 22rpx 20rpx;
   margin-bottom: 20rpx;
-  background: rgba(255, 255, 255, 0.86);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 32rpx;
   box-shadow: 0 12rpx 30rpx rgba(50, 92, 84, 0.055);
@@ -123,16 +123,16 @@ page {
 
 // 服务入口统一为轻量蓝灰卡片，名称与说明在动态配置下也不会撑破网格。
 .services-group {
-  background: #fff;
-  border-color: #dce5f0;
+  background: var(--campus-surface, #fff);
+  border-color: var(--campus-border, #dce5f0);
   box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05);
 
-  &__title { color: #1d293d; }
+  &__title { color: var(--campus-text-heading, #1d293d); }
   &__subtitle,
-  &__count { color: #90a1b9; }
+  &__count { color: var(--campus-text-muted, #90a1b9); }
 
   &__item {
-    color: #45556c;
+    color: var(--campus-text-body, #45556c);
 
     > text {
       display: block;
@@ -143,23 +143,23 @@ page {
       white-space: nowrap;
     }
 
-    &--pressed { background: #eaf2ff; }
+    &--pressed { background: var(--campus-surface-primary, #eaf2ff); }
   }
 
-  &__icon { background: #eaf2ff; }
+  &__icon { background: var(--campus-surface-primary, #eaf2ff); }
 }
 
 .services-group:nth-of-type(3) .services-group__icon,
-.services-group:nth-of-type(4) .services-group__icon { background: #eaf2ff; }
+.services-group:nth-of-type(4) .services-group__icon { background: var(--campus-surface-primary, #eaf2ff); }
 
 .services-migrated {
-  background: #fff;
-  border-color: #dce5f0;
+  background: var(--campus-surface, #fff);
+  border-color: var(--campus-border, #dce5f0);
   box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05);
 
-  &__title { color: #1d293d; }
-  &__copy { color: #45556c; }
-  &__action { color: #fff; background: #2b7fff; }
+  &__title { color: var(--campus-text-heading, #1d293d); }
+  &__copy { color: var(--campus-text-body, #45556c); }
+  &__action { color: #fff; background: var(--campus-primary, #2b7fff); }
 }
 
 .services-group:nth-of-type(3) .services-group__icon { background: #fff0df; }

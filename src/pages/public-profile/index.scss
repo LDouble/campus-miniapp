@@ -134,7 +134,7 @@ page {
 
 .public-profile-tab--active {
   background: linear-gradient(135deg, token.$color-primary, token.$color-primary-cyan);
-  color: token.$color-surface;
+  color: token.$color-on-accent;
 }
 
 .public-profile-tab--active text:last-child {
@@ -215,7 +215,7 @@ page {
 
 .public-profile-state--error {
   border-color: rgba(255, 32, 86, 0.12);
-  background: #fff1f2;
+  background: var(--campus-surface-danger, #fff1f2);
   color: #c70036;
 }
 
