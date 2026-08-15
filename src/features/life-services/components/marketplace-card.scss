@@ -268,6 +268,43 @@
   font-size: 19rpx;
 }
 
+.marketplace-card__author {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.marketplace-card__avatar {
+  display: flex;
+  width: 34rpx;
+  height: 34rpx;
+  margin-right: 8rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2b7fff;
+  font-size: 17rpx;
+  font-weight: 700;
+}
+
+.marketplace-card__avatar-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.marketplace-card__author > text {
+  max-width: 150rpx;
+  overflow: hidden;
+  color: #62748e;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .marketplace-card--compact .marketplace-card__footer {
   min-height: 42rpx;
   align-items: center;
@@ -276,19 +313,19 @@
   font-size: 19rpx;
 }
 
-.marketplace-card--compact .marketplace-card__footer text {
-  max-width: 150rpx;
+.marketplace-card--compact .marketplace-card__footer > text {
+  max-width: 120rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.marketplace-card--compact .marketplace-card__footer text:last-child {
+.marketplace-card--compact .marketplace-card__footer > text:last-child {
   color: #7d8f8a;
   font-weight: 600;
 }
 
-.marketplace-card__footer text:last-child {
+.marketplace-card__footer > text:last-child {
   color: #b65b4f;
   font-weight: 680;
 }
@@ -298,3 +335,36 @@
     transition: none;
   }
 }
+
+/* Figma 2026-08 闲置卡片视觉覆盖 */
+.marketplace-card {
+  border: 0;
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.03);
+}
+
+.marketplace-card__cover,
+.marketplace-card__cover--placeholder { height: 288rpx; }
+
+.marketplace-card__intent {
+  top: 16rpx;
+  right: auto;
+  left: 16rpx;
+  min-height: 34rpx;
+  padding: 0 14rpx;
+  border: 0;
+  background: rgba(0, 0, 0, 0.5);
+  font-size: 17rpx;
+  backdrop-filter: blur(8rpx);
+}
+
+.marketplace-card--wanted .marketplace-card__intent { background: rgba(0, 0, 0, 0.45); }
+
+.marketplace-card__body { padding: 24rpx 24rpx 16rpx; }
+.marketplace-card__description { min-height: 72rpx; color: #1d293d; font-size: 26rpx; font-weight: 700; }
+.marketplace-card__price-line { min-height: 56rpx; margin-top: 4rpx; }
+.marketplace-card__price,
+.marketplace-card--wanted .marketplace-card__price { color: #ff2056; font-size: 35rpx; }
+.marketplace-card__course { color: #62748e; }
+.marketplace-card__footer { padding-top: 12rpx; border-top: 1rpx solid #f8fafc; color: #90a1b9; }
+.marketplace-card__footer > text:last-child { color: #90a1b9; }

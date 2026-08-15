@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { MarketplaceListingView } from '../../../api/types'
+import UserAvatarImage from '../../../components/user-avatar-image'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { formatMoney } from '../format'
 import './marketplace-card.scss'
@@ -20,6 +21,8 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
   const placeholderTone = Math.abs(item.id) % 4
   const isWanted = item.intent === 'wanted'
   const isPendingOwner = item.viewer_relation === 'owner' && item.status === 'pending_review'
+  const authorName = item.author_nickname?.trim() || `发布者 #${item.owner_id}`
+  const authorInitial = authorName.trim().slice(0, 1) || '同'
 
   return (
     <View
@@ -56,15 +59,25 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
         )}
         <View className='marketplace-card__price-line'>
           <Text className='marketplace-card__price'>
-            {isWanted ? '预算 ' : ''}{formatMoney(item.price_cents)}
+            {formatMoney(item.price_cents)}
           </Text>
         </View>
         {variant === 'grid' && item.course_name && (
           <Text className='marketplace-card__course'>{item.course_name}</Text>
         )}
         <View className='marketplace-card__footer'>
-          <Text>{variant === 'compact' ? item.course_name || '校园闲置' : '校内面交'}</Text>
-          <Text>{variant === 'compact' ? '校内面交' : '查看详情'}</Text>
+          <View className='marketplace-card__author'>
+            <View className='marketplace-card__avatar'>
+              <UserAvatarImage
+                src={item.author_avatar_url}
+                className='marketplace-card__avatar-image'
+                fallback={authorInitial}
+                lazyLoad
+              />
+            </View>
+            <Text>{authorName}</Text>
+          </View>
+          <Text>校内面交</Text>
         </View>
       </View>
     </View>

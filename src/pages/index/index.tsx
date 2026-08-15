@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import {
   Image,
-  ScrollView,
   Swiper,
   SwiperItem,
   Text,
@@ -33,6 +32,7 @@ import type {
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatarImage from '../../components/user-avatar-image'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
+import FreshBarrage from '../../features/community/fresh-barrage'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
@@ -50,7 +50,7 @@ import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
 import {
-  formatOfficialNoticeDate,
+  formatOfficialNoticeCompactDate,
   officialNoticeSourceLabels,
 } from '../../features/official-notices/types'
 import type { OfficialNotice } from '../../features/official-notices/types'
@@ -309,7 +309,7 @@ const latestCommunityPosts = (items: CampusCirclePostView[]) => (
       apiDateTimeTimestamp(right.published_at || right.created_at)
       - apiDateTimeTimestamp(left.published_at || left.created_at)
     ))
-    .slice(0, 3)
+    .slice(0, 4)
 )
 
 const communitySectionNames = (sections: CampusCircleSectionView[]) => (
@@ -385,7 +385,7 @@ function Index() {
     const marketplacePromise = !isQualificationEdition
       && fullLifeServicesRepository
       && moduleEnabled('marketplace')
-      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
+      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 4 }))
       : Promise.resolve({ ok: false } as Settled<never>)
     const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
@@ -688,15 +688,14 @@ function Index() {
 
   return (
     <View className='campus'>
-      <View className='campus__orb campus__orb--one' />
-      <View className='campus__orb campus__orb--two' />
-
       <CustomNavbar
         title='海大校园'
         immersive
         compactImmersive
         collapsed={headerCollapsed}
       />
+
+      <FreshBarrage posts={communityPosts} onOpen={openCommunityPost} />
 
       <View className='campus__header motion-enter'>
         <View className='campus__identity'>
@@ -904,7 +903,7 @@ function Index() {
           {visibleHomeServices.map((item) => (
             <View
               key={item.key}
-              className={`service-panel__grid-item service-panel__grid-item--${item.tone}`}
+              className={`service-panel__grid-item service-panel__grid-item--${item.tone} service-panel__grid-item--key-${item.key}`}
               hoverClass='service-panel__item--pressed'
               ariaRole='button'
               ariaLabel={item.name}
@@ -945,14 +944,22 @@ function Index() {
             key={item.id}
             className='official-notices-home__item'
             hoverClass='official-notices-home__item--pressed'
+            ariaRole='button'
+            ariaLabel={`查看通知：${item.title}`}
             onClick={() => openOfficialNotice(item)}
           >
-            <View className='official-notices-home__source'>
-              {officialNoticeSourceLabels[item.source]}
-            </View>
             <View className='official-notices-home__copy'>
-              <Text>{item.title}</Text>
-              <Text>{item.publisher} · {formatOfficialNoticeDate(item.source_published_at)}</Text>
+              <Text className='official-notices-home__copy-title'>{item.title}</Text>
+              <View className='official-notices-home__meta'>
+                <Text className='official-notices-home__source'>
+                  {officialNoticeSourceLabels[item.source]}
+                </Text>
+                <Text className='official-notices-home__publisher'>{item.publisher}</Text>
+                <Text className='official-notices-home__meta-separator'>·</Text>
+                <Text className='official-notices-home__date'>
+                  {formatOfficialNoticeCompactDate(item.source_published_at)}
+                </Text>
+              </View>
             </View>
             <Image className='official-notices-home__arrow' src={icons.arrow} mode='aspectFit' />
           </View>
@@ -1215,7 +1222,7 @@ function Index() {
           </View>
         </View>
 
-        <ScrollView className='market-scroll' scrollX enhanced showScrollbar={false}>
+        <View className='market-scroll'>
           <View className='market-list'>
             {marketLoading && <View className='home-section-state home-section-state--market'>正在加载校内闲置</View>}
             {!marketLoading && marketError && (
@@ -1229,23 +1236,17 @@ function Index() {
             {!marketLoading && !marketError && marketItems.length === 0 && (
               <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
             )}
-            {!marketLoading && !marketError && FullMarketplaceCard && marketItems.map((item) => (
-              <FullMarketplaceCard key={item.id} item={item} variant='compact' />
-            ))}
-            <View
-              className='market-card market-card--more'
-              hoverClass='market-card--pressed'
-              ariaRole='button'
-              ariaLabel='查看更多二手好物'
-              onClick={() => openModule('market')}
-            >
-              <View className='market-card__more-icon'>
-                <Image src={icons.arrow} mode='aspectFit' />
+            {!marketLoading && !marketError && FullMarketplaceCard && [0, 1].map((columnIndex) => (
+              <View key={columnIndex} className='market-list__column'>
+                {marketItems
+                  .filter((_, itemIndex) => itemIndex % 2 === columnIndex)
+                  .map((item) => (
+                    <FullMarketplaceCard key={item.id} item={item} variant='compact' />
+                  ))}
               </View>
-              <Text>查看更多好物</Text>
-            </View>
+            ))}
           </View>
-        </ScrollView>
+        </View>
       </View>
       </>)}
 

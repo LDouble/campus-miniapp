@@ -5815,6 +5815,8 @@ export interface components {
             request_id: string;
         };
         CarpoolTripView: {
+            author_avatar_url: string | null;
+            author_nickname: string;
             available_actions: components["schemas"]["CarpoolViewerAction"][];
             contact: string;
             contact_type: string;
@@ -6951,6 +6953,8 @@ export interface components {
         ErrandView: {
             /** Format: date-time */
             accepted_at: string | null;
+            author_avatar_url: string | null;
+            author_nickname: string;
             available_actions: components["schemas"]["ErrandViewerAction"][];
             /** Format: date-time */
             cancelled_at: string | null;
@@ -7108,6 +7112,8 @@ export interface components {
         MarketplaceListingView: {
             academic_period_id: string | null;
             academic_period_label: string | null;
+            author_avatar_url: string | null;
+            author_nickname: string;
             available_actions: components["schemas"]["MarketplaceViewerAction"][];
             /** @enum {string} */
             category: "general" | "course_material";

@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../features/app-edition'
+import type { LifeHubSection } from '../features/life-services/business-theme'
 
 export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
 
@@ -23,7 +24,11 @@ export const tabBarIndex = (page: TabBarPage) => (
 )
 
 interface CustomTabBarInstance {
-  setData: (data: { selected?: number; hidden?: boolean }) => void
+  setData: (data: {
+    selected?: number
+    hidden?: boolean
+    publishSection?: LifeHubSection
+  }) => void
 }
 
 const getCustomTabBar = () => {
@@ -46,4 +51,8 @@ export function syncCustomTabBar(page: TabBarPage) {
 
 export function setCustomTabBarHidden(hidden: boolean) {
   getCustomTabBar()?.setData({ hidden })
+}
+
+export function setCustomTabBarPublishSection(publishSection: LifeHubSection) {
+  getCustomTabBar()?.setData({ publishSection })
 }

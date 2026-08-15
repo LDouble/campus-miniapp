@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
@@ -98,6 +99,18 @@ const emptyCopy: Record<LifeServiceSection, { title: string; subtitle: string }>
     title: '没有匹配的同行计划',
     subtitle: '调整日期、路线或人数后再试试',
   },
+}
+
+const myServicesRoutes: Record<LifeServiceSection, string> = {
+  errands: '/pages/my-services/index?section=errands&relation=all',
+  market: '/pages/my-services/index?section=market',
+  carpool: '/pages/my-services/index?section=carpool&relation=all',
+}
+
+const myServicesLabels: Record<LifeServiceSection, string> = {
+  errands: '我的跑腿',
+  market: '我的二手',
+  carpool: '我的同行',
 }
 
 export default function LifeServiceListPanel({
@@ -297,7 +310,14 @@ export default function LifeServiceListPanel({
 
   return (
     <View className={`life-panel life-panel--${section}`}>
-      <View className={`life-search life-search--${section}`}>
+      <View
+        className={[
+          'life-search',
+          `life-search--${section}`,
+          searchFocused ? 'life-search--focused' : '',
+          draftKeyword || keyword ? 'life-search--active' : '',
+        ].filter(Boolean).join(' ')}
+      >
         <View className='life-search__icon' />
         <KeyboardSafeInput
           id={`life-search-input-${section}`}
@@ -309,6 +329,7 @@ export default function LifeServiceListPanel({
           placeholderClass='life-search__placeholder'
           onInput={(event) => setDraftKeyword(event.detail.value)}
           onConfirm={submitSearch}
+          onFocus={() => setSearchFocused(true)}
           onBlur={() => setSearchFocused(false)}
         />
         {draftKeyword ? (
@@ -335,16 +356,6 @@ export default function LifeServiceListPanel({
         </View>
       </View>
 
-      {section === 'errands' && (
-        <View className='errand-scope'>
-          <View className='errand-scope__signal'><View /></View>
-          <View>
-            <Text>当前展示全校待接任务</Text>
-            <Text>公开任务按发布时间排列</Text>
-          </View>
-          <Text>{loading ? '—' : `${total} 条`}</Text>
-        </View>
-      )}
       {section === 'market' && (
         <MarketplaceFilters value={marketFilters} onChange={setMarketFilters} />
       )}
@@ -353,13 +364,36 @@ export default function LifeServiceListPanel({
       )}
 
       <View className='life-panel__heading'>
-        <View>
-          <Text>{resultTitle}</Text>
-          <Text>{loading ? '正在连接校园服务' : `${total} 条结果`}</Text>
+        <View className='life-panel__heading-summary'>
+          <Text className='life-panel__heading-title'>{resultTitle}</Text>
+          <Text className='life-panel__heading-separator'>·</Text>
+          <Text className='life-panel__heading-total'>
+            {loading ? '加载中' : `${total} 条`}
+          </Text>
         </View>
-        {(keyword || hasStructuredFilters) && (
-          <View onClick={clearAll}>清除条件</View>
-        )}
+        <View className='life-panel__heading-actions'>
+          {(keyword || hasStructuredFilters) && (
+            <View
+              className='life-panel__clear'
+              hoverClass='life-panel__action--pressed'
+              ariaRole='button'
+              ariaLabel='清除当前筛选条件'
+              onClick={clearAll}
+            >
+              清除条件
+            </View>
+          )}
+          <View
+            className='life-panel__mine'
+            hoverClass='life-panel__action--pressed'
+            ariaRole='button'
+            ariaLabel={`查看${myServicesLabels[section]}`}
+            onClick={() => void Taro.navigateTo({ url: myServicesRoutes[section] })}
+          >
+            <Text>我的记录</Text>
+            <Text>›</Text>
+          </View>
+        </View>
       </View>
 
       {loading && (
@@ -387,8 +421,14 @@ export default function LifeServiceListPanel({
 
       {!loading && !error && section === 'market' && (
         <View className='marketplace-grid'>
-          {(items as MarketplaceListingView[]).map((item) => (
-            <MarketplaceCard key={item.id} item={item} />
+          {[0, 1].map((columnIndex) => (
+            <View key={columnIndex} className='marketplace-grid__column'>
+              {(items as MarketplaceListingView[])
+                .filter((_, itemIndex) => itemIndex % 2 === columnIndex)
+                .map((item) => (
+                  <MarketplaceCard key={item.id} item={item} />
+                ))}
+            </View>
           ))}
         </View>
       )}

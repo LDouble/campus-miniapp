@@ -424,3 +424,36 @@
     transition: none;
   }
 }
+
+/* Figma 2026-08 筛选胶囊统一视觉 */
+.filter-quick-row {
+  gap: 16rpx;
+  padding-bottom: 18rpx;
+}
+
+.filter-chip {
+  min-width: 108rpx;
+  min-height: 58rpx;
+  padding: 0 24rpx;
+  border: 1rpx solid rgba(226, 232, 240, 0.7);
+  background: rgba(248, 250, 252, 0.82);
+  color: #45556c;
+  font-size: 22rpx;
+  font-weight: 560;
+}
+
+.filter-chip--more { border-style: solid; }
+
+.filter-chip--market-active,
+.filter-chip--carpool-active {
+  border-color: rgba(43, 127, 255, 0.2);
+  background: #eff6ff;
+  color: #155dfc;
+  font-weight: 700;
+}
+
+.filter-applied > view,
+.filter-applied--carpool > view {
+  background: #eff6ff;
+  color: #155dfc;
+}

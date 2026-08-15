@@ -55,6 +55,19 @@ type ViewQuery = {
   orderType: 'all' | 'marketplace' | 'errand'
 }
 
+type FilterOption<TKey extends string> = {
+  key: TKey
+  label: string
+}
+
+type FilterStripProps<TKey extends string> = {
+  label: string
+  options: ReadonlyArray<FilterOption<TKey>>
+  value: TKey
+  secondary?: boolean
+  onChange: (key: TKey) => void
+}
+
 const PAGE_SIZE = 20
 
 const sections: Array<{ key: Section; label: string }> = [
@@ -93,6 +106,39 @@ const orderTypes = [
   { key: 'marketplace', label: '二手' },
   { key: 'errand', label: '跑腿' },
 ] as const
+
+function FilterStrip<TKey extends string>({
+  label,
+  options,
+  value,
+  secondary = false,
+  onChange,
+}: FilterStripProps<TKey>) {
+  return (
+    <ScrollView
+      className={`my-services-filter-scroll ${secondary ? 'my-services-filter-scroll--secondary' : ''}`}
+      scrollX
+      enhanced
+      showScrollbar={false}
+      ariaLabel={label}
+    >
+      <View className='my-services-filters'>
+        {options.map((item) => (
+          <View
+            key={item.key}
+            className={`my-services-filter my-services-filter--${item.key} ${value === item.key ? 'my-services-filter--active' : ''}`}
+            hoverClass='my-services-filter--pressed'
+            ariaRole='button'
+            ariaLabel={`${label}：${item.label}`}
+            onClick={() => onChange(item.key)}
+          >
+            {item.label}
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  )
+}
 
 const defaultRelation = (section: Section) => {
   if (section === 'errands') return 'accepted'
@@ -384,16 +430,33 @@ export default function MyServicesPage() {
         ? ['还没有同行计划', '可以发布计划或响应同路同学']
         : ['还没有发布记录', '从统一发布器创建第一条内容']
 
+  const currentPublishedType = publishedTypes.find(
+    (item) => item.key === view.publishedType,
+  )?.label || '动态'
+  const heroSummary = view.section === 'published'
+    ? `${currentPublishedType} · 共 ${total} 条记录`
+    : `当前筛选 · 共 ${total} 条记录`
+
   return (
     <View className={`my-services my-services--${view.section}`}>
-      <CustomNavbar title='我的服务' subtitle='真实发布、参与与订单记录' showBack />
+      <CustomNavbar title='我的发布' showBack />
       <View className='my-services__content'>
         <View className='my-services-hero'>
-          <View>
-            <Text>我的校园足迹</Text>
-            <Text>共 {total} 条当前筛选记录</Text>
+          <View className='my-services-hero__copy'>
+            <Text className='my-services-hero__eyebrow'>CAMPUS ACTIVITY</Text>
+            <Text className='my-services-hero__title'>我的校园足迹</Text>
+            <Text className='my-services-hero__summary'>{heroSummary}</Text>
           </View>
-          <View onClick={openPublish}>＋ 发布</View>
+          <View
+            className='my-services-hero__publish'
+            hoverClass='my-services-hero__publish--pressed'
+            ariaRole='button'
+            ariaLabel='发布新内容'
+            onClick={openPublish}
+          >
+            <View className='my-services-hero__publish-icon' />
+            <Text>发布</Text>
+          </View>
         </View>
 
         <ScrollView className='my-services-tabs' scrollX enhanced showScrollbar={false}>
@@ -401,7 +464,10 @@ export default function MyServicesPage() {
             {sections.map((item) => (
               <View
                 key={item.key}
-                className={`my-services-tabs__${item.key} ${view.section === item.key ? 'my-services-tabs__active' : ''}`}
+                className={`my-services-tabs__item my-services-tabs__item--${item.key} ${view.section === item.key ? 'my-services-tabs__item--active' : ''}`}
+                hoverClass='my-services-tabs__item--pressed'
+                ariaRole='button'
+                ariaLabel={`查看${item.label}记录`}
                 onClick={() => selectSection(item.key)}
               >
                 {item.label}
@@ -411,59 +477,53 @@ export default function MyServicesPage() {
         </ScrollView>
 
         {view.section === 'published' && (
-          <View className='my-services-filters'>
-            {publishedTypes.map((item) => (
-              <View
-                key={item.key}
-                className={`my-services-filter--${item.key} ${view.publishedType === item.key ? 'my-services-filters__active' : ''}`}
-                onClick={() => changeView({ ...viewRef.current, publishedType: item.key })}
-              >
-                {item.label}
-              </View>
-            ))}
-          </View>
+          <FilterStrip
+            label='发布类型'
+            options={publishedTypes}
+            value={view.publishedType}
+            onChange={(publishedType) => changeView({ ...viewRef.current, publishedType })}
+          />
         )}
 
         {view.section !== 'published' && (
-          <ScrollView className='my-services-filter-scroll' scrollX enhanced showScrollbar={false}>
-            <View className='my-services-filters'>
-              {relationOptions[view.section].map((item) => (
-                <View
-                  key={item.key}
-                  className={`my-services-filter--${item.key} ${view.relation === item.key ? 'my-services-filters__active' : ''}`}
-                  onClick={() => changeView({ ...viewRef.current, relation: item.key })}
-                >
-                  {item.label}
-                </View>
-              ))}
-            </View>
-          </ScrollView>
+          <FilterStrip
+            label='记录关系'
+            options={relationOptions[view.section]}
+            value={view.relation}
+            onChange={(relation) => changeView({ ...viewRef.current, relation })}
+          />
         )}
 
         {view.section === 'orders' && (
-          <View className='my-services-filters my-services-filters--secondary'>
-            {orderTypes.map((item) => (
-              <View
-                key={item.key}
-                className={`my-services-order-type--${item.key} ${view.orderType === item.key ? 'my-services-filters__active' : ''}`}
-                onClick={() => changeView({ ...viewRef.current, orderType: item.key })}
-              >
-                {item.label}
-              </View>
-            ))}
-          </View>
+          <FilterStrip
+            label='订单类型'
+            options={orderTypes}
+            value={view.orderType}
+            secondary
+            onChange={(orderType) => changeView({ ...viewRef.current, orderType })}
+          />
         )}
 
         <View className='my-services-search'>
-          <View />
+          <View className='my-services-search__icon' />
           <KeyboardSafeInput
             value={keyword}
             confirmType='search'
             maxlength={40}
             placeholder='搜索当前已加载记录'
+            ariaLabel='搜索当前已加载记录'
             onInput={(event) => setKeyword(event.detail.value)}
           />
-          {keyword && <Text onClick={() => setKeyword('')}>清除</Text>}
+          {keyword && (
+            <View
+              className='my-services-search__clear'
+              ariaRole='button'
+              ariaLabel='清除搜索内容'
+              onClick={() => setKeyword('')}
+            >
+              清除
+            </View>
+          )}
         </View>
 
         {loading && <View className='my-services-state'>正在加载真实服务记录</View>}
@@ -481,11 +541,14 @@ export default function MyServicesPage() {
               <View
                 key={`order:${order.id}`}
                 className='my-record-card my-record-card--order'
+                hoverClass='my-record-card--pressed'
+                ariaRole='button'
+                ariaLabel={`查看${order.title_snapshot}订单详情`}
                 onClick={() => openBusinessRecord(order)}
               >
                 <View className='my-record-card__top'>
-                  <Text>{order.order_type === 'marketplace' ? '二手订单' : '跑腿订单'}</Text>
-                  <Text>{formatOrderStatus(order.trade_status, order.fulfillment_status)}</Text>
+                  <Text className='my-record-card__kind'>{order.order_type === 'marketplace' ? '二手订单' : '跑腿订单'}</Text>
+                  <Text className='my-record-card__status'>{formatOrderStatus(order.trade_status, order.fulfillment_status)}</Text>
                 </View>
                 <View className='my-record-card__amount'>{formatMoney(order.amount_cents)}</View>
                 <Text className='my-record-card__title'>{order.title_snapshot}</Text>
@@ -501,6 +564,9 @@ export default function MyServicesPage() {
                     {order.available_actions.includes('cancel') && (
                       <View
                         className='my-record-actions__secondary'
+                        hoverClass='my-record-actions__button--pressed'
+                        ariaRole='button'
+                        ariaLabel='取消订单'
                         onClick={(event) => {
                           requestWechatSubscriptionAndStopPropagation(event)
                           void runOrderAction(order, 'cancel')
@@ -512,6 +578,9 @@ export default function MyServicesPage() {
                     {order.available_actions.includes('complete') && (
                       <View
                         className='my-record-actions__primary'
+                        hoverClass='my-record-actions__button--pressed'
+                        ariaRole='button'
+                        ariaLabel='确认订单已完成'
                         onClick={(event) => {
                           requestWechatSubscriptionAndStopPropagation(event)
                           void runOrderAction(order, 'complete')
@@ -528,15 +597,15 @@ export default function MyServicesPage() {
           if ('pickup_location' in item) {
             const errand = item as ErrandView
             return (
-              <View key={`errand:${errand.id}`} className='my-record-card my-record-card--errand' onClick={() => openBusinessRecord(errand)}>
+              <View key={`errand:${errand.id}`} className='my-record-card my-record-card--errand' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看跑腿详情' onClick={() => openBusinessRecord(errand)}>
                 <View className='my-record-card__top'>
-                  <Text>{errand.viewer_relation === 'runner' ? '我的接单' : '我发布的跑腿'}</Text>
-                  <Text>{formatStatus(errand.status, errand.review_status)}</Text>
+                  <Text className='my-record-card__kind'>{errand.viewer_relation === 'runner' ? '我的接单' : '我发布的跑腿'}</Text>
+                  <Text className='my-record-card__status'>{formatStatus(errand.status, errand.review_status)}</Text>
                 </View>
                 <View className='my-record-card__amount'>{formatMoney(errand.reward_cents)}</View>
                 <Text className='my-record-card__body'>{errand.description}</Text>
                 <View className='my-record-route'>
-                  <Text>{errand.pickup_location}</Text><View /><Text>{errand.dropoff_location}</Text>
+                  <Text>{errand.pickup_location}</Text><View className='my-record-route__line' /><Text>{errand.dropoff_location}</Text>
                 </View>
                 <View className='my-record-card__footer'>
                   <Text>{formatDateTime(errand.deadline)}</Text><Text>查看进度 ›</Text>
@@ -547,9 +616,9 @@ export default function MyServicesPage() {
           if ('price_cents' in item) {
             const listing = item as MarketplaceListingView
             return (
-              <View key={`market:${listing.id}`} className='my-record-card my-record-card--market' onClick={() => openBusinessRecord(listing)}>
+              <View key={`market:${listing.id}`} className='my-record-card my-record-card--market' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看二手商品详情' onClick={() => openBusinessRecord(listing)}>
                 <View className='my-record-card__top'>
-                  <Text>我发布的二手</Text><Text>{formatStatus(listing.status)}</Text>
+                  <Text className='my-record-card__kind'>我发布的二手</Text><Text className='my-record-card__status'>{formatStatus(listing.status)}</Text>
                 </View>
                 <View className='my-record-card__amount'>{formatMoney(listing.price_cents)}</View>
                 <Text className='my-record-card__body'>{listing.description}</Text>
@@ -562,13 +631,13 @@ export default function MyServicesPage() {
           if ('departure_at' in item) {
             const trip = item as CarpoolTripView
             return (
-              <View key={`carpool:${trip.id}`} className='my-record-card my-record-card--carpool' onClick={() => openBusinessRecord(trip)}>
+              <View key={`carpool:${trip.id}`} className='my-record-card my-record-card--carpool' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看同行详情' onClick={() => openBusinessRecord(trip)}>
                 <View className='my-record-card__top'>
-                  <Text>{trip.viewer_relation === 'participant' ? '我参与的同行' : '我发起的同行'}</Text>
-                  <Text>{formatStatus(trip.status, trip.review_status)}</Text>
+                  <Text className='my-record-card__kind'>{trip.viewer_relation === 'participant' ? '我参与的同行' : '我发起的同行'}</Text>
+                  <Text className='my-record-card__status'>{formatStatus(trip.status, trip.review_status)}</Text>
                 </View>
                 <View className='my-record-route'>
-                  <Text>{trip.origin}</Text><View /><Text>{trip.destination}</Text>
+                  <Text>{trip.origin}</Text><View className='my-record-route__line' /><Text>{trip.destination}</Text>
                 </View>
                 {trip.description && <Text className='my-record-card__body'>{trip.description}</Text>}
                 <View className='my-record-card__footer'>
@@ -580,9 +649,9 @@ export default function MyServicesPage() {
           }
           const post = item as CampusCirclePostView
           return (
-            <View key={`post:${post.id}`} className='my-record-card' onClick={() => openBusinessRecord(post)}>
+            <View key={`post:${post.id}`} className='my-record-card' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看动态详情' onClick={() => openBusinessRecord(post)}>
               <View className='my-record-card__top'>
-                <Text>我发布的动态</Text><Text>{formatStatus(post.status)}</Text>
+                <Text className='my-record-card__kind'>我发布的动态</Text><Text className='my-record-card__status'>{formatStatus(post.status)}</Text>
               </View>
               <Text className='my-record-card__body'>{post.content || '图片动态'}</Text>
               <View className='my-record-card__footer'>

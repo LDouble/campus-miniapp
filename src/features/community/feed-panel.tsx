@@ -107,6 +107,11 @@ export default function CommunityFeedPanel({
     [sections],
   )
   const activeSectionId = activeSection?.id
+  const sectionNameForPost = (post: CampusCirclePostView, fallback: string) => (
+    post.section_id === activeSectionId
+      ? ''
+      : sectionNames.get(post.section_id) || fallback
+  )
   const activeParentSectionId = activeSection?.parent_id
   const queryKey = useMemo(() => JSON.stringify({
     activeSectionId,
@@ -372,11 +377,11 @@ export default function CommunityFeedPanel({
           )}
           {home.featured_posts.length > 0 && <Text className='community-operations__title'>精选动态</Text>}
           {home.featured_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNames.get(post.section_id) || '校园社区'} onToggleLike={toggleLike} onOpen={openPost} />
+            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} />
           ))}
           {home.recommended_posts.length > 0 && <Text className='community-operations__title'>推荐给你</Text>}
           {home.recommended_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNames.get(post.section_id) || '校园社区'} onToggleLike={toggleLike} onOpen={openPost} />
+            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} />
           ))}
         </View>
       )}
@@ -448,7 +453,7 @@ export default function CommunityFeedPanel({
               key={post.id}
               post={post}
               motionDelay={Math.min(index + 1, 4)}
-              sectionName={sectionNames.get(post.section_id) || '未知板块'}
+              sectionName={sectionNameForPost(post, '未知板块')}
               onToggleLike={(target) => void toggleLike(target)}
               onOpen={openPost}
             />

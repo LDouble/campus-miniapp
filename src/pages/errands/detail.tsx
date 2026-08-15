@@ -14,8 +14,14 @@ import {
   formatDateTime,
   formatMoney,
   formatStatus,
-  relativeDeadline,
 } from '../../features/life-services/format'
+import DetailAuthorNavbar from '../../features/life-services/components/detail-author-navbar'
+import DetailBusinessIntro from '../../features/life-services/components/detail-business-intro'
+import DetailComments, {
+  createBusinessContactComment,
+} from '../../features/life-services/components/detail-comments'
+import BusinessRoute from '../../features/life-services/components/business-route'
+import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
 import '../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -34,6 +40,7 @@ export default function ErrandDetailPage() {
   const [item, setItem] = useState<ErrandView | null>(null)
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
+  const [commentRefreshKey, setCommentRefreshKey] = useState(0)
   const [error, setError] = useState('')
 
   const load = async (targetId = id) => {
@@ -95,10 +102,22 @@ export default function ErrandDetailPage() {
     if (!result.confirm) return
 
     setWorking(true)
+    let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
     try {
       if (action === 'accept') {
         const response = await lifeServicesRepository.acceptErrand(item.id, item.version)
         setItem(response.errand)
+        try {
+          await createBusinessContactComment(
+            'errand',
+            item.id,
+            '我已接单，方便联系确认一下取送细节吗？',
+          )
+          contactCommentStatus = 'created'
+          setCommentRefreshKey((current) => current + 1)
+        } catch (commentError) {
+          contactCommentStatus = 'failed'
+        }
       } else if (action === 'pickup') {
         setItem(await lifeServicesRepository.pickupErrand(item.id, item.version))
       } else if (action === 'deliver') {
@@ -113,7 +132,14 @@ export default function ErrandDetailPage() {
         setItem(await lifeServicesRepository.submitErrandReview(item.id, item.version))
       }
       markLifeHubSectionDirty('errands')
-      Taro.showToast({ title: '状态已更新', icon: 'success' })
+      Taro.showToast({
+        title: contactCommentStatus === 'created'
+          ? '接单成功，已留言联系'
+          : contactCommentStatus === 'failed'
+            ? '接单成功，请手动留言联系'
+            : '状态已更新',
+        icon: contactCommentStatus === 'failed' ? 'none' : 'success',
+      })
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       if (isApiError(actionError) && actionError.statusCode === 409) await load()
@@ -134,9 +160,28 @@ export default function ErrandDetailPage() {
     Taro.setClipboardData({ data: item.contact })
   }
 
+  const footerActions = item ? buildDetailFooterActions({
+    availableActions: item.available_actions,
+    labels: actionLabels,
+    priority: ['accept', 'pickup', 'deliver', 'complete', 'submit_review', 'cancel', 'edit', 'verify_academic'],
+    dangerActions: ['cancel'],
+    busy: working,
+    onAction: (action) => void updateFromAction(action),
+  }) : []
+
   return (
     <View className='life-detail life-detail--errands'>
-      <CustomNavbar title='跑腿详情' subtitle='校园实名互助' showBack />
+      <CustomNavbar
+        title='跑腿详情'
+        showBack
+        barContent={item ? (
+          <DetailAuthorNavbar
+            avatarUrl={item.author_avatar_url}
+            nickname={item.author_nickname}
+            userId={item.requester_id}
+          />
+        ) : undefined}
+      />
       <View className='life-detail__content'>
         {loading && <View className='detail-state'>正在加载任务信息</View>}
         {!loading && error && (
@@ -147,20 +192,44 @@ export default function ErrandDetailPage() {
         )}
         {!loading && item && (
           <>
-            <View className='detail-overview'>
-              <View className='detail-overview__meta'>
-                <Text>{formatStatus(item.status, item.review_status)}</Text>
-                <Text>{relativeDeadline(item.deadline)}</Text>
-              </View>
-              <View className='detail-overview__summary detail-overview__summary--primary'>
-                <View>
-                  <Text>任务报酬</Text>
-                  <Text>{item.currency === 'CNY' ? '线下结算' : item.currency}</Text>
+            <DetailBusinessIntro
+              badges={['跑腿', formatStatus(item.status, item.review_status)]}
+              title={item.description}
+              action={item.viewer_relation !== 'publisher' ? (
+                <View
+                  className='detail-overview__report'
+                  hoverClass='detail-report-link--pressed'
+                  onClick={() => void openContentReport({
+                    resourceType: 'errand',
+                    resourceId: item.id,
+                    resourceVersion: item.version,
+                  })}
+                >
+                  举报
                 </View>
-                <Text>{formatMoney(item.reward_cents)}</Text>
+              ) : undefined}
+            >
+              <View className='detail-important-card detail-important-card--errand'>
+                <View className='detail-important-card__topline'>
+                  <View>
+                    <Text>任务报酬</Text>
+                    <Text>{item.currency === 'CNY' ? '线下结算' : item.currency}</Text>
+                  </View>
+                  <Text>{formatMoney(item.reward_cents)}</Text>
+                </View>
+                <BusinessRoute
+                  startLabel='取件地'
+                  start={item.pickup_location}
+                  endLabel='送达地'
+                  end={item.dropoff_location}
+                  variant='detail'
+                />
+                <View className='detail-important-card__row'>
+                  <Text>期望送达</Text>
+                  <Text>{formatDateTime(item.deadline)}</Text>
+                </View>
               </View>
-              <Text className='detail-overview__description'>{item.description}</Text>
-            </View>
+            </DetailBusinessIntro>
 
             {item.review_status === 'rejected' && (
               <View className='detail-review-alert'>
@@ -168,18 +237,6 @@ export default function ErrandDetailPage() {
                 <Text>{item.review_reason || '请修改任务信息后重新提交审核。'}</Text>
               </View>
             )}
-
-            <View className='detail-section'>
-              <View className='detail-section__heading'>
-                <Text>取送路线</Text>
-                <Text>请提前确认交接点</Text>
-              </View>
-              <View className='detail-route'>
-                <View className='detail-route__rail'><View /><View /><View /></View>
-                <View className='detail-route__place'><Text>取件地</Text><Text>{item.pickup_location}</Text></View>
-                <View className='detail-route__place'><Text>送达地</Text><Text>{item.dropoff_location}</Text></View>
-              </View>
-            </View>
 
             <View className='detail-section'>
               <View className='detail-section__heading'><Text>任务信息</Text><Text>实时状态</Text></View>
@@ -205,35 +262,15 @@ export default function ErrandDetailPage() {
               <Text className='detail-safety'>取送前请核对物品和地点，不代收验证码、不垫付高额费用。报酬为线下结算，平台不代收款。</Text>
             </View>
 
-            {item.viewer_relation !== 'publisher' && (
-              <View
-                className='detail-report-link'
-                hoverClass='detail-report-link--pressed'
-                onClick={() => void openContentReport({
-                  resourceType: 'errand',
-                  resourceId: item.id,
-                  resourceVersion: item.version,
-                })}
-              >
-                举报这条信息
-              </View>
-            )}
-
-            {item.available_actions.length > 0 && (
-              <View className='detail-action-bar'>
-                {item.available_actions.slice(0, 3).map((action, index) => (
-                  <View
-                    id={`detail-action-${action}`}
-                    key={action}
-                    className={`detail-action ${index === item.available_actions.length - 1 && action !== 'cancel' ? 'detail-action--primary' : ''} ${action === 'cancel' ? 'detail-action--danger' : ''}`}
-                    hoverClass='detail-action--pressed'
-                    onClick={() => void updateFromAction(action)}
-                  >
-                    {working ? '处理中' : actionLabels[action] || action}
-                  </View>
-                ))}
-              </View>
-            )}
+            <DetailComments
+              targetType='errand'
+              targetId={item.id}
+              enabled={item.review_status === 'approved'}
+              refreshKey={commentRefreshKey}
+              targetAuthorId={item.requester_id}
+              tone='errand'
+              actions={footerActions}
+            />
           </>
         )}
       </View>

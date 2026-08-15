@@ -15,6 +15,13 @@ import {
   formatStatus,
   remainingSeats,
 } from '../../features/life-services/format'
+import DetailAuthorNavbar from '../../features/life-services/components/detail-author-navbar'
+import DetailBusinessIntro from '../../features/life-services/components/detail-business-intro'
+import DetailComments, {
+  createBusinessContactComment,
+} from '../../features/life-services/components/detail-comments'
+import BusinessRoute from '../../features/life-services/components/business-route'
+import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
 import '../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -31,6 +38,7 @@ export default function CarpoolDetailPage() {
   const [item, setItem] = useState<CarpoolTripView | null>(null)
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
+  const [commentRefreshKey, setCommentRefreshKey] = useState(0)
   const [error, setError] = useState('')
 
   const load = async (targetId = id) => {
@@ -94,13 +102,34 @@ export default function CarpoolDetailPage() {
     if (!confirm.confirm) return
 
     setWorking(true)
+    let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
     try {
-      if (action === 'join') setItem(await lifeServicesRepository.joinCarpoolTrip(item.id, item.version))
+      if (action === 'join') {
+        setItem(await lifeServicesRepository.joinCarpoolTrip(item.id, item.version))
+        try {
+          await createBusinessContactComment(
+            'carpool',
+            item.id,
+            '我想一起同行，方便联系确认一下集合和费用细节吗？',
+          )
+          contactCommentStatus = 'created'
+          setCommentRefreshKey((current) => current + 1)
+        } catch (commentError) {
+          contactCommentStatus = 'failed'
+        }
+      }
       else if (action === 'leave') setItem(await lifeServicesRepository.leaveCarpoolTrip(item.id, item.version))
       else if (action === 'cancel') setItem(await lifeServicesRepository.cancelCarpoolTrip(item.id, item.version))
       else if (action === 'submit_review') setItem(await lifeServicesRepository.submitCarpoolReview(item.id, item.version))
       markLifeHubSectionDirty('carpool')
-      Taro.showToast({ title: '状态已更新', icon: 'success' })
+      Taro.showToast({
+        title: contactCommentStatus === 'created'
+          ? '加入成功，已留言联系'
+          : contactCommentStatus === 'failed'
+            ? '加入成功，请手动留言联系'
+            : '状态已更新',
+        icon: contactCommentStatus === 'failed' ? 'none' : 'success',
+      })
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       if (isApiError(actionError) && actionError.statusCode === 409) await load()
@@ -121,32 +150,74 @@ export default function CarpoolDetailPage() {
     Taro.setClipboardData({ data: item.contact })
   }
 
+  const footerActions = item ? buildDetailFooterActions({
+    availableActions: item.available_actions,
+    labels: actionLabels,
+    priority: ['join', 'leave', 'submit_review', 'cancel', 'edit', 'verify_academic'],
+    dangerActions: ['leave', 'cancel'],
+    busy: working,
+    onAction: (action) => void runAction(action),
+  }) : []
+
   return (
     <View className='life-detail life-detail--carpool'>
-      <CustomNavbar title='同行计划' subtitle='同时间、同方向，一起出发' showBack />
+      <CustomNavbar
+        title='找同行详情'
+        showBack
+        barContent={item ? (
+          <DetailAuthorNavbar
+            avatarUrl={item.author_avatar_url}
+            nickname={item.author_nickname}
+            userId={item.organizer_id}
+          />
+        ) : undefined}
+      />
       <View className='life-detail__content'>
-        {loading && <View className='detail-state'>正在加载同行计划</View>}
+        {loading && <View className='detail-state'>正在加载找同行信息</View>}
         {!loading && error && <View className='detail-state'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
         {!loading && item && (
           <>
-            <View className='detail-overview detail-overview--carpool'>
-              <View className='detail-overview__meta'>
-                <Text>{formatStatus(item.status, item.review_status)}</Text>
-                <Text>{formatDateTime(item.departure_at)}</Text>
+            <DetailBusinessIntro
+              badges={[formatStatus(item.status, item.review_status)]}
+              description={item.description}
+              action={item.viewer_relation !== 'organizer' ? (
+                <View
+                  className='detail-overview__report'
+                  hoverClass='detail-report-link--pressed'
+                  onClick={() => void openContentReport({
+                    resourceType: 'carpool',
+                    resourceId: item.id,
+                    resourceVersion: item.version,
+                  })}
+                >
+                  举报
+                </View>
+              ) : undefined}
+            >
+              <View className='carpool-detail-route-card'>
+                <BusinessRoute
+                  startLabel='出发地'
+                  start={item.origin}
+                  endLabel='目的地'
+                  end={item.destination}
+                  variant='detail'
+                />
+                <View className='detail-important-card__grid'>
+                  <View>
+                    <Text>出发时间</Text>
+                    <Text>{formatDateTime(item.departure_at)}</Text>
+                  </View>
+                  <View>
+                    <Text>同行人数</Text>
+                    <Text>{item.occupied_seats} / {item.total_seats} 人</Text>
+                  </View>
+                  <View>
+                    <Text>剩余名额</Text>
+                    <Text>{remainingSeats(item.total_seats, item.occupied_seats)} 人</Text>
+                  </View>
+                </View>
               </View>
-              <View className='detail-route' style={{ marginTop: '28rpx' }}>
-                <View className='detail-route__rail'><View /><View /><View /></View>
-                <View className='detail-route__place'><Text>出发地</Text><Text>{item.origin}</Text></View>
-                <View className='detail-route__place'><Text>目的地</Text><Text>{item.destination}</Text></View>
-              </View>
-              {item.description && (
-                <Text className='detail-overview__description'>{item.description}</Text>
-              )}
-              <View className='detail-overview__summary'>
-                <View><Text>出发时间</Text><Text>{formatDateTime(item.departure_at)}</Text></View>
-                <View className='carpool-count'><Text>{remainingSeats(item.total_seats, item.occupied_seats)}</Text><Text>人可同行</Text></View>
-              </View>
-            </View>
+            </DetailBusinessIntro>
 
             {item.review_status === 'rejected' && (
               <View className='detail-review-alert'>
@@ -179,35 +250,15 @@ export default function CarpoolDetailPage() {
               <Text className='detail-safety'>请在出发前与同行人确认集合点、出行方式、费用分担和安全事项。平台仅提供校内同行信息交流服务，不提供运输、营运或保险担保。</Text>
             </View>
 
-            {item.viewer_relation !== 'organizer' && (
-              <View
-                className='detail-report-link'
-                hoverClass='detail-report-link--pressed'
-                onClick={() => void openContentReport({
-                  resourceType: 'carpool',
-                  resourceId: item.id,
-                  resourceVersion: item.version,
-                })}
-              >
-                举报这条信息
-              </View>
-            )}
-
-            {item.available_actions.length > 0 && (
-              <View className='detail-action-bar'>
-                {item.available_actions.slice(0, 3).map((action, index) => (
-                  <View
-                    id={`detail-action-${action}`}
-                    key={action}
-                    className={`detail-action ${index === item.available_actions.length - 1 && action !== 'cancel' ? 'detail-action--primary' : ''} ${action === 'cancel' ? 'detail-action--danger' : ''}`}
-                    hoverClass='detail-action--pressed'
-                    onClick={() => void runAction(action)}
-                  >
-                    {working ? '处理中' : actionLabels[action] || action}
-                  </View>
-                ))}
-              </View>
-            )}
+            <DetailComments
+              targetType='carpool'
+              targetId={item.id}
+              enabled={item.review_status === 'approved'}
+              refreshKey={commentRefreshKey}
+              targetAuthorId={item.organizer_id}
+              tone='carpool'
+              actions={footerActions}
+            />
           </>
         )}
       </View>
