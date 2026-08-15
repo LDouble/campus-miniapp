@@ -461,10 +461,12 @@ export default function CommunityDetailPage() {
   }
 
   const previewPostImage = (current: string) => {
-    if (!post || post.images.length === 0) return
+    if (!post || !current) return
+    const urls = post.images.map((image) => image.url).filter(Boolean)
+    if (urls.length === 0) return
     void Taro.previewImage({
       current,
-      urls: post.images.map((image) => image.url),
+      urls,
     })
   }
 
@@ -549,13 +551,24 @@ export default function CommunityDetailPage() {
               {post.images.length > 0 && (
                 <View className='community-detail-card__images'>
                   {post.images.map((image) => (
-                    <Image
-                      key={image.id}
-                      src={image.url}
-                      mode='widthFix'
-                      lazyLoad
-                      onClick={() => previewPostImage(image.url)}
-                    />
+                    <View key={image.id} className='community-detail-card__image-frame'>
+                      {image.url && (
+                        <Image
+                          src={image.url}
+                          mode='widthFix'
+                          lazyLoad
+                          onClick={() => previewPostImage(image.url)}
+                        />
+                      )}
+                      {post.viewer_relation === 'owner' && post.status === 'pending_review' && (
+                        <View className={image.url
+                          ? 'community-detail-card__image-reviewing community-detail-card__image-reviewing--overlay'
+                          : 'community-detail-card__image-reviewing'}
+                        >
+                          <Text>图片审核中</Text>
+                        </View>
+                      )}
+                    </View>
                   ))}
                 </View>
               )}

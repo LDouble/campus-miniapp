@@ -166,6 +166,19 @@
   background: rgba(78, 142, 132, 0.92);
 }
 
+.marketplace-card__reviewing {
+  position: absolute;
+  z-index: 1;
+  right: 12rpx;
+  bottom: 12rpx;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(26, 38, 45, 0.72);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 650;
+}
+
 .marketplace-card__body {
   padding: 18rpx;
 }

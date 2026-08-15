@@ -375,6 +375,21 @@
   width: 100%;
 }
 
+.community-post__image-reviewing--overlay {
+  position: absolute;
+  z-index: 1;
+  right: 12rpx;
+  bottom: 12rpx;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(26, 38, 45, 0.72);
+  color: #fff;
+  font-size: 22rpx;
+}
+
 .community-post__image-frame image {
   display: block;
   width: 100%;

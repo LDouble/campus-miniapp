@@ -19,6 +19,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
   const cover = item.image_urls?.[0]
   const placeholderTone = Math.abs(item.id) % 4
   const isWanted = item.intent === 'wanted'
+  const isPendingOwner = item.viewer_relation === 'owner' && item.status === 'pending_review'
 
   return (
     <View
@@ -47,6 +48,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
           </View>
         )}
         <Text className='marketplace-card__intent'>{isWanted ? '求购' : '出售'}</Text>
+        {isPendingOwner && <Text className='marketplace-card__reviewing'>图片审核中</Text>}
       </View>
       <View className='marketplace-card__body'>
         {cover && (

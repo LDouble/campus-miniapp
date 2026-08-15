@@ -198,6 +198,35 @@ page {
     }
   }
 
+  &__image-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22rpx;
+    background: #eef1f4;
+  }
+
+  &__image-reviewing {
+    display: flex;
+    min-height: 320rpx;
+    align-items: center;
+    justify-content: center;
+    color: #7a8493;
+    font-size: 24rpx;
+  }
+
+  &__image-reviewing--overlay {
+    position: absolute;
+    z-index: 1;
+    right: 16rpx;
+    bottom: 16rpx;
+    min-height: 0;
+    padding: 8rpx 14rpx;
+    border-radius: 999rpx;
+    background: rgba(26, 38, 45, 0.72);
+    color: #fff;
+    font-size: 22rpx;
+  }
+
   &__actions {
     display: flex;
     min-height: 88rpx;

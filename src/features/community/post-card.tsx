@@ -121,15 +121,15 @@ export default function CommunityPostCard({
           <View className={`community-post__images community-post__images--${visibleImages.length}`}>
             {visibleImages.map((image, index) => (
               <View key={image.id} className='community-post__image-frame'>
-                {image.url
-                  ? <Image src={image.url} mode='aspectFill' lazyLoad />
-                  : imagesPendingReview
-                    ? (
-                      <View className='community-post__image-reviewing'>
-                        <Text>图片审核中</Text>
-                      </View>
-                    )
-                    : null}
+                {image.url && <Image src={image.url} mode='aspectFill' lazyLoad />}
+                {imagesPendingReview && (
+                  <View className={image.url
+                    ? 'community-post__image-reviewing community-post__image-reviewing--overlay'
+                    : 'community-post__image-reviewing'}
+                  >
+                    <Text>图片审核中</Text>
+                  </View>
+                )}
                 {index === 2 && remainingImages > 0 && (
                   <View className='community-post__image-more'>
                     <Text>+{remainingImages}</Text>

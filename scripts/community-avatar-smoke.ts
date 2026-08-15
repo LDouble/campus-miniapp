@@ -27,17 +27,30 @@ assert.ok(cardSource.includes("post.status === 'rejected'"))
 assert.ok(cardSource.includes("label: '审核中'"))
 assert.ok(cardSource.includes("label: '未通过'"))
 assert.ok(cardSource.includes('图片审核中'))
+assert.ok(cardSource.includes('community-post__image-reviewing--overlay'))
 
 const feedStyleSource = readFileSync(resolve(__dirname, '../src/features/community/feed-panel.scss'), 'utf8')
 assert.ok(feedStyleSource.includes('.community-post__review-status--pending'))
 assert.ok(feedStyleSource.includes('.community-post__review-status--rejected'))
 assert.ok(feedStyleSource.includes('.community-post__image-reviewing'))
+assert.ok(feedStyleSource.includes('.community-post__image-reviewing--overlay'))
 
 const detailSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.tsx'), 'utf8')
 assert.equal((detailSource.match(/communityAuthorAvatarUrl\(/g) || []).length >= 3, true)
 assert.ok(detailSource.includes("className='community-detail-card__avatar-image'"))
 assert.ok(detailSource.includes("className='community-detail-comments__avatar-image'"))
 assert.ok(detailSource.includes("className='community-comment__reply-avatar-image'"))
+assert.ok(detailSource.includes('community-detail-card__image-reviewing--overlay'))
+
+const detailStyleSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.scss'), 'utf8')
+assert.ok(detailStyleSource.includes('&__image-reviewing--overlay'))
+
+const publishSource = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
+assert.ok(publishSource.includes('`/pages/community/detail?id=${id}&mode=post`'))
+
+const marketplaceCardSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/marketplace-card.tsx'), 'utf8')
+assert.ok(marketplaceCardSource.includes("item.viewer_relation === 'owner' && item.status === 'pending_review'"))
+assert.ok(marketplaceCardSource.includes('marketplace-card__reviewing'))
 
 const homeSource = readFileSync(resolve(__dirname, '../src/pages/index/index.tsx'), 'utf8')
 assert.ok((homeSource.match(/communityAuthorAvatarUrl\(item\)/g) || []).length >= 2)

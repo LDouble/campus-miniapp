@@ -654,8 +654,7 @@ export default function PublishPage() {
     } else if (section === 'carpool') {
       await Taro.redirectTo({ url: `/pages/carpool/detail?id=${id}` })
     } else {
-      Taro.setStorageSync('campus.lifeHub.section.v1', 'community')
-      await Taro.switchTab({ url: '/pages/community/index' })
+      await Taro.redirectTo({ url: `/pages/community/detail?id=${id}&mode=post` })
     }
   }
 
