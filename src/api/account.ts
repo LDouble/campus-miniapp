@@ -1,4 +1,5 @@
 import { apiRequest, createIdempotencyKey } from './client'
+import type { operations } from './generated/schema'
 import type {
   AccountCancellationPreflight,
   AccountCancellationResult,
@@ -18,6 +19,19 @@ export const updateCurrentUsername = (username: string) => apiRequest<User>({
   idempotencyKey: createIdempotencyKey('profile-username'),
   skipAcademicVerificationGuard: true,
 })
+
+export const updateCurrentAvatar = (mediaId: number) => {
+  const data: operations['UpdateMe']['requestBody']['content']['application/json'] = {
+    avatar_media_id: mediaId,
+  }
+  return apiRequest<User>({
+    path: '/api/v1/auth/me',
+    method: 'PATCH',
+    data,
+    idempotencyKey: createIdempotencyKey('profile-avatar'),
+    skipAcademicVerificationGuard: true,
+  })
+}
 
 // CurrentIdentity is intentionally narrow: most mini-program flows only need
 // the user-scoped local-storage key and should not trigger the role/permission

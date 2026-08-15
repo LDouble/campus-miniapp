@@ -61,7 +61,7 @@ export default function MarketplaceDetailPage() {
       : '校园二手｜海大校园',
     path: id ? '/pages/marketplace/detail' : '/pages/community/index',
     query: id ? { id } : { section: 'market' },
-    imageUrl: item?.image_urls[0],
+    imageUrl: item?.status === 'published' ? item.image_urls[0] : undefined,
   }))
 
   const runAction = async (action: string) => {
@@ -164,6 +164,9 @@ export default function MarketplaceDetailPage() {
                     <Text className='market-detail-gallery__quote'>“</Text>
                     <Text className='market-detail-gallery__text'>{item.description}</Text>
                   </View>
+                )}
+                {item.viewer_relation === 'owner' && item.status === 'pending_review' && (
+                  <Text className='market-detail-gallery__reviewing'>图片审核中</Text>
                 )}
               </View>
               <View className='market-detail-main'>

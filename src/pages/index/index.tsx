@@ -31,6 +31,7 @@ import type {
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
+import UserAvatarImage from '../../components/user-avatar-image'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
@@ -40,6 +41,7 @@ import {
   resolveCoursePreview,
 } from '../../features/home/data'
 import {
+  communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
   communityAuthorTone,
@@ -331,6 +333,7 @@ function Index() {
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
   const [username, setUsername] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
   const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
   const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
@@ -439,7 +442,10 @@ function Index() {
       latestRuntimeConfig,
       selectedCampus,
     ))
-    if (account.ok) setUsername(account.value.user.username)
+    if (account.ok) {
+      setUsername(account.value.user.username)
+      setAvatarUrl(account.value.user.avatar_url || '')
+    }
     setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))
     if (community.ok) {
       setCommunityPosts(latestCommunityPosts(community.value.items))
@@ -695,7 +701,11 @@ function Index() {
       <View className='campus__header motion-enter'>
         <View className='campus__identity'>
           <View className='campus__avatar'>
-            <Text>{avatarText(username)}</Text>
+            <UserAvatarImage
+              src={avatarUrl}
+              className='campus__avatar-image'
+              fallback={avatarText(username)}
+            />
             <View className='campus__online' />
           </View>
           <View className='campus__identity-copy'>
@@ -1114,7 +1124,12 @@ function Index() {
             {index === 0 ? (<>
               <View className='news-card__topline'>
                 <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <Text>{communityAuthorInitial(item)}</Text>
+                  <UserAvatarImage
+                    src={communityAuthorAvatarUrl(item)}
+                    className='news-card__avatar-image'
+                    fallback={communityAuthorInitial(item)}
+                    lazyLoad
+                  />
                 </View>
                 <View className='news-card__author'>
                   <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
@@ -1158,7 +1173,12 @@ function Index() {
             </>) : (
               <View className='news-card__compact-main'>
                 <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <Text>{communityAuthorInitial(item)}</Text>
+                  <UserAvatarImage
+                    src={communityAuthorAvatarUrl(item)}
+                    className='news-card__avatar-image'
+                    fallback={communityAuthorInitial(item)}
+                    lazyLoad
+                  />
                 </View>
                 <View className='news-card__compact-copy'>
                   <View className='news-card__compact-meta'>

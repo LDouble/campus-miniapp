@@ -10,6 +10,7 @@ import type {
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
+import UserAvatarImage from '../../components/user-avatar-image'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { openContentReport } from '../../features/content-report'
 import { formatDateTime, formatStatus } from '../../features/life-services/format'
@@ -17,6 +18,7 @@ import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
+  communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
   communityAuthorTone,
@@ -460,10 +462,12 @@ export default function CommunityDetailPage() {
   }
 
   const previewPostImage = (current: string) => {
-    if (!post || post.images.length === 0) return
+    if (!post || !current) return
+    const urls = post.images.map((image) => image.url).filter(Boolean)
+    if (urls.length === 0) return
     void Taro.previewImage({
       current,
-      urls: post.images.map((image) => image.url),
+      urls,
     })
   }
 
@@ -524,7 +528,12 @@ export default function CommunityDetailPage() {
                 <View
                   className={`community-detail-card__avatar community-detail-card__avatar--tone-${communityAuthorTone(post)}`}
                 >
-                  {communityAuthorInitial(post)}
+                  <UserAvatarImage
+                    src={communityAuthorAvatarUrl(post)}
+                    className='community-detail-card__avatar-image'
+                    fallback={communityAuthorInitial(post)}
+                    lazyLoad
+                  />
                 </View>
                 <View className='community-detail-card__author'>
                   <View>
@@ -546,13 +555,24 @@ export default function CommunityDetailPage() {
               {post.images.length > 0 && (
                 <View className='community-detail-card__images'>
                   {post.images.map((image) => (
-                    <Image
-                      key={image.id}
-                      src={image.url}
-                      mode='widthFix'
-                      lazyLoad
-                      onClick={() => previewPostImage(image.url)}
-                    />
+                    <View key={image.id} className='community-detail-card__image-frame'>
+                      {image.url && (
+                        <Image
+                          src={image.url}
+                          mode='widthFix'
+                          lazyLoad
+                          onClick={() => previewPostImage(image.url)}
+                        />
+                      )}
+                      {post.viewer_relation === 'owner' && post.status === 'pending_review' && (
+                        <View className={image.url
+                          ? 'community-detail-card__image-reviewing community-detail-card__image-reviewing--overlay'
+                          : 'community-detail-card__image-reviewing'}
+                        >
+                          <Text>图片审核中</Text>
+                        </View>
+                      )}
+                    </View>
                   ))}
                 </View>
               )}
@@ -678,7 +698,12 @@ export default function CommunityDetailPage() {
                       <View
                         className={`community-detail-comments__avatar community-detail-comments__avatar--tone-${communityAuthorTone(item)}`}
                       >
-                        {communityAuthorInitial(item)}
+                        <UserAvatarImage
+                          src={communityAuthorAvatarUrl(item)}
+                          className='community-detail-comments__avatar-image'
+                          fallback={communityAuthorInitial(item)}
+                          lazyLoad
+                        />
                       </View>
                       <View className='community-detail-comments__copy'>
                         <View className='community-detail-comments__author'>
@@ -789,7 +814,12 @@ export default function CommunityDetailPage() {
                               <View
                                 className={`community-comment__reply-avatar community-detail-comments__avatar--tone-${communityAuthorTone(reply)}`}
                               >
-                                {communityAuthorInitial(reply)}
+                                <UserAvatarImage
+                                  src={communityAuthorAvatarUrl(reply)}
+                                  className='community-comment__reply-avatar-image'
+                                  fallback={communityAuthorInitial(reply)}
+                                  lazyLoad
+                                />
                               </View>
                               <View className='community-comment__reply-copy'>
                                 <View className='community-comment__reply-author'>

@@ -795,14 +795,14 @@ export default function MaterialsPage() {
         if (!draft.fileId) throw new Error('上传任务无效，请重新上传')
         return { file_id: draft.fileId }
       })
-      console.info('[COS直传] 课程资料开始完成确认')
+      console.info('[对象存储直传] 课程资料开始完成确认')
       const completed = await completeMaterialUploadSession(
         workingBatch.sessionId,
         workingBatch.sessionVersion,
         completedFiles,
         workingBatch.completeIdempotencyKey,
       )
-      console.info('[COS直传] 课程资料完成确认成功')
+      console.info('[对象存储直传] 课程资料完成确认成功')
       await removePersistedMaterialFiles(workingDrafts)
       setDrafts([])
       setMetadata(createUploadMetadata(routeContext))

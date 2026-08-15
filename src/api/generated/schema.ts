@@ -772,7 +772,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 确认学生证材料 COS 直传完成 */
+        /** 确认学生证材料 OSS 直传完成 */
         post: operations["CompleteAcademicVerificationMaterialUpload"];
         delete?: never;
         options?: never;
@@ -789,7 +789,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 获取学生证材料 COS 直传临时凭证 */
+        /** 获取学生证材料 OSS 直传临时凭证 */
         post: operations["InitiateAcademicVerificationMaterialUpload"];
         delete?: never;
         options?: never;
@@ -3424,6 +3424,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/upload-target": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建社区、二手或头像图片的 OSS 直传目标 */
+        post: operations["CreateMediaUploadTarget"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 校验并完成图片上传 */
+        post: operations["CompleteMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/notices": {
         parameters: {
             query?: never;
@@ -4196,6 +4230,10 @@ export interface components {
             /** Format: uint64 */
             id: number;
             username: string;
+            /** Format: uri */
+            avatar_url?: string | null;
+            /** @enum {string|null} */
+            avatar_moderation_status?: "pending" | "manual_review" | null;
             /** @enum {string} */
             status: "active" | "disabled" | "deleted";
             /** Format: date-time */
@@ -4281,7 +4319,9 @@ export interface components {
             password?: string;
         };
         UpdateMeRequest: {
-            username: string;
+            username?: string;
+            /** Format: uint64 */
+            avatar_media_id?: number;
         };
         ChangeMyPasswordRequest: {
             current_password: string;
@@ -5580,6 +5620,8 @@ export interface components {
         CampusCirclePostImageView: {
             /** Format: uint64 */
             id: number;
+            /** Format: uint64 */
+            media_id?: number | null;
             /** Format: int64 */
             sort_order: number;
             url: string;
@@ -5604,6 +5646,7 @@ export interface components {
         /** @enum {string} */
         CampusCirclePostStatus: "pending_review" | "approved" | "rejected" | "withdrawn";
         CampusCirclePostView: {
+            author_avatar_url: string | null;
             author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
@@ -6100,6 +6143,7 @@ export interface components {
             request_id: string;
         };
         CommentView: {
+            author_avatar_url: string | null;
             author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
@@ -7046,6 +7090,13 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        MarketplaceListingImageView: {
+            /** Format: uint64 */
+            media_id?: number | null;
+            /** Format: int64 */
+            position: number;
+            url: string;
+        };
         MarketplaceListingPageResponseBody: {
             data: components["schemas"]["MarketplaceListingViewPage"];
             request_id: string;
@@ -7071,6 +7122,7 @@ export interface components {
             /** Format: uint64 */
             id: number;
             image_urls: string[];
+            images?: components["schemas"]["MarketplaceListingImageView"][];
             /** @enum {string} */
             intent: "sell" | "wanted";
             /** Format: uint64 */
@@ -7153,6 +7205,58 @@ export interface components {
         };
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
+        /** @enum {string} */
+        MediaPurpose: "community" | "marketplace" | "avatar";
+        MediaResponseBody: {
+            data: components["schemas"]["MediaView"];
+            request_id: string;
+        };
+        MediaUploadInput: {
+            /** @enum {string} */
+            mime_type: "image/jpeg" | "image/png";
+            purpose: components["schemas"]["MediaPurpose"];
+            /** Format: int64 */
+            size: number;
+        };
+        MediaUploadTarget: {
+            /** Format: date-time */
+            expires_at: string;
+            /** @enum {string} */
+            file_field: "file";
+            form_fields: {
+                [key: string]: string;
+            };
+            headers: {
+                [key: string]: string;
+            };
+            /** Format: uint64 */
+            media_id: number;
+            /** @enum {string} */
+            upload_method: "POST";
+            /** Format: uri */
+            upload_url: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        MediaUploadTargetResponseBody: {
+            data: components["schemas"]["MediaUploadTarget"];
+            request_id: string;
+        };
+        MediaView: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            id: number;
+            /** @enum {string} */
+            moderation_status: "pending" | "checking" | "passed" | "manual_review" | "rejected" | "error" | "manual_approved" | "manual_rejected";
+            purpose: components["schemas"]["MediaPurpose"];
+            /** @enum {string} */
+            status: "pending" | "promoting" | "ready" | "expired";
+            /** Format: uint64 */
+            version: number;
+            /** Format: int64 */
+            width: number;
+        };
         OfficialNoticeAttachment: {
             mime_type?: string;
             name: string;
@@ -8057,7 +8161,7 @@ export interface components {
                 "application/json": components["schemas"]["AcademicVerificationStatusResponseBody"];
             };
         };
-        /** @description 学生证材料 COS 直传目标 */
+        /** @description 学生证材料 OSS 直传目标 */
         AcademicVerificationUploadTargetResponse: {
             headers: {
                 [name: string]: unknown;
@@ -8658,6 +8762,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MarketplaceUpdatedResponseBody"];
+            };
+        };
+        /** @description 图片媒体 */
+        MediaResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MediaResponseBody"];
+            };
+        };
+        /** @description 图片直传目标 */
+        MediaUploadTargetResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MediaUploadTargetResponseBody"];
             };
         };
         /** @description 删除全校通知结果 */
@@ -11078,6 +11200,7 @@ export interface operations {
                     section_id: number;
                     content?: string;
                     image_urls?: string[];
+                    media_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
                 };
@@ -11140,6 +11263,7 @@ export interface operations {
                     section_id: number;
                     content?: string;
                     image_urls?: string[];
+                    media_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
                     /** Format: uint64 */
@@ -13657,6 +13781,7 @@ export interface operations {
                     contact_type: string;
                     contact: string;
                     image_urls?: string[];
+                    media_ids?: number[];
                 };
             };
         };
@@ -13729,6 +13854,7 @@ export interface operations {
                     contact_type?: string;
                     contact?: string;
                     image_urls?: string[];
+                    media_ids?: number[];
                 };
             };
         };
@@ -13805,6 +13931,53 @@ export interface operations {
         responses: {
             201: components["responses"]["MarketplaceOrderResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    CreateMediaUploadTarget: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MediaUploadInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["MediaUploadTargetResponse"];
+            400: components["responses"]["Error"];
+            413: components["responses"]["Error"];
+        };
+    };
+    CompleteMedia: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["MediaResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            413: components["responses"]["Error"];
         };
     };
     ListAdminNotices: {

@@ -2,11 +2,13 @@ import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
 import { formatDateTime } from '../life-services/format'
 import {
+  communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
   communityAuthorTone,
 } from './author'
 import CommunityLevelBadge from './level-badge'
+import UserAvatarImage from '../../components/user-avatar-image'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -34,9 +36,19 @@ export default function CommunityPostCard({
   const authorName = communityAuthorName(post)
   const authorInitial = communityAuthorInitial(post)
   const avatarTone = communityAuthorTone(post)
+  const authorAvatarUrl = communityAuthorAvatarUrl(post)
   const visibleImages = post.images.slice(0, 3)
   const remainingImages = Math.max(0, post.images.length - visibleImages.length)
   const publishedAt = formatDateTime(post.published_at || post.created_at)
+  const reviewStatus = post.viewer_relation === 'owner'
+    ? post.status === 'pending_review'
+      ? { label: '审核中', tone: 'pending' }
+      : post.status === 'rejected'
+        ? { label: '未通过', tone: 'rejected' }
+        : null
+    : null
+
+  const imagesPendingReview = post.viewer_relation === 'owner' && post.status === 'pending_review'
   const operationBadges = [
     post.is_pinned && '置顶',
     post.is_featured && '精选',
@@ -64,7 +76,12 @@ export default function CommunityPostCard({
         onClick={() => onOpen(post)}
       >
         <View className={`community-post__avatar community-post__avatar--tone-${avatarTone}`}>
-          <Text>{authorInitial}</Text>
+          <UserAvatarImage
+            src={authorAvatarUrl}
+            className='community-post__avatar-image'
+            fallback={authorInitial}
+            lazyLoad
+          />
         </View>
         <View className='community-post__author'>
           <View className='community-post__author-line'>
@@ -73,6 +90,11 @@ export default function CommunityPostCard({
           </View>
           <View className='community-post__meta'>
             <Text>{publishedAt}</Text>
+            {reviewStatus && (
+              <Text className={`community-post__review-status community-post__review-status--${reviewStatus.tone}`}>
+                {reviewStatus.label}
+              </Text>
+            )}
           </View>
         </View>
       </View>
@@ -103,7 +125,15 @@ export default function CommunityPostCard({
           <View className={`community-post__images community-post__images--${visibleImages.length}`}>
             {visibleImages.map((image, index) => (
               <View key={image.id} className='community-post__image-frame'>
-                <Image src={image.url} mode='aspectFill' lazyLoad />
+                {image.url && <Image src={image.url} mode='aspectFill' lazyLoad />}
+                {imagesPendingReview && (
+                  <View className={image.url
+                    ? 'community-post__image-reviewing community-post__image-reviewing--overlay'
+                    : 'community-post__image-reviewing'}
+                  >
+                    <Text>图片审核中</Text>
+                  </View>
+                )}
                 {index === 2 && remainingImages > 0 && (
                   <View className='community-post__image-more'>
                     <Text>+{remainingImages}</Text>

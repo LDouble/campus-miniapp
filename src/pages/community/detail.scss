@@ -80,6 +80,7 @@ page {
     flex: none;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     border-radius: 50%;
     background: #655e8d;
     box-shadow:
@@ -92,6 +93,14 @@ page {
 
   &__avatar--tone-1 {
     background: #4f8580;
+  }
+
+  &__avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #eef3f2;
+    border-radius: 50%;
   }
 
   &__avatar--tone-2 {
@@ -190,6 +199,35 @@ page {
       border-radius: 22rpx;
       background: #eef1f4;
     }
+  }
+
+  &__image-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22rpx;
+    background: #eef1f4;
+  }
+
+  &__image-reviewing {
+    display: flex;
+    min-height: 320rpx;
+    align-items: center;
+    justify-content: center;
+    color: #7a8493;
+    font-size: 24rpx;
+  }
+
+  &__image-reviewing--overlay {
+    position: absolute;
+    z-index: 1;
+    right: 16rpx;
+    bottom: 16rpx;
+    min-height: 0;
+    padding: 8rpx 14rpx;
+    border-radius: 999rpx;
+    background: rgba(26, 38, 45, 0.72);
+    color: #fff;
+    font-size: 22rpx;
   }
 
   &__actions {
@@ -316,6 +354,7 @@ page {
     flex: none;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     border-radius: 50%;
     background: #655e8d;
     color: #fff;
@@ -325,6 +364,14 @@ page {
 
   &__avatar--tone-1 {
     background: #4f8580;
+  }
+
+  &__avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #eef3f2;
+    border-radius: 50%;
   }
 
   &__avatar--tone-2 {
@@ -618,11 +665,20 @@ page {
   flex: none;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border-radius: 50%;
   background: #53857f;
   color: #fff;
   font-size: 17rpx;
   font-weight: 740;
+}
+
+.community-comment__reply-avatar-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #eef3f2;
+  border-radius: 50%;
 }
 
 .community-comment__reply-copy {
