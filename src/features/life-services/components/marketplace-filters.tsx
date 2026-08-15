@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ScrollView, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import FilterSheet from './filter-sheet'
 import './filters.scss'
@@ -63,6 +63,15 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
     () => quickRanges.find((item) => sameRange(item.value, value))?.key || 'custom',
     [value],
   )
+  const selectedPriceLabel = selectedQuickKey === 'all'
+    ? '不限'
+    : selectedQuickKey === 'custom'
+      ? rangeSummary(value)
+      : quickRanges.find((item) => item.key === selectedQuickKey)?.label || '不限'
+  const draftQuickKey = quickRanges.find((item) => (
+    yuanValue(item.value.minPriceCents) === minYuan.trim()
+    && yuanValue(item.value.maxPriceCents) === maxYuan.trim()
+  ))?.key || 'custom'
 
   useEffect(() => {
     if (!sheetVisible) return
@@ -96,15 +105,17 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
 
   return (
     <>
-      <ScrollView className='filter-quick-scroll' scrollX enhanced showScrollbar={false}>
-        <View className='filter-quick-row'>
+      <View className='market-filter-toolbar'>
+        <View className='market-intent-switch' ariaRole='tablist'>
           {intentOptions.map((option) => (
             <View
               key={option.key}
-              className={`filter-chip ${
-                (value.intent || 'all') === option.key ? 'filter-chip--market-active' : ''
-              }`}
-              hoverClass='filter-chip--pressed'
+              className={(value.intent || 'all') === option.key
+                ? 'market-intent-switch__item market-intent-switch__item--active'
+                : 'market-intent-switch__item'}
+              hoverClass='market-filter-control--pressed'
+              ariaRole='button'
+              ariaLabel={`${(value.intent || 'all') === option.key ? '已选择，' : ''}${option.label}`}
               onClick={() => onChange({
                 ...value,
                 intent: option.key === 'all' ? undefined : option.key,
@@ -113,61 +124,56 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
               {option.label}
             </View>
           ))}
-          <View className='filter-quick-row__divider' />
-          {quickRanges.map((range) => (
-            <View
-              key={range.key}
-              className={`filter-chip ${
-                selectedQuickKey === range.key ? 'filter-chip--market-active' : ''
-              }`}
-              hoverClass='filter-chip--pressed'
-              onClick={() => onChange({
-                ...range.value,
-                intent: value.intent,
-                category: value.category,
-              })}
-            >
-              {range.label}
-            </View>
-          ))}
-          <View
-            className={`filter-chip filter-chip--more ${
-              selectedQuickKey === 'custom' ? 'filter-chip--market-active' : ''
-            }`}
-            hoverClass='filter-chip--pressed'
-            onClick={() => setSheetVisible(true)}
-          >
-            {selectedQuickKey === 'custom' ? rangeSummary(value) : '自定义'}
-          </View>
         </View>
-      </ScrollView>
-
-      {rangeSummary(value) && (
-        <View className='filter-applied'>
-          <Text>已筛选</Text>
-          <View>
-            <Text>{rangeSummary(value)}</Text>
-            <Text onClick={() => onChange({
-              intent: value.intent,
-              category: value.category,
-            })}
-            >
-              移除
-            </Text>
+        <View
+          className={`market-price-trigger ${selectedQuickKey !== 'all' ? 'market-price-trigger--active' : ''}`}
+          hoverClass='market-filter-control--pressed'
+          ariaRole='button'
+          ariaLabel={`价格筛选，当前${selectedPriceLabel}`}
+          onClick={() => setSheetVisible(true)}
+        >
+          <View className='market-price-trigger__label'>
+            <Text>价格</Text>
+            <Text className='market-price-trigger__separator'>·</Text>
+            <Text>{selectedPriceLabel}</Text>
           </View>
+          <View className='market-price-trigger__chevron' />
         </View>
-      )}
+      </View>
 
       <FilterSheet
         visible={sheetVisible}
         title='价格范围'
         onClose={() => setSheetVisible(false)}
         onReset={() => {
-          onChange({})
+          onChange({ intent: value.intent, category: value.category })
           setSheetVisible(false)
         }}
         onApply={applyCustom}
       >
+        <View className='filter-section'>
+          <Text className='filter-section__title'>快捷价格</Text>
+          <View className='market-price-options'>
+            {quickRanges.map((range) => (
+              <View
+                key={range.key}
+                className={draftQuickKey === range.key
+                  ? 'market-price-option market-price-option--active'
+                  : 'market-price-option'}
+                hoverClass='market-filter-control--pressed'
+                ariaRole='button'
+                ariaLabel={`${draftQuickKey === range.key ? '已选择，' : ''}${range.label}`}
+                onClick={() => {
+                  setMinYuan(yuanValue(range.value.minPriceCents))
+                  setMaxYuan(yuanValue(range.value.maxPriceCents))
+                  setValidation('')
+                }}
+              >
+                {range.label}
+              </View>
+            ))}
+          </View>
+        </View>
         <View className='filter-section'>
           <Text className='filter-section__title'>自定义价格</Text>
           <Text className='filter-section__description'>输入商品价格区间，单位为元</Text>

@@ -50,7 +50,6 @@ import {
   campusDateTimeToISOString,
 } from '../../utils/date-time'
 import './index.scss'
-import '../../features/life-services/components/campus-selector.scss'
 
 type PublishSection = 'community' | 'errands' | 'market' | 'carpool'
 type PublishMode = 'create' | 'edit' | 'resubmit'
@@ -262,9 +261,11 @@ const InputField = ({
 
 const RouteSuggestions = ({
   kind,
+  value: currentValue,
   onSelect,
 }: {
   kind: RouteHistoryKind
+  value: string
   onSelect: (value: string) => void
 }) => {
   const recent = getRecentRouteValues(kind).filter(
@@ -274,16 +275,38 @@ const RouteSuggestions = ({
     <View className='publisher-route-suggestions'>
       <Text className='publisher-route-suggestions__label'>常用地点</Text>
       <View className='publisher-route-suggestions__items'>
-        {ROUTE_SHORTCUTS.map((value) => (
-          <View key={value} onClick={() => onSelect(value)}>{value}</View>
+        {ROUTE_SHORTCUTS.map((option) => (
+          <View
+            key={option}
+            className={currentValue === option
+              ? 'publisher-route-suggestion publisher-route-suggestion--active'
+              : 'publisher-route-suggestion'}
+            hoverClass='publisher-route-suggestion--pressed'
+            ariaRole='button'
+            ariaLabel={`${currentValue === option ? '已选择，' : ''}选择常用地点${option}`}
+            onClick={() => onSelect(option)}
+          >
+            {option}
+          </View>
         ))}
       </View>
       {recent.length > 0 && (
         <>
           <Text className='publisher-route-suggestions__label'>最近使用</Text>
           <View className='publisher-route-suggestions__items publisher-route-suggestions__items--recent'>
-            {recent.map((value) => (
-              <View key={value} onClick={() => onSelect(value)}>{value}</View>
+            {recent.map((option) => (
+              <View
+                key={option}
+                className={currentValue === option
+                  ? 'publisher-route-suggestion publisher-route-suggestion--recent publisher-route-suggestion--active'
+                  : 'publisher-route-suggestion publisher-route-suggestion--recent'}
+                hoverClass='publisher-route-suggestion--pressed'
+                ariaRole='button'
+                ariaLabel={`${currentValue === option ? '已选择，' : ''}选择最近使用地点${option}`}
+                onClick={() => onSelect(option)}
+              >
+                {option}
+              </View>
             ))}
           </View>
         </>
@@ -860,8 +883,6 @@ export default function PublishPage() {
 
   return (
     <View className={`publisher-page publisher-page--${section}`}>
-      <View className='publisher-page__orb publisher-page__orb--one' />
-      <View className='publisher-page__orb publisher-page__orb--two' />
       <CustomNavbar
         title={mode === 'create' ? '发布' : '编辑发布'}
         showBack
@@ -879,7 +900,7 @@ export default function PublishPage() {
               className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
               hoverClass={mode === 'create' ? 'publisher-type--pressed' : 'none'}
               ariaRole='button'
-              ariaLabel={`${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
+              ariaLabel={`${section === item.key ? '已选择，' : ''}${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
               onClick={() => selectSection(item.key)}
             >
               <Text>{item.label}</Text>
@@ -916,6 +937,8 @@ export default function PublishPage() {
                   <View
                     className={form.marketIntent === 'sell' ? 'publisher-market-intent--active' : ''}
                     hoverClass='publisher-market-intent--pressed'
+                    ariaRole='button'
+                    ariaLabel={`${form.marketIntent === 'sell' ? '已选择，' : ''}我要出售`}
                     onClick={() => selectMarketIntent('sell')}
                   >
                     我要出售
@@ -923,6 +946,8 @@ export default function PublishPage() {
                   <View
                     className={form.marketIntent === 'wanted' ? 'publisher-market-intent--active' : ''}
                     hoverClass='publisher-market-intent--pressed'
+                    ariaRole='button'
+                    ariaLabel={`${form.marketIntent === 'wanted' ? '已选择，' : ''}我要求购`}
                     onClick={() => selectMarketIntent('wanted')}
                   >
                     我要求购
@@ -946,6 +971,7 @@ export default function PublishPage() {
             )}
 
             <View className='publisher-section publisher-section--content'>
+              <SectionHeading title={section === 'carpool' ? '补充说明（可选）' : '发布内容'} />
               <View className='publisher-field publisher-field--content'>
                 <View className='publisher-textarea'>
                   <KeyboardSafeTextarea
@@ -992,9 +1018,9 @@ export default function PublishPage() {
               <View className='publisher-section'>
                 <SectionHeading title='任务信息' />
                 <InputField inputId='publisher-pickup-location' label='取件地' value={form.pickupLocation} maxlength={100} placeholder='例如：北区快递站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('pickupLocation')} onInput={(value) => update('pickupLocation', value)} />
-                {activeRouteField === 'pickupLocation' && <RouteSuggestions kind='origin' onSelect={(value) => update('pickupLocation', value)} />}
+                {activeRouteField === 'pickupLocation' && <RouteSuggestions kind='origin' value={form.pickupLocation} onSelect={(value) => { update('pickupLocation', value); setActiveRouteField(null) }} />}
                 <InputField inputId='publisher-dropoff-location' label='送达地' value={form.dropoffLocation} maxlength={100} placeholder='例如：图书馆南门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('dropoffLocation')} onInput={(value) => update('dropoffLocation', value)} />
-                {activeRouteField === 'dropoffLocation' && <RouteSuggestions kind='destination' onSelect={(value) => update('dropoffLocation', value)} />}
+                {activeRouteField === 'dropoffLocation' && <RouteSuggestions kind='destination' value={form.dropoffLocation} onSelect={(value) => { update('dropoffLocation', value); setActiveRouteField(null) }} />}
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>截止时间</Text>
                   <View className='publisher-picker-row'>
@@ -1032,9 +1058,9 @@ export default function PublishPage() {
               <View className='publisher-section'>
                 <SectionHeading title='同行计划' />
                 <InputField inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('origin')} onInput={(value) => update('origin', value)} />
-                {activeRouteField === 'origin' && <RouteSuggestions kind='origin' onSelect={(value) => update('origin', value)} />}
+                {activeRouteField === 'origin' && <RouteSuggestions kind='origin' value={form.origin} onSelect={(value) => { update('origin', value); setActiveRouteField(null) }} />}
                 <InputField inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('destination')} onInput={(value) => update('destination', value)} />
-                {activeRouteField === 'destination' && <RouteSuggestions kind='destination' onSelect={(value) => update('destination', value)} />}
+                {activeRouteField === 'destination' && <RouteSuggestions kind='destination' value={form.destination} onSelect={(value) => { update('destination', value); setActiveRouteField(null) }} />}
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>出发时间</Text>
                   <View className='publisher-picker-row'>
@@ -1128,7 +1154,7 @@ export default function PublishPage() {
       </View>
 
       {!loadingEdit && (
-        <View className='publisher-actions'>
+        <View className={`publisher-actions ${keyboardHeight > 0 ? 'publisher-actions--keyboard' : ''}`}>
           <View className={`publisher-actions__status ${validationError ? '' : 'publisher-actions__status--ready'}`}>
             <View />
             <Text>{validationError ? `尚缺：${validationError}` : '内容完整，提交后进入审核'}</Text>
@@ -1137,17 +1163,21 @@ export default function PublishPage() {
             {mode === 'create' && (
               <View
                 className='publisher-actions__draft'
-                hoverClass='publisher-actions__button--pressed'
-                onClick={saveAndLeave}
+                hoverClass={submitting ? 'none' : 'publisher-actions__button--pressed'}
+                ariaRole='button'
+                ariaLabel='保存草稿并退出'
+                onClick={() => !submitting && saveAndLeave()}
               >
                 保存退出
               </View>
             )}
             <View
               id='publisher-submit'
-              className={`publisher-actions__submit ${validationError ? 'publisher-actions__submit--disabled' : ''}`}
-              hoverClass='publisher-actions__button--pressed'
-              onClick={() => void submit()}
+              className={`publisher-actions__submit ${validationError || submitting ? 'publisher-actions__submit--disabled' : ''}`}
+              hoverClass={validationError || submitting ? 'none' : 'publisher-actions__button--pressed'}
+              ariaRole='button'
+              ariaLabel={submitting ? '正在提交' : validationError ? `暂不可提交，${validationError}` : '提交审核'}
+              onClick={() => !validationError && !submitting && void submit()}
             >
               {submitting ? '正在提交' : mode === 'create' ? '提交审核' : '保存并提交'}
             </View>

@@ -33,7 +33,6 @@ import MarketplaceFilters, {
 import CampusSelector from './components/campus-selector'
 import type { CampusName } from './campus'
 import './list-panel.scss'
-import './components/campus-selector.scss'
 
 export type LifeServiceSection = Exclude<LifeHubSection, 'community'>
 type ServiceItem = ErrandView | MarketplaceListingView | CarpoolTripView
@@ -364,6 +363,8 @@ export default function LifeServiceListPanel({
           id={`life-search-submit-${section}`}
           className='life-search__submit'
           hoverClass='life-search__submit--pressed'
+          ariaRole='button'
+          ariaLabel='搜索校园内容'
           onClick={submitSearch}
         >
           搜索
@@ -371,11 +372,12 @@ export default function LifeServiceListPanel({
       </View>
 
       <View className='life-campus-filter'>
-        <View className='life-campus-filter__heading'>
-          <Text>按校区发现</Text>
-          <Text>{campus || '全部校区'}</Text>
-        </View>
-        <CampusSelector value={campus} allowAll onChange={setCampus} />
+        <CampusSelector
+          value={campus}
+          allowAll
+          label='按校区发现'
+          onChange={setCampus}
+        />
       </View>
 
       {section === 'market' && (

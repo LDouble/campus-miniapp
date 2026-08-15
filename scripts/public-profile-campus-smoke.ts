@@ -17,6 +17,18 @@ const carpoolFilters = readFileSync(resolve(
   __dirname,
   '../src/features/life-services/components/carpool-filters.tsx',
 ), 'utf8')
+const campusSelector = readFileSync(resolve(
+  __dirname,
+  '../src/features/life-services/components/campus-selector.tsx',
+), 'utf8')
+const filterSheet = readFileSync(resolve(
+  __dirname,
+  '../src/features/life-services/components/filter-sheet.tsx',
+), 'utf8')
+const bottomSheet = readFileSync(resolve(
+  __dirname,
+  '../src/components/bottom-sheet.tsx',
+), 'utf8')
 const routeHistory = readFileSync(resolve(
   __dirname,
   '../src/features/life-services/route-history.ts',
@@ -71,7 +83,16 @@ assert.ok(carpoolFilters.includes("kind='destination'"))
 assert.ok(carpoolFilters.includes('ROUTE_SHORTCUTS'))
 assert.ok(carpoolFilters.includes('getRecentRouteValues(kind)'))
 assert.ok(carpoolFilters.includes('rememberRoutePair(origin, destination)'))
-assert.ok(lifeList.includes('<CampusSelector value={campus} allowAll onChange={setCampus} />'))
+assert.ok(carpoolFilters.includes("className='carpool-filter-toolbar'"))
+assert.ok(carpoolFilters.includes('customDateActive'))
+assert.ok(carpoolFilters.includes('advancedFilterCount(value)'))
+assert.ok(lifeList.includes('<CampusSelector'))
+assert.ok(lifeList.includes('allowAll'))
+assert.ok(lifeList.includes('onChange={setCampus}'))
+assert.ok(campusSelector.includes("import BottomSheet from '../../../components/bottom-sheet'"))
+assert.ok(campusSelector.includes("title='选择校区'"))
+assert.ok(filterSheet.includes("import BottomSheet from '../../../components/bottom-sheet'"))
+assert.ok(bottomSheet.includes("className='bottom-sheet-layer'"))
 assert.ok(profileEntry.includes('openPublicProfile(currentUser.user.id)'))
 assert.ok(generatedSchema.includes('UserProfile: {'))
 assert.ok(generatedSchema.includes('GetUserProfile: {'))

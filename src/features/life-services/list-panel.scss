@@ -51,8 +51,8 @@
 
 .life-search__clear {
   display: flex;
-  min-width: 78rpx;
-  min-height: 78rpx;
+  min-width: 88rpx;
+  min-height: 88rpx;
   align-items: center;
   justify-content: center;
   color: #758090;
@@ -62,7 +62,7 @@
 .life-search__submit {
   display: flex;
   min-width: 104rpx;
-  min-height: 70rpx;
+  min-height: 88rpx;
   align-items: center;
   justify-content: center;
   border-radius: 20rpx;
@@ -90,23 +90,7 @@
 }
 
 .life-campus-filter {
-  margin-bottom: 8rpx;
-}
-
-.life-campus-filter__heading {
-  display: flex;
-  min-height: 48rpx;
-  padding: 0 2rpx 7rpx;
-  align-items: center;
-  justify-content: space-between;
-  color: #62748e;
-  font-size: 21rpx;
-}
-
-.life-campus-filter__heading text:first-child {
-  color: #1d293d;
-  font-size: 24rpx;
-  font-weight: 700;
+  margin-bottom: 16rpx;
 }
 
 .life-panel__heading {
