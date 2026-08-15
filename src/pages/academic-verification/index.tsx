@@ -30,6 +30,12 @@ import type {
   AcademicVerificationStatus,
 } from '../../api/types'
 import { finishAcademicVerification } from '../../features/academic-verification/guard'
+import {
+  isRepeatedRejectedCredential,
+  rejectedCredentialHint,
+  rejectedCredentialModal,
+} from '../../features/academic-verification/credential-rejection'
+import type { RejectedAcademicCredential } from '../../features/academic-verification/credential-rejection'
 import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { getSelectedTempFiles } from '../../utils/file-selection'
 import './index.scss'
@@ -135,12 +141,20 @@ export default function AcademicVerificationPage() {
   const [error, setError] = useState('')
   const [studentNo, setStudentNo] = useState('')
   const [password, setPassword] = useState('')
+  const [rejectedCredential, setRejectedCredential] = useState<RejectedAcademicCredential | null>(null)
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel | null>(null)
   const [realName, setRealName] = useState('')
   const [selectedMaterial, setSelectedMaterial] = useState<SelectedMaterial | null>(null)
   const [uploadedMaterial, setUploadedMaterial] = useState<AcademicVerificationMaterial | null>(null)
   const [working, setWorking] = useState(false)
   const [workingText, setWorkingText] = useState('')
+  const currentCredentialRejected = rejectedCredential !== null
+    && educationLevel !== null
+    && isRepeatedRejectedCredential(rejectedCredential, {
+      studentNo: studentNo.trim(),
+      password,
+      educationLevel,
+    })
 
   const loadStatus = async (silent = false) => {
     if (silent) setRefreshing(true)
@@ -256,6 +270,20 @@ export default function AcademicVerificationPage() {
       return
     }
     if (working) return
+    const attempt = {
+      studentNo: normalizedStudentNo,
+      password,
+      educationLevel,
+    }
+    if (rejectedCredential && isRepeatedRejectedCredential(rejectedCredential, attempt)) {
+      await Taro.showModal({
+        ...rejectedCredentialModal(rejectedCredential.reason),
+        showCancel: false,
+        confirmText: '我知道了',
+        confirmColor: '#5a9d88',
+      })
+      return
+    }
     setWorking(true)
     setWorkingText('正在连接教务系统')
     try {
@@ -267,10 +295,18 @@ export default function AcademicVerificationPage() {
         educationLevel,
       })
       setPassword('')
+      setRejectedCredential(null)
       setForceCredentialBinding(false)
       await loadStatus(true)
       await completeSuccess()
     } catch (submitError) {
+      if (isApiError(submitError)) {
+        if (submitError.code === 'invalid_academic_credentials') {
+          setRejectedCredential({ ...attempt, reason: 'invalid_credentials' })
+        } else if (submitError.code === 'academic_password_expired') {
+          setRejectedCredential({ ...attempt, reason: 'password_expired' })
+        }
+      }
       Taro.showToast({
         title: credentialErrorMessage(submitError),
         icon: 'none',
@@ -468,6 +504,11 @@ export default function AcademicVerificationPage() {
                       </View>
                       <View className='verification-form__tag'>推荐</View>
                     </View>
+                    <View className='verification-credential-guide'>
+                      <Text>密码填写说明</Text>
+                      <Text>请填写中国海洋大学信息门户（统一身份认证）的账号和密码。</Text>
+                      <Text>不是微信密码，也不是本小程序账号密码。</Text>
+                    </View>
                     <View className='verification-education'>
                       <View className='verification-education__heading'>
                         <Text>学生类型</Text>
@@ -537,6 +578,16 @@ export default function AcademicVerificationPage() {
                         disabled={working}
                         onInput={(event) => setPassword(event.detail.value)}
                       />
+                      {rejectedCredential && (
+                        <Text className={currentCredentialRejected
+                          ? 'verification-field__feedback verification-field__feedback--error'
+                          : 'verification-field__feedback verification-field__feedback--ready'}
+                        >
+                          {currentCredentialRejected
+                            ? rejectedCredentialHint(rejectedCredential.reason)
+                            : '账号、密码或学生类型已修改，可以重新验证。'}
+                        </Text>
+                      )}
                     </View>
                     <View
                       className={`verification-primary ${working || !educationLevel ? 'verification-primary--disabled' : ''}`}

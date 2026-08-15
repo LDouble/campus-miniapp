@@ -359,6 +359,50 @@
     border: 2rpx solid #e5eee9;
     border-radius: 22rpx;
   }
+
+  &__feedback {
+    display: block;
+    padding: 10rpx 4rpx 0;
+    font-size: 19rpx;
+    line-height: 1.55;
+
+    &--error {
+      color: #b56759;
+    }
+
+    &--ready {
+      color: #4f907b;
+    }
+  }
+}
+
+.verification-credential-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 7rpx;
+  margin-bottom: 22rpx;
+  padding: 20rpx 22rpx;
+  color: #6d7f79;
+  background: linear-gradient(135deg, #fff8e9, #f4f8ee);
+  border: 2rpx solid rgba(213, 169, 93, 0.22);
+  border-radius: 22rpx;
+
+  text:first-child {
+    color: #8b6738;
+    font-size: 21rpx;
+    font-weight: 760;
+  }
+
+  text:nth-child(2),
+  text:nth-child(3) {
+    font-size: 20rpx;
+    line-height: 1.55;
+  }
+
+  text:nth-child(3) {
+    color: #a35f53;
+    font-weight: 680;
+  }
 }
 
 .verification-placeholder {
