@@ -1,10 +1,12 @@
+@use './styles/tokens' as token;
+
 page {
   min-height: 100%;
-  color: #1d293d;
-  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  color: token.$color-text-heading;
+  font-family: token.$font-family-sans;
   font-size: 28rpx;
   line-height: 1.5;
-  background: #f4f7fb;
+  background: token.$color-page;
 }
 
 view,
@@ -19,7 +21,7 @@ button {
 // Shared motion primitives. Keep product motion short and limited to opacity
 // and transforms so the same feedback stays smooth on lower-end devices.
 .motion-enter {
-  animation: campus-motion-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: campus-motion-enter token.$motion-enter token.$motion-ease-out backwards;
 }
 
 .motion-enter--delay-1 {
@@ -39,7 +41,7 @@ button {
 }
 
 .motion-press {
-  transition: opacity 120ms ease, transform 120ms ease;
+  transition: opacity token.$motion-press ease, transform token.$motion-press ease;
 }
 
 .motion-press--active {

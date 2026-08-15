@@ -1,194 +1,252 @@
-# Design System Master File
+# 校园小程序视觉规范
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+> 版本：2.0
+>
+> 更新日期：2026-08-15
+>
+> 适用范围：微信小程序全部页面、公共组件与业务模块
 
----
+本规范以当前已经落地的 Figma 视觉语言为基线。设计稿用于校准视觉感、图标表现和信息层级，不要求为了复刻单个画板而改变既有业务架构。
 
-**Project:** Campus Miniapp
-**Generated:** 2026-07-26 11:13:54
-**Category:** General
+页面存在专属规则时，先读取 `pages/<page-name>.md`；页面规则只覆盖明确列出的差异，其余规则继续遵循本文件。代码中的基础值以 [`src/styles/_tokens.scss`](../../src/styles/_tokens.scss) 为准。
 
----
+## 1. 设计原则
 
-## Global Rules
+1. **清爽、明亮、克制**：使用蓝灰白作为基础视觉，不使用大面积暖色、黑蓝或重玻璃拟态。
+2. **内容优先**：通过字号、间距、留白和浅底分组建立层级，不依赖厚重阴影与复杂装饰。
+3. **交互明确**：实色主按钮必须使用白字；浅色按钮使用同色系深色文字，禁止蓝底黑字。
+4. **业务可识别**：社区、跑腿、二手、找同行可以有各自的强调色，但正文、背景和组件结构保持统一。
+5. **小程序优先**：所有布局以窄屏、触控、微信胶囊、安全区和键盘场景为第一约束。
+6. **稳定胜过炫技**：反馈动画短而轻，不引发跳动、重排或内容闪烁。
 
-### Color Palette
+## 2. 颜色系统
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#2563EB` | `--color-primary` |
-| Secondary | `#3B82F6` | `--color-secondary` |
-| CTA/Accent | `#F97316` | `--color-cta` |
-| Background | `#F8FAFC` | `--color-background` |
-| Text | `#1E293B` | `--color-text` |
+### 2.1 基础颜色
 
-### Typography
+| 令牌 | 色值 | 用途 |
+| --- | --- | --- |
+| `primary` | `#2B7FFF` | 主操作、当前 Tab、链接、焦点态 |
+| `primary-strong` | `#155DFC` | 高对比蓝色文字、强调图标 |
+| `primary-cyan` | `#00D3F3` | 主按钮渐变终点、轻量品牌点缀 |
+| `page` | `#F4F7FB` | 页面背景 |
+| `surface` | `#FFFFFF` | 卡片、导航、底部操作栏、浮层 |
+| `surface-subtle` | `#F8FAFC` | 卡片内分区、说明区、次级容器 |
+| `surface-primary` | `#EFF6FF` | 选中前的蓝色浅底、图标底色 |
+| `text-heading` | `#1D293D` | 页面标题、卡片标题、重要数字 |
+| `text-body` | `#45556C` | 正文、表单内容、主要描述 |
+| `text-secondary` | `#62748E` | 元信息、辅助标签 |
+| `text-muted` | `#90A1B9` | 时间、占位符、弱提示 |
+| `border` | `#F1F5F9` | 常规分隔线与浅边框 |
+| `border-strong` | `#DBEAFE` | 选中边框、蓝色头像边框 |
+| `danger` | `#FF2056` | 删除、撤回、价格和危险反馈 |
+| `success` | `#00BBA7` | 成功、可用与找同行业务强调 |
 
-- **Heading Font:** Inter
-- **Body Font:** Inter
-- **Mood:** Professional + Hierarchy
+正文颜色不得浅于 `text-body`；只有时间、占位符、统计等非关键内容可以使用 `text-muted`。
 
-### Spacing Variables
+### 2.2 业务识别色
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
+| 模块 | 主色 | 渐变/辅助色 | 浅底 |
+| --- | --- | --- | --- |
+| 社区 | `#2B7FFF` | `#00D3F3` | `#EFF6FF` |
+| 跑腿 | `#FF6900` | `#FFB900` | `#FFF7ED` |
+| 二手 | `#AD46FF` | `#ED6AFF` | `#FAF5FF` |
+| 找同行 | `#00BBA7` | `#00D492` | `#F0FDFA` |
 
-### Shadow Depths
+业务色主要用于入口图标、状态标签、关键数字和主行为。一个页面最多使用一个业务主色；危险操作始终使用 `danger`，不要被业务色覆盖。
 
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+### 2.3 颜色搭配约束
 
----
+- `primary` 或业务实色背景：文字、图标统一为 `#FFFFFF`。
+- 浅色背景：文字使用对应主色或 `text-heading`，不得使用纯黑。
+- 普通卡片默认白底；浅灰蓝底只用于卡片内部的信息分区。
+- 价格使用 `danger`，不附加“预算”文案。
+- 路线起点使用绿色 `#00D492`，终点使用粉红 `#FF637E`，同时保留起点/终点文字，不能只靠颜色区分。
+- 不新增 `#000000` 正文、暖米色页面背景或多色玻璃渐变。
 
-## Component Specs
+## 3. 字体与信息层级
 
-### Buttons
+字体栈统一为：
 
-```css
-/* Primary Button */
-.btn-primary {
-  background: #F97316;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #2563EB;
-  border: 2px solid #2563EB;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+```scss
+'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif
 ```
 
-### Cards
+| 层级 | 字号 | 字重 | 建议行高 | 场景 |
+| --- | --- | --- | --- | --- |
+| 强数字 | `42–44rpx` | `760–800` | `1.2` | 价格、核心统计 |
+| 页面标题 | `36–38rpx` | `760–800` | `1.35` | 详情页主标题 |
+| 区块标题 | `30–32rpx` | `700–760` | `1.4` | 页面区块标题 |
+| 卡片标题 | `26–28rpx` | `650–720` | `1.45` | 列表卡片标题 |
+| 正文 | `26–28rpx` | `400–550` | `1.6–1.72` | 描述、评论、详情正文 |
+| 辅助文字 | `22–24rpx` | `400–600` | `1.5` | 用户名、状态、元信息 |
+| 微型标签 | `18–20rpx` | `600–700` | `1.3` | Eyebrow、角标、标签 |
 
-```css
-.card {
-  background: #F8FAFC;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+- 跑腿与找同行的标题、描述默认不加粗，重要价格、时间、人数放在信息卡内突出。
+- 中文正文不使用全大写；英文 Eyebrow 可以使用大写并增加轻微字距。
+- 禁止用字重代替所有层级。先使用字号、颜色和间距，再决定是否加粗。
+- 用户生成内容必须允许换行；单行元信息使用省略号，卡片摘要最多两行。
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
+## 4. 间距、网格与尺寸
 
-### Inputs
+采用 `8rpx` 基础网格，允许为视觉对齐使用 `4rpx` 半格。
 
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
+| 令牌 | 值 | 常见用途 |
+| --- | --- | --- |
+| `space-1` | `8rpx` | 图标内部、紧凑文字间距 |
+| `space-2` | `16rpx` | 相邻控件、卡片内小间距 |
+| `space-3` | `24rpx` | 卡片内容间距 |
+| `space-4` | `32rpx` | 页面水平留白、区块间距 |
+| `space-5` | `40rpx` | 大区块分隔 |
+| `space-6` | `48rpx` | 首屏重要内容留白 |
 
-.input:focus {
-  border-color: #2563EB;
-  outline: none;
-  box-shadow: 0 0 0 3px #2563EB20;
-}
-```
+- 页面水平边距优先使用 `28rpx` 或 `32rpx`，同一页面不得混用多套主边距。
+- 列表卡片间距使用 `16–20rpx`；常用服务宫格应保持紧凑，不为填满高度强行拉大行距。
+- 相邻触控目标之间至少保留 `16rpx`。
+- 所有固定底栏使用 `calc(<基础值> + env(safe-area-inset-bottom))` 预留安全区。
 
-### Modals
+## 5. 圆角、边框与阴影
 
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
+| 组件 | 圆角 |
+| --- | --- |
+| 小标签、输入框内部控件 | `16–22rpx` |
+| 普通卡片、搜索框 | `24–32rpx` |
+| 首页大区块、重点卡片 | `34–40rpx` |
+| 胶囊按钮 | `999rpx` |
+| 头像、圆形图标按钮 | `50%` |
 
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
+- 常规边框：`1–2rpx solid #F1F5F9`。
+- 重点选中边框：`1–2rpx solid #DBEAFE` 或对应业务浅色边框。
+- 普通卡片优先用边框区分，不默认使用阴影。
+- 需要悬浮时使用轻阴影：`0 8rpx 24rpx rgba(43, 127, 255, 0.08)`。
+- 浮层可使用：`0 -8rpx 32rpx rgba(0, 0, 0, 0.05)`。
+- 禁止高透明玻璃卡、重模糊、双向拟物阴影和大面积灰黑投影。
 
----
+## 6. 图标规范
 
-## Style Guidelines
+- 使用同一套线性或面性 SVG/PNG 图标，不使用 Emoji 充当功能图标。
+- 同一区块内图标视觉尺寸一致；常用服务图标建议 `40–48rpx`，操作图标建议 `32–40rpx`。
+- 常用服务可以采用不同业务色，提高扫视识别度；图标底板使用对应浅色，避免所有图标都是同一种蓝。
+- 实色圆形或方形图标底板上的图标必须为白色。
+- 图标点击区域不得小于 `88rpx × 88rpx`，即使图形本身更小。
+- 纯图标按钮需要提供可访问名称；装饰图标不应抢占可访问焦点。
 
-**Style:** Glassmorphism
+## 7. 核心组件
 
-**Keywords:** Frosted glass, transparent, blurred background, layered, vibrant background, light source, depth, multi-layer
+### 7.1 导航与 Tab
 
-**Best For:** Modern SaaS, financial dashboards, high-end corporate, lifestyle apps, modal overlays, navigation
+- 自定义导航栏必须避开微信胶囊，标题与操作在可用空间内居中。
+- 吸顶 Tab 的顶部间距由导航栏实际高度计算，禁止使用只适配单一机型的固定值。
+- 当前 Tab 使用蓝色渐变或实蓝底配白字；未选中项使用白底或透明底配 `text-body`。
+- 二级筛选与主 Tab 视觉强度应有差异，不能出现两排同权重按钮。
 
-**Key Effects:** Backdrop blur (10-20px), subtle border (1px solid rgba white 0.2), light reflection, Z-depth
+### 7.2 搜索框与筛选
 
-### Page Pattern
+- 搜索框为白底、浅边框，输入态使用蓝色边框或轻焦点环。
+- 点击搜索不得改变整体高度或造成内容位移。
+- 已选筛选条件必须可见、可单项删除，并提供清空入口。
+- 日期筛选允许自定义日期，不局限于“今天 / 明天”。路线筛选可在本地基于出发地和目的地完成。
 
-**Pattern Name:** Hero + Features + CTA
+### 7.3 卡片与列表
 
-- **CTA Placement:** Above fold
-- **Section Order:** Hero > Features > CTA
+- 卡片先确定第一视觉焦点：社区看内容，二手看图片与价格，跑腿看路线与报酬，找同行看路线与时间。
+- 卡片内只放支持用户决策的信息；没有标签时不创建占位标签。
+- 双列 Feed 保持同列独立排布，避免固定等高造成大量留白。
+- 二手价格紧邻标题或图片后的内容区，用户信息固定在底部，不让价格独占过高区域。
+- 长标题最多两行；用户名、学校、时间等弱信息单行省略。
 
----
+### 7.4 按钮
 
-## Anti-Patterns (Do NOT Use)
+- 主按钮：蓝色或业务色实底、白字，最小高度 `80rpx`，推荐 `88rpx`。
+- 次按钮：浅色底、对应主色文字；不要用浅灰底配接近黑色的“伪主按钮”。
+- 文字按钮：透明背景，使用 `primary` 或 `text-secondary`。
+- 危险按钮：浅红底红字；只有最终确认操作可以使用红色实底白字。
+- 异步提交时禁用重复点击，并保持按钮宽高不变。
 
-- ❌ Excessive animation
-- ❌ Dark mode by default
+### 7.5 表单与键盘
 
-### Additional Forbidden Patterns
+- 输入框使用 `surface-subtle` 或白底，文字使用 `text-body`，占位符使用 `text-muted`。
+- 密码输入支持显示/隐藏；输入过程中可短暂显示最后输入字符，但不得泄露完整密码。
+- 输入框必须通过 `KeyboardSafeInput` 或等价机制避开键盘，并在聚焦后滚动到可见区域。
+- 多行内容使用可自动增高的 `Textarea`，设置最大高度后转为内部滚动。
+- 错误提示就近展示，不仅通过红色边框表达错误。
 
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
+### 7.6 浮层与底部 Sheet
 
----
+- Sheet 使用白底，上圆角 `32–40rpx`，高度由内容决定并设置最大高度。
+- 默认最大高度不超过可用视口的 `76%`；长内容采用“标题固定、主体滚动、操作栏固定”。
+- 必须避开微信胶囊、状态栏、键盘和底部安全区。
+- 点击遮罩关闭；点击 Sheet 内部不得误关闭。
+- 选项文字使用 flex 双轴居中，避免周次等短文字视觉偏移。
 
-## Pre-Delivery Checklist
+### 7.7 评论与详情底栏
 
-Before delivering any UI code, verify:
+- 四类详情页复用统一评论组件，业务色只影响发布按钮与主行为。
+- 输入评论时隐藏右侧业务行为，只显示向上箭头发布按钮；退出输入态后恢复行为按钮。
+- 点击可评论内容拉起输入框和系统键盘；点击评论组件外区域关闭输入态。
+- 回复采用平铺线程，不按楼层逐级缩进；文案使用“用户名 @ 用户名”，被引用内容需要截断。
+- 发布、回复和删除均在本地合并并使用轻量动效，不通过整页重新请求制造闪烁或抖动。
+- 底栏行为只依据服务端 `available_actions` 展示，不截断可用操作；主行为位于右侧，撤回、离开等危险操作仍需可达。
 
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+## 8. 页面与业务约定
+
+- 用户侧统一使用“找同行”，不得出现“拼车”“顺风车”等旧文案。
+- 跑腿和找同行详情采用“出发地 → 目的地”的横向路线表达。
+- 跑腿、找同行的重要价格、具体时间、人数放入信息卡；卡片外展示普通字重的标题或描述。
+- 时间展示具体日期与时刻，不使用“1 小时”“1 天”等模糊相对时间替代业务时间。
+- 二手、跑腿、找同行列表提供“我的”入口，使用轻量文字操作，不做突兀的彩色胶囊。
+- 举报属于内容操作，与分享、点赞、评论同一区域；不使用右上角三点替代现有能力。
+
+## 9. 动效与状态反馈
+
+| 类型 | 时长 | 建议实现 |
+| --- | --- | --- |
+| 点击反馈 | `120ms` | `opacity` + `scale(0.98)` |
+| 颜色/边框切换 | `160ms` | `color`、`background-color`、`border-color` |
+| 内容进入 | `240ms` | `opacity` + `translateY` |
+| Sheet 进出 | `200–280ms` | `opacity` + `transform` |
+
+- 单个视图最多强调 1–2 个动画元素。
+- 只动画 `opacity` 和 `transform` 等合成属性，避免动画宽高引发重排。
+- 为 `prefers-reduced-motion: reduce` 提供无动画降级。
+- 异步内容预留空间或使用骨架屏，避免加载前后页面跳动。
+
+## 10. 响应式、溢出与安全区
+
+- 以 `320px`、`360px`、`375px` 宽度至少各验证一次，不允许横向溢出。
+- flex 子项涉及省略时必须设置 `min-width: 0`。
+- 不对用户生成内容盲目使用 `overflow: hidden`；只在明确的单行或多行摘要中截断。
+- 长英文、学号、URL 使用 `overflow-wrap: anywhere`。
+- 图片容器预留尺寸并保持固定宽高比，加载失败显示稳定占位，不改变卡片高度。
+- 固定导航、TabBar、评论栏和提交栏都必须为主体内容预留等量空间。
+
+## 11. 可访问性
+
+- 主要触控区域不小于 `88rpx × 88rpx`，相邻触控目标间距不小于 `16rpx`。
+- 正文对比度至少 `4.5:1`，大字号文字至少 `3:1`。
+- 状态不能只靠颜色区分，需同时提供文字、图形或位置差异。
+- 图片提供有意义的替代文本；纯装饰图片不重复朗读。
+- 使用 Taro/微信支持的语义属性，不向组件传递平台不支持的 Web ARIA 属性。
+
+## 12. 禁止模式
+
+- 蓝色实底配黑字或深灰字。
+- 大面积黑蓝、暖米黄或多彩径向渐变作为页面背景。
+- 为了“丰富”而在同一页面混用多个高饱和主色。
+- 玻璃拟态、重阴影、内外双阴影叠加。
+- 使用 Emoji 作为功能图标。
+- 固定卡片高度导致长文溢出或短内容大量留白。
+- 通过整页刷新完成评论、删除、点赞等局部状态更新。
+- 把主行为藏在三点菜单，或用数组截断导致操作不可达。
+
+## 13. 交付检查清单
+
+- [ ] 页面背景、卡片、文字和边框均使用规范色值。
+- [ ] 所有蓝色/业务色实底按钮均为白字白图标。
+- [ ] 主标题、正文、辅助文字的层级清晰且数量克制。
+- [ ] 320–375px 窄屏无横向溢出，长文本有合理换行或截断。
+- [ ] 微信胶囊、吸顶区、键盘和安全区不会遮挡内容。
+- [ ] 触控目标至少 `88rpx`，点击态不引发布局位移。
+- [ ] 异步操作有加载、防重复提交和失败反馈。
+- [ ] 动效时长为 `120–280ms`，并支持减少动态效果。
+- [ ] 用户文案统一使用“找同行”等当前产品术语。
+- [ ] 新增页面先复用公共组件与令牌，再添加页面级覆盖。

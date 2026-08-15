@@ -1,0 +1,71 @@
+// 校园小程序视觉令牌。页面级差异只应覆盖业务强调色，不应重复定义基础色。
+
+// Brand and semantic colors
+$color-primary: #2b7fff;
+$color-primary-strong: #155dfc;
+$color-primary-cyan: #00d3f3;
+$color-danger: #ff2056;
+$color-success: #00bba7;
+
+// Surfaces
+$color-page: #f4f7fb;
+$color-surface: #fff;
+$color-surface-subtle: #f8fafc;
+$color-surface-primary: #eff6ff;
+
+// Text
+$color-text-heading: #1d293d;
+$color-text-body: #45556c;
+$color-text-secondary: #62748e;
+$color-text-muted: #90a1b9;
+
+// Borders
+$color-border: #f1f5f9;
+$color-border-strong: #dbeafe;
+
+// Business accents
+$color-community: $color-primary;
+$color-community-end: $color-primary-cyan;
+$color-errand: #ff6900;
+$color-errand-end: #ffb900;
+$color-marketplace: #ad46ff;
+$color-marketplace-end: #ed6aff;
+$color-carpool: #00bba7;
+$color-carpool-end: #00d492;
+
+// Route semantics
+$color-route-origin: #00d492;
+$color-route-destination: #ff637e;
+
+// Typography
+$font-family-sans: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+
+// 8rpx spacing grid
+$space-1: 8rpx;
+$space-2: 16rpx;
+$space-3: 24rpx;
+$space-4: 32rpx;
+$space-5: 40rpx;
+$space-6: 48rpx;
+
+// Radius
+$radius-sm: 16rpx;
+$radius-md: 22rpx;
+$radius-lg: 28rpx;
+$radius-xl: 32rpx;
+$radius-panel: 40rpx;
+$radius-pill: 999rpx;
+
+// Motion
+$motion-press: 120ms;
+$motion-state: 160ms;
+$motion-enter: 240ms;
+$motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+// Elevation
+$shadow-card: 0 8rpx 24rpx rgba(43, 127, 255, 0.08);
+$shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.05);
+
+// Interaction
+$touch-target-min: 88rpx;
+$touch-target-gap: 16rpx;
