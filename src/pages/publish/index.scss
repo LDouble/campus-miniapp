@@ -1,16 +1,14 @@
-page {
-  background: #faf7f2;
-}
+page { background: #f4f7fb; }
 
 .publisher-page {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  color: #294653;
+  color: #1d293d;
   background:
-    radial-gradient(circle at 8% 8%, rgba(244, 187, 118, 0.15), transparent 27%),
-    radial-gradient(circle at 100% 28%, rgba(129, 201, 194, 0.14), transparent 26%),
-    linear-gradient(180deg, #fffdf9 0%, #f8f6f1 100%);
+    radial-gradient(circle at 8% 8%, rgba(43, 127, 255, 0.10), transparent 27%),
+    radial-gradient(circle at 100% 28%, rgba(144, 161, 185, 0.11), transparent 26%),
+    linear-gradient(180deg, #f8faff 0%, #f4f7fb 100%);
 
   &__content {
     position: relative;
@@ -30,7 +28,7 @@ page {
       right: -128rpx;
       width: 310rpx;
       height: 310rpx;
-      background: rgba(255, 193, 133, 0.14);
+      background: rgba(43, 127, 255, 0.08);
     }
 
     &--two {
@@ -38,7 +36,7 @@ page {
       left: -150rpx;
       width: 360rpx;
       height: 360rpx;
-      background: rgba(99, 190, 184, 0.12);
+      background: rgba(144, 161, 185, 0.10);
     }
   }
 }
@@ -76,6 +74,8 @@ page {
     background: linear-gradient(145deg, #e4f5f1, #d7eeea);
     box-shadow: inset 0 2rpx 0 rgba(255, 255, 255, 0.88);
   }
+
+  &--pressed { opacity: 0.72; }
 
   &--locked:not(.publisher-type--active) {
     opacity: 0.42;
@@ -344,6 +344,8 @@ page {
     background: #fff;
     box-shadow: 0 7rpx 18rpx rgba(57, 113, 108, 0.1);
   }
+
+  .publisher-market-intent--pressed { opacity: 0.72; }
 }
 
 .publisher-course-context {
@@ -445,6 +447,8 @@ page {
       color: #2f7189;
     }
   }
+
+  &--pressed { opacity: 0.72; }
 }
 
 .publisher-loading {
@@ -548,4 +552,157 @@ page {
   .publisher-actions__submit {
     transition: none;
   }
+}
+
+// 表单页统一蓝灰体系，并为长标签、输入内容和窄屏留出收缩空间。
+.publisher-types {
+  background: #fff;
+  border-color: #e4ebf5;
+  box-shadow: 0 8rpx 22rpx rgba(29, 41, 61, 0.05);
+}
+
+.publisher-type {
+  color: #45556c;
+  font-size: 23rpx;
+
+  &--active {
+    color: #2b7fff;
+    background: #edf4ff;
+    box-shadow: none;
+  }
+}
+
+.publisher-intro {
+  &__title { min-width: 0; color: #1d293d; }
+  &__meta { min-width: 0; color: #90a1b9; }
+  &__clear { color: #2b7fff; border-left-color: #dce6f3; }
+}
+
+.publisher-section {
+  background: #fff;
+  border-color: #e4ebf5;
+  box-shadow: 0 10rpx 26rpx rgba(29, 41, 61, 0.05);
+
+  &__title { color: #1d293d; }
+}
+
+.publisher-field {
+  & + & { border-top-color: #edf1f6; }
+  &__label { color: #45556c; line-height: 1.5; word-break: break-all; }
+  &__help { color: #90a1b9; }
+}
+
+.publisher-input,
+.publisher-contact,
+.publisher-textarea,
+.publisher-picker-row picker > view {
+  background: #f8faff;
+  border-color: #dce6f3;
+  box-shadow: none;
+}
+
+.publisher-input input,
+.publisher-contact input,
+.publisher-textarea textarea {
+  color: #1d293d;
+}
+
+.publisher-input > text { color: #45556c; }
+.publisher-placeholder { color: #90a1b9; }
+.publisher-textarea > text { color: #90a1b9; }
+.publisher-picker-row picker > view { color: #45556c; }
+
+.publisher-contact picker > view { color: #2b7fff; }
+
+.publisher-note {
+  background: #f7f9fc;
+  border-color: #e4ebf5;
+
+  text { color: #45556c; }
+  text + text { color: #90a1b9; }
+}
+
+.publisher-market-intents {
+  background: #edf1f6;
+
+  > view { color: #45556c; }
+  .publisher-market-intent--active {
+    color: #2b7fff;
+    background: #fff;
+    box-shadow: 0 6rpx 16rpx rgba(43, 127, 255, 0.10);
+  }
+}
+
+.publisher-course-context {
+  background: #f7f9fc;
+  border-color: #e4ebf5;
+
+  &__copy {
+    text:first-child { color: #45556c; }
+    text:last-child { color: #90a1b9; }
+  }
+
+  &__remove { color: #2b7fff; }
+}
+
+.publisher-community-section {
+  background: #f8faff;
+  border-color: #dce6f3;
+
+  text:first-child { color: #45556c; }
+  text:last-child { color: #90a1b9; }
+
+  &--active {
+    background: #edf4ff;
+    border-color: #9fc5ff;
+    box-shadow: none;
+
+    &::after { background: #2b7fff; }
+    text:first-child { color: #2b7fff; }
+  }
+}
+
+.publisher-loading { color: #90a1b9; }
+
+.publisher-actions {
+  background: rgba(255, 255, 255, 0.98);
+  border-top-color: #e4ebf5;
+  box-shadow: 0 -8rpx 24rpx rgba(29, 41, 61, 0.05);
+
+  &__status {
+    view { background: #c65b63; }
+    text { color: #45556c; }
+    &--ready {
+      view { background: #2b7fff; }
+      text { color: #2b7fff; }
+    }
+  }
+
+  &__draft {
+    color: #2b7fff;
+    background: #edf4ff;
+    border-color: #dce6f3;
+  }
+
+  &__submit {
+    background: linear-gradient(135deg, #3b8cff, #2b7fff);
+    box-shadow: 0 9rpx 20rpx rgba(43, 127, 255, 0.2);
+  }
+
+  &__submit--disabled { background: #b9c6d8; }
+}
+
+@media (max-width: 360px) {
+  .publisher-page__content { padding-right: 20rpx; padding-left: 20rpx; }
+  .publisher-types { gap: 4rpx; padding: 5rpx; }
+  .publisher-type { min-height: 68rpx; font-size: 21rpx; }
+  .publisher-intro { align-items: flex-start; }
+  .publisher-intro__meta { max-width: 45%; margin-left: 10rpx; flex-wrap: wrap; justify-content: flex-end; }
+  .publisher-section { padding-right: 22rpx; padding-left: 22rpx; }
+  .publisher-picker-row { grid-template-columns: minmax(0, 1fr) minmax(0, 0.84fr); gap: 8rpx; }
+  .publisher-picker-row picker > view { padding-right: 13rpx; padding-left: 13rpx; font-size: 23rpx; }
+  .publisher-contact { padding-right: 14rpx; padding-left: 14rpx; }
+  .publisher-contact picker { flex-basis: 106rpx; }
+  .publisher-actions { padding-right: 20rpx; padding-left: 20rpx; }
+  .publisher-actions__draft { flex-basis: 154rpx; }
 }

@@ -652,3 +652,116 @@
   0% { background-position: 100% 0; }
   100% { background-position: 0 0; }
 }
+
+// 统一校园工具蓝灰白风格，并优先保证筛选和教室信息在窄屏可读。
+.empty-classroom-page {
+  color: #1d293d;
+  background: #f4f7fb;
+
+  &__content { padding-bottom: calc(72rpx + env(safe-area-inset-bottom)); }
+}
+
+.empty-classroom-overview {
+  background: linear-gradient(135deg, #1d293d, #2b7fff);
+  box-shadow: 0 14rpx 32rpx rgba(29, 41, 61, 0.14);
+
+  &__summary text:first-child,
+  &__metric text:first-child { color: #fff; }
+  &__summary text:last-child,
+  &__metric { color: rgba(255, 255, 255, 0.72); }
+}
+
+.empty-classroom-filters,
+.empty-classroom-building { background: #fff; border-color: #dce5f0; box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
+.empty-classroom-filter-section + .empty-classroom-filter-section,
+.empty-classroom-building__head,
+.empty-classroom-row { border-color: #edf1f6; }
+.empty-classroom-filter-title > text:first-child,
+.empty-classroom-filter-title > view > text:first-child,
+.empty-classroom-heading > view text:first-child,
+.empty-classroom-building__head text:first-child,
+.empty-classroom-row__main text:first-child { color: #1d293d; }
+.empty-classroom-filter-title > text:last-child,
+.empty-classroom-filter-title > view > text:last-child,
+.empty-classroom-heading > view text:last-child,
+.empty-classroom-building__head text:last-child { color: #90a1b9; }
+
+.empty-classroom-campus-options { display: flex; overflow-x: auto; gap: 12rpx; padding-bottom: 2rpx; }
+.empty-classroom-campus-options .empty-classroom-filter-chip { min-width: 138rpx; flex: 0 0 auto; }
+.empty-classroom-filter-chip { color: #45556c; background: #f4f7fb; border-color: #dce5f0; }
+.empty-classroom-filter-chip--active,
+.empty-classroom-weekdays__active { color: #fff !important; border-color: #2b7fff !important; background: #2b7fff !important; box-shadow: 0 7rpx 18rpx rgba(43, 127, 255, 0.2); }
+.empty-classroom-filter-chip--active text,
+.empty-classroom-weekdays__active text { color: #fff !important; }
+.empty-classroom-week-control { color: #2b7fff; background: #eaf2ff; }
+.empty-classroom-week-control text:last-child { color: #45556c; }
+.empty-classroom-weekdays__item { color: #45556c; background: #f4f7fb; }
+.empty-classroom-building-options { padding-bottom: 4rpx; }
+.empty-classroom-heading > text { color: #2b7fff; background: #eaf2ff; }
+.empty-classroom-note { color: #45556c; }
+.empty-classroom-note view { background: #2b7fff; }
+
+.empty-classroom-row__header { gap: 12rpx; }
+.empty-classroom-row__main { min-width: 0; }
+.empty-classroom-row__status { flex: none; max-width: 150rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty-classroom-row__report text { border-color: #bad4ff; color: #2b7fff; background: #eaf2ff; }
+.empty-classroom-row__report--pressed text { background: #d9e8ff; }
+.empty-classroom-day-grid > view { border-color: #dce5f0; color: #90a1b9; background: #f4f7fb; }
+.empty-classroom-day-grid > view.empty-classroom-day-grid__free { color: #fff; border-color: #2b7fff; background: #2b7fff; }
+.empty-classroom-empty,
+.empty-classroom-warning { background: #fff; border: 2rpx solid #dce5f0; border-radius: 28rpx; }
+.empty-classroom-empty > text:last-child,
+.empty-classroom-disclaimer { color: #90a1b9; }
+.empty-classroom-empty__retry { color: #2b7fff; background: #eaf2ff; }
+
+.empty-classroom-report { color: #1d293d; background: #fff; }
+.empty-classroom-report__hint { color: #45556c; background: #f4f7fb; }
+.empty-classroom-report__picker,
+.empty-classroom-report__textarea { color: #1d293d; background: #f4f7fb; border-color: #dce5f0; }
+.empty-classroom-report__category--active { border-color: #2b7fff !important; color: #2b7fff !important; background: #eaf2ff !important; }
+.empty-classroom-report__submit { color: #fff; background: #2b7fff; box-shadow: 0 12rpx 26rpx rgba(43, 127, 255, 0.22); }
+.empty-classroom-filter-chip--pressed,
+.empty-classroom-weekdays__pressed,
+.empty-classroom-empty__retry--pressed,
+.empty-classroom-building__more--pressed,
+.empty-classroom-report__category--pressed { opacity: 0.72; }
+
+.empty-classroom-page { color: #253858; background: #f5f9ff; }
+.empty-classroom-overview { background: linear-gradient(135deg, #2f80ed 0%, #28c5e9 100%); box-shadow: 0 14rpx 32rpx rgba(47, 128, 237, 0.2); }
+.empty-classroom-filters,
+.empty-classroom-building { border-color: #d7e7fa; box-shadow: 0 10rpx 28rpx rgba(47, 128, 237, 0.06); }
+.empty-classroom-filter-title > text:first-child,
+.empty-classroom-filter-title > view > text:first-child,
+.empty-classroom-heading > view text:first-child,
+.empty-classroom-building__head text:first-child,
+.empty-classroom-row__main text:first-child,
+.empty-classroom-report,
+.empty-classroom-report__picker,
+.empty-classroom-report__textarea { color: #253858; }
+.empty-classroom-filter-title > text:last-child,
+.empty-classroom-filter-title > view > text:last-child,
+.empty-classroom-heading > view text:last-child,
+.empty-classroom-building__head text:last-child,
+.empty-classroom-empty > text:last-child,
+.empty-classroom-disclaimer { color: #7890ad; }
+.empty-classroom-filter-chip,
+.empty-classroom-weekdays__item,
+.empty-classroom-report__hint,
+.empty-classroom-report__picker,
+.empty-classroom-report__textarea,
+.empty-classroom-day-grid > view { color: #607895; background: #f5f9ff; border-color: #d7e7fa; }
+.empty-classroom-filter-chip--active,
+.empty-classroom-weekdays__active,
+.empty-classroom-day-grid > view.empty-classroom-day-grid__free,
+.empty-classroom-report__submit { background: #2f80ed !important; border-color: #2f80ed !important; box-shadow: 0 9rpx 20rpx rgba(47, 128, 237, 0.2); }
+.empty-classroom-week-control,
+.empty-classroom-heading > text,
+.empty-classroom-row__report text,
+.empty-classroom-empty__retry,
+.empty-classroom-report__category--active { color: #2f80ed !important; background: #e8f5ff !important; border-color: #a9d8ff !important; }
+.empty-classroom-week-control text:last-child,
+.empty-classroom-note,
+.empty-classroom-report__hint { color: #607895; }
+.empty-classroom-note view { background: #2f80ed; }
+.empty-classroom-empty,
+.empty-classroom-warning { border-color: #d7e7fa; }

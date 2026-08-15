@@ -1,4 +1,7 @@
-import { requestWechatSubscriptionForModule } from '../features/wechat-subscription'
+import {
+  requestWechatSubscriptionForModule,
+  requestWechatSubscriptionForPublishSection
+} from '../features/wechat-subscription'
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
 
@@ -33,6 +36,7 @@ Component({
   data: {
     selected: 0,
     hidden: false,
+    publishSection: 'community',
     qualification,
     list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
   },
@@ -81,8 +85,13 @@ Component({
 
     publish() {
       if (qualification) return
-      requestWechatSubscriptionForModule('community')
-      wx.navigateTo({ url: '/pages/publish/index' })
+      const publishSection = ['community', 'errands', 'market', 'carpool'].includes(
+        this.data.publishSection
+      )
+        ? this.data.publishSection
+        : 'community'
+      requestWechatSubscriptionForPublishSection(publishSection)
+      wx.navigateTo({ url: `/pages/publish/index?section=${publishSection}` })
     }
   }
 })

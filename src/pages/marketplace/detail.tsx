@@ -10,7 +10,12 @@ import { openAcademicVerification } from '../../features/academic-verification/g
 import { openContentReport } from '../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import { useCampusShare } from '../../features/share'
-import { formatMoney, formatStatus } from '../../features/life-services/format'
+import { formatDateTime, formatMoney, formatStatus } from '../../features/life-services/format'
+import DetailAuthorNavbar from '../../features/life-services/components/detail-author-navbar'
+import DetailComments, {
+  createBusinessContactComment,
+} from '../../features/life-services/components/detail-comments'
+import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
 import '../../features/life-services/detail.scss'
 import './detail.scss'
 
@@ -28,6 +33,7 @@ export default function MarketplaceDetailPage() {
   const [item, setItem] = useState<MarketplaceListingView | null>(null)
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
+  const [commentRefreshKey, setCommentRefreshKey] = useState(0)
   const [error, setError] = useState('')
 
   const load = async (targetId = id) => {
@@ -92,9 +98,23 @@ export default function MarketplaceDetailPage() {
     if (!confirm.confirm) return
 
     setWorking(true)
+    let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
     try {
       if (action === 'purchase' || action === 'respond') {
         await lifeServicesRepository.respondMarketplaceListing(item.id)
+        try {
+          await createBusinessContactComment(
+            'marketplace',
+            item.id,
+            item.intent === 'wanted'
+              ? '我可以提供，方便联系确认一下具体需求吗？'
+              : '我想要，方便联系确认一下交易细节吗？',
+          )
+          contactCommentStatus = 'created'
+          setCommentRefreshKey((current) => current + 1)
+        } catch (commentError) {
+          contactCommentStatus = 'failed'
+        }
       } else if (action === 'submit_review') {
         await lifeServicesRepository.submitMarketplaceListing(item.id, item.version)
       } else if (action === 'withdraw') {
@@ -102,7 +122,14 @@ export default function MarketplaceDetailPage() {
       }
       markLifeHubSectionDirty('market')
       await load()
-      Taro.showToast({ title: '状态已更新', icon: 'success' })
+      Taro.showToast({
+        title: contactCommentStatus === 'created'
+          ? '状态已更新，已留言联系'
+          : contactCommentStatus === 'failed'
+            ? '状态已更新，请手动留言联系'
+            : '状态已更新',
+        icon: contactCommentStatus === 'failed' ? 'none' : 'success',
+      })
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       if (isApiError(actionError) && actionError.statusCode === 409) await load()
@@ -134,10 +161,28 @@ export default function MarketplaceDetailPage() {
         ? '我已响应'
         : item?.intent === 'wanted' ? '校内求购' : '校内在售'
   const coverTone = item ? Math.abs(item.id) % 4 : 0
+  const footerActions = item ? buildDetailFooterActions({
+    availableActions: item.available_actions,
+    labels: actionLabels,
+    priority: ['purchase', 'respond', 'submit_review', 'withdraw', 'edit', 'verify_academic'],
+    dangerActions: ['withdraw'],
+    busy: working,
+    onAction: (action) => void runAction(action),
+  }) : []
 
   return (
     <View className='life-detail life-detail--market'>
-      <CustomNavbar title={item?.intent === 'wanted' ? '求购详情' : '闲置详情'} subtitle='校内见面交易' showBack />
+      <CustomNavbar
+        title={item?.intent === 'wanted' ? '求购详情' : '闲置详情'}
+        showBack
+        barContent={item ? (
+          <DetailAuthorNavbar
+            avatarUrl={item.author_avatar_url}
+            nickname={item.author_nickname}
+            userId={item.owner_id}
+          />
+        ) : undefined}
+      />
       <View className='life-detail__content'>
         {loading && <View className='detail-state'>正在加载商品信息</View>}
         {!loading && error && <View className='detail-state'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
@@ -170,11 +215,27 @@ export default function MarketplaceDetailPage() {
                 )}
               </View>
               <View className='market-detail-main'>
-                <View className='market-detail-badges'>
-                  <Text>{item.intent === 'wanted' ? '求购' : '出售'}</Text>
-                  <Text>{formatStatus(item.status)}</Text>
-                  <Text>{relationLabel}</Text>
+                <View className='market-detail-toolbar'>
+                  <View className='market-detail-badges'>
+                    <Text>{item.intent === 'wanted' ? '求购' : '二手'}</Text>
+                    <Text>{formatStatus(item.status)}</Text>
+                    <Text>{relationLabel}</Text>
+                  </View>
+                  {item.viewer_relation !== 'owner' && (
+                    <View
+                      className='detail-overview__report'
+                      hoverClass='detail-report-link--pressed'
+                      onClick={() => void openContentReport({
+                        resourceType: 'marketplace_listing',
+                        resourceId: item.id,
+                        resourceVersion: item.version,
+                      })}
+                    >
+                      举报
+                    </View>
+                  )}
                 </View>
+                <Text className='market-detail-title'>{item.description}</Text>
                 <View className='market-detail-price'>
                   <Text>{item.intent === 'wanted' ? '预算 ' : ''}{formatMoney(item.price_cents)}</Text>
                   <View>
@@ -182,12 +243,12 @@ export default function MarketplaceDetailPage() {
                     <Text>见面验货后付款</Text>
                   </View>
                 </View>
-                {item.image_urls.length > 0 && (
-                  <View className='market-detail-description'>
-                    <Text>{item.description}</Text>
-                  </View>
-                )}
               </View>
+            </View>
+
+            <View className='business-detail-meta'>
+              <Text>{formatDateTime(item.created_at)}</Text>
+              <Text>校内面交</Text>
             </View>
 
             {item.status === 'rejected' && (
@@ -231,35 +292,15 @@ export default function MarketplaceDetailPage() {
               <Text className='detail-safety'>平台仅提供信息撮合，不代收款，也不会索要验证码。</Text>
             </View>
 
-            {item.viewer_relation !== 'owner' && (
-              <View
-                className='detail-report-link'
-                hoverClass='detail-report-link--pressed'
-                onClick={() => void openContentReport({
-                  resourceType: 'marketplace_listing',
-                  resourceId: item.id,
-                  resourceVersion: item.version,
-                })}
-              >
-                举报这条信息
-              </View>
-            )}
-
-            {item.available_actions.length > 0 && (
-              <View className='detail-action-bar'>
-                {item.available_actions.slice(0, 3).map((action, index) => (
-                  <View
-                    id={`detail-action-${action}`}
-                    key={action}
-                    className={`detail-action ${index === item.available_actions.length - 1 && action !== 'withdraw' ? 'detail-action--primary' : ''} ${action === 'withdraw' ? 'detail-action--danger' : ''}`}
-                    hoverClass='detail-action--pressed'
-                    onClick={() => void runAction(action)}
-                  >
-                    {working ? '处理中' : actionLabels[action] || action}
-                  </View>
-                ))}
-              </View>
-            )}
+            <DetailComments
+              targetType='marketplace'
+              targetId={item.id}
+              enabled={item.status === 'published' || item.viewer_relation !== 'other'}
+              refreshKey={commentRefreshKey}
+              targetAuthorId={item.owner_id}
+              tone='marketplace'
+              actions={footerActions}
+            />
           </>
         )}
       </View>

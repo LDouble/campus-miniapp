@@ -348,3 +348,48 @@
     color: #d95642;
   }
 }
+
+/* Figma 24:1958 */
+.life-detail--market {
+  background: #f4f7fb;
+
+  .life-detail__content { padding: 0 32rpx calc(170rpx + env(safe-area-inset-bottom)); background: #fff; }
+  .market-detail-hero { margin: 0; overflow: visible; border: 0; border-radius: 0; box-shadow: none; }
+  .market-detail-main { display: flex; padding: 34rpx 0 28rpx; flex-direction: column; }
+  .market-detail-toolbar { display: flex; margin-bottom: 18rpx; align-items: center; justify-content: space-between; gap: 20rpx; order: -3; }
+  .market-detail-badges { margin-bottom: 0; }
+  .market-detail-badges text { padding: 7rpx 16rpx; background: #f3e8ff; color: #9810fa; font-size: 20rpx; }
+  .market-detail-badges text:nth-child(n+2) { background: #eff6ff; color: #2b7fff; }
+  .market-detail-title { display: block; order: -2; color: #1d293d; font-size: 38rpx; font-weight: 800; line-height: 1.4; }
+  .market-detail-price { margin-top: 18rpx; padding: 0; order: -1; align-items: center; border: 0; }
+  .market-detail-price > text { color: #ff2056; font-size: 44rpx; }
+  .market-detail-price > view { display: none; }
+  .market-detail-gallery { margin-top: 0; }
+  .market-detail-gallery,
+  .market-detail-gallery__swiper,
+  .market-detail-gallery__image,
+  .market-detail-gallery__empty { height: 470rpx; border-radius: 28rpx; }
+  .market-detail-gallery__image,
+  .market-detail-gallery__empty { overflow: hidden; }
+  .market-detail-gallery__empty--tone-0,
+  .market-detail-gallery__empty--tone-1,
+  .market-detail-gallery__empty--tone-2,
+  .market-detail-gallery__empty--tone-3 { background: #f1f5f9; }
+  .market-detail-gallery__quote { color: #90a1b9; }
+  .market-detail-gallery__text { color: #314158; }
+  .market-detail-contact,
+  .market-detail-section { border-color: #f1f5f9; background: #f8fafc; box-shadow: none; }
+  .market-detail-description text,
+  .market-detail-steps > view > view text:last-child,
+  .detail-safety { color: #45556c; }
+  .market-detail-contact__main,
+  .detail-safety { background: #f8fafc; }
+  .market-detail-contact__value text:first-child,
+  .detail-contact__tip,
+  .market-detail-steps > view > view text:last-child { color: #90a1b9; }
+  .market-detail-contact__value text:last-child,
+  .market-detail-steps > view > view text:first-child { color: #1d293d; }
+  .market-detail-contact__copy { border-color: #dbeafe; color: #2b7fff; }
+  .detail-section__heading text:first-child { color: #1d293d; }
+  .detail-section__heading text:last-child { color: #90a1b9; }
+}

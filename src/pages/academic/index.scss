@@ -2694,3 +2694,611 @@ page {
 .course-material-actions { display:flex; gap:14rpx; margin-top:28rpx; > view { display:flex; flex:1; align-items:center; justify-content:center; height:78rpx; color:#4b8977; font-size:23rpx; font-weight:750; background:#e9f4ef; border-radius:21rpx; } > view:last-child { color:#fff; background:#64a68f; } }
 .course-material-inline-action { display:flex; align-items:center; justify-content:center; height:66rpx; margin-top:16rpx; color:#3f846e; font-size:22rpx; font-weight:750; background:#e6f3ed; border-radius:18rpx; }
 .grade-card__materials { display:inline-flex !important; align-items:center; width:max-content; min-height:48rpx; padding:0 13rpx; margin-top:11rpx; color:#4e907b !important; font-size:19rpx !important; font-weight:700; background:#edf6f2; border-radius:14rpx; }
+
+// Current campus visual system overrides. Course-specific colors remain as data cues.
+page {
+  background: #f4f7fb;
+}
+
+.academic-page {
+  color: #1d293d;
+  background:
+    linear-gradient(180deg, #eff6ff 0, rgba(239, 246, 255, 0) 520rpx),
+    #f4f7fb;
+
+  > .custom-navbar .custom-navbar__fixed {
+    color: #1d293d;
+    border-bottom-color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4rpx 20rpx rgba(15, 23, 42, 0.035);
+  }
+
+  &__glow--one {
+    background: rgba(43, 127, 255, 0.08);
+  }
+
+  &__glow--two {
+    background: rgba(0, 211, 243, 0.07);
+  }
+}
+
+.academic-header,
+.academic-header--schedule {
+  border-bottom-color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6rpx 20rpx rgba(15, 23, 42, 0.04);
+}
+
+.academic-toolbar {
+  &__period,
+  &__week,
+  &__reset,
+  &__hint {
+    border-color: #e8eef6;
+    background: #fff;
+  }
+
+  &__period > view {
+    color: #314158;
+  }
+
+  &__label,
+  &__chevron,
+  &__hint {
+    color: #62748e;
+  }
+
+  &__reset {
+    color: #2b7fff;
+  }
+
+  &__hint view {
+    background: #00b8e6;
+    box-shadow: 0 0 0 7rpx rgba(0, 184, 230, 0.1);
+  }
+
+  &__mode-actions {
+    border-color: #dbeafe;
+    background: #eff6ff;
+    color: #155dfc;
+
+    view + view {
+      color: #fff;
+      background: #2b7fff;
+    }
+  }
+}
+
+.academic-toolbar--schedule .academic-toolbar__period {
+  border-color: #dbeafe;
+  background: #eff6ff;
+  color: #2b7fff;
+}
+
+.grade-summary,
+.grade-summary--original,
+.grade-summary--simulation {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.22), transparent 32%),
+    linear-gradient(135deg, #2b7fff, #00b8e6);
+  box-shadow: 0 14rpx 34rpx rgba(43, 127, 255, 0.18);
+}
+
+.exam-hero,
+.selection-hero {
+  border-color: #e8eef6;
+  background: linear-gradient(135deg, #eff6ff, #f8fafc);
+  box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.045);
+}
+
+.exam-hero__eyebrow,
+.selection-hero__eyebrow,
+.selection-hero__copy {
+  color: #62748e;
+}
+
+.exam-hero__title,
+.selection-hero__number {
+  color: #1d293d;
+}
+
+.exam-hero__mark,
+.selection-hero__seal {
+  border-color: #bfdbfe;
+  background: rgba(255, 255, 255, 0.82);
+  color: #2b7fff;
+}
+
+.exam-hero__mark view {
+  border-color: #2b7fff;
+}
+
+.grade-card,
+.exam-card,
+.selection-card,
+.day-course,
+.course-conflict-card,
+.academic-load-state {
+  border-color: #edf2f7;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 7rpx 22rpx rgba(15, 23, 42, 0.04);
+}
+
+.grade-card__name,
+.exam-card__name,
+.selection-card__name,
+.exam-group__heading text:first-child,
+.selection-heading text:first-child,
+.grade-period-group__heading text:first-child,
+.academic-load-state__title {
+  color: #1d293d;
+}
+
+.grade-card__meta,
+.grade-card__original,
+.exam-card__line,
+.selection-card__line,
+.selection-card__footer,
+.academic-load-state__copy {
+  color: #62748e;
+}
+
+.exam-card__footer,
+.selection-card__footer {
+  border-top-color: #f1f5f9;
+}
+
+.exam-card__footer text:last-child,
+.selection-card__footer text:last-child {
+  color: #2b7fff;
+}
+
+.selection-card--pressed {
+  opacity: 0.72;
+  transform: none;
+}
+
+.selection-tabs {
+  border-color: #e8eef6;
+  background: #f1f5f9;
+
+  &__item {
+    color: #62748e;
+
+    &--active {
+      background: #fff;
+      color: #155dfc;
+      box-shadow: 0 4rpx 12rpx rgba(15, 23, 42, 0.06);
+    }
+  }
+}
+
+.academic-sheet {
+  background: #f8fafc;
+  box-shadow: 0 -18rpx 54rpx rgba(15, 23, 42, 0.13);
+
+  &__handle {
+    background: #cbd5e1;
+  }
+
+  &__close {
+    background: #f1f5f9;
+    color: #62748e;
+  }
+
+  &__title {
+    color: #1d293d;
+  }
+
+  &__subtitle {
+    color: #90a1b9;
+  }
+}
+
+.period-options__item,
+.week-options__item,
+.detail-list,
+.academic-field input,
+.form-chip {
+  border-color: #e8eef6;
+  background: #fff;
+}
+
+.period-options__item--active,
+.week-options__item--active,
+.form-chip--active,
+.academic-button,
+.period-options__check,
+.academic-check__box--active,
+.academic-check--active .academic-check__box {
+  border-color: #2b7fff;
+  background: #2b7fff;
+  color: #fff;
+}
+
+.academic-field {
+  input {
+    color: #314158;
+  }
+
+  &__label {
+    color: #45556c;
+  }
+}
+
+.detail-list {
+  > view {
+    min-width: 0;
+    border-bottom-color: #f1f5f9;
+  }
+
+  text:last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: #314158;
+  }
+}
+
+.academic-notice {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-card {
+    transition: none;
+  }
+}
+
+/* 蓝灰白体系的收口：课程色仅用于区分数据，容器和交互保持统一。 */
+.timetable {
+  background: #fff;
+  border-top-color: #e5edf7;
+
+  &__header { background: #f8fbff; border-bottom-color: #e5edf7; }
+  &__date { color: #62748e; }
+  &__date--selected { color: #155dfc; background: #eff6ff; }
+  &__date--selected::after { background: #2b7fff; }
+  &__time { color: #90a1b9; background: #fbfdff; border-color: #e8eef6; }
+  &__time text:first-child { color: #45556c; }
+  &__cell { border-color: #edf2f7; }
+  &__cell--conflict { background: #fff5f5; }
+}
+
+.timetable-course {
+  border-color: rgba(43, 127, 255, .16);
+  box-shadow: 0 5rpx 12rpx rgba(30, 64, 110, .06);
+
+  &__name { -webkit-line-clamp: 3; }
+  &__location { -webkit-line-clamp: 2; }
+  &__related-count { background: #2b7fff; }
+  &--inactive { color: #62748e; background: #f1f5f9; border-color: #e2e8f0; }
+}
+
+.day-strip__item {
+  color: #62748e;
+  border-color: #e1eaf6;
+  background: #fff;
+
+  &--active { color: #fff; background: linear-gradient(145deg, #2b7fff, #5b9dff); box-shadow: 0 10rpx 22rpx rgba(43, 127, 255, .19); }
+  &--active text { color: #fff !important; }
+}
+
+.day-course {
+  border-color: #edf2f7;
+  box-shadow: 0 11rpx 28rpx rgba(15, 23, 42, .045);
+
+  &__time text:first-child,
+  &__name { color: #1d293d; }
+  &__time text:last-child,
+  &__meta,
+  &__status { color: #90a1b9; }
+  &__main { border-left-color: #e5edf7; }
+}
+
+.academic-fab { background: linear-gradient(135deg, #2b7fff, #5b9dff); box-shadow: 0 15rpx 34rpx rgba(43, 127, 255, .26); }
+
+.grade-list-heading,
+.grade-period-group__heading text:last-child,
+.exam-group__heading text:last-child,
+.selection-heading text:last-child { color: #90a1b9; }
+
+.grade-card {
+  border-color: #edf2f7;
+
+  &__title-line { min-width: 0; }
+  &__name { flex: 1; min-width: 0; max-width: none; color: #1d293d; }
+  &__meta,
+  &__original { overflow: hidden; color: #62748e; text-overflow: ellipsis; white-space: nowrap; }
+  &__result text:first-child { color: #2b7fff; }
+  &--selected { border-color: #bfdbfe; }
+}
+
+.exam-card {
+  border-color: #edf2f7;
+
+  &__name { max-width: none; padding-right: 126rpx; color: #1d293d; overflow-wrap: anywhere; }
+  &__line { min-width: 0; color: #45556c; }
+  &__line text:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__footer { border-top-color: #edf2f7; }
+}
+
+.selection-card {
+  border-color: #edf2f7;
+
+  &__name { max-width: 68%; color: #1d293d; overflow-wrap: anywhere; }
+  &__type,
+  &__line,
+  &__footer { color: #62748e; }
+  &__line text:last-child,
+  &__footer text:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__result { color: #45556c; background: #f1f6fe; }
+}
+
+.selection-tabs__item text { color: #2b7fff; background: #dbeafe; }
+.selection-tip { color: #45556c; background: #f1f6fe; }
+.selection-tip view { background: #2b7fff; }
+
+.course-float-layer,
+.academic-overlay { background: rgba(15, 23, 42, .38); }
+
+.course-float-card,
+.academic-sheet {
+  max-height: calc(100vh - env(safe-area-inset-top));
+  background: #f8fafc;
+  box-shadow: 0 -18rpx 54rpx rgba(15, 23, 42, .13);
+}
+
+.course-float-card {
+  &__handle,
+  .academic-sheet__handle { background: #cbd5e1; }
+  &__close { color: #62748e; background: #f1f5f9; }
+  &__title { color: #1d293d; overflow-wrap: anywhere; }
+  &__copy { color: #90a1b9; overflow-wrap: anywhere; }
+}
+
+.academic-sheet {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+
+  &__close { color: #62748e; background: #f1f5f9; }
+  &__title { color: #1d293d; overflow-wrap: anywhere; }
+  &__subtitle { color: #90a1b9; overflow-wrap: anywhere; }
+  &__body--form { height: calc(88vh - 76rpx - env(safe-area-inset-bottom)); min-height: 0; }
+  &__body:not(&__body--form) { min-height: 0; padding: 0 5rpx calc(28rpx + env(safe-area-inset-bottom)); flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+}
+
+.period-options__item,
+.week-options__item,
+.form-chip,
+.academic-field input,
+.stepper,
+.form-weeks view { border-color: #e1eaf6; }
+
+.course-material-actions > view,
+.course-material-inline-action,
+.grade-card__materials { color: #2b7fff !important; background: #e8f1ff; }
+.course-material-actions > view:last-child { color: #fff !important; background: #2b7fff; }
+
+/* 学业主页面：所有状态容器统一为明亮蓝灰体系，避免蓝底残留深色文字。 */
+.academic-toolbar--schedule {
+  .academic-toolbar__period,
+  .academic-view-toggle,
+  .academic-week-stepper {
+    border-color: #dbeafe;
+    background: #eff6ff;
+    box-shadow: none;
+  }
+
+  .academic-toolbar__period {
+    color: #2b7fff;
+  }
+}
+
+.academic-week-stepper {
+  &__arrow::after {
+    border-color: #2b7fff;
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #155dfc;
+    line-height: 1;
+  }
+}
+
+.academic-view-toggle {
+  color: #2b7fff;
+
+  &--week &__icon {
+    background: repeating-linear-gradient(90deg, #2b7fff 0 3rpx, transparent 3rpx 7rpx);
+    border-color: #2b7fff;
+  }
+
+  &--day &__icon {
+    border-color: #2b7fff;
+
+    &::after { background: #2b7fff; }
+  }
+}
+
+.period-options {
+  &__item {
+    border-color: #e4edf8;
+    background: #fff;
+
+    text:first-child { color: #314158; }
+    text:last-child { color: #90a1b9; }
+
+    &--active {
+      border-color: #2b7fff;
+      background: #2b7fff;
+      box-shadow: 0 10rpx 22rpx rgba(43, 127, 255, 0.18);
+
+      text:first-child,
+      text:last-child {
+        color: #fff;
+      }
+
+      text:last-child { opacity: 0.82; }
+    }
+  }
+
+  &__check {
+    flex: none;
+    color: #2b7fff;
+    background: #e8f1ff;
+  }
+
+  &__item--active &__check {
+    color: #2b7fff;
+    background: #fff;
+  }
+}
+
+.week-options {
+  &__item {
+    align-items: center;
+    gap: 3rpx;
+    color: #45556c;
+    line-height: 1;
+    border-color: #e1eaf6;
+    background: #fff;
+
+    text:first-child,
+    text:last-child {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      line-height: 1;
+    }
+
+    text:last-child { margin-left: 0; }
+
+    &--active {
+      border-color: #2b7fff;
+      background: #2b7fff;
+      box-shadow: 0 9rpx 18rpx rgba(43, 127, 255, 0.18);
+
+      text:first-child,
+      text:last-child { color: #fff; }
+    }
+  }
+}
+
+.grade-summary--simulation,
+.grade-summary--original {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.24), transparent 32%),
+    linear-gradient(135deg, #2b7fff, #00b8e6);
+}
+
+.grade-simulation-tip {
+  color: #155dfc;
+  background: #eff6ff;
+  border-color: #dbeafe;
+
+  text:first-child { background: #2b7fff; }
+}
+
+.grade-card {
+  &--simulation { border-color: #bfdbfe; }
+
+  &__changed,
+  &__converted {
+    color: #155dfc;
+    background: #eff6ff;
+  }
+
+  &__converted { padding: 0; }
+}
+
+.grade-level-options {
+  > view {
+    color: #45556c;
+    border-color: #e1eaf6;
+    background: #fff;
+  }
+
+  &__item--active {
+    color: #fff !important;
+    border-color: #2b7fff !important;
+    background: #2b7fff !important;
+    box-shadow: 0 7rpx 14rpx rgba(43, 127, 255, 0.18);
+  }
+}
+
+.exam-hero {
+  background: linear-gradient(135deg, #eff6ff, #f8fbff);
+  border-color: #dbeafe;
+}
+
+.exam-card {
+  &::before { background: #00b8e6; }
+  &--ongoing::before { background: #2b7fff; }
+  &--finished::before { background: #cbd5e1; }
+
+  &__status { color: #2b7fff; }
+  &--finished &__status { color: #90a1b9; }
+}
+
+/* 课表以低饱和度课程色区分数据，统一使用可读的蓝灰文字。 */
+.timetable-course,
+.course-conflict-card {
+  color: #155dfc;
+  background: #e8f4ff;
+  border-color: #bfdbfe;
+
+  &--blue { color: #2563eb; background: #e8f1ff; border-color: #c7dcff; }
+  &--mint { color: #087f67; background: #e7f8f3; border-color: #bfeade; }
+  &--lilac { color: #6d4ce6; background: #f0ecff; border-color: #dcd1ff; }
+  &--sand { color: #ae6a08; background: #fff5e6; border-color: #fde2ae; }
+  &--sky { color: #087da9; background: #e5f6ff; border-color: #bde9fb; }
+  &--rose { color: #c14260; background: #fff0f4; border-color: #ffd1dc; }
+  &--peach { color: #bf532a; background: #fff0ea; border-color: #ffd6c7; }
+  &--lemon { color: #8b7000; background: #fffbe3; border-color: #f6e7a6; }
+  &--sage { color: #4d7d49; background: #eef8ec; border-color: #d3ebcf; }
+  &--indigo { color: #4f56b8; background: #ededff; border-color: #d5d7ff; }
+  &--coral { color: #bd4d40; background: #fff0ed; border-color: #ffd5cf; }
+
+  &--inactive {
+    color: #62748e;
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+  }
+}
+
+.timetable-course {
+  &__related-count { background: #2b7fff; }
+  &__status { color: #62748e; background: rgba(98, 116, 142, 0.11); }
+}
+
+.course-conflict-card {
+  &__name { color: inherit; }
+  &__tag { color: currentColor; background: rgba(255, 255, 255, 0.7); }
+  &__details text:first-child { color: #62748e; }
+  &__details text:last-child { color: #45556c; }
+}
+
+.grade-list-heading--original {
+  text:first-child { color: #1d293d; }
+
+  text:last-child {
+    color: #2b7fff;
+    background: #eff6ff;
+  }
+}
+
+.grade-period-group__heading text:first-child,
+.exam-group__heading text:first-child { color: #1d293d; }
+
+.academic-empty {
+  &__art view:first-child { background: #dbeafe; }
+  &__art view:last-child { background: #e0f2fe; }
+  &__title { color: #1d293d; }
+  &__copy { color: #62748e; }
+}

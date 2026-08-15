@@ -124,16 +124,16 @@ export default defineAppConfig({
   pages,
   window: {
     backgroundTextStyle: 'dark',
-    navigationBarBackgroundColor: '#f8fcfd',
+    navigationBarBackgroundColor: '#ffffff',
     navigationBarTitleText: '海大校园',
     navigationBarTextStyle: 'black',
-    backgroundColor: '#f4fafc'
+    backgroundColor: '#f4f7fb'
   },
   usingComponents: {},
   tabBar: {
     custom: true,
-    color: '#8295a2',
-    selectedColor: '#3095b6',
+    color: '#90a1b9',
+    selectedColor: '#2b7fff',
     backgroundColor: '#ffffff',
     borderStyle: 'white',
     list: tabBarList

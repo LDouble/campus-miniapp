@@ -10,7 +10,10 @@ import {
   View,
 } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
-import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import {
+  KeyboardSafeInput,
+  useKeyboardInset,
+} from '../../components/keyboard-safe-input'
 import { getCurrentIdentity } from '../../api/account'
 import {
   isAcademicEducationLevel,
@@ -136,6 +139,10 @@ const credentialErrorMessage = (error: unknown) => {
 }
 
 export default function AcademicVerificationPage() {
+  const {
+    keyboardHeight,
+    onKeyboardVisibilityChange,
+  } = useKeyboardInset()
   const [replacedCurrentPage, setReplacedCurrentPage] = useState(false)
   const [forceCredentialBinding, setForceCredentialBinding] = useState(false)
   const [method, setMethod] = useState<VerificationMethod>('credentials')
@@ -145,6 +152,7 @@ export default function AcademicVerificationPage() {
   const [error, setError] = useState('')
   const [studentNo, setStudentNo] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordVisible, setPasswordVisible] = useState(true)
   const [rejectedCredential, setRejectedCredential] = useState<RejectedAcademicCredential | null>(null)
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel | null>(null)
   const [realName, setRealName] = useState('')
@@ -409,7 +417,12 @@ export default function AcademicVerificationPage() {
         showBack
       />
 
-      <View className='verification-page__content'>
+      <View
+        className='verification-page__content'
+        style={keyboardHeight > 0
+          ? `padding-bottom: calc(56rpx + env(safe-area-inset-bottom) + ${keyboardHeight}px)`
+          : undefined}
+      >
         {loading && !status && (
           <View className='verification-loading'>
             <View />
@@ -586,25 +599,42 @@ export default function AcademicVerificationPage() {
                     <View className='verification-field'>
                       <Text>信息门户账号（学号）</Text>
                       <KeyboardSafeInput
+                        id='academic-verification-student-no'
                         value={studentNo}
                         maxlength={64}
                         placeholder='请输入信息门户账号'
                         placeholderClass='verification-placeholder'
                         disabled={working}
+                        onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                         onInput={(event) => setStudentNo(event.detail.value)}
                       />
                     </View>
                     <View className='verification-field'>
                       <Text>信息门户密码</Text>
-                      <KeyboardSafeInput
-                        value={password}
-                        password
-                        maxlength={256}
-                        placeholder='验证成功后仅保存在本机'
-                        placeholderClass='verification-placeholder'
-                        disabled={working}
-                        onInput={(event) => setPassword(event.detail.value)}
-                      />
+                      <View className='verification-password-control'>
+                        <KeyboardSafeInput
+                          id='academic-verification-password'
+                          value={password}
+                          password={!passwordVisible}
+                          holdKeyboard
+                          ariaLabel='信息门户密码'
+                          maxlength={256}
+                          placeholder='验证成功后仅保存在本机'
+                          placeholderClass='verification-placeholder'
+                          disabled={working}
+                          onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                          onInput={(event) => setPassword(event.detail.value)}
+                        />
+                        <View
+                          className='verification-password-control__toggle'
+                          hoverClass='verification-password-control__toggle--pressed'
+                          ariaRole='button'
+                          ariaLabel={passwordVisible ? '隐藏密码' : '显示密码'}
+                          onClick={() => setPasswordVisible((visible) => !visible)}
+                        >
+                          {passwordVisible ? '隐藏' : '显示'}
+                        </View>
+                      </View>
                       {rejectedCredential && (
                         <Text className={currentCredentialRejected
                           ? 'verification-field__feedback verification-field__feedback--error'
@@ -655,20 +685,24 @@ export default function AcademicVerificationPage() {
                     <View className='verification-field'>
                       <Text>真实姓名</Text>
                       <KeyboardSafeInput
+                        id='academic-verification-real-name'
                         value={realName}
                         maxlength={100}
                         placeholder='请输入学生证上的姓名'
                         placeholderClass='verification-placeholder'
+                        onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                         onInput={(event) => setRealName(event.detail.value)}
                       />
                     </View>
                     <View className='verification-field'>
                       <Text>学号</Text>
                       <KeyboardSafeInput
+                        id='academic-verification-card-student-no'
                         value={studentNo}
                         maxlength={64}
                         placeholder='请输入学生证上的学号'
                         placeholderClass='verification-placeholder'
+                        onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                         onInput={(event) => setStudentNo(event.detail.value)}
                       />
                     </View>

@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro, {
   useDidHide,
   useDidShow,
   useLoad,
   usePullDownRefresh,
 } from '@tarojs/taro'
-import { ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type {
   CampusCirclePostView,
   CampusCircleSectionView,
@@ -37,11 +37,14 @@ import {
   resolveMiniappModule,
   type MiniappModuleKey,
 } from '../../features/runtime-config'
-import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { useCampusShare } from '../../features/share'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
-import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
+import {
+  setCustomTabBarHidden,
+  setCustomTabBarPublishSection,
+  syncCustomTabBar,
+} from '../../utils/tabbar'
 import './index.scss'
 
 const icons = {
@@ -126,6 +129,10 @@ export default function CommunityPage() {
       subtitle: activeCommunityRoot.description || baseCopy.subtitle,
     }
     : baseCopy
+
+  useEffect(() => {
+    setCustomTabBarPublishSection(displayedSection)
+  }, [displayedSection])
 
   const loadCommunitySections = async (force = false) => {
     if (
@@ -214,7 +221,7 @@ export default function CommunityPage() {
       const currentScrollTop = Number(viewport?.scrollTop || 0)
       const visibleTop = navbarHeight + navigationHeight + 8
       void Taro.pageScrollTo({
-        scrollTop: Math.max(0, currentScrollTop + contentTop - visibleTop),
+        scrollTop: Math.max(24, currentScrollTop + contentTop - visibleTop),
         duration: 180,
       }).then(() => resolve()).catch(() => resolve())
     })
@@ -223,22 +230,6 @@ export default function CommunityPage() {
   const focusSearch = async () => {
     await scrollSearchBelowNavigation()
     setSearchFocusSignal((current) => current + 1)
-  }
-
-  const openPublish = () => {
-    if (displayedSection === 'community') {
-      if (!activeCommunitySection) {
-        Taro.showToast({ title: '暂无可发布的社区板块', icon: 'none' })
-        return
-      }
-      requestWechatSubscriptionForPublishSection('community', runtimeConfig)
-      Taro.navigateTo({
-        url: `/pages/publish/index?section=community&community_section_id=${activeCommunitySection.id}`,
-      })
-      return
-    }
-    requestWechatSubscriptionForPublishSection(displayedSection, runtimeConfig)
-    Taro.navigateTo({ url: `/pages/publish/index?section=${displayedSection}` })
   }
 
   useDidShow(() => {
@@ -348,7 +339,7 @@ export default function CommunityPage() {
   return (
     <View className={`community-page community-page--${displayedSection}`}>
       <CustomNavbar
-        title={pageCopy.title}
+        title='社区'
         immersive
         compactImmersive
         collapsed={headerCollapsed}
@@ -358,10 +349,22 @@ export default function CommunityPage() {
         onAction={() => void focusSearch()}
       />
 
-      <View className='community-page__intro'>
+      <View
+        className='community-page__intro'
+        style={{ paddingRight: `${navbarMetrics.sideWidth + 8}px` }}
+      >
         <View className='community-page__intro-copy'>
-          <Text className='community-page__eyebrow'>{pageCopy.title}</Text>
-          <Text className='community-page__subtitle'>{pageCopy.subtitle}</Text>
+          <Text className='community-page__eyebrow'>社区</Text>
+        </View>
+        <View
+          className='community-page__search-action'
+          hoverClass='community-page__search-action--pressed'
+          ariaRole='button'
+          ariaLabel={`搜索${pageCopy.title}`}
+          onClick={() => void focusSearch()}
+        >
+          <Image src={icons.search} mode='aspectFit' />
+          <Text>{baseCopy.searchHint}</Text>
         </View>
       </View>
 
@@ -371,23 +374,27 @@ export default function CommunityPage() {
         }`}
         style={{ top: `${navbarHeight}px` }}
       >
-        <View className='life-primary-tabs'>
-          {visibleLifeSections.map((section) => (
-            <View
-              id={`life-section-${section.key}`}
-              key={section.key}
-              className={`life-primary-tabs__item life-primary-tabs__item--${section.key} ${
-                displayedSection === section.key
-                  ? 'life-primary-tabs__item--active'
-                  : ''
-              }`}
-              hoverClass='life-primary-tabs__item--pressed'
-              onClick={() => selectSection(section.key)}
-            >
-              {section.label}
-            </View>
-          ))}
-        </View>
+        <ScrollView className='life-primary-tabs' scrollX enhanced showScrollbar={false}>
+          <View className='life-primary-tabs__inner'>
+            {visibleLifeSections.map((section) => (
+              <View
+                id={`life-section-${section.key}`}
+                key={section.key}
+                className={`life-primary-tabs__item life-primary-tabs__item--${section.key} ${
+                  displayedSection === section.key
+                    ? 'life-primary-tabs__item--active'
+                    : ''
+                }`}
+                hoverClass='life-primary-tabs__item--pressed'
+                ariaRole='button'
+                ariaLabel={`切换到${section.label}`}
+                onClick={() => selectSection(section.key)}
+              >
+                {section.label}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
 
         {displayedSection === 'community' && communityRoots.length > 0 && (
           <>
@@ -403,6 +410,8 @@ export default function CommunityPage() {
                         : 'community-root-tabs__item'
                     }
                     hoverClass='community-root-tabs__item--pressed'
+                    ariaRole='button'
+                    ariaLabel={`筛选${root.name}`}
                     onClick={() => selectCommunityRoot(root)}
                   >
                     {root.name}
@@ -458,19 +467,6 @@ export default function CommunityPage() {
         )}
       </View>
 
-      {canUseDisplayedSection && (
-        <View
-          id={`life-publish-${displayedSection}`}
-          className={`life-publish-fab community-publish-fab life-publish-fab--${displayedSection} ${
-            headerCollapsed ? 'life-publish-fab--compact' : ''
-          }`}
-          hoverClass='life-publish-fab--pressed'
-          onClick={openPublish}
-        >
-          <Text>＋</Text>
-          <Text>{baseCopy.publishLabel}</Text>
-        </View>
-      )}
     </View>
   )
 }

@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import {
   buildCampusCircleCommentInput,
+  buildCommentTree,
   commentReplyTargetName,
   commentRootId,
   mergeLocalThreadReply,
@@ -59,6 +60,11 @@ const merged = mergeLocalThreadReply([firstReply], pendingReply)
 assert.deepEqual(merged.map((item) => item.id), [43, 44])
 assert.equal(merged[0].reply_count, 1)
 assert.strictEqual(mergeLocalThreadReply(merged, pendingReply), merged)
+
+const tree = buildCommentTree(root.id, [pendingReply, firstReply])
+assert.equal(tree.length, 1)
+assert.equal(tree[0].comment.id, firstReply.id)
+assert.equal(tree[0].children[0].comment.id, pendingReply.id)
 
 assert.equal(
   noticeActionRoute('/api/v1/campus-circle/posts/12?comment_id=44'),

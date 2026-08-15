@@ -18,16 +18,24 @@ export default function FeatureUnavailablePage() {
   return (
     <View className='feature-unavailable'>
       <CustomNavbar title='功能维护' showBack />
-      <View className='feature-unavailable__card'>
-        <View className='feature-unavailable__mark'>⌛</View>
-        <Text className='feature-unavailable__title'>正在认真准备</Text>
-        <Text className='feature-unavailable__message'>{message}</Text>
-        <View
-          className='feature-unavailable__action'
-          hoverClass='feature-unavailable__action--pressed'
-          onClick={goHome}
-        >
-          返回首页
+      <View className='feature-unavailable__content'>
+        <View className='feature-unavailable__card'>
+          <View className='feature-unavailable__mark'>
+            <View />
+            <View />
+            <View />
+          </View>
+          <Text className='feature-unavailable__title'>正在认真准备</Text>
+          <Text className='feature-unavailable__message'>{message}</Text>
+          <View
+            className='feature-unavailable__action'
+            hoverClass='feature-unavailable__action--pressed'
+            ariaRole='button'
+            ariaLabel='返回首页'
+            onClick={goHome}
+          >
+            返回首页
+          </View>
         </View>
       </View>
     </View>

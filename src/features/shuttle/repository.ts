@@ -18,12 +18,12 @@ export type ShuttleLoadResult = {
 }
 
 type StoredShuttleRoutes = {
-  version: 1
+  version: 3
   items: ShuttleRoute[]
   updatedAt: number
 }
 
-const STORAGE_KEY = 'campus.shuttle.routes.v1'
+const STORAGE_KEY = 'campus.shuttle.routes.v3'
 
 const dateKey = (date: Date) => {
   const year = date.getFullYear()
@@ -52,7 +52,7 @@ const readCache = (): StoredShuttleRoutes | null => {
     const stored = Taro.getStorageSync<StoredShuttleRoutes>(STORAGE_KEY)
     if (
       stored
-      && stored.version === 1
+      && stored.version === 3
       && Array.isArray(stored.items)
       && stored.items.every(isRoute)
     ) return stored
@@ -67,7 +67,7 @@ const mergeCache = (items: ShuttleRoute[]) => {
   const byID = new Map(previous.map((item) => [item.id, item]))
   items.forEach((item) => byID.set(item.id, item))
   const stored: StoredShuttleRoutes = {
-    version: 1,
+    version: 3,
     items: Array.from(byID.values()),
     updatedAt: Date.now(),
   }
@@ -96,15 +96,24 @@ const routeScheduleForDate = (route: ShuttleRoute, date: Date) => {
   const period = route.special_periods.find((item) => (
     item.start_date <= target && item.end_date >= target
   ))
-  const weekend = date.getDay() === 0 || date.getDay() === 6
+  const weeklyDayType = date.getDay() === 0
+    ? 'sunday'
+    : date.getDay() === 6
+      ? 'saturday'
+      : 'workday'
   const dayType = override?.day_type
     || period?.day_type
-    || (weekend ? 'weekend' : 'workday')
+    || weeklyDayType
   const weekly = route.schedules.find((item) => item.day_type === dayType)
-  const departureTimes = override?.departure_times
-    || period?.departure_times
-    || weekly?.departure_times
-    || []
+  const trips = override?.trips !== undefined
+    ? override.trips
+    : period?.trips !== undefined
+      ? period.trips
+      : weekly?.trips || []
+  const departureTimes = trips
+    .map((trip) => trip.stop_times[0]?.time)
+    .filter((time): time is string => Boolean(time))
+    .sort((left, right) => left.localeCompare(right))
   return {
     service_date: target,
     day_type: dayType,
@@ -115,6 +124,7 @@ const routeScheduleForDate = (route: ShuttleRoute, date: Date) => {
         : 'weekly_rule',
     suspended: Boolean(override?.suspended || period?.suspended || departureTimes.length === 0),
     departure_times: departureTimes,
+    trips,
     note: override?.note || period?.note || weekly?.note,
   } as const
 }

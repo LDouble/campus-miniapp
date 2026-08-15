@@ -352,6 +352,10 @@
   }
 }
 
+.calendar-level-switch__pressed,
+.calendar-term-switch__pressed,
+.calendar-filters__pressed { opacity: 0.72; }
+
 .calendar-loading {
   view {
     height: 160rpx;
@@ -546,3 +550,103 @@
     background-position: -100% 0;
   }
 }
+
+// 蓝灰白校园工具视觉覆盖：保持现有结构，仅统一色彩、边界与窄屏排版。
+.calendar-page {
+  color: #1d293d;
+  background: #f4f7fb;
+
+  &__orb { opacity: 0.35; }
+  &__orb--one { background: rgba(43, 127, 255, 0.16); }
+  &__orb--two { background: rgba(144, 161, 185, 0.16); }
+  &__note { color: #90a1b9; }
+}
+
+.calendar-level-switch {
+  background: #eaf0f8;
+
+  view { color: #45556c; }
+  &__active { color: #1d293d !important; background: #fff !important; box-shadow: 0 8rpx 20rpx rgba(29, 41, 61, 0.08); }
+}
+
+.calendar-term-switch,
+.calendar-filters {
+  box-sizing: border-box;
+  padding-right: 12rpx;
+
+  view { max-width: 280rpx; color: #45556c; border-color: #dce5f0; }
+  text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.calendar-term-switch {
+  &__active { color: #1d293d !important; background: #eaf2ff !important; border-color: #bad4ff !important; }
+}
+
+.calendar-filters {
+  &__active { color: #fff !important; background: #2b7fff !important; border-color: #2b7fff !important; }
+  &__active text { color: #fff !important; }
+}
+
+.calendar-hero {
+  background: linear-gradient(138deg, #1d293d 0%, #2b7fff 100%);
+  box-shadow: 0 18rpx 38rpx rgba(29, 41, 61, 0.18);
+
+  &--upcoming,
+  &--finished,
+  &--unavailable { background: linear-gradient(138deg, #334155 0%, #45556c 100%); }
+  &__footer { gap: 18rpx; }
+  &__footer text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.calendar-source { color: #45556c; background: #eaf2ff; }
+.calendar-source view { background: #2b7fff; }
+.calendar-source--unavailable { color: #45556c; background: #edf1f6; }
+.calendar-source--unavailable view { background: #90a1b9; }
+
+.calendar-week-card,
+.calendar-event__body { background: #fff; border-color: #dce5f0; box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
+.calendar-section-heading > text:last-child,
+.calendar-section-heading > view > text:last-child { color: #90a1b9; }
+.calendar-week-strip view { color: #45556c; background: #f4f7fb; }
+.calendar-week-strip__active,
+.calendar-week-strip__active text { color: #fff !important; }
+.calendar-week-strip__active { background: #2b7fff !important; }
+.calendar-empty { color: #45556c; background: #fff; border: 2rpx solid #dce5f0; }
+.calendar-empty > text:last-child,
+.calendar-event__description { color: #90a1b9; }
+.calendar-event__head { gap: 12rpx; }
+.calendar-event__head text:first-child { min-width: 0; overflow: hidden; color: #45556c; text-overflow: ellipsis; white-space: nowrap; }
+.calendar-event__head text:last-child { flex: none; color: #2b7fff; background: #eaf2ff; }
+.calendar-event__title { white-space: normal; word-break: break-word; }
+.calendar-event__campus { overflow: hidden; color: #90a1b9; text-overflow: ellipsis; white-space: nowrap; }
+
+// 明亮蓝色层级：头图用蓝青渐变，浅色选择用蓝字，避免出现黑蓝色块。
+.calendar-page { color: #253858; background: #f5f9ff; }
+.calendar-page__note,
+.calendar-section-heading > text:last-child,
+.calendar-section-heading > view > text:last-child,
+.calendar-empty > text:last-child,
+.calendar-event__description,
+.calendar-event__campus { color: #7890ad; }
+.calendar-level-switch { background: #e8f3ff; }
+.calendar-level-switch view,
+.calendar-term-switch view,
+.calendar-filters view,
+.calendar-week-strip view,
+.calendar-event__head text:first-child,
+.calendar-empty { color: #607895; }
+.calendar-level-switch__active { color: #2f80ed !important; box-shadow: 0 8rpx 20rpx rgba(47, 128, 237, 0.12); }
+.calendar-term-switch__active { color: #2f80ed !important; background: #e8f5ff !important; border-color: #a9d8ff !important; }
+.calendar-filters__active,
+.calendar-week-strip__active { background: #2f80ed !important; border-color: #2f80ed !important; box-shadow: 0 8rpx 18rpx rgba(47, 128, 237, 0.2); }
+.calendar-hero,
+.calendar-hero--upcoming,
+.calendar-hero--finished,
+.calendar-hero--unavailable { background: linear-gradient(135deg, #2f80ed 0%, #28c5e9 100%); box-shadow: 0 18rpx 38rpx rgba(47, 128, 237, 0.22); }
+.calendar-source,
+.calendar-event__head text:last-child { color: #2f80ed; background: #e8f5ff; }
+.calendar-source view { background: #2f80ed; }
+.calendar-source--unavailable { color: #607895; background: #edf6ff; }
+.calendar-source--unavailable view { background: #69b8ec; }
+.calendar-week-card,
+.calendar-event__body { border-color: #d7e7fa; box-shadow: 0 10rpx 28rpx rgba(47, 128, 237, 0.06); }

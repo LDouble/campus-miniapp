@@ -144,12 +144,20 @@ export default function AcademicStatisticsCoursesPage() {
               onConfirm={submitSearch}
             />
             {!!query && (
-              <Text className='statistics-search__clear' onClick={clearSearch}>清除</Text>
+              <View
+                className='statistics-search__clear'
+                hoverClass='statistics-search__clear--pressed'
+                ariaRole='button'
+                ariaLabel='清除课程搜索内容'
+                onClick={clearSearch}
+              >清除</View>
             )}
           </View>
           <View
             className='statistics-search__button'
             hoverClass='statistics-search__button--pressed'
+            ariaRole='button'
+            ariaLabel='搜索课程'
             onClick={submitSearch}
           >
             搜索
@@ -176,6 +184,9 @@ export default function AcademicStatisticsCoursesPage() {
             <Text className='statistics-courses-empty__copy'>{errorText}</Text>
             <View
               className='statistics-courses-empty__action'
+              hoverClass='statistics-courses-empty__action--pressed'
+              ariaRole='button'
+              ariaLabel='重新加载课程统计'
               onClick={() => loadPage(1, keyword)}
             >
               重新加载
@@ -201,6 +212,8 @@ export default function AcademicStatisticsCoursesPage() {
                 key={item.course_code}
                 className='statistics-course-card'
                 hoverClass='statistics-course-card--pressed'
+                ariaRole='button'
+                ariaLabel={`查看${item.course_name}课程统计`}
                 onClick={() => openCourseStatistics({
                   courseCode: item.course_code,
                   courseName: item.course_name,

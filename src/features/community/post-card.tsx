@@ -15,7 +15,6 @@ const communityIcons = {
   heart: require('../../assets/community/heart.svg'),
   heartActive: require('../../assets/community/heart-active.svg'),
   share: require('../../assets/community/share.svg'),
-  topic: require('../../assets/community/topic.svg'),
 }
 
 type Props = {
@@ -87,6 +86,11 @@ export default function CommunityPostCard({
           <View className='community-post__author-line'>
             <Text>{authorName}</Text>
             <CommunityLevelBadge level={post.author_level} compact />
+            {sectionName && (
+              <View className='community-post__section-pill'>
+                <Text>{post.topic?.name || sectionName}</Text>
+              </View>
+            )}
           </View>
           <View className='community-post__meta'>
             <Text>{publishedAt}</Text>
@@ -108,10 +112,6 @@ export default function CommunityPostCard({
         ariaLabel={`查看动态：${post.content || '校园图片动态'}`}
         onClick={() => onOpen(post)}
       >
-        <View className='community-post__section-pill'>
-          <Image src={communityIcons.topic} mode='aspectFit' />
-          <Text>{post.topic?.name || sectionName}</Text>
-        </View>
         {operationBadges.length > 0 && (
           <View className='community-post__badges'>
             {operationBadges.map((badge) => <Text key={badge}>{badge}</Text>)}
@@ -157,9 +157,6 @@ export default function CommunityPostCard({
           onClick={() => onToggleLike(post)}
         >
           <Image src={post.liked ? communityIcons.heartActive : communityIcons.heart} mode='aspectFit' />
-          <Text className='community-post__action-label'>
-            {post.liked ? '已赞' : '点赞'}
-          </Text>
           <Text className='community-post__action-count'>{post.like_count}</Text>
         </View>
         <View
@@ -172,7 +169,6 @@ export default function CommunityPostCard({
           onClick={() => onOpen(post)}
         >
           <Image src={communityIcons.comment} mode='aspectFit' />
-          <Text className='community-post__action-label'>评论</Text>
           <Text className='community-post__action-count'>{post.comment_count}</Text>
         </View>
         <Button

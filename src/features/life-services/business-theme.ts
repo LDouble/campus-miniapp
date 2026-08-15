@@ -13,7 +13,7 @@ export type LifeBusinessTheme = {
 export const lifeBusinessThemes: Record<LifeHubSection, LifeBusinessTheme> = {
   community: {
     key: 'community',
-    label: '社区',
+    label: '全部',
     title: '校园社区',
     subtitle: '发现校园里的新鲜事',
     eyebrow: '此刻校园',
@@ -31,7 +31,7 @@ export const lifeBusinessThemes: Record<LifeHubSection, LifeBusinessTheme> = {
   },
   market: {
     key: 'market',
-    label: '二手',
+    label: '闲置',
     title: '校园二手',
     subtitle: '校内好物，放心流转',
     eyebrow: '校内流转',
@@ -50,7 +50,7 @@ export const lifeBusinessThemes: Record<LifeHubSection, LifeBusinessTheme> = {
 }
 
 export const lifeBusinessThemeList = (
-  Object.keys(lifeBusinessThemes) as LifeHubSection[]
+  ['community', 'market', 'errands', 'carpool'] as LifeHubSection[]
 ).map((key) => lifeBusinessThemes[key])
 
 export const isLifeHubSection = (value: string): value is LifeHubSection => (

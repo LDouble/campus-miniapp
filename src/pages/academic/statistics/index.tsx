@@ -233,7 +233,13 @@ export default function AcademicStatisticsPage() {
             <View className='statistics-empty__art'><View /><View /></View>
             <Text className='statistics-empty__title'>暂时没有可展示的数据</Text>
             <Text className='statistics-empty__copy'>{errorText}</Text>
-            <View className='statistics-empty__action' onClick={load}>重新加载</View>
+            <View
+              className='statistics-empty__action'
+              hoverClass='statistics-empty__action--pressed'
+              ariaRole='button'
+              ariaLabel='重新加载课程统计'
+              onClick={load}
+            >重新加载</View>
           </View>
         )}
         {!loading && statistics && (
@@ -296,10 +302,16 @@ export default function AcademicStatisticsPage() {
                 <View className='trend-switch'>
                   <View
                     className={metric === 'pass_rate' ? 'trend-switch__item--active' : ''}
+                    hoverClass='trend-switch__item--pressed'
+                    ariaRole='button'
+                    ariaLabel='查看通过率趋势'
                     onClick={() => setMetric('pass_rate')}
                   >通过率</View>
                   <View
                     className={metric === 'average_score' ? 'trend-switch__item--active' : ''}
+                    hoverClass='trend-switch__item--pressed'
+                    ariaRole='button'
+                    ariaLabel='查看平均分趋势'
                     onClick={() => setMetric('average_score')}
                   >平均分</View>
                 </View>
@@ -376,6 +388,8 @@ export default function AcademicStatisticsPage() {
                       key={teacher.teacher_key}
                       className={`instructor-card ${isCurrent ? 'instructor-card--current' : ''}`}
                       hoverClass='instructor-card--pressed'
+                      ariaRole='button'
+                      ariaLabel={`查看${teacher.teacher_name}的历史统计`}
                       onClick={() => openTeacher(teacher)}
                     >
                       <View className='instructor-card__identity'>
@@ -416,7 +430,13 @@ export default function AcademicStatisticsPage() {
         <View className='statistics-overlay' onClick={() => setSelectedTeacher(null)}>
           <View className='statistics-sheet' onClick={requestWechatSubscriptionAndStopPropagation}>
             <View className='statistics-sheet__handle' />
-            <View className='statistics-sheet__close' onClick={() => setSelectedTeacher(null)}>×</View>
+            <View
+              className='statistics-sheet__close'
+              hoverClass='statistics-sheet__close--pressed'
+              ariaRole='button'
+              ariaLabel='关闭教师统计详情'
+              onClick={() => setSelectedTeacher(null)}
+            >×</View>
             <Text className='statistics-sheet__title'>{selectedTeacher.teacher_name}</Text>
             <Text className='statistics-sheet__subtitle'>{title} · 历史聚合数据</Text>
             <View className='teacher-summary'>

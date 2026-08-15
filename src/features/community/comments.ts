@@ -13,6 +13,47 @@ type CommentReplyNode = Pick<
   | 'root_id'
 >
 
+export type CommentTreeNode<T extends Pick<CommentView, 'id' | 'parent_id'>> = {
+  comment: T
+  children: CommentTreeNode<T>[]
+}
+
+/** 将接口返回的扁平 descendants 按 parent_id 还原为稳定评论树。 */
+export const buildCommentTree = <T extends Pick<CommentView, 'id' | 'parent_id'>>(
+  rootId: number,
+  descendants: T[],
+): CommentTreeNode<T>[] => {
+  const nodes = new Map<number, CommentTreeNode<T>>(
+    descendants.map((comment) => [comment.id, { comment, children: [] }]),
+  )
+  const roots: CommentTreeNode<T>[] = []
+
+  const createsCycle = (commentId: number, parentId: number) => {
+    const visited = new Set<number>([commentId])
+    let currentId: number | null | undefined = parentId
+    while (currentId && currentId !== rootId) {
+      if (visited.has(currentId)) return true
+      visited.add(currentId)
+      currentId = nodes.get(currentId)?.comment.parent_id
+    }
+    return false
+  }
+
+  nodes.forEach((node) => {
+    const parentId = node.comment.parent_id
+    const parent = parentId && parentId !== rootId ? nodes.get(parentId) : undefined
+    if (parent && !createsCycle(node.comment.id, Number(parentId))) parent.children.push(node)
+    else roots.push(node)
+  })
+
+  const sortTree = (items: CommentTreeNode<T>[]) => {
+    items.sort((left, right) => left.comment.id - right.comment.id)
+    items.forEach((item) => sortTree(item.children))
+  }
+  sortTree(roots)
+  return roots
+}
+
 export const buildCampusCircleCommentInput = (
   postId: number,
   content: string,

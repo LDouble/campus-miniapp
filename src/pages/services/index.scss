@@ -1,14 +1,11 @@
 page {
-  background: #faf7f2;
+  background: #f4f7fb;
 }
 
 .services-page {
   min-height: 100vh;
-  color: #354955;
-  background:
-    radial-gradient(circle at 95% 8%, rgba(248, 191, 126, 0.25), transparent 25%),
-    radial-gradient(circle at 4% 52%, rgba(168, 210, 191, 0.14), transparent 24%),
-    linear-gradient(180deg, #fffdf9, #f8f4ee);
+  color: #1d293d;
+  background: #f4f7fb;
 
   &__content {
     padding: 22rpx 28rpx calc(60rpx + env(safe-area-inset-bottom));
@@ -122,6 +119,47 @@ page {
       height: 33rpx;
     }
   }
+}
+
+// 服务入口统一为轻量蓝灰卡片，名称与说明在动态配置下也不会撑破网格。
+.services-group {
+  background: #fff;
+  border-color: #dce5f0;
+  box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05);
+
+  &__title { color: #1d293d; }
+  &__subtitle,
+  &__count { color: #90a1b9; }
+
+  &__item {
+    color: #45556c;
+
+    > text {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &--pressed { background: #eaf2ff; }
+  }
+
+  &__icon { background: #eaf2ff; }
+}
+
+.services-group:nth-of-type(3) .services-group__icon,
+.services-group:nth-of-type(4) .services-group__icon { background: #eaf2ff; }
+
+.services-migrated {
+  background: #fff;
+  border-color: #dce5f0;
+  box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05);
+
+  &__title { color: #1d293d; }
+  &__copy { color: #45556c; }
+  &__action { color: #fff; background: #2b7fff; }
 }
 
 .services-group:nth-of-type(3) .services-group__icon { background: #fff0df; }

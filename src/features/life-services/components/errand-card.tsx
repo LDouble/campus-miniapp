@@ -1,8 +1,10 @@
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { ErrandView } from '../../../api/types'
+import UserAvatarImage from '../../../components/user-avatar-image'
 import { apiDateTimeTimestamp } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
+import BusinessRoute from './business-route'
 import {
   formatMoney,
   formatStatus,
@@ -23,6 +25,8 @@ const isUrgent = (deadline?: string | null) => {
 
 export default function ErrandCard({ item }: { item: ErrandView }) {
   const urgent = isUrgent(item.deadline)
+  const authorName = item.author_nickname?.trim() || `发布者 #${item.requester_id}`
+  const authorInitial = authorName.slice(0, 1) || '同'
 
   return (
     <View
@@ -31,33 +35,39 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
       hoverClass='business-card--pressed'
       onClick={() => openDetail(item.id)}
     >
-      <View className='errand-card__top'>
-        <View>
-          <Text className='errand-card__label'>任务报酬</Text>
-          <Text className='errand-card__reward'>{formatMoney(item.reward_cents)}</Text>
+      <View className='business-card-header'>
+        <View className='business-card-avatar business-card-avatar--errand'>
+          <UserAvatarImage
+            src={item.author_avatar_url}
+            className='business-card-avatar__image'
+            fallback={authorInitial}
+            lazyLoad
+          />
         </View>
-        <Text className='business-status business-status--errand'>
-          {formatStatus(item.status, item.review_status)}
-        </Text>
+        <View className='business-card-identity'>
+          <View>
+            <Text>{authorName}</Text>
+            <Text className='business-status business-status--errand'>
+              {formatStatus(item.status, item.review_status)}
+            </Text>
+          </View>
+          <Text>{relativeDeadline(item.deadline)}</Text>
+        </View>
+        <Text className='business-card-more'>•••</Text>
       </View>
 
-      <View className='errand-route'>
-        <View className='errand-route__point errand-route__point--pickup'>取</View>
-        <Text>{item.pickup_location}</Text>
-        <View className='errand-route__line' />
-        <View className='errand-route__point errand-route__point--dropoff'>送</View>
-        <Text>{item.dropoff_location}</Text>
-      </View>
-      <Text className='errand-card__description'>{item.description}</Text>
-
+      <Text className='errand-card__title'>{item.description}</Text>
+      <BusinessRoute
+        startLabel='取件地'
+        start={item.pickup_location}
+        endLabel='送达地'
+        end={item.dropoff_location}
+      />
       <View className='errand-card__footer'>
         <Text className={urgent ? 'errand-deadline errand-deadline--urgent' : 'errand-deadline'}>
           {relativeDeadline(item.deadline)}
         </Text>
-        <View className='business-card-link'>
-          <Text>查看任务</Text>
-          <Text>›</Text>
-        </View>
+        <Text className='errand-card__reward'>赏金 {formatMoney(item.reward_cents)}</Text>
       </View>
     </View>
   )

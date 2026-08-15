@@ -127,7 +127,13 @@ export default function CommunityTopicPage() {
       {!loading && error && (
         <View className='community-topic-page__state community-topic-page__state--error'>
           <Text>{error}</Text>
-          <View onClick={() => void load(topicId)}>重新加载</View>
+          <View
+            className='community-topic-page__retry'
+            hoverClass='community-topic-page__retry--pressed'
+            ariaRole='button'
+            ariaLabel='重新加载话题'
+            onClick={() => void load(topicId)}
+          >重新加载</View>
         </View>
       )}
       {!loading && !error && posts.map((post) => <CommunityPostCard key={post.id} post={post} sectionName='校园社区' onToggleLike={(item) => void toggleLike(item)} onOpen={openPost} />)}

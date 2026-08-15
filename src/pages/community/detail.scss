@@ -747,6 +747,7 @@ page {
     animation: none;
   }
 }
+
 .community-detail-card__report {
   display: flex;
   min-height: 64rpx;
@@ -784,3 +785,52 @@ page {
   font-size: 24rpx;
   font-weight: 650;
 }
+
+/* Figma 24:1251 */
+page { background: #f4f7fb; }
+.community-detail { color: #1d293d; background: #fff; }
+.community-detail__content { padding: 0 32rpx calc(180rpx + env(safe-area-inset-bottom)); }
+.community-detail-card,
+.community-detail-comments { border: 0; background: #fff; box-shadow: none; backdrop-filter: none; }
+.community-detail-card { padding: 34rpx 0 34rpx; border-radius: 0; }
+.community-detail-card__top { display: none; }
+.community-detail-card__toolbar { display: flex; min-height: 48rpx; margin-bottom: 18rpx; align-items: center; justify-content: space-between; gap: 20rpx; }
+.community-detail-card__tags { display: flex; gap: 12rpx; }
+.community-detail-card__tags text { padding: 7rpx 16rpx; border-radius: 999rpx; background: #eff6ff; color: #2b7fff; font-size: 20rpx; font-weight: 650; }
+.community-detail-card__body { padding: 0; color: #45556c; font-size: 28rpx; line-height: 1.72; }
+.community-detail-card__images { margin-top: 28rpx; }
+.community-detail-card__image-frame,
+.community-detail-card__image-frame image { border-radius: 28rpx; }
+.community-detail-card__actions {
+  display: flex;
+  min-height: 72rpx;
+  margin-top: 22rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx solid #f8fafc;
+}
+
+.community-detail-comments { margin: 0 -32rpx; padding: 46rpx 32rpx 36rpx; border-radius: 56rpx 56rpx 0 0; background: #fff; box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.02); }
+.community-detail-comments__heading { justify-content: flex-start; gap: 14rpx; }
+.community-detail-comments__heading::before { width: 7rpx; height: 32rpx; border-radius: 999rpx; background: #2b7fff; content: ''; }
+.community-detail-comments__heading > view image { display: none; }
+.community-detail-comments__heading > view text { color: #1d293d; font-size: 30rpx; }
+.community-detail-comments__heading > text { color: #90a1b9; font-size: 23rpx; }
+.community-detail-comments__item { gap: 22rpx; padding: 30rpx 0 10rpx; }
+.community-detail-comments__avatar { width: 62rpx; height: 62rpx; border: 1rpx solid #dbeafe; background: #eff6ff; color: #155dfc; box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1); }
+.community-detail-comments__author text:first-child { color: #45556c; font-size: 24rpx; }
+.community-detail-comments .community-comment__content { margin-top: 12rpx; padding: 20rpx 28rpx; border: 1rpx solid #f8fafc; border-radius: 12rpx 28rpx 28rpx; background: #f4f7fb; color: #314158; font-size: 26rpx; line-height: 1.6; }
+.community-comment-thread { border: 0; }
+.community-detail-comments__meta { padding-left: 6rpx; color: #90a1b9; }
+
+.community-detail-comments__composer { padding: 18rpx 32rpx calc(18rpx + env(safe-area-inset-bottom)); border-top: 1rpx solid #f1f5f9; background: rgba(255, 255, 255, 0.96); box-shadow: 0 -8rpx 32rpx rgba(0, 0, 0, 0.03); }
+.community-detail-comments__composer input { height: 72rpx; padding: 0 28rpx; border: 0; border-radius: 999rpx; background: #f4f7fb; box-shadow: none; color: #314158; }
+.community-detail-comments__send { width: 68rpx; height: 68rpx; border: 0; background: linear-gradient(90deg, #2b7fff, #00d3f3); box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.2); }
+.community-detail-comments__quick-action { display: flex; width: 68rpx; height: 68rpx; margin: 0; padding: 0; flex: none; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; }
+.community-detail-comments__quick-action::after { display: none; }
+.community-detail-comments__quick-action image { width: 42rpx; height: 42rpx; opacity: 0.72; }
+.community-detail-comments__quick-action--liked image { opacity: 1; }
+.community-comment__replies { border-color: #f1f5f9; background: #f8fafc; }
+.community-comment__reply { border-bottom-color: #f1f5f9; }
+.community-comment__reply-author > text:first-child,
+.community-comment__reply-content { color: #45556c; }
+.community-comment__reply-target { color: #62748e; }

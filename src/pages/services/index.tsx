@@ -189,6 +189,8 @@ export default function Services() {
                   key={item.key}
                   className='services-group__item'
                   hoverClass='services-group__item--pressed'
+                  role='button'
+                  ariaLabel={`打开${item.name}`}
                   onClick={() => openService(item)}
                 >
                   <View className='services-group__icon'>
@@ -210,6 +212,8 @@ export default function Services() {
             <View
               className='services-migrated__action'
               hoverClass='services-migrated__action--pressed'
+              role='button'
+              ariaLabel={migrationGuide.entry_button_text}
               onClick={() => void openMigratedFeaturePage({ module: 'community' })}
             >
               {migrationGuide.entry_button_text}

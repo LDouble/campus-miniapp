@@ -281,9 +281,7 @@ export default function ProfilePage() {
 
   return (
     <View className='profile-page'>
-      <View className='profile-page__orb profile-page__orb--warm' />
-      <View className='profile-page__orb profile-page__orb--teal' />
-      <CustomNavbar title='我的海大' subtitle='中国海洋大学' />
+      <CustomNavbar title='我的' />
 
       <View className='profile-page__content'>
         <View className='profile-card motion-enter'>

@@ -1,16 +1,18 @@
 page {
   min-height: 100%;
-  color: #294653;
+  color: #1d293d;
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   font-size: 28rpx;
   line-height: 1.5;
-  background: #faf7f2;
+  background: #f4f7fb;
 }
 
 view,
 text,
 image,
-input {
+input,
+textarea,
+button {
   box-sizing: border-box;
 }
 

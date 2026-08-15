@@ -30,3 +30,12 @@ export const formatOfficialNoticeDate = (value: string) => {
   const sameYear = parts.year === now.year
   return `${sameYear ? '' : `${parts.year}年`}${parts.month}月${parts.day}日`
 }
+
+export const formatOfficialNoticeCompactDate = (value: string) => {
+  const parts = apiDateTimeCampusParts(value)
+  const now = apiDateTimeCampusParts(new Date().toISOString())
+  if (!parts || !now) return ''
+  const month = String(parts.month).padStart(2, '0')
+  const day = String(parts.day).padStart(2, '0')
+  return parts.year === now.year ? `${month}/${day}` : `${parts.year}/${month}/${day}`
+}
