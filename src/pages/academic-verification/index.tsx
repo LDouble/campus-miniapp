@@ -31,6 +31,10 @@ import type {
 } from '../../api/types'
 import { finishAcademicVerification } from '../../features/academic-verification/guard'
 import {
+  academicChallengeRemainingMinutes,
+  academicChallengeRetryAt,
+} from '../../features/academic-verification/challenge-cooldown'
+import {
   isRepeatedRejectedCredential,
   rejectedCredentialHint,
   rejectedCredentialModal,
@@ -127,7 +131,7 @@ const credentialErrorMessage = (error: unknown) => {
   if (error.code === 'academic_provider_unavailable') return '教务认证服务暂不可用'
   if (error.code === 'invalid_education_level') return '请选择本科生或研究生'
   if (error.code === 'academic_identity_type_mismatch') return '所选学生类型与教务系统不匹配，请确认后重试'
-  if (error.code === 'academic_challenge_required') return '校方要求验证码或设备确认，请稍后重试'
+  if (error.code === 'academic_challenge_required') return '校方要求验证码或设备确认，请等待 30 分钟后重试'
   return error.message
 }
 
@@ -148,6 +152,7 @@ export default function AcademicVerificationPage() {
   const [uploadedMaterial, setUploadedMaterial] = useState<AcademicVerificationMaterial | null>(null)
   const [working, setWorking] = useState(false)
   const [workingText, setWorkingText] = useState('')
+  const [challengeRetryAt, setChallengeRetryAt] = useState(0)
   const currentCredentialRejected = rejectedCredential !== null
     && educationLevel !== null
     && isRepeatedRejectedCredential(rejectedCredential, {
@@ -270,6 +275,17 @@ export default function AcademicVerificationPage() {
       return
     }
     if (working) return
+    const challengeRemainingMinutes = academicChallengeRemainingMinutes(challengeRetryAt)
+    if (challengeRemainingMinutes > 0) {
+      await Taro.showModal({
+        title: '请稍后再试',
+        content: `校方仍处于验证码或设备确认冷却期，请等待约 ${challengeRemainingMinutes} 分钟后再次尝试。`,
+        showCancel: false,
+        confirmText: '我知道了',
+        confirmColor: '#5a9d88',
+      })
+      return
+    }
     const attempt = {
       studentNo: normalizedStudentNo,
       password,
@@ -305,6 +321,17 @@ export default function AcademicVerificationPage() {
           setRejectedCredential({ ...attempt, reason: 'invalid_credentials' })
         } else if (submitError.code === 'academic_password_expired') {
           setRejectedCredential({ ...attempt, reason: 'password_expired' })
+        } else if (submitError.code === 'academic_challenge_required') {
+          const retryAt = academicChallengeRetryAt()
+          setChallengeRetryAt(retryAt)
+          await Taro.showModal({
+            title: '请等待 30 分钟',
+            content: '校方触发了验证码或设备确认。请等待 30 分钟后再次尝试，期间请不要反复提交。',
+            showCancel: false,
+            confirmText: '我知道了',
+            confirmColor: '#5a9d88',
+          })
+          return
         }
       }
       Taro.showToast({
