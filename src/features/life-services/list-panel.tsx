@@ -30,6 +30,8 @@ import MarketplaceCard from './components/marketplace-card'
 import MarketplaceFilters, {
   type MarketplaceFilterValue,
 } from './components/marketplace-filters'
+import CampusSelector from './components/campus-selector'
+import type { CampusName } from './campus'
 import './list-panel.scss'
 
 export type LifeServiceSection = Exclude<LifeHubSection, 'community'>
@@ -124,6 +126,7 @@ export default function LifeServiceListPanel({
   const [keyword, setKeyword] = useState('')
   const [marketFilters, setMarketFilters] = useState<MarketplaceFilterValue>({})
   const [carpoolFilters, setCarpoolFilters] = useState<CarpoolFilterValue>({})
+  const [campus, setCampus] = useState<CampusName | ''>('')
   const [items, setItems] = useState<ServiceItem[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -139,7 +142,8 @@ export default function LifeServiceListPanel({
     keyword,
     marketFilters,
     carpoolFilters,
-  }), [carpoolFilters, keyword, marketFilters, section])
+    campus,
+  }), [campus, carpoolFilters, keyword, marketFilters, section])
 
   const load = useCallback(async (nextPage = 1, append = false) => {
     const requestId = ++requestSequence.current
@@ -147,10 +151,15 @@ export default function LifeServiceListPanel({
     setError('')
     try {
       const result = section === 'errands'
-        ? await lifeServicesRepository.listErrands({ keyword, page: nextPage })
+        ? await lifeServicesRepository.listErrands({
+          keyword,
+          campus: campus || undefined,
+          page: nextPage,
+        })
         : section === 'market'
           ? await lifeServicesRepository.listMarketplace({
             keyword,
+            campus: campus || undefined,
             intent: marketFilters.intent,
             category: marketFilters.category,
             minPriceCents: marketFilters.minPriceCents,
@@ -159,6 +168,7 @@ export default function LifeServiceListPanel({
           })
           : await lifeServicesRepository.listCarpool({
             keyword,
+            campus: campus || undefined,
             origin: carpoolFilters.origin,
             destination: carpoolFilters.destination,
             departureDate: carpoolFilters.departureDate,
@@ -196,6 +206,7 @@ export default function LifeServiceListPanel({
       }
     }
   }, [
+    campus,
     carpoolFilters.departureDate,
     carpoolFilters.destination,
     carpoolFilters.origin,
@@ -258,7 +269,7 @@ export default function LifeServiceListPanel({
   ])
 
   const canLoadMore = items.length < total
-  const hasStructuredFilters = section === 'market'
+  const hasSectionFilters = section === 'market'
     ? marketFilters.intent !== undefined
       || marketFilters.category !== undefined
       || marketFilters.minPriceCents !== undefined
@@ -268,6 +279,7 @@ export default function LifeServiceListPanel({
         (value) => value !== undefined && value !== '',
       )
       : false
+  const hasStructuredFilters = Boolean(campus) || hasSectionFilters
 
   const resultTitle = courseSearch
     ? `《${courseSearch.courseName}》相关资料`
@@ -306,6 +318,7 @@ export default function LifeServiceListPanel({
     setKeyword('')
     if (section === 'market') setMarketFilters({})
     if (section === 'carpool') setCarpoolFilters({})
+    setCampus('')
   }
 
   return (
@@ -350,10 +363,21 @@ export default function LifeServiceListPanel({
           id={`life-search-submit-${section}`}
           className='life-search__submit'
           hoverClass='life-search__submit--pressed'
+          ariaRole='button'
+          ariaLabel='搜索校园内容'
           onClick={submitSearch}
         >
           搜索
         </View>
+      </View>
+
+      <View className='life-campus-filter'>
+        <CampusSelector
+          value={campus}
+          allowAll
+          label='按校区发现'
+          onChange={setCampus}
+        />
       </View>
 
       {section === 'market' && (

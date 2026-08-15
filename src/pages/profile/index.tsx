@@ -30,6 +30,7 @@ import {
 import type { MediaImageDraft } from '../../features/media/images'
 import { chooseMediaImages } from '../../features/media/selection'
 import { syncCustomTabBar } from '../../utils/tabbar'
+import { openPublicProfile } from '../../features/profile/public-profile'
 import './index.scss'
 
 const icons = {
@@ -278,6 +279,13 @@ export default function ProfilePage() {
     ? `${identity.real_name} · 学号 ${studentNumber}`
     : '中国海洋大学校园服务账号'
   const avatarUrl = avatarDraft?.previewUrl || userAvatarUrl(currentUser?.user)
+  const openMyPublicProfile = () => {
+    if (!currentUser) {
+      Taro.showToast({ title: accountLoaded ? '账号信息加载失败' : '账号信息加载中', icon: 'none' })
+      return
+    }
+    void openPublicProfile(currentUser.user.id)
+  }
 
   return (
     <View className='profile-page'>
@@ -305,13 +313,20 @@ export default function ProfilePage() {
             </Text>
             <View className='profile-card__status' />
           </View>
-          <View className='profile-card__main'>
+          <View
+            className='profile-card__main'
+            hoverClass='profile-card__main--pressed'
+            ariaRole='button'
+            ariaLabel='查看我的公开个人主页'
+            onClick={openMyPublicProfile}
+          >
             <Text className='profile-card__name'>
               {displayName}
             </Text>
             <Text className='profile-card__school'>
               {accountDescription}
             </Text>
+            <Text className='profile-card__public-link'>查看个人主页 ›</Text>
           </View>
           <View className='profile-card__actions'>
             <View

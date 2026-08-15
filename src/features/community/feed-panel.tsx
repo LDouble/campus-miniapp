@@ -12,6 +12,7 @@ import {
   markLifeHubSectionDirty,
   markLifeHubSectionFresh,
 } from '../life-services/refresh-policy'
+import { openPublicProfile } from '../profile/public-profile'
 import CommunityPostCard from './post-card'
 import './feed-panel.scss'
 
@@ -377,11 +378,11 @@ export default function CommunityFeedPanel({
           )}
           {home.featured_posts.length > 0 && <Text className='community-operations__title'>精选动态</Text>}
           {home.featured_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} />
+            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} />
           ))}
           {home.recommended_posts.length > 0 && <Text className='community-operations__title'>推荐给你</Text>}
           {home.recommended_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} />
+            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} />
           ))}
         </View>
       )}
@@ -456,6 +457,7 @@ export default function CommunityFeedPanel({
               sectionName={sectionNameForPost(post, '未知板块')}
               onToggleLike={(target) => void toggleLike(target)}
               onOpen={openPost}
+              onOpenAuthor={(item) => void openPublicProfile(item.author_id)}
             />
           ))}
         </View>

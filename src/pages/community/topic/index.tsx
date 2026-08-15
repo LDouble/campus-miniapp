@@ -14,6 +14,7 @@ import { markLifeHubSectionDirty } from '../../../features/life-services/refresh
 import CommunityPostCard from '../../../features/community/post-card'
 import { useCampusShare } from '../../../features/share'
 import './index.scss'
+import { openPublicProfile } from '../../../features/profile/public-profile'
 
 export default function CommunityTopicPage() {
   const [topic, setTopic] = useState<CampusCircleTopicView | null>(null)
@@ -136,7 +137,7 @@ export default function CommunityTopicPage() {
           >重新加载</View>
         </View>
       )}
-      {!loading && !error && posts.map((post) => <CommunityPostCard key={post.id} post={post} sectionName='校园社区' onToggleLike={(item) => void toggleLike(item)} onOpen={openPost} />)}
+      {!loading && !error && posts.map((post) => <CommunityPostCard key={post.id} post={post} sectionName='校园社区' onToggleLike={(item) => void toggleLike(item)} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} />)}
       {!loading && !error && topic && posts.length === 0 && (
         <View className='community-topic-empty'>
           <View>OUC</View>

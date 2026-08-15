@@ -4,6 +4,7 @@ import type { CarpoolTripView } from '../../../api/types'
 import UserAvatarImage from '../../../components/user-avatar-image'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
+import { campusLabel } from '../campus'
 import {
   formatDateTime,
   formatStatus,
@@ -67,7 +68,7 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
       />
 
       <View className='carpool-card__footer'>
-        <Text>出发时间：{departure.date} {departure.time}</Text>
+        <Text>{campusLabel(item.campus)} · {departure.date} {departure.time}</Text>
         <Text>{seats} 人可同行</Text>
       </View>
     </View>

@@ -5,6 +5,7 @@ import UserAvatarImage from '../../../components/user-avatar-image'
 import { apiDateTimeTimestamp } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
+import { campusLabel } from '../campus'
 import {
   formatMoney,
   formatStatus,
@@ -64,9 +65,12 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
         end={item.dropoff_location}
       />
       <View className='errand-card__footer'>
-        <Text className={urgent ? 'errand-deadline errand-deadline--urgent' : 'errand-deadline'}>
-          {relativeDeadline(item.deadline)}
-        </Text>
+        <View className='business-card-campus'>
+          <Text>{campusLabel(item.campus)}</Text>
+          <Text className={urgent ? 'errand-deadline errand-deadline--urgent' : 'errand-deadline'}>
+            {relativeDeadline(item.deadline)}
+          </Text>
+        </View>
         <Text className='errand-card__reward'>赏金 {formatMoney(item.reward_cents)}</Text>
       </View>
     </View>

@@ -51,8 +51,8 @@
 
 .life-search__clear {
   display: flex;
-  min-width: 78rpx;
-  min-height: 78rpx;
+  min-width: 88rpx;
+  min-height: 88rpx;
   align-items: center;
   justify-content: center;
   color: #758090;
@@ -62,7 +62,7 @@
 .life-search__submit {
   display: flex;
   min-width: 104rpx;
-  min-height: 70rpx;
+  min-height: 88rpx;
   align-items: center;
   justify-content: center;
   border-radius: 20rpx;
@@ -87,6 +87,10 @@
 
 .life-search__submit--pressed {
   opacity: 0.72;
+}
+
+.life-campus-filter {
+  margin-bottom: 16rpx;
 }
 
 .life-panel__heading {
@@ -333,6 +337,19 @@
 
 .errand-deadline--urgent {
   color: #c4320a;
+}
+
+.business-card-campus {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.business-card-campus > text:first-child {
+  color: #53857f;
+  font-size: 20rpx;
+  font-weight: 680;
 }
 
 .business-card-link {

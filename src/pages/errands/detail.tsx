@@ -22,6 +22,7 @@ import DetailComments, {
 } from '../../features/life-services/components/detail-comments'
 import BusinessRoute from '../../features/life-services/components/business-route'
 import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
+import { campusLabel } from '../../features/life-services/campus'
 import '../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -193,7 +194,11 @@ export default function ErrandDetailPage() {
         {!loading && item && (
           <>
             <DetailBusinessIntro
-              badges={['跑腿', formatStatus(item.status, item.review_status)]}
+              badges={[
+                '跑腿',
+                campusLabel(item.campus),
+                formatStatus(item.status, item.review_status),
+              ]}
               title={item.description}
               action={item.viewer_relation !== 'publisher' ? (
                 <View

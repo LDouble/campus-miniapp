@@ -16,6 +16,7 @@ import DetailComments, {
   createBusinessContactComment,
 } from '../../features/life-services/components/detail-comments'
 import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
+import { campusLabel } from '../../features/life-services/campus'
 import '../../features/life-services/detail.scss'
 import './detail.scss'
 
@@ -218,6 +219,7 @@ export default function MarketplaceDetailPage() {
                 <View className='market-detail-toolbar'>
                   <View className='market-detail-badges'>
                     <Text>{item.intent === 'wanted' ? '求购' : '二手'}</Text>
+                    <Text>{campusLabel(item.campus)}</Text>
                     <Text>{formatStatus(item.status)}</Text>
                     <Text>{relationLabel}</Text>
                   </View>

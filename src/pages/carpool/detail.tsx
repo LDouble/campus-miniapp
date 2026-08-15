@@ -22,6 +22,7 @@ import DetailComments, {
 } from '../../features/life-services/components/detail-comments'
 import BusinessRoute from '../../features/life-services/components/business-route'
 import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
+import { campusLabel } from '../../features/life-services/campus'
 import '../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -178,7 +179,10 @@ export default function CarpoolDetailPage() {
         {!loading && item && (
           <>
             <DetailBusinessIntro
-              badges={[formatStatus(item.status, item.review_status)]}
+              badges={[
+                campusLabel(item.campus),
+                formatStatus(item.status, item.review_status),
+              ]}
               description={item.description}
               action={item.viewer_relation !== 'organizer' ? (
                 <View

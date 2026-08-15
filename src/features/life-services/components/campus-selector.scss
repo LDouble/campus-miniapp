@@ -1,0 +1,91 @@
+@use '../../../styles/tokens' as token;
+
+.campus-selector__trigger {
+  display: flex;
+  min-height: token.$touch-target-min;
+  padding: 0 22rpx;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background: token.$color-surface-subtle;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-md;
+  transition: opacity token.$motion-press ease, border-color token.$motion-state ease;
+}
+
+.campus-selector__trigger-label {
+  color: token.$color-text-body;
+  font-size: 24rpx;
+  font-weight: 650;
+}
+
+.campus-selector__trigger-value {
+  display: flex;
+  min-width: 0;
+  margin-left: token.$space-2;
+  align-items: center;
+  color: token.$color-primary-strong;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.campus-selector__trigger-value text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campus-selector__chevron {
+  width: 14rpx;
+  height: 14rpx;
+  margin-left: 14rpx;
+  flex: none;
+  border-right: 3rpx solid token.$color-primary;
+  border-bottom: 3rpx solid token.$color-primary;
+  transform: rotate(-45deg);
+}
+
+.campus-selector__trigger--pressed,
+.campus-selector__option--pressed {
+  opacity: 0.72;
+}
+
+.campus-selector__options {
+  padding: 4rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+}
+
+.campus-selector__option {
+  display: flex;
+  min-height: 96rpx;
+  align-items: center;
+  justify-content: space-between;
+  color: token.$color-text-body;
+  font-size: 27rpx;
+  font-weight: 600;
+  border-bottom: 2rpx solid token.$color-border;
+  transition: opacity token.$motion-press ease, color token.$motion-state ease;
+}
+
+.campus-selector__option:last-child {
+  border-bottom: 0;
+}
+
+.campus-selector__option--active {
+  color: token.$color-primary-strong;
+  font-weight: 720;
+}
+
+.campus-selector__option-state {
+  min-width: 88rpx;
+  color: token.$color-primary;
+  font-size: 22rpx;
+  font-weight: 650;
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-selector__trigger,
+  .campus-selector__option {
+    transition: none;
+  }
+}

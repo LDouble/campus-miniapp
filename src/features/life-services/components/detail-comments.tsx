@@ -6,6 +6,7 @@ import { isApiError } from '../../../api/client'
 import UserAvatarImage from '../../../components/user-avatar-image'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
 import { openContentReport } from '../../content-report'
+import { openPublicProfile } from '../../profile/public-profile'
 import {
   buildCommentTree,
   commentReplyTargetName,
@@ -24,6 +25,10 @@ const icons = {
 }
 
 export type DetailCommentTarget = 'campus_circle_post' | 'marketplace' | 'errand' | 'carpool'
+
+const openCommentAuthor = (comment: CommentView) => {
+  if (!comment.author_deleted) void openPublicProfile(comment.author_id)
+}
 
 export type DetailFooterAction = {
   key: string
@@ -449,7 +454,12 @@ export default function DetailComments({
           removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
         ].filter(Boolean).join(' ')}
       >
-        <View className='business-detail-comment__reply-identity'>
+        <View
+          className='business-detail-comment__reply-identity'
+          ariaRole='button'
+          ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+          onClick={() => openCommentAuthor(comment)}
+        >
           <Text className='business-detail-comment__reply-relation'>
             {compactCommentName(commentAuthorName(comment))}
             {commentReplyTargetName(comment, members)
@@ -508,7 +518,12 @@ export default function DetailComments({
                 id={`detail-comment-${comment.id}`}
                 className={`business-detail-comment ${focusedCommentId === comment.id ? 'business-detail-comment--focused' : ''}`}
               >
-                <View className='business-detail-comment__avatar'>
+                <View
+                  className='business-detail-comment__avatar'
+                  ariaRole='button'
+                  ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+                  onClick={() => openCommentAuthor(comment)}
+                >
                   <UserAvatarImage
                     src={comment.author_avatar_url || ''}
                     className='business-detail-comment__avatar-image'
@@ -517,7 +532,12 @@ export default function DetailComments({
                   />
                 </View>
                 <View className='business-detail-comment__body'>
-                  <View className='business-detail-comment__identity'>
+                  <View
+                    className='business-detail-comment__identity'
+                    ariaRole='button'
+                    ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+                    onClick={() => openCommentAuthor(comment)}
+                  >
                     <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
                     {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
                     <CommunityLevelBadge level={comment.author_level} compact />

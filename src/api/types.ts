@@ -60,6 +60,8 @@ export type DailyCheckinResult = components['schemas']['DailyCheckinResult']
 export type DailyCheckinHistory = components['schemas']['DailyCheckinHistory']
 export type DailyCheckinHistoryItem = components['schemas']['DailyCheckinHistoryItem']
 
+export type PublicUserProfile = components['schemas']['UserProfile']
+
 export type Notice = components['schemas']['Notice']
 export type NoticePage = components['schemas']['NoticePage']
 

@@ -24,6 +24,18 @@ import {
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import CampusSelector from '../../features/life-services/components/campus-selector'
+import {
+  isCampusName,
+  preferredCampus,
+  type CampusName,
+} from '../../features/life-services/campus'
+import {
+  getRecentRouteValues,
+  rememberRoutePair,
+  ROUTE_SHORTCUTS,
+  type RouteHistoryKind,
+} from '../../features/life-services/route-history'
 import {
   MAX_PUBLISH_IMAGES,
   mediaImageValidationError,
@@ -51,6 +63,7 @@ type PublisherForm = {
   academicPeriodId: string
   academicPeriodLabel: string
   marketSource: MarketplaceSource
+  campus: CampusName | ''
   pickupLocation: string
   dropoffLocation: string
   rewardYuan: string
@@ -107,6 +120,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   academicPeriodId: '',
   academicPeriodLabel: '',
   marketSource: 'manual',
+  campus: preferredCampus(),
   pickupLocation: '',
   dropoffLocation: '',
   rewardYuan: '',
@@ -134,7 +148,12 @@ type LegacyPublisherForm = Omit<PublisherForm, 'images'> & { imageUrls: string[]
 
 const storedDrafts = () => {
   const stored = Taro.getStorageSync<Partial<Record<string, PublisherForm>>>(DRAFT_KEY) || {}
-  if (Object.keys(stored).length > 0) return stored
+  if (Object.keys(stored).length > 0) {
+    return Object.fromEntries(Object.entries(stored).map(([key, value]) => [
+      key,
+      value ? { ...emptyForm(value.marketIntent), ...value } : value,
+    ])) as Partial<Record<string, PublisherForm>>
+  }
   const legacy = Taro.getStorageSync<Partial<Record<string, LegacyPublisherForm>>>(
     LEGACY_DRAFT_KEY,
   ) || {}
@@ -143,6 +162,7 @@ const storedDrafts = () => {
     const { imageUrls, ...form } = value
     return [key, {
       ...form,
+      campus: isCampusName(form.campus) ? form.campus : preferredCampus(),
       images: (imageUrls || []).map((url) => serverMediaImageDraft({ url })),
     } satisfies PublisherForm]
   })) as Partial<Record<string, PublisherForm>>
@@ -206,6 +226,7 @@ const InputField = ({
   suffix,
   inputId,
   onKeyboardVisibilityChange,
+  onFocus,
   onInput,
 }: {
   label: string
@@ -216,6 +237,7 @@ const InputField = ({
   suffix?: string
   inputId?: string
   onKeyboardVisibilityChange: (height: number) => void
+  onFocus?: () => void
   onInput: (value: string) => void
 }) => (
   <View className='publisher-field'>
@@ -229,12 +251,69 @@ const InputField = ({
         placeholder={placeholder}
         placeholderClass='publisher-placeholder'
         onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+        onFocus={onFocus}
         onInput={(event) => onInput(event.detail.value)}
       />
       {suffix && <Text>{suffix}</Text>}
     </View>
   </View>
 )
+
+const RouteSuggestions = ({
+  kind,
+  value: currentValue,
+  onSelect,
+}: {
+  kind: RouteHistoryKind
+  value: string
+  onSelect: (value: string) => void
+}) => {
+  const recent = getRecentRouteValues(kind).filter(
+    (value) => !ROUTE_SHORTCUTS.some((shortcut) => shortcut === value),
+  )
+  return (
+    <View className='publisher-route-suggestions'>
+      <Text className='publisher-route-suggestions__label'>常用地点</Text>
+      <View className='publisher-route-suggestions__items'>
+        {ROUTE_SHORTCUTS.map((option) => (
+          <View
+            key={option}
+            className={currentValue === option
+              ? 'publisher-route-suggestion publisher-route-suggestion--active'
+              : 'publisher-route-suggestion'}
+            hoverClass='publisher-route-suggestion--pressed'
+            ariaRole='button'
+            ariaLabel={`${currentValue === option ? '已选择，' : ''}选择常用地点${option}`}
+            onClick={() => onSelect(option)}
+          >
+            {option}
+          </View>
+        ))}
+      </View>
+      {recent.length > 0 && (
+        <>
+          <Text className='publisher-route-suggestions__label'>最近使用</Text>
+          <View className='publisher-route-suggestions__items publisher-route-suggestions__items--recent'>
+            {recent.map((option) => (
+              <View
+                key={option}
+                className={currentValue === option
+                  ? 'publisher-route-suggestion publisher-route-suggestion--recent publisher-route-suggestion--active'
+                  : 'publisher-route-suggestion publisher-route-suggestion--recent'}
+                hoverClass='publisher-route-suggestion--pressed'
+                ariaRole='button'
+                ariaLabel={`${currentValue === option ? '已选择，' : ''}选择最近使用地点${option}`}
+                onClick={() => onSelect(option)}
+              >
+                {option}
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+    </View>
+  )
+}
 
 const SectionHeading = ({
   title,
@@ -257,6 +336,10 @@ export default function PublishPage() {
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [activeRouteField, setActiveRouteField] = useState<keyof Pick<
+    PublisherForm,
+    'pickupLocation' | 'dropoffLocation' | 'origin' | 'destination'
+  > | null>(null)
   const skipNextDraftSave = useRef(false)
   const {
     keyboardHeight,
@@ -286,6 +369,7 @@ export default function PublishPage() {
     const deadline = apiDateTimeCampusParts(item.deadline)
     return {
       ...emptyForm(),
+      campus: isCampusName(item.campus) ? item.campus : '',
       content: item.description,
       pickupLocation: item.pickup_location,
       dropoffLocation: item.dropoff_location,
@@ -300,6 +384,7 @@ export default function PublishPage() {
 
   const mapMarketplace = (item: MarketplaceListingView): PublisherForm => ({
     ...emptyForm(item.intent),
+    campus: isCampusName(item.campus) ? item.campus : '',
     content: item.description,
     marketIntent: item.intent,
     marketCategory: item.category,
@@ -319,6 +404,7 @@ export default function PublishPage() {
     const departure = apiDateTimeCampusParts(item.departure_at)
     return {
       ...emptyForm(),
+      campus: isCampusName(item.campus) ? item.campus : '',
       content: item.description || '',
       origin: item.origin,
       destination: item.destination,
@@ -621,6 +707,7 @@ export default function PublishPage() {
       return mediaImageValidationError(form.images)
     }
     if (!form.content.trim() && section !== 'carpool') return '请补充详细说明'
+    if (!form.campus) return '请选择业务所属校区'
     if (section === 'errands') {
       if (!form.pickupLocation.trim() || !form.dropoffLocation.trim()) return '请填写取件地和送达地'
       if (toCents(form.rewardYuan) <= 0) return '跑腿报酬必须大于 0 元'
@@ -668,6 +755,7 @@ export default function PublishPage() {
     setSubmitting(true)
     try {
       let id = resourceId
+      const selectedCampus = isCampusName(form.campus) ? form.campus : preferredCampus()
       if (section === 'community') {
         const sectionId = form.communitySectionId
         if (!sectionId) throw new Error('服务端尚未提供可发布的社区板块')
@@ -688,6 +776,7 @@ export default function PublishPage() {
         }
       } else if (section === 'errands') {
         const input = {
+          campus: selectedCampus,
           description: form.content.trim(),
           reward_cents: toCents(form.rewardYuan),
           pickup_location: form.pickupLocation.trim(),
@@ -710,6 +799,7 @@ export default function PublishPage() {
         }
       } else if (section === 'market') {
         const input = {
+          campus: selectedCampus,
           intent: form.marketIntent,
           description: form.content.trim(),
           price_cents: toCents(form.priceYuan),
@@ -740,6 +830,7 @@ export default function PublishPage() {
         }
       } else {
         const input = {
+          campus: selectedCampus,
           origin: form.origin.trim(),
           destination: form.destination.trim(),
           description: form.content.trim() || undefined,
@@ -760,6 +851,11 @@ export default function PublishPage() {
             await lifeServicesRepository.submitCarpoolReview(updated.id, updated.version)
           }
         }
+      }
+      if (section === 'errands') {
+        rememberRoutePair(form.pickupLocation, form.dropoffLocation)
+      } else if (section === 'carpool') {
+        rememberRoutePair(form.origin, form.destination)
       }
       markLifeHubSectionDirty(section)
       await navigateAfterSubmit(id)
@@ -787,8 +883,6 @@ export default function PublishPage() {
 
   return (
     <View className={`publisher-page publisher-page--${section}`}>
-      <View className='publisher-page__orb publisher-page__orb--one' />
-      <View className='publisher-page__orb publisher-page__orb--two' />
       <CustomNavbar
         title={mode === 'create' ? '发布' : '编辑发布'}
         showBack
@@ -806,7 +900,7 @@ export default function PublishPage() {
               className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
               hoverClass={mode === 'create' ? 'publisher-type--pressed' : 'none'}
               ariaRole='button'
-              ariaLabel={`${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
+              ariaLabel={`${section === item.key ? '已选择，' : ''}${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
               onClick={() => selectSection(item.key)}
             >
               <Text>{item.label}</Text>
@@ -843,6 +937,8 @@ export default function PublishPage() {
                   <View
                     className={form.marketIntent === 'sell' ? 'publisher-market-intent--active' : ''}
                     hoverClass='publisher-market-intent--pressed'
+                    ariaRole='button'
+                    ariaLabel={`${form.marketIntent === 'sell' ? '已选择，' : ''}我要出售`}
                     onClick={() => selectMarketIntent('sell')}
                   >
                     我要出售
@@ -850,6 +946,8 @@ export default function PublishPage() {
                   <View
                     className={form.marketIntent === 'wanted' ? 'publisher-market-intent--active' : ''}
                     hoverClass='publisher-market-intent--pressed'
+                    ariaRole='button'
+                    ariaLabel={`${form.marketIntent === 'wanted' ? '已选择，' : ''}我要求购`}
                     onClick={() => selectMarketIntent('wanted')}
                   >
                     我要求购
@@ -873,6 +971,7 @@ export default function PublishPage() {
             )}
 
             <View className='publisher-section publisher-section--content'>
+              <SectionHeading title={section === 'carpool' ? '补充说明（可选）' : '发布内容'} />
               <View className='publisher-field publisher-field--content'>
                 <View className='publisher-textarea'>
                   <KeyboardSafeTextarea
@@ -904,11 +1003,24 @@ export default function PublishPage() {
               />
             )}
 
+            {section !== 'community' && (
+              <View className='publisher-section publisher-section--campus'>
+                <SectionHeading title='所属校区' />
+                <Text className='publisher-section__hint'>用于同校区同学快速筛选，发布后可在详情中查看</Text>
+                <CampusSelector
+                  value={form.campus}
+                  onChange={(value) => update('campus', value)}
+                />
+              </View>
+            )}
+
             {section === 'errands' && (
               <View className='publisher-section'>
                 <SectionHeading title='任务信息' />
-                <InputField inputId='publisher-pickup-location' label='取件地' value={form.pickupLocation} maxlength={100} placeholder='例如：北区快递站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('pickupLocation', value)} />
-                <InputField inputId='publisher-dropoff-location' label='送达地' value={form.dropoffLocation} maxlength={100} placeholder='例如：图书馆南门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('dropoffLocation', value)} />
+                <InputField inputId='publisher-pickup-location' label='取件地' value={form.pickupLocation} maxlength={100} placeholder='例如：北区快递站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('pickupLocation')} onInput={(value) => update('pickupLocation', value)} />
+                {activeRouteField === 'pickupLocation' && <RouteSuggestions kind='origin' value={form.pickupLocation} onSelect={(value) => { update('pickupLocation', value); setActiveRouteField(null) }} />}
+                <InputField inputId='publisher-dropoff-location' label='送达地' value={form.dropoffLocation} maxlength={100} placeholder='例如：图书馆南门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('dropoffLocation')} onInput={(value) => update('dropoffLocation', value)} />
+                {activeRouteField === 'dropoffLocation' && <RouteSuggestions kind='destination' value={form.dropoffLocation} onSelect={(value) => { update('dropoffLocation', value); setActiveRouteField(null) }} />}
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>截止时间</Text>
                   <View className='publisher-picker-row'>
@@ -945,8 +1057,10 @@ export default function PublishPage() {
             {section === 'carpool' && (
               <View className='publisher-section'>
                 <SectionHeading title='同行计划' />
-                <InputField inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('origin', value)} />
-                <InputField inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('destination', value)} />
+                <InputField inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('origin')} onInput={(value) => update('origin', value)} />
+                {activeRouteField === 'origin' && <RouteSuggestions kind='origin' value={form.origin} onSelect={(value) => { update('origin', value); setActiveRouteField(null) }} />}
+                <InputField inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setActiveRouteField('destination')} onInput={(value) => update('destination', value)} />
+                {activeRouteField === 'destination' && <RouteSuggestions kind='destination' value={form.destination} onSelect={(value) => { update('destination', value); setActiveRouteField(null) }} />}
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>出发时间</Text>
                   <View className='publisher-picker-row'>
@@ -1040,7 +1154,7 @@ export default function PublishPage() {
       </View>
 
       {!loadingEdit && (
-        <View className='publisher-actions'>
+        <View className={`publisher-actions ${keyboardHeight > 0 ? 'publisher-actions--keyboard' : ''}`}>
           <View className={`publisher-actions__status ${validationError ? '' : 'publisher-actions__status--ready'}`}>
             <View />
             <Text>{validationError ? `尚缺：${validationError}` : '内容完整，提交后进入审核'}</Text>
@@ -1049,17 +1163,21 @@ export default function PublishPage() {
             {mode === 'create' && (
               <View
                 className='publisher-actions__draft'
-                hoverClass='publisher-actions__button--pressed'
-                onClick={saveAndLeave}
+                hoverClass={submitting ? 'none' : 'publisher-actions__button--pressed'}
+                ariaRole='button'
+                ariaLabel='保存草稿并退出'
+                onClick={() => !submitting && saveAndLeave()}
               >
                 保存退出
               </View>
             )}
             <View
               id='publisher-submit'
-              className={`publisher-actions__submit ${validationError ? 'publisher-actions__submit--disabled' : ''}`}
-              hoverClass='publisher-actions__button--pressed'
-              onClick={() => void submit()}
+              className={`publisher-actions__submit ${validationError || submitting ? 'publisher-actions__submit--disabled' : ''}`}
+              hoverClass={validationError || submitting ? 'none' : 'publisher-actions__button--pressed'}
+              ariaRole='button'
+              ariaLabel={submitting ? '正在提交' : validationError ? `暂不可提交，${validationError}` : '提交审核'}
+              onClick={() => !validationError && !submitting && void submit()}
             >
               {submitting ? '正在提交' : mode === 'create' ? '提交审核' : '保存并提交'}
             </View>

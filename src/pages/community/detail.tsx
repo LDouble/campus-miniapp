@@ -24,6 +24,7 @@ import DetailAuthorNavbar from '../../features/life-services/components/detail-a
 import DetailComments from '../../features/life-services/components/detail-comments'
 import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
 import { useCampusShare } from '../../features/share'
+import { openPublicProfile } from '../../features/profile/public-profile'
 import './detail.scss'
 
 const communityDetailIcons = {
@@ -186,7 +187,15 @@ export default function CommunityDetailPage() {
         {!loading && !error && post && (
           <>
             <View className='community-detail-card'>
-              <View className='community-detail-card__top'>
+              <View
+                className='community-detail-card__top'
+                hoverClass='community-detail-card__top--pressed'
+                ariaRole='button'
+                ariaLabel={`查看${communityAuthorName(post)}的个人主页`}
+                onClick={() => {
+                  if (!post.author_deleted) void openPublicProfile(post.author_id)
+                }}
+              >
                 <View
                   className={`community-detail-card__avatar community-detail-card__avatar--tone-${communityAuthorTone(post)}`}
                 >
