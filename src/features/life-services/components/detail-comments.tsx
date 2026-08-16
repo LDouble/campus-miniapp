@@ -5,8 +5,11 @@ import type { CommentView } from '../../../api/types'
 import { isApiError } from '../../../api/client'
 import UserAvatarImage from '../../../components/user-avatar-image'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
+import StickerContent from '../../../components/sticker-content'
+import StickerPicker from '../../../components/sticker-picker'
 import { openContentReport } from '../../content-report'
 import { openPublicProfile } from '../../profile/public-profile'
+import { insertStickerToken, serializeStickerTokens } from '../../stickers/content'
 import {
   buildCommentTree,
   commentRootId,
@@ -59,6 +62,7 @@ type PendingTimer = {
 }
 
 const COMPOSER_CLOSE_DURATION = 180
+const COMMENT_FOCUS_DURATION = 2200
 
 type DetailCommentsProps = {
   targetType: DetailCommentTarget
@@ -167,9 +171,12 @@ const renderReplyTree = (
           {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
           <CommunityLevelBadge level={comment.author_level} compact />
         </View>
-        <Text className='business-detail-comment__reply-content' onClick={() => onStartReply(comment)}>
-          {comment.content}
-        </Text>
+        <View className='business-detail-comment__reply-content' onClick={() => onStartReply(comment)}>
+          <StickerContent
+            content={comment.content}
+            stickerClassName='business-detail-comment__sticker'
+          />
+        </View>
         {renderCommentMeta(comment)}
       </View>
       {children.length > 0 && (
@@ -275,7 +282,10 @@ const DetailCommentThread = memo(function DetailCommentThread({
             onClick={() => onStartReply(comment)}
             onLongPress={() => onOpenActions(comment)}
           >
-            <Text>{comment.content}</Text>
+            <StickerContent
+              content={comment.content}
+              stickerClassName='business-detail-comment__sticker'
+            />
           </View>
           {renderCommentMeta(comment)}
           {showThreadAction && (
@@ -340,7 +350,8 @@ export default function DetailComments({
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerClosing, setComposerClosing] = useState(false)
   const [inputFocused, setInputFocused] = useState(false)
-  const [focusedCommentId, setFocusedCommentId] = useState(initialCommentId)
+  const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
   const mountedRef = useRef(true)
@@ -353,6 +364,10 @@ export default function DetailComments({
   const pendingTimersRef = useRef(new Set<PendingTimer>())
   const composerCloseSequenceRef = useRef(0)
   const composerClosingRef = useRef(false)
+  const stickerPickerOpenRef = useRef(false)
+  const contentSelectionStartRef = useRef(0)
+  const contentSelectionEndRef = useRef(0)
+  const focusedCommentClearRef = useRef<null | (() => void)>(null)
   const openCommentActionsRef = useRef<(comment: CommentView) => void>(() => {})
   const handleOpenCommentActions = useCallback((comment: CommentView) => {
     openCommentActionsRef.current(comment)
@@ -395,6 +410,18 @@ export default function DetailComments({
     pendingTimersRef.current.add(timer)
   }), [])
 
+  const focusCommentTemporarily = useCallback((commentId: number) => {
+    focusedCommentClearRef.current?.()
+    focusedCommentClearRef.current = null
+    setFocusedCommentId(commentId)
+    if (commentId <= 0) return
+
+    focusedCommentClearRef.current = scheduleTimeout(() => {
+      setFocusedCommentId((current) => current === commentId ? 0 : current)
+      focusedCommentClearRef.current = null
+    }, COMMENT_FOCUS_DURATION)
+  }, [scheduleTimeout])
+
   const updateThreads = useCallback((updater: (
     current: Record<number, CommentThreadState>,
   ) => Record<number, CommentThreadState>) => {
@@ -410,6 +437,7 @@ export default function DetailComments({
     return () => {
       mountedRef.current = false
       clearPendingTimers()
+      focusedCommentClearRef.current = null
     }
   }, [clearPendingTimers])
 
@@ -457,7 +485,7 @@ export default function DetailComments({
               loaded: true,
               loading: false,
             }
-            setFocusedCommentId(focusId)
+            focusCommentTemporarily(focusId)
             scheduleTimeout(() => {
               if (isCurrentRequest()) {
                 void Taro.pageScrollTo({ selector: `#detail-comment-${focusId}`, duration: 260 })
@@ -502,7 +530,7 @@ export default function DetailComments({
       if (listInFlightRef.current === request) listInFlightRef.current = null
     })
     return request
-  }, [enabled, scheduleTimeout, targetId, targetType, updateThreads])
+  }, [enabled, focusCommentTemporarily, scheduleTimeout, targetId, targetType, updateThreads])
 
   useEffect(() => {
     requestScopeRef.current += 1
@@ -511,6 +539,7 @@ export default function DetailComments({
     threadRequestSequenceRef.current.clear()
     return () => {
       clearPendingTimers()
+      focusedCommentClearRef.current = null
     }
   }, [clearPendingTimers, enabled, initialCommentId, refreshKey, targetId, targetType])
 
@@ -593,9 +622,11 @@ export default function DetailComments({
   const openComposer = useCallback(() => {
     composerCloseSequenceRef.current += 1
     composerClosingRef.current = false
+    stickerPickerOpenRef.current = false
     setComposerClosing(false)
     setComposerOpen(true)
     setInputFocused(true)
+    setStickerPickerOpen(false)
   }, [])
 
   const startReply = useCallback((comment: CommentView) => {
@@ -606,9 +637,11 @@ export default function DetailComments({
   const finishComposerClose = useCallback(() => {
     composerCloseSequenceRef.current += 1
     composerClosingRef.current = false
+    stickerPickerOpenRef.current = false
     setComposerOpen(false)
     setComposerClosing(false)
     setInputFocused(false)
+    setStickerPickerOpen(false)
     setReplyTarget(null)
     setKeyboardHeight(0)
   }, [])
@@ -644,7 +677,7 @@ export default function DetailComments({
 
   const handleComposerBlur = useCallback(() => {
     setInputFocused(false)
-    if (!composerClosingRef.current) closeComposer()
+    if (!composerClosingRef.current && !stickerPickerOpenRef.current) closeComposer()
   }, [closeComposer])
 
   const handleKeyboardHeightChange = useCallback((event: {
@@ -659,6 +692,8 @@ export default function DetailComments({
     setKeyboardTransitionDuration(duration)
     setKeyboardHeight(height)
     if (height > 0) {
+      stickerPickerOpenRef.current = false
+      setStickerPickerOpen(false)
       setComposerOpen(true)
       return
     }
@@ -672,10 +707,30 @@ export default function DetailComments({
     }, duration)
   }, [finishComposerClose, scheduleTimeout])
 
+  const setStickerPickerVisible = useCallback((open: boolean) => {
+    stickerPickerOpenRef.current = open
+    setStickerPickerOpen(open)
+    if (!open) return
+
+    composerCloseSequenceRef.current += 1
+    composerClosingRef.current = false
+    setComposerClosing(false)
+    setComposerOpen(true)
+    setInputFocused(false)
+    setKeyboardHeight(0)
+    void Taro.hideKeyboard()
+  }, [])
+
+  const hasComposerContent = Boolean(content.trim())
+
   const submit = async () => {
-    const value = content.trim()
+    const value = serializeStickerTokens(content.trim())
     if (!value || submitting || !enabled) {
-      if (!value) Taro.showToast({ title: '请输入评论内容', icon: 'none' })
+      if (!value) Taro.showToast({ title: '请输入评论内容或选择表情', icon: 'none' })
+      return
+    }
+    if (value.length > 300) {
+      Taro.showToast({ title: '评论内容不能超过 300 字', icon: 'none' })
       return
     }
     const activeReplyTarget = replyTarget
@@ -717,7 +772,7 @@ export default function DetailComments({
           : [...current, created])
         setTotal((current) => current + 1)
       }
-      setFocusedCommentId(created.id)
+      focusCommentTemporarily(created.id)
       setEnteringCommentId(created.id)
       scheduleTimeout(() => {
         if (mountedRef.current) {
@@ -725,6 +780,8 @@ export default function DetailComments({
         }
       }, 320)
       setContent('')
+      contentSelectionStartRef.current = 0
+      contentSelectionEndRef.current = 0
       closeComposer()
       if (created.status === 'approved') onApprovedDelta?.(1)
       onMutation?.({ comment: created, type: 'create' })
@@ -790,7 +847,7 @@ export default function DetailComments({
         })
         setTotal((current) => Math.max(0, current - 1))
       }
-      if (focusedCommentId === comment.id) setFocusedCommentId(0)
+      if (focusedCommentId === comment.id) focusCommentTemporarily(0)
       if (comment.status === 'approved') {
         onApprovedDelta?.(isReply ? -1 : -(1 + Math.max(0, comment.reply_count)))
       }
@@ -943,7 +1000,41 @@ export default function DetailComments({
                   openComposer()
                 }}
                 onBlur={handleComposerBlur}
-                onInput={(event) => setContent(event.detail.value)}
+                onInput={(event) => {
+                  const detail = event.detail as typeof event.detail & {
+                    cursor?: number
+                    selectionEnd?: number
+                    selectionStart?: number
+                  }
+                  const cursor = Number.isFinite(detail.cursor) ? Number(detail.cursor) : detail.value.length
+                  const selectionStart = Number.isFinite(detail.selectionStart)
+                    ? Number(detail.selectionStart)
+                    : cursor
+                  const selectionEnd = Number.isFinite(detail.selectionEnd)
+                    ? Number(detail.selectionEnd)
+                    : cursor
+
+                  contentSelectionStartRef.current = Math.max(0, selectionStart)
+                  contentSelectionEndRef.current = Math.max(
+                    contentSelectionStartRef.current,
+                    selectionEnd,
+                  )
+                  setContent(detail.value)
+                }}
+                onSelectionChange={(event) => {
+                  const detail = event.detail as {
+                    selectionEnd?: number
+                    selectionStart?: number
+                  }
+                  const selectionStart = Number(detail.selectionStart)
+                  const selectionEnd = Number(detail.selectionEnd)
+                  if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
+                  contentSelectionStartRef.current = Math.max(0, selectionStart)
+                  contentSelectionEndRef.current = Math.max(
+                    contentSelectionStartRef.current,
+                    selectionEnd,
+                  )
+                }}
                 onConfirm={() => void submit()}
                 onKeyboardHeightChange={handleKeyboardHeightChange}
               />
@@ -951,18 +1042,33 @@ export default function DetailComments({
               <View className='business-detail-composer__disabled'>评论暂未开放</View>
             )}
             {enabled && composerOpen ? (
-              <View
-                className={[
-                  'business-detail-composer__publish',
-                  `business-detail-composer__publish--${tone}`,
-                  !content.trim() || submitting ? 'business-detail-composer__publish--disabled' : '',
-                ].filter(Boolean).join(' ')}
-                ariaRole='button'
-                ariaLabel={submitting ? '评论发布中' : '发布评论'}
-                onClick={!content.trim() || submitting ? undefined : () => void submit()}
-              >
-                <Image src={icons.send} mode='aspectFit' />
-              </View>
+              <>
+                <View
+                  className={stickerPickerOpen
+                    ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'
+                    : 'business-detail-composer__sticker-trigger'}
+                  hoverClass='business-detail-composer__sticker-trigger--pressed'
+                  hoverStartTime={20}
+                  hoverStayTime={100}
+                  ariaRole='button'
+                  ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
+                  onClick={() => setStickerPickerVisible(!stickerPickerOpen)}
+                >
+                  <Text>☺</Text>
+                </View>
+                <View
+                  className={[
+                    'business-detail-composer__publish',
+                    `business-detail-composer__publish--${tone}`,
+                    !hasComposerContent || submitting ? 'business-detail-composer__publish--disabled' : '',
+                  ].filter(Boolean).join(' ')}
+                  ariaRole='button'
+                  ariaLabel={submitting ? '评论发布中' : '发布评论'}
+                  onClick={!hasComposerContent || submitting ? undefined : () => void submit()}
+                >
+                  <Image src={icons.send} mode='aspectFit' />
+                </View>
+              </>
             ) : (
               <>
                 {quickAction && (
@@ -998,6 +1104,26 @@ export default function DetailComments({
               </View>
             )}
           </View>
+          {enabled && composerOpen && (
+            <StickerPicker
+              open={stickerPickerOpen}
+              className={stickerPickerOpen
+                ? 'business-detail-composer__sticker-picker business-detail-composer__sticker-picker--open'
+                : 'business-detail-composer__sticker-picker'}
+              onOpenChange={setStickerPickerVisible}
+              onSelect={(sticker) => {
+                const inserted = insertStickerToken(
+                  content,
+                  sticker.id,
+                  contentSelectionStartRef.current,
+                  contentSelectionEndRef.current,
+                )
+                contentSelectionStartRef.current = inserted.cursor
+                contentSelectionEndRef.current = inserted.cursor
+                setContent(inserted.text)
+              }}
+            />
+          )}
           </View>
         </>
       )}

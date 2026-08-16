@@ -2,6 +2,7 @@ import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { CarpoolTripView } from '../../../api/types'
 import UserAvatarImage from '../../../components/user-avatar-image'
+import StickerContent from '../../../components/sticker-content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
 import { campusLabel } from '../campus'
@@ -15,7 +16,7 @@ import {
 const openDetail = (item: CarpoolTripView) => {
   requestWechatSubscriptionForModule('carpool')
   saveBusinessDetailSnapshot('carpool', item)
-  Taro.navigateTo({ url: `/pages/carpool/detail?id=${item.id}&snapshot=1` })
+  Taro.navigateTo({ url: `/packages/social/carpool/detail?id=${item.id}&snapshot=1` })
 }
 
 const timeParts = (value: string) => {
@@ -61,7 +62,13 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
         <Text className='business-card-more'>•••</Text>
       </View>
 
-      {item.description && <Text className='carpool-card__description'>{item.description}</Text>}
+      {item.description && (
+        <StickerContent
+          content={item.description}
+          className='carpool-card__description'
+          stickerClassName='business-card__sticker'
+        />
+      )}
       <BusinessRoute
         startLabel='出发地'
         start={item.origin}

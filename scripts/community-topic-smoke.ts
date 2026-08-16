@@ -10,7 +10,7 @@ assert.equal(parsePositiveId('0'), 0)
 assert.equal(parsePositiveId('invalid'), 0)
 assert.equal(
   communityTopicPublisherUrl(23),
-  '/pages/publish/index?section=community&community_topic_id=23',
+  '/packages/social/publish/index?section=community&community_topic_id=23',
 )
 assert.equal(topicPeriodLabel({ kind: 'topic', starts_at: null, ends_at: null }), '')
 assert.equal(

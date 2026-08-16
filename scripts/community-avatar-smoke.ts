@@ -44,7 +44,7 @@ assert.match(feedStyleSource, /\.community-post__section-pill \{[^}]*background:
 const levelBadgeStyleSource = readFileSync(resolve(__dirname, '../src/features/community/level-badge.scss'), 'utf8')
 assert.match(levelBadgeStyleSource, /\.community-level-badge \{[^}]*flex: none;[^}]*white-space: nowrap;/u)
 
-const detailSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.tsx'), 'utf8')
+const detailSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.tsx'), 'utf8')
 assert.equal((detailSource.match(/communityAuthorAvatarUrl\(/g) || []).length, 1)
 assert.ok(detailSource.includes("className='community-detail-card__avatar-image'"))
 assert.ok(detailSource.includes('community-detail-card__image-reviewing--overlay'))
@@ -52,12 +52,12 @@ assert.ok(detailSource.includes('community-detail-card__image-reviewing--overlay
 const detailCommentsSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/detail-comments.tsx'), 'utf8')
 assert.ok(detailCommentsSource.includes("className='business-detail-comment__avatar-image'"))
 
-const detailStyleSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.scss'), 'utf8')
+const detailStyleSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.scss'), 'utf8')
 assert.ok(detailStyleSource.includes('&__image-reviewing--overlay'))
 assert.equal((detailStyleSource.match(/background: #eef3f2;\n\s+border-radius: 50%;/g) || []).length >= 3, true)
 
-const publishSource = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
-assert.ok(publishSource.includes('`/pages/community/detail?id=${id}&mode=post`'))
+const publishSource = readFileSync(resolve(__dirname, '../src/packages/social/publish/index.tsx'), 'utf8')
+assert.ok(publishSource.includes('`/packages/social/community/detail?id=${id}&mode=post`'))
 
 const marketplaceCardSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/marketplace-card.tsx'), 'utf8')
 assert.ok(marketplaceCardSource.includes("item.viewer_relation === 'owner' && item.status === 'pending_review'"))

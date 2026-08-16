@@ -21,12 +21,14 @@ export default function MediaImageEditor({
   onRetry,
 }: MediaImageEditorProps) {
   const previewUrls = images.map((image) => image.previewUrl).filter(Boolean)
+  if (images.length === 0) return null
+
   return (
     <View className='media-image-editor'>
       <View className='media-image-editor__head'>
         <View>
           <Text>图片</Text>
-          <Text>首图作为封面，可调整顺序</Text>
+          <Text>首图作为封面，点击预览</Text>
         </View>
         <Text>{images.length}/{maxCount}</Text>
       </View>
@@ -40,39 +42,59 @@ export default function MediaImageEditor({
               onClick={() => Taro.previewImage({ current: image.previewUrl, urls: previewUrls })}
             >
               <Image src={image.previewUrl} mode='aspectFill' />
-              <Text className='media-image-editor__order'>{index + 1}</Text>
               {index === 0 && <Text className='media-image-editor__cover'>封面</Text>}
+              <View
+                className='media-image-editor__remove'
+                ariaRole='button'
+                ariaLabel={`删除第 ${index + 1} 张图片`}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onRemove(image.key)
+                }}
+              ><Text>×</Text></View>
               {image.status === 'uploading' && (
-                <View className='media-image-editor__progress'>
-                  <View style={{ width: `${image.progress}%` }} />
+                <View className='media-image-editor__uploading'>
+                  <Text>上传中 {image.progress}%</Text>
+                  <View className='media-image-editor__progress'>
+                    <View style={{ width: `${image.progress}%` }} />
+                  </View>
                 </View>
               )}
               {image.status === 'failed' && (
-                <View className='media-image-editor__failed'>上传失败</View>
+                <View
+                  className='media-image-editor__failed'
+                  ariaRole='button'
+                  ariaLabel={`第 ${index + 1} 张图片上传失败，点击重试`}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onRetry(image)
+                  }}
+                ><Text>上传失败 · 重试</Text></View>
+              )}
+              {images.length > 1 && image.status !== 'uploading' && image.status !== 'failed' && (
+                <View className='media-image-editor__actions'>
+                  <View
+                    className={index === 0 ? 'is-disabled' : ''}
+                    ariaRole='button'
+                    ariaLabel={`将第 ${index + 1} 张图片前移`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      if (index > 0) onMove(index, -1)
+                    }}
+                  ><Text>‹</Text></View>
+                  <Text>{index + 1}</Text>
+                  <View
+                    className={index === images.length - 1 ? 'is-disabled' : ''}
+                    ariaRole='button'
+                    ariaLabel={`将第 ${index + 1} 张图片后移`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      if (index < images.length - 1) onMove(index, 1)
+                    }}
+                  ><Text>›</Text></View>
+                </View>
               )}
             </View>
-            <View className='media-image-editor__actions'>
-              <Text
-                className={index === 0 ? 'is-disabled' : ''}
-                onClick={() => onMove(index, -1)}
-              >前移</Text>
-              <Text
-                className={index === images.length - 1 ? 'is-disabled' : ''}
-                onClick={() => onMove(index, 1)}
-              >后移</Text>
-              {image.status === 'failed' && (
-                <Text className='is-retry' onClick={() => onRetry(image)}>重试</Text>
-              )}
-              <Text className='is-danger' onClick={() => onRemove(image.key)}>删除</Text>
-            </View>
-            {image.status === 'uploading' && (
-              <Text className='media-image-editor__message'>正在安全上传 {image.progress}%</Text>
-            )}
-            {image.status === 'failed' && (
-              <Text className='media-image-editor__message media-image-editor__message--error'>
-                {image.error || '网络异常，请重试'}
-              </Text>
-            )}
           </View>
         ))}
         {images.length < maxCount && (
@@ -83,12 +105,11 @@ export default function MediaImageEditor({
             onClick={onAdd}
           >
             <Image src={require('../../assets/icons/plus.svg')} mode='aspectFit' />
-            <Text>添加图片</Text>
-            <Text>最多 {maxCount} 张</Text>
+            <Text>添加</Text>
+            <Text>还可选 {maxCount - images.length} 张</Text>
           </View>
         )}
       </View>
-      <Text className='media-image-editor__hint'>支持 JPEG、PNG、WebP，选择后自动压缩</Text>
     </View>
   )
 }

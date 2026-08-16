@@ -659,6 +659,7 @@ export default function GradesPage() {
           <>
             <AcademicCacheNotice
               cache={serverCache}
+              updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}
               localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
               localFallback={Boolean(loadError)}
             />

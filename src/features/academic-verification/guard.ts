@@ -15,12 +15,12 @@ const TAB_PAGES = new Set([
 const SAFE_PAGES = new Set([
   ...TAB_PAGES,
   ...(!isQualificationEdition ? [
-    '/pages/community/detail',
-    '/pages/errands/detail',
-    '/pages/marketplace/detail',
-    '/pages/carpool/detail',
-    '/pages/my-services/index',
-    '/pages/publish/index',
+    '/packages/social/community/detail',
+    '/packages/social/errands/detail',
+    '/packages/social/marketplace/detail',
+    '/packages/social/carpool/detail',
+    '/packages/social/my-services/index',
+    '/packages/social/publish/index',
     '/pages/materials/index',
     '/pages/clubs/index',
     '/pages/clubs/detail',

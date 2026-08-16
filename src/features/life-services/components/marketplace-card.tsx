@@ -2,6 +2,8 @@ import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { MarketplaceListingView } from '../../../api/types'
 import UserAvatarImage from '../../../components/user-avatar-image'
+import StickerContent from '../../../components/sticker-content'
+import { plainStickerContent } from '../../stickers/content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { formatMoney } from '../format'
 import { campusLabel } from '../campus'
@@ -11,7 +13,7 @@ import './marketplace-card.scss'
 const openDetail = (item: MarketplaceListingView) => {
   requestWechatSubscriptionForModule('marketplace')
   saveBusinessDetailSnapshot('marketplace', item)
-  Taro.navigateTo({ url: `/pages/marketplace/detail?id=${item.id}&snapshot=1` })
+  Taro.navigateTo({ url: `/packages/social/marketplace/detail?id=${item.id}&snapshot=1` })
 }
 
 type Props = {
@@ -26,6 +28,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
   const isPendingOwner = item.viewer_relation === 'owner' && item.status === 'pending_review'
   const authorName = item.author_nickname?.trim() || `发布者 #${item.owner_id}`
   const authorInitial = authorName.trim().slice(0, 1) || '同'
+  const readableDescription = plainStickerContent(item.description)
 
   return (
     <View
@@ -38,7 +41,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
       ].filter(Boolean).join(' ')}
       hoverClass='marketplace-card--pressed'
       ariaRole='button'
-      ariaLabel={`${isWanted ? '求购' : '出售'}，${item.description}，${formatMoney(item.price_cents)}`}
+      ariaLabel={`${isWanted ? '求购' : '出售'}，${readableDescription}，${formatMoney(item.price_cents)}`}
       onClick={() => openDetail(item)}
     >
       <View className={`marketplace-card__cover ${cover ? '' : 'marketplace-card__cover--placeholder'}`}>
@@ -48,9 +51,11 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
           <View className={`marketplace-card__placeholder marketplace-card__placeholder--tone-${placeholderTone}`}>
             <Text className='marketplace-card__placeholder-kicker'>CAMPUS MARKET</Text>
             <Text className='marketplace-card__placeholder-quote'>“</Text>
-            <Text className='marketplace-card__placeholder-headline'>
-              {item.description}
-            </Text>
+            <StickerContent
+              content={item.description}
+              className='marketplace-card__placeholder-headline'
+              stickerClassName='marketplace-card__sticker'
+            />
           </View>
         )}
         <Text className='marketplace-card__intent'>{isWanted ? '求购' : '出售'}</Text>
@@ -58,7 +63,11 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
       </View>
       <View className='marketplace-card__body'>
         {cover && (
-          <Text className='marketplace-card__description'>{item.description}</Text>
+          <StickerContent
+            content={item.description}
+            className='marketplace-card__description'
+            stickerClassName='marketplace-card__sticker'
+          />
         )}
         <View className='marketplace-card__price-line'>
           <Text className='marketplace-card__price'>

@@ -180,7 +180,7 @@ export default function PublicProfilePage() {
 
   const openCommunityPost = useCallback((post: CampusCirclePostView) => {
     saveCommunityDetailSnapshot(post)
-    void Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
+    void Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
   }, [])
 
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {

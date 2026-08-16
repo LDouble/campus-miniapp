@@ -38,6 +38,7 @@
     "test:business-detail-navigation": "ts-node --transpile-only scripts/business-detail-navigation-smoke.ts",
     "test:community-avatar": "ts-node --transpile-only scripts/community-avatar-smoke.ts",
     "test:comment-reply": "ts-node --transpile-only scripts/comment-reply-smoke.ts",
+    "test:stickers": "ts-node --transpile-only scripts/stickers-smoke.ts",
     "test:qualification-build": "ts-node --transpile-only scripts/qualification-build-smoke.ts",
     "e2e:community": "npm run build:weapp && bash scripts/e2e-community.sh",
     "e2e:clubs": "npm run build:weapp && bash scripts/e2e-clubs.sh",

@@ -11,7 +11,7 @@ assert.deepEqual(normalizeRouteValues(['A', 'a', 'B'], 2), ['A', 'B'])
 
 const repository = readFileSync(resolve(__dirname, '../src/features/life-services/repository.ts'), 'utf8')
 const profile = readFileSync(resolve(__dirname, '../src/pages/public-profile/index.tsx'), 'utf8')
-const publisher = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
+const publisher = readFileSync(resolve(__dirname, '../src/packages/social/publish/index.tsx'), 'utf8')
 const lifeList = readFileSync(resolve(__dirname, '../src/features/life-services/list-panel.tsx'), 'utf8')
 const carpoolFilters = readFileSync(resolve(
   __dirname,

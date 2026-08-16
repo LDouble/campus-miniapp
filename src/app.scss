@@ -1,6 +1,8 @@
 @use './styles/tokens' as token;
 @use './styles/dark-mode';
 @use './styles/typography';
+@use './components/sticker-content/index' as sticker-content;
+@use './components/sticker-picker/index' as sticker-picker;
 
 page {
   --campus-primary: #2b7fff;

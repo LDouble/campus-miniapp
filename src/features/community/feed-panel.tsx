@@ -255,7 +255,7 @@ export default function CommunityFeedPanel({
   const openPost = useCallback((post: CampusCirclePostView) => {
     requestWechatSubscriptionForModule('community')
     saveCommunityDetailSnapshot(post)
-    Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
+    Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
   }, [])
 
   const openAuthor = useCallback((post: CampusCirclePostView) => {
@@ -303,7 +303,7 @@ export default function CommunityFeedPanel({
   }
 
   const openTopic = (topic: CampusCircleTopicView) => {
-    Taro.navigateTo({ url: `/pages/community/topic/index?id=${topic.id}` })
+    Taro.navigateTo({ url: `/packages/social/community/topic/index?id=${topic.id}` })
   }
 
   return (

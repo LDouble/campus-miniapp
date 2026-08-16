@@ -125,6 +125,9 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       enable: false // Webpack 持久化缓存配置，建议开启。默认配置请参考：https://docs.taro.zone/docs/config-detail#cache
     },
     mini: {
+      optimizeMainPackage: {
+        enable: true,
+      },
       imageUrlLoaderOption: {
         // TabBar 等高频组件使用独立静态文件，避免 Base64 随每个组件实例重复解析。
         limit: true,

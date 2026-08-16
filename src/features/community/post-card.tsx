@@ -10,6 +10,8 @@ import {
 } from './author'
 import CommunityLevelBadge from './level-badge'
 import UserAvatarImage from '../../components/user-avatar-image'
+import StickerContent from '../../components/sticker-content'
+import { plainStickerContent } from '../stickers/content'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -53,6 +55,7 @@ function CommunityPostCard({
     : null
 
   const imagesPendingReview = post.viewer_relation === 'owner' && post.status === 'pending_review'
+  const readableContent = plainStickerContent(post.content || '')
   const operationBadges = [
     post.is_pinned && '置顶',
     post.is_featured && '精选',
@@ -129,7 +132,7 @@ function CommunityPostCard({
         hoverStartTime={20}
         hoverStayTime={120}
         ariaRole='button'
-        ariaLabel={`查看动态：${post.content || '校园图片动态'}`}
+        ariaLabel={`查看动态：${readableContent || '校园图片动态'}`}
         onClick={() => onOpen(post)}
       >
         {operationBadges.length > 0 && (
@@ -137,8 +140,14 @@ function CommunityPostCard({
             {operationBadges.map((badge) => <Text key={badge}>{badge}</Text>)}
           </View>
         )}
-        {post.content && <Text className='community-post__content'>{post.content}</Text>}
-        {post.content && post.content.length > 90 && (
+        {post.content && (
+          <StickerContent
+            content={post.content}
+            className='community-post__content'
+            stickerClassName='community-post__content-sticker'
+          />
+        )}
+        {post.content && readableContent.length > 90 && (
           <Text className='community-post__expand'>展开全文</Text>
         )}
         {visibleImages.length > 0 && (
@@ -195,7 +204,7 @@ function CommunityPostCard({
           className='community-post__action community-post__action--share'
           openType='share'
           data-post-id={post.id}
-          data-share-title={(post.content || '海大校园动态').trim().slice(0, 28)}
+          data-share-title={(readableContent || '海大校园动态').trim().slice(0, 28)}
           data-share-image={post.images[0]?.url || ''}
           hoverClass='community-post__action--pressed'
           ariaLabel='分享这条动态'

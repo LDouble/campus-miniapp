@@ -207,6 +207,11 @@
   -webkit-line-clamp: 2;
 }
 
+.marketplace-card__sticker {
+  width: 44rpx;
+  height: 44rpx;
+}
+
 .marketplace-card--compact .marketplace-card__description {
   display: block;
   min-height: 0;

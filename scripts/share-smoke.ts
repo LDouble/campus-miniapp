@@ -39,13 +39,13 @@ assert.deepEqual(
   buildCampusShareMessage({
     title: '',
     fallbackTitle: '海大校园话题',
-    path: '/pages/community/topic/index',
+    path: '/packages/social/community/topic/index',
     query: { id: 7 },
     imageUrl: 'https://example.com/topic.jpg',
   }),
   {
     title: '海大校园话题',
-    path: '/pages/community/topic/index?id=7',
+    path: '/packages/social/community/topic/index?id=7',
     imageUrl: 'https://example.com/topic.jpg',
   },
 )
@@ -61,7 +61,7 @@ assert.equal(
 assert.deepEqual(
   buildCampusShareTimelineMessage({
     title: '  校园\n话题  ',
-    path: '/pages/community/topic/index?source=timeline',
+    path: '/packages/social/community/topic/index?source=timeline',
     query: { id: 7, tab: 'hot topics' },
     imageUrl: ' https://example.com/topic.jpg ',
   }),
@@ -92,7 +92,7 @@ assert.match(shareHookSource, /factory\(\{ from: 'menu' \}\)/u)
 
 const sharePages = execFileSync(
   'rg',
-  ['-l', 'useCampusShare', 'src/pages', '-g', '*.tsx'],
+  ['-l', 'useCampusShare', 'src/pages', 'src/packages', '-g', '*.tsx'],
   { encoding: 'utf8' },
 )
   .trim()

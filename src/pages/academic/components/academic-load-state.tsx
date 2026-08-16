@@ -16,6 +16,7 @@ interface AcademicLoadStateProps {
 
 interface AcademicCacheNoticeProps {
   cache?: AcademicCacheMetadata | null
+  updatedAt?: number
   localUpdatedAt?: number
   localFallback?: boolean
 }
@@ -129,11 +130,18 @@ export function AcademicLoadState({
 
 export function AcademicCacheNotice({
   cache,
+  updatedAt = 0,
   localUpdatedAt = 0,
   localFallback = false,
 }: AcademicCacheNoticeProps) {
   const [now, setNow] = useState(Date.now)
-  const notice = resolveAcademicCacheNotice(cache, localUpdatedAt, now, localFallback)
+  const notice = resolveAcademicCacheNotice({
+    cache,
+    updatedAt,
+    localUpdatedAt,
+    localFallback,
+    now,
+  })
   const refreshAt = notice?.kind === 'fresh' ? notice.refreshAt : undefined
 
   useEffect(() => {

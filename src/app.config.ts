@@ -59,12 +59,64 @@ const qualificationExcludedPages = new Set([
   'pages/clubs/mine'
 ])
 
+const mainPagePaths = new Set([
+  'pages/index/index',
+  'pages/app-login/index',
+  'pages/community/index',
+  'pages/messages/index',
+  'pages/profile/index',
+])
+
+const mainPages = fullPages.filter((page) => mainPagePaths.has(page))
+
+const packageDefinitions = [
+  {
+    root: 'pages/academic',
+    sourceRoot: 'pages/academic',
+    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index'],
+  },
+  { root: 'pages/clubs', sourceRoot: 'pages/clubs', pages: ['index', 'detail', 'edit', 'mine'] },
+  { root: 'pages/shuttle', sourceRoot: 'pages/shuttle', pages: ['index', 'detail'] },
+  { root: 'pages/official-notices', sourceRoot: 'pages/official-notices', pages: ['index', 'detail'] },
+  { root: 'pages/academic-verification', sourceRoot: 'pages/academic-verification', pages: ['index'] },
+  { root: 'pages/materials', sourceRoot: 'pages/materials', pages: ['index'] },
+  { root: 'pages/empty-classroom', sourceRoot: 'pages/empty-classroom', pages: ['index'] },
+  { root: 'pages/calendar', sourceRoot: 'pages/calendar', pages: ['index'] },
+  { root: 'pages/services', sourceRoot: 'pages/services', pages: ['index'] },
+  { root: 'pages/public-profile', sourceRoot: 'pages/public-profile', pages: ['index'] },
+  { root: 'pages/user-level', sourceRoot: 'pages/user-level', pages: ['index'] },
+  { root: 'pages/daily-checkin', sourceRoot: 'pages/daily-checkin', pages: ['index'] },
+  { root: 'pages/account-cancellation', sourceRoot: 'pages/account-cancellation', pages: ['index'] },
+  { root: 'pages/webview', sourceRoot: 'pages/webview', pages: ['index'] },
+  { root: 'pages/feature-unavailable', sourceRoot: 'pages/feature-unavailable', pages: ['index'] },
+  {
+    root: 'packages/social',
+    sourceRoot: 'pages',
+    pages: [
+      'community/detail',
+      'community/topic/index',
+      'publish/index',
+      'my-services/index',
+      'errands/detail',
+      'marketplace/detail',
+      'carpool/detail',
+      'content-report/index',
+    ],
+  },
+]
+
+const subPackages = packageDefinitions.flatMap(({ root, sourceRoot, pages }) => {
+  const availablePages = pages.filter((page) => !isQualificationEdition
+    || !qualificationExcludedPages.has(`${sourceRoot}/${page}`))
+  return availablePages.length ? [{ root, pages: availablePages }] : []
+})
+
 const pages = isQualificationEdition
   ? [
-      ...fullPages.filter((page) => !qualificationExcludedPages.has(page)),
-      'pages/feature-migrated/index'
+      ...mainPages.filter((page) => !qualificationExcludedPages.has(page)),
+      'pages/feature-migrated/index',
     ]
-  : fullPages
+  : mainPages
 
 const fullTabBarList = [
   {
@@ -102,13 +154,6 @@ const targetMiniProgramAppId = __CAMPUS_TARGET_WECHAT_APP_ID__.trim()
 const wechatAiModeConfig = isWechatAiEnabled
   ? {
       lazyCodeLoading: 'requiredComponents' as const,
-      subPackages: [
-        {
-          root: 'skills',
-          pages: [],
-          independent: true
-        }
-      ],
       agent: {
         skills: [
           {
@@ -126,6 +171,10 @@ export default defineAppConfig({
   darkmode: true,
   themeLocation: 'theme.json',
   pages,
+  subPackages: [
+    ...subPackages,
+    ...(isWechatAiEnabled ? [{ root: 'skills', pages: [], independent: true }] : []),
+  ],
   window: {
     // Taro's types only list the resolved literals. WeChat resolves these
     // theme variables from theme.json before rendering the native chrome.

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
 import UserAvatarImage from '../../components/user-avatar-image'
+import { plainStickerContent } from '../stickers/content'
 import {
   communityAuthorAvatarUrl,
   communityAuthorInitial,
@@ -16,7 +17,7 @@ type Props = {
 let hasShownFreshBarrage = false
 
 const barrageContent = (post: CampusCirclePostView) => (
-  post.content?.trim() || '分享了一组校园图片'
+  plainStickerContent(post.content || '').trim() || '分享了一组校园图片'
 )
 
 const barrageTextLength = (content: string) => (

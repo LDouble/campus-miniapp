@@ -11,11 +11,11 @@ export const noticeActionRoute = (path: string) => {
   )
   if (!match) return ''
   const id = match[2]
-  if (match[1] === 'errands') return `/pages/errands/detail?id=${id}`
-  if (match[1] === 'marketplace/listings') return `/pages/marketplace/detail?id=${id}`
-  if (match[1] === 'carpool/trips') return `/pages/carpool/detail?id=${id}`
+  if (match[1] === 'errands') return `/packages/social/errands/detail?id=${id}`
+  if (match[1] === 'marketplace/listings') return `/packages/social/marketplace/detail?id=${id}`
+  if (match[1] === 'carpool/trips') return `/packages/social/carpool/detail?id=${id}`
   const commentId = commentIdFromAction(path)
-  return `/pages/community/detail?id=${id}&mode=post${
+  return `/packages/social/community/detail?id=${id}&mode=post${
     commentId > 0 ? `&comment_id=${commentId}` : ''
   }`
 }

@@ -7,14 +7,15 @@ const projectConfigPath = join(outputRoot, 'project.config.json')
 
 const forbiddenPages = [
   'pages/community/index',
-  'pages/community/detail',
-  'pages/errands/detail',
-  'pages/marketplace/detail',
-  'pages/carpool/detail',
-  'pages/my-services/index',
-  'pages/publish/index',
+  'packages/social/community/detail',
+  'packages/social/community/topic/index',
+  'packages/social/errands/detail',
+  'packages/social/marketplace/detail',
+  'packages/social/carpool/detail',
+  'packages/social/my-services/index',
+  'packages/social/publish/index',
   'pages/materials/index',
-  'pages/content-report/index',
+  'packages/social/content-report/index',
   'pages/clubs/index',
   'pages/clubs/detail',
   'pages/clubs/edit',
@@ -48,15 +49,22 @@ if (!existsSync(appJsonPath) || !existsSync(projectConfigPath)) {
 
 const appConfig = readJson<{
   pages?: string[]
+  subPackages?: Array<{ root: string; pages?: string[] }>
   tabBar?: { list?: Array<{ pagePath?: string }> }
   navigateToMiniProgramAppIdList?: string[]
 }>(appJsonPath)
 const projectConfig = readJson<{ appid?: string }>(projectConfigPath)
 const pages = appConfig.pages || []
+const registeredPages = [
+  ...pages,
+  ...(appConfig.subPackages || []).flatMap(({ root, pages: packagePages = [] }) => (
+    packagePages.map((page) => `${root.replace(/\/$/u, '')}/${page}`)
+  )),
+]
 const tabPagePaths = (appConfig.tabBar?.list || []).map((item) => item.pagePath)
 
 for (const page of forbiddenPages) {
-  if (pages.includes(page)) {
+  if (registeredPages.includes(page)) {
     fail(`资格版 app.json 仍注册受限页面：${page}`)
   }
 }

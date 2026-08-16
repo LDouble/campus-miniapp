@@ -70,7 +70,7 @@ assert.equal(tree[0].children[0].comment.id, pendingReply.id)
 
 assert.equal(
   noticeActionRoute('/api/v1/campus-circle/posts/12?comment_id=44'),
-  '/pages/community/detail?id=12&mode=post&comment_id=44',
+  '/packages/social/community/detail?id=12&mode=post&comment_id=44',
 )
 
 const detailCommentsSource = readFileSync(
@@ -82,7 +82,7 @@ const detailCommentsStyle = readFileSync(
   'utf8',
 )
 const communityDetailStyle = readFileSync(
-  resolve(__dirname, '../src/pages/community/detail.scss'),
+  resolve(__dirname, '../src/packages/social/community/detail.scss'),
   'utf8',
 )
 
@@ -102,6 +102,12 @@ const startReplySource = detailCommentsSource.match(
 assert.match(startReplySource, /setReplyTarget\(comment\)[\s\S]*openComposer\(\)/u)
 assert.doesNotMatch(startReplySource, /loadThread|updateThreads|getCommentThread/u)
 assert.match(detailCommentsSource, /const COMPOSER_CLOSE_DURATION = 180/u)
+assert.match(detailCommentsSource, /const COMMENT_FOCUS_DURATION = 2200/u)
+assert.match(detailCommentsSource, /const focusCommentTemporarily = useCallback/u)
+assert.match(detailCommentsSource, /focusedCommentClearRef\.current\?\.\(\)/u)
+assert.match(detailCommentsSource, /focusCommentTemporarily\(focusId\)/u)
+assert.match(detailCommentsSource, /focusCommentTemporarily\(created\.id\)/u)
+assert.match(detailCommentsSource, /current === commentId \? 0 : current/u)
 assert.match(detailCommentsSource, /const \[composerClosing, setComposerClosing\] = useState\(false\)/u)
 assert.match(detailCommentsSource, /const shouldFollowKeyboard = inputFocused \|\| keyboardHeight > 0/u)
 assert.match(detailCommentsSource, /setComposerClosing\(true\)[\s\S]*setInputFocused\(false\)[\s\S]*Taro\.hideKeyboard/u)
@@ -109,7 +115,10 @@ assert.match(detailCommentsSource, /composerCloseSequenceRef\.current === closeS
 assert.match(detailCommentsSource, /scheduleTimeout\(\(\) => \{[\s\S]*finishComposerClose\(\)[\s\S]*keyboardTransitionDuration \+ 120/u)
 assert.match(detailCommentsSource, /const handleKeyboardHeightChange = useCallback/u)
 assert.match(detailCommentsSource, /const handleComposerBlur = useCallback/u)
-assert.match(detailCommentsSource, /if \(!composerClosingRef\.current\) closeComposer\(\)/u)
+assert.match(
+  detailCommentsSource,
+  /if \(!composerClosingRef\.current && !stickerPickerOpenRef\.current\) closeComposer\(\)/u,
+)
 assert.match(detailCommentsSource, /onBlur=\{handleComposerBlur\}/u)
 assert.match(detailCommentsSource, /event\.detail\.duration/u)
 assert.match(detailCommentsSource, /transitionDuration: `\$\{keyboardTransitionDuration\}ms`/u)
@@ -146,6 +155,7 @@ assert.match(detailCommentsSource, /!loading && comments\.length === 0/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__bubble \{[^}]*background: transparent;/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__author \{[^}]*--campus-text-muted/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__reply-identity \{[^}]*--campus-text-muted/u)
+assert.match(detailCommentsStyle, /business-detail-comment__reply--focused[^}]*box-shadow: inset/u)
 assert.match(detailCommentsStyle, /\.business-detail-comments__skeleton \{[^}]*min-height: 474rpx;/u)
 assert.match(detailCommentsStyle, /business-detail-comments-skeleton-shimmer/u)
 assert.match(detailCommentsStyle, /@media \(prefers-reduced-motion: reduce\)[\s\S]*business-detail-comments__skeleton-avatar/u)

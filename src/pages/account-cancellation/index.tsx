@@ -42,22 +42,22 @@ const blockerMeta: Record<BlockerModule, {
 }> = {
   marketplace: {
     label: '未结束的二手发布',
-    route: '/pages/my-services/index?section=published',
+    route: '/packages/social/my-services/index?section=published',
     icon: icons.market,
   },
   trade_order: {
     label: '进行中的交易订单',
-    route: '/pages/my-services/index?section=orders&relation=all',
+    route: '/packages/social/my-services/index?section=orders&relation=all',
     icon: icons.market,
   },
   errand: {
     label: '进行中的跑腿任务',
-    route: '/pages/my-services/index?section=errands&relation=all',
+    route: '/packages/social/my-services/index?section=errands&relation=all',
     icon: icons.errands,
   },
   carpool: {
     label: '进行中的同行计划',
-    route: '/pages/my-services/index?section=carpool&relation=all',
+    route: '/packages/social/my-services/index?section=carpool&relation=all',
     icon: icons.carpool,
   },
 }

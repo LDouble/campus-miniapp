@@ -63,25 +63,25 @@ const menus = [
     key: 'published',
     name: '我的发布',
     icon: icons.published,
-    route: '/pages/my-services/index?section=published',
+    route: '/packages/social/my-services/index?section=published',
   },
   {
     key: 'accepted',
     name: '我的接单',
     icon: icons.accepted,
-    route: '/pages/my-services/index?section=errands&relation=accepted',
+    route: '/packages/social/my-services/index?section=errands&relation=accepted',
   },
   {
     key: 'orders',
     name: '我的订单',
     icon: icons.orders,
-    route: '/pages/my-services/index?section=orders&relation=all',
+    route: '/packages/social/my-services/index?section=orders&relation=all',
   },
   {
     key: 'carpool',
     name: '我的同行',
     icon: icons.carpool,
-    route: '/pages/my-services/index?section=carpool&relation=all',
+    route: '/packages/social/my-services/index?section=carpool&relation=all',
   },
 ] as const
 

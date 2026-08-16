@@ -2,6 +2,7 @@ import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { ErrandView } from '../../../api/types'
 import UserAvatarImage from '../../../components/user-avatar-image'
+import StickerContent from '../../../components/sticker-content'
 import { apiDateTimeTimestamp } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
@@ -16,7 +17,7 @@ import {
 const openDetail = (item: ErrandView) => {
   requestWechatSubscriptionForModule('errand')
   saveBusinessDetailSnapshot('errand', item)
-  Taro.navigateTo({ url: `/pages/errands/detail?id=${item.id}&snapshot=1` })
+  Taro.navigateTo({ url: `/packages/social/errands/detail?id=${item.id}&snapshot=1` })
 }
 
 const isUrgent = (deadline?: string | null) => {
@@ -59,7 +60,11 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
         <Text className='business-card-more'>•••</Text>
       </View>
 
-      <Text className='errand-card__title'>{item.description}</Text>
+      <StickerContent
+        content={item.description}
+        className='errand-card__title'
+        stickerClassName='business-card__sticker'
+      />
       <BusinessRoute
         startLabel='取件地'
         start={item.pickup_location}

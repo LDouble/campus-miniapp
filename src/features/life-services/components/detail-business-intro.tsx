@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Text, View } from '@tarojs/components'
+import StickerContent from '../../../components/sticker-content'
 
 type DetailBusinessIntroProps = {
   badges?: string[]
@@ -28,9 +29,19 @@ export default function DetailBusinessIntro({
           {action}
         </View>
       )}
-      {title?.trim() && <Text className='detail-overview__title'>{title.trim()}</Text>}
+      {title?.trim() && (
+        <StickerContent
+          content={title.trim()}
+          className='detail-overview__title'
+          stickerClassName='detail-overview__sticker'
+        />
+      )}
       {description?.trim() && (
-        <Text className='detail-overview__description'>{description.trim()}</Text>
+        <StickerContent
+          content={description.trim()}
+          className='detail-overview__description'
+          stickerClassName='detail-overview__sticker'
+        />
       )}
       {children}
     </View>
