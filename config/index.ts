@@ -1,3 +1,4 @@
+import path from 'path'
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
@@ -84,7 +85,10 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     },
     sourceRoot: 'src',
     outputRoot,
-    plugins: ['@tarojs/plugin-html'],
+    plugins: [
+      '@tarojs/plugin-html',
+      path.resolve(__dirname, 'plugins/weapp-compat.js'),
+    ],
     defineConstants: {
       __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(apiEndpoints.review),
       __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(apiEndpoints.production),

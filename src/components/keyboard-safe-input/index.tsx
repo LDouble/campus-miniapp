@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { Input, Textarea } from '@tarojs/components'
 import type { InputProps } from '@tarojs/components/types/Input'
 import type { TextareaProps } from '@tarojs/components/types/Textarea'
+import { getSystemState } from '../../state/system'
 
 type KeyboardVisibilityProps = {
   keepVisibleOnKeyboard?: boolean
@@ -63,7 +64,7 @@ const useKeyboardVisibilityScroll = (
   spacing: number,
 ) => {
   const layoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const windowHeight = useRef(Taro.getSystemInfoSync().windowHeight).current
+  const windowHeight = useRef(getSystemState().windowInfo.windowHeight).current
 
   useEffect(() => () => {
     if (layoutTimer.current) clearTimeout(layoutTimer.current)
