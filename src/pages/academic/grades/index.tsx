@@ -4,7 +4,6 @@ import { Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import {
   openCourseMarketplacePublisher,
-  openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
@@ -38,11 +37,9 @@ import {
   deriveGradePeriods,
   getGradePeriodLabel,
 } from '../utils'
-import {
-  openCourseMaterials,
-  shareCourseMaterials,
-} from '../../../features/course-materials/navigation'
+import { shareCourseMaterials } from '../../../features/course-materials/navigation'
 import { rememberCourseSuggestions } from '../../../features/course-materials/storage'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -107,6 +104,8 @@ export default function GradesPage() {
   const sheetScrollTopRef = useRef(0)
   const sheetActiveRef = useRef(false)
   const sheetTransitionRef = useRef(0)
+  const gradesRequestRef = useRef(0)
+  const firstPageShowRef = useRef(true)
 
   Taro.usePageScroll(({ scrollTop }) => {
     if (!sheetActiveRef.current && Number.isFinite(scrollTop)) {
@@ -209,12 +208,13 @@ export default function GradesPage() {
 
   useEffect(() => {
     let cancelled = false
+    const requestId = ++gradesRequestRef.current
     setLoading(!hasInitialSnapshot)
     setUsingCache(hasInitialSnapshot)
     setServerCache(null)
     academicRepository.getGrades()
       .then((result) => {
-        if (cancelled) return
+        if (cancelled || gradesRequestRef.current !== requestId) return
         const records = result.records
         academicStorage.setGradeRecords(academicUserId, records)
         setAllGrades(records)
@@ -232,7 +232,7 @@ export default function GradesPage() {
         })
       })
       .catch((error) => {
-        if (cancelled) return
+        if (cancelled || gradesRequestRef.current !== requestId) return
         if (hasInitialSnapshot) {
           setUsingCache(true)
           setLoadError(error)
@@ -242,7 +242,7 @@ export default function GradesPage() {
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (!cancelled && gradesRequestRef.current === requestId) setLoading(false)
       })
     return () => {
       cancelled = true
@@ -250,12 +250,14 @@ export default function GradesPage() {
   }, [academicUserId, hasInitialSnapshot])
 
   const refreshGrades = useCallback(async () => {
+    const requestId = ++gradesRequestRef.current
     setRetrying(true)
     setLoadError(null)
     setUsingCache(hasSnapshot)
     setServerCache(null)
     try {
       const result = await academicRepository.getGrades()
+      if (gradesRequestRef.current !== requestId) return
       const records = result.records
       academicStorage.setGradeRecords(academicUserId, records)
       setAllGrades(records)
@@ -264,6 +266,7 @@ export default function GradesPage() {
       setUsingCache(false)
       setServerCache(result.cache || null)
     } catch (error) {
+      if (gradesRequestRef.current !== requestId) return
       if (hasSnapshot) {
         setUsingCache(true)
         setLoadError(error)
@@ -272,10 +275,24 @@ export default function GradesPage() {
         setLoadError(error)
       }
     } finally {
-      setRetrying(false)
-      setLoading(false)
+      if (gradesRequestRef.current === requestId) {
+        setRetrying(false)
+        setLoading(false)
+      }
     }
   }, [academicUserId, hasSnapshot])
+
+  Taro.useDidShow(() => {
+    const shouldRefresh = consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/grades/index',
+    )
+    if (firstPageShowRef.current) {
+      firstPageShowRef.current = false
+      return
+    }
+    if (shouldRefresh) void refreshGrades()
+  })
 
   Taro.usePullDownRefresh(() => {
     refreshGrades().finally(() => Taro.stopPullDownRefresh())
@@ -367,7 +384,7 @@ export default function GradesPage() {
     openSheet('course-services')
   }
 
-  const openGradeMaterials = (grade: GradeRecord, action?: 'upload') => {
+  const shareGradeMaterials = (grade: GradeRecord) => {
     runAfterClosingSheet(() => {
       if (isQualificationEdition) {
         return openMigratedFeaturePage({ module: 'course_materials' })
@@ -379,13 +396,11 @@ export default function GradesPage() {
         periodLabel: getGradePeriodLabel(periods, grade.periodId),
         source: 'grades' as const,
       }
-      return action === 'upload'
-        ? shareCourseMaterials(context)
-        : openCourseMaterials(context)
+      return shareCourseMaterials(context)
     })
   }
 
-  const openCourseTrade = (intent: 'sell' | 'wanted') => {
+  const openCourseTrade = () => {
     if (!activeGrade) return
     if (isQualificationEdition) {
       runAfterClosingSheet(() => openMigratedFeaturePage({ module: 'marketplace' }))
@@ -393,20 +408,14 @@ export default function GradesPage() {
     }
     const courseName = activeGrade.courseName.trim()
     const prefill = {
-      intent,
-      description: intent === 'wanted'
-        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
-        : `出售与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      intent: 'sell',
+      description: `出售《${courseName}》课程使用过的课本，版本、笔记与成色可沟通。`,
       courseName,
       courseCode: activeGrade.courseCode || '',
       academicPeriodId: activeGrade.periodId,
       academicPeriodLabel: getGradePeriodLabel(periods, activeGrade.periodId),
       source: 'grade',
     } as const
-    if (intent === 'wanted') {
-      runAfterClosingSheet(() => openCourseMarketplaceSearch(prefill))
-      return
-    }
     runAfterClosingSheet(() => openCourseMarketplacePublisher(prefill))
   }
 
@@ -622,18 +631,16 @@ export default function GradesPage() {
               <View className='course-resource-actions course-resource-actions--standalone'>
                 <View
                   className='course-resource-actions__primary'
-                  onClick={() => openGradeMaterials(activeGrade)}
+                  onClick={() => shareGradeMaterials(activeGrade)}
                 >
                   <View>
-                    <Text>{isQualificationEdition ? '新版课程服务' : '查看课程资料'}</Text>
-                    <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '只带入课程和学期，不会带入成绩'}</Text>
+                    <Text>{isQualificationEdition ? '新版课程服务' : '分享资料'}</Text>
+                    <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '分享笔记、课件或复习资料'}</Text>
                   </View>
-                  <Text>查看 ›</Text>
+                  <Text>去分享 ›</Text>
                 </View>
-                {!isQualificationEdition && <View className='course-resource-actions__secondary'>
-                  <View onClick={() => openGradeMaterials(activeGrade, 'upload')}>分享资料</View>
-                  <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
-                  <View onClick={() => openCourseTrade('sell')}>出售相关资料</View>
+                {!isQualificationEdition && <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
+                  <View onClick={openCourseTrade}>出售课本</View>
                 </View>}
               </View>
             </View>
@@ -695,7 +702,7 @@ export default function GradesPage() {
             ) : (
               <View className='grade-list-heading grade-list-heading--original'>
                 <Text>课程成绩</Text>
-                <Text>点击课程查看更多学习服务</Text>
+                <Text>点击课程分享资料或出售课本</Text>
               </View>
             )}
             <View className='grade-list'>
@@ -754,10 +761,10 @@ export default function GradesPage() {
                             className='grade-card__materials'
                             onClick={(event) => {
                               requestWechatSubscriptionAndStopPropagation(event)
-                              openGradeMaterials(grade)
+                              shareGradeMaterials(grade)
                             }}
                           >
-                            查看课程资料 ›
+                            分享资料 ›
                           </Text>}
                         </View>
                         <View className='grade-card__result'>

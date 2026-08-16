@@ -13,6 +13,7 @@ const theme = JSON.parse(read('src/theme.json')) as ThemeDefinition
 const appConfig = read('src/app.config.ts')
 const appStyle = read('src/app.scss')
 const darkModeStyle = read('src/styles/_dark-mode.scss')
+const shuttleDetailStyle = read('src/pages/shuttle/detail.scss')
 const tokens = read('src/styles/_tokens.scss')
 const tabBarStyle = read('src/custom-tab-bar/index.wxss')
 
@@ -64,6 +65,21 @@ assert.match(darkModeStyle, /page \.community-detail-card__review/u)
 assert.match(darkModeStyle, /page \.verification-method--active/u)
 assert.match(darkModeStyle, /page \.verification-education-option--active/u)
 assert.match(darkModeStyle, /page \.verification-password-control/u)
+assert.match(
+  darkModeStyle,
+  /page \.verification-field input\.verification-field__input/u,
+  '教务账号输入框缺少暗色文字色',
+)
+assert.match(
+  darkModeStyle,
+  /page \.verification-password-control input\.verification-password-control__input--masked/u,
+  '密码输入框缺少暗色掩码处理',
+)
+assert.match(
+  darkModeStyle,
+  /page \.verification-password-control__mask/u,
+  '密码掩码缺少暗色文字色',
+)
 assert.match(darkModeStyle, /page \.verification-upload/u)
 assert.match(darkModeStyle, /page \.bottom-sheet-layer/u)
 assert.match(darkModeStyle, /page \.academic-sheet,/u)
@@ -71,6 +87,16 @@ assert.match(darkModeStyle, /page \.period-options__item--active/u)
 assert.match(darkModeStyle, /page \.grade-summary,/u)
 assert.match(darkModeStyle, /page \.shuttle-detail-panel/u)
 assert.match(darkModeStyle, /page \.shuttle-detail-actions/u)
+assert.match(
+  shuttleDetailStyle,
+  /&__bus\s*\{[^}]*background:\s*rgba\(18,\s*73,\s*142,\s*0\.26\)/u,
+  '校车详情顶部图标不得使用白色底板',
+)
+assert.match(
+  shuttleDetailStyle,
+  /&__direction\s*\{[^}]*background:\s*rgba\(18,\s*73,\s*142,\s*0\.22\)/u,
+  '校车详情起终点长条不得使用白色背景',
+)
 assert.match(darkModeStyle, /page \.calendar-hero,/u)
 assert.doesNotMatch(darkModeStyle, /page\s+image\s*\{/u, '不能全局反色用户上传的图片')
 

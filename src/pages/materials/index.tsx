@@ -92,6 +92,7 @@ string
   schedule: '从课表进入',
   grades: '从成绩进入',
   selection: '从选课结果进入',
+  exams: '从考试安排进入',
 }
 
 const decodeRouteValue = (value?: string) => {

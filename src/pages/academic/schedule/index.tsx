@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
@@ -14,15 +14,11 @@ import {
   loadMiniappRuntimeConfig,
 } from '../../../features/runtime-config'
 import {
-  openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
-  type MarketplaceIntent,
 } from '../../../features/life-services/marketplace-prefill'
-import {
-  openCourseMaterials,
-  shareCourseMaterials,
-} from '../../../features/course-materials/navigation'
+import { openCourseMaterials } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { findCourseConflicts } from '../calculations'
@@ -91,9 +87,7 @@ interface CourseDetailCardProps {
   onEdit?: () => void
   onDelete?: () => void
   onWanted: () => void
-  onSell: () => void
   onFindMaterials: () => void
-  onShareMaterials: () => void
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
@@ -104,9 +98,7 @@ function CourseDetailCard({
   onEdit,
   onDelete,
   onWanted,
-  onSell,
   onFindMaterials,
-  onShareMaterials,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   return (
@@ -149,15 +141,13 @@ function CourseDetailCard({
         <View className='course-resource-actions course-resource-actions--course-card'>
           <View className='course-resource-actions__primary' onClick={onFindMaterials}>
             <View>
-              <Text>{isQualificationEdition ? '新版课程服务' : '查看课程资料'}</Text>
-              <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '已带入课程与当前学期'}</Text>
+              <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
+              <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '按课程与当前学期为你筛选'}</Text>
             </View>
-            <Text>查看 ›</Text>
+            <Text>去发现 ›</Text>
           </View>
-          {!isQualificationEdition && <View className='course-resource-actions__secondary'>
-            <View onClick={onShareMaterials}>分享资料</View>
-            <View onClick={onWanted}>求购教材</View>
-            <View onClick={onSell}>转卖教材</View>
+          {!isQualificationEdition && <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
+            <View onClick={onWanted}>求购课本</View>
           </View>}
         </View>
       </View>
@@ -212,6 +202,8 @@ export default function SchedulePage() {
   const [courseDraft, setCourseDraft] = useState<CustomCourseDraft>(
     emptyDraft(preferences.schedulePeriodId),
   )
+  const scheduleRequestRef = useRef(0)
+  const firstPageShowRef = useRef(true)
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
   const sectionTimes = Array.from({ length: 12 }, (_, index) => (
@@ -325,12 +317,14 @@ export default function SchedulePage() {
     }
 
     let active = true
+    const requestId = ++scheduleRequestRef.current
     setServerCache(null)
     setUsingCache(hasCachedCourses)
     if (!hasCachedCourses) setLoading(true)
     setLoadError(null)
-      academicRepository.getCourses(periodId)
+    academicRepository.getCourses(periodId)
       .then((result) => {
+        if (!active || scheduleRequestRef.current !== requestId) return
         const courses = requireCoursesForPeriod(result.records, periodId)
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         const updatedAt = Date.now()
@@ -347,17 +341,15 @@ export default function SchedulePage() {
             [periodId]: updatedAt,
           },
         )
-        if (active) {
-          setOfficialCoursesByPeriod((current) => (
-            setCoursesForPeriod(current, periodId, courses)
-          ))
-          setCacheUpdatedAt(updatedAt)
-          setUsingCache(false)
-          setServerCache(result.cache || null)
-        }
+        setOfficialCoursesByPeriod((current) => (
+          setCoursesForPeriod(current, periodId, courses)
+        ))
+        setCacheUpdatedAt(updatedAt)
+        setUsingCache(false)
+        setServerCache(result.cache || null)
       })
       .catch((error) => {
-        if (!active) return
+        if (!active || scheduleRequestRef.current !== requestId) return
         if (hasCachedCourses) {
           setUsingCache(true)
           setLoadError(error)
@@ -367,7 +359,7 @@ export default function SchedulePage() {
         }
       })
       .finally(() => {
-        if (active) setLoading(false)
+        if (active && scheduleRequestRef.current === requestId) setLoading(false)
       })
     return () => {
       active = false
@@ -390,7 +382,8 @@ export default function SchedulePage() {
     setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
   }
 
-  const refreshSchedule = async () => {
+  const refreshSchedule = useCallback(async () => {
+    const requestId = ++scheduleRequestRef.current
     const cache = academicStorage.getScheduleCache(academicUserId)
     const hasCachedCourses = Boolean(
       cache
@@ -406,11 +399,13 @@ export default function SchedulePage() {
     setUsingCache(hasCachedCourses)
     try {
       const records = await academicRepository.getPeriods()
+      if (scheduleRequestRef.current !== requestId) return
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
       const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
       const courseResult = schedulePeriodId
         ? await academicRepository.getCourses(schedulePeriodId)
         : undefined
+      if (scheduleRequestRef.current !== requestId) return
       const courses = courseResult
         ? requireCoursesForPeriod(courseResult.records, schedulePeriodId)
         : []
@@ -452,6 +447,7 @@ export default function SchedulePage() {
       }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
     } catch (error) {
+      if (scheduleRequestRef.current !== requestId) return
       if (hasCachedCourses) {
         setUsingCache(true)
         setLoadError(error)
@@ -460,10 +456,24 @@ export default function SchedulePage() {
         setLoadError(error)
       }
     } finally {
-      setLoading(false)
-      setRetrying(false)
+      if (scheduleRequestRef.current === requestId) {
+        setLoading(false)
+        setRetrying(false)
+      }
     }
-  }
+  }, [academicUserId, preferences.schedulePeriodId])
+
+  Taro.useDidShow(() => {
+    const shouldRefresh = consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/schedule/index',
+    )
+    if (firstPageShowRef.current) {
+      firstPageShowRef.current = false
+      return
+    }
+    if (shouldRefresh) void refreshSchedule()
+  })
 
   Taro.usePullDownRefresh(() => {
     setShowRefreshGuide(false)
@@ -505,7 +515,7 @@ export default function SchedulePage() {
     setActiveSlotCourses([])
   }
 
-  const openCourseTrade = (course: Course, intent: MarketplaceIntent) => {
+  const openCourseTrade = (course: Course) => {
     closeCourseFloat()
     if (isQualificationEdition) {
       void openMigratedFeaturePage({ module: 'marketplace' })
@@ -513,23 +523,17 @@ export default function SchedulePage() {
     }
     const courseName = course.name.trim()
     const prefill = {
-      intent,
-      description: intent === 'wanted'
-        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
-        : `转卖与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      intent: 'wanted',
+      description: `求购《${courseName}》课程使用的课本，版本和成色可沟通。`,
       courseName,
       courseCode: course.courseCode || '',
       academicPeriodId: course.periodId,
       academicPeriodLabel: periods.find((period) => period.id === course.periodId)?.label || course.periodId,
       source: 'schedule',
     } as const
-    if (intent === 'wanted') {
-      void openCourseMarketplaceSearch(prefill)
-      return
-    }
-    void openCourseMarketplacePublisher(prefill)
+    void openCourseMarketplaceSearch(prefill)
   }
-  const openCourseMaterialPage = (course: Course, action?: 'upload') => {
+  const openCourseMaterialPage = (course: Course) => {
     setSheet(null)
     if (isQualificationEdition) {
       void openMigratedFeaturePage({ module: 'course_materials' })
@@ -542,9 +546,7 @@ export default function SchedulePage() {
       periodLabel: periods.find((period) => period.id === course.periodId)?.label,
       source: 'schedule' as const,
     }
-    void (action === 'upload'
-      ? shareCourseMaterials(context)
-      : openCourseMaterials(context))
+    void openCourseMaterials(context)
   }
 
   const openCourseForm = (course?: Course) => {
@@ -954,10 +956,8 @@ export default function SchedulePage() {
                   currentWeek={preferences.week}
                   onDelete={() => deleteCourse(activeCourse)}
                   onEdit={() => openCourseForm(activeCourse)}
-                  onWanted={() => openCourseTrade(activeCourse, 'wanted')}
-                  onSell={() => openCourseTrade(activeCourse, 'sell')}
+                  onWanted={() => openCourseTrade(activeCourse)}
                   onFindMaterials={() => openCourseMaterialPage(activeCourse)}
-                  onShareMaterials={() => openCourseMaterialPage(activeCourse, 'upload')}
                 />
               </View>
             </View>

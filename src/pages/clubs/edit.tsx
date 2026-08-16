@@ -350,7 +350,7 @@ export default function ClubEditorPage() {
             <View className='club-form-section__head'><Text>基础资料</Text><Text>带 * 为必填</Text></View>
             <View className='club-field'>
               <Text className='club-field__label'>社团名称 *</Text>
-              <KeyboardSafeInput id='club-name' className='club-field__input' value={name} maxlength={60} disabled={nameFrozen} placeholder='2–60 个字' onInput={(event) => setName(event.detail.value)} />
+              <KeyboardSafeInput id='club-name' className='club-field__input' value={name} maxlength={60} disabled={nameFrozen} keepVisibleOnKeyboard={false} placeholder='2–60 个字' onInput={(event) => setName(event.detail.value)} />
               <Text className='club-field__hint'>{nameFrozen ? '首次发布后名称不可自行修改' : `${name.trim().length}/60`}</Text>
             </View>
             <View className='club-field'>
@@ -362,20 +362,20 @@ export default function ClubEditorPage() {
             <View className='club-field-grid'>
               <View className='club-field'>
                 <Text className='club-field__label'>社团简称</Text>
-                <KeyboardSafeInput className='club-field__input' value={shortName} maxlength={20} placeholder='最多 20 字' onInput={(event) => setShortName(event.detail.value)} />
+                <KeyboardSafeInput className='club-field__input' value={shortName} maxlength={20} nativeAdjustPosition placeholder='最多 20 字' onInput={(event) => setShortName(event.detail.value)} />
               </View>
               <View className='club-field'>
                 <Text className='club-field__label'>成立年份</Text>
-                <KeyboardSafeInput className='club-field__input' value={foundedYear} type='number' maxlength={4} placeholder={`1900–${new Date().getFullYear()}`} onInput={(event) => setFoundedYear(event.detail.value.replace(/\D/g, '').slice(0, 4))} />
+                <KeyboardSafeInput className='club-field__input' value={foundedYear} type='number' maxlength={4} nativeAdjustPosition placeholder={`1900–${new Date().getFullYear()}`} onInput={(event) => setFoundedYear(event.detail.value.replace(/\D/g, '').slice(0, 4))} />
               </View>
             </View>
             <View className='club-field'>
               <Text className='club-field__label'>宣传口号</Text>
-              <KeyboardSafeInput className='club-field__input' value={slogan} maxlength={80} placeholder='一句话表达社团特色' onInput={(event) => setSlogan(event.detail.value)} />
+              <KeyboardSafeInput className='club-field__input' value={slogan} maxlength={80} nativeAdjustPosition placeholder='一句话表达社团特色' onInput={(event) => setSlogan(event.detail.value)} />
             </View>
             <View className='club-field'>
               <Text className='club-field__label'>指导 / 挂靠单位</Text>
-              <KeyboardSafeInput className='club-field__input' value={supervisingUnit} maxlength={100} placeholder='选填，最多 100 个字' onInput={(event) => setSupervisingUnit(event.detail.value)} />
+              <KeyboardSafeInput className='club-field__input' value={supervisingUnit} maxlength={100} nativeAdjustPosition placeholder='选填，最多 100 个字' onInput={(event) => setSupervisingUnit(event.detail.value)} />
             </View>
           </View>
 
@@ -415,7 +415,7 @@ export default function ClubEditorPage() {
                     {image.status === 'uploading' && <View className='club-gallery-draft__progress'><View style={{ width: `${image.progress}%` }} /></View>}
                   </View>
                   <View className='club-gallery-draft__body'>
-                    <KeyboardSafeInput value={image.caption} maxlength={60} placeholder='图片说明（可选）' onInput={(event) => updateImage(image.key, (current) => ({ ...current, caption: event.detail.value }))} />
+                    <KeyboardSafeInput value={image.caption} maxlength={60} nativeAdjustPosition placeholder='图片说明（可选）' onInput={(event) => updateImage(image.key, (current) => ({ ...current, caption: event.detail.value }))} />
                     <View className='club-gallery-draft__actions'>
                       <View ariaRole='button' ariaLabel={`将第 ${index + 1} 张图片前移`} className={index === 0 ? 'is-disabled' : ''} onClick={() => setGallery((current) => moveGalleryImage(current, index, -1))}>前移</View>
                       <View ariaRole='button' ariaLabel={`将第 ${index + 1} 张图片后移`} className={index === gallery.length - 1 ? 'is-disabled' : ''} onClick={() => setGallery((current) => moveGalleryImage(current, index, 1))}>后移</View>
@@ -434,12 +434,12 @@ export default function ClubEditorPage() {
             <View className='club-form-section__head'><Text>文字介绍</Text><Text>使用纯文本分段</Text></View>
             <View className='club-field'>
               <Text className='club-field__label'>社团简介 *</Text>
-              <KeyboardSafeTextarea id='club-summary' className='club-field__textarea club-field__textarea--short' value={summary} maxlength={200} placeholder='20–200 个字，用于列表和详情摘要' onInput={(event) => setSummary(event.detail.value)} />
+              <KeyboardSafeTextarea id='club-summary' className='club-field__textarea club-field__textarea--short' value={summary} maxlength={200} nativeAdjustPosition placeholder='20–200 个字，用于列表和详情摘要' onInput={(event) => setSummary(event.detail.value)} />
               <Text className='club-field__hint'>{summary.trim().length}/200</Text>
             </View>
             <View className='club-field'>
               <Text className='club-field__label'>详细介绍 *</Text>
-              <KeyboardSafeTextarea id='club-description' className='club-field__textarea' value={description} maxlength={5000} placeholder='50–5000 个字，可用换行分段介绍社团文化、特色和日常活动' onInput={(event) => setDescription(event.detail.value)} />
+              <KeyboardSafeTextarea id='club-description' className='club-field__textarea' value={description} maxlength={5000} nativeAdjustPosition placeholder='50–5000 个字，可用换行分段介绍社团文化、特色和日常活动' onInput={(event) => setDescription(event.detail.value)} />
               <Text className='club-field__hint'>{description.trim().length}/5000</Text>
             </View>
           </View>

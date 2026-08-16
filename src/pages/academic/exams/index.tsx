@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
+import { isQualificationEdition } from '../../../features/app-edition'
+import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
+import { openCourseMaterials } from '../../../features/course-materials/navigation'
+import { openCourseMarketplacePublisher } from '../../../features/life-services/marketplace-prefill'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
@@ -64,6 +69,8 @@ export default function ExamsPage() {
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [sheet, setSheet] = useState<ExamSheet>(null)
   const [activeExam, setActiveExam] = useState<ExamRecord | null>(null)
+  const examsRequestRef = useRef(0)
+  const firstPageShowRef = useRef(true)
 
   const visibleExams = useMemo(() => exams
     .sort((left, right) => {
@@ -106,6 +113,7 @@ export default function ExamsPage() {
     manual = false,
     periodId = preferences.examPeriodId,
   ) => {
+    const requestId = ++examsRequestRef.current
     const cache = academicStorage.getRecordsCache(academicUserId)
     const cached = cache?.examsByPeriod[periodId]
     const updatedAt = cache?.examsUpdatedAtByPeriod[periodId] || 0
@@ -118,6 +126,7 @@ export default function ExamsPage() {
     setLoadError(null)
     try {
       const result = await academicRepository.getExams(periodId)
+      if (examsRequestRef.current !== requestId) return
       const records = result.records
       academicStorage.setExamRecords(academicUserId, periodId, records)
       setExams(records)
@@ -125,6 +134,7 @@ export default function ExamsPage() {
       setUsingCache(false)
       setServerCache(result.cache || null)
     } catch (error) {
+      if (examsRequestRef.current !== requestId) return
       if (updatedAt) {
         setUsingCache(true)
         setLoadError(error)
@@ -133,10 +143,25 @@ export default function ExamsPage() {
         setLoadError(error)
       }
     } finally {
-      setLoading(false)
-      setRetrying(false)
+      if (examsRequestRef.current === requestId) {
+        setLoading(false)
+        setRetrying(false)
+      }
     }
   }, [academicUserId, preferences.examPeriodId])
+
+  Taro.useDidShow(() => {
+    if (!firstPageShowRef.current && !hasSelectedPeriod) return
+    const shouldRefresh = consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/exams/index',
+    )
+    if (firstPageShowRef.current) {
+      firstPageShowRef.current = false
+      return
+    }
+    if (shouldRefresh && hasSelectedPeriod) void refreshExams(false)
+  })
 
   const retryPage = useCallback(async () => {
     setRetrying(true)
@@ -173,6 +198,40 @@ export default function ExamsPage() {
 
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({ ...current, ...patch, section: 'exams' }))
+  }
+
+  const openExamMaterials = () => {
+    if (!activeExam) return
+    setSheet(null)
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'course_materials' })
+      return
+    }
+    void openCourseMaterials({
+      courseName: activeExam.courseName,
+      periodId: activeExam.periodId,
+      periodLabel: getPeriodLabel(periods, activeExam.periodId),
+      source: 'exams',
+    })
+  }
+
+  const openExamTextbookPublisher = () => {
+    if (!activeExam) return
+    const courseName = activeExam.courseName.trim()
+    setSheet(null)
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'marketplace' })
+      return
+    }
+    void openCourseMarketplacePublisher({
+      intent: 'sell',
+      description: `出售《${courseName}》课程使用过的课本，版本和成色可沟通。`,
+      courseName,
+      courseCode: '',
+      academicPeriodId: activeExam.periodId,
+      academicPeriodLabel: getPeriodLabel(periods, activeExam.periodId),
+      source: 'schedule',
+    })
   }
 
   const toolbar = (
@@ -242,6 +301,20 @@ export default function ExamsPage() {
               <View className='academic-notice'>
                 <Text>考场提醒</Text>
                 <Text>{activeExam.notice}</Text>
+              </View>
+              <View className='course-resource-actions course-resource-actions--standalone'>
+                <View className='course-resource-actions__primary' onClick={openExamMaterials}>
+                  <View>
+                    <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
+                    <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '发现这门课的笔记、真题和复习资料'}</Text>
+                  </View>
+                  <Text>去发现 ›</Text>
+                </View>
+                {!isQualificationEdition && (
+                  <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
+                    <View onClick={openExamTextbookPublisher}>出售课本</View>
+                  </View>
+                )}
               </View>
               <View className='academic-button academic-button--full' onClick={() => setSheet(null)}>知道了</View>
             </View>

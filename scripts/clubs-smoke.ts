@@ -85,6 +85,13 @@ for (const sourcePath of [
 }
 
 const clubsIndexSource = readFileSync(resolve(__dirname, '../src/pages/clubs/index.tsx'), 'utf8')
+const clubEditorSource = readFileSync(resolve(__dirname, '../src/pages/clubs/edit.tsx'), 'utf8')
+const clubsIndexStyles = readFileSync(resolve(__dirname, '../src/pages/clubs/index.scss'), 'utf8')
+const clubEditorStyles = readFileSync(resolve(__dirname, '../src/pages/clubs/edit.scss'), 'utf8')
+const keyboardSafeInputSource = readFileSync(
+  resolve(__dirname, '../src/components/keyboard-safe-input/index.tsx'),
+  'utf8',
+)
 const clubsRepositorySource = readFileSync(resolve(__dirname, '../src/features/clubs/repository.ts'), 'utf8')
 for (const stableSelector of [
   'club-view-card',
@@ -98,6 +105,32 @@ for (const stableSelector of [
 assert.ok(clubsIndexSource.includes("viewMode === 'card'"), '社团广场应保留卡片视图')
 assert.ok(clubsIndexSource.includes("viewMode === 'directory'"), '社团广场应提供目录视图')
 assert.ok(clubsRepositorySource.includes("path: '/api/v1/clubs/directory'"), '社团目录应使用独立公开接口')
+assert.ok(
+  clubsIndexStyles.includes('background: var(--campus-overlay, rgba(15, 23, 42, 0.42));'),
+  '社团 Hero 的白色图标应使用高对比遮罩底板',
+)
+assert.ok(
+  clubEditorStyles.includes('.club-editor-progress__nav > view { color: var(--campus-primary, #2f80ed);'),
+  '社团创建页顶部引导应使用主题主色文字，避免亮色白字白底',
+)
+assert.equal(
+  keyboardSafeInputSource.match(/Taro\.getEnv\(\) !== Taro\.ENV_TYPE\.WEAPP/g)?.length,
+  2,
+  '微信端 Input 与 Textarea 的 onFocus 不应重复触发手动滚动',
+)
+assert.ok(
+  keyboardSafeInputSource.includes('const requestSequence = useRef(0)')
+    && keyboardSafeInputSource.includes('if (!isCurrentRequest()) return')
+    && keyboardSafeInputSource.includes('cancelKeyboardVisibilityScroll()'),
+  '键盘安全输入应让失焦、切换字段和卸载后的旧滚动请求失效',
+)
+assert.ok(
+  keyboardSafeInputSource.includes('adjustPosition={nativeAdjustPosition}')
+    && (clubEditorSource.match(/nativeAdjustPosition/g)?.length || 0) >= 7
+    && clubEditorSource.includes("id='club-name'")
+    && clubEditorSource.includes('keepVisibleOnKeyboard={false}'),
+  '社团长表单应使用微信原生键盘避让，不再主动 pageScrollTo 当前字段',
+)
 
 const clubDetailSource = readFileSync(resolve(__dirname, '../src/pages/clubs/detail.tsx'), 'utf8')
 assert.ok(clubDetailSource.includes('getNavbarMetrics'), '大图预览顶部应使用真实状态栏与胶囊尺寸')

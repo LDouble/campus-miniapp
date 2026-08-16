@@ -22,6 +22,7 @@ interface AcademicCacheNoticeProps {
 }
 
 type AcademicLoadAction = 'retry' | 'rebind'
+const UPDATED_NOTICE_DURATION = 5000
 
 export interface AcademicLoadErrorState {
   title: string
@@ -135,9 +136,10 @@ export function AcademicCacheNotice({
   localFallback = false,
 }: AcademicCacheNoticeProps) {
   const [now, setNow] = useState(Date.now)
+  const [visibleUpdatedAt, setVisibleUpdatedAt] = useState(updatedAt)
   const notice = resolveAcademicCacheNotice({
     cache,
-    updatedAt,
+    updatedAt: visibleUpdatedAt,
     localUpdatedAt,
     localFallback,
     now,
@@ -149,6 +151,15 @@ export function AcademicCacheNotice({
     const timer = setTimeout(() => setNow(Date.now()), Math.max(refreshAt - Date.now(), 0))
     return () => clearTimeout(timer)
   }, [refreshAt])
+
+  useEffect(() => {
+    setVisibleUpdatedAt(updatedAt)
+    if (!updatedAt) return undefined
+    const timer = setTimeout(() => {
+      setVisibleUpdatedAt((current) => current === updatedAt ? 0 : current)
+    }, UPDATED_NOTICE_DURATION)
+    return () => clearTimeout(timer)
+  }, [updatedAt])
 
   if (!notice) return null
   return (

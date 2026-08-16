@@ -565,7 +565,7 @@ page { background: var(--campus-page, #f4f7fb); }
 .club-editor-progress__track { background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); }
 .club-editor-progress__track > view { background: #fff; }
 .club-editor-progress__nav { overflow-x: auto; grid-template-columns: repeat(4, 132rpx); padding-bottom: 2rpx; }
-.club-editor-progress__nav > view { color: #fff; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); }
+.club-editor-progress__nav > view { color: var(--campus-primary, #2f80ed); background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); }
 .club-form-section { background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
 .club-form-section__head { gap: 16rpx; border-color: var(--campus-border, #edf1f6); }
 .club-form-section__head text:first-child { color: var(--campus-text-heading, #1d293d); }

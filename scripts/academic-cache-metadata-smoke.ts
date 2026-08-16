@@ -124,6 +124,19 @@ assert.ok(
   '已有本机成绩快照时应继续展示数据并在后台刷新',
 )
 
+const cacheNoticeComponent = readFileSync(
+  resolve(__dirname, '../src/pages/academic/components/academic-load-state.tsx'),
+  'utf8',
+)
+assert.ok(
+  cacheNoticeComponent.includes('const UPDATED_NOTICE_DURATION = 5000')
+    && cacheNoticeComponent.includes('updatedAt: visibleUpdatedAt')
+    && cacheNoticeComponent.includes('setVisibleUpdatedAt(updatedAt)')
+    && cacheNoticeComponent.includes('current === updatedAt ? 0 : current')
+    && cacheNoticeComponent.includes('return () => clearTimeout(timer)'),
+  '本次成功更新时间应在 5 秒后隐藏，并在新更新时间或组件卸载时清理旧计时器',
+)
+
 for (const pagePath of [
   '../src/pages/academic/schedule/index.tsx',
   '../src/pages/academic/grades/index.tsx',

@@ -16,6 +16,10 @@ const homeStyleSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.scss'),
   'utf8',
 )
+const freshBarrageStyleSource = readFileSync(
+  resolve(__dirname, '../src/features/community/fresh-barrage.scss'),
+  'utf8',
+)
 const homeServiceKeysSource = homeSource.match(
   /const homeServiceKeys = new Set\(\[([\s\S]*?)\]\)/,
 )?.[1] || ''
@@ -75,6 +79,26 @@ assert.match(
   homeStyleSource,
   /\.hero-card--image \.hero-card__pill\s*\{[\s\S]*?color:\s*#fff;[\s\S]*?background:\s*rgba\(15,\s*23,\s*42,\s*0\.62\)/u,
   '图片横幅标签必须使用白字搭配深色遮罩',
+)
+assert.match(
+  homeStyleSource,
+  /background:\s*linear-gradient\(\s*153deg,\s*#326ea9 0%,\s*#287992 48%,\s*#24766e 100%\s*\)/u,
+  '首页 hero 必须使用中等饱和度渐变，避免蓝青色过曝',
+)
+assert.match(
+  homeStyleSource,
+  /&__glow\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.16\)/u,
+  '首页 hero 高光透明度不得过高',
+)
+assert.match(
+  homeStyleSource,
+  /&__compact-title\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;/u,
+  '首页帖子摘要必须最多显示两行',
+)
+assert.match(
+  freshBarrageStyleSource,
+  /\.fresh-barrage__content\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;/u,
+  '首页弹幕内容必须最多显示两行',
 )
 
 const periods: AcademicPeriod[] = [{
