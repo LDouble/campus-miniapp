@@ -28,6 +28,7 @@ type Props = {
   filterLabel?: string
   canFilter?: boolean
   onOpenFilter?: () => void
+  onSelectSection?: (sectionId: number) => void
 }
 
 type CommunityFeedCacheEntry = {
@@ -81,6 +82,7 @@ export default function CommunityFeedPanel({
   filterLabel = '全部',
   canFilter = false,
   onOpenFilter,
+  onSelectSection,
 }: Props) {
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -378,11 +380,11 @@ export default function CommunityFeedPanel({
           )}
           {home.featured_posts.length > 0 && <Text className='community-operations__title'>精选动态</Text>}
           {home.featured_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} />
+            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} onSelectSection={onSelectSection} />
           ))}
           {home.recommended_posts.length > 0 && <Text className='community-operations__title'>推荐给你</Text>}
           {home.recommended_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} />
+            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} onSelectSection={onSelectSection} />
           ))}
         </View>
       )}
@@ -458,6 +460,7 @@ export default function CommunityFeedPanel({
               onToggleLike={(target) => void toggleLike(target)}
               onOpen={openPost}
               onOpenAuthor={(item) => void openPublicProfile(item.author_id)}
+              onSelectSection={onSelectSection}
             />
           ))}
         </View>

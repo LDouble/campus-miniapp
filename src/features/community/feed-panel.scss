@@ -255,6 +255,8 @@
 }
 
 .community-post__author-line > text:first-child {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   color: #28252e;
   font-size: 25rpx;
@@ -265,6 +267,7 @@
 
 .community-post__meta {
   margin-top: 4rpx;
+  width: 100%;
   overflow: hidden;
   color: #929692;
   font-size: 22rpx;
@@ -307,7 +310,7 @@
   display: inline-flex;
   max-width: 180rpx;
   min-height: 40rpx;
-  margin-left: 10rpx;
+  margin-left: auto;
   padding: 0 13rpx;
   flex: none;
   align-items: center;
@@ -663,15 +666,18 @@
 .community-post__body { padding-top: 16rpx; }
 
 .community-post__section-pill {
-  min-height: 34rpx;
-  margin-left: 10rpx;
-  padding: 0 12rpx;
+  min-height: 32rpx;
+  margin-left: auto;
+  padding: 0 10rpx;
   border-radius: 8rpx;
-  background: var(--campus-surface-primary, #eff6ff);
+  background: var(--campus-surface-subtle, #f8fafc);
+  border: 1rpx solid var(--campus-border, #f1f5f9);
+  transition: opacity 140ms ease, background-color 140ms ease;
 }
 
 .community-post__section-pill image { display: none; }
-.community-post__section-pill text { color: var(--campus-primary, #2b7fff); font-size: 21rpx; }
+.community-post__section-pill text { color: var(--campus-text-secondary, #62748e); font-size: 21rpx; }
+.community-post__section-pill--pressed { opacity: 0.62; }
 
 .community-post__content {
   color: var(--campus-text-body, #45556c);

@@ -1,5 +1,6 @@
 .community-level-badge {
   display: inline-flex;
+  flex: none;
   align-items: center;
   min-height: 34rpx;
   padding: 0 12rpx;
@@ -8,6 +9,7 @@
   font-size: 20rpx;
   font-weight: 650;
   line-height: 1;
+  white-space: nowrap;
   vertical-align: middle;
   background: #e9f5f7;
   border: 1rpx solid rgba(48, 149, 182, 0.18);
@@ -15,6 +17,10 @@
 
   text + text {
     margin-left: 6rpx;
+  }
+
+  text {
+    white-space: nowrap;
   }
 
   &--dawn {

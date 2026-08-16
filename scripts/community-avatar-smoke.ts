@@ -28,6 +28,9 @@ assert.ok(cardSource.includes("label: '审核中'"))
 assert.ok(cardSource.includes("label: '未通过'"))
 assert.ok(cardSource.includes('图片审核中'))
 assert.ok(cardSource.includes('community-post__image-reviewing--overlay'))
+assert.match(cardSource, /community-post__meta[\s\S]*?community-post__section-pill/u)
+assert.ok(cardSource.includes('onSelectSection?.(post.section_id)'))
+assert.ok(cardSource.includes('event.stopPropagation()'))
 
 const feedStyleSource = readFileSync(resolve(__dirname, '../src/features/community/feed-panel.scss'), 'utf8')
 assert.ok(feedStyleSource.includes('.community-post__review-status--pending'))
@@ -35,13 +38,19 @@ assert.ok(feedStyleSource.includes('.community-post__review-status--rejected'))
 assert.ok(feedStyleSource.includes('.community-post__image-reviewing'))
 assert.ok(feedStyleSource.includes('.community-post__image-reviewing--overlay'))
 assert.match(feedStyleSource, /\.community-post__avatar-image[\s\S]*?background: #eef3f2;[\s\S]*?border-radius: 50%;/)
+assert.match(feedStyleSource, /\.community-post__author-line > text:first-child \{[^}]*flex: 1;/u)
+assert.match(feedStyleSource, /\.community-post__section-pill \{[^}]*background: var\(--campus-surface-subtle, #f8fafc\);/u)
+
+const levelBadgeStyleSource = readFileSync(resolve(__dirname, '../src/features/community/level-badge.scss'), 'utf8')
+assert.match(levelBadgeStyleSource, /\.community-level-badge \{[^}]*flex: none;[^}]*white-space: nowrap;/u)
 
 const detailSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.tsx'), 'utf8')
-assert.equal((detailSource.match(/communityAuthorAvatarUrl\(/g) || []).length >= 3, true)
+assert.equal((detailSource.match(/communityAuthorAvatarUrl\(/g) || []).length, 1)
 assert.ok(detailSource.includes("className='community-detail-card__avatar-image'"))
-assert.ok(detailSource.includes("className='community-detail-comments__avatar-image'"))
-assert.ok(detailSource.includes("className='community-comment__reply-avatar-image'"))
 assert.ok(detailSource.includes('community-detail-card__image-reviewing--overlay'))
+
+const detailCommentsSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/detail-comments.tsx'), 'utf8')
+assert.ok(detailCommentsSource.includes("className='business-detail-comment__avatar-image'"))
 
 const detailStyleSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.scss'), 'utf8')
 assert.ok(detailStyleSource.includes('&__image-reviewing--overlay'))
@@ -65,7 +74,7 @@ assert.equal((homeStyleSource.match(/&__avatar-image \{/g) || []).length >= 2, t
 assert.equal((homeStyleSource.match(/background: #eef3f2;\n\s+border-radius: 50%;/g) || []).length >= 2, true)
 
 const profileStyleSource = readFileSync(resolve(__dirname, '../src/pages/profile/index.scss'), 'utf8')
-assert.match(profileStyleSource, /&-image \{[\s\S]*?background: #eef3f2;[\s\S]*?border-radius: 50%;/)
+assert.match(profileStyleSource, /&-image \{[\s\S]*?background: var\(--campus-surface-primary, #eff6ff\);[\s\S]*?border-radius: 50%;/)
 
 const avatarImageSource = readFileSync(resolve(__dirname, '../src/components/user-avatar-image/index.tsx'), 'utf8')
 assert.ok(avatarImageSource.includes("mode='aspectFill'"))
