@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
@@ -58,7 +59,8 @@ export default function ExamsPage() {
   const [loading, setLoading] = useState(!initialUpdatedAt)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
-  const [usingCache, setUsingCache] = useState(false)
+  const [usingCache, setUsingCache] = useState(Boolean(initialUpdatedAt))
+  const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [sheet, setSheet] = useState<ExamSheet>(null)
   const [activeExam, setActiveExam] = useState<ExamRecord | null>(null)
@@ -107,19 +109,21 @@ export default function ExamsPage() {
     const cache = academicStorage.getRecordsCache(academicUserId)
     const cached = cache?.examsByPeriod[periodId]
     const updatedAt = cache?.examsUpdatedAtByPeriod[periodId] || 0
-    if (cached && !manual) {
-      setExams(cached)
-      setCacheUpdatedAt(updatedAt)
-    }
+    setExams(cached || [])
+    setCacheUpdatedAt(updatedAt)
+    setUsingCache(Boolean(cached))
+    setServerCache(null)
     if (!updatedAt) setLoading(true)
     if (manual) setRetrying(true)
     setLoadError(null)
     try {
-      const records = await academicRepository.getExams(periodId)
+      const result = await academicRepository.getExams(periodId)
+      const records = result.records
       academicStorage.setExamRecords(academicUserId, periodId, records)
       setExams(records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
+      setServerCache(result.cache || null)
     } catch (error) {
       if (updatedAt) {
         setUsingCache(true)
@@ -261,7 +265,11 @@ export default function ExamsPage() {
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : (
           <>
-            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
+            <AcademicCacheNotice
+              cache={serverCache}
+              localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
+              localFallback={Boolean(loadError)}
+            />
             <View className='exam-hero'>
               <View>
                 <Text className='exam-hero__eyebrow'>考试日程</Text>

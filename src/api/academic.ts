@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import { apiRequest, isApiError } from './client'
+import { apiRequest, apiRequestEnvelope, isApiError } from './client'
 import { getCurrentIdentity } from './account'
 import {
   AcademicCredentialMissingError,
@@ -14,6 +14,7 @@ import type {
   AcademicExam,
   AcademicGrade,
   AcademicPeriod,
+  AcademicCacheMetadata,
 } from './types'
 
 export const getAcademicCalendar = (educationLevel: AcademicEducationLevel) => (
@@ -53,23 +54,19 @@ const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBo
   }
 }
 
-const wait = (milliseconds: number) => new Promise<void>((resolve) => {
-  setTimeout(resolve, milliseconds)
-})
-
-const retryDelay = (error: unknown) => {
-  if (isApiError(error)) {
-    if (error.code !== 'academic_provider_busy' || error.statusCode !== 429) return 0
-    return (error.retryAfterMs || 3000) + Math.floor(Math.random() * 1000)
-  }
-  return 700 + Math.floor(Math.random() * 500)
+export type AcademicQueryResult<T> = {
+  records: T[]
+  cache?: AcademicCacheMetadata
 }
 
-const academicPost = async <T>(path: string, periodId?: string) => {
+const academicPost = async <T>(path: string, periodId?: string): Promise<AcademicQueryResult<T>> => {
   const data = await academicRequestBody(periodId)
-  const request = () => apiRequest<T>({ path, method: 'POST', data })
   try {
-    return await request()
+    const response = await apiRequestEnvelope<T[]>({ path, method: 'POST', data })
+    return {
+      records: response.data,
+      ...(response.cache ? { cache: response.cache } : {}),
+    }
   } catch (error) {
     if (
       isApiError(error)
@@ -77,10 +74,7 @@ const academicPost = async <T>(path: string, periodId?: string) => {
     ) {
       clearAcademicCredential()
     }
-    const delay = retryDelay(error)
-    if (!delay) throw error
-    await wait(delay)
-    return request()
+    throw error
   }
 }
 
@@ -89,22 +83,22 @@ export const listAcademicPeriods = () => apiRequest<AcademicPeriod[]>({
   method: 'POST',
 })
 
-export const listAcademicCourses = (periodId: string) => academicPost<AcademicCourse[]>(
+export const listAcademicCourses = (periodId: string) => academicPost<AcademicCourse>(
   '/api/v1/academic/courses',
   periodId,
 )
 
-export const listAcademicGrades = () => academicPost<AcademicGrade[]>(
+export const listAcademicGrades = () => academicPost<AcademicGrade>(
   '/api/v1/academic/grades',
 )
 
-export const listAcademicExams = (periodId: string) => academicPost<AcademicExam[]>(
+export const listAcademicExams = (periodId: string) => academicPost<AcademicExam>(
   '/api/v1/academic/exams',
   periodId,
 )
 
 export const listAcademicCourseSelections = (periodId: string) => (
-  academicPost<AcademicCourseSelection[]>(
+  academicPost<AcademicCourseSelection>(
     '/api/v1/academic/course-selections',
     periodId,
   )

@@ -4802,6 +4802,7 @@ export interface components {
             weeks: number[];
         };
         AcademicCourseListResponseBody: {
+            cache?: components["schemas"]["AcademicQueryCache"] | null;
             data: components["schemas"]["AcademicCourse"][];
             request_id: string;
         };
@@ -4829,6 +4830,7 @@ export interface components {
             teacher: string;
         };
         AcademicCourseSelectionListResponseBody: {
+            cache?: components["schemas"]["AcademicQueryCache"] | null;
             data: components["schemas"]["AcademicCourseSelection"][];
             request_id: string;
         };
@@ -4854,6 +4856,7 @@ export interface components {
             start_at: string;
         };
         AcademicExamListResponseBody: {
+            cache?: components["schemas"]["AcademicQueryCache"] | null;
             data: components["schemas"]["AcademicExam"][];
             request_id: string;
         };
@@ -4874,6 +4877,7 @@ export interface components {
         };
         AcademicGradeLevel: string;
         AcademicGradeListResponseBody: {
+            cache?: components["schemas"]["AcademicQueryCache"] | null;
             data: components["schemas"]["AcademicGrade"][];
             request_id: string;
         };
@@ -4893,6 +4897,25 @@ export interface components {
             data: components["schemas"]["AcademicPeriod"][];
             request_id: string;
         };
+        /** @description 仅当本次响应实际返回服务端缓存结果时出现。 */
+        AcademicQueryCache: {
+            /**
+             * Format: date-time
+             * @description 此份查询结果写入服务端缓存的时间。
+             */
+            cached_at: string;
+            /**
+             * Format: date-time
+             * @description 此时间前缓存仍为 fresh；到期后用户可主动下拉更新。
+             */
+            fresh_until: string;
+            state: components["schemas"]["AcademicQueryCacheState"];
+        };
+        /**
+         * @description 服务端教务查询结果的缓存状态。
+         * @enum {string}
+         */
+        AcademicQueryCacheState: "fresh" | "stale";
         AcademicCourseCatalogBatch: {
             archive_reason?: string | null;
             archived: boolean;

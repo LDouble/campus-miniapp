@@ -257,7 +257,13 @@ const loadLatestAcademic = async (
 
   const periods = periodsResult.value
   let coursesByPeriod = cache ? cache.coursesByPeriod : {}
-  academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
+  let coursesUpdatedAtByPeriod = cache?.coursesUpdatedAtByPeriod || {}
+  academicStorage.setScheduleCache(
+    userId,
+    periods,
+    coursesByPeriod,
+    coursesUpdatedAtByPeriod,
+  )
 
   const { periodId } = resolveScheduleAnchor(periods)
   const anchoredPeriod = periods.find((period) => period.id === periodId)
@@ -271,12 +277,22 @@ const loadLatestAcademic = async (
     const coursesResult = await settle(academicRepository.getCourses(periodId))
     if (coursesResult.ok) {
       try {
+        const updatedAt = Date.now()
         coursesByPeriod = setCoursesForPeriod(
           coursesByPeriod,
           periodId,
-          requireCoursesForPeriod(coursesResult.value, periodId),
+          requireCoursesForPeriod(coursesResult.value.records, periodId),
         )
-        academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
+        coursesUpdatedAtByPeriod = {
+          ...coursesUpdatedAtByPeriod,
+          [periodId]: updatedAt,
+        }
+        academicStorage.setScheduleCache(
+          userId,
+          periods,
+          coursesByPeriod,
+          coursesUpdatedAtByPeriod,
+        )
       } catch {
         // 串学期响应不得污染首页课表缓存；课表页会继续提供显式重试入口。
       }
@@ -288,6 +304,7 @@ const loadLatestAcademic = async (
     platformUserId: userId,
     periods,
     coursesByPeriod,
+    coursesUpdatedAtByPeriod,
   } satisfies AcademicScheduleCache
 }
 
