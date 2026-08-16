@@ -38,14 +38,14 @@ page {
   &__text {
     margin-top: 8rpx;
     color: #526b65;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.55;
   }
 
   &__meta {
     margin-top: 9rpx;
     color: #3f6e61;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 700;
   }
 
@@ -130,14 +130,14 @@ page {
   &__category {
     margin-top: 6rpx;
     color: #526b65;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &__status {
     flex: none;
     padding: 10rpx 16rpx;
     margin-left: 12rpx;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 750;
     border-radius: 99rpx;
 
@@ -220,7 +220,7 @@ page {
     text:last-child {
       margin-top: 5rpx;
       color: #526b65;
-      font-size: 22rpx;
+      font-size: 24rpx;
       line-height: 1.5;
     }
   }
@@ -235,14 +235,14 @@ page {
 
     text:first-child {
       color: #934d42;
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 750;
     }
 
     text:last-child {
       margin-top: 7rpx;
       color: #744b44;
-      font-size: 23rpx;
+      font-size: 25rpx;
       line-height: 1.55;
     }
   }
@@ -264,7 +264,7 @@ page {
       height: 88rpx;
       padding: 0 16rpx;
       color: #38685c;
-      font-size: 23rpx;
+      font-size: 25rpx;
       font-weight: 750;
       background: #edf5f1;
       border-radius: 22rpx;

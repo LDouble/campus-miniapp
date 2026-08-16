@@ -67,7 +67,7 @@ page { background: var(--campus-page, #f4f7fb); }
       border-radius: 999rpx;
       color: #28736d;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
-      font-size: 20rpx;
+      font-size: 22rpx;
       font-weight: 700;
     }
   }
@@ -108,7 +108,7 @@ page { background: var(--campus-page, #f4f7fb); }
     flex-direction: column;
     gap: 5rpx;
     color: #557572;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 
   &__action {
@@ -172,7 +172,7 @@ page { background: var(--campus-page, #f4f7fb); }
   > text {
     margin-top: 5rpx;
     color: #82928f;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 }
 

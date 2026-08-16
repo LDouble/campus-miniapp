@@ -91,7 +91,7 @@ page {
     margin-top: 18rpx;
     overflow-wrap: anywhere;
     color: rgba(255, 255, 255, 0.78);
-    font-size: 20rpx;
+    font-size: 22rpx;
     line-height: 1.55;
   }
 
@@ -128,7 +128,7 @@ page {
     text:last-child {
       margin-top: 7rpx;
       color: rgba(255, 255, 255, 0.72);
-      font-size: 18rpx;
+      font-size: 20rpx;
       line-height: 1.4;
     }
   }
@@ -223,7 +223,7 @@ page {
       text:last-child {
         margin-top: 5rpx;
         color: var(--campus-text-muted, #90a1b9);
-        font-size: 19rpx;
+        font-size: 21rpx;
       }
     }
   }
@@ -237,7 +237,7 @@ page {
   &__weekdays {
     margin-top: 26rpx;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 19rpx;
+    font-size: 21rpx;
     text-align: center;
   }
 
@@ -259,13 +259,13 @@ page {
     color: var(--campus-text-body, #45556c);
 
     text:first-child {
-      font-size: 22rpx;
+      font-size: 24rpx;
     }
 
     text:last-child {
       margin-top: 1rpx;
       color: #059669;
-      font-size: 15rpx;
+      font-size: 18rpx;
       font-weight: 700;
     }
 
@@ -294,7 +294,7 @@ page {
     justify-content: center;
     flex-direction: column;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 21rpx;
+    font-size: 23rpx;
 
     text + text {
       margin-top: 10rpx;
@@ -308,7 +308,7 @@ page {
     margin-top: 20rpx;
     overflow-wrap: anywhere;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 18rpx;
+    font-size: 20rpx;
     line-height: 1.5;
     text-align: center;
   }

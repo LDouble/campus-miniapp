@@ -44,7 +44,7 @@ page {
         margin-top: 6rpx;
         overflow: hidden;
         color: #526b65;
-        font-size: 22rpx;
+        font-size: 24rpx;
         line-height: 1.45;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -87,7 +87,7 @@ page {
       justify-content: center;
       min-height: 72rpx;
       color: #3f685d;
-      font-size: 22rpx;
+      font-size: 24rpx;
       font-weight: 700;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
       border-radius: 18rpx;
@@ -120,7 +120,7 @@ page {
     text:last-child {
       margin-left: 18rpx;
       color: #60766f;
-      font-size: 21rpx;
+      font-size: 23rpx;
       text-align: right;
     }
   }
@@ -129,7 +129,7 @@ page {
     display: block;
     margin: 16rpx 0;
     color: #526b65;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.6;
   }
 }
@@ -200,7 +200,7 @@ page {
     align-self: flex-end;
     margin-top: 8rpx;
     color: #60766f;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 }
 
@@ -237,7 +237,7 @@ page {
       justify-content: center;
       flex-direction: column;
       color: #526b65;
-      font-size: 22rpx;
+      font-size: 24rpx;
 
       image {
         width: 44rpx;
@@ -277,7 +277,7 @@ page {
     align-items: center;
     min-height: 88rpx;
     color: #93483e;
-    font-size: 21rpx;
+    font-size: 23rpx;
     line-height: 1.45;
   }
 }
@@ -321,7 +321,7 @@ page {
     width: 40rpx;
     height: 40rpx;
     color: #fff;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 700;
     background: rgba(35, 69, 60, 0.78);
     border-radius: 50%;
@@ -354,7 +354,7 @@ page {
       height: 88rpx;
       padding: 0 16rpx;
       color: #35574f;
-      font-size: 23rpx;
+      font-size: 25rpx;
       background: var(--campus-surface, #fff);
       border: 2rpx solid #e1e9e4;
       border-radius: 18rpx;
@@ -375,7 +375,7 @@ page {
       height: 88rpx;
       padding: 0 6rpx;
       color: #3f6e62;
-      font-size: 21rpx;
+      font-size: 23rpx;
       border-radius: 17rpx;
     }
 
@@ -392,7 +392,7 @@ page {
   &__error {
     margin-top: 5rpx;
     color: #93483e;
-    font-size: 21rpx;
+    font-size: 23rpx;
     line-height: 1.4;
   }
 }
@@ -423,7 +423,7 @@ page {
   text:nth-of-type(2) {
     margin-top: 5rpx;
     color: #60766f;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 }
 
@@ -437,7 +437,7 @@ page {
 
   text:first-child {
     color: #934d42;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 750;
   }
 
@@ -453,7 +453,7 @@ page {
   padding: 22rpx 24rpx;
   margin-bottom: 22rpx;
   color: #675d53;
-  font-size: 22rpx;
+  font-size: 24rpx;
   line-height: 1.65;
   background: #fff5e6;
   border-radius: 24rpx;
@@ -474,7 +474,7 @@ page {
     display: block;
     margin-bottom: 9rpx;
     color: #75685d;
-    font-size: 21rpx;
+    font-size: 23rpx;
     text-align: center;
 
     &--ready {

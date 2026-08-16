@@ -1,5 +1,6 @@
 @use './styles/tokens' as token;
 @use './styles/dark-mode';
+@use './styles/typography';
 
 page {
   --campus-primary: #2b7fff;
@@ -39,11 +40,15 @@ page {
   --campus-route-destination: #ff637e;
   --campus-shadow-card: 0 8rpx 24rpx rgba(43, 127, 255, 0.08);
   --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.05);
+  --campus-font-caption: 22rpx;
+  --campus-font-supporting: 24rpx;
+  --campus-font-body: 28rpx;
+  --campus-font-title: 32rpx;
 
   min-height: 100%;
   color: token.$color-text-heading;
   font-family: token.$font-family-sans;
-  font-size: 28rpx;
+  font-size: 30rpx;
   line-height: 1.5;
   background: token.$color-page;
 }

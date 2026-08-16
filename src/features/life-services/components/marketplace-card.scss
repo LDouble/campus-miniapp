@@ -130,7 +130,7 @@
   left: 20rpx;
   display: block;
   color: rgba(64, 103, 94, 0.58);
-  font-size: 17rpx;
+  font-size: 19rpx;
   font-weight: 760;
   letter-spacing: 2rpx;
 }
@@ -153,7 +153,7 @@
   border-radius: 999rpx;
   background: rgba(217, 109, 88, 0.92);
   color: #fff;
-  font-size: 19rpx;
+  font-size: 21rpx;
   font-weight: 700;
   backdrop-filter: blur(8rpx);
 }
@@ -175,7 +175,7 @@
   border-radius: 999rpx;
   background: rgba(26, 38, 45, 0.72);
   color: #fff;
-  font-size: 20rpx;
+  font-size: 22rpx;
   font-weight: 650;
 }
 
@@ -254,7 +254,7 @@
   overflow: hidden;
   margin: 2rpx 0 8rpx;
   color: #7d8f8a;
-  font-size: 19rpx;
+  font-size: 21rpx;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -265,7 +265,7 @@
   align-items: flex-end;
   justify-content: space-between;
   color: #8a929d;
-  font-size: 19rpx;
+  font-size: 21rpx;
 }
 
 .marketplace-card__author {
@@ -287,7 +287,7 @@
   border-radius: 50%;
   background: var(--campus-surface-primary, #eff6ff);
   color: var(--campus-primary, #2b7fff);
-  font-size: 17rpx;
+  font-size: 19rpx;
   font-weight: 700;
 }
 
@@ -310,7 +310,7 @@
   align-items: center;
   margin-top: auto;
   color: #687d77;
-  font-size: 19rpx;
+  font-size: 21rpx;
 }
 
 .marketplace-card--compact .marketplace-card__footer > text {
@@ -354,7 +354,7 @@
   padding: 0 14rpx;
   border: 0;
   background: rgba(0, 0, 0, 0.5);
-  font-size: 17rpx;
+  font-size: 19rpx;
   backdrop-filter: blur(8rpx);
 }
 

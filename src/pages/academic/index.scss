@@ -114,7 +114,7 @@ page {
   &__label {
     margin-bottom: 3rpx;
     color: #8a9da2;
-    font-size: 19rpx;
+    font-size: 21rpx;
   }
 
   &__chevron {
@@ -148,7 +148,7 @@ page {
     min-height: 72rpx;
     overflow: hidden;
     color: #a56f58;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 680;
     background: rgba(255, 247, 240, 0.9);
     border: 2rpx solid rgba(198, 132, 96, 0.14);
@@ -207,7 +207,7 @@ page {
     min-height: 56rpx;
     padding: 0;
     color: #a26358;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 700;
     background: rgba(255, 247, 239, 0.92);
     border: 2rpx solid rgba(202, 133, 100, 0.13);
@@ -267,7 +267,7 @@ page {
     flex: none;
     min-width: 96rpx;
     color: #3e6068;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 750;
     text-align: center;
     white-space: nowrap;
@@ -282,7 +282,7 @@ page {
   justify-content: center;
   gap: 3rpx;
   color: #8c827c;
-  font-size: 17rpx;
+  font-size: 19rpx;
   font-weight: 700;
   background: rgba(245, 235, 220, 0.9);
   border: 2rpx solid rgba(194, 135, 99, 0.1);
@@ -346,7 +346,7 @@ page {
   align-items: center;
   gap: 10rpx;
   color: #3f6f76;
-  font-size: 21rpx;
+  font-size: 23rpx;
   font-weight: 720;
   white-space: nowrap;
   pointer-events: none;
@@ -410,7 +410,7 @@ page {
   &__eyebrow {
     margin-bottom: 5rpx;
     color: #779198;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &__title {
@@ -421,7 +421,7 @@ page {
 
   &__date {
     color: #83979c;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 }
 
@@ -448,7 +448,7 @@ page {
 
   &__corner {
     color: #9aabad;
-    font-size: 19rpx;
+    font-size: 21rpx;
   }
 
   &__date {
@@ -459,12 +459,12 @@ page {
     color: #6c858b;
 
     text:first-child {
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 680;
     }
 
     text:last-child {
-      font-size: 18rpx;
+      font-size: 20rpx;
     }
 
     &--selected {
@@ -515,12 +515,12 @@ page {
     text:first-child {
       margin-bottom: 3rpx;
       color: #55747b;
-      font-size: 22rpx;
+      font-size: 24rpx;
       font-weight: 700;
     }
 
     text:last-child {
-      font-size: 15rpx;
+      font-size: 18rpx;
     }
   }
 
@@ -626,7 +626,7 @@ page {
     justify-content: center;
     margin-left: auto;
     color: #fff;
-    font-size: 14rpx;
+    font-size: 18rpx;
     font-weight: 760;
     line-height: 1;
     background: #78979b;
@@ -640,7 +640,7 @@ page {
     gap: 4rpx;
     margin-bottom: 6rpx;
     color: #b85043;
-    font-size: 16rpx;
+    font-size: 18rpx;
     font-weight: 760;
     line-height: 1;
   }
@@ -654,7 +654,7 @@ page {
     height: 24rpx;
     padding: 0 5rpx;
     color: #fff;
-    font-size: 15rpx;
+    font-size: 18rpx;
     background: #dd6d5b;
     border-radius: 999rpx;
 
@@ -677,7 +677,7 @@ page {
     min-width: 0;
     margin-bottom: 0;
     color: #647a7d;
-    font-size: 14rpx;
+    font-size: 18rpx;
     font-weight: 720;
     line-height: 1;
     background: rgba(112, 140, 143, 0.13);
@@ -692,7 +692,7 @@ page {
   }
 
   &__name {
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 750;
     line-height: 1.3;
     -webkit-line-clamp: 3;
@@ -700,7 +700,7 @@ page {
 
   &__location {
     margin-top: 6rpx;
-    font-size: 16rpx;
+    font-size: 18rpx;
     line-height: 1.25;
     opacity: 0.7;
     -webkit-line-clamp: 2;
@@ -737,7 +737,7 @@ page {
 
     text:first-child {
       margin-bottom: 7rpx;
-      font-size: 20rpx;
+      font-size: 22rpx;
     }
 
     text:nth-child(2) {
@@ -831,7 +831,7 @@ page {
 
     text:last-child {
       color: #8a9da2;
-      font-size: 20rpx;
+      font-size: 22rpx;
     }
   }
 
@@ -871,7 +871,7 @@ page {
     align-items: center;
     margin-left: 12rpx;
     color: #879294;
-    font-size: 19rpx;
+    font-size: 21rpx;
 
     &::before {
       width: 7rpx;
@@ -885,7 +885,7 @@ page {
 
   &__meta {
     color: #81969c;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 
   &--pressed {
@@ -992,7 +992,7 @@ page {
   }
 
   &__eyebrow {
-    font-size: 21rpx;
+    font-size: 23rpx;
     opacity: 0.78;
   }
 
@@ -1004,7 +1004,7 @@ page {
   }
 
   &__caption {
-    font-size: 22rpx;
+    font-size: 24rpx;
     opacity: 0.84;
   }
 
@@ -1032,7 +1032,7 @@ page {
     }
 
     text:last-child {
-      font-size: 19rpx;
+      font-size: 21rpx;
       opacity: 0.74;
     }
   }
@@ -1045,7 +1045,7 @@ page {
   min-height: 70rpx;
   padding: 0 7rpx 12rpx;
   color: #86999e;
-  font-size: 21rpx;
+  font-size: 23rpx;
 
   &--original {
     color: #84999d;
@@ -1058,7 +1058,7 @@ page {
     text:last-child {
       padding: 8rpx 13rpx;
       color: #a27055;
-      font-size: 18rpx;
+      font-size: 20rpx;
       background: #fff2e8;
       border-radius: 999rpx;
     }
@@ -1080,7 +1080,7 @@ page {
 
     text:last-child {
       color: #91a2a6;
-      font-size: 19rpx;
+      font-size: 21rpx;
     }
   }
 }
@@ -1093,7 +1093,7 @@ page {
   padding: 11rpx 16rpx;
   margin-bottom: 10rpx;
   color: #9a654f;
-  font-size: 19rpx;
+  font-size: 21rpx;
   line-height: 1.4;
   background: #fff4eb;
   border: 2rpx solid rgba(207, 138, 96, 0.16);
@@ -1103,7 +1103,7 @@ page {
     flex: none;
     padding: 4rpx 9rpx;
     color: #fff;
-    font-size: 17rpx;
+    font-size: 19rpx;
     font-weight: 700;
     background: #c98162;
     border-radius: 999rpx;
@@ -1199,7 +1199,7 @@ page {
     padding: 5rpx 10rpx;
     margin-left: 9rpx;
     color: #a6714f;
-    font-size: 18rpx;
+    font-size: 20rpx;
     background: #fff3e8;
     border-radius: 999rpx;
   }
@@ -1208,7 +1208,7 @@ page {
   &__original,
   &__converted {
     display: block;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   &__meta {
@@ -1241,7 +1241,7 @@ page {
     text:last-child {
       margin-top: 3rpx;
       color: #83979c;
-      font-size: 19rpx;
+      font-size: 21rpx;
     }
   }
 
@@ -1262,7 +1262,7 @@ page {
     justify-content: center;
     min-height: 64rpx;
     color: #687f84;
-    font-size: 19rpx;
+    font-size: 21rpx;
     font-weight: 680;
     background: var(--campus-surface, #fff);
     border: 2rpx solid #e6eeee;
@@ -1298,7 +1298,7 @@ page {
   &__eyebrow {
     margin-bottom: 8rpx;
     color: #719097;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 
   &__title {
@@ -1315,7 +1315,7 @@ page {
     width: 86rpx;
     height: 86rpx;
     color: #4c877a;
-    font-size: 20rpx;
+    font-size: 22rpx;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 28rpx;
 
@@ -1347,7 +1347,7 @@ page {
 
     text:last-child {
       color: #8a9da2;
-      font-size: 21rpx;
+      font-size: 23rpx;
     }
   }
 }
@@ -1387,7 +1387,7 @@ page {
     align-items: center;
     gap: 8rpx;
     color: #518a94;
-    font-size: 21rpx;
+    font-size: 23rpx;
 
     view {
       width: 10rpx;
@@ -1429,7 +1429,7 @@ page {
     padding-top: 17rpx;
     margin-top: 17rpx;
     color: #7f9398;
-    font-size: 21rpx;
+    font-size: 23rpx;
     border-top: 2rpx solid #edf2f2;
 
     text:last-child {
@@ -1492,7 +1492,7 @@ page {
     max-width: 500rpx;
     margin-top: 10rpx;
     color: #83979b;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.65;
   }
 
@@ -1529,7 +1529,7 @@ page {
   min-height: 52rpx;
   margin-bottom: 16rpx;
   color: #748d92;
-  font-size: 21rpx;
+  font-size: 23rpx;
 
   view {
     width: 10rpx;
@@ -1574,7 +1574,7 @@ page {
   }
 
   &__copy {
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &__action {
@@ -1628,7 +1628,7 @@ page {
   &__copy {
     margin-top: 9rpx;
     color: #879a9f;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 }
 
@@ -1723,7 +1723,7 @@ page {
   &__eyebrow {
     margin-bottom: 10rpx;
     color: #dc7c67;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 700;
   }
 
@@ -1737,7 +1737,7 @@ page {
   &__copy {
     margin-top: 5rpx;
     color: #879798;
-    font-size: 20rpx;
+    font-size: 22rpx;
     line-height: 1.45;
   }
 
@@ -1790,14 +1790,14 @@ page {
     }
 
     text:first-child {
-      font-size: 23rpx;
+      font-size: 25rpx;
       font-weight: 720;
     }
 
     text:last-child {
       margin-top: 5rpx;
       color: #86989b;
-      font-size: 18rpx;
+      font-size: 20rpx;
     }
 
     &--active {
@@ -1872,7 +1872,7 @@ page {
     flex: none;
     padding: 5rpx 10rpx;
     color: rgba(52, 85, 91, 0.78);
-    font-size: 19rpx;
+    font-size: 21rpx;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 999rpx;
 
@@ -1891,7 +1891,7 @@ page {
       display: flex;
       align-items: center;
       min-width: 0;
-      font-size: 20rpx;
+      font-size: 22rpx;
       line-height: 1.3;
     }
 
@@ -1923,7 +1923,7 @@ page {
       height: 52rpx;
       padding: 0 15rpx;
       color: rgba(54, 85, 91, 0.84);
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 680;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
       border: 2rpx solid rgba(255, 255, 255, 0.62);
@@ -1945,7 +1945,7 @@ page {
     }
 
     &__hint {
-      font-size: 18rpx;
+      font-size: 20rpx;
     }
 
     &__arrow {
@@ -1963,7 +1963,7 @@ page {
         }
 
         > text:last-child {
-          font-size: 17rpx;
+          font-size: 19rpx;
         }
       }
     }
@@ -1978,7 +1978,7 @@ page {
 
     &__empty {
       margin-top: 14rpx;
-      font-size: 20rpx;
+      font-size: 22rpx;
     }
   }
 
@@ -2057,7 +2057,7 @@ page {
   &__subtitle {
     margin-top: 7rpx;
     color: #84999e;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &__actions {
@@ -2094,7 +2094,7 @@ page {
 
     text:last-child {
       color: #91a1a4;
-      font-size: 20rpx;
+      font-size: 22rpx;
     }
 
     &--active {
@@ -2139,7 +2139,7 @@ page {
 
     text:last-child {
       margin-left: 3rpx;
-      font-size: 18rpx;
+      font-size: 20rpx;
     }
 
     &--active {
@@ -2203,7 +2203,7 @@ page {
     flex: none;
     width: 140rpx;
     color: #8a9da1;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   text:last-child {
@@ -2264,7 +2264,7 @@ page {
     display: block;
     margin-bottom: 10rpx;
     color: #5e797f;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 650;
   }
 
@@ -2275,7 +2275,7 @@ page {
 
     text:last-child {
       color: #8b9da1;
-      font-size: 20rpx;
+      font-size: 22rpx;
     }
   }
 }
@@ -2362,7 +2362,7 @@ page {
     justify-content: center;
     height: 54rpx;
     color: #82969a;
-    font-size: 20rpx;
+    font-size: 22rpx;
     background: var(--campus-surface, #fff);
     border: 2rpx solid #e8eeee;
     border-radius: 15rpx;
@@ -2435,7 +2435,7 @@ page {
   text:first-child {
     margin-bottom: 8rpx;
     color: #84999d;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   text:last-child {
@@ -2448,7 +2448,7 @@ page {
 .academic-tip {
   padding: 18rpx 20rpx;
   color: #7b8f93;
-  font-size: 21rpx;
+  font-size: 23rpx;
   line-height: 1.55;
   background: #f1f5f5;
   border-radius: 20rpx;
@@ -2462,7 +2462,7 @@ page {
   padding: 0 16rpx;
   margin-bottom: 15rpx;
   color: #478895;
-  font-size: 21rpx;
+  font-size: 23rpx;
   font-weight: 650;
   background: #e7f4f5;
   border-radius: 999rpx;
@@ -2482,17 +2482,17 @@ page {
   box-shadow: 0 15rpx 34rpx rgba(72, 126, 109, 0.09);
 
   text { display: block; }
-  &__eyebrow { color: #668a7b; font-size: 22rpx; }
+  &__eyebrow { color: #668a7b; font-size: 24rpx; }
   &__number { margin: 8rpx 0 6rpx; color: #2f6255; font-size: 52rpx; font-weight: 780; line-height: 1; text { display: inline; margin-left: 6rpx; font-size: 24rpx; font-weight: 650; } }
-  &__copy { color: #6d887d; font-size: 21rpx; }
-  &__seal { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: center; width: 100rpx; height: 100rpx; color: #5d957e; font-size: 23rpx; font-weight: 760; letter-spacing: 3rpx; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 4rpx solid rgba(99, 155, 131, .26); border-radius: 50%; transform: rotate(10deg); }
+  &__copy { color: #6d887d; font-size: 23rpx; }
+  &__seal { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: center; width: 100rpx; height: 100rpx; color: #5d957e; font-size: 25rpx; font-weight: 760; letter-spacing: 3rpx; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 4rpx solid rgba(99, 155, 131, .26); border-radius: 50%; transform: rotate(10deg); }
 }
 
-.selection-tip { display: flex; align-items: center; gap: 12rpx; padding: 18rpx 20rpx; margin-bottom: 26rpx; color: #97714d; font-size: 21rpx; background: #fff7e9; border-radius: 20rpx; view { flex: none; width: 10rpx; height: 10rpx; background: #e1a65d; border-radius: 50%; } }
-.selection-tabs { display: flex; gap: 8rpx; padding: 7rpx; margin-bottom: 20rpx; background: rgba(231, 241, 239, .76); border: 2rpx solid rgba(94, 147, 140, .08); border-radius: 22rpx; &__item { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 62rpx; gap: 8rpx; color: #718a8c; font-size: 23rpx; font-weight: 700; border-radius: 17rpx; transition: background-color 180ms ease, color 180ms ease; text { display: inline-flex; align-items: center; justify-content: center; min-width: 30rpx; height: 30rpx; padding: 0 7rpx; color: #a16e58; font-size: 18rpx; background: #f9e5dc; border-radius: 999rpx; } &--active { color: #33695d; background: var(--campus-surface, #fff); box-shadow: 0 7rpx 16rpx rgba(64, 109, 99, .1); } } }
-.selection-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 8rpx 15rpx; text:first-child { color: #2f5661; font-size: 28rpx; font-weight: 740; } text:last-child { color: #84989b; font-size: 21rpx; } }
-.selection-card { position: relative; padding: 27rpx 28rpx 23rpx; margin-bottom: 18rpx; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 2rpx solid rgba(92, 143, 148, .09); border-radius: 29rpx; box-shadow: 0 12rpx 26rpx rgba(62, 105, 109, .055); &--pressed { transform: scale(.985); opacity: .9; } text { display: block; } &__status { position: absolute; top: 24rpx; right: 24rpx; display: flex; align-items: center; gap: 7rpx; padding: 8rpx 12rpx; color: #4d8975; font-size: 19rpx; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; view { width: 8rpx; height: 8rpx; background: currentColor; border-radius: 50%; } &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } } &__name { max-width: 72%; color: #2b555c; font-size: 28rpx; font-weight: 740; } &__type { padding: 8rpx 0 20rpx; color: #769096; font-size: 21rpx; } &__result { padding: 11rpx 14rpx; margin: -6rpx 0 20rpx; color: #557b72; font-size: 21rpx; line-height: 1.45; background: #edf6f1; border-radius: 14rpx; } &__line, &__footer { display: flex; justify-content: space-between; gap: 18rpx; color: #607c82; font-size: 22rpx; } &__footer { padding-top: 17rpx; margin-top: 16rpx; color: #7c9296; border-top: 2rpx solid #edf2f1; text:last-child { color: #649b9c; } } }
-.selection-detail__badge { display: inline-flex; padding: 9rpx 15rpx; margin-bottom: 15rpx; color: #4d8975; font-size: 21rpx; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } }
+.selection-tip { display: flex; align-items: center; gap: 12rpx; padding: 18rpx 20rpx; margin-bottom: 26rpx; color: #97714d; font-size: 23rpx; background: #fff7e9; border-radius: 20rpx; view { flex: none; width: 10rpx; height: 10rpx; background: #e1a65d; border-radius: 50%; } }
+.selection-tabs { display: flex; gap: 8rpx; padding: 7rpx; margin-bottom: 20rpx; background: rgba(231, 241, 239, .76); border: 2rpx solid rgba(94, 147, 140, .08); border-radius: 22rpx; &__item { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 62rpx; gap: 8rpx; color: #718a8c; font-size: 25rpx; font-weight: 700; border-radius: 17rpx; transition: background-color 180ms ease, color 180ms ease; text { display: inline-flex; align-items: center; justify-content: center; min-width: 30rpx; height: 30rpx; padding: 0 7rpx; color: #a16e58; font-size: 20rpx; background: #f9e5dc; border-radius: 999rpx; } &--active { color: #33695d; background: var(--campus-surface, #fff); box-shadow: 0 7rpx 16rpx rgba(64, 109, 99, .1); } } }
+.selection-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 8rpx 15rpx; text:first-child { color: #2f5661; font-size: 28rpx; font-weight: 740; } text:last-child { color: #84989b; font-size: 23rpx; } }
+.selection-card { position: relative; padding: 27rpx 28rpx 23rpx; margin-bottom: 18rpx; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 2rpx solid rgba(92, 143, 148, .09); border-radius: 29rpx; box-shadow: 0 12rpx 26rpx rgba(62, 105, 109, .055); &--pressed { transform: scale(.985); opacity: .9; } text { display: block; } &__status { position: absolute; top: 24rpx; right: 24rpx; display: flex; align-items: center; gap: 7rpx; padding: 8rpx 12rpx; color: #4d8975; font-size: 21rpx; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; view { width: 8rpx; height: 8rpx; background: currentColor; border-radius: 50%; } &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } } &__name { max-width: 72%; color: #2b555c; font-size: 28rpx; font-weight: 740; } &__type { padding: 8rpx 0 20rpx; color: #769096; font-size: 23rpx; } &__result { padding: 11rpx 14rpx; margin: -6rpx 0 20rpx; color: #557b72; font-size: 23rpx; line-height: 1.45; background: #edf6f1; border-radius: 14rpx; } &__line, &__footer { display: flex; justify-content: space-between; gap: 18rpx; color: #607c82; font-size: 24rpx; } &__footer { padding-top: 17rpx; margin-top: 16rpx; color: #7c9296; border-top: 2rpx solid #edf2f1; text:last-child { color: #649b9c; } } }
+.selection-detail__badge { display: inline-flex; padding: 9rpx 15rpx; margin-bottom: 15rpx; color: #4d8975; font-size: 23rpx; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } }
 
 .course-market-actions {
   padding: 21rpx;
@@ -2508,14 +2508,14 @@ page {
 
     text:first-child {
       color: #356e68;
-      font-size: 23rpx;
+      font-size: 25rpx;
       font-weight: 740;
     }
 
     text:last-child {
       margin-top: 5rpx;
       color: #78928e;
-      font-size: 20rpx;
+      font-size: 22rpx;
     }
   }
 
@@ -2534,7 +2534,7 @@ page {
 
       view {
         min-height: 60rpx;
-        font-size: 21rpx;
+        font-size: 23rpx;
       }
     }
   }
@@ -2553,7 +2553,7 @@ page {
       align-items: center;
       justify-content: center;
       color: #356e68;
-      font-size: 22rpx;
+      font-size: 24rpx;
       font-weight: 720;
       background: var(--campus-surface, #fff);
       border: 2rpx solid rgba(76, 139, 130, 0.13);
@@ -2603,14 +2603,14 @@ page {
       text:last-child {
         margin-top: 4rpx;
         color: rgba(255, 255, 255, 0.82);
-        font-size: 19rpx;
+        font-size: 21rpx;
       }
     }
 
     > text {
       flex: none;
       margin-left: 18rpx;
-      font-size: 22rpx;
+      font-size: 24rpx;
       font-weight: 700;
     }
   }
@@ -2627,7 +2627,7 @@ page {
       justify-content: center;
       min-height: 62rpx;
       color: #527c78;
-      font-size: 20rpx;
+      font-size: 22rpx;
       font-weight: 680;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
       border: 2rpx solid rgba(76, 139, 130, 0.1);
@@ -2654,13 +2654,13 @@ page {
   text:first-child {
     margin-bottom: 7rpx;
     color: #a4714f;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 700;
   }
 
   text:last-child {
     color: #806d5f;
-    font-size: 21rpx;
+    font-size: 23rpx;
     line-height: 1.55;
   }
 }
@@ -2691,9 +2691,9 @@ page {
     animation: none;
   }
 }
-.course-material-actions { display:flex; gap:14rpx; margin-top:28rpx; > view { display:flex; flex:1; align-items:center; justify-content:center; height:78rpx; color:#4b8977; font-size:23rpx; font-weight:750; background:#e9f4ef; border-radius:21rpx; } > view:last-child { color:#fff; background:#64a68f; } }
-.course-material-inline-action { display:flex; align-items:center; justify-content:center; height:66rpx; margin-top:16rpx; color:#3f846e; font-size:22rpx; font-weight:750; background:#e6f3ed; border-radius:18rpx; }
-.grade-card__materials { display:inline-flex !important; align-items:center; width:max-content; min-height:48rpx; padding:0 13rpx; margin-top:11rpx; color:#4e907b !important; font-size:19rpx !important; font-weight:700; background:#edf6f2; border-radius:14rpx; }
+.course-material-actions { display:flex; gap:14rpx; margin-top:28rpx; > view { display:flex; flex:1; align-items:center; justify-content:center; height:78rpx; color:#4b8977; font-size: 25rpx; font-weight:750; background:#e9f4ef; border-radius:21rpx; } > view:last-child { color:#fff; background:#64a68f; } }
+.course-material-inline-action { display:flex; align-items:center; justify-content:center; height:66rpx; margin-top:16rpx; color:#3f846e; font-size: 24rpx; font-weight:750; background:#e6f3ed; border-radius:18rpx; }
+.grade-card__materials { display:inline-flex !important; align-items:center; width:max-content; min-height:48rpx; padding:0 13rpx; margin-top:11rpx; color:#4e907b !important; font-size: 21rpx !important; font-weight:700; background:#edf6f2; border-radius:14rpx; }
 
 // Current campus visual system overrides. Course-specific colors remain as data cues.
 page {

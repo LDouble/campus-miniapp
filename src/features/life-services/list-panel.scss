@@ -56,7 +56,7 @@
   align-items: center;
   justify-content: center;
   color: #758090;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .life-search__submit {
@@ -120,13 +120,13 @@
 .life-panel__heading-separator {
   margin: 0 8rpx;
   color: var(--campus-border, #cbd5e1);
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .life-panel__heading-total {
   flex: none;
   color: #7d8795;
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .life-panel__heading-actions {
@@ -146,7 +146,7 @@
   align-items: center;
   justify-content: center;
   color: #596575;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 650;
 }
 
@@ -162,7 +162,7 @@
   border: 0;
   background: transparent;
   color: var(--campus-primary-strong, #155dfc);
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 680;
 }
 
@@ -215,7 +215,7 @@
 
 .errand-card__label {
   color: #8e7557;
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .errand-card__reward {
@@ -232,7 +232,7 @@
   padding: 0 15rpx;
   align-items: center;
   border-radius: 999rpx;
-  font-size: 21rpx;
+  font-size: 23rpx;
   font-weight: 680;
 }
 
@@ -281,7 +281,7 @@
   border-radius: 50%;
   background: #fff0d2;
   color: #b66306;
-  font-size: 18rpx;
+  font-size: 20rpx;
   font-weight: 760;
 }
 
@@ -331,7 +331,7 @@
 
 .errand-deadline {
   color: #697586;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 650;
 }
 
@@ -348,7 +348,7 @@
 
 .business-card-campus > text:first-child {
   color: #53857f;
-  font-size: 20rpx;
+  font-size: 22rpx;
   font-weight: 680;
 }
 
@@ -359,7 +359,7 @@
   align-items: center;
   justify-content: flex-end;
   color: #9a5c13;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 700;
 }
 
@@ -405,7 +405,7 @@
 
 .carpool-group__heading text:last-child {
   color: #8792a1;
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .carpool-card {
@@ -434,7 +434,7 @@
 .carpool-departure text:last-child {
   margin-top: 5rpx;
   color: #718098;
-  font-size: 21rpx;
+  font-size: 23rpx;
 }
 
 .carpool-seat {
@@ -457,7 +457,7 @@
 
 .carpool-seat text:last-child {
   margin-left: 5rpx;
-  font-size: 19rpx;
+  font-size: 21rpx;
   font-weight: 650;
 }
 
@@ -476,7 +476,7 @@
 
 .carpool-route__place > text:first-child {
   color: #8490a0;
-  font-size: 19rpx;
+  font-size: 21rpx;
 }
 
 .carpool-route__place > text:last-child {
@@ -519,7 +519,7 @@
   display: -webkit-box;
   overflow: hidden;
   color: #606c7c;
-  font-size: 23rpx;
+  font-size: 25rpx;
   line-height: 1.5;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -533,7 +533,7 @@
   align-items: center;
   border-top: 2rpx solid #edf0f4;
   color: #748195;
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .carpool-card__footer text:first-child {
@@ -642,7 +642,7 @@
 .life-state--empty > text:nth-child(3) {
   margin-top: 8rpx;
   color: #7b8695;
-  font-size: 23rpx;
+  font-size: 25rpx;
 }
 
 .life-state__empty-mark {
@@ -689,7 +689,7 @@
   flex: 1;
   align-items: center;
   justify-content: center;
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 720;
   border-radius: 21rpx;
 }
@@ -798,7 +798,7 @@
 }
 
 .life-panel__heading-title { color: var(--campus-text-heading, #1d293d); font-size: 26rpx; }
-.life-panel__heading-total { color: var(--campus-text-muted, #90a1b9); font-size: 20rpx; }
+.life-panel__heading-total { color: var(--campus-text-muted, #90a1b9); font-size: 22rpx; }
 
 .life-panel--errands .life-panel__mine {
   color: #f54900;
@@ -863,7 +863,7 @@
 
 .business-card-identity > view { display: flex; align-items: center; gap: 10rpx; }
 .business-card-identity > view > text:first-child { color: var(--campus-text-heading, #1d293d); font-size: 26rpx; font-weight: 700; }
-.business-card-identity > text { margin-top: 3rpx; color: var(--campus-text-muted, #90a1b9); font-size: 20rpx; }
+.business-card-identity > text { margin-top: 3rpx; color: var(--campus-text-muted, #90a1b9); font-size: 22rpx; }
 
 .business-card-more {
   display: flex;
@@ -872,7 +872,7 @@
   align-items: center;
   justify-content: center;
   color: #bfd0e5;
-  font-size: 22rpx;
+  font-size: 24rpx;
   letter-spacing: 2rpx;
 }
 
@@ -880,7 +880,7 @@
   min-height: 28rpx;
   padding: 0 11rpx;
   border-radius: 999rpx;
-  font-size: 17rpx;
+  font-size: 19rpx;
 }
 
 .business-status--errand { background: #ffedd4; color: #f54900; }
@@ -910,7 +910,7 @@
 .errand-route__point { background: transparent; color: transparent; position: relative; }
 .errand-route__point::after { position: absolute; width: 12rpx; height: 12rpx; border-radius: 50%; background: var(--campus-route-origin, #00d492); content: ''; }
 .errand-route__point--dropoff::after { background: var(--campus-route-destination, #ff637e); }
-.errand-route > text { color: var(--campus-text-body, #314158); font-size: 23rpx; }
+.errand-route > text { color: var(--campus-text-body, #314158); font-size: 25rpx; }
 
 .errand-card__footer,
 .carpool-card__footer {
@@ -922,8 +922,8 @@
 }
 
 .errand-deadline,
-.carpool-card__footer text:first-child { color: var(--campus-primary-strong, #155dfc); font-size: 21rpx; font-weight: 650; }
-.errand-card__reward { margin: 0 0 0 auto; color: var(--campus-danger, #ff2056); font-size: 23rpx; font-weight: 760; }
+.carpool-card__footer text:first-child { color: var(--campus-primary-strong, #155dfc); font-size: 23rpx; font-weight: 650; }
+.errand-card__reward { margin: 0 0 0 auto; color: var(--campus-danger, #ff2056); font-size: 25rpx; font-weight: 760; }
 
 .carpool-card__description {
   margin-top: 6rpx;
@@ -957,7 +957,7 @@
 
   > text:first-child {
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 19rpx;
+    font-size: 21rpx;
   }
 
   > text:last-child {

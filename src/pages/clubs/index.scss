@@ -188,7 +188,7 @@ page {
       flex: none;
       margin-left: 12rpx;
       color: #526b65;
-      font-size: 21rpx;
+      font-size: 23rpx;
     }
 
     &--pressed {
@@ -246,7 +246,7 @@ page {
     text:last-child {
       margin-top: 3rpx;
       color: #60766f;
-      font-size: 21rpx;
+      font-size: 23rpx;
     }
   }
 
@@ -265,7 +265,7 @@ page {
     justify-content: center;
     height: 76rpx;
     color: #526b65;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 700;
     border-radius: 18rpx;
 
@@ -315,7 +315,7 @@ page {
 
     text:last-child {
       color: #60766f;
-      font-size: 21rpx;
+      font-size: 23rpx;
     }
   }
 
@@ -382,7 +382,7 @@ page {
     margin-top: 7rpx;
     overflow: hidden;
     color: #526b65;
-    font-size: 22rpx;
+    font-size: 24rpx;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -419,7 +419,7 @@ page {
     width: 100%;
     min-height: 34rpx;
     color: #526b65;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 750;
 
     &--active {
@@ -554,7 +554,7 @@ page {
     margin-left: 9rpx;
     overflow: hidden;
     color: #526b65;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 650;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -585,7 +585,7 @@ page {
     margin-top: 7rpx;
     overflow: hidden;
     color: #526b65;
-    font-size: 21rpx;
+    font-size: 23rpx;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -595,7 +595,7 @@ page {
     margin-top: 12rpx;
     overflow: hidden;
     color: #49645d;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.58;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -616,7 +616,7 @@ page {
   padding: 18rpx 22rpx;
   margin-bottom: 16rpx;
   color: #8d4d43;
-  font-size: 23rpx;
+  font-size: 25rpx;
   text-align: center;
   background: #fff0eb;
   border-radius: 20rpx;
@@ -680,7 +680,7 @@ page {
   grid-column: 1 / -1;
   padding: 28rpx 0;
   color: #60766f;
-  font-size: 23rpx;
+  font-size: 25rpx;
   text-align: center;
 }
 

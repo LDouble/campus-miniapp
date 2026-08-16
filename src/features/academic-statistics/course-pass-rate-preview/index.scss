@@ -33,7 +33,7 @@
 
   &__hint {
     color: var(--campus-text-muted, #809693);
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   &__arrow {
@@ -67,7 +67,7 @@
 
       > text:last-child {
         color: var(--campus-text-muted, #71817f);
-        font-size: 19rpx;
+        font-size: 21rpx;
       }
     }
   }
@@ -89,7 +89,7 @@
     display: block;
     margin-top: 20rpx;
     color: var(--campus-text-muted, #71817f);
-    font-size: 22rpx;
+    font-size: 24rpx;
     line-height: 1.55;
   }
 }

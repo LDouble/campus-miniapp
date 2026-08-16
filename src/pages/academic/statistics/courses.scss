@@ -50,7 +50,7 @@
     }
 
     text:last-child {
-      font-size: 21rpx;
+      font-size: 23rpx;
       color: var(--campus-text-muted, #809693);
     }
   }
@@ -231,7 +231,7 @@
   &__clear {
     flex: none;
     padding: 16rpx 0 16rpx 14rpx;
-    font-size: 21rpx;
+    font-size: 23rpx;
     color: var(--campus-text-muted, #71817f);
   }
 
@@ -296,7 +296,7 @@
 
   &__copy {
     margin-top: 12rpx;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.6;
     color: var(--campus-text-muted, #809693);
   }
@@ -306,7 +306,7 @@
     padding: 18rpx 34rpx;
     border-radius: 22rpx;
     background: #e2f3ee;
-    font-size: 23rpx;
+    font-size: 25rpx;
     font-weight: 650;
     color: #469cae;
   }
@@ -319,7 +319,7 @@
 
   &__footer {
     padding: 20rpx 0 8rpx;
-    font-size: 21rpx;
+    font-size: 23rpx;
     color: #8a9997;
     text-align: center;
   }
@@ -366,7 +366,7 @@
   }
 
   &__code {
-    font-size: 21rpx;
+    font-size: 23rpx;
     color: var(--campus-text-muted, #809693);
   }
 
@@ -385,7 +385,7 @@
 
     text:last-child {
       margin-top: 7rpx;
-      font-size: 19rpx;
+      font-size: 21rpx;
       color: var(--campus-text-muted, #809693);
     }
   }
@@ -411,7 +411,7 @@
       }
 
       text:last-child {
-        font-size: 19rpx;
+        font-size: 21rpx;
         color: #8a9997;
       }
     }
@@ -421,7 +421,7 @@
     margin-left: auto;
     padding: 8rpx 14rpx;
     border-radius: 16rpx;
-    font-size: 19rpx;
+    font-size: 21rpx;
     color: #53857f;
     background: #e9f5f2;
 

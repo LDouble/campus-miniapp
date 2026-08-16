@@ -40,6 +40,10 @@ $color-route-destination: var(--campus-route-destination, #ff637e);
 
 // Typography
 $font-family-sans: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+$font-size-caption: var(--campus-font-caption, 22rpx);
+$font-size-supporting: var(--campus-font-supporting, 24rpx);
+$font-size-body: var(--campus-font-body, 28rpx);
+$font-size-title: var(--campus-font-title, 32rpx);
 
 // 8rpx spacing grid
 $space-1: 8rpx;

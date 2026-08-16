@@ -33,7 +33,7 @@ page { background: var(--campus-page, #f4f7fb); }
   }
 
   input { flex: 1; min-width: 0; height: 76rpx; font-size: 25rpx; }
-  > text { padding-left: 18rpx; color: #568477; font-size: 22rpx; }
+  > text { padding-left: 18rpx; color: #568477; font-size: 24rpx; }
 }
 
 .official-notices-sources {
@@ -48,7 +48,7 @@ page { background: var(--campus-page, #f4f7fb); }
     height: 60rpx;
     padding: 0 23rpx;
     color: #66817a;
-    font-size: 23rpx;
+    font-size: 25rpx;
     white-space: nowrap;
     background: var(--campus-surface, #fff);
     border: 2rpx solid rgba(63, 107, 96, 0.08);
@@ -66,12 +66,12 @@ page { background: var(--campus-page, #f4f7fb); }
   > view {
     padding: 12rpx 16rpx;
     color: #5b7770;
-    font-size: 21rpx;
+    font-size: 23rpx;
     background: rgba(232, 239, 235, 0.75);
     border-radius: 14rpx;
   }
   > view text { color: #8a9b96; }
-  > text { margin-left: auto; color: #94a19e; font-size: 20rpx; }
+  > text { margin-left: auto; color: #94a19e; font-size: 22rpx; }
 }
 
 .official-notice-card {
@@ -89,12 +89,12 @@ page { background: var(--campus-page, #f4f7fb); }
   &__meta view {
     padding: 6rpx 13rpx;
     color: #39796b;
-    font-size: 19rpx;
+    font-size: 21rpx;
     font-weight: 700;
     background: #e5f2ed;
     border-radius: 999rpx;
   }
-  &__meta text { color: #92a09c; font-size: 19rpx; }
+  &__meta text { color: #92a09c; font-size: 21rpx; }
   &__meta text:last-child { margin-left: auto; }
   &__title {
     display: -webkit-box;
@@ -111,13 +111,13 @@ page { background: var(--campus-page, #f4f7fb); }
     margin-top: 10rpx;
     overflow: hidden;
     color: #71847f;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.55;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
   &__footer { display: flex; justify-content: space-between; padding-top: 19rpx; margin-top: 18rpx; border-top: 2rpx solid #f0f3f0; }
-  &__footer text { color: #8a9a96; font-size: 20rpx; }
+  &__footer text { color: #8a9a96; font-size: 22rpx; }
   &__footer text:last-child { color: #4e897a; font-weight: 650; }
 }
 
@@ -130,11 +130,11 @@ page { background: var(--campus-page, #f4f7fb); }
   color: #81938e;
   font-size: 24rpx;
 
-  text + text { padding-top: 10rpx; color: #a0aaa7; font-size: 21rpx; }
+  text + text { padding-top: 10rpx; color: #a0aaa7; font-size: 23rpx; }
   > view { padding: 18rpx 30rpx; margin-top: 22rpx; color: #4b8174; background: #e4f0eb; border-radius: 20rpx; }
 }
 
-.official-notices-more { padding: 28rpx; text-align: center; color: #9aa6a2; font-size: 21rpx; }
+.official-notices-more { padding: 28rpx; text-align: center; color: #9aa6a2; font-size: 23rpx; }
 
 @media (prefers-reduced-motion: reduce) {
   .official-notice-card { transition: none; }

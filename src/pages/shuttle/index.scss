@@ -10,7 +10,7 @@
   &__disclaimer {
     padding: 28rpx 22rpx 8rpx;
     color: #9a8c84;
-    font-size: 20rpx;
+    font-size: 22rpx;
     line-height: 1.55;
     text-align: center;
   }
@@ -47,7 +47,7 @@
     align-items: center;
     gap: 10rpx;
     color: rgba(255, 255, 255, 0.72);
-    font-size: 20rpx;
+    font-size: 22rpx;
     letter-spacing: 2rpx;
 
     view {
@@ -78,7 +78,7 @@
   &__countdown {
     padding-top: 10rpx;
     color: #d9f1ef;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &__type {
@@ -86,7 +86,7 @@
     padding: 9rpx 12rpx;
     margin-bottom: 9rpx;
     color: var(--campus-text-heading, #21465c);
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 700;
     text-align: center;
     background: #ffd6a5;
@@ -106,7 +106,7 @@
     z-index: 1;
     padding-top: 7rpx;
     color: rgba(255, 255, 255, 0.74);
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 
   &__footer {
@@ -117,7 +117,7 @@
     padding-top: 24rpx;
     margin-top: 24rpx;
     color: rgba(255, 255, 255, 0.62);
-    font-size: 18rpx;
+    font-size: 20rpx;
     border-top: 1rpx solid rgba(255, 255, 255, 0.14);
   }
 
@@ -132,7 +132,7 @@
     text:last-child {
       padding-top: 10rpx;
       color: rgba(255, 255, 255, 0.7);
-      font-size: 22rpx;
+      font-size: 24rpx;
     }
   }
 }
@@ -144,7 +144,7 @@
   padding: 18rpx 20rpx;
   margin-top: 18rpx;
   color: #8b6a56;
-  font-size: 20rpx;
+  font-size: 22rpx;
   line-height: 1.45;
   background: #fff5e9;
   border-radius: 20rpx;
@@ -185,14 +185,14 @@
 
     text:first-child {
       color: #536d76;
-      font-size: 23rpx;
+      font-size: 25rpx;
       font-weight: 700;
     }
 
     text:last-child {
       padding-top: 4rpx;
       color: #9a8b81;
-      font-size: 19rpx;
+      font-size: 21rpx;
     }
   }
 
@@ -219,7 +219,7 @@
     padding: 0 22rpx;
     margin-right: 10rpx;
     color: #7d8d90;
-    font-size: 21rpx;
+    font-size: 23rpx;
     background: var(--campus-surface, #fff);
     border: 2rpx solid rgba(57, 92, 104, 0.08);
     border-radius: 999rpx;
@@ -246,7 +246,7 @@
     justify-content: center;
     min-height: 58rpx;
     color: #8c827d;
-    font-size: 20rpx;
+    font-size: 22rpx;
     border-radius: 15rpx;
   }
 
@@ -271,7 +271,7 @@
 
   text:last-child {
     color: #978b83;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 }
 
@@ -302,7 +302,7 @@
 
   &__kind {
     color: #55a0a5;
-    font-size: 19rpx;
+    font-size: 21rpx;
     font-weight: 700;
     letter-spacing: 1rpx;
   }
@@ -330,7 +330,7 @@
 
     text:last-child {
       padding-top: 2rpx;
-      font-size: 17rpx;
+      font-size: 19rpx;
     }
 
     &--off {
@@ -366,7 +366,7 @@
       max-width: 170rpx;
       overflow: hidden;
       color: #4c6870;
-      font-size: 20rpx;
+      font-size: 22rpx;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -396,7 +396,7 @@
     text {
       padding: 0 10rpx;
       color: #9a918b;
-      font-size: 17rpx;
+      font-size: 19rpx;
       white-space: nowrap;
     }
   }
@@ -412,7 +412,7 @@
     text {
       padding: 7rpx 12rpx;
       color: #426975;
-      font-size: 19rpx;
+      font-size: 21rpx;
       font-weight: 650;
       background: #eef7f6;
       border-radius: 12rpx;
@@ -431,7 +431,7 @@
     gap: 18rpx;
     padding-top: 17rpx;
     color: #978c86;
-    font-size: 19rpx;
+    font-size: 21rpx;
 
     text:first-child {
       min-width: 0;
@@ -474,7 +474,7 @@
   > text:last-child {
     padding-top: 8rpx;
     color: #9a9089;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 
   &__icon {
@@ -662,7 +662,7 @@
       text:last-child {
         margin-top: 5rpx;
         color: var(--campus-text-muted, #7890ad);
-        font-size: 20rpx;
+        font-size: 22rpx;
       }
     }
 
@@ -670,7 +670,7 @@
       flex: none;
       padding: 7rpx 14rpx;
       color: var(--campus-primary, #2f80ed);
-      font-size: 20rpx;
+      font-size: 22rpx;
       background: var(--campus-surface-primary, #e8f5ff);
       border-radius: 999rpx;
     }
@@ -706,13 +706,13 @@
 
     text:first-child {
       color: var(--campus-text-muted, #7890ad);
-      font-size: 18rpx;
+      font-size: 20rpx;
     }
 
     text:last-child {
       margin-top: 5rpx;
       color: var(--campus-text-secondary, #607895);
-      font-size: 23rpx;
+      font-size: 25rpx;
       font-weight: 650;
     }
 

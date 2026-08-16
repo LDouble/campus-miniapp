@@ -28,7 +28,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 600;
   border-radius: 12rpx;
   transition:
@@ -69,7 +69,7 @@
 
 .market-price-trigger__label text:first-child {
   color: token.$color-text-muted;
-  font-size: 20rpx;
+  font-size: 22rpx;
   line-height: 1.4;
 }
 
@@ -77,7 +77,7 @@
   max-width: 110rpx;
   overflow: hidden;
   color: token.$color-text-body;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 680;
   line-height: 1.4;
   text-overflow: ellipsis;
@@ -87,7 +87,7 @@
 .market-price-trigger__separator {
   margin: 0 6rpx;
   color: var(--campus-border, #cbd5e1);
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .market-price-trigger--active {
@@ -126,7 +126,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 650;
   background: token.$color-surface-subtle;
   border: 2rpx solid token.$color-border;
@@ -167,7 +167,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 600;
   border-radius: 12rpx;
   transition:
@@ -204,7 +204,7 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 680;
   white-space: nowrap;
 }
@@ -265,7 +265,7 @@
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-body;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 600;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
@@ -308,7 +308,7 @@
   align-items: center;
   gap: token.$space-2;
   color: token.$color-text-secondary;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .filter-applied__item {
@@ -341,7 +341,7 @@
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-secondary;
-  font-size: 21rpx;
+  font-size: 23rpx;
   font-weight: 650;
 }
 
@@ -419,7 +419,7 @@
 .filter-section__description {
   margin-top: 6rpx;
   color: token.$color-text-secondary;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .price-range {
@@ -434,7 +434,7 @@
   display: block;
   margin-bottom: 10rpx;
   color: token.$color-text-secondary;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .price-range__divider {
@@ -443,7 +443,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-muted;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .filter-input,
@@ -479,7 +479,7 @@
   display: block;
   margin-top: 14rpx;
   color: token.$color-danger;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .route-filter-fields {
@@ -495,7 +495,7 @@
   justify-content: center;
   flex: none;
   color: #008f82;
-  font-size: 21rpx;
+  font-size: 23rpx;
   font-weight: 760;
   background: var(--campus-surface-success, #f0fdfa);
   border-radius: 50%;
@@ -518,7 +518,7 @@
   display: block;
   margin-bottom: token.$space-1;
   color: token.$color-text-secondary;
-  font-size: 20rpx;
+  font-size: 22rpx;
   font-weight: 600;
 }
 
@@ -543,7 +543,7 @@
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-body;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 600;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
@@ -578,7 +578,7 @@
 
 .date-filter-picker text:last-child {
   color: token.$color-primary;
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 650;
 }
 
@@ -588,7 +588,7 @@
   align-items: center;
   justify-content: flex-end;
   color: token.$color-primary-strong;
-  font-size: 23rpx;
+  font-size: 25rpx;
 }
 
 .seat-filter-options {
@@ -630,7 +630,7 @@
 
   .market-intent-switch__item,
   .carpool-date-switch__item {
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   .market-price-trigger,

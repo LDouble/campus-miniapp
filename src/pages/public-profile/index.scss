@@ -72,7 +72,7 @@ page {
   border-radius: token.$radius-pill;
   background: token.$color-surface-primary;
   color: token.$color-primary-strong;
-  font-size: 18rpx;
+  font-size: 20rpx;
   font-weight: 700;
 }
 
@@ -84,14 +84,14 @@ page {
 .public-profile-hero__level {
   margin-top: 8rpx;
   color: token.$color-primary-strong;
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 650;
 }
 
 .public-profile-hero__hint {
   margin-top: 8rpx;
   color: token.$color-text-secondary;
-  font-size: 22rpx;
+  font-size: 24rpx;
   line-height: 1.5;
 }
 
@@ -121,14 +121,14 @@ page {
 }
 
 .public-profile-tab text:first-child {
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 650;
 }
 
 .public-profile-tab text:last-child {
   margin-top: 3rpx;
   color: token.$color-text-muted;
-  font-size: 19rpx;
+  font-size: 21rpx;
   font-weight: 600;
 }
 
@@ -171,7 +171,7 @@ page {
 .public-profile-section-heading > text {
   margin-top: 4rpx;
   color: token.$color-text-muted;
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .public-profile-feed,
@@ -228,7 +228,7 @@ page {
 .public-profile-state--empty text:last-child {
   margin-top: 8rpx;
   color: token.$color-text-muted;
-  font-size: 22rpx;
+  font-size: 24rpx;
 }
 
 .public-profile-load-more {
@@ -269,7 +269,7 @@ page {
   }
 
   .public-profile-tab text:first-child {
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 }
 

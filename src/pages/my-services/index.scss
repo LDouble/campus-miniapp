@@ -58,7 +58,7 @@ page {
 
 .my-services-hero__eyebrow {
   color: var(--campus-primary, #2b7fff);
-  font-size: 18rpx;
+  font-size: 20rpx;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: 1.4rpx;
@@ -75,7 +75,7 @@ page {
 .my-services-hero__summary {
   margin-top: 8rpx;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 22rpx;
+  font-size: 24rpx;
   line-height: 1.35;
 }
 
@@ -93,7 +93,7 @@ page {
   border-radius: 22rpx;
   background: linear-gradient(100deg, var(--campus-primary, #2b7fff), #00b8e6);
   color: #fff;
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 750;
   box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.2);
   transition: opacity 160ms ease;
@@ -160,7 +160,7 @@ page {
   box-sizing: border-box;
   border-radius: 999rpx;
   color: var(--campus-text-secondary, #62748e);
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 700;
   transition: opacity 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
@@ -207,7 +207,7 @@ page {
   border-radius: 999rpx;
   background: transparent;
   color: var(--campus-text-secondary, #62748e);
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 650;
   transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
 }
@@ -273,7 +273,7 @@ page {
   padding: 20rpx 0 20rpx 14rpx;
   flex: none;
   color: var(--campus-primary, #2b7fff);
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 650;
 }
 
@@ -311,7 +311,7 @@ page {
   overflow: hidden;
   box-sizing: border-box;
   border-radius: 999rpx;
-  font-size: 20rpx;
+  font-size: 22rpx;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -406,7 +406,7 @@ page {
   border-radius: 18rpx;
   background: var(--campus-surface-subtle, #f8fafc);
   color: var(--campus-text-body, #314158);
-  font-size: 23rpx;
+  font-size: 25rpx;
 
   text {
     min-width: 0;
@@ -456,7 +456,7 @@ page {
   margin-top: 18rpx;
   border-top: 1rpx solid var(--campus-border, #f1f5f9);
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 21rpx;
+  font-size: 23rpx;
 
   text {
     min-width: 0;
@@ -495,7 +495,7 @@ page {
     justify-content: center;
     box-sizing: border-box;
     border-radius: 18rpx;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 720;
     transition: opacity 150ms ease;
   }
@@ -562,7 +562,7 @@ page {
     border-radius: 24rpx;
     background: var(--campus-border, #f1f5f9);
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 21rpx;
+    font-size: 23rpx;
     letter-spacing: 1rpx;
   }
 
@@ -574,7 +574,7 @@ page {
   &--empty text:last-of-type {
     margin-top: 7rpx;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &--empty > .my-services-state__action {
@@ -584,7 +584,7 @@ page {
     border-radius: 18rpx;
     background: var(--campus-primary, #2b7fff);
     color: #fff;
-    font-size: 22rpx;
+    font-size: 24rpx;
     box-shadow: 0 7rpx 16rpx rgba(43, 127, 255, 0.16);
   }
 }
@@ -593,7 +593,7 @@ page {
   padding: 24rpx 16rpx 10rpx;
   overflow-wrap: anywhere;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 21rpx;
+  font-size: 23rpx;
   text-align: center;
 }
 

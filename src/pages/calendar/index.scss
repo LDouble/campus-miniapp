@@ -38,7 +38,7 @@
     display: block;
     padding: 28rpx 24rpx 0;
     color: #9a8d85;
-    font-size: 19rpx;
+    font-size: 21rpx;
     line-height: 1.6;
     text-align: center;
   }
@@ -58,7 +58,7 @@
     justify-content: center;
     min-height: 60rpx;
     color: #8a817b;
-    font-size: 22rpx;
+    font-size: 24rpx;
     border-radius: 15rpx;
   }
 
@@ -88,13 +88,13 @@
     border-radius: 19rpx;
 
     text:first-child {
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 680;
     }
 
     text:last-child {
       color: #9a8d85;
-      font-size: 17rpx;
+      font-size: 19rpx;
     }
   }
 
@@ -161,7 +161,7 @@
     align-items: center;
     gap: 10rpx;
     color: rgba(255, 255, 255, 0.72);
-    font-size: 20rpx;
+    font-size: 22rpx;
     letter-spacing: 1rpx;
 
     view {
@@ -188,7 +188,7 @@
     z-index: 1;
     padding-top: 10rpx;
     color: rgba(255, 255, 255, 0.76);
-    font-size: 22rpx;
+    font-size: 24rpx;
     line-height: 1.5;
   }
 
@@ -200,7 +200,7 @@
     padding-top: 20rpx;
     margin-top: 22rpx;
     color: rgba(255, 255, 255, 0.66);
-    font-size: 19rpx;
+    font-size: 21rpx;
     border-top: 1rpx solid rgba(255, 255, 255, 0.14);
   }
 }
@@ -229,7 +229,7 @@
   padding: 18rpx 20rpx;
   margin-top: 18rpx;
   color: #637b7d;
-  font-size: 20rpx;
+  font-size: 22rpx;
   line-height: 1.45;
   background: #eef7f5;
   border-radius: 20rpx;
@@ -275,7 +275,7 @@
   > text:last-child,
   > view > text:last-child {
     color: #998b82;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   > view > text {
@@ -314,7 +314,7 @@
 
     text:last-child {
       padding-top: 3rpx;
-      font-size: 17rpx;
+      font-size: 19rpx;
     }
   }
 
@@ -338,7 +338,7 @@
     padding: 0 22rpx;
     margin-right: 10rpx;
     color: #7f8d8d;
-    font-size: 20rpx;
+    font-size: 22rpx;
     background: var(--campus-surface, #fff);
     border: 2rpx solid rgba(54, 85, 95, 0.08);
     border-radius: 999rpx;
@@ -385,7 +385,7 @@
   > text:last-child {
     padding-top: 8rpx;
     color: #a09389;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   &__mark {
@@ -479,14 +479,14 @@
 
     text:first-child {
       color: #5c777c;
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 700;
     }
 
     text:last-child {
       padding: 6rpx 11rpx;
       color: #397c78;
-      font-size: 17rpx;
+      font-size: 19rpx;
       background: #e9f5f2;
       border-radius: 999rpx;
     }
@@ -508,7 +508,7 @@
     padding-top: 8rpx;
     overflow: hidden;
     color: #718386;
-    font-size: 21rpx;
+    font-size: 23rpx;
     line-height: 1.55;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -518,7 +518,7 @@
     display: block;
     padding-top: 13rpx;
     color: #a09187;
-    font-size: 19rpx;
+    font-size: 21rpx;
   }
 
   &--holiday &__rail view:first-child {

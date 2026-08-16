@@ -32,7 +32,7 @@ page {
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 23rpx;
+  font-size: 25rpx;
   font-weight: 600;
   border-radius: token.$radius-md;
   transition:
@@ -90,7 +90,7 @@ page {
     gap: token.$space-2;
     margin-left: token.$space-2;
     color: token.$color-text-muted;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   &__clear {
@@ -127,7 +127,7 @@ page {
     display: block;
     margin: 4rpx 0 token.$space-2;
     color: token.$color-text-secondary;
-    font-size: 22rpx;
+    font-size: 24rpx;
     line-height: 1.5;
   }
 
@@ -164,7 +164,7 @@ page {
     display: block;
     margin: 10rpx 4rpx 0;
     color: token.$color-text-muted;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   &--content {
@@ -196,7 +196,7 @@ page {
   > text {
     margin-left: 12rpx;
     color: token.$color-text-body;
-    font-size: 23rpx;
+    font-size: 25rpx;
   }
 }
 
@@ -223,7 +223,7 @@ page {
     display: block;
     margin-top: token.$space-1;
     color: token.$color-text-muted;
-    font-size: 19rpx;
+    font-size: 21rpx;
     text-align: right;
   }
 }
@@ -287,7 +287,7 @@ page {
   display: block;
   margin: 0 2rpx 10rpx;
   color: token.$color-text-secondary;
-  font-size: 20rpx;
+  font-size: 22rpx;
 }
 
 .publisher-route-suggestions__items {
@@ -308,7 +308,7 @@ page {
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-body;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 600;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
@@ -346,7 +346,7 @@ page {
   text {
     display: block;
     color: token.$color-text-body;
-    font-size: 21rpx;
+    font-size: 23rpx;
     line-height: 1.5;
   }
 
@@ -426,7 +426,7 @@ page {
     text:last-child {
       margin-top: 4rpx;
       color: token.$color-text-muted;
-      font-size: 20rpx;
+      font-size: 22rpx;
     }
   }
 
@@ -438,7 +438,7 @@ page {
     align-items: center;
     justify-content: center;
     color: token.$color-primary;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 680;
   }
 }
@@ -477,7 +477,7 @@ page {
   text:last-child {
     margin-top: 4rpx;
     color: token.$color-text-muted;
-    font-size: 18rpx;
+    font-size: 20rpx;
   }
 
   &--active {
@@ -548,7 +548,7 @@ page {
     text {
       overflow: hidden;
       color: token.$color-text-body;
-      font-size: 20rpx;
+      font-size: 22rpx;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -632,7 +632,7 @@ page {
 
   .publisher-type {
     min-height: token.$touch-target-min;
-    font-size: 21rpx;
+    font-size: 23rpx;
   }
 
   .publisher-intro {
@@ -659,7 +659,7 @@ page {
   .publisher-picker-row picker > view {
     padding-right: 12rpx;
     padding-left: 12rpx;
-    font-size: 23rpx;
+    font-size: 25rpx;
   }
 
   .publisher-contact {

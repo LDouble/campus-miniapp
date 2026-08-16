@@ -537,7 +537,7 @@ page { background: var(--campus-page, #f4f7fb); }
     display: block;
     margin-bottom: 2rpx;
     color: #4d8d82;
-    font-size: 17rpx;
+    font-size: 19rpx;
     font-weight: 750;
     letter-spacing: 2rpx;
 
@@ -570,7 +570,7 @@ page { background: var(--campus-page, #f4f7fb); }
   &__count {
     padding-bottom: 4rpx;
     color: #819590;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &--community {
@@ -631,21 +631,21 @@ page { background: var(--campus-page, #f4f7fb); }
   &__item { display: flex; align-items: center; }
   &__head { justify-content: space-between; min-height: 82rpx; padding: 0 4rpx 10rpx; transition: opacity 150ms ease; }
   &__head--pressed { opacity: 0.68; }
-  &__eyebrow { display: block; color: #d18a51; font-size: 17rpx; font-weight: 750; letter-spacing: 2rpx; }
+  &__eyebrow { display: block; color: #d18a51; font-size: 19rpx; font-weight: 750; letter-spacing: 2rpx; }
   &__title { display: block; padding-top: 2rpx; color: #294d47; font-size: 30rpx; font-weight: 760; }
-  &__more { min-height: 82rpx; color: #526f69; font-size: 21rpx; }
+  &__more { min-height: 82rpx; color: #526f69; font-size: 23rpx; }
   &__more image { width: 22rpx; height: 22rpx; margin-left: 4rpx; opacity: 0.65; }
   &__item { min-height: 96rpx; padding: 14rpx 4rpx; border-top: 1rpx solid #f0f2ee; transition: opacity 120ms ease, transform 120ms ease; }
   &__item--pressed { opacity: 0.86; transform: scale(0.99); }
   &__copy { flex: 1; min-width: 0; padding: 0 12rpx 0 4rpx; }
   &__copy-title { display: block; overflow: hidden; color: #36564f; font-size: 24rpx; font-weight: 680; text-overflow: ellipsis; white-space: nowrap; }
-  &__meta { display: flex; min-width: 0; padding-top: 8rpx; align-items: center; color: #788a85; font-size: 19rpx; }
-  &__source { flex: none; padding: 4rpx 10rpx; color: #376f62; font-size: 18rpx; background: #e6f1ed; border-radius: 999rpx; }
+  &__meta { display: flex; min-width: 0; padding-top: 8rpx; align-items: center; color: #788a85; font-size: 21rpx; }
+  &__source { flex: none; padding: 4rpx 10rpx; color: #376f62; font-size: 20rpx; background: #e6f1ed; border-radius: 999rpx; }
   &__publisher { min-width: 0; margin-left: 10rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   &__meta-separator { flex: none; margin: 0 8rpx; }
   &__date { flex: none; }
   &__arrow { flex: none; width: 20rpx; height: 20rpx; margin-left: 4rpx; opacity: 0.5; }
-  &__empty { min-height: 96rpx; padding: 16rpx 4rpx; text-align: center; color: #71847f; font-size: 22rpx; border-top: 2rpx solid #f0f2ee; }
+  &__empty { min-height: 96rpx; padding: 16rpx 4rpx; text-align: center; color: #71847f; font-size: 24rpx; border-top: 2rpx solid #f0f2ee; }
 }
 
 .home-migrated {
@@ -672,7 +672,7 @@ page { background: var(--campus-page, #f4f7fb); }
     min-height: 40rpx;
     padding: 0 16rpx;
     color: #39796f;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 700;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 999rpx;
@@ -723,7 +723,7 @@ page { background: var(--campus-page, #f4f7fb); }
   &__hint {
     margin-top: 14rpx;
     color: #8fa19e;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 }
 
@@ -784,7 +784,7 @@ page { background: var(--campus-page, #f4f7fb); }
   &__subtitle {
     margin-top: 4rpx;
     color: #718984;
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   &__all {
@@ -794,7 +794,7 @@ page { background: var(--campus-page, #f4f7fb); }
     min-height: 88rpx;
     justify-content: flex-end;
     color: #526f69;
-    font-size: 22rpx;
+    font-size: 24rpx;
 
     image {
       width: 22rpx;
@@ -852,7 +852,7 @@ page { background: var(--campus-page, #f4f7fb); }
     margin-top: 3rpx;
     overflow: hidden;
     color: var(--campus-text-muted, #809693);
-    font-size: 20rpx;
+    font-size: 22rpx;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -861,7 +861,7 @@ page { background: var(--campus-page, #f4f7fb); }
     flex: none;
     padding: 9rpx 15rpx;
     color: #53857f;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 650;
     background: #e9f5f2;
     border-radius: 15rpx;
@@ -938,7 +938,7 @@ page { background: var(--campus-page, #f4f7fb); }
   &__academic-meta {
     margin-top: 5rpx;
     color: #789491;
-    font-size: 18rpx;
+    font-size: 20rpx;
   }
 
   &__academic-arrow {
@@ -967,7 +967,7 @@ page { background: var(--campus-page, #f4f7fb); }
 
     text:last-child {
       color: #91a19e;
-      font-size: 19rpx;
+      font-size: 21rpx;
     }
   }
 
@@ -1035,14 +1035,14 @@ page { background: var(--campus-page, #f4f7fb); }
 
   &__life-name {
     color: var(--campus-text-body, #31515b);
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 680;
   }
 
   &__life-meta {
     margin-top: 3rpx;
     color: #92a09e;
-    font-size: 17rpx;
+    font-size: 19rpx;
   }
 }
 
@@ -1143,7 +1143,7 @@ page { background: var(--campus-page, #f4f7fb); }
   max-width: 100%;
   overflow: hidden;
   color: var(--campus-text-body, #31515b);
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 650;
   text-align: center;
   text-overflow: ellipsis;
@@ -1210,13 +1210,13 @@ page { background: var(--campus-page, #f4f7fb); }
   &__date-label {
     margin-left: 10rpx;
     color: var(--campus-text-muted, #809693);
-    font-size: 20rpx;
+    font-size: 22rpx;
   }
 
   &__summary {
     flex: none;
     color: #62807a;
-    font-size: 20rpx;
+    font-size: 22rpx;
     transition: opacity 140ms ease;
 
     &--pressed {
@@ -1248,7 +1248,7 @@ page { background: var(--campus-page, #f4f7fb); }
     flex: none;
     width: 126rpx;
     color: #53857f;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 700;
   }
 
@@ -1273,7 +1273,7 @@ page { background: var(--campus-page, #f4f7fb); }
     margin-top: 2rpx;
     overflow: hidden;
     color: #80918e;
-    font-size: 18rpx;
+    font-size: 20rpx;
     white-space: nowrap;
 
     image {
@@ -1296,7 +1296,7 @@ page { background: var(--campus-page, #f4f7fb); }
     padding: 5rpx 10rpx;
     margin-left: 10rpx;
     color: #3f827c;
-    font-size: 17rpx;
+    font-size: 19rpx;
     font-weight: 650;
     background: #dff3ee;
     border-radius: 12rpx;
@@ -1328,7 +1328,7 @@ page { background: var(--campus-page, #f4f7fb); }
     text:last-child {
       margin-top: 5rpx;
       color: #8a9997;
-      font-size: 19rpx;
+      font-size: 21rpx;
     }
   }
 }
@@ -1359,14 +1359,14 @@ page { background: var(--campus-page, #f4f7fb); }
 
     text:first-child {
       color: #3d7f78;
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 720;
     }
 
     text:last-child {
       margin-top: 3rpx;
       color: #98a4a0;
-      font-size: 17rpx;
+      font-size: 19rpx;
     }
   }
 
@@ -1381,7 +1381,7 @@ page { background: var(--campus-page, #f4f7fb); }
     padding: 3rpx 8rpx;
     margin-left: 8rpx;
     color: #b36843;
-    font-size: 16rpx;
+    font-size: 18rpx;
     font-weight: 700;
     background: #ffead5;
     border-radius: 9rpx;
@@ -1393,7 +1393,7 @@ page { background: var(--campus-page, #f4f7fb); }
     padding: 10rpx 12rpx;
     margin-left: 10rpx;
     color: #507a74;
-    font-size: 18rpx;
+    font-size: 20rpx;
     text-align: center;
     background: #edf5f1;
     border-radius: 15rpx;
@@ -1463,7 +1463,7 @@ page { background: var(--campus-page, #f4f7fb); }
 
   &__eyebrow {
     color: #d08453;
-    font-size: 17rpx;
+    font-size: 19rpx;
     font-weight: 750;
     letter-spacing: 1rpx;
   }
@@ -1479,7 +1479,7 @@ page { background: var(--campus-page, #f4f7fb); }
     margin-top: 6rpx;
     overflow: hidden;
     color: #84928f;
-    font-size: 19rpx;
+    font-size: 21rpx;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1491,7 +1491,7 @@ page { background: var(--campus-page, #f4f7fb); }
     min-height: 72rpx;
     padding-left: 12rpx;
     color: #4e756e;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 650;
 
     image {
@@ -1584,7 +1584,7 @@ page { background: var(--campus-page, #f4f7fb); }
     box-shadow: 5rpx 7rpx 14rpx rgba(48, 92, 84, 0.11);
 
     text {
-      font-size: 20rpx;
+      font-size: 22rpx;
       font-weight: 750;
     }
 
@@ -1624,14 +1624,14 @@ page { background: var(--campus-page, #f4f7fb); }
 
   &__author-name {
     color: var(--campus-text-body, #31515b);
-    font-size: 23rpx;
+    font-size: 25rpx;
     font-weight: 680;
   }
 
   &__time {
     margin-top: 2rpx;
     color: #94a4a2;
-    font-size: 18rpx;
+    font-size: 20rpx;
   }
 
   &__tag {
@@ -1648,7 +1648,7 @@ page { background: var(--campus-page, #f4f7fb); }
 
     text {
       overflow: hidden;
-      font-size: 19rpx;
+      font-size: 21rpx;
       font-weight: 650;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1702,7 +1702,7 @@ page { background: var(--campus-page, #f4f7fb); }
   &__metric {
     min-width: 60rpx;
     margin-right: 12rpx;
-    font-size: 19rpx;
+    font-size: 21rpx;
 
     image {
       width: 25rpx;
@@ -1715,7 +1715,7 @@ page { background: var(--campus-page, #f4f7fb); }
   &__read {
     margin-left: auto;
     color: #53857f;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 650;
 
     image {
@@ -1745,7 +1745,7 @@ page { background: var(--campus-page, #f4f7fb); }
       min-width: 0;
       overflow: hidden;
       color: #45645d;
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 680;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1755,7 +1755,7 @@ page { background: var(--campus-page, #f4f7fb); }
       flex: none;
       margin-left: 12rpx;
       color: #788a85;
-      font-size: 19rpx;
+      font-size: 21rpx;
     }
   }
 
@@ -1860,7 +1860,7 @@ page { background: var(--campus-page, #f4f7fb); }
       right: 12rpx;
       bottom: 9rpx;
       color: rgba(26, 55, 51, 0.28);
-      font-size: 19rpx;
+      font-size: 21rpx;
       font-weight: 800;
       letter-spacing: 2rpx;
     }
@@ -1958,7 +1958,7 @@ page { background: var(--campus-page, #f4f7fb); }
 
   &__meta {
     color: #99a5a3;
-    font-size: 18rpx;
+    font-size: 20rpx;
   }
 
   &--more {
@@ -2271,7 +2271,7 @@ page {
 
   &__grid-name {
     color: var(--campus-text-body, #45556c);
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 500;
   }
 
@@ -2675,7 +2675,7 @@ page {
   }
 
   &__compact-title {
-    font-size: 23rpx;
+    font-size: 25rpx;
   }
 
   &__read {
@@ -2750,7 +2750,7 @@ page {
   }
 
   .marketplace-card__description {
-    font-size: 23rpx;
+    font-size: 25rpx;
   }
 
   .marketplace-card__price-line {
