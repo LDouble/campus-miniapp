@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
@@ -63,7 +64,8 @@ export default function SelectionPage() {
   const [loading, setLoading] = useState(!initialUpdatedAt)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
-  const [usingCache, setUsingCache] = useState(false)
+  const [usingCache, setUsingCache] = useState(Boolean(initialUpdatedAt))
+  const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [activeTab, setActiveTab] = useState<SelectionTab>('all')
   const [sheet, setSheet] = useState<SelectionSheet>(null)
@@ -89,10 +91,10 @@ export default function SelectionPage() {
     const cached = cache?.selectionsByPeriod[periodId]
     const updatedAt = cache
       ?.selectionsUpdatedAtByPeriod[periodId] || 0
-    if (cached && !manual) {
-      setRecords(cached)
-      setCacheUpdatedAt(updatedAt)
-    }
+    setRecords(cached || [])
+    setCacheUpdatedAt(updatedAt)
+    setUsingCache(Boolean(cached))
+    setServerCache(null)
     if (!updatedAt) setLoading(true)
     if (manual) setRetrying(true)
     setLoadError(null)
@@ -101,11 +103,12 @@ export default function SelectionPage() {
       academicStorage.setSelectionRecords(
         academicUserId,
         periodId,
-        result,
+        result.records,
       )
-      setRecords(result)
+      setRecords(result.records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
+      setServerCache(result.cache || null)
     } catch (error) {
       if (updatedAt) {
         setUsingCache(true)
@@ -236,7 +239,11 @@ export default function SelectionPage() {
         {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : loadError && !usingCache ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : <>
-          {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
+          <AcademicCacheNotice
+            cache={serverCache}
+            localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
+            localFallback={Boolean(loadError)}
+          />
           <View className='selection-hero'>
             <View><Text className='selection-hero__eyebrow'>本学期课程记录</Text><Text className='selection-hero__number'>{records.length}<Text> 门课程</Text></Text><Text className='selection-hero__copy'>完整展示教务系统返回的课程状态</Text></View>
             <View className='selection-hero__seal'><Text>课程</Text><Text>记录</Text></View>

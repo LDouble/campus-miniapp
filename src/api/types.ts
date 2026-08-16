@@ -80,9 +80,12 @@ export type MaterialFeedbackStatus = components['schemas']['MaterialFeedbackStat
 export type MaterialFeedbackView = components['schemas']['MaterialFeedbackView']
 export type MaterialFeedbackPage = components['schemas']['MaterialFeedbackPage']
 
+export type AcademicCacheMetadata = components['schemas']['AcademicQueryCache']
+
 export type ApiSuccessEnvelope<T> = {
   data: T
   request_id: string
+  cache?: AcademicCacheMetadata | null
 }
 
 export type ApiErrorEnvelope = {

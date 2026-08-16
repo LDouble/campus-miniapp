@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
@@ -195,12 +196,14 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(!hasInitialCourses)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
-  const [usingCache, setUsingCache] = useState(false)
+  const [usingCache, setUsingCache] = useState(hasInitialCourses)
+  const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [showRefreshGuide, setShowRefreshGuide] = useState(() => (
     !academicStorage.hasSeenScheduleRefreshGuideToday()
   ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
-    initialScheduleCache?.updatedAt || 0,
+    initialScheduleCache
+      ?.coursesUpdatedAtByPeriod[preferences.schedulePeriodId] || 0,
   )
   const [initialized, setInitialized] = useState(false)
   const [sheet, setSheet] = useState<ScheduleSheet>(null)
@@ -278,6 +281,7 @@ export default function SchedulePage() {
           academicUserId,
           records,
           currentCache ? currentCache.coursesByPeriod : {},
+          currentCache?.coursesUpdatedAtByPeriod || {},
         )
         applyPeriods(records)
       })
@@ -286,6 +290,7 @@ export default function SchedulePage() {
         if (initialScheduleCache && initialScheduleCache.periods.length) {
           applyPeriods(initialScheduleCache.periods)
           setUsingCache(true)
+          setServerCache(null)
           setLoadError(error)
           Taro.showToast({ title: '网络异常，已使用本地课表', icon: 'none' })
           return
@@ -315,17 +320,20 @@ export default function SchedulePage() {
       setOfficialCoursesByPeriod((current) => (
         setCoursesForPeriod(current, periodId, cachedCourses)
       ))
-      setCacheUpdatedAt(cache.updatedAt || 0)
+      setCacheUpdatedAt(cache.coursesUpdatedAtByPeriod[periodId] || 0)
       setLoading(false)
     }
 
     let active = true
+    setServerCache(null)
+    setUsingCache(hasCachedCourses)
     if (!hasCachedCourses) setLoading(true)
     setLoadError(null)
-    academicRepository.getCourses(periodId)
-      .then((records) => {
-        const courses = requireCoursesForPeriod(records, periodId)
+      academicRepository.getCourses(periodId)
+      .then((result) => {
+        const courses = requireCoursesForPeriod(result.records, periodId)
         const currentCache = academicStorage.getScheduleCache(academicUserId)
+        const updatedAt = Date.now()
         academicStorage.setScheduleCache(
           academicUserId,
           periods,
@@ -334,13 +342,18 @@ export default function SchedulePage() {
             periodId,
             courses,
           ),
+          {
+            ...(currentCache?.coursesUpdatedAtByPeriod || {}),
+            [periodId]: updatedAt,
+          },
         )
         if (active) {
           setOfficialCoursesByPeriod((current) => (
             setCoursesForPeriod(current, periodId, courses)
           ))
-          setCacheUpdatedAt(Date.now())
+          setCacheUpdatedAt(updatedAt)
           setUsingCache(false)
+          setServerCache(result.cache || null)
         }
       })
       .catch((error) => {
@@ -389,17 +402,20 @@ export default function SchedulePage() {
     if (!hasCachedCourses) setLoading(true)
     setRetrying(true)
     setLoadError(null)
+    setServerCache(null)
+    setUsingCache(hasCachedCourses)
     try {
       const records = await academicRepository.getPeriods()
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
       const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
-      const courseRecords = schedulePeriodId
+      const courseResult = schedulePeriodId
         ? await academicRepository.getCourses(schedulePeriodId)
-        : []
-      const courses = schedulePeriodId
-        ? requireCoursesForPeriod(courseRecords, schedulePeriodId)
+        : undefined
+      const courses = courseResult
+        ? requireCoursesForPeriod(courseResult.records, schedulePeriodId)
         : []
       const currentCache = academicStorage.getScheduleCache(academicUserId)
+      const updatedAt = Date.now()
       academicStorage.setScheduleCache(
         academicUserId,
         records,
@@ -410,6 +426,12 @@ export default function SchedulePage() {
             courses,
           )
           : sanitizeCoursesByPeriod(currentCache?.coursesByPeriod || {}),
+        schedulePeriodId
+          ? {
+            ...(currentCache?.coursesUpdatedAtByPeriod || {}),
+            [schedulePeriodId]: updatedAt,
+          }
+          : currentCache?.coursesUpdatedAtByPeriod || {},
       )
       setPeriods(records)
       if (schedulePeriodId) {
@@ -417,8 +439,9 @@ export default function SchedulePage() {
           setCoursesForPeriod(current, schedulePeriodId, courses)
         ))
       }
-      setCacheUpdatedAt(Date.now())
+      setCacheUpdatedAt(schedulePeriodId ? updatedAt : 0)
       setUsingCache(false)
+      setServerCache(courseResult?.cache || null)
       setPreferences((current) => ({
         ...current,
         schedulePeriodId,
@@ -1128,7 +1151,11 @@ export default function SchedulePage() {
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />
         ) : (
           <>
-            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
+            <AcademicCacheNotice
+              cache={serverCache}
+              localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
+              localFallback={Boolean(loadError)}
+            />
             {preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
           </>
         )}

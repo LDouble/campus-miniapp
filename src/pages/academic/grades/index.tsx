@@ -8,6 +8,7 @@ import {
 } from '../../../features/life-services/marketplace-prefill'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
@@ -89,7 +90,8 @@ export default function GradesPage() {
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [hasSnapshot, setHasSnapshot] = useState(hasInitialSnapshot)
-  const [usingCache, setUsingCache] = useState(false)
+  const [usingCache, setUsingCache] = useState(hasInitialSnapshot)
+  const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialRecordsCache?.gradesUpdatedAt || 0,
   )
@@ -207,15 +209,19 @@ export default function GradesPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
+    setLoading(!hasInitialSnapshot)
+    setUsingCache(hasInitialSnapshot)
+    setServerCache(null)
     academicRepository.getGrades()
-      .then((records) => {
+      .then((result) => {
         if (cancelled) return
+        const records = result.records
         academicStorage.setGradeRecords(academicUserId, records)
         setAllGrades(records)
         setCacheUpdatedAt(Date.now())
         setHasSnapshot(true)
         setUsingCache(false)
+        setServerCache(result.cache || null)
         setLoadError(null)
         setPreferences((current) => {
           if (
@@ -246,13 +252,17 @@ export default function GradesPage() {
   const refreshGrades = useCallback(async () => {
     setRetrying(true)
     setLoadError(null)
+    setUsingCache(hasSnapshot)
+    setServerCache(null)
     try {
-      const records = await academicRepository.getGrades()
+      const result = await academicRepository.getGrades()
+      const records = result.records
       academicStorage.setGradeRecords(academicUserId, records)
       setAllGrades(records)
       setCacheUpdatedAt(Date.now())
       setHasSnapshot(true)
       setUsingCache(false)
+      setServerCache(result.cache || null)
     } catch (error) {
       if (hasSnapshot) {
         setUsingCache(true)
@@ -647,7 +657,11 @@ export default function GradesPage() {
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshGrades} />
         ) : (
           <>
-            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
+            <AcademicCacheNotice
+              cache={serverCache}
+              localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
+              localFallback={Boolean(loadError)}
+            />
             <View className={`grade-summary ${simulationMode ? 'grade-summary--simulation' : 'grade-summary--original'}`}>
               <View className='grade-summary__lead'>
                 <Text className='grade-summary__eyebrow'>{simulationMode ? '模拟计算结果' : '原始成绩统计'}</Text>

@@ -1537,6 +1537,18 @@ page {
     background: #74aab0;
     border-radius: 50%;
   }
+
+  &--stale {
+    color: #a77852;
+
+    view { background: #d89b62; }
+  }
+
+  &--local {
+    color: #9a7867;
+
+    view { background: #bd927b; }
+  }
 }
 
 .academic-state {

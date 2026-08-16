@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { AcademicCredentialMissingError } from '../../../api/academic-credential'
 import { isApiError } from '../../../api/client'
+import type { AcademicCacheMetadata } from '../../../api/types'
+import { resolveAcademicCacheNotice } from './academic-cache-notice'
 
 interface AcademicLoadStateProps {
   title?: string
@@ -12,15 +15,9 @@ interface AcademicLoadStateProps {
 }
 
 interface AcademicCacheNoticeProps {
-  updatedAt: number
-  error?: unknown
-}
-
-const formatCacheTime = (timestamp: number) => {
-  const date = new Date(timestamp)
-  if (!timestamp || Number.isNaN(date.getTime())) return ''
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  cache?: AcademicCacheMetadata | null
+  localUpdatedAt?: number
+  localFallback?: boolean
 }
 
 type AcademicLoadAction = 'retry' | 'rebind'
@@ -130,16 +127,26 @@ export function AcademicLoadState({
   )
 }
 
-export function AcademicCacheNotice({ updatedAt, error }: AcademicCacheNoticeProps) {
-  const label = formatCacheTime(updatedAt)
-  if (!label) return null
-  const errorState = error ? resolveAcademicLoadError(error) : null
+export function AcademicCacheNotice({
+  cache,
+  localUpdatedAt = 0,
+  localFallback = false,
+}: AcademicCacheNoticeProps) {
+  const [now, setNow] = useState(Date.now)
+  const notice = resolveAcademicCacheNotice(cache, localUpdatedAt, now, localFallback)
+  const refreshAt = notice?.kind === 'fresh' ? notice.refreshAt : undefined
+
+  useEffect(() => {
+    if (!refreshAt) return undefined
+    const timer = setTimeout(() => setNow(Date.now()), Math.max(refreshAt - Date.now(), 0))
+    return () => clearTimeout(timer)
+  }, [refreshAt])
+
+  if (!notice) return null
   return (
-    <View className='academic-cache-notice'>
+    <View className={`academic-cache-notice academic-cache-notice--${notice.kind}`}>
       <View />
-      <Text>
-        {errorState ? `${errorState.title} · ` : ''}已展示上次数据 · {label}
-      </Text>
+      <Text>{notice.message}</Text>
     </View>
   )
 }
