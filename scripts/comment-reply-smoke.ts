@@ -81,6 +81,10 @@ const detailCommentsStyle = readFileSync(
   resolve(__dirname, '../src/features/life-services/components/detail-comments.scss'),
   'utf8',
 )
+const communityDetailStyle = readFileSync(
+  resolve(__dirname, '../src/pages/community/detail.scss'),
+  'utf8',
+)
 
 assert.doesNotMatch(detailCommentsSource, /收起回复/u)
 assert.match(detailCommentsSource, /!thread\?\.expanded && hasHiddenReplies/u)
@@ -90,5 +94,6 @@ assert.match(detailCommentsSource, /onLongPress=\{\(\) => void openCommentAction
 assert.match(detailCommentsStyle, /\.business-detail-comment__bubble \{[^}]*background: transparent;/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__author \{[^}]*--campus-text-muted/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__reply-identity \{[^}]*--campus-text-muted/u)
+assert.match(communityDetailStyle, /\.community-detail-card \+ \.business-detail-comments \{[^}]*margin-top: 0;[^}]*padding-top: 30rpx;/u)
 
 console.log('comment reply smoke: ok')

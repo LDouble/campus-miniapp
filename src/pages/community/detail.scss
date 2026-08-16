@@ -796,7 +796,7 @@ page { background: var(--campus-page, #f4f7fb); }
 .community-detail__content { padding: 0 32rpx calc(180rpx + env(safe-area-inset-bottom)); }
 .community-detail-card,
 .community-detail-comments { border: 0; background: var(--campus-surface, #fff); box-shadow: none; backdrop-filter: none; }
-.community-detail-card { padding: 34rpx 0 34rpx; border-radius: 0; }
+.community-detail-card { padding: 34rpx 0 12rpx; border-radius: 0; }
 .community-detail-card__top { display: none; }
 .community-detail-card__toolbar { display: flex; min-height: 48rpx; margin-bottom: 18rpx; align-items: center; justify-content: space-between; gap: 20rpx; }
 .community-detail-card__tags { display: flex; gap: 12rpx; }
@@ -811,6 +811,12 @@ page { background: var(--campus-page, #f4f7fb); }
   margin-top: 22rpx;
   padding-top: 12rpx;
   border-top: 1rpx solid var(--campus-surface-subtle, #f8fafc);
+}
+
+.community-detail-card + .business-detail-comments {
+  margin-top: 0;
+  padding-top: 30rpx;
+  border-radius: 44rpx 44rpx 0 0;
 }
 
 .community-detail-comments { margin: 0 -32rpx; padding: 46rpx 32rpx 36rpx; border-radius: 56rpx 56rpx 0 0; background: var(--campus-surface, #fff); box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.02); }
