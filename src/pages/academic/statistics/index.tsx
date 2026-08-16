@@ -14,6 +14,7 @@ import {
   formatAcademicStatisticsTerm,
 } from '../../../features/academic-statistics/term-label'
 import type { AcademicPassRateTrend } from '../../../api/types'
+import { getSystemState } from '../../../state/system'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './index.scss'
 
@@ -87,8 +88,8 @@ const drawTrend = (
 ) => {
   const points = trend.points
   if (points.length < 2) return
-  const system = Taro.getSystemInfoSync()
-  const width = Math.max(280, Math.floor(system.windowWidth * (1 - 112 / 750)))
+  const { windowWidth } = getSystemState().windowInfo
+  const width = Math.max(280, Math.floor(windowWidth * (1 - 112 / 750)))
   const height = 176
   const padding = { top: 18, right: 16, bottom: 16, left: 16 }
   const plotWidth = width - padding.left - padding.right

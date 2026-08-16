@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro, {
   useDidShow,
   useLoad,
@@ -46,6 +46,10 @@ import type {
   CredentialRejectionReason,
   RejectedAcademicCredential,
 } from '../../features/academic-verification/credential-rejection'
+import {
+  convertAcademicPasswordToEnglishSymbols,
+  hasConvertibleAcademicPasswordSymbols,
+} from '../../features/academic-verification/password-symbols'
 import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { getSelectedTempFiles } from '../../utils/file-selection'
 import './index.scss'
@@ -60,6 +64,7 @@ type SelectedMaterial = {
 }
 
 const MAX_MATERIAL_BYTES = 5 * 1024 * 1024
+const PASSWORD_REVEAL_DURATION = 1000
 const educationIcons: Record<AcademicEducationLevel, string> = {
   undergraduate: require('../../assets/icons/study.svg'),
   graduate: require('../../assets/icons/academic.svg'),
@@ -69,6 +74,13 @@ const verificationMethodIcons: Record<VerificationMethod, string> = {
   student_card: require('../../assets/icons/profile.svg'),
 }
 const securityIcon = require('../../assets/icons/result.svg')
+const passwordVisibleIcon = require('../../assets/icons/eye-off.svg')
+const passwordHiddenIcon = require('../../assets/icons/eye.svg')
+
+const maskPassword = (value: string, revealedIndex: number | null) =>
+  Array.from(value)
+    .map((character, index) => (index === revealedIndex ? character : '*'))
+    .join('')
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
@@ -161,7 +173,9 @@ export default function AcademicVerificationPage() {
   const [error, setError] = useState('')
   const [studentNo, setStudentNo] = useState('')
   const [password, setPassword] = useState('')
-  const [passwordVisible, setPasswordVisible] = useState(true)
+  const [passwordVisible, setPasswordVisible] = useState(false)
+  const [revealedPasswordIndex, setRevealedPasswordIndex] = useState<number | null>(null)
+  const passwordRevealTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [rejectedCredential, setRejectedCredential] = useState<RejectedAcademicCredential | null>(null)
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel | null>(null)
   const [realName, setRealName] = useState('')
@@ -170,6 +184,7 @@ export default function AcademicVerificationPage() {
   const [working, setWorking] = useState(false)
   const [workingText, setWorkingText] = useState('')
   const [challengeRetryAt, setChallengeRetryAt] = useState(0)
+  const maskedPassword = maskPassword(password, revealedPasswordIndex)
   const currentCredentialRejected = rejectedCredential !== null
     && educationLevel !== null
     && isRepeatedRejectedCredential(rejectedCredential, {
@@ -177,6 +192,41 @@ export default function AcademicVerificationPage() {
       password,
       educationLevel,
     })
+
+  const clearPasswordReveal = () => {
+    if (passwordRevealTimer.current) {
+      clearTimeout(passwordRevealTimer.current)
+      passwordRevealTimer.current = null
+    }
+    setRevealedPasswordIndex(null)
+  }
+
+  const handlePasswordInput = (nextPassword: string, cursor?: number) => {
+    if (passwordRevealTimer.current) clearTimeout(passwordRevealTimer.current)
+
+    if (!passwordVisible && nextPassword.length > password.length) {
+      const nextCursor = Math.max(0, Math.min(cursor ?? nextPassword.length, nextPassword.length))
+      const revealedIndex = Math.max(0, Array.from(nextPassword.slice(0, nextCursor)).length - 1)
+      setRevealedPasswordIndex(revealedIndex)
+      passwordRevealTimer.current = setTimeout(() => {
+        setRevealedPasswordIndex(null)
+        passwordRevealTimer.current = null
+      }, PASSWORD_REVEAL_DURATION)
+    } else {
+      setRevealedPasswordIndex(null)
+    }
+
+    setPassword(nextPassword)
+  }
+
+  const togglePasswordVisibility = () => {
+    clearPasswordReveal()
+    setPasswordVisible((visible) => !visible)
+  }
+
+  useEffect(() => () => {
+    if (passwordRevealTimer.current) clearTimeout(passwordRevealTimer.current)
+  }, [])
 
   const loadStatus = async (silent = false) => {
     if (silent) setRefreshing(true)
@@ -317,14 +367,17 @@ export default function AcademicVerificationPage() {
       })
       return
     }
-    setWorking(true)
-    setWorkingText('正在连接教务系统')
-    try {
-      await verifyAcademicCredentials(normalizedStudentNo, password, educationLevel)
+
+    const completeCredentialAttempt = async (candidatePassword: string) => {
+      await verifyAcademicCredentials(
+        normalizedStudentNo,
+        candidatePassword,
+        educationLevel,
+      )
       const currentUser = await getCurrentIdentity()
       saveAcademicCredential(currentUser.user_id, {
         studentNo: normalizedStudentNo,
-        password,
+        password: candidatePassword,
         educationLevel,
       })
       setPassword('')
@@ -332,7 +385,52 @@ export default function AcademicVerificationPage() {
       setForceCredentialBinding(false)
       await loadStatus(true)
       await completeSuccess()
-    } catch (submitError) {
+    }
+
+    setWorking(true)
+    setWorkingText('正在连接教务系统')
+    try {
+      await completeCredentialAttempt(password)
+    } catch (initialSubmitError) {
+      let submittedPassword = password
+      let submitError: unknown = initialSubmitError
+
+      if (
+        isApiError(initialSubmitError)
+        && initialSubmitError.code === 'invalid_academic_credentials'
+        && hasConvertibleAcademicPasswordSymbols(password)
+      ) {
+        let shouldRetryWithEnglishSymbols = false
+        try {
+          const decision = await Taro.showModal({
+            title: '密码符号可能输错了',
+            content: '检测到密码中含有中文输入法符号，可能与实际密码不一致。是否仅转换为对应的英文半角符号，并重新验证？',
+            confirmText: '转换重试',
+            cancelText: '保持原样',
+            confirmColor: '#5a9d88',
+          })
+          shouldRetryWithEnglishSymbols = decision.confirm
+        } catch {
+          // 旧版微信取消弹窗可能进入 fail，按保持原密码处理。
+        }
+
+        if (!shouldRetryWithEnglishSymbols) {
+          return
+        }
+
+        submittedPassword = convertAcademicPasswordToEnglishSymbols(password)
+        clearPasswordReveal()
+        setPassword(submittedPassword)
+        setWorkingText('已转换为英文符号，正在重新验证')
+        try {
+          await completeCredentialAttempt(submittedPassword)
+          return
+        } catch (retryError) {
+          submitError = retryError
+        }
+      }
+
+      const submittedAttempt = { ...attempt, password: submittedPassword }
       if (isApiError(submitError)) {
         let rejectionReason: CredentialRejectionReason | null = null
         if (submitError.code === 'invalid_academic_credentials') {
@@ -354,7 +452,7 @@ export default function AcademicVerificationPage() {
           return
         }
         if (rejectionReason) {
-          setRejectedCredential({ ...attempt, reason: rejectionReason })
+          setRejectedCredential({ ...submittedAttempt, reason: rejectionReason })
           await Taro.showModal({
             ...rejectedCredentialModal(rejectionReason),
             showCancel: false,
@@ -664,27 +762,42 @@ export default function AcademicVerificationPage() {
                     <View className='verification-field'>
                       <Text>信息门户密码</Text>
                       <View className='verification-password-control'>
-                        <KeyboardSafeInput
-                          id='academic-verification-password'
-                          value={password}
-                          password={!passwordVisible}
-                          holdKeyboard
-                          ariaLabel='信息门户密码'
-                          maxlength={256}
-                          placeholder='验证成功后仅保存在本机'
-                          placeholderClass='verification-placeholder'
-                          disabled={working}
-                          onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                          onInput={(event) => setPassword(event.detail.value)}
-                        />
+                        <View className='verification-password-control__field'>
+                          {!passwordVisible && password && (
+                            <Text className='verification-password-control__mask'>
+                              {maskedPassword}
+                            </Text>
+                          )}
+                          <KeyboardSafeInput
+                            id='academic-verification-password'
+                            className={passwordVisible
+                              ? 'verification-password-control__input'
+                              : 'verification-password-control__input verification-password-control__input--masked'}
+                            value={password}
+                            holdKeyboard
+                            cursorColor='#2b7fff'
+                            ariaLabel='信息门户密码'
+                            maxlength={256}
+                            placeholder='验证成功后仅保存在本机'
+                            placeholderClass='verification-placeholder'
+                            disabled={working}
+                            onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                            onBlur={clearPasswordReveal}
+                            onInput={(event) => handlePasswordInput(event.detail.value, event.detail.cursor)}
+                          />
+                        </View>
                         <View
                           className='verification-password-control__toggle'
                           hoverClass='verification-password-control__toggle--pressed'
                           ariaRole='button'
                           ariaLabel={passwordVisible ? '隐藏密码' : '显示密码'}
-                          onClick={() => setPasswordVisible((visible) => !visible)}
+                          onClick={togglePasswordVisibility}
                         >
-                          {passwordVisible ? '隐藏' : '显示'}
+                          <Image
+                            className='verification-password-control__toggle-icon'
+                            src={passwordVisible ? passwordVisibleIcon : passwordHiddenIcon}
+                            mode='aspectFit'
+                          />
                         </View>
                       </View>
                       {rejectedCredential && (

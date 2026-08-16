@@ -1,6 +1,10 @@
 import { strict as assert } from 'node:assert'
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   buildCampusShareMessage,
+  buildCampusShareTimelineMessage,
   buildSharePath,
 } from '../src/features/share/message'
 
@@ -53,5 +57,54 @@ assert.equal(
   }).title.length,
   36,
 )
+
+assert.deepEqual(
+  buildCampusShareTimelineMessage({
+    title: '  校园\n话题  ',
+    path: '/pages/community/topic/index?source=timeline',
+    query: { id: 7, tab: 'hot topics' },
+    imageUrl: ' https://example.com/topic.jpg ',
+  }),
+  {
+    title: '校园 话题',
+    query: 'source=timeline&id=7&tab=hot%20topics',
+    imageUrl: 'https://example.com/topic.jpg',
+  },
+)
+
+assert.deepEqual(
+  buildCampusShareTimelineMessage({
+    title: '',
+    fallbackTitle: '海大校园',
+    path: '/pages/index/index',
+    imageUrl: '   ',
+  }),
+  { title: '海大校园' },
+)
+
+const shareHookSource = readFileSync(
+  resolve(__dirname, '../src/features/share/index.ts'),
+  'utf8',
+)
+assert.match(shareHookSource, /useShareAppMessage, useShareTimeline/u)
+assert.match(shareHookSource, /useShareTimeline\(\(\) => buildCampusShareTimelineMessage/u)
+assert.match(shareHookSource, /factory\(\{ from: 'menu' \}\)/u)
+
+const sharePages = execFileSync(
+  'rg',
+  ['-l', 'useCampusShare', 'src/pages', '-g', '*.tsx'],
+  { encoding: 'utf8' },
+)
+  .trim()
+  .split('\n')
+  .filter(Boolean)
+
+assert.equal(sharePages.length, 17, '朋友圈配置检查应覆盖全部现有分享页面')
+for (const pagePath of sharePages) {
+  const configPath = pagePath.replace(/\.tsx$/u, '.config.ts')
+  const configSource = readFileSync(resolve(__dirname, '..', configPath), 'utf8')
+  assert.match(configSource, /enableShareAppMessage:\s*true/u, `${configPath} 未开启好友分享`)
+  assert.match(configSource, /enableShareTimeline:\s*true/u, `${configPath} 未开启朋友圈分享`)
+}
 
 console.log('share smoke: ok')

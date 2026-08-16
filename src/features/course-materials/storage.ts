@@ -77,7 +77,13 @@ const isUploadState = (value: unknown): value is MaterialUploadState => {
 const fileExists = async (filePath: string) => {
   if (!filePath) return false
   try {
-    await Taro.getSavedFileInfo({ filePath })
+    await new Promise<void>((resolve, reject) => {
+      Taro.getFileSystemManager().getFileInfo({
+        filePath,
+        success: () => resolve(),
+        fail: reject,
+      })
+    })
     return true
   } catch {
     return false

@@ -3,4 +3,5 @@ export default definePageConfig({
   navigationBarTitleText: '通知详情',
   backgroundColor: '@backgroundColor',
   enableShareAppMessage: true,
+  enableShareTimeline: true,
 })

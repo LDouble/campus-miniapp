@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
 import type { CommentView } from '../../../api/types'
@@ -9,7 +9,6 @@ import { openContentReport } from '../../content-report'
 import { openPublicProfile } from '../../profile/public-profile'
 import {
   buildCommentTree,
-  commentReplyTargetName,
   commentRootId,
   mergeLocalThreadReply,
 } from '../../community/comments'
@@ -54,6 +53,12 @@ type CommentThreadState = {
   loaded: boolean
   loading: boolean
 }
+
+type PendingTimer = {
+  cancel: () => void
+}
+
+const COMPOSER_CLOSE_DURATION = 180
 
 type DetailCommentsProps = {
   targetType: DetailCommentTarget
@@ -116,6 +121,193 @@ const compactCommentName = (name: string, maxLength = 6) => {
     : characters.join('')
 }
 
+const renderCommentMeta = (comment: CommentView) => (
+  <View className='business-detail-comment__meta'>
+    <Text>{formatDateTime(comment.created_at)}</Text>
+    {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
+  </View>
+)
+
+const renderReplyTree = (
+  nodes: CommentTreeNode<CommentView>[],
+  memberNames: ReadonlyMap<number, string>,
+  targetAuthorId: number | undefined,
+  focusedCommentId: number,
+  enteringCommentId: number,
+  removingCommentId: number,
+  onStartReply: (comment: CommentView) => void,
+  onOpenActions: (comment: CommentView) => void,
+) => nodes.map(({ comment, children }) => {
+  const replyTargetName = comment.reply_to_user_id
+    ? memberNames.get(comment.reply_to_user_id) || '上一位同学'
+    : ''
+
+  return (
+    <View key={comment.id} className='business-detail-comment__reply-node'>
+      <View
+        id={`detail-comment-${comment.id}`}
+        className={[
+          'business-detail-comment__reply',
+          focusedCommentId === comment.id ? 'business-detail-comment__reply--focused' : '',
+          enteringCommentId === comment.id ? 'business-detail-comment-node--entering' : '',
+          removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
+        ].filter(Boolean).join(' ')}
+        onLongPress={() => onOpenActions(comment)}
+      >
+        <View
+          className='business-detail-comment__reply-identity'
+          ariaRole='button'
+          ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+          onClick={() => openCommentAuthor(comment)}
+        >
+          <Text className='business-detail-comment__reply-relation'>
+            {compactCommentName(commentAuthorName(comment))}
+            {replyTargetName ? `@${compactCommentName(replyTargetName)}` : ''}
+          </Text>
+          {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
+          <CommunityLevelBadge level={comment.author_level} compact />
+        </View>
+        <Text className='business-detail-comment__reply-content' onClick={() => onStartReply(comment)}>
+          {comment.content}
+        </Text>
+        {renderCommentMeta(comment)}
+      </View>
+      {children.length > 0 && (
+        <View className='business-detail-comment__reply-children'>
+          {renderReplyTree(
+            children,
+            memberNames,
+            targetAuthorId,
+            focusedCommentId,
+            enteringCommentId,
+            removingCommentId,
+            onStartReply,
+            onOpenActions,
+          )}
+        </View>
+      )}
+    </View>
+  )
+})
+
+type DetailCommentThreadProps = {
+  comment: CommentView
+  thread?: CommentThreadState
+  targetAuthorId?: number
+  focusedCommentId: number
+  enteringCommentId: number
+  removingCommentId: number
+  onExpand: (rootId: number) => void
+  onStartReply: (comment: CommentView) => void
+  onOpenActions: (comment: CommentView) => void
+}
+
+const DetailCommentThread = memo(function DetailCommentThread({
+  comment,
+  thread,
+  targetAuthorId,
+  focusedCommentId,
+  enteringCommentId,
+  removingCommentId,
+  onExpand,
+  onStartReply,
+  onOpenActions,
+}: DetailCommentThreadProps) {
+  const { descendants, memberNames, replyTree, showThreadAction } = useMemo(() => {
+    const preview = thread?.descendants || visibleComments(comment.reply_preview || [])
+    const visibleDescendants = thread?.expanded ? preview : preview.slice(0, 2)
+    const hasHiddenReplies = comment.reply_count > Math.min(preview.length, 2)
+    const names = new Map<number, string>()
+
+    ;[comment, ...preview].forEach((member) => {
+      if (!names.has(member.author_id)) names.set(member.author_id, commentAuthorName(member))
+    })
+
+    return {
+      descendants: visibleDescendants,
+      memberNames: names,
+      replyTree: buildCommentTree(comment.id, visibleDescendants),
+      showThreadAction: Boolean(thread?.loading)
+        || (!thread?.expanded && hasHiddenReplies),
+    }
+  }, [comment, thread])
+
+  return (
+    <View
+      className={[
+        'business-detail-comment-thread',
+        enteringCommentId === comment.id ? 'business-detail-comment-node--entering' : '',
+        removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
+      ].filter(Boolean).join(' ')}
+    >
+      <View
+        id={`detail-comment-${comment.id}`}
+        className={`business-detail-comment ${focusedCommentId === comment.id ? 'business-detail-comment--focused' : ''}`}
+      >
+        <View
+          className='business-detail-comment__avatar'
+          ariaRole='button'
+          ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+          onClick={() => openCommentAuthor(comment)}
+        >
+          <UserAvatarImage
+            src={comment.author_avatar_url || ''}
+            className='business-detail-comment__avatar-image'
+            fallback={commentAuthorInitial(comment)}
+            lazyLoad
+          />
+        </View>
+        <View className='business-detail-comment__body'>
+          <View
+            className='business-detail-comment__identity'
+            ariaRole='button'
+            ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+            onClick={() => openCommentAuthor(comment)}
+          >
+            <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
+            {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
+            <CommunityLevelBadge level={comment.author_level} compact />
+          </View>
+          <View
+            className='business-detail-comment__bubble'
+            ariaRole='button'
+            ariaLabel='点击回复，长按查看更多操作'
+            onClick={() => onStartReply(comment)}
+            onLongPress={() => onOpenActions(comment)}
+          >
+            <Text>{comment.content}</Text>
+          </View>
+          {renderCommentMeta(comment)}
+          {showThreadAction && (
+            <View className='business-detail-comment__thread-action' onClick={() => onExpand(comment.id)}>
+              {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
+            </View>
+          )}
+        </View>
+      </View>
+      {thread?.error && (
+        <View className='business-detail-comment__thread-error' onClick={() => onExpand(comment.id)}>
+          {thread.error}，点击重试
+        </View>
+      )}
+      {descendants.length > 0 && (
+        <View className='business-detail-comment__replies'>
+          {renderReplyTree(
+            replyTree,
+            memberNames,
+            targetAuthorId,
+            focusedCommentId,
+            enteringCommentId,
+            removingCommentId,
+            onStartReply,
+            onOpenActions,
+          )}
+        </View>
+      )}
+    </View>
+  )
+})
+
 export default function DetailComments({
   targetType,
   targetId,
@@ -142,73 +334,204 @@ export default function DetailComments({
   const [submitting, setSubmitting] = useState(false)
   const [withdrawingId, setWithdrawingId] = useState(0)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const [keyboardTransitionDuration, setKeyboardTransitionDuration] = useState(
+    COMPOSER_CLOSE_DURATION,
+  )
   const [composerOpen, setComposerOpen] = useState(false)
+  const [composerClosing, setComposerClosing] = useState(false)
   const [inputFocused, setInputFocused] = useState(false)
   const [focusedCommentId, setFocusedCommentId] = useState(initialCommentId)
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
+  const mountedRef = useRef(true)
+  const requestScopeRef = useRef(0)
+  const listRequestSequenceRef = useRef(0)
+  const listInFlightRef = useRef<Promise<void> | null>(null)
+  const threadRequestSequenceRef = useRef(new Map<number, number>())
+  const threadInFlightRef = useRef(new Map<number, Promise<void>>())
+  const threadsRef = useRef(threads)
+  const pendingTimersRef = useRef(new Set<PendingTimer>())
+  const composerCloseSequenceRef = useRef(0)
+  const composerClosingRef = useRef(false)
+  const openCommentActionsRef = useRef<(comment: CommentView) => void>(() => {})
+  const handleOpenCommentActions = useCallback((comment: CommentView) => {
+    openCommentActionsRef.current(comment)
+  }, [])
 
-  const load = useCallback(async (nextPage = 1, focusId = 0) => {
-    if (!targetId || !enabled) {
-      setComments([])
-      setThreads({})
-      setTotal(0)
-      setLoading(false)
-      return
+  const clearPendingTimers = useCallback(() => {
+    pendingTimersRef.current.forEach((timer) => timer.cancel())
+    pendingTimersRef.current.clear()
+  }, [])
+
+  const scheduleTimeout = useCallback((callback: () => void, delay: number) => {
+    let handle: ReturnType<typeof setTimeout> | null = null
+    const timer: PendingTimer = {
+      cancel: () => {
+        if (handle) clearTimeout(handle)
+        pendingTimersRef.current.delete(timer)
+      },
     }
-    nextPage === 1 ? setLoading(true) : setLoadingMore(true)
-    try {
-      const result = await lifeServicesRepository.listComments(targetType, targetId, {
-        page: nextPage,
-        pageSize: 20,
-      })
-      let items = visibleRootComments(result.items)
-      let nextThreads = previewThreadStates(items)
-      if (nextPage === 1 && focusId > 0) {
-        try {
-          const focused = await lifeServicesRepository.getCommentThread(focusId)
-          items = [focused.root, ...items.filter((item) => item.id !== focused.root.id)]
-          nextThreads[focused.root.id] = {
-            descendants: visibleComments(focused.descendants),
-            error: '',
-            expanded: true,
-            loaded: true,
-            loading: false,
+    handle = setTimeout(() => {
+      pendingTimersRef.current.delete(timer)
+      callback()
+    }, delay)
+    pendingTimersRef.current.add(timer)
+    return timer.cancel
+  }, [])
+
+  const waitForTimeout = useCallback((delay: number) => new Promise<boolean>((resolve) => {
+    let handle: ReturnType<typeof setTimeout> | null = null
+    const timer: PendingTimer = {
+      cancel: () => {
+        if (handle) clearTimeout(handle)
+        pendingTimersRef.current.delete(timer)
+        resolve(false)
+      },
+    }
+    handle = setTimeout(() => {
+      pendingTimersRef.current.delete(timer)
+      resolve(true)
+    }, delay)
+    pendingTimersRef.current.add(timer)
+  }), [])
+
+  const updateThreads = useCallback((updater: (
+    current: Record<number, CommentThreadState>,
+  ) => Record<number, CommentThreadState>) => {
+    setThreads((current) => {
+      const next = updater(current)
+      threadsRef.current = next
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      clearPendingTimers()
+    }
+  }, [clearPendingTimers])
+
+  const load = useCallback((nextPage = 1, focusId = 0) => {
+    if (nextPage !== 1 && listInFlightRef.current) return listInFlightRef.current
+
+    const scope = requestScopeRef.current
+    const requestSequence = listRequestSequenceRef.current + 1
+    listRequestSequenceRef.current = requestSequence
+    const isCurrentRequest = () => (
+      mountedRef.current
+      && requestScopeRef.current === scope
+      && listRequestSequenceRef.current === requestSequence
+    )
+
+    const request = (async () => {
+      if (!targetId || !enabled) {
+        if (!isCurrentRequest()) return
+        setComments([])
+        updateThreads(() => ({}))
+        setTotal(0)
+        setLoading(false)
+        return
+      }
+
+      nextPage === 1 ? setLoading(true) : setLoadingMore(true)
+      try {
+        const result = await lifeServicesRepository.listComments(targetType, targetId, {
+          page: nextPage,
+          pageSize: 20,
+        })
+        if (!isCurrentRequest()) return
+
+        let items = visibleRootComments(result.items)
+        let nextThreads = previewThreadStates(items)
+        if (nextPage === 1 && focusId > 0) {
+          try {
+            const focused = await lifeServicesRepository.getCommentThread(focusId)
+            if (!isCurrentRequest()) return
+            items = [focused.root, ...items.filter((item) => item.id !== focused.root.id)]
+            nextThreads[focused.root.id] = {
+              descendants: visibleComments(focused.descendants),
+              error: '',
+              expanded: true,
+              loaded: true,
+              loading: false,
+            }
+            setFocusedCommentId(focusId)
+            scheduleTimeout(() => {
+              if (isCurrentRequest()) {
+                void Taro.pageScrollTo({ selector: `#detail-comment-${focusId}`, duration: 260 })
+              }
+            }, 120)
+          } catch (focusError) {
+            if (isCurrentRequest()) {
+              Taro.showToast({
+                title: isApiError(focusError) ? focusError.message : '对应评论暂时无法查看',
+                icon: 'none',
+              })
+            }
           }
-          setFocusedCommentId(focusId)
-          setTimeout(() => {
-            void Taro.pageScrollTo({ selector: `#detail-comment-${focusId}`, duration: 260 })
-          }, 120)
-        } catch (focusError) {
+        }
+        if (!isCurrentRequest()) return
+
+        setComments((current) => {
+          if (nextPage === 1) return items
+          const existingIds = new Set(current.map((entry) => entry.id))
+          return [...current, ...items.filter((item) => !existingIds.has(item.id))]
+        })
+        updateThreads((current) => nextPage === 1 ? nextThreads : { ...current, ...nextThreads })
+        setPage(result.page)
+        setTotal(Number(result.total))
+      } catch (error) {
+        if (isCurrentRequest()) {
           Taro.showToast({
-            title: isApiError(focusError) ? focusError.message : '对应评论暂时无法查看',
+            title: isApiError(error) ? error.message : '评论加载失败',
             icon: 'none',
           })
         }
+      } finally {
+        if (isCurrentRequest()) {
+          setLoading(false)
+          setLoadingMore(false)
+        }
       }
-      setComments((current) => nextPage === 1
-        ? items
-        : [...current, ...items.filter((item) => !current.some((entry) => entry.id === item.id))])
-      setThreads((current) => nextPage === 1 ? nextThreads : { ...current, ...nextThreads })
-      setPage(result.page)
-      setTotal(Number(result.total))
-    } catch (error) {
-      Taro.showToast({
-        title: isApiError(error) ? error.message : '评论加载失败',
-        icon: 'none',
-      })
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
+    })()
+
+    listInFlightRef.current = request
+    void request.finally(() => {
+      if (listInFlightRef.current === request) listInFlightRef.current = null
+    })
+    return request
+  }, [enabled, scheduleTimeout, targetId, targetType, updateThreads])
+
+  useEffect(() => {
+    requestScopeRef.current += 1
+    listInFlightRef.current = null
+    threadInFlightRef.current.clear()
+    threadRequestSequenceRef.current.clear()
+    return () => {
+      clearPendingTimers()
     }
-  }, [enabled, targetId, targetType])
+  }, [clearPendingTimers, enabled, initialCommentId, refreshKey, targetId, targetType])
 
   useEffect(() => {
     void load(1, initialCommentId)
   }, [initialCommentId, load, refreshKey])
 
-  const loadThread = async (rootId: number) => {
-    setThreads((current) => ({
+  const loadThread = useCallback((rootId: number) => {
+    const existingRequest = threadInFlightRef.current.get(rootId)
+    if (existingRequest) return existingRequest
+
+    const scope = requestScopeRef.current
+    const requestSequence = (threadRequestSequenceRef.current.get(rootId) || 0) + 1
+    threadRequestSequenceRef.current.set(rootId, requestSequence)
+    const isCurrentRequest = () => (
+      mountedRef.current
+      && requestScopeRef.current === scope
+      && threadRequestSequenceRef.current.get(rootId) === requestSequence
+    )
+
+    updateThreads((current) => ({
       ...current,
       [rootId]: {
         descendants: current[rootId]?.descendants || [],
@@ -218,67 +541,136 @@ export default function DetailComments({
         loading: true,
       },
     }))
-    try {
-      const result = await lifeServicesRepository.getCommentThread(rootId)
-      setThreads((current) => ({
-        ...current,
-        [result.root.id]: {
-          descendants: visibleComments(result.descendants),
-          error: '',
-          expanded: true,
-          loaded: true,
-          loading: false,
-        },
-      }))
-    } catch (error) {
-      setThreads((current) => ({
-        ...current,
-        [rootId]: {
-          ...(current[rootId] || { descendants: [], loaded: false }),
-          error: isApiError(error) ? error.message : '回复加载失败，请稍后重试',
-          expanded: true,
-          loading: false,
-        },
-      }))
-    }
-  }
+    const request = (async () => {
+      try {
+        const result = await lifeServicesRepository.getCommentThread(rootId)
+        if (!isCurrentRequest()) return
+        updateThreads((current) => ({
+          ...current,
+          [result.root.id]: {
+            descendants: visibleComments(result.descendants),
+            error: '',
+            expanded: true,
+            loaded: true,
+            loading: false,
+          },
+        }))
+      } catch (error) {
+        if (!isCurrentRequest()) return
+        updateThreads((current) => ({
+          ...current,
+          [rootId]: {
+            ...(current[rootId] || { descendants: [], loaded: false }),
+            error: isApiError(error) ? error.message : '回复加载失败，请稍后重试',
+            expanded: true,
+            loading: false,
+          },
+        }))
+      }
+    })()
 
-  const expandThread = (comment: CommentView) => {
-    const thread = threads[comment.id]
+    threadInFlightRef.current.set(rootId, request)
+    void request.finally(() => {
+      if (threadInFlightRef.current.get(rootId) === request) {
+        threadInFlightRef.current.delete(rootId)
+      }
+    })
+    return request
+  }, [updateThreads])
+
+  const expandThread = useCallback((rootId: number) => {
+    const thread = threadsRef.current[rootId]
     if (!thread?.loaded) {
-      if (!thread?.loading) void loadThread(comment.id)
+      if (!thread?.loading) void loadThread(rootId)
       return
     }
-    setThreads((current) => ({
+    updateThreads((current) => ({
       ...current,
-      [comment.id]: { ...current[comment.id], expanded: true },
+      [rootId]: { ...current[rootId], expanded: true },
     }))
-  }
+  }, [loadThread, updateThreads])
 
-  const startReply = (comment: CommentView) => {
-    const rootId = commentRootId(comment)
+  const openComposer = useCallback(() => {
+    composerCloseSequenceRef.current += 1
+    composerClosingRef.current = false
+    setComposerClosing(false)
+    setComposerOpen(true)
+    setInputFocused(true)
+  }, [])
+
+  const startReply = useCallback((comment: CommentView) => {
     setReplyTarget(comment)
-    setComposerOpen(true)
-    setInputFocused(true)
-    setThreads((current) => current[rootId]
-      ? { ...current, [rootId]: { ...current[rootId], expanded: true } }
-      : current)
-    if (!threads[rootId]?.loaded && !threads[rootId]?.loading) void loadThread(rootId)
-  }
+    openComposer()
+  }, [openComposer])
 
-  const openComposer = () => {
-    if (!enabled) return
-    setComposerOpen(true)
-    setInputFocused(true)
-  }
-
-  const closeComposer = () => {
+  const finishComposerClose = useCallback(() => {
+    composerCloseSequenceRef.current += 1
+    composerClosingRef.current = false
     setComposerOpen(false)
+    setComposerClosing(false)
     setInputFocused(false)
     setReplyTarget(null)
     setKeyboardHeight(0)
+  }, [])
+
+  const closeComposer = useCallback(() => {
+    const closeSequence = composerCloseSequenceRef.current + 1
+    composerCloseSequenceRef.current = closeSequence
+    const shouldFollowKeyboard = inputFocused || keyboardHeight > 0
+
+    composerClosingRef.current = true
+    setComposerClosing(true)
+    setInputFocused(false)
     void Taro.hideKeyboard()
-  }
+
+    if (!shouldFollowKeyboard) {
+      finishComposerClose()
+      return
+    }
+
+    scheduleTimeout(() => {
+      if (composerCloseSequenceRef.current === closeSequence) {
+        setKeyboardHeight(0)
+        finishComposerClose()
+      }
+    }, keyboardTransitionDuration + 120)
+  }, [
+    finishComposerClose,
+    inputFocused,
+    keyboardHeight,
+    keyboardTransitionDuration,
+    scheduleTimeout,
+  ])
+
+  const handleComposerBlur = useCallback(() => {
+    setInputFocused(false)
+    if (!composerClosingRef.current) closeComposer()
+  }, [closeComposer])
+
+  const handleKeyboardHeightChange = useCallback((event: {
+    detail: { duration?: number; height?: number }
+  }) => {
+    const height = Math.max(0, Number(event.detail.height) || 0)
+    const reportedDuration = Number(event.detail.duration)
+    const duration = Number.isFinite(reportedDuration) && reportedDuration >= 0
+      ? Math.min(reportedDuration, 1000)
+      : COMPOSER_CLOSE_DURATION
+
+    setKeyboardTransitionDuration(duration)
+    setKeyboardHeight(height)
+    if (height > 0) {
+      setComposerOpen(true)
+      return
+    }
+    if (!composerClosingRef.current) return
+
+    const closeSequence = composerCloseSequenceRef.current
+    scheduleTimeout(() => {
+      if (composerCloseSequenceRef.current === closeSequence) {
+        finishComposerClose()
+      }
+    }, duration)
+  }, [finishComposerClose, scheduleTimeout])
 
   const submit = async () => {
     const value = content.trim()
@@ -295,6 +687,7 @@ export default function DetailComments({
         content: value,
         ...(activeReplyTarget ? { parent_id: activeReplyTarget.id } : {}),
       })
+      if (!mountedRef.current) return
       if (activeReplyTarget) {
         const rootId = commentRootId(activeReplyTarget)
         const rootComment = comments.find((comment) => comment.id === rootId)
@@ -303,7 +696,7 @@ export default function DetailComments({
             ? { ...comment, reply_count: comment.reply_count + 1 }
             : comment
         )))
-        setThreads((current) => {
+        updateThreads((current) => {
           const existing = current[rootId]
           const descendants = existing?.descendants
             || visibleComments(rootComment?.reply_preview || [])
@@ -326,8 +719,10 @@ export default function DetailComments({
       }
       setFocusedCommentId(created.id)
       setEnteringCommentId(created.id)
-      setTimeout(() => {
-        setEnteringCommentId((current) => current === created.id ? 0 : current)
+      scheduleTimeout(() => {
+        if (mountedRef.current) {
+          setEnteringCommentId((current) => current === created.id ? 0 : current)
+        }
       }, 320)
       setContent('')
       closeComposer()
@@ -346,7 +741,7 @@ export default function DetailComments({
         icon: 'none',
       })
     } finally {
-      setSubmitting(false)
+      if (mountedRef.current) setSubmitting(false)
     }
   }
 
@@ -363,15 +758,16 @@ export default function DetailComments({
     setWithdrawingId(comment.id)
     try {
       await lifeServicesRepository.withdrawComment(comment.id, comment.version)
+      if (!mountedRef.current) return
       if (replyTarget?.id === comment.id) setReplyTarget(null)
       setRemovingCommentId(comment.id)
-      await new Promise((resolve) => setTimeout(resolve, 180))
+      if (!await waitForTimeout(180) || !mountedRef.current) return
       if (isReply) {
         const rootId = commentRootId(comment)
         setComments((current) => current.map((item) => item.id === rootId
           ? { ...item, reply_count: Math.max(0, item.reply_count - 1) }
           : item))
-        setThreads((current) => {
+        updateThreads((current) => {
           const existing = current[rootId]
           if (!existing) return current
           return {
@@ -388,7 +784,7 @@ export default function DetailComments({
         })
       } else {
         setComments((current) => current.filter((item) => item.id !== comment.id))
-        setThreads((current) => {
+        updateThreads((current) => {
           const { [comment.id]: _removed, ...remaining } = current
           return remaining
         })
@@ -408,8 +804,10 @@ export default function DetailComments({
         icon: 'none',
       })
     } finally {
-      setRemovingCommentId(0)
-      setWithdrawingId(0)
+      if (mountedRef.current) {
+        setRemovingCommentId(0)
+        setWithdrawingId(0)
+      }
     }
   }
 
@@ -442,56 +840,9 @@ export default function DetailComments({
     const selected = tapIndex === null ? null : menuItems[tapIndex]
     if (selected) await selected.run()
   }
-
-  const renderMeta = (comment: CommentView) => (
-    <View className='business-detail-comment__meta'>
-      <Text>{formatDateTime(comment.created_at)}</Text>
-      {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
-    </View>
-  )
-
-  const renderReplyTree = (
-    nodes: CommentTreeNode<CommentView>[],
-    members: CommentView[],
-  ) => nodes.map(({ comment, children }) => (
-    <View key={comment.id} className='business-detail-comment__reply-node'>
-      <View
-        id={`detail-comment-${comment.id}`}
-        className={[
-          'business-detail-comment__reply',
-          focusedCommentId === comment.id ? 'business-detail-comment__reply--focused' : '',
-          enteringCommentId === comment.id ? 'business-detail-comment-node--entering' : '',
-          removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
-        ].filter(Boolean).join(' ')}
-        onLongPress={() => void openCommentActions(comment)}
-      >
-        <View
-          className='business-detail-comment__reply-identity'
-          ariaRole='button'
-          ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
-          onClick={() => openCommentAuthor(comment)}
-        >
-          <Text className='business-detail-comment__reply-relation'>
-            {compactCommentName(commentAuthorName(comment))}
-            {commentReplyTargetName(comment, members)
-              ? `@${compactCommentName(commentReplyTargetName(comment, members))}`
-              : ''}
-          </Text>
-          {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
-          <CommunityLevelBadge level={comment.author_level} compact />
-        </View>
-        <Text className='business-detail-comment__reply-content' onClick={() => startReply(comment)}>
-          {comment.content}
-        </Text>
-        {renderMeta(comment)}
-      </View>
-      {children.length > 0 && (
-        <View className='business-detail-comment__reply-children'>
-          {renderReplyTree(children, members)}
-        </View>
-      )}
-    </View>
-  ))
+  openCommentActionsRef.current = (comment) => {
+    void openCommentActions(comment)
+  }
 
   return (
     <>
@@ -502,88 +853,44 @@ export default function DetailComments({
           <Text>{displayTotal ?? total}</Text>
         </View>
 
-        {loading && <View className='business-detail-comments__state'>正在加载评论</View>}
+        {loading && (
+          <View
+            className='business-detail-comments__skeleton'
+            ariaRole='status'
+            ariaLabel='评论加载中'
+          >
+            {[0, 1, 2].map((index) => (
+              <View key={index} className='business-detail-comments__skeleton-item'>
+                <View className='business-detail-comments__skeleton-avatar' />
+                <View className='business-detail-comments__skeleton-body'>
+                  <View className='business-detail-comments__skeleton-author' />
+                  <View className='business-detail-comments__skeleton-line business-detail-comments__skeleton-line--long' />
+                  <View className='business-detail-comments__skeleton-line business-detail-comments__skeleton-line--short' />
+                  <View className='business-detail-comments__skeleton-meta' />
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
         {!loading && comments.length === 0 && (
           <View className='business-detail-comments__state'>
             {enabled ? '还没有评论，来聊聊细节吧' : '当前暂不开放评论'}
           </View>
         )}
-        {!loading && comments.map((comment) => {
-          const thread = threads[comment.id]
-          const preview = thread?.descendants || visibleComments(comment.reply_preview || [])
-          const descendants = thread?.expanded ? preview : preview.slice(0, 2)
-          const members = [comment, ...preview]
-          const replyTree = buildCommentTree(comment.id, descendants)
-          const hasHiddenReplies = comment.reply_count > Math.min(preview.length, 2)
-          const showThreadAction = Boolean(thread?.loading)
-            || (!thread?.expanded && hasHiddenReplies)
-          return (
-            <View
-              key={comment.id}
-              className={[
-                'business-detail-comment-thread',
-                enteringCommentId === comment.id ? 'business-detail-comment-node--entering' : '',
-                removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
-              ].filter(Boolean).join(' ')}
-            >
-              <View
-                id={`detail-comment-${comment.id}`}
-                className={`business-detail-comment ${focusedCommentId === comment.id ? 'business-detail-comment--focused' : ''}`}
-              >
-                <View
-                  className='business-detail-comment__avatar'
-                  ariaRole='button'
-                  ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
-                  onClick={() => openCommentAuthor(comment)}
-                >
-                  <UserAvatarImage
-                    src={comment.author_avatar_url || ''}
-                    className='business-detail-comment__avatar-image'
-                    fallback={commentAuthorInitial(comment)}
-                    lazyLoad
-                  />
-                </View>
-                <View className='business-detail-comment__body'>
-                  <View
-                    className='business-detail-comment__identity'
-                    ariaRole='button'
-                    ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
-                    onClick={() => openCommentAuthor(comment)}
-                  >
-                    <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
-                    {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
-                    <CommunityLevelBadge level={comment.author_level} compact />
-                  </View>
-                  <View
-                    className='business-detail-comment__bubble'
-                    ariaRole='button'
-                    ariaLabel='点击回复，长按查看更多操作'
-                    onClick={() => startReply(comment)}
-                    onLongPress={() => void openCommentActions(comment)}
-                  >
-                    <Text>{comment.content}</Text>
-                  </View>
-                  {renderMeta(comment)}
-                  {showThreadAction && (
-                    <View className='business-detail-comment__thread-action' onClick={() => expandThread(comment)}>
-                      {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
-                    </View>
-                  )}
-                </View>
-              </View>
-              {thread?.error && (
-                <View className='business-detail-comment__thread-error' onClick={() => void loadThread(comment.id)}>
-                  {thread.error}，点击重试
-                </View>
-              )}
-              {descendants.length > 0 && (
-                <View className='business-detail-comment__replies'>
-                  {renderReplyTree(replyTree, members)}
-                </View>
-              )}
-            </View>
-          )
-        })}
+        {!loading && comments.map((comment) => (
+          <DetailCommentThread
+            key={comment.id}
+            comment={comment}
+            thread={threads[comment.id]}
+            targetAuthorId={targetAuthorId}
+            focusedCommentId={focusedCommentId}
+            enteringCommentId={enteringCommentId}
+            removingCommentId={removingCommentId}
+            onExpand={expandThread}
+            onStartReply={startReply}
+            onOpenActions={handleOpenCommentActions}
+          />
+        ))}
         {!loading && comments.length < total && (
           <View className='business-detail-comments__more' onClick={() => !loadingMore && void load(page + 1)}>
             {loadingMore ? '正在加载' : '查看更多评论'}
@@ -593,28 +900,35 @@ export default function DetailComments({
 
       {(enabled || actions.length > 0) && (
         <>
-          {composerOpen && (
-            <View
-              className='business-detail-composer__backdrop'
-              catchMove
-              ariaRole='button'
-              ariaLabel='关闭评论输入'
-              onClick={closeComposer}
-            />
-          )}
-          <View className='business-detail-composer' style={{ bottom: `${keyboardHeight}px` }}>
+          <View
+            className={composerOpen
+              && !composerClosing
+              ? 'business-detail-composer__backdrop business-detail-composer__backdrop--active'
+              : 'business-detail-composer__backdrop'}
+            catchMove={composerOpen && !composerClosing}
+            ariaRole={composerOpen && !composerClosing ? 'button' : undefined}
+            ariaLabel={composerOpen && !composerClosing ? '关闭评论输入' : undefined}
+            onTouchStart={composerOpen && !composerClosing ? closeComposer : undefined}
+          />
+          <View
+            className='business-detail-composer'
+            style={{
+              transform: `translate3d(0, -${keyboardHeight}px, 0)`,
+              transitionDuration: `${keyboardTransitionDuration}ms`,
+            }}
+          >
           {replyTarget && (
             <View className='business-detail-composer__replying'>
               <Text>@{compactCommentName(commentAuthorName(replyTarget), 10)}</Text>
-              <Text onClick={closeComposer}>取消</Text>
+              <Text onTouchStart={closeComposer}>取消</Text>
             </View>
           )}
           <View className='business-detail-composer__main'>
-            {enabled && composerOpen ? (
+            {enabled ? (
               <KeyboardSafeTextarea
                 id={`business-comment-${targetType}-${targetId}`}
                 value={content}
-                focus={inputFocused}
+                focus={composerOpen && inputFocused}
                 disabled={submitting}
                 maxlength={300}
                 autoHeight
@@ -624,23 +938,15 @@ export default function DetailComments({
                 confirmHold
                 showConfirmBar={false}
                 keepVisibleOnKeyboard={false}
-                placeholder={replyTarget ? `@${compactCommentName(commentAuthorName(replyTarget), 10)}` : placeholder}
+                placeholder={replyTarget ? '写下回复...' : placeholder}
                 onFocus={() => {
-                  setComposerOpen(true)
-                  setInputFocused(true)
+                  openComposer()
                 }}
-                onBlur={() => setInputFocused(false)}
+                onBlur={handleComposerBlur}
                 onInput={(event) => setContent(event.detail.value)}
                 onConfirm={() => void submit()}
-                onKeyboardVisibilityChange={(height) => {
-                  setKeyboardHeight(height)
-                  if (height > 0) setComposerOpen(true)
-                }}
+                onKeyboardHeightChange={handleKeyboardHeightChange}
               />
-            ) : enabled ? (
-              <View className='business-detail-composer__collapsed-input' onClick={openComposer}>
-                <Text>{content || placeholder}</Text>
-              </View>
             ) : (
               <View className='business-detail-composer__disabled'>评论暂未开放</View>
             )}

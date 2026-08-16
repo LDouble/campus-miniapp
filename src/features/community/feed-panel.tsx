@@ -13,6 +13,7 @@ import {
   markLifeHubSectionFresh,
 } from '../life-services/refresh-policy'
 import { openPublicProfile } from '../profile/public-profile'
+import { saveCommunityDetailSnapshot } from './detail-snapshot'
 import CommunityPostCard from './post-card'
 import './feed-panel.scss'
 
@@ -236,7 +237,7 @@ export default function CommunityFeedPanel({
     if (searchFocusSignal > 0) setSearchFocused(true)
   }, [searchFocusSignal])
 
-  const toggleLike = async (post: CampusCirclePostView) => {
+  const toggleLike = useCallback(async (post: CampusCirclePostView) => {
     try {
       const updated = post.liked
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
@@ -249,12 +250,17 @@ export default function CommunityFeedPanel({
         icon: 'none',
       })
     }
-  }
+  }, [])
 
-  const openPost = (post: CampusCirclePostView) => {
+  const openPost = useCallback((post: CampusCirclePostView) => {
     requestWechatSubscriptionForModule('community')
-    Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post` })
-  }
+    saveCommunityDetailSnapshot(post)
+    Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
+
+  const openAuthor = useCallback((post: CampusCirclePostView) => {
+    void openPublicProfile(post.author_id)
+  }, [])
 
   const canLoadMore = posts.length < total
   const normalizedDraftKeyword = draftKeyword.trim()
@@ -380,11 +386,11 @@ export default function CommunityFeedPanel({
           )}
           {home.featured_posts.length > 0 && <Text className='community-operations__title'>精选动态</Text>}
           {home.featured_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} onSelectSection={onSelectSection} />
+            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={openAuthor} onSelectSection={onSelectSection} />
           ))}
           {home.recommended_posts.length > 0 && <Text className='community-operations__title'>推荐给你</Text>}
           {home.recommended_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} onSelectSection={onSelectSection} />
+            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={openAuthor} onSelectSection={onSelectSection} />
           ))}
         </View>
       )}
@@ -455,11 +461,11 @@ export default function CommunityFeedPanel({
             <CommunityPostCard
               key={post.id}
               post={post}
-              motionDelay={Math.min(index + 1, 4)}
+              motionDelay={index < 4 ? index + 1 : undefined}
               sectionName={sectionNameForPost(post, '未知板块')}
-              onToggleLike={(target) => void toggleLike(target)}
+              onToggleLike={toggleLike}
               onOpen={openPost}
-              onOpenAuthor={(item) => void openPublicProfile(item.author_id)}
+              onOpenAuthor={openAuthor}
               onSelectSection={onSelectSection}
             />
           ))}

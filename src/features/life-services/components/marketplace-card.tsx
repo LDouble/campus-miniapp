@@ -5,11 +5,13 @@ import UserAvatarImage from '../../../components/user-avatar-image'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { formatMoney } from '../format'
 import { campusLabel } from '../campus'
+import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
 import './marketplace-card.scss'
 
-const openDetail = (id: number) => {
+const openDetail = (item: MarketplaceListingView) => {
   requestWechatSubscriptionForModule('marketplace')
-  Taro.navigateTo({ url: `/pages/marketplace/detail?id=${id}` })
+  saveBusinessDetailSnapshot('marketplace', item)
+  Taro.navigateTo({ url: `/pages/marketplace/detail?id=${item.id}&snapshot=1` })
 }
 
 type Props = {
@@ -37,7 +39,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
       hoverClass='marketplace-card--pressed'
       ariaRole='button'
       ariaLabel={`${isWanted ? '求购' : '出售'}，${item.description}，${formatMoney(item.price_cents)}`}
-      onClick={() => openDetail(item.id)}
+      onClick={() => openDetail(item)}
     >
       <View className={`marketplace-card__cover ${cover ? '' : 'marketplace-card__cover--placeholder'}`}>
         {cover ? (

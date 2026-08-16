@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CampusCircleTopicView } from '../../../api/types'
@@ -12,43 +12,104 @@ import {
 import { lifeServicesRepository } from '../../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
 import CommunityPostCard from '../../../features/community/post-card'
+import { saveCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
 import { useCampusShare } from '../../../features/share'
 import './index.scss'
 import { openPublicProfile } from '../../../features/profile/public-profile'
+
+const TOPIC_POSTS_PAGE_SIZE = 20
+
+const mergeUniquePosts = (
+  current: CampusCirclePostView[],
+  incoming: CampusCirclePostView[],
+) => {
+  const seen = new Set(current.map((post) => post.id))
+  return [...current, ...incoming.filter((post) => {
+    if (seen.has(post.id)) return false
+    seen.add(post.id)
+    return true
+  })]
+}
 
 export default function CommunityTopicPage() {
   const [topic, setTopic] = useState<CampusCircleTopicView | null>(null)
   const [posts, setPosts] = useState<CampusCirclePostView[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [topicId, setTopicId] = useState(0)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const requestSequence = useRef(0)
 
-  const load = async (id: number) => {
+  const load = useCallback(async (id: number, nextPage = 1, append = false) => {
     if (!Number.isInteger(id) || id < 1) {
       setLoading(false)
+      setLoadingMore(false)
       setError('话题参数无效')
       Taro.stopPullDownRefresh()
       return
     }
-    setLoading(true); setError('')
+
+    const requestId = ++requestSequence.current
+    if (append) setLoadingMore(true)
+    else {
+      setLoading(true)
+      setError('')
+    }
+
     try {
+      if (append) {
+        const postsResult = await lifeServicesRepository.listCampusCirclePosts({
+          topicId: id,
+          page: nextPage,
+          pageSize: TOPIC_POSTS_PAGE_SIZE,
+        })
+        if (requestId !== requestSequence.current) return
+        setPosts((current) => mergeUniquePosts(current, postsResult.items))
+        setPage(postsResult.page)
+        setTotal(Number(postsResult.total))
+        return
+      }
+
       const [topicResult, postsResult] = await Promise.all([
         lifeServicesRepository.getCampusCircleTopic(id),
-        lifeServicesRepository.listCampusCirclePosts({ topicId: id, pageSize: 50 }),
+        lifeServicesRepository.listCampusCirclePosts({
+          topicId: id,
+          page: nextPage,
+          pageSize: TOPIC_POSTS_PAGE_SIZE,
+        }),
       ])
-      setTopic(topicResult); setPosts(postsResult.items)
+      if (requestId !== requestSequence.current) return
+      setTopic(topicResult)
+      setPosts(mergeUniquePosts([], postsResult.items))
+      setPage(postsResult.page)
+      setTotal(Number(postsResult.total))
     } catch (loadError) {
-      setError(isApiError(loadError) ? loadError.message : '话题加载失败')
+      if (requestId !== requestSequence.current) return
+      const message = isApiError(loadError) ? loadError.message : '话题加载失败'
+      if (append) {
+        Taro.showToast({ title: message, icon: 'none' })
+      } else {
+        setError(message)
+      }
     } finally {
-      setLoading(false); Taro.stopPullDownRefresh()
+      if (requestId === requestSequence.current) {
+        setLoading(false)
+        setLoadingMore(false)
+        Taro.stopPullDownRefresh()
+      }
     }
-  }
+  }, [])
 
   useLoad((options) => {
     const id = parsePositiveId(options.id)
-    setTopicId(id); void load(id)
+    setTopicId(id)
+    void load(id)
   })
-  usePullDownRefresh(() => { void load(topicId) })
+  usePullDownRefresh(useCallback(() => {
+    void load(topicId)
+  }, [load, topicId]))
 
   useCampusShare(() => ({
     title: topic ? `#${topic.name}｜海大校园话题` : '海大校园话题',
@@ -57,18 +118,31 @@ export default function CommunityTopicPage() {
     imageUrl: topic?.cover_url || undefined,
   }))
 
-  const toggleLike = async (post: CampusCirclePostView) => {
+  const toggleLike = useCallback(async (post: CampusCirclePostView) => {
     const updated = post.liked
       ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
       : await lifeServicesRepository.likeCampusCirclePost(post.id)
     setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
     markLifeHubSectionDirty('community')
-  }
-  const openPost = (post: CampusCirclePostView) => Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post` })
-  const openPublisher = () => {
+  }, [])
+  const openPost = useCallback((post: CampusCirclePostView) => {
+    saveCommunityDetailSnapshot(post)
+    return Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
+  const openPublisher = useCallback(() => {
     if (!topic) return
-    Taro.navigateTo({ url: communityTopicPublisherUrl(topic.id) })
-  }
+    return Taro.navigateTo({ url: communityTopicPublisherUrl(topic.id) })
+  }, [topic])
+  const openPostAuthor = useCallback((post: CampusCirclePostView) => {
+    void openPublicProfile(post.author_id)
+  }, [])
+  const reload = useCallback(() => {
+    void load(topicId)
+  }, [load, topicId])
+  const loadMore = useCallback(() => {
+    if (loading || loadingMore || posts.length >= total) return
+    void load(topicId, page + 1, true)
+  }, [load, loading, loadingMore, page, posts.length, topicId, total])
 
   const topicLabel = topic?.kind === 'campaign'
     ? '校园活动'
@@ -133,11 +207,20 @@ export default function CommunityTopicPage() {
             hoverClass='community-topic-page__retry--pressed'
             ariaRole='button'
             ariaLabel='重新加载话题'
-            onClick={() => void load(topicId)}
+            onClick={reload}
           >重新加载</View>
         </View>
       )}
-      {!loading && !error && posts.map((post) => <CommunityPostCard key={post.id} post={post} sectionName='校园社区' onToggleLike={(item) => void toggleLike(item)} onOpen={openPost} onOpenAuthor={(item) => void openPublicProfile(item.author_id)} />)}
+      {!loading && !error && posts.map((post) => (
+        <CommunityPostCard
+          key={post.id}
+          post={post}
+          sectionName='校园社区'
+          onToggleLike={toggleLike}
+          onOpen={openPost}
+          onOpenAuthor={openPostAuthor}
+        />
+      ))}
       {!loading && !error && topic && posts.length === 0 && (
         <View className='community-topic-empty'>
           <View>OUC</View>
@@ -152,6 +235,17 @@ export default function CommunityTopicPage() {
           >
             {participateLabel}
           </View>
+        </View>
+      )}
+      {!loading && !error && posts.length < total && (
+        <View
+          className='api-community-load-more'
+          hoverClass='community-topic-empty__action--pressed'
+          ariaRole='button'
+          ariaLabel={loadingMore ? '正在加载更多话题动态' : '查看更多话题动态'}
+          onClick={loadMore}
+        >
+          {loadingMore ? '正在加载…' : '查看更多'}
         </View>
       )}
     </View>

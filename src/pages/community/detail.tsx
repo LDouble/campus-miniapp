@@ -19,6 +19,7 @@ import {
   communityAuthorName,
   communityAuthorTone,
 } from '../../features/community/author'
+import { consumeCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import DetailAuthorNavbar from '../../features/life-services/components/detail-author-navbar'
 import DetailComments from '../../features/life-services/components/detail-comments'
@@ -70,7 +71,18 @@ export default function CommunityDetailPage() {
       return
     }
     setPostId(id)
-    void load(id, Number.isFinite(commentId) && commentId > 0 ? commentId : 0)
+    const normalizedCommentId = Number.isFinite(commentId) && commentId > 0 ? commentId : 0
+    const snapshot = options.snapshot === '1'
+      ? consumeCommunityDetailSnapshot(id)
+      : null
+    if (snapshot) {
+      setPost(snapshot)
+      setFocusedCommentId(normalizedCommentId)
+      setError('')
+      setLoading(false)
+      return
+    }
+    void load(id, normalizedCommentId)
   })
 
   usePullDownRefresh(() => {
@@ -231,15 +243,23 @@ export default function CommunityDetailPage() {
                 <Text className='community-detail-card__body'>{post.content}</Text>
               )}
               {post.images.length > 0 && (
-                <View className='community-detail-card__images'>
-                  {post.images.map((image) => (
-                    <View key={image.id} className='community-detail-card__image-frame'>
+                <View className={post.images.length === 1
+                  ? 'community-detail-card__images community-detail-card__images--single'
+                  : 'community-detail-card__images'}
+                >
+                  {post.images.map((image, index) => (
+                    <View
+                      key={image.id}
+                      className='community-detail-card__image-frame'
+                      ariaRole={image.url ? 'button' : undefined}
+                      ariaLabel={image.url ? `预览第 ${index + 1} 张图片，共 ${post.images.length} 张` : undefined}
+                      onClick={() => previewPostImage(image.url)}
+                    >
                       {image.url && (
                         <Image
                           src={image.url}
-                          mode='widthFix'
+                          mode={post.images.length === 1 ? 'widthFix' : 'aspectFill'}
                           lazyLoad
-                          onClick={() => previewPostImage(image.url)}
                         />
                       )}
                       {post.viewer_relation === 'owner' && post.status === 'pending_review' && (

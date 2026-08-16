@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
+import { getSystemState } from '../../state/system'
 import './index.scss'
 
 interface CustomNavbarProps {
@@ -30,8 +31,7 @@ export const getNavbarMetrics = () => {
   }
 
   try {
-    const windowInfo = Taro.getWindowInfo()
-    const menuRect = Taro.getMenuButtonBoundingClientRect()
+    const { windowInfo, menuButtonRect: menuRect } = getSystemState()
     const statusBarHeight = windowInfo.statusBarHeight || fallback.statusBarHeight
     const hasValidMenuRect = (
       menuRect.width > 0

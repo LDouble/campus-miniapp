@@ -6,15 +6,17 @@ import { apiDateTimeTimestamp } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
 import { campusLabel } from '../campus'
+import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
 import {
   formatMoney,
   formatStatus,
   relativeDeadline,
 } from '../format'
 
-const openDetail = (id: number) => {
+const openDetail = (item: ErrandView) => {
   requestWechatSubscriptionForModule('errand')
-  Taro.navigateTo({ url: `/pages/errands/detail?id=${id}` })
+  saveBusinessDetailSnapshot('errand', item)
+  Taro.navigateTo({ url: `/pages/errands/detail?id=${item.id}&snapshot=1` })
 }
 
 const isUrgent = (deadline?: string | null) => {
@@ -34,7 +36,7 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
       id={`errand-card-${item.id}`}
       className='errand-card'
       hoverClass='business-card--pressed'
-      onClick={() => openDetail(item.id)}
+      onClick={() => openDetail(item)}
     >
       <View className='business-card-header'>
         <View className='business-card-avatar business-card-avatar--errand'>

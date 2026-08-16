@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
 import { formatDateTime } from '../life-services/format'
@@ -27,7 +28,7 @@ type Props = {
   onSelectSection?: (sectionId: number) => void
 }
 
-export default function CommunityPostCard({
+function CommunityPostCard({
   post,
   sectionName,
   motionDelay = 0,
@@ -65,7 +66,7 @@ export default function CommunityPostCard({
       className={[
         'community-post',
         'api-post',
-        'motion-enter',
+        motionDelay > 0 ? 'motion-enter' : '',
         motionDelay > 0 ? `motion-enter--delay-${Math.min(motionDelay, 4)}` : '',
       ].filter(Boolean).join(' ')}
     >
@@ -206,3 +207,5 @@ export default function CommunityPostCard({
     </View>
   )
 }
+
+export default memo(CommunityPostCard)
