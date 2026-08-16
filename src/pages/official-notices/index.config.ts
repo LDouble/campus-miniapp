@@ -2,8 +2,8 @@ export default definePageConfig({
   enableShareAppMessage: true,
   navigationStyle: 'custom',
   navigationBarTitleText: '全校通知',
-  backgroundColor: '#f7f8f4',
-  backgroundTextStyle: 'dark',
+  backgroundColor: '@backgroundColor',
+  backgroundTextStyle: '@backgroundTextStyle' as 'dark',
   enablePullDownRefresh: true,
   onReachBottomDistance: 120,
 })

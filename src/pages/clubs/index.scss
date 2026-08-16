@@ -1,5 +1,5 @@
 page {
-  background: #f8f5ef;
+  background: var(--campus-page, #f4f7fb);
 }
 
 .clubs-page {
@@ -54,7 +54,7 @@ page {
     width: 88rpx;
     height: 88rpx;
     margin-left: 18rpx;
-    background: rgba(255, 255, 255, 0.72);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 30rpx;
 
     image {
@@ -73,7 +73,7 @@ page {
   align-items: center;
   height: 88rpx;
   padding: 0 8rpx 0 22rpx;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid #fff;
   border-radius: 28rpx;
   box-shadow: 0 10rpx 28rpx rgba(49, 84, 74, 0.055);
@@ -144,7 +144,7 @@ page {
   padding: 0 24rpx;
   color: #526b65;
   font-size: 24rpx;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(86, 130, 117, 0.16);
   border-radius: 99rpx;
   transition: color 180ms ease, background-color 180ms ease;
@@ -175,7 +175,7 @@ page {
     justify-content: space-between;
     min-width: 0;
     padding: 0 22rpx;
-    background: rgba(255, 255, 255, 0.78);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border: 2rpx solid rgba(86, 130, 117, 0.13);
 
     text:first-child {
@@ -188,7 +188,7 @@ page {
       flex: none;
       margin-left: 12rpx;
       color: #526b65;
-      font-size: 21rpx;
+      font-size: 23rpx;
     }
 
     &--pressed {
@@ -246,7 +246,7 @@ page {
     text:last-child {
       margin-top: 3rpx;
       color: #60766f;
-      font-size: 21rpx;
+      font-size: 23rpx;
     }
   }
 
@@ -265,13 +265,13 @@ page {
     justify-content: center;
     height: 76rpx;
     color: #526b65;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 700;
     border-radius: 18rpx;
 
     &--active {
       color: #2f6256;
-      background: #fff;
+      background: var(--campus-surface, #fff);
       box-shadow: 0 4rpx 12rpx rgba(49, 84, 74, 0.08);
     }
   }
@@ -315,13 +315,13 @@ page {
 
     text:last-child {
       color: #60766f;
-      font-size: 21rpx;
+      font-size: 23rpx;
     }
   }
 
   &__section-list {
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.93);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border: 2rpx solid rgba(255, 255, 255, 0.98);
     border-radius: 28rpx;
     box-shadow: 0 10rpx 26rpx rgba(51, 79, 72, 0.055);
@@ -382,7 +382,7 @@ page {
     margin-top: 7rpx;
     overflow: hidden;
     color: #526b65;
-    font-size: 22rpx;
+    font-size: 24rpx;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -407,7 +407,7 @@ page {
   width: 88rpx;
   min-height: 88rpx;
   padding: 10rpx 0;
-  background: rgba(255, 255, 255, 0.86);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(86, 130, 117, 0.12);
   border-radius: 24rpx;
   box-shadow: 0 8rpx 22rpx rgba(49, 84, 74, 0.055);
@@ -419,7 +419,7 @@ page {
     width: 100%;
     min-height: 34rpx;
     color: #526b65;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 750;
 
     &--active {
@@ -454,7 +454,7 @@ page {
   min-height: 116rpx;
   padding: 16rpx 20rpx;
   margin: 0 28rpx 14rpx;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border-radius: 26rpx;
 
   &__logo {
@@ -479,7 +479,7 @@ page {
   padding: 14rpx;
   margin-bottom: 0;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.93);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
   border-radius: 30rpx;
   box-shadow: 0 11rpx 28rpx rgba(51, 79, 72, 0.06);
@@ -554,7 +554,7 @@ page {
     margin-left: 9rpx;
     overflow: hidden;
     color: #526b65;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 650;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -585,7 +585,7 @@ page {
     margin-top: 7rpx;
     overflow: hidden;
     color: #526b65;
-    font-size: 21rpx;
+    font-size: 23rpx;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -595,7 +595,7 @@ page {
     margin-top: 12rpx;
     overflow: hidden;
     color: #49645d;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.58;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -616,7 +616,7 @@ page {
   padding: 18rpx 22rpx;
   margin-bottom: 16rpx;
   color: #8d4d43;
-  font-size: 23rpx;
+  font-size: 25rpx;
   text-align: center;
   background: #fff0eb;
   border-radius: 20rpx;
@@ -629,7 +629,7 @@ page {
   flex-direction: column;
   padding: 72rpx 36rpx;
   text-align: center;
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border-radius: 34rpx;
 
   &__icon {
@@ -680,7 +680,7 @@ page {
   grid-column: 1 / -1;
   padding: 28rpx 0;
   color: #60766f;
-  font-size: 23rpx;
+  font-size: 25rpx;
   text-align: center;
 }
 
@@ -733,58 +733,58 @@ page {
 }
 
 // 社团广场沿用校园工具蓝灰白基调，封面、分类和状态仍可保留识别色。
-page { background: #f4f7fb; }
-.clubs-page { color: #1d293d; background: #f4f7fb; }
-.clubs-hero { background: linear-gradient(135deg, #1d293d, #2b7fff); border-color: rgba(255, 255, 255, 0.22); box-shadow: 0 14rpx 36rpx rgba(29, 41, 61, 0.16); }
+page { background: var(--campus-page, #f4f7fb); }
+.clubs-page { color: var(--campus-text-heading, #1d293d); background: var(--campus-page, #f4f7fb); }
+.clubs-hero { background: linear-gradient(135deg, var(--campus-text-heading, #1d293d), var(--campus-primary, #2b7fff)); border-color: rgba(255, 255, 255, 0.22); box-shadow: 0 14rpx 36rpx rgba(29, 41, 61, 0.16); }
 .clubs-hero__title { color: #fff; }
 .clubs-hero__subtitle { display: -webkit-box; overflow: hidden; color: rgba(255, 255, 255, 0.74); -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .clubs-hero__mark {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
 }
-.clubs-search { background: #fff; border-color: #dce5f0; box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
-.clubs-search input { color: #1d293d; }
-.clubs-search__action { color: #2b7fff; }
+.clubs-search { background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
+.clubs-search input { color: var(--campus-text-heading, #1d293d); }
+.clubs-search__action { color: var(--campus-primary, #2b7fff); }
 .clubs-categories { box-sizing: border-box; padding-right: 8rpx; }
-.clubs-category { max-width: 280rpx; overflow: hidden; color: #45556c; text-overflow: ellipsis; white-space: nowrap; background: #fff; border-color: #dce5f0; }
+.clubs-category { max-width: 280rpx; overflow: hidden; color: var(--campus-text-body, #45556c); text-overflow: ellipsis; white-space: nowrap; background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); }
 .clubs-category--active {
   color: #fff !important;
-  background: #2b7fff;
-  border-color: #2b7fff;
+  background: var(--campus-primary, #2b7fff);
+  border-color: var(--campus-primary, #2b7fff);
 }
-.clubs-workspace__mine { background: #fff; border-color: #dce5f0; }
-.clubs-workspace__mine text:first-child { color: #1d293d; }
-.clubs-workspace__mine text:last-child { max-width: 140rpx; overflow: hidden; color: #90a1b9; text-overflow: ellipsis; white-space: nowrap; }
-.clubs-workspace__create { min-width: 176rpx; color: #fff; background: #2b7fff; box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.2); }
-.clubs-viewbar__title text:first-child { color: #1d293d; }
-.clubs-viewbar__title text:last-child { color: #90a1b9; }
+.clubs-workspace__mine { background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); }
+.clubs-workspace__mine text:first-child { color: var(--campus-text-heading, #1d293d); }
+.clubs-workspace__mine text:last-child { max-width: 140rpx; overflow: hidden; color: var(--campus-text-muted, #90a1b9); text-overflow: ellipsis; white-space: nowrap; }
+.clubs-workspace__create { min-width: 176rpx; color: #fff; background: var(--campus-primary, #2b7fff); box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.2); }
+.clubs-viewbar__title text:first-child { color: var(--campus-text-heading, #1d293d); }
+.clubs-viewbar__title text:last-child { color: var(--campus-text-muted, #90a1b9); }
 .clubs-viewbar__modes { background: #eaf0f8; }
-.clubs-viewbar__mode { color: #45556c; }
-.clubs-viewbar__mode--active { color: #1d293d; }
+.clubs-viewbar__mode { color: var(--campus-text-body, #45556c); }
+.clubs-viewbar__mode--active { color: var(--campus-text-heading, #1d293d); }
 .club-card,
-.club-directory__section-list { background: #fff; border-color: #dce5f0; box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
-.club-card__cover { background: #eaf2ff; }
-.club-card__logo { background: #eaf2ff; }
-.club-card__category { color: #2b7fff; }
+.club-directory__section-list { background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
+.club-card__cover { background: var(--campus-surface-primary, #eaf2ff); }
+.club-card__logo { background: var(--campus-surface-primary, #eaf2ff); }
+.club-card__category { color: var(--campus-primary, #2b7fff); }
 .club-card__name,
-.club-directory-row__name { color: #1d293d; }
+.club-directory-row__name { color: var(--campus-text-heading, #1d293d); }
 .club-card__slogan,
 .club-card__summary,
-.club-directory-row__meta { color: #45556c; }
+.club-directory-row__meta { color: var(--campus-text-body, #45556c); }
 .club-card__slogan { display: -webkit-box; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .club-card__summary { overflow-wrap: anywhere; }
 .club-card__arrow,
-.club-directory-row__arrow { color: #2b7fff; }
-.club-directory__section-head text:first-child { color: #2b7fff; }
+.club-directory-row__arrow { color: var(--campus-primary, #2b7fff); }
+.club-directory__section-head text:first-child { color: var(--campus-primary, #2b7fff); }
 .club-directory__section-head text:last-child,
-.clubs-list__footer { color: #90a1b9; }
-.club-directory-index { width: 76rpx; background: #fff; border-color: #dce5f0; }
-.club-directory-index__item { color: #45556c; }
-.club-directory-index__item--active { color: #fff !important; background: #2b7fff; }
+.clubs-list__footer { color: var(--campus-text-muted, #90a1b9); }
+.club-directory-index { width: 76rpx; background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); }
+.club-directory-index__item { color: var(--campus-text-body, #45556c); }
+.club-directory-index__item--active { color: #fff !important; background: var(--campus-primary, #2b7fff); }
 .club-directory-prompt { background: rgba(29, 41, 61, 0.9); }
-.clubs-state { background: #fff; border: 2rpx solid #dce5f0; }
-.clubs-state__title { color: #1d293d; }
-.clubs-state__text { color: #45556c; }
-.clubs-state__action { color: #fff; background: #2b7fff; }
+.clubs-state { background: var(--campus-surface, #fff); border: 2rpx solid var(--campus-border, #dce5f0); }
+.clubs-state__title { color: var(--campus-text-heading, #1d293d); }
+.clubs-state__text { color: var(--campus-text-body, #45556c); }
+.clubs-state__action { color: #fff; background: var(--campus-primary, #2b7fff); }
 
 @media (max-width: 640rpx) {
   .clubs-workspace { grid-template-columns: minmax(0, 1fr) auto; }
@@ -794,38 +794,38 @@ page { background: #f4f7fb; }
 }
 
 // 社团页改为明亮蓝青主视觉，降低正文和深色卡片的压迫感。
-.clubs-page { color: #253858; background: #f5f9ff; }
-.clubs-hero { background: linear-gradient(135deg, #2f80ed 0%, #28c5e9 100%); box-shadow: 0 14rpx 36rpx rgba(47, 128, 237, 0.2); }
+.clubs-page { color: var(--campus-text-heading, #253858); background: var(--campus-page, #f5f9ff); }
+.clubs-hero { background: linear-gradient(135deg, var(--campus-primary, #2f80ed) 0%, #28c5e9 100%); box-shadow: 0 14rpx 36rpx rgba(47, 128, 237, 0.2); }
 .clubs-search,
 .clubs-workspace__mine,
 .club-card,
 .club-directory__section-list,
 .club-directory-index,
-.clubs-state { border-color: #d7e7fa; box-shadow: 0 10rpx 28rpx rgba(47, 128, 237, 0.06); }
+.clubs-state { border-color: var(--campus-border-strong, #d7e7fa); box-shadow: 0 10rpx 28rpx rgba(47, 128, 237, 0.06); }
 .clubs-search input,
 .clubs-workspace__mine text:first-child,
 .clubs-viewbar__title text:first-child,
 .club-card__name,
 .club-directory-row__name,
-.clubs-state__title { color: #253858; }
+.clubs-state__title { color: var(--campus-text-heading, #253858); }
 .clubs-search__action,
 .club-card__category,
 .club-card__arrow,
 .club-directory-row__arrow,
-.club-directory__section-head text:first-child { color: #2f80ed; }
+.club-directory__section-head text:first-child { color: var(--campus-primary, #2f80ed); }
 .clubs-category,
 .clubs-viewbar__mode,
 .club-directory-index__item,
 .club-card__slogan,
 .club-card__summary,
 .club-directory-row__meta,
-.clubs-state__text { color: #607895; }
+.clubs-state__text { color: var(--campus-text-secondary, #607895); }
 .clubs-category--active,
 .clubs-workspace__create,
 .club-directory-index__item--active,
-.clubs-state__action { background: #2f80ed; border-color: #2f80ed; box-shadow: 0 8rpx 18rpx rgba(47, 128, 237, 0.2); }
-.clubs-viewbar__modes { background: #e8f3ff; }
-.clubs-viewbar__mode--active { color: #2f80ed; background: #fff; }
+.clubs-state__action { background: var(--campus-primary, #2f80ed); border-color: var(--campus-primary, #2f80ed); box-shadow: 0 8rpx 18rpx rgba(47, 128, 237, 0.2); }
+.clubs-viewbar__modes { background: var(--campus-surface-primary, #e8f3ff); }
+.clubs-viewbar__mode--active { color: var(--campus-primary, #2f80ed); background: var(--campus-surface, #fff); }
 .club-card__cover,
-.club-card__logo { background: #e8f5ff; }
+.club-card__logo { background: var(--campus-surface-primary, #e8f5ff); }
 .club-directory-prompt { background: rgba(47, 128, 237, 0.92); }

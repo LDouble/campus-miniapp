@@ -1,13 +1,13 @@
 page {
-  background: #f4f7fb;
+  background: var(--campus-page, #f4f7fb);
 }
 
 .feature-unavailable {
   min-height: 100vh;
-  color: #1d293d;
+  color: var(--campus-text-heading, #1d293d);
   background:
-    linear-gradient(180deg, #eff6ff 0, rgba(239, 246, 255, 0) 460rpx),
-    #f4f7fb;
+    linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 460rpx),
+    var(--campus-page, #f4f7fb);
 
   &__content {
     width: 100%;
@@ -19,9 +19,9 @@ page {
     width: 100%;
     padding: 58rpx 34rpx 36rpx;
     box-sizing: border-box;
-    border: 1rpx solid #e8eef6;
+    border: 1rpx solid var(--campus-border, #e8eef6);
     border-radius: 30rpx;
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     box-shadow: 0 10rpx 30rpx rgba(15, 23, 42, 0.05);
     text-align: center;
   }
@@ -35,13 +35,13 @@ page {
     justify-content: center;
     gap: 7rpx;
     border-radius: 26rpx;
-    background: #eff6ff;
+    background: var(--campus-surface-primary, #eff6ff);
 
     view {
       width: 9rpx;
       height: 9rpx;
       border-radius: 50%;
-      background: #2b7fff;
+      background: var(--campus-primary, #2b7fff);
     }
   }
 
@@ -53,7 +53,7 @@ page {
 
   &__title {
     margin-top: 24rpx;
-    color: #1d293d;
+    color: var(--campus-text-heading, #1d293d);
     font-size: 34rpx;
     font-weight: 800;
   }
@@ -61,7 +61,7 @@ page {
   &__message {
     margin-top: 14rpx;
     overflow-wrap: anywhere;
-    color: #62748e;
+    color: var(--campus-text-secondary, #62748e);
     font-size: 24rpx;
     line-height: 1.65;
   }
@@ -75,7 +75,7 @@ page {
     justify-content: center;
     box-sizing: border-box;
     border-radius: 22rpx;
-    background: #2b7fff;
+    background: var(--campus-primary, #2b7fff);
     color: #fff;
     font-size: 24rpx;
     font-weight: 700;

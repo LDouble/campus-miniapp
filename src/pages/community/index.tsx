@@ -452,6 +452,7 @@ export default function CommunityPage() {
             }
             canFilter={activeCommunityChildren.length > 0}
             onOpenFilter={() => void chooseCommunitySection()}
+            onSelectSection={(sectionId) => setActiveCommunitySectionId(sectionId)}
           />
         ) : (
           <LifeServiceListPanel

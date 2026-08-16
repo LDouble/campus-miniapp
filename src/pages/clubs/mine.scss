@@ -1,5 +1,5 @@
 page {
-  background: #f8f5ef;
+  background: var(--campus-page, #f4f7fb);
 }
 
 .my-clubs-page {
@@ -38,14 +38,14 @@ page {
   &__text {
     margin-top: 8rpx;
     color: #526b65;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.55;
   }
 
   &__meta {
     margin-top: 9rpx;
     color: #3f6e61;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 700;
   }
 
@@ -81,7 +81,7 @@ page {
 .my-club-card {
   padding: 26rpx;
   margin-bottom: 20rpx;
-  background: rgba(255, 255, 255, 0.93);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
   border-radius: 32rpx;
   box-shadow: 0 11rpx 30rpx rgba(49, 78, 70, 0.06);
@@ -130,14 +130,14 @@ page {
   &__category {
     margin-top: 6rpx;
     color: #526b65;
-    font-size: 22rpx;
+    font-size: 24rpx;
   }
 
   &__status {
     flex: none;
     padding: 10rpx 16rpx;
     margin-left: 12rpx;
-    font-size: 21rpx;
+    font-size: 23rpx;
     font-weight: 750;
     border-radius: 99rpx;
 
@@ -220,7 +220,7 @@ page {
     text:last-child {
       margin-top: 5rpx;
       color: #526b65;
-      font-size: 22rpx;
+      font-size: 24rpx;
       line-height: 1.5;
     }
   }
@@ -235,14 +235,14 @@ page {
 
     text:first-child {
       color: #934d42;
-      font-size: 21rpx;
+      font-size: 23rpx;
       font-weight: 750;
     }
 
     text:last-child {
       margin-top: 7rpx;
       color: #744b44;
-      font-size: 23rpx;
+      font-size: 25rpx;
       line-height: 1.55;
     }
   }
@@ -264,7 +264,7 @@ page {
       height: 88rpx;
       padding: 0 16rpx;
       color: #38685c;
-      font-size: 23rpx;
+      font-size: 25rpx;
       font-weight: 750;
       background: #edf5f1;
       border-radius: 22rpx;
@@ -295,7 +295,7 @@ page {
   flex-direction: column;
   padding: 82rpx 40rpx;
   text-align: center;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border-radius: 34rpx;
 
   &__icon {
@@ -371,28 +371,28 @@ page {
   }
 }
 
-page { background: #f4f7fb; }
-.my-clubs-page { color: #1d293d; background: #f4f7fb; padding-bottom: calc(76rpx + env(safe-area-inset-bottom)); }
-.my-clubs-intro { gap: 16rpx; background: linear-gradient(135deg, #1d293d, #2b7fff); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 14rpx 36rpx rgba(29, 41, 61, 0.16); }
+page { background: var(--campus-page, #f4f7fb); }
+.my-clubs-page { color: var(--campus-text-heading, #1d293d); background: var(--campus-page, #f4f7fb); padding-bottom: calc(76rpx + env(safe-area-inset-bottom)); }
+.my-clubs-intro { gap: 16rpx; background: linear-gradient(135deg, var(--campus-text-heading, #1d293d), var(--campus-primary, #2b7fff)); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 14rpx 36rpx rgba(29, 41, 61, 0.16); }
 .my-clubs-intro__title { color: #fff; }
 .my-clubs-intro__text { display: -webkit-box; overflow: hidden; color: rgba(255, 255, 255, 0.74); -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .my-clubs-intro__meta { overflow: hidden; color: rgba(255, 255, 255, 0.9); text-overflow: ellipsis; white-space: nowrap; }
-.my-clubs-intro__action { min-width: 126rpx; background: #fff; color: #2b7fff; }
-.my-club-card { background: #fff; border-color: #dce5f0; box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
-.my-club-card__logo { background: #eaf2ff; }
-.my-club-card__name { color: #1d293d; }
-.my-club-card__category { display: block; overflow: hidden; color: #45556c; text-overflow: ellipsis; white-space: nowrap; }
+.my-clubs-intro__action { min-width: 126rpx; background: var(--campus-surface, #fff); color: var(--campus-primary, #2b7fff); }
+.my-club-card { background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
+.my-club-card__logo { background: var(--campus-surface-primary, #eaf2ff); }
+.my-club-card__name { color: var(--campus-text-heading, #1d293d); }
+.my-club-card__category { display: block; overflow: hidden; color: var(--campus-text-body, #45556c); text-overflow: ellipsis; white-space: nowrap; }
 .my-club-card__status { max-width: 150rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.my-club-card__progress { background: #f4f7fb; }
-.my-club-card__progress-copy text:first-child { color: #1d293d; }
-.my-club-card__progress-copy text:last-child { display: -webkit-box; overflow: hidden; color: #45556c; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.my-club-card__actions { border-color: #edf1f6; }
-.my-club-card__actions > view { min-width: 140rpx; color: #2b7fff; background: #eaf2ff; }
-.my-club-card__primary { color: #fff !important; background: #2b7fff !important; }
-.my-clubs-state { background: #fff; border: 2rpx solid #dce5f0; }
-.my-clubs-state__title { color: #1d293d; }
-.my-clubs-state__text { color: #45556c; }
-.my-clubs-state__action { color: #fff; background: #2b7fff; }
+.my-club-card__progress { background: var(--campus-page, #f4f7fb); }
+.my-club-card__progress-copy text:first-child { color: var(--campus-text-heading, #1d293d); }
+.my-club-card__progress-copy text:last-child { display: -webkit-box; overflow: hidden; color: var(--campus-text-body, #45556c); -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.my-club-card__actions { border-color: var(--campus-border, #edf1f6); }
+.my-club-card__actions > view { min-width: 140rpx; color: var(--campus-primary, #2b7fff); background: var(--campus-surface-primary, #eaf2ff); }
+.my-club-card__primary { color: #fff !important; background: var(--campus-primary, #2b7fff) !important; }
+.my-clubs-state { background: var(--campus-surface, #fff); border: 2rpx solid var(--campus-border, #dce5f0); }
+.my-clubs-state__title { color: var(--campus-text-heading, #1d293d); }
+.my-clubs-state__text { color: var(--campus-text-body, #45556c); }
+.my-clubs-state__action { color: #fff; background: var(--campus-primary, #2b7fff); }
 
 @media (max-width: 640rpx) {
   .my-clubs-intro { padding-right: 22rpx; padding-left: 22rpx; }
@@ -402,19 +402,19 @@ page { background: #f4f7fb; }
   .my-club-card__actions > view { min-width: 132rpx; }
 }
 
-.my-clubs-page { color: #253858; background: #f5f9ff; }
-.my-clubs-intro { background: linear-gradient(135deg, #2f80ed 0%, #28c5e9 100%); box-shadow: 0 14rpx 36rpx rgba(47, 128, 237, 0.2); }
-.my-clubs-intro__action { color: #2f80ed; }
+.my-clubs-page { color: var(--campus-text-heading, #253858); background: var(--campus-page, #f5f9ff); }
+.my-clubs-intro { background: linear-gradient(135deg, var(--campus-primary, #2f80ed) 0%, #28c5e9 100%); box-shadow: 0 14rpx 36rpx rgba(47, 128, 237, 0.2); }
+.my-clubs-intro__action { color: var(--campus-primary, #2f80ed); }
 .my-club-card,
-.my-clubs-state { border-color: #d7e7fa; box-shadow: 0 10rpx 28rpx rgba(47, 128, 237, 0.06); }
-.my-club-card__logo { background: #e8f5ff; }
+.my-clubs-state { border-color: var(--campus-border-strong, #d7e7fa); box-shadow: 0 10rpx 28rpx rgba(47, 128, 237, 0.06); }
+.my-club-card__logo { background: var(--campus-surface-primary, #e8f5ff); }
 .my-club-card__name,
 .my-club-card__progress-copy text:first-child,
-.my-clubs-state__title { color: #253858; }
+.my-clubs-state__title { color: var(--campus-text-heading, #253858); }
 .my-club-card__category,
 .my-club-card__progress-copy text:last-child,
-.my-clubs-state__text { color: #607895; }
-.my-club-card__progress { background: #f5f9ff; }
-.my-club-card__actions > view { color: #2f80ed; background: #e8f5ff; }
+.my-clubs-state__text { color: var(--campus-text-secondary, #607895); }
+.my-club-card__progress { background: var(--campus-page, #f5f9ff); }
+.my-club-card__actions > view { color: var(--campus-primary, #2f80ed); background: var(--campus-surface-primary, #e8f5ff); }
 .my-club-card__primary,
-.my-clubs-state__action { background: #2f80ed !important; }
+.my-clubs-state__action { background: var(--campus-primary, #2f80ed) !important; }

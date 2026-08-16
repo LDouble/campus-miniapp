@@ -1,7 +1,7 @@
 .shuttle-detail-page {
   min-height: 100vh;
   color: #203552;
-  background: #f4f8fd;
+  background: var(--campus-page, #f4f7fb);
 
   &__content {
     box-sizing: border-box;
@@ -17,7 +17,7 @@
   view {
     height: 220rpx;
     overflow: hidden;
-    background: linear-gradient(100deg, #edf3fa 20%, #fff 42%, #edf3fa 64%);
+    background: linear-gradient(100deg, #edf3fa 20%, var(--campus-surface, #fff) 42%, #edf3fa 64%);
     background-size: 240% 100%;
     border-radius: 30rpx;
     animation: shuttle-skeleton 1.35s ease-in-out infinite;
@@ -65,7 +65,7 @@
   overflow: hidden;
   padding: 28rpx;
   color: #fff;
-  background: linear-gradient(135deg, #2f80ed 0%, #20b8ee 58%, #25d0cb 100%);
+  background: linear-gradient(135deg, var(--campus-primary, #2f80ed) 0%, #20b8ee 58%, #25d0cb 100%);
   border: 1rpx solid rgba(255, 255, 255, 0.28);
   border-radius: 34rpx;
   box-shadow: 0 20rpx 42rpx rgba(47, 128, 237, 0.22);
@@ -78,7 +78,7 @@
     width: 330rpx;
     height: 330rpx;
     content: '';
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 50%;
   }
 
@@ -101,7 +101,7 @@
     justify-content: center;
     width: 58rpx;
     height: 58rpx;
-    background: rgba(255, 255, 255, 0.18);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border: 1rpx solid rgba(255, 255, 255, 0.26);
     border-radius: 18rpx;
 
@@ -127,7 +127,7 @@
     display: block;
     margin-top: 8rpx;
     overflow: hidden;
-    font-size: 23rpx;
+    font-size: 25rpx;
     color: rgba(255, 255, 255, 0.78);
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -140,7 +140,7 @@
     gap: 14rpx;
     margin-top: 28rpx;
     padding: 22rpx;
-    background: rgba(255, 255, 255, 0.14);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border: 1rpx solid rgba(255, 255, 255, 0.2);
     border-radius: 24rpx;
 
@@ -154,7 +154,7 @@
 
       text:first-child {
         margin-bottom: 7rpx;
-        font-size: 21rpx;
+        font-size: 23rpx;
         color: rgba(255, 255, 255, 0.7);
       }
 
@@ -180,7 +180,7 @@
     view {
       flex: 1;
       height: 1rpx;
-      background: rgba(255, 255, 255, 0.45);
+      background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     }
 
     text {
@@ -210,7 +210,7 @@
       }
 
       text:first-child {
-        font-size: 21rpx;
+        font-size: 23rpx;
         color: rgba(255, 255, 255, 0.68);
       }
 
@@ -232,7 +232,7 @@
   gap: 12rpx;
   margin-top: 18rpx;
   padding: 17rpx 20rpx;
-  font-size: 23rpx;
+  font-size: 25rpx;
   line-height: 1.45;
   color: #476886;
   background: #eaf4ff;
@@ -242,7 +242,7 @@
     flex: none;
     width: 12rpx;
     height: 12rpx;
-    background: #2f80ed;
+    background: var(--campus-primary, #2f80ed);
     border-radius: 50%;
   }
 }
@@ -268,7 +268,7 @@
 
   &__active {
     color: #2176ff;
-    background: #fff;
+    background: var(--campus-surface, #fff);
     box-shadow: 0 5rpx 15rpx rgba(38, 88, 145, 0.1);
   }
 
@@ -279,7 +279,7 @@
 
 .shuttle-detail-panel {
   padding: 26rpx;
-  background: #fff;
+  background: var(--campus-surface, #fff);
   border: 1rpx solid #e6edf6;
   border-radius: 28rpx;
   box-shadow: 0 10rpx 28rpx rgba(38, 70, 108, 0.05);
@@ -309,7 +309,7 @@
 
       text:last-child {
         margin-top: 6rpx;
-        font-size: 22rpx;
+        font-size: 24rpx;
         line-height: 1.4;
         color: #879ab3;
       }
@@ -318,8 +318,8 @@
     > text {
       flex: none;
       padding: 8rpx 16rpx;
-      font-size: 21rpx;
-      color: #2f80ed;
+      font-size: 23rpx;
+      color: var(--campus-primary, #2f80ed);
       background: #eaf4ff;
       border-radius: 999rpx;
     }
@@ -339,10 +339,10 @@
     display: block;
     margin-top: 22rpx;
     padding-top: 20rpx;
-    font-size: 23rpx;
+    font-size: 25rpx;
     line-height: 1.55;
     color: #7187a4;
-    border-top: 1rpx solid #edf2f7;
+    border-top: 1rpx solid var(--campus-border, #edf2f7);
   }
 }
 
@@ -358,7 +358,7 @@
   > text {
     display: block;
     margin-bottom: 13rpx;
-    font-size: 22rpx;
+    font-size: 24rpx;
     font-weight: 600;
     color: #6f84a0;
   }
@@ -388,7 +388,7 @@
     overflow: hidden;
     font-size: 27rpx;
     font-weight: 650;
-    color: #2f80ed;
+    color: var(--campus-primary, #2f80ed);
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -401,8 +401,8 @@
   &__selected {
     color: #fff !important;
     text-decoration: none !important;
-    background: #2f80ed !important;
-    border-color: #2f80ed !important;
+    background: var(--campus-primary, #2f80ed) !important;
+    border-color: var(--campus-primary, #2f80ed) !important;
     box-shadow: 0 7rpx 16rpx rgba(47, 128, 237, 0.2);
   }
 
@@ -442,7 +442,7 @@
   }
 
   > text {
-    font-size: 23rpx;
+    font-size: 25rpx;
     font-weight: 600;
   }
 
@@ -481,14 +481,14 @@
 
       &:last-child {
         margin-top: 4rpx;
-        font-size: 21rpx;
+        font-size: 23rpx;
         color: #8195ae;
       }
     }
 
     > text {
       flex: none;
-      font-size: 22rpx;
+      font-size: 24rpx;
       color: #4a75a6;
     }
   }
@@ -533,7 +533,7 @@
       width: 12rpx;
       height: 12rpx;
       margin-top: 10rpx;
-      background: #2f80ed;
+      background: var(--campus-primary, #2f80ed);
       border: 5rpx solid #dcecff;
       border-radius: 50%;
     }
@@ -566,7 +566,7 @@
       flex: none;
       width: 14rpx;
       height: 14rpx;
-      background: #2f80ed;
+      background: var(--campus-primary, #2f80ed);
       border: 6rpx solid #ddecff;
       border-radius: 50%;
     }
@@ -600,7 +600,7 @@
 
       text:last-child {
         flex: none;
-        font-size: 21rpx;
+        font-size: 23rpx;
         color: #8296af;
       }
     }
@@ -608,8 +608,8 @@
     > text {
       display: block;
       margin-top: 5rpx;
-      font-size: 21rpx;
-      color: #2f80ed;
+      font-size: 23rpx;
+      color: var(--campus-primary, #2f80ed);
     }
   }
 
@@ -617,7 +617,7 @@
     grid-column: 2;
     margin-top: -23rpx;
     margin-bottom: 18rpx;
-    font-size: 21rpx;
+    font-size: 23rpx;
     line-height: 1.4;
     color: #8296af;
   }
@@ -628,7 +628,7 @@
 
   > view {
     padding: 19rpx 0;
-    border-top: 1rpx solid #edf2f7;
+    border-top: 1rpx solid var(--campus-border, #edf2f7);
   }
 
   &__head {
@@ -649,7 +649,7 @@
 
     text:last-child {
       flex: none;
-      font-size: 21rpx;
+      font-size: 23rpx;
       color: #8498b1;
     }
   }
@@ -659,9 +659,9 @@
     display: block;
     margin-top: 8rpx;
     overflow-wrap: anywhere;
-    font-size: 22rpx;
+    font-size: 24rpx;
     line-height: 1.5;
-    color: #607895;
+    color: var(--campus-text-secondary, #607895);
   }
 
   &__note {
@@ -707,7 +707,7 @@
 
     text:last-child {
       margin-top: 7rpx;
-      font-size: 22rpx;
+      font-size: 24rpx;
       line-height: 1.55;
       color: #826b42;
       white-space: pre-wrap;
@@ -718,7 +718,7 @@
 .shuttle-detail-disclaimer {
   display: block;
   padding: 22rpx 12rpx 4rpx;
-  font-size: 21rpx;
+  font-size: 23rpx;
   line-height: 1.5;
   color: #8da0b7;
   text-align: center;
@@ -734,7 +734,7 @@
   grid-template-columns: 0.82fr 1.18fr;
   gap: 16rpx;
   padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border-top: 1rpx solid #e7eef6;
   backdrop-filter: blur(18rpx);
 
@@ -751,7 +751,7 @@
   }
 
   &__share {
-    color: #2f80ed;
+    color: var(--campus-primary, #2f80ed);
     background: #edf5ff;
     border: 0;
 
@@ -762,7 +762,7 @@
 
   &__refresh {
     color: #fff;
-    background: linear-gradient(100deg, #2f80ed, #20b8ee);
+    background: linear-gradient(100deg, var(--campus-primary, #2f80ed), #20b8ee);
     box-shadow: 0 10rpx 22rpx rgba(47, 128, 237, 0.2);
   }
 

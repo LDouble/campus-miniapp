@@ -123,21 +123,25 @@ const wechatAiModeConfig = isWechatAiEnabled
   : {}
 
 export default defineAppConfig({
+  darkmode: true,
+  themeLocation: 'theme.json',
   pages,
   window: {
-    backgroundTextStyle: 'dark',
-    navigationBarBackgroundColor: '#ffffff',
+    // Taro's types only list the resolved literals. WeChat resolves these
+    // theme variables from theme.json before rendering the native chrome.
+    backgroundTextStyle: '@backgroundTextStyle' as 'dark',
+    navigationBarBackgroundColor: '@navigationBarBackgroundColor',
     navigationBarTitleText: '海大校园',
-    navigationBarTextStyle: 'black',
-    backgroundColor: '#f4f7fb'
+    navigationBarTextStyle: '@navigationBarTextStyle' as 'black',
+    backgroundColor: '@backgroundColor'
   },
   usingComponents: {},
   tabBar: {
     custom: true,
-    color: '#90a1b9',
-    selectedColor: '#2b7fff',
-    backgroundColor: '#ffffff',
-    borderStyle: 'white',
+    color: '@tabBarColor',
+    selectedColor: '@tabBarSelectedColor',
+    backgroundColor: '@tabBarBackgroundColor',
+    borderStyle: '@tabBarBorderStyle' as 'white',
     list: tabBarList
   },
   ...(isQualificationEdition && targetMiniProgramAppId

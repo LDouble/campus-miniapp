@@ -24,6 +24,7 @@ type Props = {
   onToggleLike: (post: CampusCirclePostView) => void
   onOpen: (post: CampusCirclePostView) => void
   onOpenAuthor?: (post: CampusCirclePostView) => void
+  onSelectSection?: (sectionId: number) => void
 }
 
 export default function CommunityPostCard({
@@ -33,6 +34,7 @@ export default function CommunityPostCard({
   onToggleLike,
   onOpen,
   onOpenAuthor,
+  onSelectSection,
 }: Props) {
   const authorName = communityAuthorName(post)
   const authorInitial = communityAuthorInitial(post)
@@ -92,11 +94,6 @@ export default function CommunityPostCard({
           <View className='community-post__author-line'>
             <Text>{authorName}</Text>
             <CommunityLevelBadge level={post.author_level} compact />
-            {sectionName && (
-              <View className='community-post__section-pill'>
-                <Text>{post.topic?.name || sectionName}</Text>
-              </View>
-            )}
           </View>
           <View className='community-post__meta'>
             <Text>{publishedAt}</Text>
@@ -104,6 +101,22 @@ export default function CommunityPostCard({
               <Text className={`community-post__review-status community-post__review-status--${reviewStatus.tone}`}>
                 {reviewStatus.label}
               </Text>
+            )}
+            {sectionName && (
+              <View
+                className='community-post__section-pill'
+                hoverClass='community-post__section-pill--pressed'
+                hoverStartTime={20}
+                hoverStayTime={100}
+                ariaRole='button'
+                ariaLabel={`筛选${sectionName}板块`}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onSelectSection?.(post.section_id)
+                }}
+              >
+                <Text>{sectionName}</Text>
+              </View>
             )}
           </View>
         </View>

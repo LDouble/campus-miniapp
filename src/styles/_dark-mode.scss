@@ -1,0 +1,1279 @@
+// 只放无法由基础语义令牌自动覆盖的暗色例外。
+// 使用 `page` 提升全局样式的优先级，避免依赖导入顺序。
+
+@media (prefers-color-scheme: dark) {
+  // 社区吸顶导航：避免浅色轨道在暗色页面中形成高亮色块，并保证两级标签均清晰可读。
+  page .life-hub-navigation {
+    border-bottom-color: var(--campus-border, #243244);
+    background: rgba(17, 24, 39, 0.92);
+    box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.18);
+  }
+
+  page .life-primary-tabs__inner {
+    border-color: var(--campus-border-strong, #2f4c73);
+    background: rgba(23, 32, 51, 0.92);
+    box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.035);
+  }
+
+  page .life-primary-tabs__item {
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  page .life-primary-tabs__item--active {
+    color: #fff;
+    background: linear-gradient(90deg, #2563eb, #0e7490);
+    box-shadow: 0 6rpx 16rpx rgba(37, 99, 235, 0.26);
+  }
+
+  page .life-primary-tabs__item--pressed {
+    opacity: 0.78;
+    background-color: rgba(47, 76, 115, 0.56);
+  }
+
+  page .community-root-tabs__inner {
+    gap: 12rpx;
+  }
+
+  page .community-root-tabs__item {
+    border-color: var(--campus-border, #243244);
+    background: rgba(23, 32, 51, 0.66);
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  page .community-root-tabs__item--active {
+    border-color: var(--campus-border-strong, #2f4c73);
+    background: var(--campus-surface-primary, #172554);
+    color: var(--campus-primary-strong, #93c5fd);
+    box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.04);
+  }
+
+  page .community-root-tabs__item--pressed {
+    opacity: 0.78;
+    background: var(--campus-border, #243244);
+  }
+
+  page .verification-page {
+    color: var(--campus-text-heading, #f8fafc);
+    background:
+      radial-gradient(circle at 94% 7%, rgba(96, 165, 250, 0.14), transparent 30%),
+      radial-gradient(circle at 5% 35%, rgba(34, 211, 238, 0.08), transparent 30%),
+      var(--campus-page, #0b1220);
+  }
+
+  page .verification-loading,
+  page .verification-error,
+  page .verification-form,
+  page .verification-profile,
+  page .verification-pending,
+  page .verification-security {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .verification-hero {
+    color: #fff;
+    background: linear-gradient(135deg, #1d4ed8, #0e7490);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.26);
+  }
+
+  page .verification-hero--pending { background: linear-gradient(135deg, #1d4ed8, #4338ca); }
+  page .verification-hero--verified { background: linear-gradient(135deg, #0f766e, #0e7490 58%, #1d4ed8); }
+  page .verification-hero--rejected,
+  page .verification-hero--revoked { background: linear-gradient(135deg, #9f1239, #c2410c); }
+  page .verification-hero__orb { background: rgba(11, 18, 32, 0.28); border-color: rgba(255, 255, 255, 0.22); }
+  page .verification-hero__orb > view { color: #93c5fd; background: var(--campus-surface, #111827); }
+  page .verification-hero--verified .verification-hero__orb > view { color: #5eead4; }
+  page .verification-hero--rejected .verification-hero__orb > view,
+  page .verification-hero--revoked .verification-hero__orb > view { color: #fda4af; }
+
+  page .verification-methods-heading text:first-child,
+  page .verification-education__heading text:first-child,
+  page .verification-form__heading > view:first-child text:first-child,
+  page .verification-pending > text:nth-child(2),
+  page .verification-security > view:last-child text:first-child {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .verification-methods-heading text:last-child,
+  page .verification-education__heading text:last-child,
+  page .verification-form__heading > view:first-child text:last-child,
+  page .verification-form__footnote,
+  page .verification-pending > text:nth-child(3) {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  page .verification-method,
+  page .verification-education-option,
+  page .verification-profile__facts view {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .verification-method--active,
+  page .verification-education-option--active,
+  page .verification-education-option--graduate.verification-education-option--active {
+    background: var(--campus-surface-primary, #172554);
+    border-color: #3b82f6;
+    box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .verification-method__copy text:first-child,
+  page .verification-education-option__copy text:first-child {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .verification-method__copy text:last-child,
+  page .verification-education-option__copy text:last-child {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  page .verification-method__icon,
+  page .verification-education-option__icon,
+  page .verification-security__icon {
+    background: var(--campus-icon-surface-blue, #162a46);
+  }
+
+  page .verification-method__icon image,
+  page .verification-education-option__icon image,
+  page .verification-security__icon image {
+    filter: brightness(0) saturate(100%) invert(73%) sepia(16%) saturate(1800%) hue-rotate(181deg) brightness(103%) contrast(98%);
+  }
+
+  page .verification-method--active .verification-method__icon image {
+    filter: brightness(0) invert(1);
+  }
+
+  page .verification-education-option--graduate .verification-education-option__icon {
+    background: var(--campus-icon-surface-purple, #2e254c);
+  }
+
+  page .verification-method:not(.verification-method--active) .verification-method__check,
+  page .verification-education-option:not(.verification-education-option--active) .verification-education-option__check {
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
+
+  page .verification-education-option::after { background: rgba(96, 165, 250, 0.06); }
+
+  page .verification-field input,
+  page .verification-password-control,
+  page .verification-upload {
+    color: var(--campus-text-heading, #f8fafc);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .verification-field input,
+  page .verification-profile__main text:first-child,
+  page .verification-profile__facts text:last-child {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .verification-field > text,
+  page .verification-profile__main text:last-child,
+  page .verification-profile__facts text:first-child,
+  page .verification-security text:last-child {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  page .verification-placeholder { color: var(--campus-text-muted, #8494aa); }
+
+  page .verification-credential-guide {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: linear-gradient(135deg, #172554, #12343d);
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
+
+  page .verification-credential-guide text:first-child { color: #93c5fd; }
+  page .verification-credential-guide text:nth-child(3) { color: #fda4af; }
+
+  page .verification-review-note {
+    background: var(--campus-surface-danger, #3f1725);
+    border-color: rgba(251, 113, 133, 0.28);
+  }
+
+  page .verification-review-note text:first-child { color: #fda4af; }
+  page .verification-review-note text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+  page .verification-form__tag { color: #93c5fd; background: var(--campus-surface-primary, #172554); }
+  page .verification-form__tag--warm { color: #fdba74; background: var(--campus-surface-errand, #3a2416); }
+
+  page .verification-primary {
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #0e7490);
+    box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .verification-primary--disabled {
+    color: var(--campus-text-muted, #8494aa);
+    background: var(--campus-border, #243244);
+    box-shadow: none;
+  }
+
+  page .verification-upload__icon,
+  page .verification-pending__icon,
+  page .verification-pending > view:last-child {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .verification-upload > text:nth-last-child(2) { color: var(--campus-text-heading, #f8fafc); }
+  page .verification-upload > text:last-child { color: var(--campus-text-muted, #8494aa); }
+  page .verification-profile__badge { color: #6ee7b7; background: var(--campus-surface-success, #102f2e); }
+  page .verification-security { background: var(--campus-surface-primary, #172554); border-color: var(--campus-border-strong, #2f4c73); }
+  page .verification-credential-action { color: var(--campus-primary-strong, #93c5fd); }
+  page .verification-loading > view { background: linear-gradient(90deg, #172033, #243244, #172033); }
+
+  page .materials-view-tabs {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .materials-hero,
+  page .messages-summary {
+    background: linear-gradient(135deg, var(--campus-surface-primary, #172554), var(--campus-surface-subtle, #172033));
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 12rpx 28rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .materials-note,
+  page .materials-upload-notice {
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.24);
+  }
+
+  page .materials-note text:first-child,
+  page .materials-upload-notice text:first-child {
+    color: #fdba74;
+  }
+
+  page .materials-note text:last-child,
+  page .materials-upload-notice text:last-child {
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  page .message-sheet__handle {
+    background: var(--campus-border-strong, #2f4c73);
+  }
+
+  page .message-card__icon--social {
+    color: #c4b5fd;
+    background: #2e254c;
+  }
+
+  page .message-card__icon--trade {
+    color: #fdba74;
+    background: #3a2416;
+  }
+
+  page .message-card__icon--system {
+    color: #93c5fd;
+    background: #172554;
+  }
+
+  // 功能 SVG 使用固定描边色，暗色下统一提亮；用户上传的照片保持原色。
+  page .campus__chevron,
+  page .icon-button > image,
+  page .schedule-card__summary image,
+  page .today-task__action image,
+  page .section-heading__more image,
+  page .service-panel__all image,
+  page .official-notices-home__more image,
+  page .official-notices-home__arrow,
+  page .news-card__compact-arrow,
+  page .news-card__read image,
+  page .market-panel .section-heading__more image,
+  page .tab-page__card > image,
+  page .module-card__arrow,
+  page .cancellation-blocker__action image,
+  page .profile-identity-entry__arrow,
+  page .materials-search image,
+  page .materials-course-browser__search image,
+  page .community-search-trigger image,
+  page .clubs-search image {
+    filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(436%) hue-rotate(177deg) brightness(94%) contrast(91%);
+    opacity: 0.82;
+  }
+
+  page .community-post__action image,
+  page .community-detail-card__action image,
+  page .business-detail-composer__share image {
+    filter: brightness(1.75) saturate(0.86);
+  }
+
+  page .community-detail-comments__quick-action image {
+    filter: brightness(1.75) saturate(0.86);
+  }
+
+  page .community-post__action--liked image {
+    filter: brightness(1.12) saturate(1.08);
+  }
+
+  // 首页与服务入口：图标承载面改为低亮度色块，保留各服务的识别色。
+  page .campus {
+    background:
+      radial-gradient(circle at 12% 9%, rgba(96, 165, 250, 0.09), transparent 30%),
+      radial-gradient(circle at 96% 24%, rgba(45, 212, 191, 0.07), transparent 29%),
+      var(--campus-page, #0b1220);
+  }
+
+  page .campus__orb--one { background: rgba(251, 146, 60, 0.07); }
+  page .campus__orb--two { background: rgba(45, 212, 191, 0.06); }
+
+  page .campus__avatar,
+  page .campus__avatar-image {
+    background: var(--campus-icon-surface-orange, #3a291a);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.26);
+  }
+
+  page .campus__online { border-color: var(--campus-page, #0b1220); }
+
+  page .icon-button::before {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .hero-card {
+    background: linear-gradient(128deg, #123c48 0%, #172554 54%, #3a291a 100%);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .hero-card__glow { background: rgba(96, 165, 250, 0.12); }
+  page .hero-card__title { color: var(--campus-text-heading, #f8fafc); }
+  page .hero-card__subtitle { color: var(--campus-text-secondary, #aab8ca); }
+  page .hero-card__pill { color: #93c5fd; background: rgba(23, 37, 84, 0.78); border-color: #28477a; }
+  page .hero-card--image .hero-card__pill { color: #fff; background: rgba(11, 18, 32, 0.76); border-color: rgba(203, 213, 225, 0.28); }
+  page .hero-card--image .hero-card__pulse { background: #fff; box-shadow: 0 0 0 7rpx rgba(255, 255, 255, 0.12); }
+  page .hero-card__action { color: #93c5fd; }
+  page .hero-card__action image { filter: brightness(0) invert(1); opacity: 0.78; }
+
+  page .service-panel__grid-icon {
+    background: var(--campus-icon-surface, #172033);
+    box-shadow: 6rpx 6rpx 16rpx rgba(0, 0, 0, 0.22), -2rpx -2rpx 10rpx rgba(148, 163, 184, 0.04);
+  }
+
+  page .service-panel__grid-item--blue .service-panel__grid-icon,
+  page .service-panel__grid-item--key-schedule .service-panel__grid-icon,
+  page .service-panel__grid-item--key-result .service-panel__grid-icon {
+    background: var(--campus-icon-surface-blue, #162a46);
+  }
+
+  page .service-panel__grid-item--cyan .service-panel__grid-icon,
+  page .service-panel__grid-item--key-materials .service-panel__grid-icon,
+  page .service-panel__grid-item--key-carpool .service-panel__grid-icon {
+    background: var(--campus-icon-surface-cyan, #12343d);
+  }
+
+  page .service-panel__grid-item--green .service-panel__grid-icon,
+  page .service-panel__grid-item--key-grades .service-panel__grid-icon,
+  page .service-panel__grid-item--key-shuttle .service-panel__grid-icon,
+  page .service-panel__grid-item--key-classroom .service-panel__grid-icon,
+  page .service-panel__grid-item--key-clubs .service-panel__grid-icon {
+    background: var(--campus-icon-surface-green, #12352f);
+  }
+
+  page .service-panel__grid-item--orange .service-panel__grid-icon,
+  page .service-panel__grid-item--sand .service-panel__grid-icon,
+  page .service-panel__grid-item--key-market .service-panel__grid-icon,
+  page .service-panel__grid-item--key-errands .service-panel__grid-icon {
+    background: var(--campus-icon-surface-orange, #3a291a);
+  }
+
+  page .service-panel__grid-item--purple .service-panel__grid-icon,
+  page .service-panel__grid-item--key-community .service-panel__grid-icon,
+  page .service-panel__grid-item--key-calendar .service-panel__grid-icon {
+    background: var(--campus-icon-surface-purple, #2e254c);
+  }
+
+  page .service-panel__grid-item--pink .service-panel__grid-icon,
+  page .service-panel__grid-item--key-exams .service-panel__grid-icon,
+  page .service-panel__grid-item--key-pass-rate .service-panel__grid-icon {
+    background: var(--campus-icon-surface-pink, #3b202b);
+  }
+
+  page .services-search,
+  page .services-group {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .services-search image,
+  page .module-search image {
+    filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(436%) hue-rotate(177deg) brightness(94%) contrast(91%);
+  }
+
+  page .services-search input { color: var(--campus-text-heading, #f8fafc); }
+  page .services-group__icon { background: var(--campus-icon-surface-blue, #162a46); }
+  page .services-group:nth-of-type(3) .services-group__icon { background: var(--campus-icon-surface-orange, #3a291a); }
+  page .services-group:nth-of-type(4) .services-group__icon { background: var(--campus-icon-surface-purple, #2e254c); }
+  page .services-group__icon image { filter: brightness(1.28) saturate(0.92); }
+
+  page .services-migrated {
+    background: linear-gradient(135deg, #12352f, #3a291a);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .services-migrated__title { color: var(--campus-text-heading, #f8fafc); }
+  page .services-migrated__copy { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .api-community-search,
+  page .api-community-search--focused,
+  page .api-community-search--active:not(.api-community-search--focused) {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: inset 4rpx 4rpx 10rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .api-community-search input { color: var(--campus-text-heading, #f8fafc); }
+  page .api-community-search__clear { color: var(--campus-text-secondary, #aab8ca); background: var(--campus-border, #243244); }
+  page .community-page__search-action image {
+    filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(436%) hue-rotate(177deg) brightness(94%) contrast(91%);
+  }
+
+  page .community-post {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-post__image-frame,
+  page .community-post__image-frame image,
+  page .community-post__image-reviewing {
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  // 社区首页、搜索与状态反馈。
+  page .community-page__search-action {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: inset 3rpx 3rpx 9rpx rgba(0, 0, 0, 0.2), inset -2rpx -2rpx 8rpx rgba(148, 163, 184, 0.04);
+  }
+
+  page .community-page .custom-navbar__fixed {
+    border-bottom-color: var(--campus-border, #243244);
+    box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-subtabs__item { color: var(--campus-text-secondary, #aab8ca); }
+  page .community-subtabs__item--active { color: var(--campus-text-heading, #f8fafc); }
+  page .community-subtabs__item--active::after { background: var(--campus-primary, #60a5fa); }
+
+  page .community-module-state {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .community-module-state__mark {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-module-state__title { color: var(--campus-text-heading, #f8fafc); }
+  page .community-module-state__message { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .api-community__filter {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .api-community__filter text:first-child { color: var(--campus-text-body, #d7e0ec); }
+  page .api-community__filter text:last-child { color: var(--campus-text-muted, #8494aa); }
+
+  page .api-community-search__submit {
+    color: #fff;
+    background: linear-gradient(90deg, #2563eb, #0e7490);
+  }
+
+  page .api-community-search__submit--secondary {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-post__avatar-image { background: var(--campus-surface-subtle, #172033); }
+  page .community-post__meta-divider { background: var(--campus-border, #243244); }
+
+  page .community-post__review-status--pending {
+    color: #fbbf24;
+    background: #3a291a;
+  }
+
+  page .community-post__review-status--rejected {
+    color: #fda4af;
+    background: var(--campus-surface-danger, #3f1725);
+  }
+
+  page .community-post__actions { border-top-color: var(--campus-border, #243244); }
+  page .community-post__action--pressed { background: var(--campus-surface-subtle, #172033); }
+
+  page .community-operations__campaign {
+    border: 1rpx solid var(--campus-border, #243244);
+    box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-operations__campaign text:last-child { color: var(--campus-text-muted, #8494aa); }
+
+  page .api-community-state,
+  page .api-community-load-more {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .api-community-state > view:last-child,
+  page .api-community-state--empty > view:first-child {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .api-community-state--empty > text:nth-child(2) { color: var(--campus-text-heading, #f8fafc); }
+  page .api-community-state--empty > text:nth-child(3),
+  page .api-community-state--empty > text:last-child { color: var(--campus-text-muted, #8494aa); }
+  page .api-community-load-more { color: var(--campus-primary-strong, #93c5fd); }
+
+  page .community-feed-skeleton__item {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-feed-skeleton__header > view:first-child,
+  page .community-feed-skeleton__header > view:last-child view {
+    background: var(--campus-border, #243244);
+  }
+
+  page .community-feed-skeleton__line,
+  page .community-feed-skeleton__media {
+    background: linear-gradient(90deg, #172033 25%, #243244 50%, #172033 75%);
+  }
+
+  // 社区弹幕与用户等级徽章。
+  page .fresh-barrage__item {
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .community-level-badge {
+    color: #93c5fd;
+    background: var(--campus-icon-surface-blue, #162a46);
+    border-color: #28477a;
+  }
+
+  page .community-level-badge--dawn { color: #6ee7b7; background: #12352f; border-color: #236653; }
+  page .community-level-badge--coral { color: #fdba8c; background: #3d271e; border-color: #704632; }
+  page .community-level-badge--deepsea { color: #93c5fd; background: #172554; border-color: #28477a; }
+  page .community-level-badge--gold { color: #fde68a; background: #38331a; border-color: #6c6127; }
+
+  // 话题页与动态详情的浅色专属容器。
+  page .community-topic-hero {
+    background: linear-gradient(138deg, #172554 0%, #172033 58%, #12343d 100%);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 42rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .community-topic-hero__glow { background: rgba(96, 165, 250, 0.08); }
+  page .community-topic-hero__action,
+  page .community-topic-empty__action {
+    color: #fff;
+    background: #2563eb;
+  }
+
+  page .community-topic-page__state,
+  page .community-topic-empty {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .community-detail-state {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .community-detail-state view {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-detail-card__image-frame,
+  page .community-detail-card__image-frame image,
+  page .community-detail-card__image-reviewing {
+    color: var(--campus-text-muted, #8494aa);
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .community-detail-card__image-reviewing--overlay {
+    color: #fff;
+    background: rgba(0, 0, 0, 0.68);
+  }
+
+  page .community-detail-card__action,
+  page .community-detail-card__report { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .community-detail-card__review {
+    color: #fdba74;
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.24);
+  }
+
+  page .business-detail-comments {
+    border-top: 1rpx solid var(--campus-border, #243244);
+    box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.24);
+  }
+
+  // 跑腿、找同行列表与详情中的浅色业务底，全部切换为暗色语义面。
+  page .life-search,
+  page .life-search--focused,
+  page .life-search--active {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: inset 4rpx 4rpx 10rpx rgba(0, 0, 0, 0.22), inset -2rpx -2rpx 8rpx rgba(148, 163, 184, 0.04);
+  }
+
+  page .errand-card,
+  page .carpool-card,
+  page .marketplace-card {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .errand-route,
+  page .carpool-route,
+  page .business-route,
+  page .detail-route--horizontal,
+  page .detail-important-card,
+  page .carpool-detail-route-card {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .business-card-avatar--errand {
+    color: #fdba74;
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.28);
+  }
+
+  page .business-card-avatar--carpool {
+    color: #a5b4fc;
+    background: var(--campus-icon-surface-purple, #2e254c);
+    border-color: rgba(165, 180, 252, 0.24);
+  }
+
+  page .business-status--errand,
+  page .life-detail--errands .detail-overview__badges text:first-child {
+    color: #fdba74;
+    background: var(--campus-surface-errand, #3a2416);
+  }
+
+  page .business-status--carpool,
+  page .life-detail--carpool .detail-overview__badges text:first-child {
+    color: #5eead4;
+    background: var(--campus-surface-success, #102f2e);
+  }
+
+  page .life-panel--errands .life-panel__mine,
+  page .life-detail--errands .detail-inline-action {
+    color: #fdba74;
+  }
+
+  page .life-detail--errands .detail-inline-action {
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.28);
+  }
+
+  page .detail-important-card__row,
+  page .detail-important-card__grid > view {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .detail-important-card__grid { background: var(--campus-border, #243244); border-color: var(--campus-border, #243244); }
+
+  // 无图商品与媒体上传占位属于 UI 插画，不按真实照片处理。
+  page .marketplace-card__cover,
+  page .marketplace-card__placeholder,
+  page .marketplace-card__placeholder--tone-1,
+  page .marketplace-card__placeholder--tone-2,
+  page .marketplace-card__placeholder--tone-3,
+  page .marketplace-card--wanted .marketplace-card__placeholder,
+  page .media-image-editor__preview,
+  page .media-image-editor__add {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .marketplace-card__placeholder-headline { color: var(--campus-text-heading, #f8fafc); }
+  page .marketplace-card__placeholder-kicker { color: var(--campus-text-muted, #8494aa); }
+  page .media-image-editor__add image { filter: brightness(1.55) saturate(0.82); }
+
+  // 旧模块页和迁移提示页仍会作为兜底入口出现，避免亮色插画底泄漏。
+  page .tab-page,
+  page .module {
+    background: var(--campus-page, #0b1220);
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .tab-page__hero,
+  page .module-hero {
+    background: linear-gradient(135deg, #123c48, #172554 56%, #3a291a);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.26);
+  }
+
+  page .tab-page__hero-icon,
+  page .module-hero__icon,
+  page .module-stats,
+  page .module-search,
+  page .tab-page__quick view,
+  page .tab-page__card {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .tab-page__hero-icon image,
+  page .module-hero__icon image { filter: brightness(1.3) saturate(0.9); }
+
+  page .module-search input,
+  page .tab-page__card { color: var(--campus-text-heading, #f8fafc); }
+
+  page .campus-service {
+    color: var(--campus-text-heading, #f8fafc);
+    background: var(--campus-page, #0b1220);
+  }
+
+  page .campus-service-hero,
+  page .campus-detail__hero {
+    background: linear-gradient(135deg, #123c48, #302719);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 14rpx 32rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .campus-service-card,
+  page .campus-detail__panel {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .campus-service-card__top text:first-child,
+  page .campus-service-heading text:first-child,
+  page .campus-detail__title,
+  page .campus-detail__heading,
+  page .campus-detail__row text:last-child {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .campus-service-card__summary,
+  page .campus-service-card__bottom,
+  page .campus-detail__summary,
+  page .campus-detail__meta,
+  page .campus-detail__row text:first-child {
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  // 通用底部浮层：遮罩、承载面与顶部抓手都使用暗色语义层级。
+  page .bottom-sheet-layer,
+  page .academic-overlay,
+  page .course-float-layer {
+    background: rgba(0, 0, 0, 0.68);
+  }
+
+  page .bottom-sheet {
+    background: var(--campus-surface, #111827);
+    border-top: 1rpx solid var(--campus-border, #243244);
+    box-shadow: var(--campus-shadow-sheet, 0 -8rpx 32rpx rgba(0, 0, 0, 0.32));
+  }
+
+  page .bottom-sheet__handle { background: var(--campus-border-strong, #2f4c73); }
+  page .bottom-sheet__header { border-bottom-color: var(--campus-border, #243244); }
+
+  // 课表、成绩、考场与选课：重点覆盖学期、周次、详情及编辑浮层。
+  page .academic-page > .custom-navbar .custom-navbar__fixed,
+  page .academic-header,
+  page .academic-header--schedule {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .academic-sheet,
+  page .course-float-card {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 -18rpx 54rpx rgba(0, 0, 0, 0.36);
+  }
+
+  page .academic-sheet__handle,
+  page .course-float-card__handle { background: var(--campus-border-strong, #2f4c73); }
+
+  page .academic-sheet__close,
+  page .course-float-card__close {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-border, #243244);
+  }
+
+  page .course-float-card__eyebrow { color: #fdba74; }
+  page .course-float-card__title { color: var(--campus-text-heading, #f8fafc); }
+  page .course-float-card__copy { color: var(--campus-text-muted, #8494aa); }
+
+  page .period-options__item,
+  page .week-options__item,
+  page .grade-level-options > view,
+  page .academic-field input,
+  page .form-chip,
+  page .stepper,
+  page .form-weeks view,
+  page .detail-list {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .period-options__item text:first-child,
+  page .academic-field input,
+  page .stepper text,
+  page .detail-list text:last-child { color: var(--campus-text-body, #d7e0ec); }
+
+  page .period-options__item text:last-child,
+  page .academic-field__label-line text:last-child,
+  page .detail-list text:first-child { color: var(--campus-text-muted, #8494aa); }
+
+  page .period-options__item--active,
+  page .week-options__item--active,
+  page .form-chip--active,
+  page .form-weeks__active,
+  page .grade-level-options__item--active,
+  page .academic-check__box--active,
+  page .academic-check--active .academic-check__box {
+    color: #fff !important;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 8rpx 18rpx rgba(37, 99, 235, 0.26);
+  }
+
+  page .period-options__item--active text,
+  page .week-options__item--active text { color: #fff !important; }
+
+  page .period-options__item--active .period-options__check {
+    color: #1d4ed8;
+    background: #dbeafe;
+  }
+
+  page .academic-check { color: var(--campus-text-body, #d7e0ec); }
+  page .academic-check__box { background: var(--campus-surface, #111827); border-color: var(--campus-border-strong, #2f4c73); }
+
+  page .academic-button {
+    color: #fff;
+    background: #2563eb;
+  }
+
+  page .academic-button--secondary {
+    color: #fda4af;
+    background: var(--campus-surface-danger, #3f1725);
+  }
+
+  page .academic-toolbar__mode-actions view + view,
+  page .academic-fab,
+  page .day-strip__item--active {
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #0e7490);
+  }
+
+  page .grade-summary,
+  page .grade-summary--original,
+  page .grade-summary--simulation {
+    background:
+      radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.12), transparent 32%),
+      linear-gradient(135deg, #1d4ed8, #155e75);
+    box-shadow: 0 14rpx 34rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .grade-card,
+  page .exam-card,
+  page .selection-card,
+  page .day-course,
+  page .academic-load-state,
+  page .exam-hero,
+  page .selection-hero {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 7rpx 22rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .timetable {
+    background: var(--campus-surface, #111827);
+    border-top-color: var(--campus-border, #243244);
+  }
+
+  page .timetable__header,
+  page .timetable__time {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .timetable__cell { border-color: var(--campus-border, #243244); }
+  page .timetable__cell--conflict { background: var(--campus-surface-danger, #3f1725); }
+  page .day-course__main { border-left-color: var(--campus-border, #243244); }
+
+  page .exam-hero__mark,
+  page .selection-hero__seal { border-color: var(--campus-border-strong, #2f4c73); }
+  page .grade-card--selected,
+  page .grade-card--simulation { border-color: var(--campus-border-strong, #2f4c73); }
+
+  page .selection-tabs {
+    background: var(--campus-border, #243244);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .selection-tabs__item--active {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .selection-card__status,
+  page .selection-detail__badge {
+    color: #6ee7b7;
+    background: var(--campus-surface-success, #102f2e);
+  }
+
+  page .selection-card__status--pending,
+  page .selection-detail__badge--pending { color: #fbbf24; background: #3a291a; }
+  page .selection-card__status--failed,
+  page .selection-detail__badge--failed { color: #fda4af; background: var(--campus-surface-danger, #3f1725); }
+
+  page .course-switcher__item {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .course-switcher__item text:last-child { color: var(--campus-text-muted, #8494aa); }
+  page .course-switcher__item--active {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
+
+  page .course-switcher__item--active text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .course-conflict-card__actions > view {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: rgba(17, 24, 39, 0.72);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .course-conflict-card__actions > view:first-child { color: #fda4af; }
+
+  page .course-detail__tone,
+  page .color-options__item { color: #93c5fd; background: var(--campus-icon-surface-blue, #162a46); }
+  page .course-detail__tone--mint,
+  page .color-options__item--mint,
+  page .course-detail__tone--sage,
+  page .color-options__item--sage { color: #6ee7b7; background: #12352f; }
+  page .course-detail__tone--lilac,
+  page .color-options__item--lilac,
+  page .course-detail__tone--indigo,
+  page .color-options__item--indigo { color: #c4b5fd; background: #2e254c; }
+  page .course-detail__tone--sand,
+  page .color-options__item--sand,
+  page .course-detail__tone--lemon,
+  page .color-options__item--lemon { color: #fde68a; background: #38331a; }
+  page .course-detail__tone--sky,
+  page .color-options__item--sky { color: #67e8f9; background: #12343d; }
+  page .course-detail__tone--rose,
+  page .color-options__item--rose,
+  page .course-detail__tone--coral,
+  page .color-options__item--coral { color: #fda4af; background: #3b202b; }
+  page .course-detail__tone--peach,
+  page .color-options__item--peach { color: #fdba8c; background: #3d271e; }
+  page .color-options__item--active { border-color: var(--campus-primary-strong, #93c5fd); }
+
+  page .stepper view {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .grade-original,
+  page .academic-tip {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .grade-original view { border-color: var(--campus-border, #243244); }
+  page .grade-original text:first-child { color: var(--campus-text-muted, #8494aa); }
+  page .grade-original text:last-child { color: var(--campus-text-heading, #f8fafc); }
+
+  page .exam-detail__badge {
+    color: #93c5fd;
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .grade-list-heading--original text:last-child {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .academic-empty__art view:first-child { background: var(--campus-border-strong, #2f4c73); }
+  page .academic-empty__art view:last-child { background: var(--campus-icon-surface-cyan, #12343d); }
+
+  page .course-market-actions,
+  page .academic-notice {
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.24);
+  }
+
+  page .course-market-actions > view:first-child text:first-child,
+  page .academic-notice text:first-child { color: #fdba74; }
+  page .course-market-actions > view:first-child text:last-child,
+  page .academic-notice text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+  page .course-market-actions__buttons view,
+  page .course-resource-actions__secondary > view {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .course-market-actions__buttons view:first-child,
+  page .course-resource-actions__primary,
+  page .course-material-actions > view:last-child {
+    color: #fff !important;
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  // 校车列表与筛选。
+  page .shuttle-hero,
+  page .shuttle-detail-hero,
+  page .shuttle-detail-hero--campus_loop {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0e7490 62%, #0f766e 100%);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 38rpx rgba(0, 0, 0, 0.3);
+  }
+
+  page .shuttle-hero__type,
+  page .shuttle-detail-hero__bus,
+  page .shuttle-detail-hero__direction { background: rgba(11, 18, 32, 0.48); }
+
+  page .shuttle-campus-filter__active,
+  page .shuttle-campus-filter__active text,
+  page .shuttle-detail-times__selected,
+  page .shuttle-detail-actions__refresh {
+    color: #fff !important;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+  }
+
+  page .shuttle-date-tabs__active,
+  page .shuttle-stop-filter__station--selected {
+    background: var(--campus-surface-primary, #172554) !important;
+    border-color: var(--campus-border-strong, #2f4c73) !important;
+  }
+
+  page .shuttle-type-filter { background: var(--campus-surface-subtle, #172033); }
+  page .shuttle-type-filter__active { background: var(--campus-surface, #111827) !important; }
+
+  page .shuttle-stop-filter,
+  page .shuttle-route-card,
+  page .shuttle-detail-panel {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .shuttle-stop-filter__swap { background: linear-gradient(135deg, #2563eb, #0e7490); }
+  page .shuttle-stop-filter__swap--disabled {
+    color: var(--campus-text-muted, #8494aa);
+    background: var(--campus-border, #243244);
+  }
+
+  // 校车详情：班次、停靠站、提示卡与固定操作栏。
+  page .shuttle-detail-page { color: var(--campus-text-heading, #f8fafc); }
+  page .shuttle-detail-loading view {
+    background: linear-gradient(100deg, #172033 20%, #243244 42%, #172033 64%);
+  }
+
+  page .shuttle-detail-empty { color: var(--campus-text-secondary, #aab8ca); }
+  page .shuttle-detail-empty view { background: var(--campus-surface-primary, #172554); }
+  page .shuttle-detail-empty text:nth-child(2) { color: var(--campus-text-heading, #f8fafc); }
+  page .shuttle-detail-empty text:last-child {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .shuttle-detail-source,
+  page .shuttle-detail-panel__head > text,
+  page .shuttle-detail-actions__share {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .shuttle-detail-tabs {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .shuttle-detail-tabs__active {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+    box-shadow: 0 5rpx 15rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .shuttle-detail-panel__head > view text:first-child,
+  page .shuttle-trip-detail__head > view text:first-child,
+  page .shuttle-stop-list__content > view text:first-child,
+  page .shuttle-weekly-list__head text:first-child { color: var(--campus-text-heading, #f8fafc); }
+
+  page .shuttle-detail-panel__head > view text:last-child,
+  page .shuttle-detail-panel__note,
+  page .shuttle-departure-group > text,
+  page .shuttle-trip-detail__head > view text:last-child,
+  page .shuttle-stop-list__content > view text:last-child,
+  page .shuttle-stop-list__note,
+  page .shuttle-weekly-list__head text:last-child,
+  page .shuttle-weekly-list__note,
+  page .shuttle-detail-disclaimer { color: var(--campus-text-muted, #8494aa); }
+
+  page .shuttle-detail-panel__empty,
+  page .shuttle-detail-times view,
+  page .shuttle-departure-group--passed .shuttle-detail-times view {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .shuttle-detail-times view { color: var(--campus-primary-strong, #93c5fd); }
+  page .shuttle-departure-group--passed .shuttle-detail-times__selected { color: #fff; background: #475569; }
+
+  page .shuttle-departure-next {
+    color: #6ee7b7;
+    background: var(--campus-surface-success, #102f2e);
+    border-color: #236653;
+  }
+
+  page .shuttle-trip-detail {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .shuttle-trip-detail__head { border-bottom-color: var(--campus-border, #243244); }
+  page .shuttle-trip-detail__head > text,
+  page .shuttle-trip-detail__stops > view > text:last-child,
+  page .shuttle-stop-list__content > text { color: var(--campus-primary-strong, #93c5fd); }
+  page .shuttle-trip-detail__stops > view > text:nth-child(2) { color: var(--campus-text-body, #d7e0ec); }
+  page .shuttle-trip-detail__rail view:first-child,
+  page .shuttle-stop-list__rail view:first-child { border-color: var(--campus-border-strong, #2f4c73); }
+  page .shuttle-trip-detail__rail view:last-child,
+  page .shuttle-stop-list__rail view:last-child { background: var(--campus-border-strong, #2f4c73); }
+
+  page .shuttle-detail-notice {
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.24);
+  }
+
+  page .shuttle-detail-notice > view:last-child text:first-child { color: #fdba74; }
+  page .shuttle-detail-notice > view:last-child text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+  page .shuttle-detail-actions {
+    background: var(--campus-surface-glass, rgba(17, 24, 39, 0.96));
+    border-top-color: var(--campus-border, #243244);
+  }
+
+  // 校历：避免明亮蓝青头图和实色筛选上的白字在暗色下失去对比度。
+  page .calendar-hero,
+  page .calendar-hero--upcoming,
+  page .calendar-hero--finished,
+  page .calendar-hero--unavailable {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0e7490 100%);
+    box-shadow: 0 18rpx 38rpx rgba(0, 0, 0, 0.3);
+  }
+
+  page .calendar-level-switch { background: var(--campus-surface-subtle, #172033); }
+  page .calendar-level-switch__active { background: var(--campus-surface, #111827) !important; }
+  page .calendar-term-switch__active {
+    background: var(--campus-surface-primary, #172554) !important;
+    border-color: var(--campus-border-strong, #2f4c73) !important;
+  }
+
+  page .calendar-filters__active,
+  page .calendar-week-strip__active {
+    color: #fff !important;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+  }
+
+  page .calendar-week-card,
+  page .calendar-event__body,
+  page .calendar-empty {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .calendar-loading view {
+    background: linear-gradient(90deg, #172033 20%, #243244 50%, #172033 80%);
+  }
+
+  page .calendar-empty__mark { border-color: var(--campus-text-muted, #8494aa); }
+  page .calendar-empty__mark view:nth-child(1),
+  page .calendar-empty__mark view:nth-child(2),
+  page .calendar-empty__mark view:nth-child(3) { background: var(--campus-text-muted, #8494aa); }
+
+  page .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-green, #12352f); }
+  page .calendar-event__rail view:last-child { background: var(--campus-border, #243244); }
+  page .calendar-event--holiday .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-pink, #3b202b); }
+  page .calendar-event--exam .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-purple, #2e254c); }
+  page .calendar-event--makeup .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-orange, #3a291a); }
+
+  // 课程颜色在暗色模式中保持可区分，同时避免大面积高亮浅色块。
+  page .timetable-course,
+  page .course-conflict-card {
+    color: #93c5fd;
+    background: #172554;
+    border-color: #28477a;
+  }
+
+  page .timetable-course--blue,
+  page .course-conflict-card--blue { color: #93c5fd; background: #172554; border-color: #28477a; }
+  page .timetable-course--mint,
+  page .course-conflict-card--mint { color: #6ee7b7; background: #12352f; border-color: #236653; }
+  page .timetable-course--lilac,
+  page .course-conflict-card--lilac { color: #c4b5fd; background: #2e254c; border-color: #56458a; }
+  page .timetable-course--sand,
+  page .course-conflict-card--sand { color: #fdba74; background: #3a291a; border-color: #704b27; }
+  page .timetable-course--sky,
+  page .course-conflict-card--sky { color: #67e8f9; background: #12343d; border-color: #22606f; }
+  page .timetable-course--rose,
+  page .course-conflict-card--rose { color: #fda4af; background: #3b202b; border-color: #704052; }
+  page .timetable-course--peach,
+  page .course-conflict-card--peach { color: #fdba8c; background: #3d271e; border-color: #704632; }
+  page .timetable-course--lemon,
+  page .course-conflict-card--lemon { color: #fde68a; background: #38331a; border-color: #6c6127; }
+  page .timetable-course--sage,
+  page .course-conflict-card--sage { color: #a7f3d0; background: #1d352b; border-color: #365f4c; }
+  page .timetable-course--indigo,
+  page .course-conflict-card--indigo { color: #a5b4fc; background: #25294c; border-color: #464d88; }
+  page .timetable-course--coral,
+  page .course-conflict-card--coral { color: #fca5a5; background: #3d2422; border-color: #70433f; }
+
+  page .timetable-course--inactive,
+  page .course-conflict-card--inactive {
+    color: var(--campus-text-muted, #8494aa);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .business-skeleton,
+  page .material-card--skeleton,
+  page .club-card--skeleton,
+  page .shuttle-route-skeleton {
+    background: linear-gradient(90deg, #172033 25%, #243244 50%, #172033 75%);
+    border-color: var(--campus-border, #243244);
+  }
+}

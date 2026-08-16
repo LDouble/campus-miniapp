@@ -1,7 +1,7 @@
 export default definePageConfig({
   enableShareAppMessage: true,
   navigationStyle: 'custom',
-  backgroundColor: '#f4f7fb',
+  backgroundColor: '@backgroundColor',
   enablePullDownRefresh: true,
   usingComponents: {}
 })

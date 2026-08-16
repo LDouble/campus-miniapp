@@ -1,13 +1,13 @@
 page {
-  background: #f4f7fb;
+  background: var(--campus-page, #f4f7fb);
 }
 
 .profile-page {
   min-height: 100vh;
   box-sizing: border-box;
   padding-bottom: calc(168rpx + env(safe-area-inset-bottom));
-  color: #1d293d;
-  background: #f4f7fb;
+  color: var(--campus-text-heading, #1d293d);
+  background: var(--campus-page, #f4f7fb);
 
   &__content {
     padding: 24rpx 32rpx 0;
@@ -19,8 +19,8 @@ page {
   min-height: 176rpx;
   padding: 30rpx;
   align-items: center;
-  background: #fff;
-  border: 1rpx solid #f1f5f9;
+  background: var(--campus-surface, #fff);
+  border: 1rpx solid var(--campus-border, #f1f5f9);
   border-radius: 40rpx;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.03);
 
@@ -34,18 +34,18 @@ page {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    color: #155dfc;
+    color: var(--campus-primary-strong, #155dfc);
     font-size: 36rpx;
     font-weight: 750;
-    background: #eff6ff;
-    border: 4rpx solid #dbeafe;
+    background: var(--campus-surface-primary, #eff6ff);
+    border: 4rpx solid var(--campus-border-strong, #dbeafe);
     border-radius: 50%;
 
     &-image {
       display: block;
       width: 100%;
       height: 100%;
-      background: #eff6ff;
+      background: var(--campus-surface-primary, #eff6ff);
       border-radius: 50%;
     }
   }
@@ -57,7 +57,7 @@ page {
     left: 0;
     padding: 5rpx 0 6rpx;
     color: #fff;
-    font-size: 17rpx;
+    font-size: 19rpx;
     font-weight: 700;
     line-height: 1;
     text-align: center;
@@ -70,7 +70,7 @@ page {
     bottom: 4rpx;
     width: 18rpx;
     height: 18rpx;
-    background: #00d492;
+    background: var(--campus-route-origin, #00d492);
     border: 4rpx solid #fff;
     border-radius: 50%;
   }
@@ -96,12 +96,12 @@ page {
     display: block;
     margin-top: 9rpx;
     color: #2f7f8d;
-    font-size: 20rpx;
+    font-size: 22rpx;
     font-weight: 680;
   }
 
   &__name {
-    color: #1d293d;
+    color: var(--campus-text-heading, #1d293d);
     font-size: 34rpx;
     font-weight: 760;
     line-height: 1.4;
@@ -109,8 +109,8 @@ page {
 
   &__school {
     margin-top: 7rpx;
-    color: #62748e;
-    font-size: 21rpx;
+    color: var(--campus-text-secondary, #62748e);
+    font-size: 23rpx;
     line-height: 1.45;
   }
 
@@ -131,16 +131,16 @@ page {
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    color: #155dfc;
-    font-size: 20rpx;
+    color: var(--campus-primary-strong, #155dfc);
+    font-size: 22rpx;
     font-weight: 700;
-    background: #eff6ff;
-    border: 1rpx solid #dbeafe;
+    background: var(--campus-surface-primary, #eff6ff);
+    border: 1rpx solid var(--campus-border-strong, #dbeafe);
     border-radius: 22rpx;
     transition: background-color 160ms ease, opacity 160ms ease;
 
     &--pressed {
-      background: #dbeafe;
+      background: var(--campus-border-strong, #dbeafe);
       opacity: 0.76;
     }
   }
@@ -159,17 +159,17 @@ page {
       width: 9rpx;
       height: 9rpx;
       margin-right: 7rpx;
-      background: #2b7fff;
+      background: var(--campus-primary, #2b7fff);
       border-radius: 50%;
     }
 
     &--done {
-      color: #62748e;
-      background: #f8fafc;
-      border-color: #f1f5f9;
+      color: var(--campus-text-secondary, #62748e);
+      background: var(--campus-surface-subtle, #f8fafc);
+      border-color: var(--campus-border, #f1f5f9);
 
       > view {
-        background: #90a1b9;
+        background: var(--campus-text-muted, #90a1b9);
       }
     }
   }
@@ -184,8 +184,8 @@ page {
   justify-content: space-between;
   gap: 18rpx;
   color: #e11d48;
-  font-size: 20rpx;
-  background: #fff1f2;
+  font-size: 22rpx;
+  background: var(--campus-surface-danger, #fff1f2);
   border: 1rpx solid #ffe4e6;
   border-radius: 20rpx;
 
@@ -196,7 +196,7 @@ page {
 
   text:last-child {
     flex: none;
-    color: #155dfc;
+    color: var(--campus-primary-strong, #155dfc);
     font-weight: 700;
   }
 }
@@ -204,15 +204,15 @@ page {
 .profile-level {
   padding: 28rpx;
   margin-top: 24rpx;
-  color: #1d293d;
-  background: #fff;
-  border: 1rpx solid #f1f5f9;
+  color: var(--campus-text-heading, #1d293d);
+  background: var(--campus-surface, #fff);
+  border: 1rpx solid var(--campus-border, #f1f5f9);
   border-radius: 32rpx;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.03);
   transition: background-color 160ms ease, opacity 160ms ease;
 
   &--pressed {
-    background: #f8fafc;
+    background: var(--campus-surface-subtle, #f8fafc);
     opacity: 0.82;
   }
 
@@ -227,13 +227,13 @@ page {
     display: block;
 
     &:first-child {
-      color: #62748e;
-      font-size: 20rpx;
+      color: var(--campus-text-secondary, #62748e);
+      font-size: 22rpx;
     }
 
     &:last-child {
       margin-top: 5rpx;
-      color: #1d293d;
+      color: var(--campus-text-heading, #1d293d);
       font-size: 30rpx;
       font-weight: 750;
     }
@@ -247,14 +247,14 @@ page {
     }
 
     text:first-child {
-      color: #155dfc;
+      color: var(--campus-primary-strong, #155dfc);
       font-size: 32rpx;
       font-weight: 750;
     }
 
     text:last-child {
-      color: #90a1b9;
-      font-size: 18rpx;
+      color: var(--campus-text-muted, #90a1b9);
+      font-size: 20rpx;
     }
   }
 
@@ -262,20 +262,20 @@ page {
     height: 12rpx;
     margin-top: 20rpx;
     overflow: hidden;
-    background: #eff6ff;
+    background: var(--campus-surface-primary, #eff6ff);
     border-radius: 999rpx;
 
     view {
       height: 100%;
-      background: #2b7fff;
+      background: var(--campus-primary, #2b7fff);
       border-radius: inherit;
     }
   }
 
   &__foot {
     margin-top: 12rpx;
-    color: #62748e;
-    font-size: 19rpx;
+    color: var(--campus-text-secondary, #62748e);
+    font-size: 21rpx;
 
     text:first-child {
       max-width: 62%;
@@ -299,7 +299,7 @@ page {
   &__title {
     display: block;
     padding: 0 4rpx 14rpx;
-    color: #1d293d;
+    color: var(--campus-text-heading, #1d293d);
     font-size: 28rpx;
     font-weight: 750;
     line-height: 1.4;
@@ -310,8 +310,8 @@ page {
   }
 
   &__hint {
-    color: #90a1b9;
-    font-size: 20rpx;
+    color: var(--campus-text-muted, #90a1b9);
+    font-size: 22rpx;
   }
 }
 
@@ -319,8 +319,8 @@ page {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 12rpx;
-  background: #fff;
-  border: 1rpx solid #f1f5f9;
+  background: var(--campus-surface, #fff);
+  border: 1rpx solid var(--campus-border, #f1f5f9);
   border-radius: 32rpx;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.03);
 
@@ -338,15 +338,15 @@ page {
       max-width: 100%;
       margin-top: 12rpx;
       overflow: hidden;
-      color: #314158;
-      font-size: 23rpx;
+      color: var(--campus-text-body, #314158);
+      font-size: 25rpx;
       font-weight: 650;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     &--pressed {
-      background: #f4f7fb;
+      background: var(--campus-page, #f4f7fb);
       opacity: 0.78;
     }
   }
@@ -357,8 +357,8 @@ page {
     height: 64rpx;
     align-items: center;
     justify-content: center;
-    background: #eff6ff;
-    border: 1rpx solid #dbeafe;
+    background: var(--campus-surface-primary, #eff6ff);
+    border: 1rpx solid var(--campus-border-strong, #dbeafe);
     border-radius: 20rpx;
 
     image {
@@ -371,8 +371,8 @@ page {
 .profile-account-list {
   padding: 0 8rpx;
   overflow: hidden;
-  background: #fff;
-  border: 1rpx solid #f1f5f9;
+  background: var(--campus-surface, #fff);
+  border: 1rpx solid var(--campus-border, #f1f5f9);
   border-radius: 32rpx;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.03);
 }
@@ -382,11 +382,11 @@ page {
   min-height: 108rpx;
   padding: 14rpx 20rpx;
   align-items: center;
-  border-bottom: 1rpx solid #f1f5f9;
+  border-bottom: 1rpx solid var(--campus-border, #f1f5f9);
   transition: background-color 160ms ease, opacity 160ms ease;
 
   &--pressed {
-    background: #f8fafc;
+    background: var(--campus-surface-subtle, #f8fafc);
     opacity: 0.78;
   }
 
@@ -402,7 +402,7 @@ page {
     margin-right: 18rpx;
     align-items: center;
     justify-content: center;
-    background: #eff6ff;
+    background: var(--campus-surface-primary, #eff6ff);
     border-radius: 20rpx;
 
     image {
@@ -423,15 +423,15 @@ page {
     }
 
     text:first-child {
-      color: #314158;
+      color: var(--campus-text-body, #314158);
       font-size: 25rpx;
       font-weight: 680;
     }
 
     text:last-child {
       margin-top: 5rpx;
-      color: #90a1b9;
-      font-size: 20rpx;
+      color: var(--campus-text-muted, #90a1b9);
+      font-size: 22rpx;
     }
   }
 
@@ -448,43 +448,43 @@ page {
   }
 
   &--danger &__icon {
-    background: #fff1f2;
+    background: var(--campus-surface-danger, #fff1f2);
   }
 }
 
 .profile-username-editor {
   padding: 8rpx 20rpx 24rpx 102rpx;
-  border-bottom: 1rpx solid #f1f5f9;
+  border-bottom: 1rpx solid var(--campus-border, #f1f5f9);
 
   &__field {
     display: flex;
     min-height: 84rpx;
     padding: 0 20rpx;
     align-items: center;
-    background: #f4f7fb;
-    border: 1rpx solid #dbeafe;
+    background: var(--campus-page, #f4f7fb);
+    border: 1rpx solid var(--campus-border-strong, #dbeafe);
     border-radius: 20rpx;
 
     input {
       min-width: 0;
       flex: 1;
-      color: #314158;
+      color: var(--campus-text-body, #314158);
       font-size: 25rpx;
     }
 
     > text {
       flex: none;
       margin-left: 12rpx;
-      color: #90a1b9;
-      font-size: 19rpx;
+      color: var(--campus-text-muted, #90a1b9);
+      font-size: 21rpx;
     }
   }
 
   &__hint {
     display: block;
     margin-top: 12rpx;
-    color: #62748e;
-    font-size: 20rpx;
+    color: var(--campus-text-secondary, #62748e);
+    font-size: 22rpx;
     line-height: 1.55;
   }
 
@@ -504,21 +504,21 @@ page {
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    font-size: 23rpx;
+    font-size: 25rpx;
     font-weight: 680;
     border-radius: 20rpx;
     transition: background-color 160ms ease, opacity 160ms ease;
   }
 
   &__cancel {
-    color: #45556c;
-    background: #fff;
+    color: var(--campus-text-body, #45556c);
+    background: var(--campus-surface, #fff);
     border: 1rpx solid #e2e8f0;
   }
 
   &__save {
     color: #fff;
-    background: #2b7fff;
+    background: var(--campus-primary, #2b7fff);
 
     &--disabled {
       opacity: 0.52;

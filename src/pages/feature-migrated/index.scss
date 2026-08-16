@@ -1,15 +1,15 @@
 page {
-  background: #f4f7fb;
+  background: var(--campus-page, #f4f7fb);
 }
 
 .feature-migrated {
   min-height: 100vh;
   padding-bottom: calc(64rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
-  color: #1d293d;
+  color: var(--campus-text-heading, #1d293d);
   background:
-    linear-gradient(180deg, #eff6ff 0, rgba(239, 246, 255, 0) 460rpx),
-    #f4f7fb;
+    linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 460rpx),
+    var(--campus-page, #f4f7fb);
 
   &__content {
     padding: 70rpx 32rpx 0;
@@ -19,9 +19,9 @@ page {
     width: 100%;
     padding: 58rpx 34rpx 38rpx;
     box-sizing: border-box;
-    border: 1rpx solid #e8eef6;
+    border: 1rpx solid var(--campus-border, #e8eef6);
     border-radius: 30rpx;
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     box-shadow: 0 10rpx 30rpx rgba(15, 23, 42, 0.05);
     text-align: center;
   }
@@ -34,7 +34,7 @@ page {
     align-items: center;
     justify-content: center;
     border-radius: 26rpx;
-    background: linear-gradient(135deg, #2b7fff, #00b8e6);
+    background: linear-gradient(135deg, var(--campus-primary, #2b7fff), #00b8e6);
     color: #fff;
     font-size: 42rpx;
     font-weight: 600;
@@ -52,7 +52,7 @@ page {
   &__title {
     margin-top: 24rpx;
     overflow-wrap: anywhere;
-    color: #1d293d;
+    color: var(--campus-text-heading, #1d293d);
     font-size: 34rpx;
     font-weight: 800;
   }
@@ -60,7 +60,7 @@ page {
   &__message {
     margin-top: 14rpx;
     overflow-wrap: anywhere;
-    color: #62748e;
+    color: var(--campus-text-secondary, #62748e);
     font-size: 24rpx;
     line-height: 1.65;
   }
@@ -76,7 +76,7 @@ page {
     box-sizing: border-box;
     overflow-wrap: anywhere;
     border-radius: 22rpx;
-    background: #2b7fff;
+    background: var(--campus-primary, #2b7fff);
     color: #fff;
     font-size: 24rpx;
     font-weight: 700;
@@ -91,8 +91,8 @@ page {
   &__hint {
     margin-top: 18rpx;
     overflow-wrap: anywhere;
-    color: #90a1b9;
-    font-size: 21rpx;
+    color: var(--campus-text-muted, #90a1b9);
+    font-size: 23rpx;
     line-height: 1.5;
   }
 }

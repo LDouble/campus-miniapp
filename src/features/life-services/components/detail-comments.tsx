@@ -17,6 +17,7 @@ import type { CommentTreeNode } from '../../community/comments'
 import CommunityLevelBadge from '../../community/level-badge'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
+import { showActionSheetSelection } from '../../../utils/action-sheet'
 import './detail-comments.scss'
 
 const icons = {
@@ -242,7 +243,7 @@ export default function DetailComments({
     }
   }
 
-  const toggleThread = (comment: CommentView) => {
+  const expandThread = (comment: CommentView) => {
     const thread = threads[comment.id]
     if (!thread?.loaded) {
       if (!thread?.loading) void loadThread(comment.id)
@@ -250,7 +251,7 @@ export default function DetailComments({
     }
     setThreads((current) => ({
       ...current,
-      [comment.id]: { ...current[comment.id], expanded: !current[comment.id].expanded },
+      [comment.id]: { ...current[comment.id], expanded: true },
     }))
   }
 
@@ -412,31 +413,40 @@ export default function DetailComments({
     }
   }
 
+  const openCommentActions = async (comment: CommentView) => {
+    const menuItems: Array<{
+      label: string
+      run: () => void | Promise<void>
+    }> = []
+
+    if (comment.available_actions.includes('withdraw')) {
+      menuItems.push({
+        label: withdrawingId === comment.id ? '删除中' : '删除',
+        run: () => withdraw(comment),
+      })
+    } else if (comment.viewer_relation !== 'author' && comment.viewer_relation !== 'admin') {
+      menuItems.push({
+        label: '举报',
+        run: () => {
+          void openContentReport({
+            resourceType: 'comment',
+            resourceId: comment.id,
+            resourceVersion: comment.version,
+          })
+        },
+      })
+    }
+
+    if (menuItems.length === 0) return
+    const tapIndex = await showActionSheetSelection(menuItems.map((item) => item.label))
+    const selected = tapIndex === null ? null : menuItems[tapIndex]
+    if (selected) await selected.run()
+  }
+
   const renderMeta = (comment: CommentView) => (
     <View className='business-detail-comment__meta'>
       <Text>{formatDateTime(comment.created_at)}</Text>
       {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
-      {comment.available_actions.includes('reply') && (
-        <Text className='business-detail-comment__meta-action' onClick={() => startReply(comment)}>回复</Text>
-      )}
-      {comment.viewer_relation !== 'author' && comment.viewer_relation !== 'admin' && (
-        <Text className='business-detail-comment__meta-action' onClick={() => void openContentReport({
-          resourceType: 'comment',
-          resourceId: comment.id,
-          resourceVersion: comment.version,
-        })}
-        >
-          举报
-        </Text>
-      )}
-      {comment.available_actions.includes('withdraw') && (
-        <Text
-          className='business-detail-comment__meta-action business-detail-comment__meta-action--danger'
-          onClick={() => void withdraw(comment)}
-        >
-          {withdrawingId === comment.id ? '删除中' : '删除'}
-        </Text>
-      )}
     </View>
   )
 
@@ -453,6 +463,7 @@ export default function DetailComments({
           enteringCommentId === comment.id ? 'business-detail-comment-node--entering' : '',
           removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
         ].filter(Boolean).join(' ')}
+        onLongPress={() => void openCommentActions(comment)}
       >
         <View
           className='business-detail-comment__reply-identity'
@@ -503,8 +514,9 @@ export default function DetailComments({
           const descendants = thread?.expanded ? preview : preview.slice(0, 2)
           const members = [comment, ...preview]
           const replyTree = buildCommentTree(comment.id, descendants)
-          const hasThreadAction = Boolean(thread?.expanded)
-            || comment.reply_count > Math.min(preview.length, 2)
+          const hasHiddenReplies = comment.reply_count > Math.min(preview.length, 2)
+          const showThreadAction = Boolean(thread?.loading)
+            || (!thread?.expanded && hasHiddenReplies)
           return (
             <View
               key={comment.id}
@@ -542,13 +554,19 @@ export default function DetailComments({
                     {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
                     <CommunityLevelBadge level={comment.author_level} compact />
                   </View>
-                  <View className='business-detail-comment__bubble' onClick={() => startReply(comment)}>
+                  <View
+                    className='business-detail-comment__bubble'
+                    ariaRole='button'
+                    ariaLabel='点击回复，长按查看更多操作'
+                    onClick={() => startReply(comment)}
+                    onLongPress={() => void openCommentActions(comment)}
+                  >
                     <Text>{comment.content}</Text>
                   </View>
                   {renderMeta(comment)}
-                  {hasThreadAction && (
-                    <View className='business-detail-comment__thread-action' onClick={() => toggleThread(comment)}>
-                      {thread?.loading ? '加载回复中…' : thread?.expanded ? '收起回复' : `查看全部 ${comment.reply_count} 条回复`}
+                  {showThreadAction && (
+                    <View className='business-detail-comment__thread-action' onClick={() => expandThread(comment)}>
+                      {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
                     </View>
                   )}
                 </View>

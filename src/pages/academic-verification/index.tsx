@@ -61,6 +61,11 @@ const educationIcons: Record<AcademicEducationLevel, string> = {
   undergraduate: require('../../assets/icons/study.svg'),
   graduate: require('../../assets/icons/academic.svg'),
 }
+const verificationMethodIcons: Record<VerificationMethod, string> = {
+  credentials: require('../../assets/icons/academic.svg'),
+  student_card: require('../../assets/icons/profile.svg'),
+}
+const securityIcon = require('../../assets/icons/result.svg')
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
@@ -487,6 +492,9 @@ export default function AcademicVerificationPage() {
                 </View>
                 <View
                   className='verification-credential-action'
+                  hoverClass='verification-credential-action--pressed'
+                  ariaRole='button'
+                  ariaLabel='更新教务账号'
                   onClick={() => {
                     setMethod('credentials')
                     setForceCredentialBinding(true)
@@ -496,6 +504,9 @@ export default function AcademicVerificationPage() {
                 </View>
                 <View
                   className='verification-primary'
+                  hoverClass='verification-primary--pressed'
+                  ariaRole='button'
+                  ariaLabel='返回继续使用'
                   onClick={() => void finishAcademicVerification(replacedCurrentPage)}
                 >
                   返回继续使用
@@ -512,28 +523,50 @@ export default function AcademicVerificationPage() {
                   </View>
                 )}
 
-                {!forceCredentialBinding && <View className='verification-methods'>
-                  <View
-                    className={method === 'credentials' ? 'verification-method verification-method--active' : 'verification-method'}
-                    onClick={() => setMethod('credentials')}
-                  >
-                    <View className='verification-method__icon'>校</View>
-                    <View>
-                      <Text>教务账号</Text>
-                      <Text>使用信息门户账号密码</Text>
+                {!forceCredentialBinding && (
+                  <View className='verification-methods-block'>
+                    <View className='verification-methods-heading'>
+                      <Text>选择认证方式</Text>
+                      <Text>可随时切换</Text>
+                    </View>
+                    <View className='verification-methods'>
+                      {([
+                        {
+                          value: 'credentials',
+                          label: '教务账号',
+                          description: '推荐，验证后立即生效',
+                        },
+                        {
+                          value: 'student_card',
+                          label: '学生证认证',
+                          description: '无法登录教务时使用',
+                        },
+                      ] as const).map((item) => (
+                        <View
+                          key={item.value}
+                          className={method === item.value
+                            ? 'verification-method verification-method--active'
+                            : 'verification-method'}
+                          hoverClass='verification-method--pressed'
+                          ariaRole='button'
+                          ariaLabel={`${item.label}，${item.description}`}
+                          onClick={() => setMethod(item.value)}
+                        >
+                          <View className='verification-method__icon'>
+                            <Image src={verificationMethodIcons[item.value]} mode='aspectFit' />
+                          </View>
+                          <View className='verification-method__copy'>
+                            <Text>{item.label}</Text>
+                            <Text>{item.description}</Text>
+                          </View>
+                          <View className='verification-method__check'>
+                            {method === item.value ? '✓' : ''}
+                          </View>
+                        </View>
+                      ))}
                     </View>
                   </View>
-                  <View
-                    className={method === 'student_card' ? 'verification-method verification-method--active' : 'verification-method'}
-                    onClick={() => setMethod('student_card')}
-                  >
-                    <View className='verification-method__icon'>证</View>
-                    <View>
-                      <Text>学生证认证</Text>
-                      <Text>没有可登录教务账号</Text>
-                    </View>
-                  </View>
-                </View>}
+                )}
 
                 {method === 'credentials' && (
                   <View className='verification-form'>
@@ -570,6 +603,8 @@ export default function AcademicVerificationPage() {
                           <View
                             key={item.value}
                             hoverClass='verification-education-option--pressed'
+                            ariaRole='button'
+                            ariaLabel={`${item.label}，${item.description}`}
                             className={[
                               'verification-education-option',
                               `verification-education-option--${item.value}`,
@@ -648,6 +683,9 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View
                       className={`verification-primary ${working || !educationLevel ? 'verification-primary--disabled' : ''}`}
+                      hoverClass='verification-primary--pressed'
+                      ariaRole='button'
+                      ariaLabel='验证并绑定教务账号'
                       onClick={() => void submitCredentials()}
                     >
                       {working && method === 'credentials' ? workingText : '验证并绑定'}
@@ -708,6 +746,9 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View
                       className={`verification-upload ${selectedMaterial ? 'verification-upload--selected' : ''}`}
+                      hoverClass='verification-upload--pressed'
+                      ariaRole='button'
+                      ariaLabel={selectedMaterial ? '更换学生证图片' : '上传学生证图片'}
                       onClick={() => void chooseMaterial()}
                     >
                       {selectedMaterial ? (
@@ -728,6 +769,9 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View
                       className={`verification-primary verification-primary--warm ${working ? 'verification-primary--disabled' : ''}`}
+                      hoverClass='verification-primary--pressed'
+                      ariaRole='button'
+                      ariaLabel='提交学生证人工审核'
                       onClick={() => void submitStudentCard()}
                     >
                       {working && method === 'student_card' ? workingText : '提交人工审核'}
@@ -736,7 +780,9 @@ export default function AcademicVerificationPage() {
                 )}
 
                 <View className='verification-security'>
-                  <View className='verification-security__icon'>盾</View>
+                  <View className='verification-security__icon'>
+                    <Image src={securityIcon} mode='aspectFit' />
+                  </View>
                   <View>
                     <Text>隐私材料受保护</Text>
                     <Text>学生证使用私有加密存储，仅授权审核人员可查看，并按保留策略自动清理。</Text>
