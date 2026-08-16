@@ -69,8 +69,6 @@
 .business-detail-comment__author-badge { padding: 2rpx 9rpx; border-radius: 999rpx; background: var(--campus-surface-primary, #eff6ff); color: var(--campus-primary-strong, #155dfc); font-size: 20rpx; font-weight: 700; }
 .business-detail-comment__bubble { margin-top: 12rpx; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--campus-text-heading, #1d293d); font-size: 26rpx; line-height: 1.6; }
 .business-detail-comment__meta { display: flex; min-height: 54rpx; padding: 8rpx 6rpx 0; align-items: center; gap: 28rpx; color: var(--campus-text-muted, #90a1b9); font-size: 23rpx; }
-.business-detail-comment__meta-action { color: var(--campus-text-secondary, #62748e); font-size: 25rpx; font-weight: 700; }
-.business-detail-comment__meta-action--danger { color: var(--campus-danger, #ff2056); }
 .business-detail-comment__thread-action,
 .business-detail-comment__thread-error { padding: 8rpx 4rpx; color: var(--campus-primary, #2b7fff); font-size: 24rpx; font-weight: 650; }
 .business-detail-comment__thread-error { color: var(--campus-danger, #ff2056); }

@@ -84,6 +84,9 @@ const detailCommentsStyle = readFileSync(
 
 assert.doesNotMatch(detailCommentsSource, /收起回复/u)
 assert.match(detailCommentsSource, /!thread\?\.expanded && hasHiddenReplies/u)
+assert.doesNotMatch(detailCommentsSource, /business-detail-comment__meta-action/u)
+assert.match(detailCommentsSource, /showActionSheetSelection/u)
+assert.match(detailCommentsSource, /onLongPress=\{\(\) => void openCommentActions\(comment\)\}/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__bubble \{[^}]*background: transparent;/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__author \{[^}]*--campus-text-muted/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__reply-identity \{[^}]*--campus-text-muted/u)
