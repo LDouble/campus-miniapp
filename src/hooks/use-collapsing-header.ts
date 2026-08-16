@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import Taro, { usePageScroll, useReady } from '@tarojs/taro'
+import { getSystemState } from '../state/system'
 
 interface CollapsingHeaderOptions {
   threshold?: number
@@ -25,7 +26,7 @@ export function useCollapsingHeader(options: number | CollapsingHeaderOptions = 
       const rect = results[0] as { top?: number } | undefined
       if (typeof rect?.top !== 'number') return
 
-      const statusBarHeight = Taro.getWindowInfo().statusBarHeight || 20
+      const statusBarHeight = getSystemState().windowInfo.statusBarHeight
       thresholdRef.current = Math.max(rect.top - statusBarHeight, 0)
     })
   })

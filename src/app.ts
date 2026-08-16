@@ -6,8 +6,10 @@ import {
   resolveMiniappModule,
 } from './features/runtime-config'
 import { installGlobalErrorReporting } from './features/error-reporting'
+import { installRequestLogging } from './features/request-logging'
 import { requestWechatSubscriptionForCurrentPage } from './features/wechat-subscription'
 import { registerWechatAiHandoff } from './features/wechat-ai/handoff'
+import { initializeSystemState } from './state/system'
 import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
@@ -17,6 +19,8 @@ import './app.scss'
 
 function App(props) {
   useLaunch(() => {
+    initializeSystemState()
+    installRequestLogging()
     if (__CAMPUS_WECHAT_AI_ENABLED__) registerWechatAiHandoff()
   })
 
