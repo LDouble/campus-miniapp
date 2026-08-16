@@ -332,6 +332,188 @@
     background: var(--campus-surface-subtle, #172033);
   }
 
+  // 社区首页、搜索与状态反馈。
+  page .community-page__search-action {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: inset 3rpx 3rpx 9rpx rgba(0, 0, 0, 0.2), inset -2rpx -2rpx 8rpx rgba(148, 163, 184, 0.04);
+  }
+
+  page .community-page .custom-navbar__fixed {
+    border-bottom-color: var(--campus-border, #243244);
+    box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-subtabs__item { color: var(--campus-text-secondary, #aab8ca); }
+  page .community-subtabs__item--active { color: var(--campus-text-heading, #f8fafc); }
+  page .community-subtabs__item--active::after { background: var(--campus-primary, #60a5fa); }
+
+  page .community-module-state {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .community-module-state__mark {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-module-state__title { color: var(--campus-text-heading, #f8fafc); }
+  page .community-module-state__message { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .api-community__filter {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .api-community__filter text:first-child { color: var(--campus-text-body, #d7e0ec); }
+  page .api-community__filter text:last-child { color: var(--campus-text-muted, #8494aa); }
+
+  page .api-community-search__submit {
+    color: #fff;
+    background: linear-gradient(90deg, #2563eb, #0e7490);
+  }
+
+  page .api-community-search__submit--secondary {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-post__avatar-image { background: var(--campus-surface-subtle, #172033); }
+  page .community-post__meta-divider { background: var(--campus-border, #243244); }
+
+  page .community-post__review-status--pending {
+    color: #fbbf24;
+    background: #3a291a;
+  }
+
+  page .community-post__review-status--rejected {
+    color: #fda4af;
+    background: var(--campus-surface-danger, #3f1725);
+  }
+
+  page .community-post__actions { border-top-color: var(--campus-border, #243244); }
+  page .community-post__action--pressed { background: var(--campus-surface-subtle, #172033); }
+
+  page .community-operations__campaign {
+    border: 1rpx solid var(--campus-border, #243244);
+    box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-operations__campaign text:last-child { color: var(--campus-text-muted, #8494aa); }
+
+  page .api-community-state,
+  page .api-community-load-more {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .api-community-state > view:last-child,
+  page .api-community-state--empty > view:first-child {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .api-community-state--empty > text:nth-child(2) { color: var(--campus-text-heading, #f8fafc); }
+  page .api-community-state--empty > text:nth-child(3),
+  page .api-community-state--empty > text:last-child { color: var(--campus-text-muted, #8494aa); }
+  page .api-community-load-more { color: var(--campus-primary-strong, #93c5fd); }
+
+  page .community-feed-skeleton__item {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-feed-skeleton__header > view:first-child,
+  page .community-feed-skeleton__header > view:last-child view {
+    background: var(--campus-border, #243244);
+  }
+
+  page .community-feed-skeleton__line,
+  page .community-feed-skeleton__media {
+    background: linear-gradient(90deg, #172033 25%, #243244 50%, #172033 75%);
+  }
+
+  // 社区弹幕与用户等级徽章。
+  page .fresh-barrage__item {
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .community-level-badge {
+    color: #93c5fd;
+    background: var(--campus-icon-surface-blue, #162a46);
+    border-color: #28477a;
+  }
+
+  page .community-level-badge--dawn { color: #6ee7b7; background: #12352f; border-color: #236653; }
+  page .community-level-badge--coral { color: #fdba8c; background: #3d271e; border-color: #704632; }
+  page .community-level-badge--deepsea { color: #93c5fd; background: #172554; border-color: #28477a; }
+  page .community-level-badge--gold { color: #fde68a; background: #38331a; border-color: #6c6127; }
+
+  // 话题页与动态详情的浅色专属容器。
+  page .community-topic-hero {
+    background: linear-gradient(138deg, #172554 0%, #172033 58%, #12343d 100%);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 42rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .community-topic-hero__glow { background: rgba(96, 165, 250, 0.08); }
+  page .community-topic-hero__action,
+  page .community-topic-empty__action {
+    color: #fff;
+    background: #2563eb;
+  }
+
+  page .community-topic-page__state,
+  page .community-topic-empty {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .community-detail-state {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .community-detail-state view {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-detail-card__image-frame,
+  page .community-detail-card__image-frame image,
+  page .community-detail-card__image-reviewing {
+    color: var(--campus-text-muted, #8494aa);
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .community-detail-card__image-reviewing--overlay {
+    color: #fff;
+    background: rgba(0, 0, 0, 0.68);
+  }
+
+  page .community-detail-card__action,
+  page .community-detail-card__report { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .community-detail-card__review {
+    color: #fdba74;
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.24);
+  }
+
+  page .business-detail-comments {
+    border-top: 1rpx solid var(--campus-border, #243244);
+    box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.24);
+  }
+
   // 跑腿、找同行列表与详情中的浅色业务底，全部切换为暗色语义面。
   page .life-search,
   page .life-search--focused,
