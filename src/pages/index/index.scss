@@ -2416,16 +2416,16 @@ page {
   }
 
   &__pill {
-    color: rgba(255, 255, 255, 0.9);
-    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+    color: var(--campus-primary-strong, #155dfc);
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 4rpx 12rpx rgba(21, 93, 252, 0.12);
   }
 
   &__pulse,
   &--notice &__pulse {
-    background: var(--campus-surface, #fff);
-    box-shadow: 0 0 0 7rpx rgba(255, 255, 255, 0.12);
+    background: var(--campus-primary, #2b7fff);
+    box-shadow: 0 0 0 7rpx rgba(43, 127, 255, 0.12);
   }
 
   &__title {
@@ -2515,6 +2515,18 @@ page {
     filter: none;
     opacity: 0.58;
   }
+}
+
+.hero-card--image .hero-card__pill {
+  color: #fff;
+  background: rgba(15, 23, 42, 0.62);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.18);
+}
+
+.hero-card--image .hero-card__pulse {
+  background: #fff;
+  box-shadow: 0 0 0 7rpx rgba(255, 255, 255, 0.14);
 }
 
 .section-heading {

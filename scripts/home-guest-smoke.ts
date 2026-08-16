@@ -12,6 +12,10 @@ const homeDataSource = readFileSync(
   resolve(__dirname, '../src/features/home/data.ts'),
   'utf8',
 )
+const homeStyleSource = readFileSync(
+  resolve(__dirname, '../src/pages/index/index.scss'),
+  'utf8',
+)
 const homeServiceKeysSource = homeSource.match(
   /const homeServiceKeys = new Set\(\[([\s\S]*?)\]\)/,
 )?.[1] || ''
@@ -61,6 +65,16 @@ assert.ok(
 assert.ok(
   !homeSource.includes('{item.startTime}'),
   '首页课程卡片不得展示具体上课时间',
+)
+assert.match(
+  homeStyleSource,
+  /&__pill\s*\{[\s\S]*?color:\s*var\(--campus-primary-strong,[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*0\.94\)/u,
+  '首页横幅标签必须使用深色文字搭配浅色底，不能白字叠白底',
+)
+assert.match(
+  homeStyleSource,
+  /\.hero-card--image \.hero-card__pill\s*\{[\s\S]*?color:\s*#fff;[\s\S]*?background:\s*rgba\(15,\s*23,\s*42,\s*0\.62\)/u,
+  '图片横幅标签必须使用白字搭配深色遮罩',
 )
 
 const periods: AcademicPeriod[] = [{

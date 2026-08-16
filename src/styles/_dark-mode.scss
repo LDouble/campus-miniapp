@@ -181,6 +181,8 @@
   page .hero-card__title { color: var(--campus-text-heading, #f8fafc); }
   page .hero-card__subtitle { color: var(--campus-text-secondary, #aab8ca); }
   page .hero-card__pill { color: #93c5fd; background: rgba(23, 37, 84, 0.78); border-color: #28477a; }
+  page .hero-card--image .hero-card__pill { color: #fff; background: rgba(11, 18, 32, 0.76); border-color: rgba(203, 213, 225, 0.28); }
+  page .hero-card--image .hero-card__pulse { background: #fff; box-shadow: 0 0 0 7rpx rgba(255, 255, 255, 0.12); }
   page .hero-card__action { color: #93c5fd; }
   page .hero-card__action image { filter: brightness(0) invert(1); opacity: 0.78; }
 
