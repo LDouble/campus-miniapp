@@ -107,6 +107,296 @@
     background: #172554;
   }
 
+  // 功能 SVG 使用固定描边色，暗色下统一提亮；用户上传的照片保持原色。
+  page .campus__chevron,
+  page .icon-button > image,
+  page .schedule-card__summary image,
+  page .today-task__action image,
+  page .section-heading__more image,
+  page .service-panel__all image,
+  page .official-notices-home__more image,
+  page .official-notices-home__arrow,
+  page .news-card__compact-arrow,
+  page .news-card__read image,
+  page .market-panel .section-heading__more image,
+  page .tab-page__card > image,
+  page .module-card__arrow,
+  page .cancellation-blocker__action image,
+  page .profile-identity-entry__arrow,
+  page .materials-search image,
+  page .materials-course-browser__search image,
+  page .community-search-trigger image,
+  page .clubs-search image {
+    filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(436%) hue-rotate(177deg) brightness(94%) contrast(91%);
+    opacity: 0.82;
+  }
+
+  page .community-post__action image,
+  page .community-detail-card__action image,
+  page .business-detail-composer__share image {
+    filter: brightness(1.75) saturate(0.86);
+  }
+
+  page .community-detail-comments__quick-action image {
+    filter: brightness(1.75) saturate(0.86);
+  }
+
+  page .community-post__action--liked image {
+    filter: brightness(1.12) saturate(1.08);
+  }
+
+  // 首页与服务入口：图标承载面改为低亮度色块，保留各服务的识别色。
+  page .campus {
+    background:
+      radial-gradient(circle at 12% 9%, rgba(96, 165, 250, 0.09), transparent 30%),
+      radial-gradient(circle at 96% 24%, rgba(45, 212, 191, 0.07), transparent 29%),
+      var(--campus-page, #0b1220);
+  }
+
+  page .campus__orb--one { background: rgba(251, 146, 60, 0.07); }
+  page .campus__orb--two { background: rgba(45, 212, 191, 0.06); }
+
+  page .campus__avatar,
+  page .campus__avatar-image {
+    background: var(--campus-icon-surface-orange, #3a291a);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.26);
+  }
+
+  page .campus__online { border-color: var(--campus-page, #0b1220); }
+
+  page .icon-button::before {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .hero-card {
+    background: linear-gradient(128deg, #123c48 0%, #172554 54%, #3a291a 100%);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .hero-card__glow { background: rgba(96, 165, 250, 0.12); }
+  page .hero-card__title { color: var(--campus-text-heading, #f8fafc); }
+  page .hero-card__subtitle { color: var(--campus-text-secondary, #aab8ca); }
+  page .hero-card__pill { color: #93c5fd; background: rgba(23, 37, 84, 0.78); border-color: #28477a; }
+  page .hero-card__action { color: #93c5fd; }
+  page .hero-card__action image { filter: brightness(0) invert(1); opacity: 0.78; }
+
+  page .service-panel__grid-icon {
+    background: var(--campus-icon-surface, #172033);
+    box-shadow: 6rpx 6rpx 16rpx rgba(0, 0, 0, 0.22), -2rpx -2rpx 10rpx rgba(148, 163, 184, 0.04);
+  }
+
+  page .service-panel__grid-item--blue .service-panel__grid-icon,
+  page .service-panel__grid-item--key-schedule .service-panel__grid-icon,
+  page .service-panel__grid-item--key-result .service-panel__grid-icon {
+    background: var(--campus-icon-surface-blue, #162a46);
+  }
+
+  page .service-panel__grid-item--cyan .service-panel__grid-icon,
+  page .service-panel__grid-item--key-materials .service-panel__grid-icon,
+  page .service-panel__grid-item--key-carpool .service-panel__grid-icon {
+    background: var(--campus-icon-surface-cyan, #12343d);
+  }
+
+  page .service-panel__grid-item--green .service-panel__grid-icon,
+  page .service-panel__grid-item--key-grades .service-panel__grid-icon,
+  page .service-panel__grid-item--key-shuttle .service-panel__grid-icon,
+  page .service-panel__grid-item--key-classroom .service-panel__grid-icon,
+  page .service-panel__grid-item--key-clubs .service-panel__grid-icon {
+    background: var(--campus-icon-surface-green, #12352f);
+  }
+
+  page .service-panel__grid-item--orange .service-panel__grid-icon,
+  page .service-panel__grid-item--sand .service-panel__grid-icon,
+  page .service-panel__grid-item--key-market .service-panel__grid-icon,
+  page .service-panel__grid-item--key-errands .service-panel__grid-icon {
+    background: var(--campus-icon-surface-orange, #3a291a);
+  }
+
+  page .service-panel__grid-item--purple .service-panel__grid-icon,
+  page .service-panel__grid-item--key-community .service-panel__grid-icon,
+  page .service-panel__grid-item--key-calendar .service-panel__grid-icon {
+    background: var(--campus-icon-surface-purple, #2e254c);
+  }
+
+  page .service-panel__grid-item--pink .service-panel__grid-icon,
+  page .service-panel__grid-item--key-exams .service-panel__grid-icon,
+  page .service-panel__grid-item--key-pass-rate .service-panel__grid-icon {
+    background: var(--campus-icon-surface-pink, #3b202b);
+  }
+
+  page .services-search,
+  page .services-group {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .services-search image,
+  page .module-search image {
+    filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(436%) hue-rotate(177deg) brightness(94%) contrast(91%);
+  }
+
+  page .services-search input { color: var(--campus-text-heading, #f8fafc); }
+  page .services-group__icon { background: var(--campus-icon-surface-blue, #162a46); }
+  page .services-group:nth-of-type(3) .services-group__icon { background: var(--campus-icon-surface-orange, #3a291a); }
+  page .services-group:nth-of-type(4) .services-group__icon { background: var(--campus-icon-surface-purple, #2e254c); }
+  page .services-group__icon image { filter: brightness(1.28) saturate(0.92); }
+
+  page .services-migrated {
+    background: linear-gradient(135deg, #12352f, #3a291a);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .services-migrated__title { color: var(--campus-text-heading, #f8fafc); }
+  page .services-migrated__copy { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .api-community-search,
+  page .api-community-search--focused,
+  page .api-community-search--active:not(.api-community-search--focused) {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: inset 4rpx 4rpx 10rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .api-community-search input { color: var(--campus-text-heading, #f8fafc); }
+  page .api-community-search__clear { color: var(--campus-text-secondary, #aab8ca); background: var(--campus-border, #243244); }
+  page .community-page__search-action image {
+    filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(436%) hue-rotate(177deg) brightness(94%) contrast(91%);
+  }
+
+  page .community-post {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.2);
+  }
+
+  page .community-post__image-frame,
+  page .community-post__image-frame image,
+  page .community-post__image-reviewing {
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  // 跑腿、找同行列表与详情中的浅色业务底，全部切换为暗色语义面。
+  page .life-search,
+  page .life-search--focused,
+  page .life-search--active {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: inset 4rpx 4rpx 10rpx rgba(0, 0, 0, 0.22), inset -2rpx -2rpx 8rpx rgba(148, 163, 184, 0.04);
+  }
+
+  page .errand-card,
+  page .carpool-card,
+  page .marketplace-card {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .errand-route,
+  page .carpool-route,
+  page .business-route,
+  page .detail-route--horizontal,
+  page .detail-important-card,
+  page .carpool-detail-route-card {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .business-card-avatar--errand {
+    color: #fdba74;
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.28);
+  }
+
+  page .business-card-avatar--carpool {
+    color: #a5b4fc;
+    background: var(--campus-icon-surface-purple, #2e254c);
+    border-color: rgba(165, 180, 252, 0.24);
+  }
+
+  page .business-status--errand,
+  page .life-detail--errands .detail-overview__badges text:first-child {
+    color: #fdba74;
+    background: var(--campus-surface-errand, #3a2416);
+  }
+
+  page .business-status--carpool,
+  page .life-detail--carpool .detail-overview__badges text:first-child {
+    color: #5eead4;
+    background: var(--campus-surface-success, #102f2e);
+  }
+
+  page .life-panel--errands .life-panel__mine,
+  page .life-detail--errands .detail-inline-action {
+    color: #fdba74;
+  }
+
+  page .life-detail--errands .detail-inline-action {
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.28);
+  }
+
+  page .detail-important-card__row,
+  page .detail-important-card__grid > view {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .detail-important-card__grid { background: var(--campus-border, #243244); border-color: var(--campus-border, #243244); }
+
+  // 无图商品与媒体上传占位属于 UI 插画，不按真实照片处理。
+  page .marketplace-card__cover,
+  page .marketplace-card__placeholder,
+  page .marketplace-card__placeholder--tone-1,
+  page .marketplace-card__placeholder--tone-2,
+  page .marketplace-card__placeholder--tone-3,
+  page .marketplace-card--wanted .marketplace-card__placeholder,
+  page .media-image-editor__preview,
+  page .media-image-editor__add {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .marketplace-card__placeholder-headline { color: var(--campus-text-heading, #f8fafc); }
+  page .marketplace-card__placeholder-kicker { color: var(--campus-text-muted, #8494aa); }
+  page .media-image-editor__add image { filter: brightness(1.55) saturate(0.82); }
+
+  // 旧模块页和迁移提示页仍会作为兜底入口出现，避免亮色插画底泄漏。
+  page .tab-page,
+  page .module {
+    background: var(--campus-page, #0b1220);
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .tab-page__hero,
+  page .module-hero {
+    background: linear-gradient(135deg, #123c48, #172554 56%, #3a291a);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.26);
+  }
+
+  page .tab-page__hero-icon,
+  page .module-hero__icon,
+  page .module-stats,
+  page .module-search,
+  page .tab-page__quick view,
+  page .tab-page__card {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .tab-page__hero-icon image,
+  page .module-hero__icon image { filter: brightness(1.3) saturate(0.9); }
+
+  page .module-search input,
+  page .tab-page__card { color: var(--campus-text-heading, #f8fafc); }
+
   page .campus-service {
     color: var(--campus-text-heading, #f8fafc);
     background: var(--campus-page, #0b1220);
