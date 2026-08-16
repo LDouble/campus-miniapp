@@ -242,7 +242,7 @@ export default function DetailComments({
     }
   }
 
-  const toggleThread = (comment: CommentView) => {
+  const expandThread = (comment: CommentView) => {
     const thread = threads[comment.id]
     if (!thread?.loaded) {
       if (!thread?.loading) void loadThread(comment.id)
@@ -250,7 +250,7 @@ export default function DetailComments({
     }
     setThreads((current) => ({
       ...current,
-      [comment.id]: { ...current[comment.id], expanded: !current[comment.id].expanded },
+      [comment.id]: { ...current[comment.id], expanded: true },
     }))
   }
 
@@ -503,8 +503,9 @@ export default function DetailComments({
           const descendants = thread?.expanded ? preview : preview.slice(0, 2)
           const members = [comment, ...preview]
           const replyTree = buildCommentTree(comment.id, descendants)
-          const hasThreadAction = Boolean(thread?.expanded)
-            || comment.reply_count > Math.min(preview.length, 2)
+          const hasHiddenReplies = comment.reply_count > Math.min(preview.length, 2)
+          const showThreadAction = Boolean(thread?.loading)
+            || (!thread?.expanded && hasHiddenReplies)
           return (
             <View
               key={comment.id}
@@ -546,9 +547,9 @@ export default function DetailComments({
                     <Text>{comment.content}</Text>
                   </View>
                   {renderMeta(comment)}
-                  {hasThreadAction && (
-                    <View className='business-detail-comment__thread-action' onClick={() => toggleThread(comment)}>
-                      {thread?.loading ? '加载回复中…' : thread?.expanded ? '收起回复' : `查看全部 ${comment.reply_count} 条回复`}
+                  {showThreadAction && (
+                    <View className='business-detail-comment__thread-action' onClick={() => expandThread(comment)}>
+                      {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
                     </View>
                   )}
                 </View>

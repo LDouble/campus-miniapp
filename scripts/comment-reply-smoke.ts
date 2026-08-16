@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   buildCampusCircleCommentInput,
   buildCommentTree,
@@ -70,5 +72,20 @@ assert.equal(
   noticeActionRoute('/api/v1/campus-circle/posts/12?comment_id=44'),
   '/pages/community/detail?id=12&mode=post&comment_id=44',
 )
+
+const detailCommentsSource = readFileSync(
+  resolve(__dirname, '../src/features/life-services/components/detail-comments.tsx'),
+  'utf8',
+)
+const detailCommentsStyle = readFileSync(
+  resolve(__dirname, '../src/features/life-services/components/detail-comments.scss'),
+  'utf8',
+)
+
+assert.doesNotMatch(detailCommentsSource, /收起回复/u)
+assert.match(detailCommentsSource, /!thread\?\.expanded && hasHiddenReplies/u)
+assert.match(detailCommentsStyle, /\.business-detail-comment__bubble \{[^}]*background: transparent;/u)
+assert.match(detailCommentsStyle, /\.business-detail-comment__author \{[^}]*--campus-text-muted/u)
+assert.match(detailCommentsStyle, /\.business-detail-comment__reply-identity \{[^}]*--campus-text-muted/u)
 
 console.log('comment reply smoke: ok')
