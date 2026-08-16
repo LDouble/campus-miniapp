@@ -12,6 +12,7 @@ import type {
   AcademicGrade,
   AcademicPeriod as AcademicPeriodDTO,
 } from '../../api/types'
+import type { AcademicQueryResult } from '../../api/academic'
 import { apiDateTimeCampusParts } from '../../utils/date-time'
 import {
   AcademicPeriod,
@@ -111,19 +112,27 @@ const mapCourseSelection = (
 
 export interface AcademicRepository {
   getPeriods: () => Promise<AcademicPeriod[]>
-  getCourses: (periodId: string) => Promise<Course[]>
-  getGrades: () => Promise<GradeRecord[]>
-  getExams: (periodId: string) => Promise<ExamRecord[]>
-  getCourseSelections: (periodId: string) => Promise<CourseSelectionRecord[]>
+  getCourses: (periodId: string) => Promise<AcademicQueryResult<Course>>
+  getGrades: () => Promise<AcademicQueryResult<GradeRecord>>
+  getExams: (periodId: string) => Promise<AcademicQueryResult<ExamRecord>>
+  getCourseSelections: (periodId: string) => Promise<AcademicQueryResult<CourseSelectionRecord>>
 }
 
-let pendingGradeRequest: Promise<GradeRecord[]> | null = null
+const mapQueryResult = <Source, Target>(
+  result: AcademicQueryResult<Source>,
+  map: (record: Source) => Target,
+): AcademicQueryResult<Target> => ({
+  records: result.records.map(map),
+  ...(result.cache ? { cache: result.cache } : {}),
+})
+
+let pendingGradeRequest: Promise<AcademicQueryResult<GradeRecord>> | null = null
 
 const getGrades = () => {
   if (pendingGradeRequest) return pendingGradeRequest
-  let tracked: Promise<GradeRecord[]>
+  let tracked: Promise<AcademicQueryResult<GradeRecord>>
   tracked = listAcademicGrades()
-    .then((records) => records.map(mapGrade))
+    .then((result) => mapQueryResult(result, mapGrade))
     .finally(() => {
       if (pendingGradeRequest === tracked) pendingGradeRequest = null
     })
@@ -133,10 +142,11 @@ const getGrades = () => {
 
 export const academicRepository: AcademicRepository = {
   getPeriods: async () => (await listAcademicPeriods()).map(mapPeriod),
-  getCourses: async (periodId) => (await listAcademicCourses(periodId)).map(mapCourse),
+  getCourses: async (periodId) => mapQueryResult(await listAcademicCourses(periodId), mapCourse),
   getGrades,
-  getExams: async (periodId) => (await listAcademicExams(periodId)).map(mapExam),
-  getCourseSelections: async (periodId) => (
-    await listAcademicCourseSelections(periodId)
-  ).map(mapCourseSelection),
+  getExams: async (periodId) => mapQueryResult(await listAcademicExams(periodId), mapExam),
+  getCourseSelections: async (periodId) => mapQueryResult(
+    await listAcademicCourseSelections(periodId),
+    mapCourseSelection,
+  ),
 }
