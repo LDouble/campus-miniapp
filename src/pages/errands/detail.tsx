@@ -5,6 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import type { ErrandView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { consumeBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { openAcademicVerification } from '../../features/academic-verification/guard'
 import { openContentReport } from '../../features/content-report'
@@ -61,11 +62,21 @@ export default function ErrandDetailPage() {
   useLoad((options) => {
     const nextId = Number(options.id)
     setId(nextId)
-    if (nextId > 0) void load(nextId)
-    else {
+    if (nextId <= 0) {
       setLoading(false)
       setError('任务参数无效')
+      return
     }
+    const snapshot = options.snapshot === '1'
+      ? consumeBusinessDetailSnapshot('errand', nextId)
+      : null
+    if (snapshot) {
+      setItem(snapshot)
+      setError('')
+      setLoading(false)
+      return
+    }
+    void load(nextId)
   })
   usePullDownRefresh(() => void load())
 

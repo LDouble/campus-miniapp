@@ -30,6 +30,8 @@ import {
 } from '../../features/life-services/format'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import { saveBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
 import './index.scss'
 
 type Section = 'published' | 'errands' | 'orders' | 'carpool'
@@ -204,16 +206,20 @@ const openBusinessRecord = (item: RecordItem) => {
     }
   } else if ('pickup_location' in item) {
     module = 'errand'
-    url = `/pages/errands/detail?id=${item.id}`
+    saveBusinessDetailSnapshot('errand', item)
+    url = `/pages/errands/detail?id=${item.id}&snapshot=1`
   } else if ('price_cents' in item) {
     module = 'marketplace'
-    url = `/pages/marketplace/detail?id=${item.id}`
+    saveBusinessDetailSnapshot('marketplace', item)
+    url = `/pages/marketplace/detail?id=${item.id}&snapshot=1`
   } else if ('departure_at' in item) {
     module = 'carpool'
-    url = `/pages/carpool/detail?id=${item.id}`
+    saveBusinessDetailSnapshot('carpool', item)
+    url = `/pages/carpool/detail?id=${item.id}&snapshot=1`
   } else {
     module = 'community'
-    url = `/pages/community/detail?id=${item.id}&mode=post`
+    saveCommunityDetailSnapshot(item as CampusCirclePostView)
+    url = `/pages/community/detail?id=${item.id}&mode=post&snapshot=1`
   }
   requestWechatSubscriptionForModule(module)
   Taro.navigateTo({ url })

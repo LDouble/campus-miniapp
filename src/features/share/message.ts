@@ -17,6 +17,12 @@ export type CampusShareMessage = {
   imageUrl?: string
 }
 
+export type CampusShareTimelineMessage = {
+  title: string
+  query?: string
+  imageUrl?: string
+}
+
 const normalizedTitle = (value?: string) => (
   (value || '').replace(/\s+/g, ' ').trim()
 )
@@ -49,4 +55,19 @@ export const buildCampusShareMessage = ({
     path: buildSharePath(path, query),
   }
   return safeImageUrl ? { ...message, imageUrl: safeImageUrl } : message
+}
+
+export const buildCampusShareTimelineMessage = (
+  input: CampusShareInput,
+): CampusShareTimelineMessage => {
+  const message = buildCampusShareMessage(input)
+  const queryStart = message.path.indexOf('?')
+  const query = queryStart >= 0 ? message.path.slice(queryStart + 1) : ''
+  const timelineMessage: CampusShareTimelineMessage = {
+    title: message.title,
+    ...(query ? { query } : {}),
+  }
+  return message.imageUrl
+    ? { ...timelineMessage, imageUrl: message.imageUrl }
+    : timelineMessage
 }

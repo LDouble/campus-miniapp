@@ -5,15 +5,17 @@ import UserAvatarImage from '../../../components/user-avatar-image'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
 import { campusLabel } from '../campus'
+import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
 import {
   formatDateTime,
   formatStatus,
   remainingSeats,
 } from '../format'
 
-const openDetail = (id: number) => {
+const openDetail = (item: CarpoolTripView) => {
   requestWechatSubscriptionForModule('carpool')
-  Taro.navigateTo({ url: `/pages/carpool/detail?id=${id}` })
+  saveBusinessDetailSnapshot('carpool', item)
+  Taro.navigateTo({ url: `/pages/carpool/detail?id=${item.id}&snapshot=1` })
 }
 
 const timeParts = (value: string) => {
@@ -36,7 +38,7 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
       id={`carpool-card-${item.id}`}
       className='carpool-card'
       hoverClass='business-card--pressed'
-      onClick={() => openDetail(item.id)}
+      onClick={() => openDetail(item)}
     >
       <View className='business-card-header'>
         <View className='business-card-avatar business-card-avatar--carpool'>

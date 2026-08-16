@@ -3208,13 +3208,16 @@ page {
 .grade-card {
   &--simulation { border-color: #bfdbfe; }
 
-  &__changed,
-  &__converted {
+  &__changed {
     color: var(--campus-primary-strong, #155dfc);
     background: var(--campus-surface-primary, #eff6ff);
   }
 
-  &__converted { padding: 0; }
+  &__converted {
+    padding: 0;
+    color: var(--campus-primary-strong, #155dfc);
+    background: transparent;
+  }
 }
 
 .grade-level-options {

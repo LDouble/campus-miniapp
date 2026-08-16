@@ -90,10 +90,85 @@ assert.doesNotMatch(detailCommentsSource, /收起回复/u)
 assert.match(detailCommentsSource, /!thread\?\.expanded && hasHiddenReplies/u)
 assert.doesNotMatch(detailCommentsSource, /business-detail-comment__meta-action/u)
 assert.match(detailCommentsSource, /showActionSheetSelection/u)
-assert.match(detailCommentsSource, /onLongPress=\{\(\) => void openCommentActions\(comment\)\}/u)
+assert.match(detailCommentsSource, /onLongPress=\{\(\) => onOpenActions\(comment\)\}/u)
+assert.match(detailCommentsSource, /const DetailCommentThread = memo/u)
+assert.match(detailCommentsSource, /const \{ descendants, memberNames, replyTree, showThreadAction \} = useMemo/u)
+assert.match(detailCommentsSource, /const existingIds = new Set\(current\.map\(\(entry\) => entry\.id\)\)/u)
+assert.match(detailCommentsSource, /threadInFlightRef/u)
+assert.match(detailCommentsSource, /clearPendingTimers/u)
+const startReplySource = detailCommentsSource.match(
+  /const startReply = useCallback\([\s\S]*?\n  const finishComposerClose/u,
+)?.[0] || ''
+assert.match(startReplySource, /setReplyTarget\(comment\)[\s\S]*openComposer\(\)/u)
+assert.doesNotMatch(startReplySource, /loadThread|updateThreads|getCommentThread/u)
+assert.match(detailCommentsSource, /const COMPOSER_CLOSE_DURATION = 180/u)
+assert.match(detailCommentsSource, /const \[composerClosing, setComposerClosing\] = useState\(false\)/u)
+assert.match(detailCommentsSource, /const shouldFollowKeyboard = inputFocused \|\| keyboardHeight > 0/u)
+assert.match(detailCommentsSource, /setComposerClosing\(true\)[\s\S]*setInputFocused\(false\)[\s\S]*Taro\.hideKeyboard/u)
+assert.match(detailCommentsSource, /composerCloseSequenceRef\.current === closeSequence/u)
+assert.match(detailCommentsSource, /scheduleTimeout\(\(\) => \{[\s\S]*finishComposerClose\(\)[\s\S]*keyboardTransitionDuration \+ 120/u)
+assert.match(detailCommentsSource, /const handleKeyboardHeightChange = useCallback/u)
+assert.match(detailCommentsSource, /const handleComposerBlur = useCallback/u)
+assert.match(detailCommentsSource, /if \(!composerClosingRef\.current\) closeComposer\(\)/u)
+assert.match(detailCommentsSource, /onBlur=\{handleComposerBlur\}/u)
+assert.match(detailCommentsSource, /event\.detail\.duration/u)
+assert.match(detailCommentsSource, /transitionDuration: `\$\{keyboardTransitionDuration\}ms`/u)
+assert.match(detailCommentsSource, /onKeyboardHeightChange=\{handleKeyboardHeightChange\}/u)
+assert.doesNotMatch(detailCommentsSource, /onKeyboardVisibilityChange=/u)
+assert.doesNotMatch(
+  detailCommentsSource,
+  /business-detail-composer__control-spacer/u,
+  '发布箭头右侧不得保留透明占位',
+)
+assert.doesNotMatch(
+  detailCommentsStyle,
+  /business-detail-composer__control-spacer/u,
+  '发布箭头占位样式应同步移除',
+)
+assert.match(detailCommentsSource, /catchMove=\{composerOpen && !composerClosing\}/u)
+assert.match(detailCommentsSource, /onTouchStart=\{composerOpen && !composerClosing \? closeComposer : undefined\}/u)
+assert.doesNotMatch(detailCommentsSource, /\{composerOpen && \([\s\S]*business-detail-composer__backdrop/u)
+assert.match(detailCommentsSource, /<Text onTouchStart=\{closeComposer\}>取消<\/Text>/u)
+assert.match(detailCommentsSource, /placeholder=\{replyTarget \? '写下回复\.\.\.' : placeholder\}/u)
+assert.doesNotMatch(
+  detailCommentsSource,
+  /placeholder=\{replyTarget \? `@\$\{compactCommentName/u,
+  '回复对象已在输入框上方展示，输入框中不得重复显示',
+)
+assert.match(detailCommentsSource, /\{enabled \? \([\s\S]*<KeyboardSafeTextarea/u)
+assert.match(detailCommentsSource, /focus=\{composerOpen && inputFocused\}/u)
+assert.doesNotMatch(detailCommentsSource, /business-detail-composer__collapsed-input/u)
+assert.match(detailCommentsSource, /transform: `translate3d\(0, -\$\{keyboardHeight\}px, 0\)`/u)
+assert.doesNotMatch(detailCommentsSource, /style=\{\{ bottom: `\$\{keyboardHeight\}px` \}\}/u)
+assert.match(detailCommentsSource, /className='business-detail-comments__skeleton'/u)
+assert.match(detailCommentsSource, /\[0, 1, 2\]\.map\(\(index\) =>/u)
+assert.match(detailCommentsSource, /!loading && comments\.length === 0/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__bubble \{[^}]*background: transparent;/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__author \{[^}]*--campus-text-muted/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__reply-identity \{[^}]*--campus-text-muted/u)
+assert.match(detailCommentsStyle, /\.business-detail-comments__skeleton \{[^}]*min-height: 474rpx;/u)
+assert.match(detailCommentsStyle, /business-detail-comments-skeleton-shimmer/u)
+assert.match(detailCommentsStyle, /@media \(prefers-reduced-motion: reduce\)[\s\S]*business-detail-comments__skeleton-avatar/u)
+assert.match(detailCommentsStyle, /\.business-detail-composer \{[\s\S]*background: var\(--campus-surface, #fff\);/u)
+assert.doesNotMatch(detailCommentsStyle, /\.business-detail-composer \{[\s\S]*?backdrop-filter:/u)
+assert.match(detailCommentsStyle, /\.business-detail-composer \{[\s\S]*transition: transform 180ms ease-out;/u)
+assert.match(detailCommentsStyle, /\.business-detail-composer__backdrop \{[^}]*pointer-events: none;/u)
+assert.match(detailCommentsStyle, /\.business-detail-composer__backdrop--active \{ pointer-events: auto; \}/u)
+assert.match(
+  detailCommentsStyle,
+  /\.business-detail-composer textarea \{[^}]*border: 1rpx solid var\(--campus-border, #e8eef6\);[^}]*background: transparent;/u,
+  '回复输入框不得使用横向铺满的灰色背景',
+)
+assert.match(
+  detailCommentsStyle,
+  /\.business-detail-composer__replying text:last-child \{[^}]*color: var\(--campus-text-secondary, #62748e\);/u,
+  '取消回复应使用中性色，避免呈现为危险操作',
+)
+assert.doesNotMatch(
+  detailCommentsStyle,
+  /\.business-detail-composer__replying text:last-child \{[^}]*--campus-danger/u,
+  '取消回复不得使用危险红色',
+)
 assert.match(communityDetailStyle, /\.community-detail-card \+ \.business-detail-comments \{[^}]*margin-top: 0;[^}]*padding-top: 30rpx;/u)
 
 console.log('comment reply smoke: ok')

@@ -438,30 +438,60 @@
   border: 2rpx solid var(--campus-border, #f1f5f9);
   border-radius: 22rpx;
 
-  input {
+  &__field {
+    position: relative;
     min-width: 0;
     flex: 1;
+  }
+
+  input {
+    position: relative;
+    z-index: 1;
+    width: 100%;
     background: transparent;
     border: 0;
     border-radius: 0;
+
+    &.verification-password-control__input--masked {
+      color: transparent;
+    }
+  }
+
+  &__mask {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 0 22rpx;
+    color: var(--campus-text-heading, #1d293d);
+    font-size: 26rpx;
+    line-height: 88rpx;
+    white-space: nowrap;
+    pointer-events: none;
   }
 
   &__toggle {
     display: flex;
-    min-width: 96rpx;
+    width: 88rpx;
     min-height: 88rpx;
-    padding: 0 18rpx;
+    flex: none;
     align-items: center;
     justify-content: center;
-    color: var(--campus-primary, #2b7fff);
-    font-size: 24rpx;
-    font-weight: 700;
     transition: background-color 160ms ease, opacity 160ms ease;
 
     &--pressed {
       background: var(--campus-surface-primary, #eff6ff);
       opacity: 0.72;
     }
+  }
+
+  &__toggle-icon {
+    width: 38rpx;
+    height: 38rpx;
   }
 }
 

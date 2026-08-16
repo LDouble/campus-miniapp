@@ -12,6 +12,7 @@ import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatarImage from '../../components/user-avatar-image'
 import CommunityPostCard from '../../features/community/post-card'
+import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
 import '../../features/community/feed-panel.scss'
 import CarpoolCard from '../../features/life-services/components/carpool-card'
 import ErrandCard from '../../features/life-services/components/errand-card'
@@ -177,11 +178,12 @@ export default function PublicProfilePage() {
     return profile.counts.carpool_trips
   }
 
-  const openCommunityPost = (post: CampusCirclePostView) => {
-    void Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post` })
-  }
+  const openCommunityPost = useCallback((post: CampusCirclePostView) => {
+    saveCommunityDetailSnapshot(post)
+    void Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
 
-  const toggleLike = async (post: CampusCirclePostView) => {
+  const toggleLike = useCallback(async (post: CampusCirclePostView) => {
     try {
       const updated = post.liked
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
@@ -202,7 +204,7 @@ export default function PublicProfilePage() {
         icon: 'none',
       })
     }
-  }
+  }, [])
 
   const renderItems = () => {
     if (activeTab === 'community') {
@@ -213,7 +215,7 @@ export default function PublicProfilePage() {
               key={post.id}
               post={post}
               sectionName='校园社区'
-              onToggleLike={(item) => void toggleLike(item)}
+              onToggleLike={toggleLike}
               onOpen={openCommunityPost}
             />
           ))}

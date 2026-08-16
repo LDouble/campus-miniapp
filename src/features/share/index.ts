@@ -1,14 +1,19 @@
-import { useShareAppMessage } from '@tarojs/taro'
-import { buildCampusShareMessage } from './message'
+import { useShareAppMessage, useShareTimeline } from '@tarojs/taro'
+import {
+  buildCampusShareMessage,
+  buildCampusShareTimelineMessage,
+} from './message'
 import type { CampusShareInput } from './message'
 
 export {
   buildCampusShareMessage,
+  buildCampusShareTimelineMessage,
   buildSharePath,
 } from './message'
 export type {
   CampusShareInput,
   CampusShareMessage,
+  CampusShareTimelineMessage,
 } from './message'
 
 export type CampusShareEvent = {
@@ -23,5 +28,8 @@ export const useCampusShare = (
 ) => {
   useShareAppMessage((event) => buildCampusShareMessage(
     factory(event as CampusShareEvent),
+  ))
+  useShareTimeline(() => buildCampusShareTimelineMessage(
+    factory({ from: 'menu' }),
   ))
 }
