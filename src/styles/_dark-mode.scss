@@ -665,6 +665,456 @@
     color: var(--campus-text-secondary, #aab8ca);
   }
 
+  // 通用底部浮层：遮罩、承载面与顶部抓手都使用暗色语义层级。
+  page .bottom-sheet-layer,
+  page .academic-overlay,
+  page .course-float-layer {
+    background: rgba(0, 0, 0, 0.68);
+  }
+
+  page .bottom-sheet {
+    background: var(--campus-surface, #111827);
+    border-top: 1rpx solid var(--campus-border, #243244);
+    box-shadow: var(--campus-shadow-sheet, 0 -8rpx 32rpx rgba(0, 0, 0, 0.32));
+  }
+
+  page .bottom-sheet__handle { background: var(--campus-border-strong, #2f4c73); }
+  page .bottom-sheet__header { border-bottom-color: var(--campus-border, #243244); }
+
+  // 课表、成绩、考场与选课：重点覆盖学期、周次、详情及编辑浮层。
+  page .academic-page > .custom-navbar .custom-navbar__fixed,
+  page .academic-header,
+  page .academic-header--schedule {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .academic-sheet,
+  page .course-float-card {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 -18rpx 54rpx rgba(0, 0, 0, 0.36);
+  }
+
+  page .academic-sheet__handle,
+  page .course-float-card__handle { background: var(--campus-border-strong, #2f4c73); }
+
+  page .academic-sheet__close,
+  page .course-float-card__close {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-border, #243244);
+  }
+
+  page .course-float-card__eyebrow { color: #fdba74; }
+  page .course-float-card__title { color: var(--campus-text-heading, #f8fafc); }
+  page .course-float-card__copy { color: var(--campus-text-muted, #8494aa); }
+
+  page .period-options__item,
+  page .week-options__item,
+  page .grade-level-options > view,
+  page .academic-field input,
+  page .form-chip,
+  page .stepper,
+  page .form-weeks view,
+  page .detail-list {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .period-options__item text:first-child,
+  page .academic-field input,
+  page .stepper text,
+  page .detail-list text:last-child { color: var(--campus-text-body, #d7e0ec); }
+
+  page .period-options__item text:last-child,
+  page .academic-field__label-line text:last-child,
+  page .detail-list text:first-child { color: var(--campus-text-muted, #8494aa); }
+
+  page .period-options__item--active,
+  page .week-options__item--active,
+  page .form-chip--active,
+  page .form-weeks__active,
+  page .grade-level-options__item--active,
+  page .academic-check__box--active,
+  page .academic-check--active .academic-check__box {
+    color: #fff !important;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 8rpx 18rpx rgba(37, 99, 235, 0.26);
+  }
+
+  page .period-options__item--active text,
+  page .week-options__item--active text { color: #fff !important; }
+
+  page .period-options__item--active .period-options__check {
+    color: #1d4ed8;
+    background: #dbeafe;
+  }
+
+  page .academic-check { color: var(--campus-text-body, #d7e0ec); }
+  page .academic-check__box { background: var(--campus-surface, #111827); border-color: var(--campus-border-strong, #2f4c73); }
+
+  page .academic-button {
+    color: #fff;
+    background: #2563eb;
+  }
+
+  page .academic-button--secondary {
+    color: #fda4af;
+    background: var(--campus-surface-danger, #3f1725);
+  }
+
+  page .academic-toolbar__mode-actions view + view,
+  page .academic-fab,
+  page .day-strip__item--active {
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #0e7490);
+  }
+
+  page .grade-summary,
+  page .grade-summary--original,
+  page .grade-summary--simulation {
+    background:
+      radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.12), transparent 32%),
+      linear-gradient(135deg, #1d4ed8, #155e75);
+    box-shadow: 0 14rpx 34rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .grade-card,
+  page .exam-card,
+  page .selection-card,
+  page .day-course,
+  page .academic-load-state,
+  page .exam-hero,
+  page .selection-hero {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 7rpx 22rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .timetable {
+    background: var(--campus-surface, #111827);
+    border-top-color: var(--campus-border, #243244);
+  }
+
+  page .timetable__header,
+  page .timetable__time {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .timetable__cell { border-color: var(--campus-border, #243244); }
+  page .timetable__cell--conflict { background: var(--campus-surface-danger, #3f1725); }
+  page .day-course__main { border-left-color: var(--campus-border, #243244); }
+
+  page .exam-hero__mark,
+  page .selection-hero__seal { border-color: var(--campus-border-strong, #2f4c73); }
+  page .grade-card--selected,
+  page .grade-card--simulation { border-color: var(--campus-border-strong, #2f4c73); }
+
+  page .selection-tabs {
+    background: var(--campus-border, #243244);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .selection-tabs__item--active {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .selection-card__status,
+  page .selection-detail__badge {
+    color: #6ee7b7;
+    background: var(--campus-surface-success, #102f2e);
+  }
+
+  page .selection-card__status--pending,
+  page .selection-detail__badge--pending { color: #fbbf24; background: #3a291a; }
+  page .selection-card__status--failed,
+  page .selection-detail__badge--failed { color: #fda4af; background: var(--campus-surface-danger, #3f1725); }
+
+  page .course-switcher__item {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .course-switcher__item text:last-child { color: var(--campus-text-muted, #8494aa); }
+  page .course-switcher__item--active {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
+
+  page .course-switcher__item--active text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+
+  page .course-conflict-card__actions > view {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: rgba(17, 24, 39, 0.72);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .course-conflict-card__actions > view:first-child { color: #fda4af; }
+
+  page .course-detail__tone,
+  page .color-options__item { color: #93c5fd; background: var(--campus-icon-surface-blue, #162a46); }
+  page .course-detail__tone--mint,
+  page .color-options__item--mint,
+  page .course-detail__tone--sage,
+  page .color-options__item--sage { color: #6ee7b7; background: #12352f; }
+  page .course-detail__tone--lilac,
+  page .color-options__item--lilac,
+  page .course-detail__tone--indigo,
+  page .color-options__item--indigo { color: #c4b5fd; background: #2e254c; }
+  page .course-detail__tone--sand,
+  page .color-options__item--sand,
+  page .course-detail__tone--lemon,
+  page .color-options__item--lemon { color: #fde68a; background: #38331a; }
+  page .course-detail__tone--sky,
+  page .color-options__item--sky { color: #67e8f9; background: #12343d; }
+  page .course-detail__tone--rose,
+  page .color-options__item--rose,
+  page .course-detail__tone--coral,
+  page .color-options__item--coral { color: #fda4af; background: #3b202b; }
+  page .course-detail__tone--peach,
+  page .color-options__item--peach { color: #fdba8c; background: #3d271e; }
+  page .color-options__item--active { border-color: var(--campus-primary-strong, #93c5fd); }
+
+  page .stepper view {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .grade-original,
+  page .academic-tip {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .grade-original view { border-color: var(--campus-border, #243244); }
+  page .grade-original text:first-child { color: var(--campus-text-muted, #8494aa); }
+  page .grade-original text:last-child { color: var(--campus-text-heading, #f8fafc); }
+
+  page .exam-detail__badge {
+    color: #93c5fd;
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .grade-list-heading--original text:last-child {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .academic-empty__art view:first-child { background: var(--campus-border-strong, #2f4c73); }
+  page .academic-empty__art view:last-child { background: var(--campus-icon-surface-cyan, #12343d); }
+
+  page .course-market-actions,
+  page .academic-notice {
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.24);
+  }
+
+  page .course-market-actions > view:first-child text:first-child,
+  page .academic-notice text:first-child { color: #fdba74; }
+  page .course-market-actions > view:first-child text:last-child,
+  page .academic-notice text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+  page .course-market-actions__buttons view,
+  page .course-resource-actions__secondary > view {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .course-market-actions__buttons view:first-child,
+  page .course-resource-actions__primary,
+  page .course-material-actions > view:last-child {
+    color: #fff !important;
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  // 校车列表与筛选。
+  page .shuttle-hero,
+  page .shuttle-detail-hero,
+  page .shuttle-detail-hero--campus_loop {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0e7490 62%, #0f766e 100%);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: 0 18rpx 38rpx rgba(0, 0, 0, 0.3);
+  }
+
+  page .shuttle-hero__type,
+  page .shuttle-detail-hero__bus,
+  page .shuttle-detail-hero__direction { background: rgba(11, 18, 32, 0.48); }
+
+  page .shuttle-campus-filter__active,
+  page .shuttle-campus-filter__active text,
+  page .shuttle-detail-times__selected,
+  page .shuttle-detail-actions__refresh {
+    color: #fff !important;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+  }
+
+  page .shuttle-date-tabs__active,
+  page .shuttle-stop-filter__station--selected {
+    background: var(--campus-surface-primary, #172554) !important;
+    border-color: var(--campus-border-strong, #2f4c73) !important;
+  }
+
+  page .shuttle-type-filter { background: var(--campus-surface-subtle, #172033); }
+  page .shuttle-type-filter__active { background: var(--campus-surface, #111827) !important; }
+
+  page .shuttle-stop-filter,
+  page .shuttle-route-card,
+  page .shuttle-detail-panel {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .shuttle-stop-filter__swap { background: linear-gradient(135deg, #2563eb, #0e7490); }
+  page .shuttle-stop-filter__swap--disabled {
+    color: var(--campus-text-muted, #8494aa);
+    background: var(--campus-border, #243244);
+  }
+
+  // 校车详情：班次、停靠站、提示卡与固定操作栏。
+  page .shuttle-detail-page { color: var(--campus-text-heading, #f8fafc); }
+  page .shuttle-detail-loading view {
+    background: linear-gradient(100deg, #172033 20%, #243244 42%, #172033 64%);
+  }
+
+  page .shuttle-detail-empty { color: var(--campus-text-secondary, #aab8ca); }
+  page .shuttle-detail-empty view { background: var(--campus-surface-primary, #172554); }
+  page .shuttle-detail-empty text:nth-child(2) { color: var(--campus-text-heading, #f8fafc); }
+  page .shuttle-detail-empty text:last-child {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .shuttle-detail-source,
+  page .shuttle-detail-panel__head > text,
+  page .shuttle-detail-actions__share {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .shuttle-detail-tabs {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .shuttle-detail-tabs__active {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+    box-shadow: 0 5rpx 15rpx rgba(0, 0, 0, 0.24);
+  }
+
+  page .shuttle-detail-panel__head > view text:first-child,
+  page .shuttle-trip-detail__head > view text:first-child,
+  page .shuttle-stop-list__content > view text:first-child,
+  page .shuttle-weekly-list__head text:first-child { color: var(--campus-text-heading, #f8fafc); }
+
+  page .shuttle-detail-panel__head > view text:last-child,
+  page .shuttle-detail-panel__note,
+  page .shuttle-departure-group > text,
+  page .shuttle-trip-detail__head > view text:last-child,
+  page .shuttle-stop-list__content > view text:last-child,
+  page .shuttle-stop-list__note,
+  page .shuttle-weekly-list__head text:last-child,
+  page .shuttle-weekly-list__note,
+  page .shuttle-detail-disclaimer { color: var(--campus-text-muted, #8494aa); }
+
+  page .shuttle-detail-panel__empty,
+  page .shuttle-detail-times view,
+  page .shuttle-departure-group--passed .shuttle-detail-times view {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .shuttle-detail-times view { color: var(--campus-primary-strong, #93c5fd); }
+  page .shuttle-departure-group--passed .shuttle-detail-times__selected { color: #fff; background: #475569; }
+
+  page .shuttle-departure-next {
+    color: #6ee7b7;
+    background: var(--campus-surface-success, #102f2e);
+    border-color: #236653;
+  }
+
+  page .shuttle-trip-detail {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  page .shuttle-trip-detail__head { border-bottom-color: var(--campus-border, #243244); }
+  page .shuttle-trip-detail__head > text,
+  page .shuttle-trip-detail__stops > view > text:last-child,
+  page .shuttle-stop-list__content > text { color: var(--campus-primary-strong, #93c5fd); }
+  page .shuttle-trip-detail__stops > view > text:nth-child(2) { color: var(--campus-text-body, #d7e0ec); }
+  page .shuttle-trip-detail__rail view:first-child,
+  page .shuttle-stop-list__rail view:first-child { border-color: var(--campus-border-strong, #2f4c73); }
+  page .shuttle-trip-detail__rail view:last-child,
+  page .shuttle-stop-list__rail view:last-child { background: var(--campus-border-strong, #2f4c73); }
+
+  page .shuttle-detail-notice {
+    background: var(--campus-surface-errand, #3a2416);
+    border-color: rgba(251, 146, 60, 0.24);
+  }
+
+  page .shuttle-detail-notice > view:last-child text:first-child { color: #fdba74; }
+  page .shuttle-detail-notice > view:last-child text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+  page .shuttle-detail-actions {
+    background: var(--campus-surface-glass, rgba(17, 24, 39, 0.96));
+    border-top-color: var(--campus-border, #243244);
+  }
+
+  // 校历：避免明亮蓝青头图和实色筛选上的白字在暗色下失去对比度。
+  page .calendar-hero,
+  page .calendar-hero--upcoming,
+  page .calendar-hero--finished,
+  page .calendar-hero--unavailable {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0e7490 100%);
+    box-shadow: 0 18rpx 38rpx rgba(0, 0, 0, 0.3);
+  }
+
+  page .calendar-level-switch { background: var(--campus-surface-subtle, #172033); }
+  page .calendar-level-switch__active { background: var(--campus-surface, #111827) !important; }
+  page .calendar-term-switch__active {
+    background: var(--campus-surface-primary, #172554) !important;
+    border-color: var(--campus-border-strong, #2f4c73) !important;
+  }
+
+  page .calendar-filters__active,
+  page .calendar-week-strip__active {
+    color: #fff !important;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+  }
+
+  page .calendar-week-card,
+  page .calendar-event__body,
+  page .calendar-empty {
+    border-color: var(--campus-border, #243244);
+    box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.22);
+  }
+
+  page .calendar-loading view {
+    background: linear-gradient(90deg, #172033 20%, #243244 50%, #172033 80%);
+  }
+
+  page .calendar-empty__mark { border-color: var(--campus-text-muted, #8494aa); }
+  page .calendar-empty__mark view:nth-child(1),
+  page .calendar-empty__mark view:nth-child(2),
+  page .calendar-empty__mark view:nth-child(3) { background: var(--campus-text-muted, #8494aa); }
+
+  page .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-green, #12352f); }
+  page .calendar-event__rail view:last-child { background: var(--campus-border, #243244); }
+  page .calendar-event--holiday .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-pink, #3b202b); }
+  page .calendar-event--exam .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-purple, #2e254c); }
+  page .calendar-event--makeup .calendar-event__rail view:first-child { border-color: var(--campus-icon-surface-orange, #3a291a); }
+
   // 课程颜色在暗色模式中保持可区分，同时避免大面积高亮浅色块。
   page .timetable-course,
   page .course-conflict-card {
