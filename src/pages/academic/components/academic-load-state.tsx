@@ -55,16 +55,23 @@ export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState
     case 'invalid_academic_credentials':
       return {
         title: '教务账号或密码错误',
-        message: '本机保存的教务凭据已被校方拒绝，请确认账号密码后更新。',
+        message: '请访问信息门户 my.ouc.edu.cn 确认或修改密码，再回来更新本机密码。',
         action: 'rebind',
         actionLabel: '更新教务账号',
       }
     case 'academic_password_expired':
       return {
         title: '统一认证密码已过期',
-        message: '请先在校方统一身份认证系统修改密码，再回来更新本机保存的密码。',
+        message: '请访问信息门户 my.ouc.edu.cn 修改密码，再回来更新本机保存的密码。',
         action: 'rebind',
         actionLabel: '更新本机密码',
+      }
+    case 'academic_account_restricted':
+      return {
+        title: '校方账号已锁定或冻结',
+        message: '请访问信息门户 my.ouc.edu.cn 处理账号状态并修改密码，再回来更新本机密码。',
+        action: 'rebind',
+        actionLabel: '解锁后重新绑定',
       }
     case 'academic_challenge_required':
       return {

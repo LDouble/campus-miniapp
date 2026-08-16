@@ -42,7 +42,10 @@ import {
   rejectedCredentialHint,
   rejectedCredentialModal,
 } from '../../features/academic-verification/credential-rejection'
-import type { RejectedAcademicCredential } from '../../features/academic-verification/credential-rejection'
+import type {
+  CredentialRejectionReason,
+  RejectedAcademicCredential,
+} from '../../features/academic-verification/credential-rejection'
 import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { getSelectedTempFiles } from '../../utils/file-selection'
 import './index.scss'
@@ -133,8 +136,9 @@ const credentialErrorMessage = (error: unknown) => {
   if (!isApiError(error)) {
     return error instanceof Error ? error.message : '教务认证失败，请稍后重试'
   }
-  if (error.code === 'invalid_academic_credentials') return '学号或密码不正确'
-  if (error.code === 'academic_password_expired') return '统一身份认证密码已过期，请修改密码后重试'
+  if (error.code === 'invalid_academic_credentials') return '请访问信息门户确认或修改密码'
+  if (error.code === 'academic_password_expired') return '请访问信息门户修改已过期密码'
+  if (error.code === 'academic_account_restricted') return '请访问信息门户处理账号状态和密码'
   if (error.code === 'academic_credentials_limited') return '尝试次数过多，请稍后再试'
   if (error.code === 'academic_provider_unavailable') return '教务认证服务暂不可用'
   if (error.code === 'invalid_education_level') return '请选择本科生或研究生'
@@ -330,16 +334,29 @@ export default function AcademicVerificationPage() {
       await completeSuccess()
     } catch (submitError) {
       if (isApiError(submitError)) {
+        let rejectionReason: CredentialRejectionReason | null = null
         if (submitError.code === 'invalid_academic_credentials') {
-          setRejectedCredential({ ...attempt, reason: 'invalid_credentials' })
+          rejectionReason = 'invalid_credentials'
         } else if (submitError.code === 'academic_password_expired') {
-          setRejectedCredential({ ...attempt, reason: 'password_expired' })
+          rejectionReason = 'password_expired'
+        } else if (submitError.code === 'academic_account_restricted') {
+          rejectionReason = 'account_restricted'
         } else if (submitError.code === 'academic_challenge_required') {
           const retryAt = academicChallengeRetryAt()
           setChallengeRetryAt(retryAt)
           await Taro.showModal({
             title: '请等待 30 分钟',
             content: '校方触发了验证码或设备确认。请等待 30 分钟后再次尝试，期间请不要反复提交。',
+            showCancel: false,
+            confirmText: '我知道了',
+            confirmColor: '#5a9d88',
+          })
+          return
+        }
+        if (rejectionReason) {
+          setRejectedCredential({ ...attempt, reason: rejectionReason })
+          await Taro.showModal({
+            ...rejectedCredentialModal(rejectionReason),
             showCancel: false,
             confirmText: '我知道了',
             confirmColor: '#5a9d88',
