@@ -2,6 +2,56 @@
 // 使用 `page` 提升全局样式的优先级，避免依赖导入顺序。
 
 @media (prefers-color-scheme: dark) {
+  // 社区吸顶导航：避免浅色轨道在暗色页面中形成高亮色块，并保证两级标签均清晰可读。
+  page .life-hub-navigation {
+    border-bottom-color: var(--campus-border, #243244);
+    background: rgba(17, 24, 39, 0.92);
+    box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.18);
+  }
+
+  page .life-primary-tabs__inner {
+    border-color: var(--campus-border-strong, #2f4c73);
+    background: rgba(23, 32, 51, 0.92);
+    box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.035);
+  }
+
+  page .life-primary-tabs__item {
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  page .life-primary-tabs__item--active {
+    color: #fff;
+    background: linear-gradient(90deg, #2563eb, #0e7490);
+    box-shadow: 0 6rpx 16rpx rgba(37, 99, 235, 0.26);
+  }
+
+  page .life-primary-tabs__item--pressed {
+    opacity: 0.78;
+    background-color: rgba(47, 76, 115, 0.56);
+  }
+
+  page .community-root-tabs__inner {
+    gap: 12rpx;
+  }
+
+  page .community-root-tabs__item {
+    border-color: var(--campus-border, #243244);
+    background: rgba(23, 32, 51, 0.66);
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  page .community-root-tabs__item--active {
+    border-color: var(--campus-border-strong, #2f4c73);
+    background: var(--campus-surface-primary, #172554);
+    color: var(--campus-primary-strong, #93c5fd);
+    box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.04);
+  }
+
+  page .community-root-tabs__item--pressed {
+    opacity: 0.78;
+    background: var(--campus-border, #243244);
+  }
+
   page .verification-page {
     color: var(--campus-text-heading, #f8fafc);
     background:

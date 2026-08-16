@@ -51,6 +51,9 @@ assert.match(darkModeStyle, /page \.service-panel__grid-icon/u)
 assert.match(darkModeStyle, /page \.errand-card,/u)
 assert.match(darkModeStyle, /page \.errand-route,/u)
 assert.match(darkModeStyle, /page \.marketplace-card__placeholder/u)
+assert.match(darkModeStyle, /page \.life-primary-tabs__inner/u)
+assert.match(darkModeStyle, /page \.life-primary-tabs__item--active/u)
+assert.match(darkModeStyle, /page \.community-root-tabs__item--active/u)
 assert.doesNotMatch(darkModeStyle, /page\s+image\s*\{/u, '不能全局反色用户上传的图片')
 
 const pageConfigPaths = require('node:child_process')
@@ -98,5 +101,7 @@ const contrast = (foreground: string, background: string) => {
 assert.ok(contrast('#f8fafc', '#111827') >= 4.5, '暗色标题与卡片背景对比度不足')
 assert.ok(contrast('#d7e0ec', '#111827') >= 4.5, '暗色正文与卡片背景对比度不足')
 assert.ok(contrast('#8494aa', '#0b1220') >= 4.5, '暗色辅助文字与页面背景对比度不足')
+assert.ok(contrast('#aab8ca', '#172033') >= 4.5, '暗色社区未选中标签对比度不足')
+assert.ok(contrast('#ffffff', '#0e7490') >= 4.5, '暗色社区选中标签对比度不足')
 
 console.log('dark mode smoke: ok')
