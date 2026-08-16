@@ -85,9 +85,11 @@ assert.ok(source.includes('removeStoredAcademicCredential'), '解绑或账号切
 
 const academicApiSource = readFileSync(resolve(__dirname, '../src/api/academic.ts'), 'utf8')
 assert.ok(
-  academicApiSource.includes("['invalid_academic_credentials', 'academic_password_expired']")
+  academicApiSource.includes("'invalid_academic_credentials'")
+    && academicApiSource.includes("'academic_password_expired'")
+    && academicApiSource.includes("'academic_account_restricted'")
     && academicApiSource.includes('clearAcademicCredential()'),
-  '校方拒绝或密码过期时必须清理本机旧凭据',
+  '校方拒绝、密码过期或账号受限时必须清理本机旧凭据',
 )
 
 process.stdout.write('academic credential persistence smoke: ok\n')

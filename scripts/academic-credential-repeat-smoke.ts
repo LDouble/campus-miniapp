@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import {
   isRepeatedRejectedCredential,
   rejectedCredentialHint,
+  rejectedCredentialModal,
 } from '../src/features/academic-verification/credential-rejection'
 import {
   ACADEMIC_CHALLENGE_COOLDOWN_MS,
@@ -22,8 +23,12 @@ assert.equal(isRepeatedRejectedCredential(rejected, rejected), true)
 assert.equal(isRepeatedRejectedCredential(rejected, { ...rejected, studentNo: '20260002' }), false)
 assert.equal(isRepeatedRejectedCredential(rejected, { ...rejected, password: 'changed-password' }), false)
 assert.equal(isRepeatedRejectedCredential(rejected, { ...rejected, educationLevel: 'graduate' }), false)
-assert.match(rejectedCredentialHint('invalid_credentials'), /校方明确提示/)
-assert.match(rejectedCredentialHint('password_expired'), /过期/)
+assert.match(rejectedCredentialHint('invalid_credentials'), /my\.ouc\.edu\.cn/)
+assert.match(rejectedCredentialHint('password_expired'), /my\.ouc\.edu\.cn/)
+assert.match(rejectedCredentialHint('account_restricted'), /my\.ouc\.edu\.cn/)
+assert.match(rejectedCredentialModal('invalid_credentials').content, /my\.ouc\.edu\.cn/)
+assert.match(rejectedCredentialModal('password_expired').content, /my\.ouc\.edu\.cn/)
+assert.match(rejectedCredentialModal('account_restricted').content, /my\.ouc\.edu\.cn/)
 
 const challengeStartedAt = 1_000_000
 const challengeRetryAt = academicChallengeRetryAt(challengeStartedAt)
@@ -46,6 +51,9 @@ assert.ok(guardPosition >= 0 && guardPosition < requestPosition, '重复错误�
 assert.ok(challengeGuardPosition >= 0 && challengeGuardPosition < requestPosition, '验证码冷却必须在网络请求前拦截')
 assert.ok(pageSource.includes("submitError.code === 'invalid_academic_credentials'"), '明确密码错误必须记住当前凭据')
 assert.ok(pageSource.includes("submitError.code === 'academic_password_expired'"), '密码过期必须记住当前凭据')
+assert.ok(pageSource.includes("submitError.code === 'academic_account_restricted'"), '账号锁定或冻结必须记住当前凭据')
+assert.ok(!pageSource.includes("confirmText: restricted ? '已解锁'"), '账号锁定后不得提供原凭据重试按钮')
+assert.ok(pageSource.includes("confirmText: '我知道了'"), '认证业务错误只能确认提示')
 assert.ok(pageSource.includes("submitError.code === 'academic_challenge_required'"), '验证码必须启动冷却')
 assert.ok(pageSource.includes('请等待 30 分钟'), '验证码提示必须明确等待 30 分钟')
 assert.ok(!pageSource.includes('setStorage'), '被拒绝的密码和验证码冷却不得写入小程序存储')

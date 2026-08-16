@@ -73,7 +73,11 @@ const academicPost = async <T>(path: string, periodId?: string) => {
   } catch (error) {
     if (
       isApiError(error)
-      && ['invalid_academic_credentials', 'academic_password_expired'].includes(error.code)
+      && [
+        'invalid_academic_credentials',
+        'academic_password_expired',
+        'academic_account_restricted',
+      ].includes(error.code)
     ) {
       clearAcademicCredential()
     }
