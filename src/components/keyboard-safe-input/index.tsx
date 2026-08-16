@@ -8,6 +8,7 @@ import { getSystemState } from '../../state/system'
 type KeyboardVisibilityProps = {
   keepVisibleOnKeyboard?: boolean
   keyboardVisibilitySpacing?: number
+  nativeAdjustPosition?: boolean
   onKeyboardVisibilityChange?: (height: number) => void
 }
 
@@ -34,13 +35,15 @@ const scrollControlIntoKeyboardViewport = (
   keyboardHeight: number,
   spacing: number,
   windowHeight: number,
+  isCurrentRequest: () => boolean,
 ) => {
-  if (keyboardHeight <= 0) return
+  if (keyboardHeight <= 0 || !isCurrentRequest()) return
 
   const query = Taro.createSelectorQuery()
   query.select(`#${controlId}`).boundingClientRect()
   query.selectViewport().scrollOffset()
   query.exec((results) => {
+    if (!isCurrentRequest()) return
     const rect = results[0] as { bottom?: number } | null
     const viewport = results[1] as { scrollTop?: number } | null
     const controlBottom = Number(rect?.bottom)
@@ -64,25 +67,36 @@ const useKeyboardVisibilityScroll = (
   spacing: number,
 ) => {
   const layoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const requestSequence = useRef(0)
   const windowHeight = useRef(getSystemState().windowInfo.windowHeight).current
 
-  useEffect(() => () => {
+  const cancelKeyboardVisibilityScroll = useCallback(() => {
+    requestSequence.current += 1
     if (layoutTimer.current) clearTimeout(layoutTimer.current)
+    layoutTimer.current = null
   }, [])
 
-  return useCallback((keyboardHeight: number) => {
-    if (layoutTimer.current) clearTimeout(layoutTimer.current)
+  useEffect(() => cancelKeyboardVisibilityScroll, [cancelKeyboardVisibilityScroll])
+
+  const keepControlVisible = useCallback((keyboardHeight: number) => {
+    cancelKeyboardVisibilityScroll()
     if (!keepVisibleOnKeyboard || keyboardHeight <= 0) return
+    const requestId = requestSequence.current
 
     layoutTimer.current = setTimeout(() => {
+      if (requestSequence.current !== requestId) return
+      layoutTimer.current = null
       scrollControlIntoKeyboardViewport(
         controlId,
         keyboardHeight,
         spacing,
         windowHeight,
+        () => requestSequence.current === requestId,
       )
     }, KEYBOARD_LAYOUT_DELAY)
-  }, [controlId, keepVisibleOnKeyboard, spacing, windowHeight])
+  }, [cancelKeyboardVisibilityScroll, controlId, keepVisibleOnKeyboard, spacing, windowHeight])
+
+  return { keepControlVisible, cancelKeyboardVisibilityScroll }
 }
 
 export function useKeyboardInset() {
@@ -102,6 +116,7 @@ export function KeyboardSafeInput({
   cursorSpacing = DEFAULT_CURSOR_SPACING,
   keepVisibleOnKeyboard = true,
   keyboardVisibilitySpacing = cursorSpacing,
+  nativeAdjustPosition = false,
   onKeyboardVisibilityChange,
   onFocus,
   onBlur,
@@ -109,7 +124,7 @@ export function KeyboardSafeInput({
   ...props
 }: KeyboardSafeInputProps) {
   const controlId = useControlId(id)
-  const keepControlVisible = useKeyboardVisibilityScroll(
+  const { keepControlVisible, cancelKeyboardVisibilityScroll } = useKeyboardVisibilityScroll(
     controlId,
     keepVisibleOnKeyboard,
     keyboardVisibilitySpacing,
@@ -119,23 +134,27 @@ export function KeyboardSafeInput({
     <Input
       {...props}
       id={controlId}
-      adjustPosition={false}
+      adjustPosition={nativeAdjustPosition}
       cursorSpacing={cursorSpacing}
       onFocus={(event) => {
         onFocus?.(event)
         const height = Math.max(0, event.detail.height || 0)
         onKeyboardVisibilityChange?.(height)
-        keepControlVisible(height)
+        if (!nativeAdjustPosition && Taro.getEnv() !== Taro.ENV_TYPE.WEAPP) {
+          keepControlVisible(height)
+        }
       }}
       onBlur={(event) => {
         onBlur?.(event)
         onKeyboardVisibilityChange?.(0)
+        cancelKeyboardVisibilityScroll()
       }}
       onKeyboardHeightChange={(event) => {
         onKeyboardHeightChange?.(event)
         const height = Math.max(0, event.detail.height || 0)
         onKeyboardVisibilityChange?.(height)
-        keepControlVisible(height)
+        if (nativeAdjustPosition) cancelKeyboardVisibilityScroll()
+        else keepControlVisible(height)
       }}
     />
   )
@@ -146,6 +165,7 @@ export function KeyboardSafeTextarea({
   cursorSpacing = DEFAULT_CURSOR_SPACING,
   keepVisibleOnKeyboard = true,
   keyboardVisibilitySpacing = cursorSpacing,
+  nativeAdjustPosition = false,
   onKeyboardVisibilityChange,
   onFocus,
   onBlur,
@@ -153,7 +173,7 @@ export function KeyboardSafeTextarea({
   ...props
 }: KeyboardSafeTextareaProps) {
   const controlId = useControlId(id)
-  const keepControlVisible = useKeyboardVisibilityScroll(
+  const { keepControlVisible, cancelKeyboardVisibilityScroll } = useKeyboardVisibilityScroll(
     controlId,
     keepVisibleOnKeyboard,
     keyboardVisibilitySpacing,
@@ -163,23 +183,27 @@ export function KeyboardSafeTextarea({
     <Textarea
       {...props}
       id={controlId}
-      adjustPosition={false}
+      adjustPosition={nativeAdjustPosition}
       cursorSpacing={cursorSpacing}
       onFocus={(event) => {
         onFocus?.(event)
         const height = Math.max(0, event.detail.height || 0)
         onKeyboardVisibilityChange?.(height)
-        keepControlVisible(height)
+        if (!nativeAdjustPosition && Taro.getEnv() !== Taro.ENV_TYPE.WEAPP) {
+          keepControlVisible(height)
+        }
       }}
       onBlur={(event) => {
         onBlur?.(event)
         onKeyboardVisibilityChange?.(0)
+        cancelKeyboardVisibilityScroll()
       }}
       onKeyboardHeightChange={(event) => {
         onKeyboardHeightChange?.(event)
         const height = Math.max(0, event.detail.height || 0)
         onKeyboardVisibilityChange?.(height)
-        keepControlVisible(height)
+        if (nativeAdjustPosition) cancelKeyboardVisibilityScroll()
+        else keepControlVisible(height)
       }}
     />
   )

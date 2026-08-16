@@ -328,7 +328,7 @@ export default function AcademicVerificationPage() {
       confirmText: '返回继续',
       confirmColor: '#5a9d88',
     })
-    await finishAcademicVerification(replacedCurrentPage)
+    await finishAcademicVerification(replacedCurrentPage, true)
   }
 
   const submitCredentials = async () => {
@@ -750,6 +750,7 @@ export default function AcademicVerificationPage() {
                       <Text>信息门户账号（学号）</Text>
                       <KeyboardSafeInput
                         id='academic-verification-student-no'
+                        className='verification-field__input'
                         value={studentNo}
                         maxlength={64}
                         placeholder='请输入信息门户账号'

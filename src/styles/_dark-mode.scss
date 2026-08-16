@@ -172,6 +172,27 @@
     color: var(--campus-text-heading, #f8fafc);
   }
 
+  // 微信原生 input 在暗色模式下可能保留系统文字填充色；密码输入层还会遮住自绘掩码。
+  page .verification-field input.verification-field__input,
+  page .verification-password-control input.verification-password-control__input {
+    color: var(--campus-text-heading, #f8fafc);
+    -webkit-text-fill-color: var(--campus-text-heading, #f8fafc);
+    caret-color: var(--campus-primary-strong, #93c5fd);
+  }
+
+  page .verification-password-control input.verification-password-control__input {
+    background: transparent;
+  }
+
+  page .verification-password-control input.verification-password-control__input--masked {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  page .verification-password-control__mask {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
   page .verification-field > text,
   page .verification-profile__main text:last-child,
   page .verification-profile__facts text:first-child,
@@ -344,6 +365,11 @@
   }
 
   page .hero-card__glow { background: rgba(96, 165, 250, 0.12); }
+  page .hero-card__sun,
+  page .hero-card__cloud,
+  page .hero-card__building,
+  page .hero-card__roof,
+  page .hero-card__tree::before { background: rgba(148, 163, 184, 0.28); }
   page .hero-card__title { color: var(--campus-text-heading, #f8fafc); }
   page .hero-card__subtitle { color: var(--campus-text-secondary, #aab8ca); }
   page .hero-card__pill { color: #93c5fd; background: rgba(23, 37, 84, 0.78); border-color: #28477a; }

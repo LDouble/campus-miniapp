@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
@@ -7,14 +7,11 @@ import { requestWechatSubscriptionAndStopPropagation } from '../../../features/w
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
 import {
-  openCourseMarketplacePublisher,
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
-import {
-  openCourseMaterials,
-  shareCourseMaterials,
-} from '../../../features/course-materials/navigation'
+import { openCourseMaterials } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
@@ -70,6 +67,8 @@ export default function SelectionPage() {
   const [activeTab, setActiveTab] = useState<SelectionTab>('all')
   const [sheet, setSheet] = useState<SelectionSheet>(null)
   const [activeRecord, setActiveRecord] = useState<CourseSelectionRecord | null>(null)
+  const selectionsRequestRef = useRef(0)
+  const firstPageShowRef = useRef(true)
 
   const summary = useMemo(() => ({
     pending: records.filter((item) => item.status === 'pending'),
@@ -87,6 +86,7 @@ export default function SelectionPage() {
     manual = false,
     periodId = preferences.schedulePeriodId,
   ) => {
+    const requestId = ++selectionsRequestRef.current
     const cache = academicStorage.getRecordsCache(academicUserId)
     const cached = cache?.selectionsByPeriod[periodId]
     const updatedAt = cache
@@ -100,6 +100,7 @@ export default function SelectionPage() {
     setLoadError(null)
     try {
       const result = await academicRepository.getCourseSelections(periodId)
+      if (selectionsRequestRef.current !== requestId) return
       academicStorage.setSelectionRecords(
         academicUserId,
         periodId,
@@ -110,6 +111,7 @@ export default function SelectionPage() {
       setUsingCache(false)
       setServerCache(result.cache || null)
     } catch (error) {
+      if (selectionsRequestRef.current !== requestId) return
       if (updatedAt) {
         setUsingCache(true)
         setLoadError(error)
@@ -118,10 +120,25 @@ export default function SelectionPage() {
         setLoadError(error)
       }
     } finally {
-      setLoading(false)
-      setRetrying(false)
+      if (selectionsRequestRef.current === requestId) {
+        setLoading(false)
+        setRetrying(false)
+      }
     }
   }, [academicUserId, preferences.schedulePeriodId])
+
+  Taro.useDidShow(() => {
+    if (!firstPageShowRef.current && !hasSelectedPeriod) return
+    const shouldRefresh = consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/selection/index',
+    )
+    if (firstPageShowRef.current) {
+      firstPageShowRef.current = false
+      return
+    }
+    if (shouldRefresh) void refreshSelections(false)
+  })
 
   const retryPage = useCallback(async () => {
     setRetrying(true)
@@ -177,7 +194,7 @@ export default function SelectionPage() {
   const updatePeriod = (schedulePeriodId: string) => {
     setPreferences((current) => ({ ...current, schedulePeriodId }))
   }
-  const openCourseTrade = (intent: 'sell' | 'wanted') => {
+  const openCourseTrade = () => {
     if (!activeRecord) return
     if (isQualificationEdition) {
       setSheet(null)
@@ -187,23 +204,17 @@ export default function SelectionPage() {
     const courseName = activeRecord.courseName.trim()
     setSheet(null)
     const prefill = {
-      intent,
-      description: intent === 'wanted'
-        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
-        : `出售与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      intent: 'wanted',
+      description: `求购《${courseName}》课程使用的课本，版本和成色可沟通。`,
       courseName,
       courseCode: activeRecord.courseCode,
       academicPeriodId: activeRecord.periodId,
       academicPeriodLabel: getPeriodLabel(periods, activeRecord.periodId),
       source: 'course_selection',
     } as const
-    if (intent === 'wanted') {
-      void openCourseMarketplaceSearch(prefill)
-      return
-    }
-    void openCourseMarketplacePublisher(prefill)
+    void openCourseMarketplaceSearch(prefill)
   }
-  const openCourseMaterialPage = (action?: 'upload') => {
+  const openCourseMaterialPage = () => {
     if (!activeRecord) return
     setSheet(null)
     if (isQualificationEdition) {
@@ -217,9 +228,7 @@ export default function SelectionPage() {
       periodLabel: getPeriodLabel(periods, activeRecord.periodId),
       source: 'selection' as const,
     }
-    void (action === 'upload'
-      ? shareCourseMaterials(context)
-      : openCourseMaterials(context))
+    void openCourseMaterials(context)
   }
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
@@ -304,17 +313,15 @@ export default function SelectionPage() {
             {activeRecord.status === 'selected' && (
               <View className='course-market-actions'>
                 <View>
-                  <Text>{isQualificationEdition ? '新版课程服务' : '课程相关'}</Text>
-                  <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '查资料，也可以求购或转卖教材'}</Text>
+                  <Text>{isQualificationEdition ? '新版课程服务' : '学习准备'}</Text>
+                  <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '发现课程资料，或求购对应课本'}</Text>
                 </View>
                 <View className='course-market-actions__buttons'>
                   {isQualificationEdition ? (
                     <View onClick={() => openCourseMaterialPage()}>前往新版</View>
                   ) : (<>
-                    <View onClick={() => openCourseMaterialPage()}>查找资料</View>
-                    <View onClick={() => openCourseMaterialPage('upload')}>分享资料</View>
-                    <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
-                    <View onClick={() => openCourseTrade('sell')}>转卖教材</View>
+                    <View onClick={() => openCourseMaterialPage()}>发现资料</View>
+                    <View onClick={openCourseTrade}>求购课本</View>
                   </>)}
                 </View>
               </View>

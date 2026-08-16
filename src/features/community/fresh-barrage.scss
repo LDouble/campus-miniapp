@@ -4,7 +4,7 @@
   top: 52%;
   right: 0;
   left: 0;
-  height: 140rpx;
+  height: 184rpx;
   overflow: hidden;
   pointer-events: none;
   transform: translateY(-50%);
@@ -23,14 +23,14 @@
 }
 
 .fresh-barrage__lane--1 {
-  top: 72rpx;
+  top: 92rpx;
   animation-delay: 520ms;
 }
 
 .fresh-barrage__item {
   display: flex;
   max-width: 610rpx;
-  height: 64rpx;
+  min-height: 64rpx;
   box-sizing: border-box;
   padding: 8rpx 22rpx 8rpx 10rpx;
   align-items: center;
@@ -72,14 +72,19 @@
 }
 
 .fresh-barrage__content {
+  display: -webkit-box;
   min-width: 0;
   max-width: 510rpx;
+  max-height: 66rpx;
   overflow: hidden;
   font-size: 24rpx;
   font-weight: 600;
   line-height: 1.35;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 @keyframes fresh-barrage-cross {

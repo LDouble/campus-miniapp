@@ -739,7 +739,8 @@ page { background: var(--campus-page, #f4f7fb); }
 .clubs-hero__title { color: #fff; }
 .clubs-hero__subtitle { display: -webkit-box; overflow: hidden; color: rgba(255, 255, 255, 0.74); -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .clubs-hero__mark {
-  background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
+  background: var(--campus-overlay, rgba(15, 23, 42, 0.42));
+  border: 2rpx solid rgba(255, 255, 255, 0.22);
 }
 .clubs-search { background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
 .clubs-search input { color: var(--campus-text-heading, #1d293d); }

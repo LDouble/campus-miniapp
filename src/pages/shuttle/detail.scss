@@ -78,7 +78,7 @@
     width: 330rpx;
     height: 330rpx;
     content: '';
-    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
   }
 
@@ -101,7 +101,7 @@
     justify-content: center;
     width: 58rpx;
     height: 58rpx;
-    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
+    background: rgba(18, 73, 142, 0.26);
     border: 1rpx solid rgba(255, 255, 255, 0.26);
     border-radius: 18rpx;
 
@@ -140,7 +140,7 @@
     gap: 14rpx;
     margin-top: 28rpx;
     padding: 22rpx;
-    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
+    background: rgba(18, 73, 142, 0.22);
     border: 1rpx solid rgba(255, 255, 255, 0.2);
     border-radius: 24rpx;
 
