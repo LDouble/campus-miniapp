@@ -848,8 +848,23 @@ page {
   }
 }
 
+// 课程数量较多时在浮层内部滚动，顶部始终避开状态栏与微信胶囊区。
+.materials-sheet--filter {
+  display: flex;
+  max-height: 72vh;
+  flex-direction: column;
+  overflow: hidden;
+
+  .materials-sheet__body {
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .materials-sheet--upload-course {
-  height: 84vh;
+  height: 76vh;
+  max-height: 76vh;
   overflow: hidden;
 }
 

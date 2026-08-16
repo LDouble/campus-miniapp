@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   inferCourseSuggestion,
   inferMaterialKind,
@@ -139,5 +141,13 @@ assert.deepEqual(getSelectedTempFiles({ tempFiles: undefined }), [])
 assert.deepEqual(getSelectedTempFiles({ tempFiles: [{ path: 'wxfile://safe.pdf' }] }), [
   { path: 'wxfile://safe.pdf' },
 ])
+
+const materialsStyle = readFileSync(
+  resolve(__dirname, '../src/pages/materials/index.scss'),
+  'utf8',
+)
+assert.match(materialsStyle, /\.materials-sheet--filter \{[^}]*max-height: 72vh;/u)
+assert.match(materialsStyle, /\.materials-sheet--filter[\s\S]*?\.materials-sheet__body \{[^}]*overflow-y: auto;/u)
+assert.match(materialsStyle, /\.materials-sheet--upload-course \{[^}]*height: 76vh;[^}]*max-height: 76vh;/u)
 
 process.stdout.write('course-materials semantic smoke: ok\n')
