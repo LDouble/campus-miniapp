@@ -8,6 +8,7 @@ import {
   mediaImageMimeFromType,
   mediaImageValidationError,
   moveMediaImage,
+  normalizedSquareCropDimensions,
   serverMediaImageDraft,
   scaledMediaImageDimensions,
   validateMediaImage,
@@ -24,6 +25,18 @@ assert.deepEqual(
 assert.deepEqual(
   scaledMediaImageDimensions({ width: 1024, height: 768, maxDimension: 512 }),
   { width: 512, height: 384 },
+)
+assert.deepEqual(
+  normalizedSquareCropDimensions({ width: 1080, height: 1079, maxDimension: 512 }),
+  { width: 512, height: 512 },
+)
+assert.deepEqual(
+  normalizedSquareCropDimensions({ width: 480, height: 479, maxDimension: 512 }),
+  { width: 479, height: 479 },
+)
+assert.equal(
+  normalizedSquareCropDimensions({ width: 1920, height: 1080, maxDimension: 512 }),
+  null,
 )
 
 assert.equal(mediaImageMimeFromType('JPG'), 'image/jpeg')
@@ -95,6 +108,8 @@ assert.ok(accountSource.includes('avatar_media_id: mediaId'))
 const selectionSource = readFileSync(resolve(__dirname, '../src/features/media/selection.ts'), 'utf8')
 assert.ok(selectionSource.includes('compressedWidth: dimensions.width'))
 assert.ok(selectionSource.includes('compressedHeight: dimensions.height'))
+assert.ok(selectionSource.includes('normalizedSquareCropDimensions'))
+assert.ok(selectionSource.includes('Number(info.width) !== Number(info.height)'))
 
 const communityDetailSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.tsx'), 'utf8')
 const communityDetailStyleSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.scss'), 'utf8')

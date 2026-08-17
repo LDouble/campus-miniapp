@@ -5,6 +5,7 @@ export const CAMPUS_OPTIONS = [
   '鱼山校区',
   '西海岸校区',
   '浮山校区',
+  '三亚校区',
 ] as const
 
 export type CampusName = typeof CAMPUS_OPTIONS[number]

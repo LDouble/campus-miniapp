@@ -5,6 +5,7 @@ import {
   DEFAULT_MEDIA_IMAGE_QUALITY,
   MAX_PUBLISH_IMAGES,
   mediaImageMimeFromType,
+  normalizedSquareCropDimensions,
   scaledMediaImageDimensions,
   validateMediaImage,
 } from './images'
@@ -41,26 +42,36 @@ const prepareImage = async (input: {
   quality?: number
 }): Promise<MediaImageDraft> => {
   let localPath = input.filePath
+  let squareDimensions: { width: number; height: number } | null = null
+  let requiresSquareNormalization = false
   if (input.cropSquare) {
     try {
       const cropped = await Taro.cropImage({ src: localPath, cropScale: '1:1' })
       localPath = cropped.tempFilePath
     } catch (error) {
       if (wasCancelled(error)) throw error
-      console.warn('[图片处理] 裁剪不可用，使用已选择的图片', {
-        message: mediaApiErrorMessage(error, '未知错误'),
-      })
+      throw new Error(mediaApiErrorMessage(error, '图片裁剪失败，请重试'))
     }
+    const cropInfo = await Taro.getImageInfo({ src: localPath })
+    const cropWidth = Number(cropInfo.width)
+    const cropHeight = Number(cropInfo.height)
+    squareDimensions = normalizedSquareCropDimensions({
+      width: cropWidth,
+      height: cropHeight,
+      maxDimension: input.maxDimension,
+    })
+    if (!squareDimensions) throw new Error('裁剪结果不是 1:1，请重新选择并使用 1:1 裁剪')
+    requiresSquareNormalization = cropWidth !== cropHeight
   }
   try {
     const maxDimension = input.maxDimension
-    const dimensions = maxDimension
+    const dimensions = squareDimensions || (maxDimension
       ? await Taro.getImageInfo({ src: localPath }).then((info) => scaledMediaImageDimensions({
         width: Number(info.width),
         height: Number(info.height),
         maxDimension,
       }))
-      : null
+      : null)
     const compressed = await Taro.compressImage({
       src: localPath,
       quality: input.quality ?? DEFAULT_MEDIA_IMAGE_QUALITY,
@@ -71,6 +82,9 @@ const prepareImage = async (input: {
     })
     localPath = compressed.tempFilePath
   } catch (error) {
+    if (requiresSquareNormalization) {
+      throw new Error('方形头像处理失败，请重新裁剪')
+    }
     console.warn('[图片处理] 二次压缩不可用，使用当前图片', {
       message: mediaApiErrorMessage(error, '未知错误'),
     })
@@ -82,6 +96,9 @@ const prepareImage = async (input: {
   const mimeType = mediaImageMimeFromType(info.type)
   const error = validateMediaImage({ mimeType, sizeBytes })
   if (error || !mimeType) throw new Error(error || '图片格式无法识别')
+  if (input.cropSquare && Number(info.width) !== Number(info.height)) {
+    throw new Error('头像图片处理后不是 1:1，请重新裁剪')
+  }
   return createLocalMediaImageDraft({
     localPath,
     mimeType,
