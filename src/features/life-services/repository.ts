@@ -17,6 +17,8 @@ import type {
   MarketplaceListingViewPage,
   MarketplaceTradeOrder,
   PublicUserProfile,
+  ReactionResourceType,
+  ReactionState,
   TradeOrderView,
   TradeOrderViewPage,
   CommentView,
@@ -240,6 +242,22 @@ export const lifeServicesRepository = {
     return apiRequest<CampusCirclePostView>({
       path: `/api/v1/campus-circle/posts/${id}/like`,
       method: 'DELETE',
+    })
+  },
+
+  likeResource(id: number, resourceType: ReactionResourceType) {
+    return apiRequest<ReactionState>({
+      path: `/api/v1/likes/${id}`,
+      method: 'PUT',
+      query: { resource_type: resourceType },
+    })
+  },
+
+  unlikeResource(id: number, resourceType: ReactionResourceType) {
+    return apiRequest<ReactionState>({
+      path: `/api/v1/likes/${id}`,
+      method: 'DELETE',
+      query: { resource_type: resourceType },
     })
   },
 

@@ -16,6 +16,10 @@ import {
   mergeLocalThreadReply,
 } from '../../community/comments'
 import type { CommentTreeNode } from '../../community/comments'
+import {
+  applyCommentReaction,
+  commentLikeFailure,
+} from '../../community/comment-likes'
 import CommunityLevelBadge from '../../community/level-badge'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
@@ -23,6 +27,8 @@ import { showActionSheetSelection } from '../../../utils/action-sheet'
 import './detail-comments.scss'
 
 const icons = {
+  heart: require('../../../assets/community/heart.svg'),
+  heartActive: require('../../../assets/community/heart-active.svg'),
   send: require('../../../assets/community/send.svg'),
   share: require('../../../assets/community/share.svg'),
 }
@@ -125,12 +131,40 @@ const compactCommentName = (name: string, maxLength = 6) => {
     : characters.join('')
 }
 
-const renderCommentMeta = (comment: CommentView) => (
-  <View className='business-detail-comment__meta'>
-    <Text>{formatDateTime(comment.created_at)}</Text>
-    {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
-  </View>
-)
+const renderCommentMeta = (
+  comment: CommentView,
+  liking: boolean,
+  onToggleLike: (comment: CommentView) => void,
+) => {
+  const expectedAction = comment.liked ? 'unlike' : 'like'
+  const canToggleLike = comment.available_actions.includes(expectedAction)
+
+  return (
+    <View className='business-detail-comment__meta'>
+      <Text>{formatDateTime(comment.created_at)}</Text>
+      {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
+      <View
+        className={[
+          'business-detail-comment__like',
+          comment.liked ? 'business-detail-comment__like--active' : '',
+          liking ? 'business-detail-comment__like--busy' : '',
+          !canToggleLike ? 'business-detail-comment__like--disabled' : '',
+        ].filter(Boolean).join(' ')}
+        hoverClass={canToggleLike && !liking ? 'business-detail-comment__like--pressed' : undefined}
+        hoverStartTime={20}
+        hoverStayTime={100}
+        ariaRole={canToggleLike ? 'button' : undefined}
+        ariaLabel={canToggleLike
+          ? `${liking ? '点赞处理中' : comment.liked ? '取消点赞' : '点赞'}，当前 ${comment.like_count} 个赞`
+          : `当前 ${comment.like_count} 个赞`}
+        onClick={canToggleLike && !liking ? () => onToggleLike(comment) : undefined}
+      >
+        <Image src={comment.liked ? icons.heartActive : icons.heart} mode='aspectFit' />
+        <Text>{comment.like_count}</Text>
+      </View>
+    </View>
+  )
+}
 
 const renderReplyTree = (
   nodes: CommentTreeNode<CommentView>[],
@@ -139,8 +173,10 @@ const renderReplyTree = (
   focusedCommentId: number,
   enteringCommentId: number,
   removingCommentId: number,
+  likingIds: ReadonlySet<number>,
   onStartReply: (comment: CommentView) => void,
   onOpenActions: (comment: CommentView) => void,
+  onToggleLike: (comment: CommentView) => void,
 ) => nodes.map(({ comment, children }) => {
   const replyTargetName = comment.reply_to_user_id
     ? memberNames.get(comment.reply_to_user_id) || '上一位同学'
@@ -177,7 +213,7 @@ const renderReplyTree = (
             stickerClassName='business-detail-comment__sticker'
           />
         </View>
-        {renderCommentMeta(comment)}
+        {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
       </View>
       {children.length > 0 && (
         <View className='business-detail-comment__reply-children'>
@@ -188,8 +224,10 @@ const renderReplyTree = (
             focusedCommentId,
             enteringCommentId,
             removingCommentId,
+            likingIds,
             onStartReply,
             onOpenActions,
+            onToggleLike,
           )}
         </View>
       )}
@@ -204,9 +242,11 @@ type DetailCommentThreadProps = {
   focusedCommentId: number
   enteringCommentId: number
   removingCommentId: number
+  likingIds: ReadonlySet<number>
   onExpand: (rootId: number) => void
   onStartReply: (comment: CommentView) => void
   onOpenActions: (comment: CommentView) => void
+  onToggleLike: (comment: CommentView) => void
 }
 
 const DetailCommentThread = memo(function DetailCommentThread({
@@ -216,9 +256,11 @@ const DetailCommentThread = memo(function DetailCommentThread({
   focusedCommentId,
   enteringCommentId,
   removingCommentId,
+  likingIds,
   onExpand,
   onStartReply,
   onOpenActions,
+  onToggleLike,
 }: DetailCommentThreadProps) {
   const { descendants, memberNames, replyTree, showThreadAction } = useMemo(() => {
     const preview = thread?.descendants || visibleComments(comment.reply_preview || [])
@@ -287,7 +329,7 @@ const DetailCommentThread = memo(function DetailCommentThread({
               stickerClassName='business-detail-comment__sticker'
             />
           </View>
-          {renderCommentMeta(comment)}
+          {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
           {showThreadAction && (
             <View className='business-detail-comment__thread-action' onClick={() => onExpand(comment.id)}>
               {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
@@ -309,8 +351,10 @@ const DetailCommentThread = memo(function DetailCommentThread({
             focusedCommentId,
             enteringCommentId,
             removingCommentId,
+            likingIds,
             onStartReply,
             onOpenActions,
+            onToggleLike,
           )}
         </View>
       )}
@@ -354,6 +398,7 @@ export default function DetailComments({
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
+  const [likingIds, setLikingIds] = useState<ReadonlySet<number>>(() => new Set())
   const mountedRef = useRef(true)
   const requestScopeRef = useRef(0)
   const listRequestSequenceRef = useRef(0)
@@ -368,6 +413,7 @@ export default function DetailComments({
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
   const focusedCommentClearRef = useRef<null | (() => void)>(null)
+  const likeInFlightRef = useRef(new Set<number>())
   const openCommentActionsRef = useRef<(comment: CommentView) => void>(() => {})
   const handleOpenCommentActions = useCallback((comment: CommentView) => {
     openCommentActionsRef.current(comment)
@@ -434,8 +480,10 @@ export default function DetailComments({
 
   useEffect(() => {
     mountedRef.current = true
+    const likeInFlight = likeInFlightRef.current
     return () => {
       mountedRef.current = false
+      likeInFlight.clear()
       clearPendingTimers()
       focusedCommentClearRef.current = null
     }
@@ -618,6 +666,46 @@ export default function DetailComments({
       [rootId]: { ...current[rootId], expanded: true },
     }))
   }, [loadThread, updateThreads])
+
+  const toggleCommentLike = useCallback(async (comment: CommentView) => {
+    const action = comment.liked ? 'unlike' : 'like'
+    if (
+      likeInFlightRef.current.has(comment.id)
+      || !comment.available_actions.includes(action)
+    ) return
+
+    likeInFlightRef.current.add(comment.id)
+    setLikingIds(new Set(likeInFlightRef.current))
+    try {
+      const reaction = comment.liked
+        ? await lifeServicesRepository.unlikeResource(comment.id, 'comment')
+        : await lifeServicesRepository.likeResource(comment.id, 'comment')
+      if (reaction.resource_type !== 'comment' || reaction.resource_id !== comment.id) {
+        throw new Error('评论点赞响应与请求不匹配')
+      }
+      if (!mountedRef.current) return
+
+      setComments((current) => applyCommentReaction(current, reaction))
+      const rootId = commentRootId(comment)
+      updateThreads((current) => {
+        const thread = current[rootId]
+        if (!thread) return current
+        const descendants = applyCommentReaction(thread.descendants, reaction)
+        return descendants === thread.descendants
+          ? current
+          : { ...current, [rootId]: { ...thread, descendants } }
+      })
+    } catch (error) {
+      if (isApiError(error) && error.code === 'academic_verification_required') return
+
+      const feedback = commentLikeFailure(isApiError(error) ? error : null)
+      if (feedback.refresh) await load(1)
+      Taro.showToast({ title: feedback.message, icon: 'none' })
+    } finally {
+      likeInFlightRef.current.delete(comment.id)
+      if (mountedRef.current) setLikingIds(new Set(likeInFlightRef.current))
+    }
+  }, [load, updateThreads])
 
   const openComposer = useCallback(() => {
     composerCloseSequenceRef.current += 1
@@ -943,9 +1031,11 @@ export default function DetailComments({
             focusedCommentId={focusedCommentId}
             enteringCommentId={enteringCommentId}
             removingCommentId={removingCommentId}
+            likingIds={likingIds}
             onExpand={expandThread}
             onStartReply={startReply}
             onOpenActions={handleOpenCommentActions}
+            onToggleLike={toggleCommentLike}
           />
         ))}
         {!loading && comments.length < total && (

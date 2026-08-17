@@ -106,6 +106,14 @@
 .business-detail-comment__author-badge { padding: 2rpx 9rpx; border-radius: 999rpx; background: var(--campus-surface-primary, #eff6ff); color: var(--campus-primary-strong, #155dfc); font-size: 20rpx; font-weight: 700; }
 .business-detail-comment__bubble { margin-top: 12rpx; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--campus-text-heading, #1d293d); font-size: 26rpx; line-height: 1.6; transition: box-shadow 220ms ease, background-color 220ms ease; }
 .business-detail-comment__meta { display: flex; min-height: 54rpx; padding: 8rpx 6rpx 0; align-items: center; gap: 28rpx; color: var(--campus-text-muted, #90a1b9); font-size: 23rpx; }
+.business-detail-comment__like { display: flex; min-width: 64rpx; min-height: 54rpx; margin-left: auto; padding: 0 10rpx; align-items: center; justify-content: center; gap: 7rpx; border-radius: 18rpx; color: var(--campus-text-muted, #809693); transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 160ms ease; }
+.business-detail-comment__like image { width: 28rpx; height: 28rpx; flex: none; opacity: 0.76; }
+.business-detail-comment__like text { min-width: 18rpx; text-align: center; }
+.business-detail-comment__like--active { color: #c76453; }
+.business-detail-comment__like--active image { opacity: 1; animation: business-detail-comment-like-pop 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+.business-detail-comment__like--pressed { background: rgba(233, 245, 242, 0.7); transform: scale(0.97); }
+.business-detail-comment__like--busy { opacity: 0.52; }
+.business-detail-comment__like--disabled { opacity: 0.68; }
 .business-detail-comment__thread-action,
 .business-detail-comment__thread-error { padding: 8rpx 4rpx; color: var(--campus-primary, #2b7fff); font-size: 24rpx; font-weight: 650; }
 .business-detail-comment__thread-error { color: var(--campus-danger, #ff2056); }
@@ -127,8 +135,19 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes business-detail-comment-like-pop {
+  0% { transform: scale(0.82); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
 .business-detail-comment-node--entering { animation: business-detail-comment-enter 280ms ease-out both; }
 .business-detail-comment-node--removing { opacity: 0; transform: translateX(18rpx) scale(0.99); transition: opacity 180ms ease, transform 180ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .business-detail-comment__like { transition: none; }
+  .business-detail-comment__like--active image { animation: none; }
+}
 
 .business-detail-composer {
   position: fixed;
