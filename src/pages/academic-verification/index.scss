@@ -658,10 +658,46 @@
 
   &--pressed { transform: scale(0.985); }
 
+  &--guided:not(&--disabled) {
+    animation: verification-bind-guide 1.1s cubic-bezier(0.22, 1, 0.36, 1) 3;
+  }
+
   &--disabled {
     color: var(--campus-text-muted, #90a1b9);
     background: var(--campus-border, #f1f5f9);
     box-shadow: none;
+  }
+}
+
+.verification-prefill-guide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  padding: 16rpx 20rpx;
+  margin: 18rpx 0 10rpx;
+  color: var(--campus-primary-strong, #155dfc);
+  background: linear-gradient(135deg, var(--campus-surface-primary, #eff6ff), #ecfeff);
+  border: 2rpx solid var(--campus-border-strong, #dbeafe);
+  border-radius: 18rpx;
+  box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.08);
+  animation: verification-prefill-guide-enter 240ms ease-out both;
+
+  &__copy {
+    min-width: 0;
+
+    text { display: block; }
+    text:first-child { font-size: 24rpx; font-weight: 760; }
+    text:last-child { padding-top: 3rpx; color: var(--campus-text-secondary, #62748e); font-size: 21rpx; }
+  }
+
+  &__arrow {
+    flex: 0 0 auto;
+    color: var(--campus-primary, #2b7fff);
+    font-size: 34rpx;
+    font-weight: 800;
+    line-height: 1;
+    animation: verification-prefill-guide-arrow 900ms ease-in-out 3;
   }
 }
 
@@ -900,6 +936,24 @@
   .verification-education-option,
   .verification-primary,
   .verification-upload { transition: none; }
+  .verification-primary--guided,
+  .verification-prefill-guide,
+  .verification-prefill-guide__arrow { animation: none; }
+}
+
+@keyframes verification-bind-guide {
+  0%, 100% { transform: scale(1); box-shadow: 0 12rpx 24rpx rgba(43, 127, 255, 0.2); }
+  50% { transform: scale(1.018); box-shadow: 0 16rpx 32rpx rgba(43, 127, 255, 0.34); }
+}
+
+@keyframes verification-prefill-guide-enter {
+  from { opacity: 0; transform: translateY(8rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes verification-prefill-guide-arrow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6rpx); }
 }
 
 @keyframes verification-shimmer {

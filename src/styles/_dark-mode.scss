@@ -211,6 +211,16 @@
   page .verification-credential-guide text:first-child { color: #93c5fd; }
   page .verification-credential-guide text:nth-child(3) { color: #fda4af; }
 
+  page .verification-prefill-guide {
+    color: #93c5fd;
+    background: linear-gradient(135deg, #172554, #12343d);
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
+
+  page .verification-prefill-guide__copy text:first-child,
+  page .verification-prefill-guide__arrow { color: #93c5fd; }
+  page .verification-prefill-guide__copy text:last-child { color: var(--campus-text-muted, #8494aa); }
+
   page .verification-review-note {
     background: var(--campus-surface-danger, #3f1725);
     border-color: rgba(251, 113, 133, 0.28);

@@ -50,6 +50,11 @@ import {
   convertAcademicPasswordToEnglishSymbols,
   hasConvertibleAcademicPasswordSymbols,
 } from '../../features/academic-verification/password-symbols'
+import {
+  consumeAcademicVerificationCredentialPrefill,
+  resolveAcademicVerificationCredentialPrefill,
+  type AcademicVerificationCredentialPrefill,
+} from '../../features/academic-verification/miniapp-prefill'
 import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { getSelectedTempFiles } from '../../utils/file-selection'
 import './index.scss'
@@ -76,6 +81,12 @@ const verificationMethodIcons: Record<VerificationMethod, string> = {
 const securityIcon = require('../../assets/icons/result.svg')
 const passwordVisibleIcon = require('../../assets/icons/eye-off.svg')
 const passwordHiddenIcon = require('../../assets/icons/eye.svg')
+
+const getExternalCredentialPrefill = () => (
+  resolveAcademicVerificationCredentialPrefill(
+    Taro.getEnterOptionsSync().referrerInfo?.extraData,
+  )
+)
 
 const maskPassword = (value: string, revealedIndex: number | null) =>
   Array.from(value)
@@ -176,6 +187,8 @@ export default function AcademicVerificationPage() {
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [revealedPasswordIndex, setRevealedPasswordIndex] = useState<number | null>(null)
   const passwordRevealTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const externalCredentialPrefillRef = useRef(false)
+  const [credentialPrefillGuideVisible, setCredentialPrefillGuideVisible] = useState(false)
   const [rejectedCredential, setRejectedCredential] = useState<RejectedAcademicCredential | null>(null)
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel | null>(null)
   const [realName, setRealName] = useState('')
@@ -224,6 +237,21 @@ export default function AcademicVerificationPage() {
     setPasswordVisible((visible) => !visible)
   }
 
+  const applyExternalCredentialPrefill = (
+    credentialPrefill: AcademicVerificationCredentialPrefill | null,
+  ) => {
+    if (!credentialPrefill) return false
+
+    externalCredentialPrefillRef.current = true
+    setMethod('credentials')
+    setStudentNo(credentialPrefill.studentNo)
+    setPassword(credentialPrefill.password)
+    setEducationLevel(credentialPrefill.educationLevel)
+    setRejectedCredential(null)
+    setCredentialPrefillGuideVisible(true)
+    return true
+  }
+
   useEffect(() => () => {
     if (passwordRevealTimer.current) clearTimeout(passwordRevealTimer.current)
   }, [])
@@ -237,13 +265,17 @@ export default function AcademicVerificationPage() {
       setStatus(nextStatus)
       const request = nextStatus.latest_request
       const identity = nextStatus.identity
-      if (!studentNo) setStudentNo(identity?.student_no || request?.student_no || '')
-      if (!realName) setRealName(identity?.real_name || request?.real_name || '')
+      setStudentNo((current) => current || identity?.student_no || request?.student_no || '')
+      setRealName((current) => current || identity?.real_name || request?.real_name || '')
       const identityEducationLevel = identity?.education_level
       if (isAcademicEducationLevel(identityEducationLevel)) {
         setEducationLevel((current) => current || identityEducationLevel)
       }
-      if (request?.method === 'student_card' && request.status !== 'approved') {
+      if (
+        !externalCredentialPrefillRef.current
+        && request?.method === 'student_card'
+        && request.status !== 'approved'
+      ) {
         setMethod('student_card')
       }
     } catch (loadError) {
@@ -261,8 +293,13 @@ export default function AcademicVerificationPage() {
       setForceCredentialBinding(true)
       setMethod('credentials')
     }
+
+    applyExternalCredentialPrefill(
+      consumeAcademicVerificationCredentialPrefill() || getExternalCredentialPrefill(),
+    )
   })
   useDidShow(() => {
+    applyExternalCredentialPrefill(consumeAcademicVerificationCredentialPrefill())
     void loadStatus()
     void getCurrentIdentity()
       .then((currentUser) => {
@@ -332,6 +369,7 @@ export default function AcademicVerificationPage() {
   }
 
   const submitCredentials = async () => {
+    setCredentialPrefillGuideVisible(false)
     const normalizedStudentNo = studentNo.trim()
     if (!educationLevel) {
       Taro.showToast({ title: '请选择本科生或研究生', icon: 'none' })
@@ -665,7 +703,10 @@ export default function AcademicVerificationPage() {
                           hoverClass='verification-method--pressed'
                           ariaRole='button'
                           ariaLabel={`${item.label}，${item.description}`}
-                          onClick={() => setMethod(item.value)}
+                          onClick={() => {
+                            setMethod(item.value)
+                            if (item.value === 'student_card') setCredentialPrefillGuideVisible(false)
+                          }}
                         >
                           <View className='verification-method__icon'>
                             <Image src={verificationMethodIcons[item.value]} mode='aspectFit' />
@@ -812,8 +853,21 @@ export default function AcademicVerificationPage() {
                         </Text>
                       )}
                     </View>
+                    {credentialPrefillGuideVisible && !working && (
+                      <View className='verification-prefill-guide' ariaRole='status'>
+                        <View className='verification-prefill-guide__copy'>
+                          <Text>信息已自动填好</Text>
+                          <Text>点击下方按钮完成验证并绑定</Text>
+                        </View>
+                        <Text className='verification-prefill-guide__arrow'>↓</Text>
+                      </View>
+                    )}
                     <View
-                      className={`verification-primary ${working || !educationLevel ? 'verification-primary--disabled' : ''}`}
+                      className={[
+                        'verification-primary',
+                        working || !educationLevel ? 'verification-primary--disabled' : '',
+                        credentialPrefillGuideVisible && !working ? 'verification-primary--guided' : '',
+                      ].filter(Boolean).join(' ')}
                       hoverClass='verification-primary--pressed'
                       ariaRole='button'
                       ariaLabel='验证并绑定教务账号'
