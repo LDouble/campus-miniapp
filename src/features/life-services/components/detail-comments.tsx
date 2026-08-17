@@ -143,25 +143,28 @@ const renderCommentMeta = (
     <View className='business-detail-comment__meta'>
       <Text>{formatDateTime(comment.created_at)}</Text>
       {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
-      <View
-        className={[
-          'business-detail-comment__like',
-          comment.liked ? 'business-detail-comment__like--active' : '',
-          liking ? 'business-detail-comment__like--busy' : '',
-          !canToggleLike ? 'business-detail-comment__like--disabled' : '',
-        ].filter(Boolean).join(' ')}
-        hoverClass={canToggleLike && !liking ? 'business-detail-comment__like--pressed' : undefined}
-        hoverStartTime={20}
-        hoverStayTime={100}
-        ariaRole={canToggleLike ? 'button' : undefined}
-        ariaLabel={canToggleLike
-          ? `${liking ? '点赞处理中' : comment.liked ? '取消点赞' : '点赞'}，当前 ${comment.like_count} 个赞`
-          : `当前 ${comment.like_count} 个赞`}
-        onClick={canToggleLike && !liking ? () => onToggleLike(comment) : undefined}
-      >
-        <Image src={comment.liked ? icons.heartActive : icons.heart} mode='aspectFit' />
-        <Text>{comment.like_count}</Text>
-      </View>
+      {canToggleLike ? (
+        <View
+          className={[
+            'business-detail-comment__like',
+            comment.liked ? 'business-detail-comment__like--active' : '',
+            liking ? 'business-detail-comment__like--busy' : '',
+          ].filter(Boolean).join(' ')}
+          hoverClass={!liking ? 'business-detail-comment__like--pressed' : undefined}
+          hoverStartTime={20}
+          hoverStayTime={100}
+          ariaRole='button'
+          ariaLabel={`${liking ? '点赞处理中' : comment.liked ? '取消点赞' : '点赞'}，当前 ${comment.like_count} 个赞`}
+          onClick={!liking ? () => onToggleLike(comment) : undefined}
+        >
+          <Image src={comment.liked ? icons.heartActive : icons.heart} mode='aspectFit' />
+          <Text>{comment.like_count}</Text>
+        </View>
+      ) : (
+        <Text className='business-detail-comment__like-count'>
+          {comment.like_count} 赞
+        </Text>
+      )}
     </View>
   )
 }
