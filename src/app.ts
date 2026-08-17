@@ -10,6 +10,7 @@ import { installRequestLogging } from './features/request-logging'
 import { requestWechatSubscriptionForCurrentPage } from './features/wechat-subscription'
 import { registerWechatAiHandoff } from './features/wechat-ai/handoff'
 import { installAppUpdate } from './features/app-update'
+import { captureAcademicVerificationCredentialPrefill } from './features/academic-verification/miniapp-prefill'
 import { initializeSystemState } from './state/system'
 import { preloadPublicData } from './state/public-data'
 import {
@@ -20,7 +21,8 @@ import {
 import './app.scss'
 
 function App(props) {
-  useLaunch(() => {
+  useLaunch((options) => {
+    captureAcademicVerificationCredentialPrefill(options?.referrerInfo?.extraData)
     initializeSystemState()
     installAppUpdate()
     void preloadPublicData()
@@ -34,7 +36,8 @@ function App(props) {
   }, [])
 
   // 对应 onShow
-  useDidShow(() => {
+  useDidShow((options) => {
+    captureAcademicVerificationCredentialPrefill(options?.referrerInfo?.extraData)
     void preloadPublicData()
     void guardCurrentPage()
   })
