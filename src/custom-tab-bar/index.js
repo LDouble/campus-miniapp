@@ -73,7 +73,14 @@ Component({
       const index = Number(event.currentTarget.dataset.index)
       const item = this.data.list[index]
 
-      if (!item || index === this.data.selected) return
+      if (!item) return
+
+      if (index === this.data.selected) {
+        if (item.pagePath === 'pages/community/index') {
+          wx.pageScrollTo({ scrollTop: 0, duration: 240 })
+        }
+        return
+      }
 
       if (item.pagePath === 'pages/community/index') {
         requestWechatSubscriptionForModule('community')
