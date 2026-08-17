@@ -1093,7 +1093,11 @@ export default function PublishPage() {
                         ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
                         onClick={() => changeStickerPickerOpen(!stickerPickerOpen)}
                       >
-                        <Text>☺</Text>
+                        <Image
+                          className='publisher-composer-tool__icon'
+                          src={require('../../../assets/icons/smile.svg')}
+                          mode='aspectFit'
+                        />
                       </View>
                       {(section === 'community' || section === 'market') && (
                         <View
