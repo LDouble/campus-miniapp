@@ -30,7 +30,7 @@ assert.ok(
 )
 
 assert.ok(
-  homeSource.includes('getAcademicVerificationStatus()'),
+  homeSource.includes('getAcademicVerificationStatus({ force })'),
   '首页刷新教务数据前必须先查询校园身份认证状态',
 )
 assert.ok(

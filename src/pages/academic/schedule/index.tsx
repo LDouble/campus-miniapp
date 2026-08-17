@@ -398,7 +398,7 @@ export default function SchedulePage() {
     setServerCache(null)
     setUsingCache(hasCachedCourses)
     try {
-      const records = await academicRepository.getPeriods()
+      const records = await academicRepository.getPeriods({ force: true })
       if (scheduleRequestRef.current !== requestId) return
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
       const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)

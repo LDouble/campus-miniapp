@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro'
 import { markAccountCancelled } from '../../api/auth'
+import { clearAcademicCredential } from '../../api/academic-credential'
 import {
   materialDraftStorage,
   removePersistedMaterialFiles,
@@ -11,5 +12,6 @@ export const clearCancelledAccountLocalData = async (userId: number) => {
     await removePersistedMaterialFiles(drafts.drafts)
   }
   Taro.clearStorageSync()
+  clearAcademicCredential()
   markAccountCancelled()
 }

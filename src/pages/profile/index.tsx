@@ -111,10 +111,10 @@ export default function ProfilePage() {
   const [savingUsername, setSavingUsername] = useState(false)
   const [avatarDraft, setAvatarDraft] = useState<MediaImageDraft | null>(null)
   const [savingAvatar, setSavingAvatar] = useState(false)
-  const loadCurrentUser = async (showError = false) => {
+  const loadCurrentUser = async (showError = false, force = false) => {
     setAccountLoaded(false)
     try {
-      const account = await getCurrentUser()
+      const account = await getCurrentUser({ force })
       setCurrentUser(account)
       setUsernameDraft(account.user.username)
     } catch {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import { ScrollView, Text, View } from '@tarojs/components'
 import type {
@@ -72,11 +72,12 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(!result.calendar)
   const [filter, setFilter] = useState<EventFilter>('all')
   const [selectedTermID, setSelectedTermID] = useState('')
+  const forceLevelRefresh = useRef<AcademicEducationLevel | null>(null)
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options: { force?: boolean } = {}) => {
     setLoading(true)
     try {
-      setResult(await loadAcademicCalendar(level))
+      setResult(await loadAcademicCalendar(level, options))
     } finally {
       setLoading(false)
     }
@@ -85,11 +86,13 @@ export default function CalendarPage() {
   useEffect(() => {
     setResult(getCachedAcademicCalendar(level))
     setSelectedTermID('')
-    void refresh()
+    const force = forceLevelRefresh.current === level
+    if (force) forceLevelRefresh.current = null
+    void refresh({ force })
   }, [level, refresh])
 
   usePullDownRefresh(async () => {
-    await refresh()
+    await refresh({ force: true })
     Taro.stopPullDownRefresh()
   })
 
@@ -136,6 +139,7 @@ export default function CalendarPage() {
     saveCalendarEducationLevel(next)
     setFilter('all')
     setSelectedTermID('')
+    forceLevelRefresh.current = next
     setLevel(next)
   }
 

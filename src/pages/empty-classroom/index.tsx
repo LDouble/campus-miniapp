@@ -20,7 +20,10 @@ import {
   type ClassroomView,
   type EmptyClassroomDayAvailability,
 } from '../../features/empty-classroom/repository'
-import { loadAcademicCalendar } from '../../features/calendar/repository'
+import {
+  getCalendarEducationLevel,
+  loadAcademicCalendar,
+} from '../../features/calendar/repository'
 import {
   academicWeekdayToDate,
   resolveAcademicCalendarState,
@@ -116,6 +119,7 @@ export default function EmptyClassroomPage() {
   const handoffCampus = useRef<string>()
   const handoffHasDate = useRef(false)
   const requestVersion = useRef(0)
+  const skipCalendarRefresh = useRef(false)
 
   useCampusShare(() => ({
     title: `${campus}·${dateLabel(serviceDate)}空教室`,
@@ -161,17 +165,17 @@ export default function EmptyClassroomPage() {
     ) || serviceDate
   }, [calendarSelection, reportEndWeek, serviceDate])
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (selection = calendarSelection) => {
     const version = ++requestVersion.current
     setLoading(true)
     setErrorText('')
     try {
-      if (!calendarSelection) throw new Error('所选日期不在教学周内')
+      if (!selection) throw new Error('所选日期不在教学周内')
       const next = await loadClassroomDayAvailability({
         campus,
-        periodId: calendarSelection.term.id,
-        teachingWeek: calendarSelection.week,
-        weekday: calendarSelection.weekday,
+        periodId: selection.term.id,
+        teachingWeek: selection.week,
+        weekday: selection.weekday,
       })
       if (version !== requestVersion.current) return
       setDayResult(next)
@@ -205,7 +209,7 @@ export default function EmptyClassroomPage() {
     let active = true
     Promise.all([
       loadMiniappRuntimeConfig().catch(() => getMiniappRuntimeConfig()),
-      loadAcademicCalendar('undergraduate').catch(() => null),
+      loadAcademicCalendar(getCalendarEducationLevel()).catch(() => null),
     ]).then(([next, calendarResult]) => {
       if (!active) return
       setConfig(next)
@@ -243,12 +247,24 @@ export default function EmptyClassroomPage() {
 
   useEffect(() => {
     if (!queryReady) return
+    if (skipCalendarRefresh.current) {
+      skipCalendarRefresh.current = false
+      return
+    }
     void refresh()
   }, [queryReady, refresh])
 
   usePullDownRefresh(async () => {
-    if (queryReady) await refresh()
-    Taro.stopPullDownRefresh()
+    try {
+      if (!queryReady) return
+      const result = await loadAcademicCalendar(getCalendarEducationLevel(), { force: true })
+      const nextCalendar = result.calendar
+      skipCalendarRefresh.current = true
+      setCalendar(nextCalendar)
+      await refresh(resolveAcademicWeekday(nextCalendar, serviceDate))
+    } finally {
+      Taro.stopPullDownRefresh()
+    }
   })
 
   const chooseCampus = (value: string) => {

@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import type { ApiErrorEnvelope, ApiSuccessEnvelope, TokenPair } from './types'
 import { resolveApiBaseUrl } from './environment'
+import { invalidateSharedResourceGroup } from '../state/shared-resource'
 
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
@@ -52,6 +53,9 @@ export const clearSession = () => {
   Taro.removeStorageSync(ACCESS_TOKEN_KEY)
   Taro.removeStorageSync(REFRESH_TOKEN_KEY)
   Taro.removeStorageSync(TOKEN_EXPIRES_AT_KEY)
+  invalidateSharedResourceGroup('session')
+  invalidateSharedResourceGroup('verification')
+  invalidateSharedResourceGroup('academic')
 }
 
 export class AccountCancelledError extends Error {
@@ -120,6 +124,7 @@ export const login = () => {
 }
 
 export const resumeAfterAccountCancellation = async () => {
+  clearSession()
   Taro.removeStorageSync(ACCOUNT_CANCELLED_KEY)
   try {
     return await login()
@@ -133,7 +138,10 @@ export const refreshAccessToken = () => {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       const refreshToken = getRefreshToken()
-      if (!refreshToken) return login()
+      if (!refreshToken) {
+        clearSession()
+        return login()
+      }
 
       const response = await Taro.request<ApiSuccessEnvelope<TokenPair> | ApiErrorEnvelope>({
         url: apiUrl('/api/v1/auth/refresh'),

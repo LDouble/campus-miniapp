@@ -167,7 +167,7 @@ export default function ExamsPage() {
     setRetrying(true)
     setLoadError(null)
     try {
-      const records = await academicRepository.getPeriods()
+      const records = await academicRepository.getPeriods({ force: true })
       const periodId = resolvePeriodId(records, preferences.examPeriodId)
       if (!periodId) throw new Error('academic period unavailable')
       setPeriods(records)
