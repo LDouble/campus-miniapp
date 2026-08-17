@@ -71,6 +71,26 @@ export const scaledMediaImageDimensions = (input: {
   }
 }
 
+export const normalizedSquareCropDimensions = (input: {
+  width: number
+  height: number
+  maxDimension?: number
+}) => {
+  const width = Math.floor(input.width)
+  const height = Math.floor(input.height)
+  if (width <= 0 || height <= 0) return null
+
+  const longestDimension = Math.max(width, height)
+  const shortestDimension = Math.min(width, height)
+  const toleratedDifference = Math.max(2, Math.ceil(longestDimension * 0.01))
+  if (longestDimension - shortestDimension > toleratedDifference) return null
+
+  const maxDimension = Math.floor(input.maxDimension || shortestDimension)
+  const side = Math.min(shortestDimension, maxDimension)
+  if (side <= 0) return null
+  return { width: side, height: side }
+}
+
 export const moveMediaImage = (
   images: MediaImageDraft[],
   index: number,
