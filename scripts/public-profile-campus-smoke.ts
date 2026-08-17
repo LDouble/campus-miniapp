@@ -39,6 +39,10 @@ const profileStyles = readFileSync(resolve(
 ), 'utf8')
 const profileEntry = readFileSync(resolve(__dirname, '../src/pages/profile/index.tsx'), 'utf8')
 const generatedSchema = readFileSync(resolve(__dirname, '../src/api/generated/schema.ts'), 'utf8')
+const campusOptions = readFileSync(resolve(
+  __dirname,
+  '../src/features/life-services/campus.ts',
+), 'utf8')
 
 for (const path of [
   '/api/v1/users/${userId}/profile',
@@ -91,6 +95,7 @@ assert.ok(lifeList.includes('allowAll'))
 assert.ok(lifeList.includes('onChange={setCampus}'))
 assert.ok(campusSelector.includes("import BottomSheet from '../../../components/bottom-sheet'"))
 assert.ok(campusSelector.includes("title='选择校区'"))
+assert.ok(campusOptions.includes("'三亚校区'"), '校区筛选缺少三亚校区')
 assert.ok(filterSheet.includes("import BottomSheet from '../../../components/bottom-sheet'"))
 assert.ok(bottomSheet.includes("className='bottom-sheet-layer'"))
 assert.ok(profileEntry.includes('openPublicProfile(currentUser.user.id)'))
