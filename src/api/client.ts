@@ -12,6 +12,7 @@ import type {
 } from './types'
 import { handleAcademicVerificationRequired } from '../features/academic-verification/guard'
 import { reportClientError } from '../features/error-reporting'
+import { invalidateSharedResourceGroup } from '../state/shared-resource'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -132,6 +133,7 @@ const throwApiError = async (error: ApiError, options: RequestOptions): Promise<
     error.code === 'academic_verification_required'
     && !options.skipAcademicVerificationGuard
   ) {
+    invalidateSharedResourceGroup('verification', { clearData: false })
     try {
       await handleAcademicVerificationRequired()
     } catch {

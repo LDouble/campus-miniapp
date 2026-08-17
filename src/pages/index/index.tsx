@@ -251,8 +251,9 @@ const loadCachedAcademicLabel = () => {
 const loadLatestAcademic = async (
   userId: number,
   cache: AcademicScheduleCache | null,
+  force = false,
 ) => {
-  const periodsResult = await settle(academicRepository.getPeriods())
+  const periodsResult = await settle(academicRepository.getPeriods({ force }))
   if (!periodsResult.ok || !periodsResult.value.length) return cache
 
   const periods = periodsResult.value
@@ -308,15 +309,18 @@ const loadLatestAcademic = async (
   } satisfies AcademicScheduleCache
 }
 
-const loadHomeAcademic = async (accountPromise: Promise<Settled<Awaited<ReturnType<typeof getCurrentUser>>>>) => {
+const loadHomeAcademic = async (
+  accountPromise: Promise<Settled<Awaited<ReturnType<typeof getCurrentUser>>>>,
+  force = false,
+) => {
   const account = await accountPromise
   const userId = account.ok ? account.value.user.id : getActiveAcademicUserId()
   const cache = academicStorage.getScheduleCache(userId)
   if (!account.ok) return cache
 
-  const verification = await settle(getAcademicVerificationStatus())
+  const verification = await settle(getAcademicVerificationStatus({ force }))
   if (!verification.ok || verification.value.identity?.status !== 'verified') return cache
-  return loadLatestAcademic(userId, cache)
+  return loadLatestAcademic(userId, cache, force)
 }
 
 const latestCommunityPosts = (items: CampusCirclePostView[]) => (
@@ -377,15 +381,15 @@ function Index() {
     releaseGap: 16,
   })
 
-  const loadHome = useCallback(async () => {
+  const loadHome = useCallback(async (force = false) => {
     const latestRuntimeConfig = await loadMiniappRuntimeConfig()
     const moduleEnabled = (key: MiniappModuleKey) => (
       resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
     )
-    const accountPromise = settle(getCurrentUser())
+    const accountPromise = settle(getCurrentUser({ force }))
     // 未认证用户只展示缓存；已认证用户才在后台刷新教务数据。
     const academicPromise = moduleEnabled('academic_schedule')
-      ? loadHomeAcademic(accountPromise)
+      ? loadHomeAcademic(accountPromise, force)
       : accountPromise.then((account) => academicStorage.getScheduleCache(
         account.ok ? account.value.user.id : getActiveAcademicUserId(),
       ))
@@ -408,7 +412,7 @@ function Index() {
       pageSize: 2,
     }))
     const calendarPromise = moduleEnabled('calendar')
-      ? loadAcademicCalendar(getCalendarEducationLevel())
+      ? loadAcademicCalendar(getCalendarEducationLevel(), { force })
       : Promise.resolve({ calendar: null, source: 'unavailable' as const, updatedAt: 0 })
     const checkinPromise = homeFeatureFlags.todayTask
       ? accountPromise.then((account) => (
@@ -511,7 +515,7 @@ function Index() {
   usePullDownRefresh(() => {
     setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
     setAcademicCalendarLabel(loadCachedAcademicLabel())
-    void loadHome()
+    void loadHome(true)
   })
 
   const openLifeHub = async (section: LifeHubSection) => {

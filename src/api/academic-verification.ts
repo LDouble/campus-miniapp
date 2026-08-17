@@ -3,6 +3,7 @@ import {
   createIdempotencyKey,
 } from './client'
 import { uploadFileToObjectStorage } from './object-upload'
+import { createSharedResource } from '../state/shared-resource'
 import type { AcademicEducationLevel } from './academic-credential'
 import type {
   AcademicVerificationMaterial,
@@ -15,17 +16,45 @@ import type { operations } from './generated/schema'
 type InitiateUploadRequest = operations['InitiateAcademicVerificationMaterialUpload']['requestBody']['content']['application/json']
 type CompleteUploadRequest = operations['CompleteAcademicVerificationMaterialUpload']['requestBody']['content']['application/json']
 
-export const getAcademicVerificationStatus = () => apiRequest<AcademicVerificationStatus>({
+const PENDING_VERIFICATION_MAX_AGE_MS = 30 * 1000
+const VERIFICATION_MAX_AGE_MS = 60 * 1000
+
+export type AcademicVerificationRequestOptions = {
+  force?: boolean
+}
+
+const verificationMaxAgeMs = (status: AcademicVerificationStatus | undefined) => (
+  status?.latest_request?.status === 'pending'
+    ? PENDING_VERIFICATION_MAX_AGE_MS
+    : VERIFICATION_MAX_AGE_MS
+)
+
+const academicVerificationResource = createSharedResource<AcademicVerificationStatus>({
+  maxAgeMs: verificationMaxAgeMs,
+  group: 'verification',
+})
+
+const requestAcademicVerificationStatus = () => apiRequest<AcademicVerificationStatus>({
   path: '/api/v1/academic-verification',
   skipAcademicVerificationGuard: true,
 })
 
-export const verifyAcademicCredentials = (
+export const getAcademicVerificationStatus = (
+  options: AcademicVerificationRequestOptions = {},
+) => academicVerificationResource.ensure(requestAcademicVerificationStatus, options)
+
+export const invalidateAcademicVerificationStatus = () => academicVerificationResource.invalidate()
+
+export const seedAcademicVerificationStatus = (status: AcademicVerificationStatus) => (
+  academicVerificationResource.seed(status)
+)
+
+export const verifyAcademicCredentials = async (
   studentNo: string,
   password: string,
   educationLevel: AcademicEducationLevel,
-) => (
-  apiRequest<AcademicVerificationRequest>({
+) => {
+  const request = await apiRequest<AcademicVerificationRequest>({
     path: '/api/v1/academic-verification/credentials',
     method: 'POST',
     data: {
@@ -36,23 +65,29 @@ export const verifyAcademicCredentials = (
     idempotencyKey: createIdempotencyKey('academic-credentials'),
     skipAcademicVerificationGuard: true,
   })
-)
+  invalidateAcademicVerificationStatus()
+  return request
+}
 
-export const submitStudentCardVerification = (
+export const submitStudentCardVerification = async (
   realName: string,
   studentNo: string,
   materialId: number,
-) => apiRequest<AcademicVerificationRequest>({
-  path: '/api/v1/academic-verification/student-card',
-  method: 'POST',
-  data: {
-    real_name: realName,
-    student_no: studentNo,
-    material_id: materialId,
-  },
-  idempotencyKey: createIdempotencyKey('academic-student-card'),
-  skipAcademicVerificationGuard: true,
-})
+) => {
+  const request = await apiRequest<AcademicVerificationRequest>({
+    path: '/api/v1/academic-verification/student-card',
+    method: 'POST',
+    data: {
+      real_name: realName,
+      student_no: studentNo,
+      material_id: materialId,
+    },
+    idempotencyKey: createIdempotencyKey('academic-student-card'),
+    skipAcademicVerificationGuard: true,
+  })
+  invalidateAcademicVerificationStatus()
+  return request
+}
 
 export const uploadAcademicVerificationMaterial = async (
   filePath: string,

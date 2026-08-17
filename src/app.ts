@@ -9,7 +9,9 @@ import { installGlobalErrorReporting } from './features/error-reporting'
 import { installRequestLogging } from './features/request-logging'
 import { requestWechatSubscriptionForCurrentPage } from './features/wechat-subscription'
 import { registerWechatAiHandoff } from './features/wechat-ai/handoff'
+import { installAppUpdate } from './features/app-update'
 import { initializeSystemState } from './state/system'
+import { preloadPublicData } from './state/public-data'
 import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
@@ -20,6 +22,8 @@ import './app.scss'
 function App(props) {
   useLaunch(() => {
     initializeSystemState()
+    installAppUpdate()
+    void preloadPublicData()
     installRequestLogging()
     if (__CAMPUS_WECHAT_AI_ENABLED__) registerWechatAiHandoff()
   })
@@ -31,6 +35,7 @@ function App(props) {
 
   // 对应 onShow
   useDidShow(() => {
+    void preloadPublicData()
     void guardCurrentPage()
   })
 

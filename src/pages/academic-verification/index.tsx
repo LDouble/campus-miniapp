@@ -228,12 +228,12 @@ export default function AcademicVerificationPage() {
     if (passwordRevealTimer.current) clearTimeout(passwordRevealTimer.current)
   }, [])
 
-  const loadStatus = async (silent = false) => {
+  const loadStatus = async (silent = false, force = false) => {
     if (silent) setRefreshing(true)
     else setLoading(true)
     setError('')
     try {
-      const nextStatus = await getAcademicVerificationStatus()
+      const nextStatus = await getAcademicVerificationStatus({ force })
       setStatus(nextStatus)
       const request = nextStatus.latest_request
       const identity = nextStatus.identity
@@ -275,7 +275,7 @@ export default function AcademicVerificationPage() {
       })
   })
   usePullDownRefresh(() => {
-    void loadStatus(true)
+    void loadStatus(true, true)
   })
 
   const chooseMaterial = async () => {
@@ -383,7 +383,7 @@ export default function AcademicVerificationPage() {
       setPassword('')
       setRejectedCredential(null)
       setForceCredentialBinding(false)
-      await loadStatus(true)
+      await loadStatus(true, true)
       await completeSuccess()
     }
 
@@ -504,7 +504,7 @@ export default function AcademicVerificationPage() {
         normalizedStudentNo,
         material.material_id,
       )
-      await loadStatus(true)
+      await loadStatus(true, true)
       Taro.showToast({ title: '已提交审核', icon: 'success' })
     } catch (submitError) {
       Taro.showToast({

@@ -111,7 +111,7 @@ const mapCourseSelection = (
 })
 
 export interface AcademicRepository {
-  getPeriods: () => Promise<AcademicPeriod[]>
+  getPeriods: (options?: { force?: boolean }) => Promise<AcademicPeriod[]>
   getCourses: (periodId: string) => Promise<AcademicQueryResult<Course>>
   getGrades: () => Promise<AcademicQueryResult<GradeRecord>>
   getExams: (periodId: string) => Promise<AcademicQueryResult<ExamRecord>>
@@ -141,7 +141,7 @@ const getGrades = () => {
 }
 
 export const academicRepository: AcademicRepository = {
-  getPeriods: async () => (await listAcademicPeriods()).map(mapPeriod),
+  getPeriods: async (options) => (await listAcademicPeriods(options)).map(mapPeriod),
   getCourses: async (periodId) => mapQueryResult(await listAcademicCourses(periodId), mapCourse),
   getGrades,
   getExams: async (periodId) => mapQueryResult(await listAcademicExams(periodId), mapExam),

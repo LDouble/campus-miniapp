@@ -16,6 +16,7 @@ import type {
   AcademicPeriod,
   AcademicCacheMetadata,
 } from './types'
+import { createSharedResource } from '../state/shared-resource'
 
 export const getAcademicCalendar = (educationLevel: AcademicEducationLevel) => (
   apiRequest<AcademicCalendar>({
@@ -82,10 +83,23 @@ const academicPost = async <T>(path: string, periodId?: string): Promise<Academi
   }
 }
 
-export const listAcademicPeriods = () => apiRequest<AcademicPeriod[]>({
-  path: '/api/v1/academic/periods',
-  method: 'POST',
+export const ACADEMIC_PERIODS_FRESH_MS = 30 * 60 * 1000
+
+const academicPeriodsResource = createSharedResource<AcademicPeriod[]>({
+  maxAgeMs: ACADEMIC_PERIODS_FRESH_MS,
+  group: 'academic',
 })
+
+export const listAcademicPeriods = (options: { force?: boolean } = {}) => (
+  academicPeriodsResource.ensure(() => apiRequest<AcademicPeriod[]>({
+    path: '/api/v1/academic/periods',
+    method: 'POST',
+  }), options)
+)
+
+export const invalidateAcademicPeriods = () => {
+  academicPeriodsResource.invalidate()
+}
 
 export const listAcademicCourses = (periodId: string) => academicPost<AcademicCourse>(
   '/api/v1/academic/courses',

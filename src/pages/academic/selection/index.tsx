@@ -144,7 +144,7 @@ export default function SelectionPage() {
     setRetrying(true)
     setLoadError(null)
     try {
-      const result = await academicRepository.getPeriods()
+      const result = await academicRepository.getPeriods({ force: true })
       const periodId = resolvePeriodId(result, preferences.schedulePeriodId)
       if (!periodId) throw new Error('academic period unavailable')
       setPeriods(result)
