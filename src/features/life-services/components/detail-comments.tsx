@@ -55,6 +55,12 @@ type QuickAction = {
   onClick: () => void
 }
 
+type PersistentContact = {
+  label: string
+  value: string
+  onCopy: () => void
+}
+
 type CommentThreadState = {
   descendants: CommentView[]
   error: string
@@ -82,6 +88,7 @@ type DetailCommentsProps = {
   tone?: Exclude<DetailCommentTarget, 'campus_circle_post'> | 'community'
   actions?: DetailFooterAction[]
   quickAction?: QuickAction
+  persistentContact?: PersistentContact
   onApprovedDelta?: (delta: number) => void
   onMutation?: (mutation: {
     comment: CommentView
@@ -377,6 +384,7 @@ export default function DetailComments({
   tone = targetType === 'campus_circle_post' ? 'community' : targetType,
   actions = [],
   quickAction,
+  persistentContact,
   onApprovedDelta,
   onMutation,
 }: DetailCommentsProps) {
@@ -1048,8 +1056,9 @@ export default function DetailComments({
         )}
       </View>
 
-      {(enabled || actions.length > 0) && (
+      {(enabled || actions.length > 0 || persistentContact) && (
         <>
+          {persistentContact && <View className='business-detail-comments__persistent-offset' />}
           <View
             className={composerOpen
               && !composerClosing
@@ -1067,6 +1076,24 @@ export default function DetailComments({
               transitionDuration: `${keyboardTransitionDuration}ms`,
             }}
           >
+          {persistentContact && !composerOpen && (
+            <View
+              className='business-detail-composer__persistent-contact'
+              hoverClass='business-detail-composer__persistent-contact--pressed'
+              hoverStartTime={20}
+              hoverStayTime={100}
+              ariaRole='button'
+              ariaLabel={`${persistentContact.label}，${persistentContact.value}，点击复制`}
+              onClick={persistentContact.onCopy}
+            >
+              <View className='business-detail-composer__persistent-contact-icon'>联</View>
+              <View className='business-detail-composer__persistent-contact-copy'>
+                <Text>{persistentContact.label}</Text>
+                <Text>{persistentContact.value}</Text>
+              </View>
+              <Text className='business-detail-composer__persistent-contact-action'>复制</Text>
+            </View>
+          )}
           {replyTarget && (
             <View className='business-detail-composer__replying'>
               <Text>@{compactCommentName(commentAuthorName(replyTarget), 10)}</Text>

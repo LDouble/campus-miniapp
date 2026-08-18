@@ -30,6 +30,7 @@ import {
   showParticipationContact,
 } from '../../../features/life-services/contact-reveal'
 import {
+  hasParticipationContactAccess,
   type ParticipationContact,
   restoreParticipationContact,
   visibleParticipationContact,
@@ -223,6 +224,16 @@ export default function ErrandDetailPage() {
     Taro.setClipboardData({ data: displayedContact.contact })
   }
 
+  const persistentContact = item
+    && displayedContact
+    && hasParticipationContactAccess('errand', item.viewer_relation, item.status)
+      ? {
+          label: `发布者 · ${contactTypeLabel(displayedContact.contactType)}`,
+          value: displayedContact.contact,
+          onCopy: copyContact,
+        }
+      : undefined
+
   const footerActions = item ? buildDetailFooterActions({
     availableActions: item.available_actions,
     labels: actionLabels,
@@ -341,6 +352,7 @@ export default function ErrandDetailPage() {
               targetAuthorId={item.requester_id}
               tone='errand'
               actions={footerActions}
+              persistentContact={persistentContact}
             />
           </>
         )}

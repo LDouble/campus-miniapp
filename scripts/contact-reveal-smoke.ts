@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   contactTypeLabel,
   revealedContactValue,
@@ -23,6 +25,39 @@ assert.equal(hasParticipationContactAccess('carpool', 'participant', 'open'), tr
 assert.equal(hasParticipationContactAccess('errand', 'runner', 'accepted'), true)
 assert.equal(hasParticipationContactAccess('errand', 'runner', 'completed'), false)
 assert.equal(hasParticipationContactAccess('errand', 'other', 'accepted'), false)
+
+const persistentContactCases = [
+  { resourceType: 'marketplace', page: 'marketplace' },
+  { resourceType: 'errand', page: 'errands' },
+  { resourceType: 'carpool', page: 'carpool' },
+]
+
+for (const item of persistentContactCases) {
+  const source = readFileSync(
+    resolve(__dirname, `../src/packages/social/${item.page}/detail.tsx`),
+    'utf8',
+  )
+  assert.match(
+    source,
+    new RegExp(`hasParticipationContactAccess\\('${item.resourceType}',\\s*item\\.viewer_relation,\\s*item\\.status\\)`),
+    `${item.resourceType}: 常驻联系条必须按 viewer_relation 和状态判断访问权限`,
+  )
+  assert.match(
+    source,
+    /persistentContact=\{persistentContact\}/u,
+    `${item.resourceType}: 详情页必须把已解锁联系方式传入固定操作区`,
+  )
+}
+
+const commentsSource = readFileSync(
+  resolve(__dirname, '../src/features/life-services/components/detail-comments.tsx'),
+  'utf8',
+)
+assert.match(
+  commentsSource,
+  /business-detail-composer__persistent-contact/u,
+  '评论操作区必须渲染常驻联系条',
+)
 
 const modals: Array<Record<string, unknown>> = []
 const copied: string[] = []

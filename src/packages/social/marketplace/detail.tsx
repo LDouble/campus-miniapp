@@ -19,6 +19,7 @@ import {
   showParticipationContact,
 } from '../../../features/life-services/contact-reveal'
 import {
+  hasParticipationContactAccess,
   type ParticipationContact,
   restoreParticipationContact,
   visibleParticipationContact,
@@ -222,6 +223,16 @@ export default function MarketplaceDetailPage() {
     Taro.setClipboardData({ data: displayedContact.contact })
   }
 
+  const persistentContact = item
+    && displayedContact
+    && hasParticipationContactAccess('marketplace', item.viewer_relation, item.status)
+      ? {
+          label: `${item.intent === 'wanted' ? '求购者' : '卖家'} · ${contactTypeLabel(displayedContact.contactType)}`,
+          value: displayedContact.contact,
+          onCopy: copyContact,
+        }
+      : undefined
+
   const relationLabel = item?.viewer_relation === 'owner'
     ? '我发布的'
     : item?.viewer_relation === 'buyer'
@@ -382,6 +393,7 @@ export default function MarketplaceDetailPage() {
               targetAuthorId={item.owner_id}
               tone='marketplace'
               actions={footerActions}
+              persistentContact={persistentContact}
             />
           </>
         )}
