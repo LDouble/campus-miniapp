@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
-import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import {
+  AcademicCredentialMissingError,
+  getActiveAcademicUserId,
+} from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
@@ -1147,7 +1150,10 @@ export default function SchedulePage() {
             <View className='academic-state__loader' />
             <Text>正在整理课程表…</Text>
           </View>
-        ) : loadError && !usingCache ? (
+        ) : (
+          loadError instanceof AcademicCredentialMissingError
+          || (loadError && !usingCache)
+        ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />
         ) : (
           <>

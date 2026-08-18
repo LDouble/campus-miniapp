@@ -91,5 +91,31 @@ assert.ok(
     && academicApiSource.includes('clearAcademicCredential()'),
   '校方拒绝、密码过期或账号受限时必须清理本机旧凭据',
 )
+assert.ok(
+  !academicApiSource.includes("from '@tarojs/taro'")
+    && !academicApiSource.includes('/pages/academic-verification/index?rebind=1'),
+  '教务请求层不得自动跳转，未绑定状态应交由页面明确引导',
+)
+
+const loadStateSource = readFileSync(
+  resolve(__dirname, '../src/pages/academic/components/academic-load-state.tsx'),
+  'utf8',
+)
+assert.ok(
+  loadStateSource.includes('还没有绑定教务账号')
+    && loadStateSource.includes('去绑定教务账号'),
+  '未绑定状态应展示清晰的绑定说明和操作',
+)
+
+for (const directory of ['grades', 'schedule', 'exams', 'selection']) {
+  const pageSource = readFileSync(
+    resolve(__dirname, `../src/pages/academic/${directory}/index.tsx`),
+    'utf8',
+  )
+  assert.ok(
+    pageSource.includes('loadError instanceof AcademicCredentialMissingError'),
+    `${directory} 即使有本机缓存，也应优先提示绑定教务账号`,
+  )
+}
 
 process.stdout.write('academic credential persistence smoke: ok\n')

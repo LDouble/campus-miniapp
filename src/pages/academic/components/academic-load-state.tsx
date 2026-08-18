@@ -41,10 +41,10 @@ const retryState = (message = '可以稍后再试，已有数据不会受影响'
 export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState => {
   if (error instanceof AcademicCredentialMissingError) {
     return {
-      title: '本机没有可用教务账号',
-      message: '请重新绑定教务账号后再查询。',
+      title: '还没有绑定教务账号',
+      message: '绑定后即可查询课表、成绩、考试和选课记录。',
       action: 'rebind',
-      actionLabel: '绑定教务账号',
+      actionLabel: '去绑定教务账号',
     }
   }
   if (!isApiError(error)) {
