@@ -4,24 +4,24 @@
   bottom: 0;
   left: 0;
   z-index: 100;
-  height: calc(196rpx + env(safe-area-inset-bottom));
+  height: calc(164rpx + env(safe-area-inset-bottom));
   pointer-events: none;
 }
 
 .tab-bar__dock {
   position: absolute;
   right: 46rpx;
-  bottom: calc(30rpx + env(safe-area-inset-bottom));
+  bottom: calc(22rpx + env(safe-area-inset-bottom));
   left: 46rpx;
   display: flex;
-  height: 142rpx;
-  padding: 0 20rpx;
+  height: 112rpx;
+  padding: 0 18rpx;
   overflow: visible;
   box-sizing: border-box;
   border: 1rpx solid rgba(255, 255, 255, 0.8);
-  border-radius: 48rpx;
+  border-radius: 38rpx;
   background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 16rpx 64rpx rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12rpx 44rpx rgba(0, 0, 0, 0.08);
   color: #90a1b9;
   pointer-events: auto;
   backdrop-filter: blur(28rpx);
@@ -41,7 +41,7 @@
   position: relative;
   display: flex;
   min-width: 0;
-  height: 142rpx;
+  height: 112rpx;
   flex: 1;
   flex-direction: column;
   align-items: center;
@@ -51,12 +51,12 @@
 .tab-bar__pill {
   position: relative;
   display: flex;
-  width: 88rpx;
-  height: 108rpx;
+  width: 80rpx;
+  height: 88rpx;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 28rpx;
+  border-radius: 24rpx;
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
@@ -67,9 +67,9 @@
 
 .tab-bar__icon {
   display: block;
-  width: 40rpx;
-  height: 40rpx;
-  margin-bottom: 7rpx;
+  width: 36rpx;
+  height: 36rpx;
+  margin-bottom: 4rpx;
   opacity: 0.9;
 }
 
@@ -92,26 +92,26 @@
 .tab-bar__publish-button {
   position: relative;
   display: flex;
-  width: 96rpx;
-  height: 96rpx;
+  width: 84rpx;
+  height: 84rpx;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  border: 7rpx solid #f0f4f8;
+  border: 6rpx solid #f0f4f8;
   border-radius: 50%;
   background: linear-gradient(135deg, #2b7fff, #00d3f3);
   box-shadow:
-    0 16rpx 22rpx rgba(59, 130, 246, 0.4),
+    0 12rpx 18rpx rgba(59, 130, 246, 0.34),
     inset 0 3rpx 5rpx rgba(255, 255, 255, 0.28);
-  transform: translateY(-40rpx);
+  transform: translateY(-24rpx);
 }
 
 .tab-bar__publish-button::after {
   position: absolute;
-  top: 10rpx;
-  left: 23rpx;
-  width: 42rpx;
-  height: 5rpx;
+  top: 9rpx;
+  left: 20rpx;
+  width: 38rpx;
+  height: 4rpx;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   content: '';
@@ -120,8 +120,8 @@
 .tab-bar__publish-icon {
   position: relative;
   display: block;
-  width: 42rpx;
-  height: 42rpx;
+  width: 36rpx;
+  height: 36rpx;
 }
 
 .tab-bar__publish-icon::before,
@@ -129,8 +129,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 42rpx;
-  height: 5rpx;
+  width: 36rpx;
+  height: 4rpx;
   border-radius: 999rpx;
   background: #fff;
   content: '';
@@ -175,7 +175,7 @@
     border-color: #0b1220;
     background: linear-gradient(135deg, #3b82f6, #0891b2);
     box-shadow:
-      0 16rpx 24rpx rgba(37, 99, 235, 0.38),
+      0 12rpx 20rpx rgba(37, 99, 235, 0.34),
       inset 0 3rpx 5rpx rgba(255, 255, 255, 0.18);
   }
 }
