@@ -13,6 +13,7 @@ import { openContentReport } from '../../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
 import { useCampusShare } from '../../../features/share'
 import { formatDateTime, formatMoney, formatStatus } from '../../../features/life-services/format'
+import { showParticipationContact } from '../../../features/life-services/contact-reveal'
 import DetailAuthorNavbar from '../../../features/life-services/components/detail-author-navbar'
 import DetailComments, {
   createBusinessContactComment,
@@ -113,6 +114,7 @@ export default function MarketplaceDetailPage() {
 
     setWorking(true)
     let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
+    let participationItem: MarketplaceListingView | null = null
     try {
       if (action === 'purchase' || action === 'respond') {
         await lifeServicesRepository.respondMarketplaceListing(item.id)
@@ -129,21 +131,30 @@ export default function MarketplaceDetailPage() {
         } catch (commentError) {
           contactCommentStatus = 'failed'
         }
+        try {
+          participationItem = await lifeServicesRepository.getMarketplaceListing(item.id)
+          setItem(participationItem)
+        } catch {
+          participationItem = item
+        }
       } else if (action === 'submit_review') {
         await lifeServicesRepository.submitMarketplaceListing(item.id, item.version)
       } else if (action === 'withdraw') {
         await lifeServicesRepository.withdrawMarketplaceListing(item.id, item.version)
       }
       markLifeHubSectionDirty('market')
-      await load()
-      Taro.showToast({
-        title: contactCommentStatus === 'created'
-          ? '状态已更新，已留言联系'
-          : contactCommentStatus === 'failed'
-            ? '状态已更新，请手动留言联系'
-            : '状态已更新',
-        icon: contactCommentStatus === 'failed' ? 'none' : 'success',
-      })
+      if (participationItem) {
+        await showParticipationContact(Taro, {
+          successTitle: item.intent === 'wanted' ? '响应成功' : '预订成功',
+          contactType: participationItem.contact_type,
+          contact: participationItem.contact,
+          commentStatus: contactCommentStatus,
+          confirmColor: '#df7773',
+        })
+      } else {
+        await load()
+        Taro.showToast({ title: '状态已更新', icon: 'success' })
+      }
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       if (isApiError(actionError) && actionError.statusCode === 409) await load()
