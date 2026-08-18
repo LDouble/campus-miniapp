@@ -1,16 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
-import { ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { Notice } from '../../api/types'
 import { isApiError } from '../../api/client'
-import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
+import {
+  requestWechatSubscriptionAndStopPropagation,
+} from '../../features/wechat-subscription'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
-import { noticeActionRoute } from '../../features/notices/action-route'
+import {
+  isPrivateMessageNoticeAction,
+  noticeActionRoute,
+} from '../../features/notices/action-route'
 import { isQualificationEdition, type MigratedFeatureModule } from '../../features/app-edition'
 import { featureMigratedUrl } from '../../features/app-edition/navigation'
+import { directMessagesListUrl } from '../../features/direct-messages/navigation'
+import {
+  refreshPrivateMessageUnreadCount,
+  subscribePrivateMessageUnreadCount,
+} from '../../features/direct-messages/unread'
+import {
+  getMiniappRuntimeConfig,
+  loadMiniappRuntimeConfig,
+  openMiniappModule,
+  resolveMiniappModule,
+} from '../../features/runtime-config'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -59,8 +75,10 @@ export default function MessagesPage() {
   const [keyword, setKeyword] = useState('')
   const [unreadIds, setUnreadIds] = useState<number[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [privateUnreadCount, setPrivateUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
 
   const load = async () => {
     setLoading(true)
@@ -84,6 +102,12 @@ export default function MessagesPage() {
 
   useDidShow(() => {
     syncCustomTabBar('messages')
+    void loadMiniappRuntimeConfig().then((config) => {
+      setRuntimeConfig(config)
+      if (resolveMiniappModule(config, 'private_message').state === 'enabled') {
+        void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+      }
+    })
     void load()
   })
 
@@ -95,6 +119,8 @@ export default function MessagesPage() {
     setCustomTabBarHidden(Boolean(active))
     return () => setCustomTabBarHidden(false)
   }, [active])
+
+  useEffect(() => subscribePrivateMessageUnreadCount(setPrivateUnreadCount), [])
 
   const visible = useMemo(() => {
     const normalized = keyword.trim().toLowerCase()
@@ -135,13 +161,19 @@ export default function MessagesPage() {
   }
 
   const goAction = (message: Notice) => {
-    const route = noticeActionRoute(message.action_path)
+    const route = noticeActionRoute(message.action_path, {
+      allowPrivateMessages: !isQualificationEdition,
+    })
     setActive(null)
     const migratedModule = migratedModuleForAction(message.action_path)
     if (isQualificationEdition && migratedModule) {
       Taro.navigateTo({
         url: featureMigratedUrl({ module: migratedModule, path: route || undefined }),
       })
+      return
+    }
+    if (route && isPrivateMessageNoticeAction(route)) {
+      void openMiniappModule('private_message', route, { config: runtimeConfig })
       return
     }
     if (route) {
@@ -151,10 +183,50 @@ export default function MessagesPage() {
     Taro.showToast({ title: '这条消息没有可跳转的页面', icon: 'none' })
   }
 
+  const openPrivateMessages = () => {
+    void openMiniappModule('private_message', directMessagesListUrl, {
+      config: runtimeConfig,
+    })
+  }
+
+  const canOpenNoticeAction = (message: Notice) => {
+    const route = noticeActionRoute(message.action_path, {
+      allowPrivateMessages: !isQualificationEdition,
+    })
+    return Boolean(route)
+      && (!isPrivateMessageNoticeAction(route)
+        || resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden')
+  }
+
   return (
     <View className={`messages-page ${active ? 'messages-page--locked' : ''}`}>
       <CustomNavbar title='消息' subtitle={`${unreadCount} 条未读`} />
       <View className='messages-page__content'>
+        {!isQualificationEdition
+          && resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden'
+          && (
+          <View
+            className='messages-private-entry motion-enter'
+            hoverClass='messages-private-entry--pressed'
+            ariaRole='button'
+            ariaLabel='打开私信'
+            onClick={openPrivateMessages}
+          >
+            <View className='messages-private-entry__icon'>
+              <Image src={require('../../assets/icons/message.svg')} mode='aspectFit' />
+            </View>
+            <View className='messages-private-entry__copy'>
+              <Text>私信</Text>
+              <Text>和同学聊聊，消息只在会话中展示</Text>
+            </View>
+            {privateUnreadCount > 0 && (
+              <View className='messages-private-entry__badge'>
+                {privateUnreadCount > 99 ? '99+' : privateUnreadCount}
+              </View>
+            )}
+            <Text className='messages-private-entry__arrow'>查看</Text>
+          </View>
+        )}
         <View className='messages-summary motion-enter'>
           <View><Text>校园消息</Text><Text>重要提醒，及时抵达</Text></View>
           <View
@@ -284,7 +356,7 @@ export default function MessagesPage() {
               </View>
             </ScrollView>
             <View className='message-sheet__actions'>
-              {noticeActionRoute(active.action_path) && (
+              {canOpenNoticeAction(active) && (
                 <View
                   className='message-sheet__button message-sheet__button--primary motion-press'
                   hoverClass='motion-press--active'

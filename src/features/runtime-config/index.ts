@@ -60,6 +60,7 @@ export const MINIAPP_MODULE_KEYS = [
   'empty_classroom',
   'shuttle',
   'club',
+  'private_message',
 ] as const
 
 export type MiniappModuleKey = typeof MINIAPP_MODULE_KEYS[number]
@@ -133,6 +134,7 @@ const conservativeModules: Record<MiniappModuleKey, MiniappModuleConfig> = {
   carpool: { state: 'hidden' },
   course_materials: { state: 'hidden' },
   club: { state: 'hidden' },
+  private_message: { state: 'hidden' },
 }
 
 export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
@@ -275,7 +277,7 @@ const isModuleConfig = (value: unknown): value is MiniappModuleConfig => (
   && (value.message === undefined || typeof value.message === 'string')
 )
 
-const normalizeModules = (
+export const normalizeMiniappModules = (
   value: unknown,
 ): Record<MiniappModuleKey, MiniappModuleConfig> => {
   if (!isRecord(value)) return conservativeModules
@@ -357,7 +359,7 @@ const normalizeRuntimeConfig = (
   value: MiniappRuntimeConfig,
 ): MiniappRuntimeConfig => ({
   ...value,
-  modules: normalizeModules(value.modules),
+  modules: normalizeMiniappModules(value.modules),
   subscription_templates: normalizeSubscriptionTemplates(value.subscription_templates),
   migration_guide: normalizeMigrationGuideCopy(value.migration_guide),
 })

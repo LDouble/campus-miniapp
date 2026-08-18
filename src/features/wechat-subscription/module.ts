@@ -34,6 +34,7 @@ export const resolvePageSubscriptionModule = (
   if (route.startsWith('pages/materials/')) return 'course_materials'
   if (route.startsWith('pages/empty-classroom/')) return 'empty_classroom'
   if (route.startsWith('pages/shuttle/')) return 'shuttle'
+  if (route.startsWith('packages/social/direct-messages/')) return 'private_message'
   if (route === 'pages/publish/index') {
     return lifeHubSectionModules[page.options?.section || ''] || null
   }

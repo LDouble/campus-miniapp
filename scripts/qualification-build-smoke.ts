@@ -16,6 +16,8 @@ const forbiddenPages = [
   'packages/social/publish/index',
   'pages/materials/index',
   'packages/social/content-report/index',
+  'packages/social/direct-messages/index',
+  'packages/social/direct-messages/chat',
   'pages/clubs/index',
   'pages/clubs/detail',
   'pages/clubs/edit',
@@ -28,7 +30,7 @@ const forbiddenBundleNeedles = [
   '/api/v1/clubs/media/upload-target',
   '/api/v1/carpool/trips',
   '/api/v1/errands',
-  '/api/v1/marketplace'
+  '/api/v1/marketplace',
 ]
 
 const readJson = <T>(filePath: string): T => JSON.parse(readFileSync(filePath, 'utf8')) as T

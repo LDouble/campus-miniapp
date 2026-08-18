@@ -28,13 +28,19 @@ interface CustomTabBarInstance {
     selected?: number
     hidden?: boolean
     publishSection?: LifeHubSection
+    privateUnreadCount?: number
+    privateUnreadLabel?: string
   }) => void
 }
 
 const getCustomTabBar = () => {
-  const page = Taro.getCurrentInstance().page as
+  const instancePage = Taro.getCurrentInstance().page as
     | { getTabBar?: () => CustomTabBarInstance }
     | undefined
+  if (instancePage?.getTabBar) return instancePage.getTabBar()
+
+  const pages = Taro.getCurrentPages() as Array<{ getTabBar?: () => CustomTabBarInstance }>
+  const page = pages[pages.length - 1]
 
   return page?.getTabBar?.()
 }
@@ -55,4 +61,13 @@ export function setCustomTabBarHidden(hidden: boolean) {
 
 export function setCustomTabBarPublishSection(publishSection: LifeHubSection) {
   getCustomTabBar()?.setData({ publishSection })
+}
+
+export function syncPrivateMessageUnreadBadge(count: number) {
+  if (isQualificationEdition) return
+  const normalized = Math.max(0, Number(count) || 0)
+  getCustomTabBar()?.setData({
+    privateUnreadCount: normalized,
+    privateUnreadLabel: normalized > 99 ? '99+' : String(normalized),
+  })
 }

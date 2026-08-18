@@ -37,6 +37,8 @@ Component({
     selected: 0,
     hidden: false,
     publishSection: 'community',
+    privateUnreadCount: 0,
+    privateUnreadLabel: '',
     qualification,
     list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
   },

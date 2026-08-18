@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
@@ -19,6 +19,18 @@ import ErrandCard from '../../features/life-services/components/errand-card'
 import MarketplaceCard from '../../features/life-services/components/marketplace-card'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import {
+  directMessageChatUrl,
+  directMessagesListUrl,
+} from '../../features/direct-messages/navigation'
+import { privateMessagesRepository } from '../../features/direct-messages/repository'
+import { isQualificationEdition } from '../../features/app-edition'
+import {
+  getMiniappRuntimeConfig,
+  loadMiniappRuntimeConfig,
+  openMiniappModule,
+  resolveMiniappModule,
+} from '../../features/runtime-config'
 import '../../features/life-services/list-panel.scss'
 import './index.scss'
 
@@ -90,6 +102,8 @@ export default function PublicProfilePage() {
   const [profileError, setProfileError] = useState('')
   const [activeTab, setActiveTab] = useState<ProfileTab>('community')
   const [tabs, setTabs] = useState<Record<ProfileTab, TabState>>(initialTabs)
+  const [openingConversation, setOpeningConversation] = useState(false)
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
 
   const updateTab = useCallback((tab: ProfileTab, update: Partial<TabState>) => {
     setTabs((current) => ({
@@ -153,6 +167,10 @@ export default function PublicProfilePage() {
     void loadProfile(id)
   })
 
+  useDidShow(() => {
+    void loadMiniappRuntimeConfig().then(setRuntimeConfig)
+  })
+
   useEffect(() => {
     if (!userId || tabs[activeTab].loaded || tabs[activeTab].loading) return
     void loadTab(activeTab)
@@ -182,6 +200,32 @@ export default function PublicProfilePage() {
     saveCommunityDetailSnapshot(post)
     void Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
   }, [])
+
+  const openPrivateConversation = async () => {
+    if (isQualificationEdition || !profile || profile.is_self || openingConversation) return
+    setOpeningConversation(true)
+    try {
+      const config = await loadMiniappRuntimeConfig()
+      setRuntimeConfig(config)
+      if (resolveMiniappModule(config, 'private_message').state !== 'enabled') {
+        await openMiniappModule('private_message', directMessagesListUrl, { config })
+        return
+      }
+      const conversation = await privateMessagesRepository.createConversation(profile.user.id)
+      await openMiniappModule(
+        'private_message',
+        directMessageChatUrl(conversation.id),
+        { config },
+      )
+    } catch (error) {
+      Taro.showToast({
+        title: isApiError(error) ? error.message : '暂时无法打开私信，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setOpeningConversation(false)
+    }
+  }
 
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {
     try {
@@ -290,6 +334,20 @@ export default function PublicProfilePage() {
                     ? '这里展示你未删除的校园发布'
                     : '仅展示对你公开可见的校园内容'}
                 </Text>
+                {!isQualificationEdition
+                  && !profile.is_self
+                  && resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden'
+                  && (
+                  <View
+                    className='public-profile-hero__message-action'
+                    hoverClass='public-profile-hero__message-action--pressed'
+                    ariaRole='button'
+                    ariaLabel={`给${profile.user.nickname}发私信`}
+                    onClick={() => void openPrivateConversation()}
+                  >
+                    {openingConversation ? '正在打开' : '发私信'}
+                  </View>
+                )}
               </View>
             </View>
 

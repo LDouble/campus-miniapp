@@ -130,6 +130,89 @@
 
 .messages-page__content { padding: 24rpx 28rpx calc(36rpx + env(safe-area-inset-bottom)); }
 
+.messages-private-entry {
+  display: flex;
+  min-height: 128rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 20rpx;
+  align-items: center;
+  box-sizing: border-box;
+  border: 2rpx solid rgba(255, 255, 255, 0.92);
+  border-radius: 34rpx;
+  background: linear-gradient(135deg, #d9f3f0, #eef8f4 58%, #fff0dc);
+  box-shadow: 12rpx 16rpx 34rpx rgba(50, 92, 84, 0.07), inset 0 2rpx 0 rgba(255, 255, 255, 0.94);
+  transition: opacity 120ms ease, transform 120ms ease;
+
+  &--pressed {
+    opacity: .78;
+    transform: scale(.985);
+  }
+
+  &__icon {
+    display: flex;
+    width: 72rpx;
+    height: 72rpx;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 24rpx;
+    background: rgba(255, 255, 255, .76);
+
+    image {
+      width: 36rpx;
+      height: 36rpx;
+      opacity: .72;
+    }
+  }
+
+  &__copy {
+    display: flex;
+    min-width: 0;
+    margin-left: 18rpx;
+    flex: 1;
+    flex-direction: column;
+
+    text:first-child {
+      color: #21465c;
+      font-size: 29rpx;
+      font-weight: 750;
+    }
+
+    text:last-child {
+      margin-top: 5rpx;
+      overflow: hidden;
+      color: #5d7e8c;
+      font-size: 22rpx;
+      line-height: 1.45;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__arrow {
+    margin-left: 14rpx;
+    color: #469cae;
+    font-size: 23rpx;
+    font-weight: 700;
+  }
+
+  &__badge {
+    display: flex;
+    min-width: 34rpx;
+    height: 34rpx;
+    padding: 0 8rpx;
+    margin-left: 14rpx;
+    align-items: center;
+    justify-content: center;
+    border: 3rpx solid rgba(255, 255, 255, .9);
+    border-radius: 999rpx;
+    background: #e98c70;
+    color: #fff;
+    font-size: 18rpx;
+    font-weight: 720;
+  }
+}
+
 .messages-summary {
   padding: 28rpx;
   background: linear-gradient(135deg, #e8f2ff, var(--campus-surface-subtle, #f8fbff));

@@ -1,0 +1,188 @@
+page {
+  background: #f8f6f1;
+}
+
+.direct-chat-page {
+  height: 100vh;
+  overflow: hidden;
+  color: #31515b;
+  background:
+    radial-gradient(circle at 12% 9%, rgba(244, 187, 118, .1), transparent 29%),
+    radial-gradient(circle at 96% 24%, rgba(129, 201, 194, .1), transparent 28%),
+    linear-gradient(180deg, #fffdf9 0%, #f8f6f1 100%);
+}
+
+.direct-chat-page__scroll {
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.direct-chat-page__content {
+  min-height: 100%;
+  padding: 24rpx 28rpx calc(190rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.direct-chat-state,
+.direct-chat-empty {
+  display: flex;
+  min-height: 320rpx;
+  padding: 32rpx;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2rpx solid rgba(255, 255, 255, .94);
+  border-radius: 34rpx;
+  background: rgba(255, 255, 255, .82);
+  color: #71817f;
+  font-size: 24rpx;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.direct-chat-state > view {
+  display: flex;
+  min-height: 76rpx;
+  padding: 0 26rpx;
+  margin-top: 20rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22rpx;
+  background: #d9f3f0;
+  color: #397d88;
+  font-weight: 720;
+}
+
+.direct-chat-state--error {
+  background: #fff3e9;
+  color: #a85f52;
+}
+
+.direct-chat-empty text:first-child {
+  color: #21465c;
+  font-size: 28rpx;
+  font-weight: 740;
+}
+
+.direct-chat-empty text:last-child {
+  margin-top: 8rpx;
+}
+
+.direct-chat-history {
+  min-height: 60rpx;
+  padding: 10rpx 0 18rpx;
+  color: #809693;
+  font-size: 21rpx;
+  text-align: center;
+}
+
+.direct-chat-message {
+  display: flex;
+  max-width: 78%;
+  margin: 16rpx 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.direct-chat-message--own {
+  margin-left: auto;
+  align-items: flex-end;
+}
+
+.direct-chat-message__content {
+  display: block;
+  padding: 18rpx 21rpx;
+  border: 2rpx solid rgba(255, 255, 255, .94);
+  border-radius: 26rpx 26rpx 26rpx 8rpx;
+  background: rgba(255, 255, 255, .9);
+  box-shadow: 7rpx 9rpx 20rpx rgba(50, 92, 84, .045);
+  color: #31515b;
+  font-size: 26rpx;
+  line-height: 1.58;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.direct-chat-message--own .direct-chat-message__content {
+  border-color: rgba(85, 183, 189, .2);
+  border-radius: 26rpx 26rpx 8rpx 26rpx;
+  background: linear-gradient(135deg, #d9f3f0, #e9f5f2);
+  color: #21465c;
+}
+
+.direct-chat-message__time {
+  margin: 7rpx 8rpx 0;
+  color: #94a4a2;
+  font-size: 18rpx;
+}
+
+.direct-chat-composer {
+  position: fixed;
+  right: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  min-height: 112rpx;
+  padding: 14rpx 28rpx calc(14rpx + env(safe-area-inset-bottom));
+  align-items: center;
+  box-sizing: border-box;
+  border-top: 2rpx solid rgba(255, 255, 255, .94);
+  background: rgba(255, 253, 249, .9);
+  box-shadow: 0 -8rpx 26rpx rgba(50, 92, 84, .06);
+  backdrop-filter: blur(22rpx);
+  transition: bottom 120ms ease;
+}
+
+.direct-chat-composer__field {
+  display: flex;
+  min-width: 0;
+  min-height: 76rpx;
+  padding: 0 20rpx;
+  flex: 1;
+  align-items: center;
+  border: 2rpx solid rgba(85, 183, 189, .12);
+  border-radius: 22rpx;
+  background: #f4f8f6;
+}
+
+.direct-chat-composer__field input {
+  width: 100%;
+  height: 72rpx;
+  color: #31515b;
+  font-size: 25rpx;
+}
+
+.direct-chat-composer__send {
+  display: flex;
+  min-width: 100rpx;
+  min-height: 76rpx;
+  padding: 0 17rpx;
+  margin-left: 14rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22rpx;
+  background: linear-gradient(135deg, #55b7bd, #469cae 58%, #e98c70);
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 740;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.direct-chat-composer__send--disabled {
+  background: #bccbc6;
+  color: rgba(255, 255, 255, .86);
+  pointer-events: none;
+}
+
+.direct-chat-composer__send--pressed {
+  opacity: .74;
+  transform: scale(.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direct-chat-composer,
+  .direct-chat-composer__send {
+    transition: none;
+  }
+}
