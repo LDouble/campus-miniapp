@@ -36,6 +36,7 @@ assertModule('pages/carpool/detail', 'carpool')
 assertModule('pages/publish/index', 'marketplace', { section: 'market' })
 assertModule('packages/social/direct-messages/index', 'private_message')
 assertModule('packages/social/direct-messages/chat', 'private_message', { id: '123' })
+assertModule('packages/social/direct-messages/chat', 'private_message')
 assertModule('pages/messages/index', null)
 
 console.log('wechat subscription configuration smoke test passed')

@@ -23,9 +23,7 @@ const publishSectionModules: Record<SubscriptionPublishSection, MiniappModuleKey
 export const requestWechatSubscriptionForModule = (
   moduleKey: MiniappModuleKey,
   config: MiniappRuntimeConfig = getMiniappRuntimeConfig(),
-) => {
-  requestWechatSubscription(config.subscription_templates[moduleKey])
-}
+) => requestWechatSubscription(config.subscription_templates[moduleKey])
 
 export const requestWechatSubscriptionForPublishSection = (
   section: SubscriptionPublishSection,

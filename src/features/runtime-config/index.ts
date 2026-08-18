@@ -463,7 +463,11 @@ export const visibleMiniappModule = (
 export const openMiniappModule = async (
   key: MiniappModuleKey,
   url: string,
-  options: { tab?: boolean; config?: MiniappRuntimeConfig } = {},
+  options: {
+    tab?: boolean
+    config?: MiniappRuntimeConfig
+    subscriptionAlreadyRequested?: boolean
+  } = {},
 ) => {
   const config = options.config || getMiniappRuntimeConfig()
   const module = resolveMiniappModule(config, key)
@@ -479,7 +483,9 @@ export const openMiniappModule = async (
     })
     return false
   }
-  requestWechatSubscription(config.subscription_templates[key])
+  if (!options.subscriptionAlreadyRequested) {
+    requestWechatSubscription(config.subscription_templates[key])
+  }
   if (options.tab) await Taro.switchTab({ url })
   else await Taro.navigateTo({ url })
   return true

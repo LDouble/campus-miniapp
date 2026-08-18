@@ -25,6 +25,7 @@ import {
   decrementPrivateMessageUnreadCount,
   refreshPrivateMessageUnreadCount,
 } from '../../../features/direct-messages/unread'
+import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
 import type {
   DirectMessage,
   DirectMessageConversation,
@@ -295,6 +296,12 @@ export default function DirectMessageChatPage() {
     }
   }
 
+  const sendFromButton = () => {
+    if (!draft.trim() || sending || !conversationId) return
+    requestWechatSubscriptionForModule('private_message')
+    void send()
+  }
+
   const peerName = conversation?.peer.deleted
     ? '已注销用户'
     : conversation?.peer.nickname || '私信'
@@ -381,7 +388,7 @@ export default function DirectMessageChatPage() {
           ariaLabel={sending
             ? '正在发送消息'
             : !draft.trim() || !conversationId ? '发送消息，当前不可用' : '发送消息'}
-          onClick={() => void send()}
+          onClick={sendFromButton}
         >
           {sending ? '发送中' : '发送'}
         </View>

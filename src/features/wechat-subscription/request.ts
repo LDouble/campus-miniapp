@@ -28,7 +28,7 @@ export const requestWechatSubscription = (configuredTemplateIds: unknown) => {
     || requesting
     || templateIds.length === 0
     || !getAccessToken()
-  ) return
+  ) return false
   requesting = true
   // Taro 的跨平台类型错误地要求 entityIds；微信小程序运行时只接受 tmplIds。
   const option = { tmplIds: templateIds } as unknown as WechatSubscribeOption
@@ -41,4 +41,5 @@ export const requestWechatSubscription = (configuredTemplateIds: unknown) => {
     .finally(() => {
       requesting = false
     })
+  return true
 }

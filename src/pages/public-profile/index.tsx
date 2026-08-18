@@ -25,6 +25,7 @@ import {
 } from '../../features/direct-messages/navigation'
 import { privateMessagesRepository } from '../../features/direct-messages/repository'
 import { isQualificationEdition } from '../../features/app-edition'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
   getMiniappRuntimeConfig,
   loadMiniappRuntimeConfig,
@@ -201,21 +202,24 @@ export default function PublicProfilePage() {
     void Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
   }, [])
 
-  const openPrivateConversation = async () => {
+  const openPrivateConversation = async (subscriptionAlreadyRequested = false) => {
     if (isQualificationEdition || !profile || profile.is_self || openingConversation) return
     setOpeningConversation(true)
     try {
       const config = await loadMiniappRuntimeConfig()
       setRuntimeConfig(config)
       if (resolveMiniappModule(config, 'private_message').state !== 'enabled') {
-        await openMiniappModule('private_message', directMessagesListUrl, { config })
+        await openMiniappModule('private_message', directMessagesListUrl, {
+          config,
+          subscriptionAlreadyRequested,
+        })
         return
       }
       const conversation = await privateMessagesRepository.createConversation(profile.user.id)
       await openMiniappModule(
         'private_message',
         directMessageChatUrl(conversation.id),
-        { config },
+        { config, subscriptionAlreadyRequested },
       )
     } catch (error) {
       Taro.showToast({
@@ -225,6 +229,17 @@ export default function PublicProfilePage() {
     } finally {
       setOpeningConversation(false)
     }
+  }
+
+  const beginPrivateConversation = () => {
+    const subscriptionAlreadyRequested = resolveMiniappModule(
+      runtimeConfig,
+      'private_message',
+    ).state === 'enabled' && requestWechatSubscriptionForModule(
+      'private_message',
+      runtimeConfig,
+    )
+    void openPrivateConversation(subscriptionAlreadyRequested)
   }
 
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {
@@ -343,7 +358,7 @@ export default function PublicProfilePage() {
                     hoverClass='public-profile-hero__message-action--pressed'
                     ariaRole='button'
                     ariaLabel={`给${profile.user.nickname}发私信`}
-                    onClick={() => void openPrivateConversation()}
+                    onClick={beginPrivateConversation}
                   >
                     {openingConversation ? '正在打开' : '发私信'}
                   </View>
