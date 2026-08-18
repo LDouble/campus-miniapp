@@ -44,6 +44,18 @@ assert.equal(
   4,
   '课程通过率接口应让页面接管未绑定引导，避免请求层自动弹窗',
 )
+assert.equal(
+  statisticsApi.match(/withAcademicBindingGuidance\(apiRequest/g)?.length,
+  4,
+  '课程通过率的四个接口都应精确归因权限拒绝',
+)
+assert.ok(
+  statisticsApi.includes("error.statusCode !== 403")
+  && statisticsApi.includes("error.code !== 'forbidden'")
+  && statisticsApi.includes('getAcademicVerificationStatus({ force: true })')
+  && statisticsApi.includes("status.identity?.status !== 'verified'"),
+  '403 forbidden 应强制刷新教务身份，仅对未认证用户展示绑定引导',
+)
 
 const statisticsRepository = readFileSync(
   resolve(__dirname, '../src/features/academic-statistics/repository.ts'),

@@ -1,4 +1,6 @@
-import { apiRequest } from './client'
+import { AcademicCredentialMissingError } from './academic-credential'
+import { getAcademicVerificationStatus } from './academic-verification'
+import { apiRequest, isApiError } from './client'
 import type {
   AcademicCoursePassRatePage,
   AcademicInstructorPassRatePage,
@@ -12,13 +14,32 @@ type AcademicCoursePassRateQuery = {
   pageSize?: number
 }
 
+const withAcademicBindingGuidance = async <T>(request: Promise<T>): Promise<T> => {
+  try {
+    return await request
+  } catch (error) {
+    if (
+      !isApiError(error)
+      || error.statusCode !== 403
+      || error.code !== 'forbidden'
+    ) throw error
+
+    const status = await getAcademicVerificationStatus({ force: true })
+      .catch(() => null)
+    if (status && status.identity?.status !== 'verified') {
+      throw new AcademicCredentialMissingError()
+    }
+    throw error
+  }
+}
+
 export const listAcademicCoursePassRates = ({
   keyword = '',
   courseCode = '',
   page = 1,
   pageSize = 20,
 }: AcademicCoursePassRateQuery = {}) => (
-  apiRequest<AcademicCoursePassRatePage>({
+  withAcademicBindingGuidance(apiRequest<AcademicCoursePassRatePage>({
     path: '/api/v1/academic/pass-rates',
     method: 'GET',
     skipAcademicVerificationGuard: true,
@@ -28,7 +49,7 @@ export const listAcademicCoursePassRates = ({
       page,
       page_size: pageSize,
     },
-  })
+  }))
 )
 
 export const getAcademicCoursePassRate = (courseCode: string) => (
@@ -40,7 +61,7 @@ export const getAcademicCoursePassRate = (courseCode: string) => (
 )
 
 export const listAcademicInstructorPassRates = (courseCode: string) => (
-  apiRequest<AcademicInstructorPassRatePage>({
+  withAcademicBindingGuidance(apiRequest<AcademicInstructorPassRatePage>({
     path: '/api/v1/academic/pass-rates/instructors',
     method: 'GET',
     skipAcademicVerificationGuard: true,
@@ -49,23 +70,23 @@ export const listAcademicInstructorPassRates = (courseCode: string) => (
       page: 1,
       page_size: 100,
     },
-  })
+  }))
 )
 
 export const getAcademicCoursePassRateTrend = (courseCode: string) => (
-  apiRequest<AcademicPassRateTrend>({
+  withAcademicBindingGuidance(apiRequest<AcademicPassRateTrend>({
     path: '/api/v1/academic/pass-rates/trends',
     method: 'GET',
     skipAcademicVerificationGuard: true,
     query: { course_code: courseCode },
-  })
+  }))
 )
 
 export const getAcademicInstructorPassRateTrend = (
   courseCode: string,
   teacherKey: string,
 ) => (
-  apiRequest<AcademicPassRateTrend>({
+  withAcademicBindingGuidance(apiRequest<AcademicPassRateTrend>({
     path: '/api/v1/academic/pass-rates/instructors/trends',
     method: 'GET',
     skipAcademicVerificationGuard: true,
@@ -73,5 +94,5 @@ export const getAcademicInstructorPassRateTrend = (
       course_code: courseCode,
       teacher_key: teacherKey,
     },
-  })
+  }))
 )
