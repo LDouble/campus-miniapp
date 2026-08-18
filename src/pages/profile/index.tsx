@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import Taro, { useDidShow } from '@tarojs/taro'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Taro, { useDidHide, useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatarImage from '../../components/user-avatar-image'
@@ -7,7 +7,7 @@ import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { getCurrentUser, updateCurrentAvatar, updateCurrentUsername } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { isApiError } from '../../api/client'
-import { uploadMediaImage } from '../../api/media'
+import { getMedia, uploadMediaImage } from '../../api/media'
 import type {
   AcademicVerificationStatus,
   CurrentUser,
@@ -22,6 +22,16 @@ import {
   USERNAME_MAX_LENGTH,
   validateUsername,
 } from '../../features/profile/username'
+import {
+  AVATAR_MODERATION_MAX_NETWORK_FAILURES,
+  AVATAR_MODERATION_MAX_POLLS,
+  avatarModerationStorage,
+  avatarModerationPollDelay,
+  canRetryApprovedAvatarRefresh,
+  isAvatarModerationUserId,
+  resolveApprovedAvatarRefresh,
+  resolveAvatarModerationOutcome,
+} from '../../features/profile/avatar-moderation'
 import { isQualificationEdition } from '../../features/app-edition'
 import {
   AVATAR_IMAGE_MAX_DIMENSION,
@@ -100,6 +110,26 @@ const userAvatarUrl = (user?: CurrentUser['user'] | null) => (
   user?.avatar_url || ''
 )
 
+type AvatarModerationNotice = 'reviewing' | 'unavailable' | 'rejected'
+type PendingAvatarModeration = {
+  mediaId: number
+  userId: number
+}
+type AvatarModerationOperation = PendingAvatarModeration & {
+  version: number
+}
+type AvatarUploadOperation = {
+  draftKey: string
+  userId: number
+  version: number
+}
+
+const avatarModerationNoticeCopy: Record<AvatarModerationNotice, string> = {
+  reviewing: '头像正在审核，审核完成后会自动更新',
+  unavailable: '头像审核仍在进行，状态暂时无法刷新，请稍后回到此页查看',
+  rejected: '头像审核未通过，请重新选择',
+}
+
 export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -111,24 +141,94 @@ export default function ProfilePage() {
   const [savingUsername, setSavingUsername] = useState(false)
   const [avatarDraft, setAvatarDraft] = useState<MediaImageDraft | null>(null)
   const [savingAvatar, setSavingAvatar] = useState(false)
-  const loadCurrentUser = async (showError = false, force = false) => {
-    setAccountLoaded(false)
+  const [profileVisible, setProfileVisible] = useState(true)
+  const [avatarModerationNotice, setAvatarModerationNotice] = useState<AvatarModerationNotice | null>(null)
+  const [pendingAvatarModeration, setPendingAvatarModeration] = useState<PendingAvatarModeration | null>(null)
+  const profileVisibleRef = useRef(true)
+  const profileShowVersionRef = useRef(0)
+  const currentUserIdRef = useRef<number | null>(null)
+  const avatarOperationVersionRef = useRef(0)
+  const activeAvatarMediaIdRef = useRef<number | null>(null)
+  const activeAvatarUserIdRef = useRef<number | null>(null)
+  const activeAvatarDraftKeyRef = useRef('')
+  const pendingAvatarModerationRef = useRef<PendingAvatarModeration | null>(null)
+  const approvedAvatarUrlRef = useRef<string | null>(null)
+  const updatePendingAvatarModeration = useCallback((pending: PendingAvatarModeration | null) => {
+    pendingAvatarModerationRef.current = pending
+    setPendingAvatarModeration(pending)
+  }, [])
+  const isAvatarOperationLatest = useCallback((operation: AvatarModerationOperation) => (
+    avatarOperationVersionRef.current === operation.version
+    && activeAvatarMediaIdRef.current === operation.mediaId
+    && activeAvatarUserIdRef.current === operation.userId
+  ), [])
+  const isAvatarOperationCurrent = useCallback((operation: AvatarModerationOperation) => (
+    profileVisibleRef.current && isAvatarOperationLatest(operation)
+  ), [isAvatarOperationLatest])
+  const loadCurrentUser = useCallback(async (
+    showError = false,
+    force = false,
+    guard?: () => boolean,
+  ) => {
+    const canApply = () => profileVisibleRef.current && (!guard || guard())
+    if (canApply()) setAccountLoaded(false)
     try {
       const account = await getCurrentUser({ force })
+      if (!canApply()) return account
+      const userId = account.user.id
+      if (currentUserIdRef.current !== null && currentUserIdRef.current !== userId) {
+        avatarOperationVersionRef.current += 1
+        activeAvatarMediaIdRef.current = null
+        activeAvatarUserIdRef.current = null
+        activeAvatarDraftKeyRef.current = ''
+        approvedAvatarUrlRef.current = null
+        updatePendingAvatarModeration(null)
+        setAvatarDraft(null)
+        setAvatarModerationNotice(null)
+        setSavingAvatar(false)
+      }
+      currentUserIdRef.current = userId
+      if (!account.user.avatar_moderation_status || approvedAvatarUrlRef.current === null) {
+        approvedAvatarUrlRef.current = userAvatarUrl(account.user)
+      }
       setCurrentUser(account)
       setUsernameDraft(account.user.username)
+      return account
     } catch {
-      if (showError) {
+      if (showError && canApply()) {
         Taro.showToast({ title: '账号信息加载失败，请稍后重试', icon: 'none' })
       }
+      return null
     } finally {
-      setAccountLoaded(true)
+      if (canApply()) setAccountLoaded(true)
     }
-  }
+  }, [updatePendingAvatarModeration])
   useDidShow(() => {
+    profileVisibleRef.current = true
+    const showVersion = ++profileShowVersionRef.current
+    const avatarOperationVersion = avatarOperationVersionRef.current
+    setProfileVisible(true)
+    setAccountLoaded(false)
+    setSavingAvatar(false)
     syncCustomTabBar('profile')
     setCheckinStatus(null)
-    void loadCurrentUser()
+    void loadCurrentUser().then((account) => {
+      if (
+        !account
+        || !profileVisibleRef.current
+        || profileShowVersionRef.current !== showVersion
+        || avatarOperationVersionRef.current !== avatarOperationVersion
+        || !isAvatarModerationUserId(account.user.id)
+      ) return
+      const mediaId = avatarModerationStorage.read(Taro, account.user.id)
+      if (!mediaId) return
+      const restored: PendingAvatarModeration = { mediaId, userId: account.user.id }
+      const currentPending = pendingAvatarModerationRef.current
+      if (currentPending?.mediaId === mediaId && currentPending.userId === account.user.id) return
+      updatePendingAvatarModeration(restored)
+      setAvatarDraft(null)
+      setAvatarModerationNotice('reviewing')
+    })
     void getAcademicVerificationStatus().then((status) => {
       setAcademicStatus(status)
     }).catch(() => {
@@ -141,6 +241,120 @@ export default function ProfilePage() {
       // 签到状态失败时仍保留入口，详情页提供完整错误重试。
     })
   })
+  useDidHide(() => {
+    profileVisibleRef.current = false
+    profileShowVersionRef.current += 1
+    setProfileVisible(false)
+  })
+  useEffect(() => () => {
+    profileVisibleRef.current = false
+    profileShowVersionRef.current += 1
+  }, [])
+  useEffect(() => {
+    if (!profileVisible || !pendingAvatarModeration) {
+      return undefined
+    }
+
+    const operation: AvatarModerationOperation = {
+      ...pendingAvatarModeration,
+      version: avatarOperationVersionRef.current + 1,
+    }
+    avatarOperationVersionRef.current = operation.version
+    activeAvatarMediaIdRef.current = operation.mediaId
+    activeAvatarUserIdRef.current = operation.userId
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let pollCount = 0
+    let networkFailureCount = 0
+    let approvedRefreshFailureCount = 0
+    const stop = () => {
+      cancelled = true
+      if (timer) clearTimeout(timer)
+    }
+    const scheduleNext = (failureCount = networkFailureCount) => {
+      if (cancelled || !isAvatarOperationCurrent(operation)) return
+      timer = setTimeout(() => {
+        void poll()
+      }, avatarModerationPollDelay(failureCount))
+    }
+    const poll = async () => {
+      if (cancelled || !isAvatarOperationCurrent(operation)) return
+      pollCount += 1
+      try {
+        const media = await getMedia(operation.mediaId)
+        if (cancelled || !isAvatarOperationCurrent(operation)) return
+        networkFailureCount = 0
+        const outcome = resolveAvatarModerationOutcome(media.moderation_status)
+        if (outcome === 'approved') {
+          const refreshedAccount = await loadCurrentUser(
+            false,
+            true,
+            () => isAvatarOperationCurrent(operation),
+          )
+          const refreshResolution = resolveApprovedAvatarRefresh(
+            Boolean(refreshedAccount),
+            isAvatarOperationCurrent(operation),
+          )
+          if (refreshResolution === 'ignore') return
+          if (refreshResolution === 'retry') {
+            approvedRefreshFailureCount += 1
+            setAvatarModerationNotice('unavailable')
+            if (!canRetryApprovedAvatarRefresh(approvedRefreshFailureCount, pollCount)) return
+            scheduleNext(approvedRefreshFailureCount)
+            return
+          }
+          avatarModerationStorage.remove(Taro, operation.userId)
+          updatePendingAvatarModeration(null)
+          setAvatarDraft((currentDraft) => currentDraft?.mediaId === operation.mediaId ? null : currentDraft)
+          setAvatarModerationNotice(null)
+          activeAvatarMediaIdRef.current = null
+          return
+        }
+        approvedRefreshFailureCount = 0
+        if (outcome === 'rejected') {
+          avatarModerationStorage.remove(Taro, operation.userId)
+          updatePendingAvatarModeration(null)
+          setAvatarDraft((currentDraft) => currentDraft?.mediaId === operation.mediaId ? null : currentDraft)
+          setCurrentUser((account) => account ? {
+            ...account,
+            user: {
+              ...account.user,
+              avatar_url: approvedAvatarUrlRef.current ?? account.user.avatar_url,
+              avatar_moderation_status: null,
+            },
+          } : account)
+          setAvatarModerationNotice('rejected')
+          Taro.showToast({ title: avatarModerationNoticeCopy.rejected, icon: 'none' })
+          void loadCurrentUser(false, true, () => isAvatarOperationCurrent(operation)).then(() => {
+            if (isAvatarOperationCurrent(operation)) activeAvatarMediaIdRef.current = null
+          })
+          return
+        }
+      } catch {
+        if (cancelled || !isAvatarOperationCurrent(operation)) return
+        networkFailureCount += 1
+      }
+
+      if (cancelled || !isAvatarOperationCurrent(operation)) return
+      if (
+        pollCount >= AVATAR_MODERATION_MAX_POLLS
+        || networkFailureCount >= AVATAR_MODERATION_MAX_NETWORK_FAILURES
+      ) {
+        setAvatarModerationNotice('unavailable')
+        return
+      }
+      scheduleNext()
+    }
+
+    void poll()
+    return stop
+  }, [
+    isAvatarOperationCurrent,
+    loadCurrentUser,
+    pendingAvatarModeration,
+    profileVisible,
+    updatePendingAvatarModeration,
+  ])
   const openMenu = (item: typeof menus[number] | typeof identityMenu) => {
     Taro.navigateTo({ url: item.route })
   }
@@ -201,7 +415,33 @@ export default function ProfilePage() {
   }
   const applyAvatar = async (draft: MediaImageDraft) => {
     if (savingAvatar) return
+    const account = currentUser
+    const userId = account?.user.id
+    if (!accountLoaded || !account || !isAvatarModerationUserId(userId)) {
+      Taro.showToast({ title: '账号信息加载中，请稍后重试', icon: 'none' })
+      void loadCurrentUser(true)
+      return
+    }
+    if (approvedAvatarUrlRef.current === null) approvedAvatarUrlRef.current = userAvatarUrl(account.user)
+    const operation: AvatarUploadOperation = {
+      draftKey: draft.key,
+      userId,
+      version: avatarOperationVersionRef.current + 1,
+    }
+    avatarOperationVersionRef.current = operation.version
+    activeAvatarMediaIdRef.current = null
+    activeAvatarUserIdRef.current = operation.userId
+    activeAvatarDraftKeyRef.current = operation.draftKey
+    avatarModerationStorage.remove(Taro, operation.userId)
+    updatePendingAvatarModeration(null)
+    const isLatest = () => (
+      avatarOperationVersionRef.current === operation.version
+      && activeAvatarUserIdRef.current === operation.userId
+      && activeAvatarDraftKeyRef.current === operation.draftKey
+    )
+    const isCurrent = () => profileVisibleRef.current && isLatest()
     setSavingAvatar(true)
+    setAvatarModerationNotice(null)
     setAvatarDraft({ ...draft, status: 'uploading', error: '' })
     try {
       const mediaId = draft.mediaId || (await uploadMediaImage({
@@ -210,21 +450,30 @@ export default function ProfilePage() {
         mimeType: draft.mimeType,
         sizeBytes: draft.sizeBytes,
         onProgress: (progress) => setAvatarDraft((currentDraft) => (
-          currentDraft?.key === draft.key
+          isCurrent() && currentDraft?.key === draft.key
             ? { ...currentDraft, status: 'uploading', progress }
             : currentDraft
         )),
       })).id
-      setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
-        ? { ...currentDraft, mediaId, status: 'uploading', progress: 100 }
-        : currentDraft)
+      if (!isLatest()) return
       const updated = await updateCurrentAvatar(mediaId)
-      setCurrentUser((account) => account ? { ...account, user: updated } : account)
+      if (!isLatest()) return
+      activeAvatarMediaIdRef.current = mediaId
+      avatarModerationStorage.write(Taro, operation.userId, mediaId)
+      if (!isCurrent()) return
+      setCurrentUser((loadedAccount) => (
+        loadedAccount?.user.id === operation.userId
+          ? { ...loadedAccount, user: updated }
+          : loadedAccount
+      ))
       setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
         ? { ...currentDraft, mediaId, status: 'uploaded', progress: 100, error: '' }
         : currentDraft)
+      updatePendingAvatarModeration({ mediaId, userId: operation.userId })
+      setAvatarModerationNotice('reviewing')
       Taro.showToast({ title: '头像审核中', icon: 'none' })
     } catch (error) {
+      if (!isCurrent()) return
       setAvatarDraft((currentDraft) => currentDraft?.key === draft.key
         ? {
           ...currentDraft,
@@ -233,11 +482,16 @@ export default function ProfilePage() {
         }
         : currentDraft)
     } finally {
-      setSavingAvatar(false)
+      if (isCurrent()) setSavingAvatar(false)
     }
   }
   const chooseAvatar = async () => {
     if (savingAvatar) return
+    if (!accountLoaded || !currentUser || !isAvatarModerationUserId(currentUser.user.id)) {
+      Taro.showToast({ title: '账号信息加载中，请稍后重试', icon: 'none' })
+      void loadCurrentUser(true)
+      return
+    }
     try {
       const [selected] = await chooseMediaImages({
         count: 1,
@@ -246,6 +500,7 @@ export default function ProfilePage() {
         quality: AVATAR_IMAGE_QUALITY,
       })
       if (!selected) return
+      setAvatarModerationNotice(null)
       setAvatarDraft(selected)
       await applyAvatar(selected)
     } catch (error) {
@@ -279,6 +534,9 @@ export default function ProfilePage() {
     ? `${identity.real_name} · 学号 ${studentNumber}`
     : '中国海洋大学校园服务账号'
   const avatarUrl = avatarDraft?.previewUrl || userAvatarUrl(currentUser?.user)
+  const avatarReviewing = Boolean(pendingAvatarModeration)
+    || avatarDraft?.status === 'uploaded'
+    || Boolean(currentUser?.user.avatar_moderation_status)
   const openMyPublicProfile = () => {
     if (!currentUser) {
       Taro.showToast({ title: accountLoaded ? '账号信息加载失败' : '账号信息加载中', icon: 'none' })
@@ -296,7 +554,7 @@ export default function ProfilePage() {
           <View
             className='profile-card__avatar'
             ariaRole='button'
-            ariaLabel={savingAvatar ? '头像正在上传' : '更换头像'}
+            ariaLabel={savingAvatar ? '头像正在上传' : avatarReviewing ? '头像审核中' : '更换头像'}
             onClick={() => void chooseAvatar()}
           >
             <UserAvatarImage
@@ -307,7 +565,7 @@ export default function ProfilePage() {
             <Text className='profile-card__avatar-action'>
               {savingAvatar
                 ? `${avatarDraft?.progress || 0}%`
-                : avatarDraft?.status === 'uploaded' || currentUser?.user.avatar_moderation_status
+                : avatarReviewing
                   ? '审核中'
                   : '更换'}
             </Text>
@@ -369,6 +627,28 @@ export default function ProfilePage() {
           <View className='profile-avatar-error'>
             <Text>{avatarDraft.error}</Text>
             <Text onClick={() => void applyAvatar(avatarDraft)}>重试</Text>
+          </View>
+        )}
+
+        {avatarModerationNotice && (
+          <View
+            className={[
+              'profile-avatar-notice',
+              `profile-avatar-notice--${avatarModerationNotice}`,
+            ].join(' ')}
+            ariaRole='alert'
+          >
+            <Text>{avatarModerationNoticeCopy[avatarModerationNotice]}</Text>
+            {avatarModerationNotice === 'rejected' && (
+              <View
+                className='profile-avatar-notice__action'
+                ariaRole='button'
+                ariaLabel='重新选择头像'
+                onClick={() => void chooseAvatar()}
+              >
+                <Text>重新选择</Text>
+              </View>
+            )}
           </View>
         )}
 

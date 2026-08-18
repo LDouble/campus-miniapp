@@ -56,6 +56,7 @@
     "test:empty-classroom-day-view": "ts-node --transpile-only scripts/empty-classroom-day-view-smoke.ts",
     "test:daily-checkin": "ts-node --transpile-only scripts/daily-checkin-smoke.ts",
     "test:profile-username": "ts-node --transpile-only scripts/profile-username-smoke.ts",
+    "test:profile-avatar-moderation": "ts-node --transpile-only scripts/profile-avatar-moderation-smoke.ts",
     "test:public-profile-campus": "ts-node --transpile-only scripts/public-profile-campus-smoke.ts",
     "test:media-images": "ts-node --transpile-only scripts/media-images-smoke.ts",
     "test:share": "ts-node --transpile-only scripts/share-smoke.ts",
