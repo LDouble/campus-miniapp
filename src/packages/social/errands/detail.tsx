@@ -24,6 +24,7 @@ import DetailComments, {
 import BusinessRoute from '../../../features/life-services/components/business-route'
 import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
+import { showParticipationContact } from '../../../features/life-services/contact-reveal'
 import '../../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -115,10 +116,12 @@ export default function ErrandDetailPage() {
 
     setWorking(true)
     let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
+    let participationItem: ErrandView | null = null
     try {
       if (action === 'accept') {
         const response = await lifeServicesRepository.acceptErrand(item.id, item.version)
-        setItem(response.errand)
+        participationItem = response.errand
+        setItem(participationItem)
         try {
           await createBusinessContactComment(
             'errand',
@@ -129,6 +132,12 @@ export default function ErrandDetailPage() {
           setCommentRefreshKey((current) => current + 1)
         } catch (commentError) {
           contactCommentStatus = 'failed'
+        }
+        try {
+          participationItem = await lifeServicesRepository.getErrand(item.id)
+          setItem(participationItem)
+        } catch {
+          // 保留接单接口返回的已更新详情。
         }
       } else if (action === 'pickup') {
         setItem(await lifeServicesRepository.pickupErrand(item.id, item.version))
@@ -144,14 +153,17 @@ export default function ErrandDetailPage() {
         setItem(await lifeServicesRepository.submitErrandReview(item.id, item.version))
       }
       markLifeHubSectionDirty('errands')
-      Taro.showToast({
-        title: contactCommentStatus === 'created'
-          ? '接单成功，已留言联系'
-          : contactCommentStatus === 'failed'
-            ? '接单成功，请手动留言联系'
-            : '状态已更新',
-        icon: contactCommentStatus === 'failed' ? 'none' : 'success',
-      })
+      if (participationItem) {
+        await showParticipationContact(Taro, {
+          successTitle: '接单成功',
+          contactType: participationItem.contact_type,
+          contact: participationItem.contact,
+          commentStatus: contactCommentStatus,
+          confirmColor: '#3f8f83',
+        })
+      } else {
+        Taro.showToast({ title: '状态已更新', icon: 'success' })
+      }
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       if (isApiError(actionError) && actionError.statusCode === 409) await load()

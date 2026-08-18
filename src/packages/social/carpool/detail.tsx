@@ -24,6 +24,7 @@ import DetailComments, {
 import BusinessRoute from '../../../features/life-services/components/business-route'
 import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
+import { showParticipationContact } from '../../../features/life-services/contact-reveal'
 import '../../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -115,9 +116,11 @@ export default function CarpoolDetailPage() {
 
     setWorking(true)
     let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
+    let participationItem: CarpoolTripView | null = null
     try {
       if (action === 'join') {
-        setItem(await lifeServicesRepository.joinCarpoolTrip(item.id, item.version))
+        participationItem = await lifeServicesRepository.joinCarpoolTrip(item.id, item.version)
+        setItem(participationItem)
         try {
           await createBusinessContactComment(
             'carpool',
@@ -129,19 +132,28 @@ export default function CarpoolDetailPage() {
         } catch (commentError) {
           contactCommentStatus = 'failed'
         }
+        try {
+          participationItem = await lifeServicesRepository.getCarpoolTrip(item.id)
+          setItem(participationItem)
+        } catch {
+          // 保留参与接口返回的已更新详情。
+        }
       }
       else if (action === 'leave') setItem(await lifeServicesRepository.leaveCarpoolTrip(item.id, item.version))
       else if (action === 'cancel') setItem(await lifeServicesRepository.cancelCarpoolTrip(item.id, item.version))
       else if (action === 'submit_review') setItem(await lifeServicesRepository.submitCarpoolReview(item.id, item.version))
       markLifeHubSectionDirty('carpool')
-      Taro.showToast({
-        title: contactCommentStatus === 'created'
-          ? '加入成功，已留言联系'
-          : contactCommentStatus === 'failed'
-            ? '加入成功，请手动留言联系'
-            : '状态已更新',
-        icon: contactCommentStatus === 'failed' ? 'none' : 'success',
-      })
+      if (participationItem) {
+        await showParticipationContact(Taro, {
+          successTitle: '加入同行成功',
+          contactType: participationItem.contact_type,
+          contact: participationItem.contact,
+          commentStatus: contactCommentStatus,
+          confirmColor: '#708fc9',
+        })
+      } else {
+        Taro.showToast({ title: '状态已更新', icon: 'success' })
+      }
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
       if (isApiError(actionError) && actionError.statusCode === 409) await load()
