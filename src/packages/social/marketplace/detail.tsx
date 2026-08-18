@@ -5,6 +5,7 @@ import CustomNavbar from '../../../components/custom-navbar'
 import StickerContent from '../../../components/sticker-content'
 import type { MarketplaceListingView } from '../../../api/types'
 import { isApiError } from '../../../api/client'
+import { getCurrentIdentity } from '../../../api/account'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
 import { consumeBusinessDetailSnapshot } from '../../../features/life-services/business-detail-snapshot'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
@@ -13,7 +14,15 @@ import { openContentReport } from '../../../features/content-report'
 import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
 import { useCampusShare } from '../../../features/share'
 import { formatDateTime, formatMoney, formatStatus } from '../../../features/life-services/format'
-import { showParticipationContact } from '../../../features/life-services/contact-reveal'
+import {
+  contactTypeLabel,
+  showParticipationContact,
+} from '../../../features/life-services/contact-reveal'
+import {
+  type ParticipationContact,
+  restoreParticipationContact,
+  visibleParticipationContact,
+} from '../../../features/life-services/participation-contact-storage'
 import DetailAuthorNavbar from '../../../features/life-services/components/detail-author-navbar'
 import DetailComments, {
   createBusinessContactComment,
@@ -40,13 +49,28 @@ export default function MarketplaceDetailPage() {
   const [working, setWorking] = useState(false)
   const [commentRefreshKey, setCommentRefreshKey] = useState(0)
   const [error, setError] = useState('')
+  const [persistedContact, setPersistedContact] = useState<ParticipationContact | null>(null)
+
+  const applyItem = async (nextItem: MarketplaceListingView) => {
+    setItem(nextItem)
+    const contact = await restoreParticipationContact(Taro, getCurrentIdentity, {
+      resourceType: 'marketplace',
+      resourceId: nextItem.id,
+      viewerRelation: nextItem.viewer_relation,
+      resourceStatus: nextItem.status,
+      contactType: nextItem.contact_type,
+      contact: nextItem.contact,
+    })
+    setPersistedContact(contact)
+    return contact
+  }
 
   const load = async (targetId = id) => {
     if (!targetId) return
     setLoading(true)
     setError('')
     try {
-      setItem(await lifeServicesRepository.getMarketplaceListing(targetId))
+      await applyItem(await lifeServicesRepository.getMarketplaceListing(targetId))
     } catch (loadError) {
       setError(isApiError(loadError) ? loadError.message : '商品信息加载失败')
     } finally {
@@ -67,7 +91,7 @@ export default function MarketplaceDetailPage() {
       ? consumeBusinessDetailSnapshot('marketplace', nextId)
       : null
     if (snapshot) {
-      setItem(snapshot)
+      void applyItem(snapshot)
       setError('')
       setLoading(false)
       return
@@ -115,6 +139,7 @@ export default function MarketplaceDetailPage() {
     setWorking(true)
     let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
     let participationItem: MarketplaceListingView | null = null
+    let participationContact: ParticipationContact | null = null
     try {
       if (action === 'purchase' || action === 'respond') {
         await lifeServicesRepository.respondMarketplaceListing(item.id)
@@ -133,9 +158,14 @@ export default function MarketplaceDetailPage() {
         }
         try {
           participationItem = await lifeServicesRepository.getMarketplaceListing(item.id)
-          setItem(participationItem)
+          participationContact = await applyItem(participationItem)
         } catch {
           participationItem = item
+          participationContact = visibleParticipationContact(
+            item.contact_type,
+            item.contact,
+            persistedContact,
+          )
         }
       } else if (action === 'submit_review') {
         await lifeServicesRepository.submitMarketplaceListing(item.id, item.version)
@@ -146,8 +176,8 @@ export default function MarketplaceDetailPage() {
       if (participationItem) {
         await showParticipationContact(Taro, {
           successTitle: item.intent === 'wanted' ? '响应成功' : '预订成功',
-          contactType: participationItem.contact_type,
-          contact: participationItem.contact,
+          contactType: participationContact?.contactType || participationItem.contact_type,
+          contact: participationContact?.contact || participationItem.contact,
           commentStatus: contactCommentStatus,
           confirmColor: '#df7773',
         })
@@ -167,15 +197,21 @@ export default function MarketplaceDetailPage() {
     }
   }
 
+  const displayedContact = visibleParticipationContact(
+    item?.contact_type,
+    item?.contact,
+    persistedContact,
+  )
+
   const copyContact = () => {
-    if (!item?.contact || item.contact.includes('*')) {
+    if (!displayedContact) {
       Taro.showToast({
         title: item?.intent === 'wanted' ? '响应后可查看完整联系方式' : '预订后可查看完整联系方式',
         icon: 'none',
       })
       return
     }
-    Taro.setClipboardData({ data: item.contact })
+    Taro.setClipboardData({ data: displayedContact.contact })
   }
 
   const relationLabel = item?.viewer_relation === 'owner'
@@ -308,12 +344,16 @@ export default function MarketplaceDetailPage() {
               <View className='market-detail-contact__main'>
                 <View className='market-detail-contact__avatar'>{item.intent === 'wanted' ? '求' : '卖'}</View>
                 <View className='market-detail-contact__value'>
-                  <Text>{item.contact_type || '校内联系'}</Text>
-                  <Text>{item.contact || (item.intent === 'wanted' ? '响应后可见' : '预订后可见')}</Text>
+                  <Text>{displayedContact ? contactTypeLabel(displayedContact.contactType) : '校内联系'}</Text>
+                  <Text>{displayedContact?.contact || (item.intent === 'wanted' ? '响应后可见' : '预订后可见')}</Text>
                 </View>
                 <Text className='market-detail-contact__copy'>复制</Text>
               </View>
-              <Text className='detail-contact__tip'>{item.intent === 'wanted' ? '响应后' : '预订后'}可查看完整联系方式，公开页面会自动隐藏敏感信息。</Text>
+              <Text className='detail-contact__tip'>
+                {displayedContact
+                  ? '已为当前账号在本机保留，之后回来仍可查看。'
+                  : `${item.intent === 'wanted' ? '响应后' : '预订后'}可查看完整联系方式，公开页面会自动隐藏敏感信息。`}
+              </Text>
             </View>
 
             <View className='detail-section market-detail-section'>

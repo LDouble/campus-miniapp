@@ -4,6 +4,7 @@ import { Text, View } from '@tarojs/components'
 import CustomNavbar from '../../../components/custom-navbar'
 import type { CarpoolTripView } from '../../../api/types'
 import { isApiError } from '../../../api/client'
+import { getCurrentIdentity } from '../../../api/account'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
 import { consumeBusinessDetailSnapshot } from '../../../features/life-services/business-detail-snapshot'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
@@ -24,7 +25,15 @@ import DetailComments, {
 import BusinessRoute from '../../../features/life-services/components/business-route'
 import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
-import { showParticipationContact } from '../../../features/life-services/contact-reveal'
+import {
+  contactTypeLabel,
+  showParticipationContact,
+} from '../../../features/life-services/contact-reveal'
+import {
+  type ParticipationContact,
+  restoreParticipationContact,
+  visibleParticipationContact,
+} from '../../../features/life-services/participation-contact-storage'
 import '../../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -43,13 +52,28 @@ export default function CarpoolDetailPage() {
   const [working, setWorking] = useState(false)
   const [commentRefreshKey, setCommentRefreshKey] = useState(0)
   const [error, setError] = useState('')
+  const [persistedContact, setPersistedContact] = useState<ParticipationContact | null>(null)
+
+  const applyItem = async (nextItem: CarpoolTripView) => {
+    setItem(nextItem)
+    const contact = await restoreParticipationContact(Taro, getCurrentIdentity, {
+      resourceType: 'carpool',
+      resourceId: nextItem.id,
+      viewerRelation: nextItem.viewer_relation,
+      resourceStatus: nextItem.status,
+      contactType: nextItem.contact_type,
+      contact: nextItem.contact,
+    })
+    setPersistedContact(contact)
+    return contact
+  }
 
   const load = async (targetId = id) => {
     if (!targetId) return
     setLoading(true)
     setError('')
     try {
-      setItem(await lifeServicesRepository.getCarpoolTrip(targetId))
+      await applyItem(await lifeServicesRepository.getCarpoolTrip(targetId))
     } catch (loadError) {
       setError(isApiError(loadError) ? loadError.message : '同行计划加载失败')
     } finally {
@@ -70,7 +94,7 @@ export default function CarpoolDetailPage() {
       ? consumeBusinessDetailSnapshot('carpool', nextId)
       : null
     if (snapshot) {
-      setItem(snapshot)
+      void applyItem(snapshot)
       setError('')
       setLoading(false)
       return
@@ -117,10 +141,11 @@ export default function CarpoolDetailPage() {
     setWorking(true)
     let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
     let participationItem: CarpoolTripView | null = null
+    let participationContact: ParticipationContact | null = null
     try {
       if (action === 'join') {
         participationItem = await lifeServicesRepository.joinCarpoolTrip(item.id, item.version)
-        setItem(participationItem)
+        participationContact = await applyItem(participationItem)
         try {
           await createBusinessContactComment(
             'carpool',
@@ -134,20 +159,20 @@ export default function CarpoolDetailPage() {
         }
         try {
           participationItem = await lifeServicesRepository.getCarpoolTrip(item.id)
-          setItem(participationItem)
+          participationContact = await applyItem(participationItem)
         } catch {
           // 保留参与接口返回的已更新详情。
         }
       }
-      else if (action === 'leave') setItem(await lifeServicesRepository.leaveCarpoolTrip(item.id, item.version))
-      else if (action === 'cancel') setItem(await lifeServicesRepository.cancelCarpoolTrip(item.id, item.version))
-      else if (action === 'submit_review') setItem(await lifeServicesRepository.submitCarpoolReview(item.id, item.version))
+      else if (action === 'leave') await applyItem(await lifeServicesRepository.leaveCarpoolTrip(item.id, item.version))
+      else if (action === 'cancel') await applyItem(await lifeServicesRepository.cancelCarpoolTrip(item.id, item.version))
+      else if (action === 'submit_review') await applyItem(await lifeServicesRepository.submitCarpoolReview(item.id, item.version))
       markLifeHubSectionDirty('carpool')
       if (participationItem) {
         await showParticipationContact(Taro, {
           successTitle: '加入同行成功',
-          contactType: participationItem.contact_type,
-          contact: participationItem.contact,
+          contactType: participationContact?.contactType || participationItem.contact_type,
+          contact: participationContact?.contact || participationItem.contact,
           commentStatus: contactCommentStatus,
           confirmColor: '#708fc9',
         })
@@ -166,12 +191,18 @@ export default function CarpoolDetailPage() {
     }
   }
 
+  const displayedContact = visibleParticipationContact(
+    item?.contact_type,
+    item?.contact,
+    persistedContact,
+  )
+
   const copyContact = () => {
-    if (!item?.contact || item.contact.includes('*')) {
+    if (!displayedContact) {
       Taro.showToast({ title: '确认同行后可查看完整联系方式', icon: 'none' })
       return
     }
-    Taro.setClipboardData({ data: item.contact })
+    Taro.setClipboardData({ data: displayedContact.contact })
   }
 
   const footerActions = item ? buildDetailFooterActions({
@@ -266,10 +297,14 @@ export default function CarpoolDetailPage() {
             <View className='detail-section detail-contact' onClick={copyContact}>
               <View className='detail-section__heading'><Text>联系发起人</Text><Text>点击复制</Text></View>
               <View className='detail-contact__row'>
-                <Text>{item.contact_type || '校内联系'}</Text>
-                <Text>{item.contact || '确认同行后可见'}</Text>
+                <Text>{displayedContact ? contactTypeLabel(displayedContact.contactType) : '校内联系'}</Text>
+                <Text>{displayedContact?.contact || '确认同行后可见'}</Text>
               </View>
-              <Text className='detail-contact__tip'>联系方式由服务端按同行关系授权，取消同行或计划结束后会重新隐藏。</Text>
+              <Text className='detail-contact__tip'>
+                {displayedContact
+                  ? '已为当前账号在本机保留，之后回来仍可查看。'
+                  : '确认同行后可查看完整联系方式，公开页面会自动隐藏敏感信息。'}
+              </Text>
             </View>
 
             <View className='detail-section'>
