@@ -30,6 +30,7 @@ import {
   showParticipationContact,
 } from '../../../features/life-services/contact-reveal'
 import {
+  hasParticipationContactAccess,
   type ParticipationContact,
   restoreParticipationContact,
   visibleParticipationContact,
@@ -213,6 +214,16 @@ export default function CarpoolDetailPage() {
     Taro.setClipboardData({ data: displayedContact.contact })
   }
 
+  const persistentContact = item
+    && displayedContact
+    && hasParticipationContactAccess('carpool', item.viewer_relation, item.status)
+      ? {
+          label: `发起人 · ${contactTypeLabel(displayedContact.contactType)}`,
+          value: displayedContact.contact,
+          onCopy: copyContact,
+        }
+      : undefined
+
   const footerActions = item ? buildDetailFooterActions({
     availableActions: item.available_actions,
     labels: actionLabels,
@@ -328,6 +339,7 @@ export default function CarpoolDetailPage() {
               targetAuthorId={item.organizer_id}
               tone='carpool'
               actions={footerActions}
+              persistentContact={persistentContact}
             />
           </>
         )}

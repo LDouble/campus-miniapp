@@ -163,6 +163,82 @@
   transition: transform 180ms ease-out;
 }
 
+.business-detail-comments__persistent-offset {
+  height: 112rpx;
+}
+
+.business-detail-composer__persistent-contact {
+  display: flex;
+  min-height: 84rpx;
+  padding: 0 18rpx;
+  margin: 0 0 14rpx;
+  align-items: center;
+  gap: 16rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.96);
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, rgba(233, 245, 242, 0.98), rgba(255, 253, 249, 0.98));
+  box-shadow:
+    8rpx 10rpx 24rpx rgba(50, 92, 84, 0.08),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.94);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.business-detail-composer__persistent-contact--pressed {
+  opacity: 0.78;
+  transform: scale(0.988);
+}
+
+.business-detail-composer__persistent-contact-icon {
+  display: flex;
+  width: 54rpx;
+  height: 54rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
+  background: #d9f3f0;
+  color: #469cae;
+  font-size: 24rpx;
+  font-weight: 760;
+}
+
+.business-detail-composer__persistent-contact-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.business-detail-composer__persistent-contact-copy text:first-child {
+  color: #71817f;
+  font-size: 21rpx;
+}
+
+.business-detail-composer__persistent-contact-copy text:last-child {
+  overflow: hidden;
+  color: #21465c;
+  font-size: 27rpx;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.business-detail-composer__persistent-contact-action {
+  display: flex;
+  min-width: 88rpx;
+  min-height: 56rpx;
+  padding: 0 18rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, #55b7bd, #469cae 58%, #e98c70);
+  color: #fff;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
 .business-detail-composer__backdrop { position: fixed; inset: 0; z-index: 39; background: transparent; pointer-events: none; }
 .business-detail-composer__backdrop--active { pointer-events: auto; }
 
