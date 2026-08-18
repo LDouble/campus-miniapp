@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import {
+  AcademicCredentialMissingError,
+  getActiveAcademicUserId,
+} from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
@@ -245,7 +248,10 @@ export default function SelectionPage() {
       <View className='academic-page__glow academic-page__glow--two' />
       <AcademicHeader title='选课结果' toolbar={toolbar} />
       <View className='academic-content'>
-        {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : loadError && !usingCache ? (
+        {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : (
+          loadError instanceof AcademicCredentialMissingError
+          || (loadError && !usingCache)
+        ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : <>
           <AcademicCacheNotice

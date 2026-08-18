@@ -1,6 +1,7 @@
 import {
   apiRequest,
   createIdempotencyKey,
+  isApiError,
 } from './client'
 import { uploadFileToObjectStorage } from './object-upload'
 import { createSharedResource } from '../state/shared-resource'
@@ -12,6 +13,10 @@ import type {
   AcademicVerificationUploadTarget,
 } from './types'
 import type { operations } from './generated/schema'
+import {
+  emptyAcademicVerificationStatus,
+  isMissingAcademicVerificationStatus,
+} from '../features/academic-verification/missing-status'
 
 type InitiateUploadRequest = operations['InitiateAcademicVerificationMaterialUpload']['requestBody']['content']['application/json']
 type CompleteUploadRequest = operations['CompleteAcademicVerificationMaterialUpload']['requestBody']['content']['application/json']
@@ -34,10 +39,22 @@ const academicVerificationResource = createSharedResource<AcademicVerificationSt
   group: 'verification',
 })
 
-const requestAcademicVerificationStatus = () => apiRequest<AcademicVerificationStatus>({
-  path: '/api/v1/academic-verification',
-  skipAcademicVerificationGuard: true,
-})
+const requestAcademicVerificationStatus = async () => {
+  try {
+    return await apiRequest<AcademicVerificationStatus>({
+      path: '/api/v1/academic-verification',
+      skipAcademicVerificationGuard: true,
+    })
+  } catch (error) {
+    if (
+      isApiError(error)
+      && isMissingAcademicVerificationStatus(error.statusCode, error.code)
+    ) {
+      return emptyAcademicVerificationStatus()
+    }
+    throw error
+  }
+}
 
 export const getAcademicVerificationStatus = (
   options: AcademicVerificationRequestOptions = {},

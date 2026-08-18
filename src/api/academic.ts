@@ -1,8 +1,6 @@
-import Taro from '@tarojs/taro'
 import { apiRequest, apiRequestEnvelope, isApiError } from './client'
 import { getCurrentIdentity } from './account'
 import {
-  AcademicCredentialMissingError,
   clearAcademicCredential,
   loadAcademicCredential,
 } from './academic-credential'
@@ -34,24 +32,11 @@ type AcademicRequestBody = {
 
 const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBody> => {
   const currentUser = await getCurrentIdentity()
-  try {
-    const credential = loadAcademicCredential(currentUser.user_id)
-    return {
-      student_no: credential.studentNo,
-      password: credential.password,
-      ...(periodId ? { period_id: periodId } : {}),
-    }
-  } catch (error) {
-    if (error instanceof AcademicCredentialMissingError) {
-      try {
-        await Taro.navigateTo({
-          url: '/pages/academic-verification/index?rebind=1',
-        })
-      } catch {
-        // 导航失败时仍抛出明确的凭据错误。
-      }
-    }
-    throw error
+  const credential = loadAcademicCredential(currentUser.user_id)
+  return {
+    student_no: credential.studentNo,
+    password: credential.password,
+    ...(periodId ? { period_id: periodId } : {}),
   }
 }
 

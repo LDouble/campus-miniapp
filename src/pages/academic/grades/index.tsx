@@ -6,7 +6,10 @@ import {
   openCourseMarketplacePublisher,
 } from '../../../features/life-services/marketplace-prefill'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
-import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import {
+  AcademicCredentialMissingError,
+  getActiveAcademicUserId,
+} from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
@@ -660,7 +663,10 @@ export default function GradesPage() {
             <View className='academic-state__loader' />
             <Text>正在整理成绩…</Text>
           </View>
-        ) : loadError && !usingCache ? (
+        ) : (
+          loadError instanceof AcademicCredentialMissingError
+          || (loadError && !usingCache)
+        ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshGrades} />
         ) : (
           <>

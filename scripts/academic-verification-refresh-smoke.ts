@@ -9,11 +9,35 @@ import {
   markAcademicRefreshAfterVerification,
   resolveAcademicRefreshReturnRoute,
 } from '../src/features/academic-verification/refresh-signal'
+import {
+  emptyAcademicVerificationStatus,
+  isMissingAcademicVerificationStatus,
+} from '../src/features/academic-verification/missing-status'
 
 const grades = '/pages/academic/grades/index'
 const schedule = '/pages/academic/schedule/index'
 const exams = '/pages/academic/exams/index'
 const selection = '/pages/academic/selection/index'
+
+assert.deepEqual(emptyAcademicVerificationStatus(), {
+  identity: null,
+  latest_request: null,
+})
+for (const code of [
+  'academic_verification_not_found',
+  'academic_verification_request_not_found',
+  'academic_review_not_found',
+  'academic_request_not_found',
+  'academic_identity_not_found',
+]) {
+  assert.equal(
+    isMissingAcademicVerificationStatus(404, code),
+    true,
+    `${code} 应按未绑定状态处理`,
+  )
+}
+assert.equal(isMissingAcademicVerificationStatus(500, 'academic_request_not_found'), false)
+assert.equal(isMissingAcademicVerificationStatus(404, 'academic_material_not_found'), false)
 
 const values = new Map<string, unknown>()
 const storage = {
@@ -73,9 +97,18 @@ const verificationPage = readFileSync(
   resolve(__dirname, '../src/pages/academic-verification/index.tsx'),
   'utf8',
 )
+const verificationApi = readFileSync(
+  resolve(__dirname, '../src/api/academic-verification.ts'),
+  'utf8',
+)
 const verificationGuard = readFileSync(
   resolve(__dirname, '../src/features/academic-verification/guard.ts'),
   'utf8',
+)
+assert.ok(
+  verificationApi.includes('isMissingAcademicVerificationStatus(error.statusCode, error.code)')
+    && verificationApi.includes('return emptyAcademicVerificationStatus()'),
+  '认证状态接口应将旧版无审核记录响应转换为正常未绑定状态',
 )
 assert.ok(
   verificationPage.includes('finishAcademicVerification(replacedCurrentPage, true)')
