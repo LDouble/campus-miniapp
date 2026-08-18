@@ -11,6 +11,7 @@ import {
 import StickerPicker from '../../../components/sticker-picker'
 import { isApiError } from '../../../api/client'
 import { uploadMediaImage } from '../../../api/media'
+import { getCurrentIdentity } from '../../../api/account'
 import type {
   CarpoolTripView,
   CampusCircleSectionView,
@@ -25,6 +26,11 @@ import {
 } from '../../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
+import {
+  publisherContactStorage,
+  withRememberedPublisherContact,
+  type PublisherContact,
+} from '../../../features/life-services/publisher-contact-storage'
 import CampusSelector from '../../../features/life-services/components/campus-selector'
 import {
   isCampusName,
@@ -371,6 +377,7 @@ export default function PublishPage() {
   const [topics, setTopics] = useState<CampusCircleTopicView[]>([])
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
+  const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
   const contentSelectionStartRef = useRef(0)
@@ -380,6 +387,8 @@ export default function PublishPage() {
     'pickupLocation' | 'dropoffLocation' | 'origin' | 'destination'
   > | null>(null)
   const skipNextDraftSave = useRef(false)
+  const identityUserIdRef = useRef(0)
+  const rememberedContactRef = useRef<PublisherContact | null>(null)
   const {
     keyboardHeight,
     onKeyboardVisibilityChange,
@@ -390,6 +399,7 @@ export default function PublishPage() {
   }, [keyboardHeight])
 
   const current = sectionOptions.find((item) => item.key === section) || sectionOptions[0]
+  const loadingForm = loadingEdit || restoringCreateDefaults
   const hasDraftContent = useMemo(() => (
     [
       form.content,
@@ -408,6 +418,39 @@ export default function PublishPage() {
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
     setForm((draft) => ({ ...draft, [key]: value }))
+  }
+
+  const loadRememberedContact = async () => {
+    try {
+      const identity = await getCurrentIdentity()
+      identityUserIdRef.current = identity.user_id
+      const remembered = publisherContactStorage.read(Taro, identity.user_id)
+      rememberedContactRef.current = remembered
+      return remembered
+    } catch {
+      return null
+    }
+  }
+
+  const rememberCurrentContact = async () => {
+    if (section === 'community') return
+    let userId = identityUserIdRef.current
+    if (!userId) {
+      try {
+        const identity = await getCurrentIdentity()
+        userId = identity.user_id
+        identityUserIdRef.current = userId
+      } catch {
+        return
+      }
+    }
+    const remembered = {
+      contactType: form.contactType,
+      contact: form.contact.trim(),
+    }
+    if (publisherContactStorage.write(Taro, userId, remembered)) {
+      rememberedContactRef.current = remembered
+    }
   }
 
   const mapErrand = (item: ErrandView): PublisherForm => {
@@ -518,35 +561,42 @@ export default function PublishPage() {
         : 0,
     )
     if (initialMode !== 'create' && initialId > 0) {
+      setRestoringCreateDefaults(false)
       void loadEdit(initialSection, initialId)
     } else {
-      const initialForm = storedDrafts()[draftKey(initialSection, initialIntent)]
-        || emptyForm(initialIntent)
-      const prefill = initialSection === 'market' && options.course_prefill === '1'
-        ? consumeMarketplacePublishPrefill()
-        : null
-      const nextForm = prefill ? {
-        ...initialForm,
-        marketIntent: prefill.intent,
-        content: prefill.description,
-        marketCategory: 'course_material' as const,
-        courseName: prefill.courseName,
-        courseCode: prefill.courseCode,
-        academicPeriodId: prefill.academicPeriodId,
-        academicPeriodLabel: prefill.academicPeriodLabel,
-        marketSource: prefill.source,
-      } : initialForm
-      setForm(initialSection === 'community'
-        ? {
-          ...nextForm,
-          communitySectionId: Number.isInteger(initialCommunitySectionId) && initialCommunitySectionId > 0
-            ? initialCommunitySectionId
-            : nextForm.communitySectionId,
-          communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
-            ? initialCommunityTopicId
-            : nextForm.communityTopicId,
-        }
-        : nextForm)
+      setRestoringCreateDefaults(true)
+      void loadRememberedContact().then((remembered) => {
+        const draft = storedDrafts()[draftKey(initialSection, initialIntent)]
+          || emptyForm(initialIntent)
+        const initialForm = initialSection === 'community'
+          ? draft
+          : withRememberedPublisherContact(draft, remembered)
+        const prefill = initialSection === 'market' && options.course_prefill === '1'
+          ? consumeMarketplacePublishPrefill()
+          : null
+        const nextForm = prefill ? {
+          ...initialForm,
+          marketIntent: prefill.intent,
+          content: prefill.description,
+          marketCategory: 'course_material' as const,
+          courseName: prefill.courseName,
+          courseCode: prefill.courseCode,
+          academicPeriodId: prefill.academicPeriodId,
+          academicPeriodLabel: prefill.academicPeriodLabel,
+          marketSource: prefill.source,
+        } : initialForm
+        setForm(initialSection === 'community'
+          ? {
+            ...nextForm,
+            communitySectionId: Number.isInteger(initialCommunitySectionId) && initialCommunitySectionId > 0
+              ? initialCommunitySectionId
+              : nextForm.communitySectionId,
+            communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
+              ? initialCommunityTopicId
+              : nextForm.communityTopicId,
+          }
+          : nextForm)
+      }).finally(() => setRestoringCreateDefaults(false))
     }
     void lifeServicesRepository.listCampusCircleSections()
       .then((result) => setSections(result.items))
@@ -587,17 +637,17 @@ export default function PublishPage() {
   ])
 
   useEffect(() => {
-    if (mode !== 'create' || loadingEdit) return
+    if (mode !== 'create' || loadingEdit || restoringCreateDefaults) return
     if (skipNextDraftSave.current) {
       skipNextDraftSave.current = false
       return
     }
     const timer = setTimeout(() => saveDraft(section, form), 350)
     return () => clearTimeout(timer)
-  }, [form, loadingEdit, mode, section])
+  }, [form, loadingEdit, mode, restoringCreateDefaults, section])
 
   const selectSection = (next: PublishSection) => {
-    if (mode !== 'create' || next === section) return
+    if (mode !== 'create' || next === section || restoringCreateDefaults) return
     if (form.images.some((image) => image.status === 'uploading')) {
       Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
       return
@@ -605,7 +655,10 @@ export default function PublishPage() {
     requestWechatSubscriptionForPublishSection(next)
     saveDraft(section, form)
     setSection(next)
-    setForm(storedDrafts()[draftKey(next)] || emptyForm())
+    const nextForm = storedDrafts()[draftKey(next)] || emptyForm()
+    setForm(next === 'community'
+      ? nextForm
+      : withRememberedPublisherContact(nextForm, rememberedContactRef.current))
   }
 
   const selectMarketIntent = (intent: MarketplaceIntent) => {
@@ -616,7 +669,8 @@ export default function PublishPage() {
     }
     if (mode === 'create') {
       saveDraft(section, form)
-      setForm(storedDrafts()[draftKey('market', intent)] || emptyForm(intent))
+      const nextForm = storedDrafts()[draftKey('market', intent)] || emptyForm(intent)
+      setForm(withRememberedPublisherContact(nextForm, rememberedContactRef.current))
       return
     }
     update('marketIntent', intent)
@@ -635,7 +689,10 @@ export default function PublishPage() {
     if (!result.confirm) return
     skipNextDraftSave.current = true
     clearDraft(section, form)
-    setForm(emptyForm(form.marketIntent))
+    const nextForm = emptyForm(form.marketIntent)
+    setForm(section === 'community'
+      ? nextForm
+      : withRememberedPublisherContact(nextForm, rememberedContactRef.current))
     Taro.showToast({ title: '草稿已清空', icon: 'success' })
   }
 
@@ -915,6 +972,7 @@ export default function PublishPage() {
       } else if (section === 'carpool') {
         rememberRoutePair(form.origin, form.destination)
       }
+      await rememberCurrentContact()
       markLifeHubSectionDirty(section)
       await navigateAfterSubmit(id)
     } catch (error) {
@@ -985,8 +1043,10 @@ export default function PublishPage() {
           </View>
         </View>
 
-        {loadingEdit ? (
-          <View className='publisher-loading'>正在加载原内容</View>
+        {loadingForm ? (
+          <View className='publisher-loading'>
+            {loadingEdit ? '正在加载原内容' : '正在恢复发布信息'}
+          </View>
         ) : (
           <>
             {section === 'market' && (
@@ -1306,7 +1366,7 @@ export default function PublishPage() {
         )}
       </View>
 
-      {!loadingEdit && (
+      {!loadingForm && (
         <View className={`publisher-actions ${keyboardHeight > 0 ? 'publisher-actions--keyboard' : ''}`}>
           <View className={`publisher-actions__status ${validationError ? '' : 'publisher-actions__status--ready'}`}>
             <View />
