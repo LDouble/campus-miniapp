@@ -4,14 +4,14 @@
   bottom: 0;
   left: 0;
   z-index: 100;
-  height: calc(164rpx + env(safe-area-inset-bottom));
+  height: calc(152rpx + env(safe-area-inset-bottom));
   pointer-events: none;
 }
 
 .tab-bar__dock {
   position: absolute;
   right: 46rpx;
-  bottom: calc(22rpx + env(safe-area-inset-bottom));
+  bottom: calc(10rpx + env(safe-area-inset-bottom));
   left: 46rpx;
   display: flex;
   height: 112rpx;
