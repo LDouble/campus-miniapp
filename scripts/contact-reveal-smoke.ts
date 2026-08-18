@@ -76,48 +76,105 @@ const main = async () => {
   }
   const getIdentity = async () => ({ user_id: 42 })
 
-  const firstReveal = await restoreParticipationContact(storage, getIdentity, {
-    resourceType: 'errand',
-    resourceId: 18,
-    viewerRelation: 'runner',
-    resourceStatus: 'accepted',
-    contactType: 'wechat',
-    contact: 'runner-campus',
-  })
-  assert.deepEqual(firstReveal, { contactType: 'wechat', contact: 'runner-campus' })
-  assert.deepEqual(
-    participationContactStorage.read(storage, 42, 'errand', 18),
-    firstReveal,
-  )
-  assert.equal(participationContactStorage.read(storage, 43, 'errand', 18), null)
+  const revisitCases = [
+    {
+      resourceType: 'marketplace' as const,
+      resourceId: 17,
+      viewerRelation: 'buyer',
+      activeStatus: 'reserved',
+      terminalStatus: 'sold',
+      contact: 'market-campus',
+    },
+    {
+      resourceType: 'errand' as const,
+      resourceId: 18,
+      viewerRelation: 'runner',
+      activeStatus: 'accepted',
+      terminalStatus: 'completed',
+      contact: 'runner-campus',
+    },
+    {
+      resourceType: 'carpool' as const,
+      resourceId: 19,
+      viewerRelation: 'participant',
+      activeStatus: 'full',
+      terminalStatus: 'completed',
+      contact: 'carpool-campus',
+    },
+  ]
 
-  const revisit = await restoreParticipationContact(storage, getIdentity, {
-    resourceType: 'errand',
-    resourceId: 18,
-    viewerRelation: 'runner',
-    resourceStatus: 'accepted',
-    contactType: 'wechat',
-    contact: 'r************',
-  })
-  assert.deepEqual(revisit, firstReveal)
+  for (const revisitCase of revisitCases) {
+    const firstReveal = await restoreParticipationContact(storage, getIdentity, {
+      resourceType: revisitCase.resourceType,
+      resourceId: revisitCase.resourceId,
+      viewerRelation: revisitCase.viewerRelation,
+      resourceStatus: revisitCase.activeStatus,
+      contactType: 'wechat',
+      contact: revisitCase.contact,
+    })
+    assert.deepEqual(firstReveal, {
+      contactType: 'wechat',
+      contact: revisitCase.contact,
+    })
+    assert.deepEqual(
+      participationContactStorage.read(
+        storage,
+        42,
+        revisitCase.resourceType,
+        revisitCase.resourceId,
+      ),
+      firstReveal,
+    )
+    assert.equal(
+      participationContactStorage.read(
+        storage,
+        43,
+        revisitCase.resourceType,
+        revisitCase.resourceId,
+      ),
+      null,
+    )
+
+    const revisit = await restoreParticipationContact(storage, getIdentity, {
+      resourceType: revisitCase.resourceType,
+      resourceId: revisitCase.resourceId,
+      viewerRelation: revisitCase.viewerRelation,
+      resourceStatus: revisitCase.activeStatus,
+      contactType: 'wechat',
+      contact: 'c************',
+    })
+    assert.deepEqual(revisit, firstReveal)
+    assert.deepEqual(
+      visibleParticipationContact('wechat', 'c************', revisit),
+      firstReveal,
+    )
+
+    assert.equal(await restoreParticipationContact(storage, getIdentity, {
+      resourceType: revisitCase.resourceType,
+      resourceId: revisitCase.resourceId,
+      viewerRelation: revisitCase.viewerRelation,
+      resourceStatus: revisitCase.terminalStatus,
+      contactType: 'wechat',
+      contact: 'c************',
+    }), null)
+    assert.equal(
+      participationContactStorage.read(
+        storage,
+        42,
+        revisitCase.resourceType,
+        revisitCase.resourceId,
+      ),
+      null,
+    )
+  }
+
   assert.deepEqual(
-    visibleParticipationContact('wechat', 'r************', revisit),
-    firstReveal,
-  )
-  assert.deepEqual(
-    visibleParticipationContact('phone', '13800138000', revisit),
+    visibleParticipationContact('phone', '13800138000', {
+      contactType: 'wechat',
+      contact: 'cached-campus',
+    }),
     { contactType: 'phone', contact: '13800138000' },
   )
-
-  assert.equal(await restoreParticipationContact(storage, getIdentity, {
-    resourceType: 'errand',
-    resourceId: 18,
-    viewerRelation: 'runner',
-    resourceStatus: 'completed',
-    contactType: 'wechat',
-    contact: 'r************',
-  }), null)
-  assert.equal(participationContactStorage.read(storage, 42, 'errand', 18), null)
 
   console.log('contact reveal smoke passed')
 }

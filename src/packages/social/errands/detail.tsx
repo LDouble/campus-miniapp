@@ -70,17 +70,23 @@ export default function ErrandDetailPage() {
     return contact
   }
 
-  const load = async (targetId = id) => {
+  const load = async (targetId = id, silent = false) => {
     if (!targetId) return
-    setLoading(true)
-    setError('')
+    if (!silent) {
+      setLoading(true)
+      setError('')
+    }
     try {
       await applyItem(await lifeServicesRepository.getErrand(targetId))
     } catch (loadError) {
-      setError(isApiError(loadError) ? loadError.message : '跑腿任务加载失败')
+      if (!silent) {
+        setError(isApiError(loadError) ? loadError.message : '跑腿任务加载失败')
+      }
     } finally {
-      setLoading(false)
-      Taro.stopPullDownRefresh()
+      if (!silent) {
+        setLoading(false)
+        Taro.stopPullDownRefresh()
+      }
     }
   }
 
@@ -96,9 +102,11 @@ export default function ErrandDetailPage() {
       ? consumeBusinessDetailSnapshot('errand', nextId)
       : null
     if (snapshot) {
-      void applyItem(snapshot)
+      setItem(snapshot)
+      setPersistedContact(null)
       setError('')
       setLoading(false)
+      void load(nextId, true)
       return
     }
     void load(nextId)
