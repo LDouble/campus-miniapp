@@ -66,14 +66,15 @@ for (const detail of detailCases) {
   )
   assert.match(
     source,
-    /if \(snapshot\) \{[\s\S]*?setItem\(snapshot\)[\s\S]*?setLoading\(false\)[\s\S]*?return/u,
-    `${detail.kind}: a snapshot renders immediately without falling through to detail loading`,
+    /if \(snapshot\) \{[\s\S]*?setItem\(snapshot\)[\s\S]*?setPersistedContact\(null\)[\s\S]*?setLoading\(false\)[\s\S]*?void load\(nextId, true\)[\s\S]*?return/u,
+    `${detail.kind}: a snapshot renders immediately and refreshes authoritative detail in the background`,
   )
-  assert.match(
+  assert.doesNotMatch(
     source,
-    /if \(snapshot\)[\s\S]*?return\s*\}\s*void load\(nextId\)/u,
-    `${detail.kind}: absent snapshots fall back to the detail loader`,
+    /applyItem\(snapshot\)/u,
+    `${detail.kind}: a non-authoritative snapshot never restores or clears persisted contact`,
   )
+  assert.match(source, /void load\(nextId\)/u, `${detail.kind}: absent snapshots use the detail loader`)
   assert.match(
     source,
     new RegExp(`${detail.getter}\\(targetId\\)`, 'u'),
