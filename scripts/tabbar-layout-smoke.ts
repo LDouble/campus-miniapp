@@ -15,9 +15,9 @@ const rule = (selector: string) => {
 
 assert.match(
   rule('.tab-bar'),
-  /height:\s*calc\(164rpx \+ env\(safe-area-inset-bottom\)\)/u,
+  /height:\s*calc\(152rpx \+ env\(safe-area-inset-bottom\)\)/u,
 )
-assert.match(rule('.tab-bar__dock'), /bottom:\s*calc\(22rpx \+ env\(safe-area-inset-bottom\)\)/u)
+assert.match(rule('.tab-bar__dock'), /bottom:\s*calc\(10rpx \+ env\(safe-area-inset-bottom\)\)/u)
 assert.match(rule('.tab-bar__dock'), /height:\s*112rpx/u)
 assert.match(rule('.tab-bar__item'), /height:\s*112rpx/u)
 assert.match(rule('.tab-bar__pill'), /height:\s*88rpx/u)
@@ -25,6 +25,7 @@ assert.match(rule('.tab-bar__publish-button'), /width:\s*84rpx/u)
 assert.match(rule('.tab-bar__publish-button'), /height:\s*84rpx/u)
 assert.match(rule('.tab-bar__publish-button'), /transform:\s*translateY\(-24rpx\)/u)
 assert.doesNotMatch(tabBarStyle, /height:\s*142rpx/u)
+assert.doesNotMatch(tabBarStyle, /bottom:\s*calc\(22rpx \+ env\(safe-area-inset-bottom\)\)/u)
 assert.doesNotMatch(tabBarStyle, /translateY\(-40rpx\)/u)
 assert.match(tabBarStyle, /@media \(prefers-color-scheme: dark\)/u)
 
@@ -35,7 +36,7 @@ for (const path of [
 ]) {
   assert.match(
     read(path),
-    /calc\(164rpx \+ env\(safe-area-inset-bottom\)\)/u,
+    /calc\(152rpx \+ env\(safe-area-inset-bottom\)\)/u,
     `${path} 未同步收紧底部内容留白`,
   )
 }

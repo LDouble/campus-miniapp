@@ -7,7 +7,7 @@ page { background: var(--campus-page, #f4f7fb); }
   flex-direction: column;
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 0 28rpx calc(164rpx + env(safe-area-inset-bottom));
+  padding: 0 28rpx calc(152rpx + env(safe-area-inset-bottom));
   overflow: hidden;
   color: var(--campus-text-heading, #294653);
   background:
@@ -2011,7 +2011,7 @@ page {
 }
 
 .campus {
-  padding: 0 32rpx calc(164rpx + env(safe-area-inset-bottom));
+  padding: 0 32rpx calc(152rpx + env(safe-area-inset-bottom));
   color: var(--campus-text-heading, #1d293d);
   background:
     linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 510rpx),
