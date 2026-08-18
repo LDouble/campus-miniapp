@@ -3527,6 +3527,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的图片上传与审核状态 */
+        get: operations["GetMedia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/{id}/complete": {
         parameters: {
             query?: never;
@@ -3538,6 +3555,23 @@ export interface paths {
         put?: never;
         /** 校验并完成图片上传 */
         post: operations["CompleteMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{id}/submit-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交我的私信图片内容安全审核 */
+        post: operations["SubmitPrivateMessageMediaReview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3918,7 +3952,7 @@ export interface paths {
         /** 游标查询会话消息 */
         get: operations["ListPrivateMessages"];
         put?: never;
-        /** 发送一条文字私信 */
+        /** 发送一条文字或图片私信 */
         post: operations["CreatePrivateMessage"];
         delete?: never;
         options?: never;
@@ -7459,7 +7493,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -7611,8 +7645,10 @@ export interface components {
             peer_id: number;
         };
         CreatePrivateMessageInput: {
-            content: string;
-        };
+            content?: string;
+            /** Format: uint64 */
+            media_id?: number;
+        } & (unknown | unknown);
         PrivateConversationPage: {
             has_more: boolean;
             items: components["schemas"]["PrivateConversationView"][];
@@ -7649,6 +7685,16 @@ export interface components {
             peer: components["schemas"]["PrivateMessagePeer"];
             /** Format: uint64 */
             unread_count: number;
+        };
+        PrivateMessageImage: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            /** Format: uri */
+            url: string;
+            /** Format: int64 */
+            width: number;
         };
         PrivateMessagePage: {
             has_more: boolean;
@@ -7687,6 +7733,7 @@ export interface components {
             created_at: string;
             /** Format: uint64 */
             id: number;
+            image?: components["schemas"]["PrivateMessageImage"];
             /** Format: uint64 */
             sender_id: number;
         };
@@ -14485,6 +14532,21 @@ export interface operations {
             413: components["responses"]["Error"];
         };
     };
+    GetMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MediaResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     CompleteMedia: {
         parameters: {
             query?: never;
@@ -14510,6 +14572,23 @@ export interface operations {
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
             413: components["responses"]["Error"];
+        };
+    };
+    SubmitPrivateMessageMediaReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MediaResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     ListAdminNotices: {

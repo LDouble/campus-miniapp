@@ -102,10 +102,10 @@ page {
   margin-top: 16rpx;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid rgba(85, 183, 189, .22);
-  border-radius: 20rpx;
-  background: rgba(217, 243, 240, .76);
-  color: #397d88;
+  border: 2rpx solid token.$color-border-strong;
+  border-radius: token.$radius-md;
+  background: token.$color-surface-primary;
+  color: token.$color-primary-strong;
   font-size: 23rpx;
   font-weight: 720;
   transition: opacity token.$motion-press ease, transform token.$motion-press ease;

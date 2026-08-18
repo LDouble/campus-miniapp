@@ -4,6 +4,7 @@ import { Text, View } from '@tarojs/components'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
 import UserAvatarImage from '../../../components/user-avatar-image'
+import { plainStickerContent } from '../../../features/stickers/content'
 import { formatDateTime } from '../../../features/life-services/format'
 import { directMessageChatUrl } from '../../../features/direct-messages/navigation'
 import {
@@ -25,7 +26,7 @@ const peerName = (conversation: DirectMessageConversation) => (
 )
 
 const preview = (conversation: DirectMessageConversation) => (
-  conversation.last_message?.content || '还没有消息，打个招呼吧'
+  conversation.last_message ? plainStickerContent(conversation.last_message.content) : '还没有消息，打个招呼吧'
 )
 
 export default function DirectMessagesPage() {
@@ -113,7 +114,7 @@ export default function DirectMessagesPage() {
         <View className='direct-messages-intro motion-enter'>
           <View>
             <Text>校园私信</Text>
-            <Text>仅支持文字消息，请文明交流</Text>
+            <Text>支持文字、图片和表情，请文明交流</Text>
           </View>
           {unreadCount > 0 && <Text>{unreadCount > 99 ? '99+' : unreadCount} 未读</Text>}
         </View>

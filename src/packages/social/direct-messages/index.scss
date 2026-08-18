@@ -1,16 +1,13 @@
 @use '../../../styles/tokens' as token;
 
 page {
-  background: #f8f6f1;
+  background: token.$color-page;
 }
 
 .direct-messages-page {
   min-height: 100vh;
-  color: #31515b;
-  background:
-    radial-gradient(circle at 12% 9%, rgba(244, 187, 118, .14), transparent 29%),
-    radial-gradient(circle at 96% 24%, rgba(129, 201, 194, .12), transparent 28%),
-    linear-gradient(180deg, #fffdf9 0%, #f8f6f1 100%);
+  color: token.$color-text-body;
+  background: token.$color-page;
 }
 
 .direct-messages-page__content {
@@ -25,10 +22,9 @@ page {
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  border: 2rpx solid rgba(255, 255, 255, .94);
-  border-radius: 34rpx;
-  background: rgba(255, 255, 255, .86);
-  box-shadow: 12rpx 16rpx 34rpx rgba(50, 92, 84, .07), inset 0 2rpx 0 rgba(255, 255, 255, .94);
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
 
   > view {
     min-width: 0;
@@ -39,7 +35,7 @@ page {
   }
 
   > view text:first-child {
-    color: #21465c;
+    color: token.$color-text-heading;
     font-size: 31rpx;
     font-weight: 750;
   }
@@ -47,7 +43,7 @@ page {
   > view text:last-child {
     margin-top: 6rpx;
     overflow: hidden;
-    color: #71817f;
+    color: token.$color-text-secondary;
     font-size: 22rpx;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -58,8 +54,8 @@ page {
     padding: 8rpx 14rpx;
     margin-left: 18rpx;
     border-radius: 999rpx;
-    background: #fff0dc;
-    color: #c76f5b;
+    background: token.$color-surface-primary;
+    color: token.$color-primary-strong;
     font-size: 20rpx;
     font-weight: 720;
   }
@@ -78,15 +74,14 @@ page {
   padding: 22rpx 24rpx;
   align-items: center;
   box-sizing: border-box;
-  border: 2rpx solid rgba(255, 255, 255, .92);
-  border-radius: 32rpx;
-  background: rgba(255, 255, 255, .88);
-  box-shadow: 10rpx 13rpx 28rpx rgba(50, 92, 84, .055);
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
   transition: opacity token.$motion-press ease, transform token.$motion-press ease;
 
   &--unread {
-    background: rgba(255, 255, 255, .96);
-    box-shadow: 12rpx 16rpx 32rpx rgba(55, 128, 126, .1);
+    border-color: token.$color-border-strong;
+    background: token.$color-surface;
   }
 
   &--pressed {
@@ -102,10 +97,10 @@ page {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border: 3rpx solid rgba(255, 255, 255, .94);
+    border: 3rpx solid token.$color-border-strong;
     border-radius: 50%;
-    background: linear-gradient(145deg, #e2f3ee, #fff3e9);
-    color: #397d88;
+    background: token.$color-surface-primary;
+    color: token.$color-primary-strong;
     font-size: 27rpx;
     font-weight: 720;
   }
@@ -125,7 +120,7 @@ page {
       display: block;
       padding-top: 8rpx;
       overflow: hidden;
-      color: #71817f;
+      color: token.$color-text-secondary;
       font-size: 23rpx;
       line-height: 1.42;
       text-overflow: ellipsis;
@@ -142,7 +137,7 @@ page {
     text:first-child {
       min-width: 0;
       overflow: hidden;
-      color: #21465c;
+      color: token.$color-text-heading;
       font-size: 27rpx;
       font-weight: 720;
       text-overflow: ellipsis;
@@ -151,7 +146,7 @@ page {
 
     text:last-child {
       flex: none;
-      color: #94a4a2;
+      color: token.$color-text-muted;
       font-size: 19rpx;
     }
   }
@@ -164,10 +159,10 @@ page {
     margin-left: 12rpx;
     align-items: center;
     justify-content: center;
-    border: 3rpx solid rgba(255, 255, 255, .94);
+    border: 3rpx solid token.$color-surface;
     border-radius: 999rpx;
-    background: #e98c70;
-    color: #fff;
+    background: token.$color-primary;
+    color: token.$color-on-accent;
     font-size: 18rpx;
     font-weight: 720;
   }
@@ -181,10 +176,10 @@ page {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  border: 2rpx solid rgba(255, 255, 255, .94);
-  border-radius: 34rpx;
-  background: rgba(255, 255, 255, .84);
-  color: #71817f;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
+  color: token.$color-text-secondary;
   font-size: 24rpx;
   line-height: 1.6;
   text-align: center;
@@ -196,14 +191,14 @@ page {
     margin-top: 20rpx;
     align-items: center;
     justify-content: center;
-    border-radius: 22rpx;
-    background: #d9f3f0;
-    color: #397d88;
+    border-radius: token.$radius-md;
+    background: token.$color-surface-primary;
+    color: token.$color-primary-strong;
     font-weight: 720;
   }
 
   &--empty text:first-child {
-    color: #21465c;
+    color: token.$color-text-heading;
     font-size: 28rpx;
     font-weight: 740;
   }
@@ -213,22 +208,22 @@ page {
   }
 
   &--error {
-    background: #fff3e9;
-    color: #a85f52;
+    background: var(--campus-surface-danger, #fff1f2);
+    color: token.$color-danger;
   }
 }
 
 .direct-messages-inline-error,
 .direct-messages-footer {
   padding: 20rpx 4rpx 4rpx;
-  color: #809693;
+  color: token.$color-text-muted;
   font-size: 22rpx;
   line-height: 1.5;
   text-align: center;
 }
 
 .direct-messages-inline-error {
-  color: #b56d5e;
+  color: token.$color-danger;
 }
 
 @media (prefers-reduced-motion: reduce) {

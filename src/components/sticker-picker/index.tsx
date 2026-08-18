@@ -4,6 +4,8 @@ import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { CampusSticker } from '../../assets/stickers'
 import { campusStickers } from '../../assets/stickers'
 
+const smileIcon = require('../../assets/icons/smile.svg')
+
 const RECENT_STICKERS_STORAGE_KEY = 'campus_recent_sticker_ids'
 const MAX_RECENT_STICKERS = 7
 const stickerById = new Map(campusStickers.map((sticker) => [sticker.id, sticker]))
@@ -76,7 +78,11 @@ export default function StickerPicker({
         ariaLabel={open ? '收起校园鲨表情' : '选择校园鲨表情'}
         onClick={() => onOpenChange(!open)}
       >
-        <Text className='sticker-picker__trigger-icon'>☺</Text>
+        <Image
+          className='sticker-picker__trigger-icon'
+          src={smileIcon}
+          mode='aspectFit'
+        />
       </View>
 
       {open && (

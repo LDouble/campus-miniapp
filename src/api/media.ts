@@ -33,6 +33,15 @@ export const completeMediaUpload = (
   idempotencyKey: createIdempotencyKey(`media:${target.media_id}:complete`),
 })
 
+export const getMedia = (mediaId: number) => apiRequest<MediaView>({
+  path: `/api/v1/media/${mediaId}`,
+})
+
+export const submitPrivateMessageMediaReview = (mediaId: number) => apiRequest<MediaView>({
+  path: `/api/v1/media/${mediaId}/submit-review`,
+  method: 'POST',
+})
+
 export const uploadMediaImage = async (input: {
   purpose: MediaPurpose
   filePath: string

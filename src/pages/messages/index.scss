@@ -137,10 +137,9 @@
   margin-bottom: 20rpx;
   align-items: center;
   box-sizing: border-box;
-  border: 2rpx solid rgba(255, 255, 255, 0.92);
+  border: 2rpx solid var(--campus-border, #f1f5f9);
   border-radius: 34rpx;
-  background: linear-gradient(135deg, #d9f3f0, #eef8f4 58%, #fff0dc);
-  box-shadow: 12rpx 16rpx 34rpx rgba(50, 92, 84, 0.07), inset 0 2rpx 0 rgba(255, 255, 255, 0.94);
+  background: var(--campus-surface, #fff);
   transition: opacity 120ms ease, transform 120ms ease;
 
   &--pressed {
@@ -156,7 +155,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 24rpx;
-    background: rgba(255, 255, 255, .76);
+    background: var(--campus-surface-primary, #eff6ff);
 
     image {
       width: 36rpx;
@@ -173,7 +172,7 @@
     flex-direction: column;
 
     text:first-child {
-      color: #21465c;
+      color: var(--campus-text-heading, #1d293d);
       font-size: 29rpx;
       font-weight: 750;
     }
@@ -181,7 +180,7 @@
     text:last-child {
       margin-top: 5rpx;
       overflow: hidden;
-      color: #5d7e8c;
+      color: var(--campus-text-secondary, #62748e);
       font-size: 22rpx;
       line-height: 1.45;
       text-overflow: ellipsis;
@@ -191,7 +190,7 @@
 
   &__arrow {
     margin-left: 14rpx;
-    color: #469cae;
+    color: var(--campus-primary, #2b7fff);
     font-size: 23rpx;
     font-weight: 700;
   }
@@ -204,9 +203,9 @@
     margin-left: 14rpx;
     align-items: center;
     justify-content: center;
-    border: 3rpx solid rgba(255, 255, 255, .9);
+    border: 3rpx solid var(--campus-surface, #fff);
     border-radius: 999rpx;
-    background: #e98c70;
+    background: var(--campus-primary, #2b7fff);
     color: #fff;
     font-size: 18rpx;
     font-weight: 720;

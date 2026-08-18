@@ -1,5 +1,6 @@
 import { apiRequest } from '../../api/client'
 import type { operations } from '../../api/generated/schema'
+import type { DirectMessageSendPayload } from './composer'
 import type {
   DirectMessage,
   DirectMessageConversation,
@@ -56,11 +57,18 @@ export const privateMessagesRepository = {
     })
   },
 
-  sendMessage(conversationId: number, content: string, idempotencyKey: string) {
+  sendMessage(
+    conversationId: number,
+    payload: DirectMessageSendPayload,
+    idempotencyKey: string,
+  ) {
+    const data: operations['CreatePrivateMessage']['requestBody']['content']['application/json'] = payload.kind === 'image'
+      ? { media_id: payload.mediaId }
+      : { content: payload.content }
     return apiRequest<DirectMessage>({
       path: `${privateMessagePath(conversationId)}/messages`,
       method: 'POST',
-      data: { content },
+      data,
       idempotencyKey,
     })
   },
