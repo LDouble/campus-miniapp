@@ -320,6 +320,7 @@
 
   page .community-post__action image,
   page .community-detail-card__action image,
+  page .business-detail-comment__like image,
   page .business-detail-composer__share image {
     filter: brightness(1.75) saturate(0.86);
   }
@@ -328,7 +329,8 @@
     filter: brightness(1.75) saturate(0.86);
   }
 
-  page .community-post__action--liked image {
+  page .community-post__action--liked image,
+  page .business-detail-comment__like--active image {
     filter: brightness(1.12) saturate(1.08);
   }
 

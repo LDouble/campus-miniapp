@@ -3873,6 +3873,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/likes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 点赞资源 */
+        put: operations["LikeResource"];
+        post?: never;
+        /** 取消点赞资源 */
+        delete: operations["UnlikeResource"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/shuttle/routes": {
         parameters: {
             query?: never;
@@ -6296,6 +6314,9 @@ export interface components {
             depth: number;
             /** Format: uint64 */
             id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
             /** Format: uint64 */
             parent_id?: number | null;
             pinned: boolean;
@@ -6324,7 +6345,7 @@ export interface components {
             viewer_relation: string;
         };
         /** @enum {string} */
-        CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "pin_comment" | "unpin_comment" | "verify_academic";
+        CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "like" | "unlike" | "pin_comment" | "unpin_comment" | "verify_academic";
         ContentReportCaseDetail: components["schemas"]["ContentReportCaseSummary"] & {
             reports: components["schemas"]["ContentReportView"][];
         };
@@ -7497,6 +7518,20 @@ export interface components {
             updated_at: string;
             /** Format: uint64 */
             version: number;
+        };
+        /** @enum {string} */
+        ReactionResourceType: "campus_circle_post" | "comment";
+        ReactionState: {
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
+            /** Format: uint64 */
+            resource_id: number;
+            resource_type: components["schemas"]["ReactionResourceType"];
+        };
+        ReactionStateResponseBody: {
+            data: components["schemas"]["ReactionState"];
+            request_id: string;
         };
         ShuttleDateOverrideInput: {
             day_type: components["schemas"]["ShuttleDayType"];
@@ -8979,6 +9014,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeResponseBody"];
+            };
+        };
+        /** @description 资源点赞状态 */
+        ReactionStateResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ReactionStateResponseBody"];
             };
         };
         /** @description 校车线路分页 */
@@ -14679,6 +14723,42 @@ export interface operations {
         responses: {
             200: components["responses"]["OfficialNoticeResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    LikeResource: {
+        parameters: {
+            query: {
+                resource_type: "campus_circle_post" | "comment";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ReactionStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UnlikeResource: {
+        parameters: {
+            query: {
+                resource_type: "campus_circle_post" | "comment";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ReactionStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     ListAdminShuttleRoutes: {
