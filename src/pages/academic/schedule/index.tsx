@@ -2,10 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
-import {
-  AcademicCredentialMissingError,
-  getActiveAcademicUserId,
-} from '../../../api/academic-credential'
+import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
@@ -22,6 +19,7 @@ import {
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
+import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { findCourseConflicts } from '../calculations'
@@ -1151,7 +1149,7 @@ export default function SchedulePage() {
             <Text>正在整理课程表…</Text>
           </View>
         ) : (
-          loadError instanceof AcademicCredentialMissingError
+          isAcademicBindingRequiredError(loadError)
           || (loadError && !usingCache)
         ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />

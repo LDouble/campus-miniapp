@@ -6,6 +6,12 @@ import { listAcademicCoursePassRates } from '../../../api/academic-statistics'
 import CustomNavbar from '../../../components/custom-navbar'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { openCourseStatistics } from '../../../features/academic-statistics/navigation'
+import {
+  academicBindingGuidance,
+  isAcademicBindingRequiredError,
+  openAcademicCredentialBinding,
+} from '../../../features/academic-verification/binding-guidance'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './courses.scss'
 
@@ -38,7 +44,7 @@ export default function AcademicStatisticsCoursesPage() {
   const [publishedAt, setPublishedAt] = useState('')
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [errorText, setErrorText] = useState('')
+  const [loadError, setLoadError] = useState<unknown>(null)
   const requestSequence = useRef(0)
 
   const loadPage = useCallback(async (
@@ -49,7 +55,7 @@ export default function AcademicStatisticsCoursesPage() {
     requestSequence.current = requestId
     if (nextPage === 1) {
       setLoading(true)
-      setErrorText('')
+      setLoadError(null)
     } else {
       setLoadingMore(true)
     }
@@ -74,13 +80,13 @@ export default function AcademicStatisticsCoursesPage() {
       setPage(result.page)
       setTotal(result.total)
       setPublishedAt(result.metadata.published_at)
-      setErrorText('')
+      setLoadError(null)
     } catch (error) {
       if (requestId !== requestSequence.current) return
       if (nextPage === 1) {
         setItems([])
         setTotal(0)
-        setErrorText(error instanceof Error ? error.message : '课程数据加载失败')
+        setLoadError(error)
       } else {
         Taro.showToast({ title: '加载更多失败', icon: 'none' })
       }
@@ -98,6 +104,15 @@ export default function AcademicStatisticsCoursesPage() {
     }, keyword ? 180 : 0)
     return () => clearTimeout(timer)
   }, [keyword, loadPage])
+
+  Taro.useDidShow(() => {
+    if (consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/statistics/courses',
+    )) {
+      void loadPage(1, keyword)
+    }
+  })
 
   Taro.usePullDownRefresh(() => {
     loadPage(1, keyword).finally(() => Taro.stopPullDownRefresh())
@@ -124,6 +139,12 @@ export default function AcademicStatisticsCoursesPage() {
   }
 
   const heading = keyword ? `“${keyword}”的结果` : '全部课程'
+  const bindingRequired = isAcademicBindingRequiredError(loadError)
+  const errorMessage = bindingRequired
+    ? academicBindingGuidance.message
+    : loadError instanceof Error
+      ? loadError.message
+      : '课程数据加载失败'
 
   return (
     <View className='statistics-courses'>
@@ -164,7 +185,7 @@ export default function AcademicStatisticsCoursesPage() {
           </View>
         </View>
 
-        {!loading && !errorText && (
+        {!loading && !loadError && (
           <View className='statistics-courses__heading'>
             <Text>{heading}</Text>
             <Text>{total} 门课程</Text>
@@ -178,23 +199,31 @@ export default function AcademicStatisticsCoursesPage() {
           </View>
         )}
 
-        {!loading && errorText && (
+        {!loading && Boolean(loadError) && (
           <View className='statistics-courses-empty'>
-            <Text className='statistics-courses-empty__title'>暂时无法加载课程</Text>
-            <Text className='statistics-courses-empty__copy'>{errorText}</Text>
+            <Text className='statistics-courses-empty__title'>
+              {bindingRequired ? academicBindingGuidance.title : '暂时无法加载课程'}
+            </Text>
+            <Text className='statistics-courses-empty__copy'>{errorMessage}</Text>
             <View
               className='statistics-courses-empty__action'
               hoverClass='statistics-courses-empty__action--pressed'
               ariaRole='button'
-              ariaLabel='重新加载课程统计'
-              onClick={() => loadPage(1, keyword)}
+              ariaLabel={bindingRequired ? academicBindingGuidance.actionLabel : '重新加载课程统计'}
+              onClick={() => {
+                if (bindingRequired) {
+                  void openAcademicCredentialBinding()
+                  return
+                }
+                void loadPage(1, keyword)
+              }}
             >
-              重新加载
+              {bindingRequired ? academicBindingGuidance.actionLabel : '重新加载'}
             </View>
           </View>
         )}
 
-        {!loading && !errorText && items.length === 0 && (
+        {!loading && !loadError && items.length === 0 && (
           <View className='statistics-courses-empty'>
             <Text className='statistics-courses-empty__title'>
               {keyword ? '没有找到相关课程' : '暂无课程统计'}
@@ -205,7 +234,7 @@ export default function AcademicStatisticsCoursesPage() {
           </View>
         )}
 
-        {!loading && !errorText && items.length > 0 && (
+        {!loading && !loadError && items.length > 0 && (
           <View className='statistics-course-list'>
             {items.map((item) => (
               <View

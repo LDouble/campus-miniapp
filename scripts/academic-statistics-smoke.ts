@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   academicStatisticsTermKey,
   formatAcademicStatisticsTerm,
@@ -35,5 +37,34 @@ assert.equal(
   }),
   'undergraduate:2025-2026-3',
 )
+
+const statisticsApi = readFileSync(resolve(__dirname, '../src/api/academic-statistics.ts'), 'utf8')
+assert.equal(
+  statisticsApi.match(/skipAcademicVerificationGuard: true/g)?.length,
+  4,
+  '课程通过率接口应让页面接管未绑定引导，避免请求层自动弹窗',
+)
+
+const statisticsRepository = readFileSync(
+  resolve(__dirname, '../src/features/academic-statistics/repository.ts'),
+  'utf8',
+)
+assert.equal(
+  statisticsRepository.match(/if \(isAcademicBindingRequiredError\(error\)\) throw error/g)?.length,
+  2,
+  '未绑定时不得用通过率旧缓存掩盖绑定引导',
+)
+
+for (const path of [
+  '../src/pages/academic/statistics/courses.tsx',
+  '../src/pages/academic/statistics/index.tsx',
+  '../src/features/academic-statistics/course-pass-rate-preview/index.tsx',
+]) {
+  const source = readFileSync(resolve(__dirname, path), 'utf8')
+  assert.ok(
+    source.includes('isAcademicBindingRequiredError'),
+    `${path} 应识别并引导处理未绑定错误`,
+  )
+}
 
 console.log('academic-statistics smoke tests passed')
