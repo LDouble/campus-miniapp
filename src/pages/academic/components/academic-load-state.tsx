@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { AcademicCredentialMissingError } from '../../../api/academic-credential'
 import { isApiError } from '../../../api/client'
 import type { AcademicCacheMetadata } from '../../../api/types'
+import {
+  academicBindingGuidance,
+  isAcademicBindingRequiredError,
+  openAcademicCredentialBinding,
+} from '../../../features/academic-verification/binding-guidance'
 import { resolveAcademicCacheNotice } from './academic-cache-notice'
 
 interface AcademicLoadStateProps {
@@ -39,12 +42,12 @@ const retryState = (message = '可以稍后再试，已有数据不会受影响'
 })
 
 export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState => {
-  if (error instanceof AcademicCredentialMissingError) {
+  if (isAcademicBindingRequiredError(error)) {
     return {
-      title: '还没有绑定教务账号',
-      message: '绑定后即可查询课表、成绩、考试和选课记录。',
+      title: academicBindingGuidance.title,
+      message: academicBindingGuidance.message,
       action: 'rebind',
-      actionLabel: '去绑定教务账号',
+      actionLabel: academicBindingGuidance.actionLabel,
     }
   }
   if (!isApiError(error)) {
@@ -108,8 +111,7 @@ export function AcademicLoadState({
       onRetry()
       return
     }
-    Taro.navigateTo({ url: '/pages/academic-verification/index?rebind=1' })
-      .catch(() => Taro.showToast({ title: '暂时无法打开账号更新页', icon: 'none' }))
+    void openAcademicCredentialBinding()
   }
   return (
     <View className='academic-load-state'>

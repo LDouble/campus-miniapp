@@ -10,6 +10,7 @@ import type {
   AcademicInstructorPassRatePage,
   AcademicPassRateTrend,
 } from '../../api/types'
+import { isAcademicBindingRequiredError } from '../academic-verification/binding-guidance'
 
 const CACHE_VERSION = 1
 const CACHE_TTL = 24 * 60 * 60 * 1000
@@ -86,6 +87,7 @@ export const getCourseStatistics = async (
     writeCache(normalized, data)
     return { data, fromCache: false }
   } catch (error) {
+    if (isAcademicBindingRequiredError(error)) throw error
     const cached = readCache(normalized)
     if (cached) return { data: cached, fromCache: true }
     throw error
@@ -101,6 +103,7 @@ export const getCoursePassRatePreview = async (
     const page = await getAcademicCoursePassRate(normalized)
     return { data: page.items[0] || null, fromCache: false }
   } catch (error) {
+    if (isAcademicBindingRequiredError(error)) throw error
     if (cached) return { data: cached.overview, fromCache: true }
     throw error
   }

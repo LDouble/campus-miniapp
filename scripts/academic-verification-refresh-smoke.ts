@@ -18,6 +18,8 @@ const grades = '/pages/academic/grades/index'
 const schedule = '/pages/academic/schedule/index'
 const exams = '/pages/academic/exams/index'
 const selection = '/pages/academic/selection/index'
+const statisticsCourses = '/pages/academic/statistics/courses'
+const statisticsDetail = '/pages/academic/statistics/index'
 
 assert.deepEqual(emptyAcademicVerificationStatus(), {
   identity: null,
@@ -46,12 +48,23 @@ const storage = {
   removeStorageSync(key: string) { values.delete(key) },
 }
 
-for (const path of [grades, schedule, exams, selection]) {
+for (const path of [
+  grades,
+  schedule,
+  exams,
+  selection,
+  statisticsCourses,
+  statisticsDetail,
+]) {
   assert.equal(isAcademicRefreshRoute(path), true)
 }
 assert.equal(isAcademicRefreshRoute('/pages/index/index'), false)
 assert.equal(resolveAcademicRefreshReturnRoute(`${grades}?rebind=1`), grades)
 assert.equal(resolveAcademicRefreshReturnRoute(schedule, exams.slice(1)), exams)
+assert.equal(
+  resolveAcademicRefreshReturnRoute(statisticsCourses, statisticsDetail.slice(1)),
+  statisticsDetail,
+)
 assert.equal(resolveAcademicRefreshReturnRoute('/pages/index/index', 'pages/profile/index'), null)
 
 const now = 1_000_000
@@ -90,6 +103,18 @@ for (const [directory, path, refreshFunction] of pageRefreshes) {
       && source.includes(`void ${refreshFunction}`)
       && source.includes('RequestRef.current !== requestId'),
     `${directory} 应仅消费匹配的绑定成功信号，并避免旧请求覆盖新数据`,
+  )
+}
+
+for (const file of ['courses.tsx', 'index.tsx']) {
+  const source = readFileSync(
+    resolve(__dirname, `../src/pages/academic/statistics/${file}`),
+    'utf8',
+  )
+  assert.ok(
+    source.includes('Taro.useDidShow(() => {')
+      && source.includes('consumeAcademicRefreshAfterVerification('),
+    `${file} 应在绑定成功返回后自动刷新课程通过率`,
   )
 }
 

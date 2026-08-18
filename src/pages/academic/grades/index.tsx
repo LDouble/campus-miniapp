@@ -6,10 +6,7 @@ import {
   openCourseMarketplacePublisher,
 } from '../../../features/life-services/marketplace-prefill'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
-import {
-  AcademicCredentialMissingError,
-  getActiveAcademicUserId,
-} from '../../../api/academic-credential'
+import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
@@ -43,6 +40,7 @@ import {
 import { shareCourseMaterials } from '../../../features/course-materials/navigation'
 import { rememberCourseSuggestions } from '../../../features/course-materials/storage'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
+import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -664,7 +662,7 @@ export default function GradesPage() {
             <Text>正在整理成绩…</Text>
           </View>
         ) : (
-          loadError instanceof AcademicCredentialMissingError
+          isAcademicBindingRequiredError(loadError)
           || (loadError && !usingCache)
         ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshGrades} />

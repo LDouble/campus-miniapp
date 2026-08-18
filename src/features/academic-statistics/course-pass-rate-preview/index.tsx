@@ -5,6 +5,10 @@ import {
   CoursePassRate,
   getCoursePassRatePreview,
 } from '../repository'
+import {
+  isAcademicBindingRequiredError,
+  openAcademicCredentialBinding,
+} from '../../academic-verification/binding-guidance'
 import './index.scss'
 
 type Props = {
@@ -28,6 +32,7 @@ export default function CoursePassRatePreview({
   const [loading, setLoading] = useState(Boolean(courseCode.trim()))
   const [empty, setEmpty] = useState(false)
   const [fromCache, setFromCache] = useState(false)
+  const [bindingRequired, setBindingRequired] = useState(false)
 
   useEffect(() => {
     const normalized = courseCode.trim()
@@ -39,6 +44,9 @@ export default function CoursePassRatePreview({
     let active = true
     setLoading(true)
     setEmpty(false)
+    setData(null)
+    setFromCache(false)
+    setBindingRequired(false)
     getCoursePassRatePreview(normalized)
       .then((result) => {
         if (!active) return
@@ -46,8 +54,11 @@ export default function CoursePassRatePreview({
         setFromCache(result.fromCache)
         setEmpty(!result.data)
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return
+        setData(null)
+        setFromCache(false)
+        setBindingRequired(isAcademicBindingRequiredError(error))
         setEmpty(true)
       })
       .finally(() => {
@@ -61,6 +72,10 @@ export default function CoursePassRatePreview({
   if (!courseCode.trim()) return null
 
   const openDetails = () => {
+    if (bindingRequired) {
+      void openAcademicCredentialBinding()
+      return
+    }
     void openCourseStatistics({ courseCode, courseName, teacherName })
   }
 
@@ -89,7 +104,7 @@ export default function CoursePassRatePreview({
           <View />
         </View>
       )}
-      {!loading && data && (
+      {!loading && data && !bindingRequired && (
         <View className='course-reference__metrics'>
           <View>
             <Text>{Math.round(data.pass_rate * 100)}%</Text>
@@ -106,7 +121,9 @@ export default function CoursePassRatePreview({
         </View>
       )}
       {!loading && empty && (
-        <Text className='course-reference__empty'>暂未积累到足够的历史样本</Text>
+        <Text className='course-reference__empty'>
+          {bindingRequired ? '绑定教务账号后查看课程通过率' : '暂未积累到足够的历史样本'}
+        </Text>
       )}
     </View>
   )

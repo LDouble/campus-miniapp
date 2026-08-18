@@ -21,6 +21,7 @@ export const listAcademicCoursePassRates = ({
   apiRequest<AcademicCoursePassRatePage>({
     path: '/api/v1/academic/pass-rates',
     method: 'GET',
+    skipAcademicVerificationGuard: true,
     query: {
       ...(keyword.trim() ? { keyword: keyword.trim() } : {}),
       ...(courseCode.trim() ? { course_code: courseCode.trim() } : {}),
@@ -42,6 +43,7 @@ export const listAcademicInstructorPassRates = (courseCode: string) => (
   apiRequest<AcademicInstructorPassRatePage>({
     path: '/api/v1/academic/pass-rates/instructors',
     method: 'GET',
+    skipAcademicVerificationGuard: true,
     query: {
       course_code: courseCode,
       page: 1,
@@ -54,6 +56,7 @@ export const getAcademicCoursePassRateTrend = (courseCode: string) => (
   apiRequest<AcademicPassRateTrend>({
     path: '/api/v1/academic/pass-rates/trends',
     method: 'GET',
+    skipAcademicVerificationGuard: true,
     query: { course_code: courseCode },
   })
 )
@@ -65,6 +68,7 @@ export const getAcademicInstructorPassRateTrend = (
   apiRequest<AcademicPassRateTrend>({
     path: '/api/v1/academic/pass-rates/instructors/trends',
     method: 'GET',
+    skipAcademicVerificationGuard: true,
     query: {
       course_code: courseCode,
       teacher_key: teacherKey,

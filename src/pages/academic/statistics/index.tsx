@@ -15,6 +15,12 @@ import {
 } from '../../../features/academic-statistics/term-label'
 import type { AcademicPassRateTrend } from '../../../api/types'
 import { getSystemState } from '../../../state/system'
+import {
+  academicBindingGuidance,
+  isAcademicBindingRequiredError,
+  openAcademicCredentialBinding,
+} from '../../../features/academic-verification/binding-guidance'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './index.scss'
 
@@ -146,7 +152,7 @@ export default function AcademicStatisticsPage() {
   const currentTeacherName = decodeParam(router.params.teacher_name).trim()
   const [statistics, setStatistics] = useState<CourseStatistics | null>(null)
   const [loading, setLoading] = useState(true)
-  const [errorText, setErrorText] = useState('')
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [fromCache, setFromCache] = useState(false)
   const [metric, setMetric] = useState<TrendMetric>('pass_rate')
   const [selectedPoint, setSelectedPoint] = useState(0)
@@ -156,19 +162,19 @@ export default function AcademicStatisticsPage() {
 
   const load = useCallback(async () => {
     if (!courseCode) {
-      setErrorText('缺少课程编号，暂时无法查询')
+      setLoadError(new Error('缺少课程编号，暂时无法查询'))
       setLoading(false)
       return
     }
     setLoading(true)
-    setErrorText('')
+    setLoadError(null)
     try {
       const result = await getCourseStatistics(courseCode)
       setStatistics(result.data)
       setFromCache(result.fromCache)
       setSelectedPoint(Math.max(0, result.data.trend.points.length - 1))
     } catch (error) {
-      setErrorText(error instanceof Error ? error.message : '课程参考加载失败')
+      setLoadError(error)
     } finally {
       setLoading(false)
     }
@@ -177,6 +183,15 @@ export default function AcademicStatisticsPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  Taro.useDidShow(() => {
+    if (consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/statistics/index',
+    )) {
+      void load()
+    }
+  })
 
   Taro.usePullDownRefresh(() => {
     load().finally(() => Taro.stopPullDownRefresh())
@@ -216,6 +231,12 @@ export default function AcademicStatisticsPage() {
 
   const title = statistics?.overview.course_name || courseName || '课程参考'
   const distributions = statistics ? distributionRows(statistics) : []
+  const bindingRequired = isAcademicBindingRequiredError(loadError)
+  const errorMessage = bindingRequired
+    ? academicBindingGuidance.message
+    : loadError instanceof Error
+      ? loadError.message
+      : '课程参考加载失败'
 
   return (
     <View className={`statistics-page ${selectedTeacher ? 'statistics-page--locked' : ''}`}>
@@ -229,21 +250,29 @@ export default function AcademicStatisticsPage() {
             <Text>正在整理历史数据…</Text>
           </View>
         )}
-        {!loading && errorText && (
+        {!loading && Boolean(loadError) && (
           <View className='statistics-empty'>
             <View className='statistics-empty__art'><View /><View /></View>
-            <Text className='statistics-empty__title'>暂时没有可展示的数据</Text>
-            <Text className='statistics-empty__copy'>{errorText}</Text>
+            <Text className='statistics-empty__title'>
+              {bindingRequired ? academicBindingGuidance.title : '暂时没有可展示的数据'}
+            </Text>
+            <Text className='statistics-empty__copy'>{errorMessage}</Text>
             <View
               className='statistics-empty__action'
               hoverClass='statistics-empty__action--pressed'
               ariaRole='button'
-              ariaLabel='重新加载课程统计'
-              onClick={load}
-            >重新加载</View>
+              ariaLabel={bindingRequired ? academicBindingGuidance.actionLabel : '重新加载课程统计'}
+              onClick={() => {
+                if (bindingRequired) {
+                  void openAcademicCredentialBinding()
+                  return
+                }
+                void load()
+              }}
+            >{bindingRequired ? academicBindingGuidance.actionLabel : '重新加载'}</View>
           </View>
         )}
-        {!loading && statistics && (
+        {!loading && statistics && !loadError && (
           <>
             <View className='statistics-hero'>
               <Text className='statistics-hero__course'>{title}</Text>

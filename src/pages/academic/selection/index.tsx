@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import {
-  AcademicCredentialMissingError,
-  getActiveAcademicUserId,
-} from '../../../api/academic-credential'
+import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
@@ -15,6 +12,7 @@ import {
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
+import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
@@ -249,7 +247,7 @@ export default function SelectionPage() {
       <AcademicHeader title='选课结果' toolbar={toolbar} />
       <View className='academic-content'>
         {loading ? <View className='academic-state'><View className='academic-state__loader' /><Text>正在同步选课结果…</Text></View> : (
-          loadError instanceof AcademicCredentialMissingError
+          isAcademicBindingRequiredError(loadError)
           || (loadError && !usingCache)
         ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />

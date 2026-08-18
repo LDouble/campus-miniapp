@@ -101,9 +101,16 @@ const loadStateSource = readFileSync(
   resolve(__dirname, '../src/pages/academic/components/academic-load-state.tsx'),
   'utf8',
 )
+const bindingGuidanceSource = readFileSync(
+  resolve(__dirname, '../src/features/academic-verification/binding-guidance.ts'),
+  'utf8',
+)
 assert.ok(
-  loadStateSource.includes('还没有绑定教务账号')
-    && loadStateSource.includes('去绑定教务账号'),
+  loadStateSource.includes('isAcademicBindingRequiredError(error)')
+    && bindingGuidanceSource.includes('还没有绑定教务账号')
+    && bindingGuidanceSource.includes('去绑定教务账号')
+    && bindingGuidanceSource.includes("error.code === 'academic_verification_required'")
+    && bindingGuidanceSource.includes('isMissingAcademicVerificationStatus(error.statusCode, error.code)'),
   '未绑定状态应展示清晰的绑定说明和操作',
 )
 
@@ -113,8 +120,8 @@ for (const directory of ['grades', 'schedule', 'exams', 'selection']) {
     'utf8',
   )
   assert.ok(
-    pageSource.includes('loadError instanceof AcademicCredentialMissingError'),
-    `${directory} 即使有本机缓存，也应优先提示绑定教务账号`,
+    pageSource.includes('isAcademicBindingRequiredError(loadError)'),
+    `${directory} 遇到本机凭据或后端教务身份缺失时应优先提示绑定`,
   )
 }
 
