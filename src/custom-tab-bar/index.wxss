@@ -74,7 +74,7 @@
 }
 
 .tab-bar__text {
-  color: #90a1b9;
+  color: #718096;
   font-size: 22rpx;
   font-weight: 400;
   line-height: 26rpx;
@@ -82,7 +82,7 @@
 
 .tab-bar__item--active .tab-bar__text {
   color: #2b7fff;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .tab-bar__item--publish {
