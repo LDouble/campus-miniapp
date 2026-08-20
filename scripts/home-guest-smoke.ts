@@ -28,6 +28,22 @@ assert.ok(
   homeServiceKeysSource.includes("'classroom'"),
   '首页常用服务白名单必须包含空教室入口',
 )
+assert.ok(
+  homeSource.includes('<Text>{campusName}</Text>')
+    && !homeSource.includes('中国海洋大学 · {campusName}'),
+  '首页校区筛选只应显示当前校区，不重复学校全称',
+)
+assert.ok(
+  !homeSource.includes('学习生活，一触即达')
+    && !homeSource.includes('service-panel__subtitle'),
+  '常用服务标题区必须移除冗余介绍文案',
+)
+assert.ok(
+  homeSource.includes("className='official-notices-home__heading'")
+    && homeSource.indexOf("official-notices-home__eyebrow'>OFFICIAL")
+      < homeSource.indexOf("official-notices-home__title'>全校通知"),
+  'OFFICIAL 与全校通知必须由同一标题容器按顺序展示',
+)
 
 assert.ok(
   homeSource.includes('getAcademicVerificationStatus({ force })'),
@@ -129,6 +145,16 @@ assert.match(
   homeStyleSource,
   /\.marketplace-card__description \.sticker-content__text\s*\{[^}]*white-space:\s*normal;/u,
   '二手卡片内部 StickerContent 文本不得绕过宿主截断规则',
+)
+assert.match(
+  homeStyleSource,
+  /\.service-panel\s*\{\s*padding:\s*16rpx 24rpx 14rpx;[\s\S]{0,260}&__simple-head\s*\{[^}]*min-height:\s*56rpx;[^}]*padding-bottom:\s*4rpx;/u,
+  '常用服务卡片必须使用紧凑的单行标题区',
+)
+assert.match(
+  homeStyleSource,
+  /\.official-notices-home\s*\{\s*padding:\s*18rpx 24rpx 12rpx;[\s\S]{0,440}&__heading\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*baseline;[^}]*white-space:\s*nowrap;/u,
+  '官方通知中英文标题必须保持单行并对齐基线',
 )
 
 const periods: AcademicPeriod[] = [{

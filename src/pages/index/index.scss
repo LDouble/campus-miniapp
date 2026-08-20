@@ -764,13 +764,7 @@ page { background: var(--campus-page, #f4f7fb); }
     padding: 0 0 16rpx;
   }
 
-  &__title-group {
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__title,
-  &__subtitle {
+  &__title {
     display: block;
   }
 
@@ -778,12 +772,6 @@ page { background: var(--campus-page, #f4f7fb); }
     color: #244a57;
     font-size: 28rpx;
     font-weight: 750;
-  }
-
-  &__subtitle {
-    margin-top: 4rpx;
-    color: #718984;
-    font-size: 22rpx;
   }
 
   &__all {
@@ -1204,12 +1192,6 @@ page { background: var(--campus-page, #f4f7fb); }
     color: #244a57;
     font-size: 26rpx;
     font-weight: 750;
-  }
-
-  &__date-label {
-    margin-left: 10rpx;
-    color: var(--campus-text-muted, #809693);
-    font-size: 22rpx;
   }
 
   &__summary {
@@ -2090,7 +2072,6 @@ page {
     font-size: 28rpx;
   }
 
-  &__date-label,
   &__meta {
     color: var(--campus-text-muted, #90a1b9);
   }
@@ -2195,22 +2176,18 @@ page {
 }
 
 .service-panel {
-  padding: 22rpx 24rpx 16rpx;
+  padding: 16rpx 24rpx 14rpx;
   margin-bottom: 24rpx;
   border-radius: 40rpx;
 
   &__simple-head {
-    min-height: 68rpx;
-    padding-bottom: 12rpx;
+    min-height: 56rpx;
+    padding-bottom: 4rpx;
   }
 
   &__title {
     color: var(--campus-text-heading, #1d293d);
     font-size: 30rpx;
-  }
-
-  &__subtitle {
-    color: var(--campus-text-muted, #90a1b9);
   }
 
   &__all {
@@ -2219,7 +2196,7 @@ page {
 
   &__home-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 10rpx 8rpx;
+    gap: 6rpx 8rpx;
     margin: 0;
   }
 
@@ -2327,9 +2304,30 @@ page {
 }
 
 .official-notices-home {
-  padding: 26rpx 24rpx 12rpx;
+  padding: 18rpx 24rpx 12rpx;
   margin-bottom: 24rpx;
   border-radius: 40rpx;
+
+  &__head {
+    min-height: 82rpx;
+    padding-bottom: 6rpx;
+  }
+
+  &__heading {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 12rpx;
+    white-space: nowrap;
+  }
+
+  &__title {
+    padding-top: 0;
+  }
+
+  &__more {
+    min-height: 82rpx;
+  }
 
   &__eyebrow {
     color: var(--campus-primary, #2b7fff);
@@ -2856,7 +2854,6 @@ page {
 .campus__school,
 .schedule-card__section,
 .schedule-card__summary,
-.service-panel__subtitle,
 .service-panel__all,
 .section-heading__sub,
 .section-heading__more,
@@ -2879,7 +2876,6 @@ page {
 
 .campus .custom-navbar__subtitle,
 .campus__eyebrow,
-.schedule-card__date-label,
 .schedule-card__meta,
 .schedule-card__state,
 .schedule-card__empty text:last-child,
@@ -2911,7 +2907,6 @@ page {
 .schedule-card__section,
 .schedule-card__summary,
 .today-task__description,
-.service-panel__subtitle,
 .service-panel__grid-name,
 .section-heading__sub,
 .official-notices-home__empty,
@@ -2924,7 +2919,6 @@ page {
 
 .campus .custom-navbar__subtitle,
 .campus__eyebrow,
-.schedule-card__date-label,
 .schedule-card__meta,
 .schedule-card__state,
 .schedule-card__empty text:last-child,

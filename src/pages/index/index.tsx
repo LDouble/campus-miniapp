@@ -744,7 +744,7 @@ function Index() {
               ariaLabel={`切换校区，当前为${campusName}`}
               onClick={chooseCampus}
             >
-              <Text>中国海洋大学 · {campusName}</Text>
+              <Text>{campusName}</Text>
               <Image className='campus__chevron' src={icons.arrow} mode='aspectFit' />
             </View>
           </View>
@@ -768,8 +768,7 @@ function Index() {
       <View className='schedule-card today-card motion-enter motion-enter--delay-2'>
         <View className='schedule-card__header'>
           <View className='schedule-card__date'>
-            <Text className='schedule-card__day-label'>今天</Text>
-            <Text className='schedule-card__date-label'>{coursePreview.dateLabel}</Text>
+            <Text className='schedule-card__day-label'>{coursePreview.dayLabel}</Text>
           </View>
           <View
             className='schedule-card__summary'
@@ -778,7 +777,7 @@ function Index() {
             ariaLabel='查看完整校历'
             onClick={openCalendar}
           >
-            <Text>全部日程</Text>
+            <Text>校历</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
@@ -878,8 +877,8 @@ function Index() {
           </View>
         ) : (
           <View className='schedule-card__empty'>
-            <Text>今天没有待办日程</Text>
-            <Text>课程、考试和推荐校历事件会汇总在这里</Text>
+            <Text>{coursePreview.emptyText}</Text>
+            <Text>{coursePreview.emptyHint}</Text>
           </View>
         )}
       </View>
@@ -912,10 +911,7 @@ function Index() {
 
       <View className='service-panel motion-enter motion-enter--delay-3'>
         <View className='service-panel__simple-head'>
-          <View className='service-panel__title-group'>
-            <Text className='service-panel__title'>常用服务</Text>
-            <Text className='service-panel__subtitle'>学习生活，一触即达</Text>
-          </View>
+          <Text className='service-panel__title'>常用服务</Text>
           <View
             className='service-panel__all'
             hoverClass='service-panel__all--pressed'
@@ -954,7 +950,7 @@ function Index() {
           ariaLabel='查看全部官方通知'
           onClick={openOfficialNotices}
         >
-          <View>
+          <View className='official-notices-home__heading'>
             <Text className='official-notices-home__eyebrow'>OFFICIAL</Text>
             <Text className='official-notices-home__title'>全校通知</Text>
           </View>

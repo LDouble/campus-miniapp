@@ -146,7 +146,7 @@ assert.match(
 )
 assert.match(
   homeStyle,
-  /\.service-panel__subtitle,[\s\S]{0,900}font-size:\s*var\(--campus-font-size-body,\s*28rpx\);[^}]*font-weight:\s*var\(--campus-font-weight-regular,\s*400\);[^}]*line-height:\s*var\(--campus-line-height-body,\s*44rpx\);/u,
+  /\.service-panel__all,[\s\S]{0,900}font-size:\s*var\(--campus-font-size-body,\s*28rpx\);[^}]*font-weight:\s*var\(--campus-font-weight-regular,\s*400\);[^}]*line-height:\s*var\(--campus-line-height-body,\s*44rpx\);/u,
   '首页说明与操作文字必须使用 14px / 400 / 22px 正文规范',
 )
 assert.match(
