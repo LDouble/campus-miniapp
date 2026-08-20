@@ -22,6 +22,10 @@ const homeStyleSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.scss'),
   'utf8',
 )
+const communityPostStyleSource = readFileSync(
+  resolve(__dirname, '../src/features/community/feed-panel.scss'),
+  'utf8',
+)
 const freshBarrageStyleSource = readFileSync(
   resolve(__dirname, '../src/features/community/fresh-barrage.scss'),
   'utf8',
@@ -139,9 +143,11 @@ assert.ok(
   '首页课程卡片必须展示具体节次',
 )
 assert.ok(
-  homeSource.includes("plainStickerContent(post.content || '').trim()")
-    && homeSource.includes('communityPostPreviewText(communityItem)'),
-  '首页社区摘要必须把贴纸标记转换为可读文本，不能直接暴露协议字符串',
+  homeSource.includes("import CommunityPostCard from '../../features/community/post-card'")
+    && !homeSource.includes("mode='home'")
+    && homeSource.includes('onToggleLike={toggleCommunityLike}')
+    && homeSource.includes('timeFormatter={formatHomeMomentsTime}'),
+  '首页社区动态必须复用统一帖子卡片组件并保留首页时间格式',
 )
 assert.ok(
   !homeSource.includes('{item.startTime}'),
@@ -181,7 +187,7 @@ assert.ok(
 assert.ok(
   homeSource.includes("kind: 'community'")
     && homeSource.includes("kind: 'marketplace'")
-    && homeSource.includes('openCommunityPost(communityItem)')
+    && homeSource.includes('onOpen={openCommunityPost}')
     && homeSource.includes('openMarketplaceListing(marketplaceItem)'),
   '朋友圈 Feed 必须保留社区与二手各自的详情路由',
 )
@@ -249,8 +255,8 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /\.moments-feed\s*\{[\s\S]*?&__item\s*\{[^}]*display:\s*flex;[^}]*gap:\s*20rpx;[^}]*border-top:\s*0;/u,
-  '朋友圈 Feed 条目必须使用头像与正文并排的无分隔线连续布局',
+  /\.moments-feed\s*\{[\s\S]*?&__item\s*\{[^}]*display:\s*flex;[^}]*gap:\s*20rpx;[^}]*border-top:\s*0;[\s\S]*?& \+ &\s*\{[^}]*border-top:\s*1rpx solid var\(--ousea-bg-line, #e8edf4\);/u,
+  '朋友圈 Feed 条目必须按照 Figma 使用浅色顶部分界线',
 )
 assert.match(
   homeStyleSource,
@@ -258,26 +264,41 @@ assert.match(
   '朋友圈 Feed 昵称必须使用 Ousea Ocean 400 与 Regular 400',
 )
 assert.match(
-  homeStyleSource,
-  /&__social\s*\{[^}]*display:\s*flex;[^}]*background:\s*var\(--campus-surface-subtle,[^}]*border-radius:\s*12rpx;/u,
-  '朋友圈 Feed 必须使用 Figma 对齐的浅底互动摘要',
+  communityPostStyleSource,
+  /\.community-post__social\s*\{[^}]*display:\s*flex;[^}]*border-radius:\s*12rpx;[^}]*background:\s*var\(--campus-surface-subtle,/u,
+  '帖子卡片必须使用首页风格的浅底互动摘要',
 )
 assert.match(
-  homeStyleSource,
-  /&__meta\s*\{[^}]*padding:\s*12rpx 0 8rpx;[\s\S]{0,700}?&__social\s*\{[^}]*margin-top:\s*4rpx;/u,
-  '朋友圈 Feed 操作行与评论摘要必须保留垂直间距',
+  communityPostStyleSource,
+  /\.community-post__meta\s*\{[^}]*padding:\s*12rpx 0 8rpx;/u,
+  '帖子卡片操作行必须保留首页垂直间距',
 )
 assert.match(
-  homeStyleSource,
-  /&--comments\s*\{[^}]*padding-top:\s*0;[^}]*border-top:\s*0;/u,
-  '朋友圈 Feed 评论摘要内部不得显示横向分隔线',
+  communityPostStyleSource,
+  /\.community-post__social\s*\{[^}]*margin-top:\s*4rpx;/u,
+  '帖子卡片互动摘要必须保留首页垂直间距',
+)
+assert.match(
+  communityPostStyleSource,
+  /\.community-post__social-divider\s*\{[^}]*display:\s*none;/u,
+  '帖子卡片互动摘要内部不得显示横向分隔线',
 )
 
 const homeMomentsNow = new Date('2026-08-20T12:00:00+08:00').getTime()
 assert.equal(
+  formatHomeMomentsTime('2026-08-20T11:45:00+08:00', homeMomentsNow),
+  '15分钟前',
+  '首页 Feed 1 小时内必须显示分钟数',
+)
+assert.equal(
   formatHomeMomentsTime('2026-08-20T08:00:00+08:00', homeMomentsNow),
+  '4小时前',
+  '首页 Feed 24 小时内必须显示小时数',
+)
+assert.equal(
+  formatHomeMomentsTime('2026-08-19T12:00:00+08:00', homeMomentsNow),
   '1天',
-  '首页 Feed 当天发布内容也必须统一显示为天数',
+  '首页 Feed 满 24 小时后才显示天数',
 )
 assert.equal(
   formatHomeMomentsTime('2026-07-21T12:00:00+08:00', homeMomentsNow),
@@ -306,9 +327,9 @@ assert.deepEqual(
 )
 assert.ok(
   homeSource.includes("className='moments-feed__meta-copy'")
-    && homeSource.includes('{formatHomeMomentsTime(publishedAt)} · {sectionLabel}')
+    && homeSource.includes('{formatHomeMomentsTime(marketplaceItem.created_at)} · {homeMomentsBusinessLabels.marketplace}')
     && homeSource.includes("communitySectionNames[communityItem.section_id] || '校园动态'")
-    && homeSource.includes('homeMomentsBusinessLabels.marketplace'),
+    && homeSource.includes('sectionName={communitySectionNames[communityItem.section_id] || \'校园动态\'}'),
   '首页 Feed 时间后必须跟真实社区板块名或业务板块名',
 )
 assert.match(

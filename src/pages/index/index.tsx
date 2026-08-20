@@ -32,6 +32,7 @@ import type {
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
+import CommunityPostCard from '../../features/community/post-card'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
@@ -39,11 +40,6 @@ import {
   avatarText,
   resolveCoursePreview,
 } from '../../features/home/data'
-import {
-  communityAuthorAvatarUrl,
-  communityAuthorInitial,
-  communityAuthorName,
-} from '../../features/community/author'
 import { plainStickerContent } from '../../features/stickers/content'
 import { formatMoney } from '../../features/life-services/format'
 import {
@@ -130,8 +126,6 @@ const icons = {
   shuttle: require('../../assets/icons/shuttle.svg'),
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
-  comment: require('../../assets/community/comment.svg'),
-  heart: require('../../assets/community/heart.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
   campusCard: require('../../assets/icons/campus-card.svg'),
   campaign: require('../../assets/icons/campaign.svg'),
@@ -340,14 +334,6 @@ const latestCommunityPosts = (items: CampusCirclePostView[]) => (
     .slice(0, 4)
 )
 
-const communityPostPreviewText = (post: CampusCirclePostView) => (
-  plainStickerContent(post.content || '').trim() || '分享了一组校园图片'
-)
-
-const communityPostPreviewImages = (post: CampusCirclePostView) => (
-  post.images.filter((image) => !!image.url).slice(0, 3)
-)
-
 const marketplaceListingPreviewText = (item: MarketplaceListingView) => {
   const description = plainStickerContent(item.description).trim() || '发布了一件校内闲置'
   return [description, formatMoney(item.price_cents), campusLabel(item.campus)]
@@ -380,10 +366,25 @@ const buildHomeMomentsFeed = (
   .slice(0, 6)
 
 function Index() {
-  useCampusShare(() => ({
-    title: '海大校园｜一站式校园生活',
-    path: '/pages/index/index',
-  }))
+  useCampusShare((event) => {
+    const target = event.target as {
+      dataset?: Record<string, string | number>
+    } | undefined
+    const dataset = target?.dataset || {}
+    const postId = Number(dataset.postId)
+    const shareTitle = typeof dataset.shareTitle === 'string'
+      ? dataset.shareTitle
+      : '海大校园社区'
+    const shareImage = typeof dataset.shareImage === 'string'
+      ? dataset.shareImage
+      : ''
+    const result = {
+      title: postId > 0 ? shareTitle : '海大校园｜一站式校园生活',
+      path: postId > 0 ? '/packages/social/community/detail' : '/pages/index/index',
+      query: postId > 0 ? { id: postId, mode: 'post' } : undefined,
+    }
+    return shareImage ? { ...result, imageUrl: shareImage } : result
+  })
 
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
@@ -551,6 +552,20 @@ function Index() {
     }
     void loadHome()
   })
+
+  const toggleCommunityLike = useCallback(async (post: CampusCirclePostView) => {
+    if (!fullLifeServicesRepository) return
+    try {
+      const updated = post.liked
+        ? await fullLifeServicesRepository.unlikeCampusCirclePost(post.id)
+        : await fullLifeServicesRepository.likeCampusCirclePost(post.id)
+      setCommunityPosts((current) => current.map((item) => (
+        item.id === updated.id ? updated : item
+      )))
+    } catch {
+      Taro.showToast({ title: '操作失败，请稍后重试', icon: 'none' })
+    }
+  }, [])
 
   usePullDownRefresh(() => {
     setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
@@ -1190,34 +1205,28 @@ function Index() {
           )}
           {!momentsLoading && homeMomentsFeed.map((entry, index) => {
             const communityItem = entry.kind === 'community' ? entry.item : null
-            const marketplaceItem = entry.kind === 'marketplace' ? entry.item : null
-            const authorName = communityItem
-              ? communityAuthorName(communityItem)
-              : marketplaceItem?.author_nickname?.trim() || `发布者 #${marketplaceItem?.owner_id}`
-            const authorAvatarUrl = communityItem
-              ? communityAuthorAvatarUrl(communityItem)
-              : marketplaceItem?.author_avatar_url
-            const authorId = communityItem?.author_deleted
-              ? 0
-              : communityItem?.author_id || marketplaceItem?.owner_id || 0
-            const images = communityItem
-              ? communityPostPreviewImages(communityItem).map((image) => ({
-                  key: `community-image-${image.id}`,
-                  url: image.url,
-                }))
-              : (marketplaceItem?.image_urls || []).filter(Boolean).slice(0, 3).map((url, imageIndex) => ({
-                  key: `marketplace-image-${entry.item.id}-${imageIndex}`,
-                  url,
-                }))
-            const content = communityItem
-              ? communityPostPreviewText(communityItem)
-              : marketplaceListingPreviewText(entry.item as MarketplaceListingView)
-            const publishedAt = communityItem
-              ? communityItem.published_at || communityItem.created_at
-              : marketplaceItem?.created_at
-            const sectionLabel = communityItem
-              ? communitySectionNames[communityItem.section_id] || '校园动态'
-              : homeMomentsBusinessLabels.marketplace
+            if (communityItem) {
+              return (
+                <CommunityPostCard
+                  key={entry.key}
+                  post={communityItem}
+                  motionDelay={index + 1}
+                  sectionName={communitySectionNames[communityItem.section_id] || '校园动态'}
+                  timeFormatter={formatHomeMomentsTime}
+                  onToggleLike={toggleCommunityLike}
+                  onOpen={openCommunityPost}
+                />
+              )
+            }
+
+            const marketplaceItem = entry.item as MarketplaceListingView
+            const authorName = marketplaceItem.author_nickname?.trim()
+              || `发布者 #${marketplaceItem.owner_id}`
+            const images = (marketplaceItem.image_urls || []).filter(Boolean).slice(0, 3).map((url, imageIndex) => ({
+              key: `marketplace-image-${marketplaceItem.id}-${imageIndex}`,
+              url,
+            }))
+            const content = marketplaceListingPreviewText(marketplaceItem)
 
             return (
               <View
@@ -1231,19 +1240,15 @@ function Index() {
                 hoverStartTime={20}
                 hoverStayTime={120}
                 ariaRole='button'
-                ariaLabel={`查看${authorName}发布的${entry.kind === 'community' ? '动态' : '二手信息'}`}
-                onClick={() => communityItem
-                  ? openCommunityPost(communityItem)
-                  : marketplaceItem && openMarketplaceListing(marketplaceItem)}
+                ariaLabel={`查看${authorName}发布的二手信息`}
+                onClick={() => openMarketplaceListing(marketplaceItem)}
               >
                 <UserAvatar
-                  src={authorAvatarUrl}
+                  src={marketplaceItem.author_avatar_url}
                   className='moments-feed__avatar'
                   imageClassName='moments-feed__avatar-image'
-                  fallback={communityItem
-                    ? communityAuthorInitial(communityItem)
-                    : authorName.slice(0, 1) || '同'}
-                  userId={authorId}
+                  fallback={authorName.slice(0, 1) || '同'}
+                  userId={marketplaceItem.owner_id}
                   lazyLoad
                 />
 
@@ -1260,7 +1265,7 @@ function Index() {
                           src={image.url}
                           mode='aspectFill'
                           lazyLoad
-                          ariaLabel={`${entry.kind === 'community' ? '动态' : '二手'}图片 ${imageIndex + 1}/${images.length}`}
+                          ariaLabel={`二手图片 ${imageIndex + 1}/${images.length}`}
                         />
                       ))}
                     </View>
@@ -1268,29 +1273,13 @@ function Index() {
 
                   <View className='moments-feed__meta'>
                     <Text className='moments-feed__meta-copy'>
-                      {formatHomeMomentsTime(publishedAt)} · {sectionLabel}
+                      {formatHomeMomentsTime(marketplaceItem.created_at)} · {homeMomentsBusinessLabels.marketplace}
                     </Text>
                     <View className='moments-feed__action'>
                       <View />
                       <View />
                     </View>
                   </View>
-
-                  {communityItem && (communityItem.like_count > 0 || communityItem.comment_count > 0) && (
-                    <View className='moments-feed__social'>
-                      {communityItem.like_count > 0 && (
-                        <View className='moments-feed__social-row moments-feed__social-row--like'>
-                          <Image src={icons.heart} mode='aspectFit' />
-                          <Text>{communityItem.like_count} 人赞过</Text>
-                        </View>
-                      )}
-                      {communityItem.comment_count > 0 && (
-                        <View className='moments-feed__social-row moments-feed__social-row--comments'>
-                          <Text>查看全部 {communityItem.comment_count} 条评论</Text>
-                        </View>
-                      )}
-                    </View>
-                  )}
                 </View>
               </View>
             )

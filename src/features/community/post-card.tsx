@@ -18,7 +18,7 @@ const communityIcons = {
 
 const CAMPUS_OFFSET_MILLISECONDS = 8 * 60 * 60 * 1000
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1000
-const MAX_FEED_IMAGES = 9
+const MAX_POST_IMAGES = 3
 
 const formatCommunityPostTime = (value?: string | null, now = Date.now()) => {
   const timestamp = apiDateTimeTimestamp(value)
@@ -49,6 +49,7 @@ type Props = {
   post: CampusCirclePostView
   sectionName: string
   motionDelay?: number
+  timeFormatter?: (value?: string | null) => string
   onToggleLike: (post: CampusCirclePostView) => void
   onOpen: (post: CampusCirclePostView) => void
   onOpenAuthor?: (post: CampusCirclePostView) => void
@@ -59,6 +60,7 @@ function CommunityPostCard({
   post,
   sectionName,
   motionDelay = 0,
+  timeFormatter,
   onToggleLike,
   onOpen,
   onOpenAuthor,
@@ -67,9 +69,10 @@ function CommunityPostCard({
   const authorName = communityAuthorName(post)
   const authorInitial = communityAuthorInitial(post)
   const authorAvatarUrl = communityAuthorAvatarUrl(post)
-  const visibleImages = post.images.slice(0, MAX_FEED_IMAGES)
-  const remainingImages = Math.max(0, post.images.length - visibleImages.length)
-  const publishedAt = formatCommunityPostTime(post.published_at || post.created_at)
+  const visibleImages = post.images.slice(0, MAX_POST_IMAGES)
+  const publishedAt = (timeFormatter || formatCommunityPostTime)(
+    post.published_at || post.created_at,
+  )
   const reviewStatus = post.viewer_relation === 'owner'
     ? post.status === 'pending_review'
       ? { label: '审核中', tone: 'pending' }
@@ -78,7 +81,8 @@ function CommunityPostCard({
         : null
     : null
 
-  const imagesPendingReview = post.viewer_relation === 'owner' && post.status === 'pending_review'
+  const imagesPendingReview = post.viewer_relation === 'owner'
+    && post.status === 'pending_review'
   const readableContent = plainStickerContent(post.content || '')
   const contentIsClamped = readableContent.length > 90
   const operationBadges = [
@@ -101,6 +105,7 @@ function CommunityPostCard({
         motionDelay > 0 ? 'motion-enter' : '',
         motionDelay > 0 ? `motion-enter--delay-${Math.min(motionDelay, 4)}` : '',
       ].filter(Boolean).join(' ')}
+      hoverClass='community-post__tap-area--pressed'
     >
       <View
         className='community-post__avatar-button'
@@ -192,12 +197,6 @@ function CommunityPostCard({
                       <Text>图片审核中</Text>
                     </View>
                   )}
-                  {index === visibleImages.length - 1 && remainingImages > 0 && (
-                    <View className='community-post__image-more'>
-                      <Text>+{remainingImages}</Text>
-                      <Text>更多图片</Text>
-                    </View>
-                  )}
                 </View>
               ))}
             </View>
@@ -220,10 +219,10 @@ function CommunityPostCard({
                   onSelectSection(post.section_id)
                 }}
               >
-                <Text>{sectionName}</Text>
+                <Text> · {sectionName}</Text>
               </View>
             ) : (
-              <Text className='community-post__section-label'>{sectionName}</Text>
+              <Text className='community-post__section-label'> · {sectionName}</Text>
             ))}
           </View>
           <Button

@@ -461,9 +461,20 @@
   }
 
   page .community-post {
-    border-bottom-color: var(--campus-border, #243244);
+    border-bottom-color: transparent;
     background: var(--campus-surface, #111827);
     box-shadow: none;
+  }
+
+  page .community-post + .community-post {
+    background: var(--campus-surface, #111827);
+  }
+
+  page .community-post + .community-post,
+  page .moments-feed > .community-post + .moments-feed__item,
+  page .moments-feed > .moments-feed__item + .community-post,
+  page .moments-feed__item + .moments-feed__item {
+    border-top-color: var(--campus-border, #243244);
   }
 
   page .community-post__image-frame,
@@ -473,11 +484,7 @@
   }
 
   page .community-post__author-line > text:first-child,
-  page .community-post__section-pill,
-  page .community-post__section-pill text,
-  page .community-post__section-label,
-  page .community-post__social-like,
-  page .community-post__comments-summary {
+  page .community-post__social-like {
     color: var(--campus-primary-strong, #93c5fd);
   }
 
@@ -492,6 +499,16 @@
 
   page .community-post__time {
     color: var(--campus-text-muted, #8494aa);
+  }
+
+  page .community-post__section-pill text,
+  page .community-post__section-pill,
+  page .community-post__section-label {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  page .community-post__comments-summary {
+    color: var(--campus-text-heading, #f8fafc);
   }
 
   page .community-post__more {

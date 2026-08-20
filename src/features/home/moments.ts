@@ -2,7 +2,9 @@ import type { CampusCircleSectionView } from '../../api/types'
 import { formatDateTime } from '../life-services/format'
 import { apiDateTimeTimestamp } from '../../utils/date-time'
 
-const DAY_MS = 24 * 60 * 60 * 1000
+const MINUTE_MS = 60 * 1000
+const HOUR_MS = 60 * MINUTE_MS
+const DAY_MS = 24 * HOUR_MS
 const RELATIVE_DAY_LIMIT = 30
 
 export const homeMomentsBusinessLabels = {
@@ -19,7 +21,16 @@ export const formatHomeMomentsTime = (
   const timestamp = apiDateTimeTimestamp(value)
   if (Number.isNaN(timestamp) || timestamp > now) return formatDateTime(value)
 
-  const days = Math.max(1, Math.ceil((now - timestamp) / DAY_MS))
+  const elapsed = now - timestamp
+  if (elapsed < MINUTE_MS) return '刚刚'
+
+  const minutes = Math.floor(elapsed / MINUTE_MS)
+  if (minutes < 60) return `${minutes}分钟前`
+
+  const hours = Math.floor(elapsed / HOUR_MS)
+  if (hours < 24) return `${hours}小时前`
+
+  const days = Math.floor(elapsed / DAY_MS)
   return days <= RELATIVE_DAY_LIMIT ? `${days}天` : formatDateTime(value)
 }
 
