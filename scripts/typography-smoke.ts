@@ -9,9 +9,9 @@ const typographyStyle = readFileSync(resolve(__dirname, '../src/styles/_typograp
 assert.match(appStyle, /--campus-font-caption:\s*22rpx/u)
 assert.match(appStyle, /--campus-font-body:\s*28rpx/u)
 assert.match(appStyle, /font-size:\s*30rpx/u, '全局默认字号必须保持在 30rpx')
-assert.match(typographyStyle, /page \.community-post__content \{ font-size: 30rpx; \}/u)
-assert.match(typographyStyle, /page \.community-detail-card__body \{ font-size: 30rpx; \}/u)
-assert.match(typographyStyle, /page \.community-detail-comments \.community-comment__content \{ font-size: 28rpx; \}/u)
+assert.match(typographyStyle, /page \.community-post__content \{ font-size: 34rpx; \}/u)
+assert.match(typographyStyle, /page \.community-detail__body \{ font-size: 30rpx; \}/u)
+assert.match(typographyStyle, /page \.business-detail-comment__bubble \{ font-size: 28rpx; \}/u)
 
 const scssPaths = execFileSync('rg', ['--files', 'src', '-g', '*.scss'], { encoding: 'utf8' })
   .trim()

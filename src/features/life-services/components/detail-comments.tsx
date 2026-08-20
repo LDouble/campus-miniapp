@@ -1,9 +1,18 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import Taro from '@tarojs/taro'
-import { Button, Image, Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import type { CommentView } from '../../../api/types'
+import { getCurrentUser } from '../../../api/account'
 import { isApiError } from '../../../api/client'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
 import StickerContent from '../../../components/sticker-content'
 import StickerPicker from '../../../components/sticker-picker'
@@ -20,17 +29,16 @@ import {
   applyCommentReaction,
   commentLikeFailure,
 } from '../../community/comment-likes'
-import CommunityLevelBadge from '../../community/level-badge'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import './detail-comments.scss'
 
 const icons = {
-  heart: require('../../../assets/community/heart.svg'),
+  heart: require('../../../assets/community/detail-comment-heart.svg'),
+  heartSmall: require('../../../assets/community/detail-comment-heart-small.svg'),
   heartActive: require('../../../assets/community/heart-active.svg'),
-  send: require('../../../assets/community/send.svg'),
-  share: require('../../../assets/community/share.svg'),
+  send: require('../../../assets/community/detail-send.svg'),
 }
 
 export type DetailCommentTarget = 'campus_circle_post' | 'marketplace' | 'errand' | 'carpool'
@@ -84,6 +92,7 @@ type DetailCommentsProps = {
   targetAuthorId?: number
   initialCommentId?: number
   displayTotal?: number
+  headingActions?: ReactNode
   placeholder?: string
   tone?: Exclude<DetailCommentTarget, 'campus_circle_post'> | 'community'
   actions?: DetailFooterAction[]
@@ -138,17 +147,21 @@ const compactCommentName = (name: string, maxLength = 6) => {
     : characters.join('')
 }
 
+const formatCommentDateTime = (value?: string | null) => (
+  formatDateTime(value).replace(/^(\d{2})月(\d{2})日/u, '$1-$2')
+)
+
 const renderCommentMeta = (
   comment: CommentView,
   liking: boolean,
   onToggleLike: (comment: CommentView) => void,
+  compact = false,
 ) => {
   const expectedAction = comment.liked ? 'unlike' : 'like'
   const canToggleLike = comment.available_actions.includes(expectedAction)
 
   return (
     <View className='business-detail-comment__meta'>
-      <Text>{formatDateTime(comment.created_at)}</Text>
       {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
       {canToggleLike ? (
         <View
@@ -164,13 +177,23 @@ const renderCommentMeta = (
           ariaLabel={`${liking ? '点赞处理中' : comment.liked ? '取消点赞' : '点赞'}，当前 ${comment.like_count} 个赞`}
           onClick={!liking ? () => onToggleLike(comment) : undefined}
         >
-          <Image src={comment.liked ? icons.heartActive : icons.heart} mode='aspectFit' />
+          <Image
+            src={comment.liked ? icons.heartActive : compact ? icons.heartSmall : icons.heart}
+            mode='aspectFit'
+          />
           <Text>{comment.like_count}</Text>
         </View>
       ) : (
-        <Text className='business-detail-comment__like-count'>
-          {comment.like_count} 赞
-        </Text>
+        <View
+          className='business-detail-comment__like business-detail-comment__like--readonly'
+          ariaLabel={`当前 ${comment.like_count} 个赞`}
+        >
+          <Image
+            src={comment.liked ? icons.heartActive : compact ? icons.heartSmall : icons.heart}
+            mode='aspectFit'
+          />
+          <Text>{comment.like_count}</Text>
+        </View>
       )}
     </View>
   )
@@ -198,32 +221,55 @@ const renderReplyTree = (
         id={`detail-comment-${comment.id}`}
         className={[
           'business-detail-comment__reply',
+          `business-detail-comment__reply--${comment.status}`,
           focusedCommentId === comment.id ? 'business-detail-comment__reply--focused' : '',
           enteringCommentId === comment.id ? 'business-detail-comment-node--entering' : '',
           removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
         ].filter(Boolean).join(' ')}
         onLongPress={() => onOpenActions(comment)}
       >
-        <View
-          className='business-detail-comment__reply-identity'
+        <UserAvatar
+          src={comment.author_deleted ? '' : comment.author_avatar_url}
+          className='business-detail-comment__reply-avatar'
+          imageClassName='business-detail-comment__reply-avatar-image'
+          fallback={commentAuthorInitial(comment)}
+          userId={comment.author_deleted ? 0 : comment.author_id}
+          lazyLoad
           ariaRole='button'
           ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
           onClick={() => openCommentAuthor(comment)}
-        >
-          <Text className='business-detail-comment__reply-relation'>
-            {compactCommentName(commentAuthorName(comment))}
-            {replyTargetName ? `@${compactCommentName(replyTargetName)}` : ''}
-          </Text>
-          {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
-          <CommunityLevelBadge level={comment.author_level} compact />
+        />
+        <View className='business-detail-comment__reply-body'>
+          <View className='business-detail-comment__reply-header'>
+            <View
+              className='business-detail-comment__reply-identity'
+              ariaRole='button'
+              ariaLabel={replyTargetName
+                ? `查看${commentAuthorName(comment)}的个人主页，回复${replyTargetName}`
+                : `查看${commentAuthorName(comment)}的个人主页`}
+              onClick={() => openCommentAuthor(comment)}
+            >
+              <Text className='business-detail-comment__reply-relation'>
+                {compactCommentName(commentAuthorName(comment))}
+              </Text>
+              <Text className='business-detail-comment__time'>
+                {formatCommentDateTime(comment.created_at)}
+              </Text>
+              {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
+            </View>
+            {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike, true)}
+          </View>
+          <View
+            id={`detail-comment-reply-${comment.id}`}
+            className='business-detail-comment__reply-content'
+            onClick={() => onStartReply(comment)}
+          >
+            <StickerContent
+              content={comment.content}
+              stickerClassName='business-detail-comment__sticker'
+            />
+          </View>
         </View>
-        <View className='business-detail-comment__reply-content' onClick={() => onStartReply(comment)}>
-          <StickerContent
-            content={comment.content}
-            stickerClassName='business-detail-comment__sticker'
-          />
-        </View>
-        {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
       </View>
       {children.length > 0 && (
         <View className='business-detail-comment__reply-children'>
@@ -301,33 +347,41 @@ const DetailCommentThread = memo(function DetailCommentThread({
     >
       <View
         id={`detail-comment-${comment.id}`}
-        className={`business-detail-comment ${focusedCommentId === comment.id ? 'business-detail-comment--focused' : ''}`}
+        className={[
+          'business-detail-comment',
+          `business-detail-comment--${comment.status}`,
+          focusedCommentId === comment.id ? 'business-detail-comment--focused' : '',
+        ].filter(Boolean).join(' ')}
       >
-        <View
+        <UserAvatar
+          src={comment.author_deleted ? '' : comment.author_avatar_url}
           className='business-detail-comment__avatar'
+          imageClassName='business-detail-comment__avatar-image'
+          fallback={commentAuthorInitial(comment)}
+          userId={comment.author_deleted ? 0 : comment.author_id}
+          lazyLoad
           ariaRole='button'
           ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
           onClick={() => openCommentAuthor(comment)}
-        >
-          <UserAvatarImage
-            src={comment.author_avatar_url || ''}
-            className='business-detail-comment__avatar-image'
-            fallback={commentAuthorInitial(comment)}
-            lazyLoad
-          />
-        </View>
+        />
         <View className='business-detail-comment__body'>
-          <View
-            className='business-detail-comment__identity'
-            ariaRole='button'
-            ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
-            onClick={() => openCommentAuthor(comment)}
-          >
-            <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
-            {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
-            <CommunityLevelBadge level={comment.author_level} compact />
+          <View className='business-detail-comment__header'>
+            <View
+              className='business-detail-comment__identity'
+              ariaRole='button'
+              ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+              onClick={() => openCommentAuthor(comment)}
+            >
+              <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
+              <Text className='business-detail-comment__time'>
+                {formatCommentDateTime(comment.created_at)}
+              </Text>
+              {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
+            </View>
+            {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
           </View>
           <View
+            id={`detail-comment-reply-${comment.id}`}
             className='business-detail-comment__bubble'
             ariaRole='button'
             ariaLabel='点击回复，长按查看更多操作'
@@ -339,7 +393,6 @@ const DetailCommentThread = memo(function DetailCommentThread({
               stickerClassName='business-detail-comment__sticker'
             />
           </View>
-          {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
           {showThreadAction && (
             <View className='business-detail-comment__thread-action' onClick={() => onExpand(comment.id)}>
               {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
@@ -380,6 +433,7 @@ export default function DetailComments({
   targetAuthorId,
   initialCommentId = 0,
   displayTotal,
+  headingActions,
   placeholder = '留言问问细节...',
   tone = targetType === 'campus_circle_post' ? 'community' : targetType,
   actions = [],
@@ -410,6 +464,7 @@ export default function DetailComments({
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
   const [likingIds, setLikingIds] = useState<ReadonlySet<number>>(() => new Set())
+  const [composerAvatar, setComposerAvatar] = useState({ src: '', fallback: '同', userId: 0 })
   const mountedRef = useRef(true)
   const requestScopeRef = useRef(0)
   const listRequestSequenceRef = useRef(0)
@@ -428,6 +483,20 @@ export default function DetailComments({
   const openCommentActionsRef = useRef<(comment: CommentView) => void>(() => {})
   const handleOpenCommentActions = useCallback((comment: CommentView) => {
     openCommentActionsRef.current(comment)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void getCurrentUser().then(({ user }) => {
+      if (!active) return
+      const username = user.username?.trim() || '同学'
+      setComposerAvatar({
+        src: user.avatar_url?.trim() || '',
+        fallback: Array.from(username)[0] || '同',
+        userId: user.id,
+      })
+    }).catch(() => undefined)
+    return () => { active = false }
   }, [])
 
   const clearPendingTimers = useCallback(() => {
@@ -1005,8 +1074,12 @@ export default function DetailComments({
       <View className='business-detail-comments'>
         <View className='business-detail-comments__heading'>
           <View />
-          <Text>全部评论</Text>
-          <Text>{displayTotal ?? total}</Text>
+          <Text>评论 {displayTotal ?? total}</Text>
+          {headingActions && (
+            <View className='business-detail-comments__heading-actions'>
+              {headingActions}
+            </View>
+          )}
         </View>
 
         {loading && (
@@ -1095,12 +1168,26 @@ export default function DetailComments({
             </View>
           )}
           {replyTarget && (
-            <View className='business-detail-composer__replying'>
+            <View
+              id={`business-comment-replying-${replyTarget.id}`}
+              className='business-detail-composer__replying'
+            >
               <Text>@{compactCommentName(commentAuthorName(replyTarget), 10)}</Text>
-              <Text onTouchStart={closeComposer}>取消</Text>
+              <Text
+                id={`business-comment-cancel-reply-${replyTarget.id}`}
+                onTouchStart={closeComposer}
+              >取消</Text>
             </View>
           )}
           <View className='business-detail-composer__main'>
+            <UserAvatar
+              src={composerAvatar.src}
+              className='business-detail-composer__avatar'
+              imageClassName='business-detail-composer__avatar-image'
+              fallback={composerAvatar.fallback}
+              userId={composerAvatar.userId}
+              lazyLoad
+            />
             {enabled ? (
               <KeyboardSafeTextarea
                 id={`business-comment-${targetType}-${targetId}`}
@@ -1177,6 +1264,7 @@ export default function DetailComments({
                   <Text>☺</Text>
                 </View>
                 <View
+                  id={`business-comment-submit-${targetType}-${targetId}`}
                   className={[
                     'business-detail-composer__publish',
                     `business-detail-composer__publish--${tone}`,
@@ -1201,9 +1289,18 @@ export default function DetailComments({
                     <Image src={quickAction.active && quickAction.activeIcon ? quickAction.activeIcon : quickAction.icon} mode='aspectFit' />
                   </View>
                 )}
-                <Button className='business-detail-composer__share' openType='share'>
-                  <Image src={icons.share} mode='aspectFit' />
-                </Button>
+                {enabled && (
+                  <View
+                    id={`business-comment-open-${targetType}-${targetId}`}
+                    className='business-detail-composer__publish business-detail-composer__publish--comment'
+                    hoverClass='business-detail-composer__publish--pressed'
+                    ariaRole='button'
+                    ariaLabel='写评论'
+                    onClick={openComposer}
+                  >
+                    <Image src={icons.send} mode='aspectFit' />
+                  </View>
+                )}
               </>
             )}
             {!composerOpen && actions.length > 0 && (

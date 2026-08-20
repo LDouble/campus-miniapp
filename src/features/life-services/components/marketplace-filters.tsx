@@ -1,8 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Text, View } from '@tarojs/components'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import Taro from '@tarojs/taro'
+import { Image, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
+import { setCustomTabBarHidden } from '../../../utils/tabbar'
 import FilterSheet from './filter-sheet'
 import './filters.scss'
+
+const icons = {
+  check: require('../../../assets/community/topbar-check.svg'),
+  chevron: require('../../../assets/community/topbar-chevron.svg'),
+  filter: require('../../../assets/community/topbar-filter.svg'),
+  sort: require('../../../assets/community/topbar-sort.svg'),
+}
 
 export type MarketplaceFilterValue = {
   intent?: 'sell' | 'wanted'
@@ -13,8 +22,18 @@ export type MarketplaceFilterValue = {
 
 type Props = {
   value: MarketplaceFilterValue
+  campusControl: ReactNode
   onChange: (value: MarketplaceFilterValue) => void
 }
+
+type MarketplaceTypeKey = 'all' | 'sell' | 'wanted' | 'free'
+
+const typeOptions: Array<{ key: MarketplaceTypeKey; label: string }> = [
+  { key: 'all', label: '全部类型' },
+  { key: 'sell', label: '闲置出售' },
+  { key: 'wanted', label: '求购需求' },
+  { key: 'free', label: '免费赠送' },
+]
 
 const quickRanges: Array<{
   key: string
@@ -27,19 +46,31 @@ const quickRanges: Array<{
   { key: 'over-200', label: '200 元以上', value: { minPriceCents: 20000 } },
 ]
 
-const intentOptions: Array<{
-  key: 'all' | 'sell' | 'wanted'
-  label: string
-}> = [
-  { key: 'all', label: '全部' },
-  { key: 'sell', label: '出售' },
-  { key: 'wanted', label: '求购' },
-]
-
 const sameRange = (left: MarketplaceFilterValue, right: MarketplaceFilterValue) => (
   left.minPriceCents === right.minPriceCents
   && left.maxPriceCents === right.maxPriceCents
 )
+
+const isFreeValue = (value: MarketplaceFilterValue) => (
+  value.intent === 'sell'
+  && value.minPriceCents === 0
+  && value.maxPriceCents === 0
+)
+
+const selectedTypeKey = (value: MarketplaceFilterValue): MarketplaceTypeKey => {
+  if (isFreeValue(value)) return 'free'
+  if (value.intent === 'sell') return 'sell'
+  if (value.intent === 'wanted') return 'wanted'
+  return 'all'
+}
+
+const withoutFreePrice = (value: MarketplaceFilterValue) => {
+  if (!isFreeValue(value)) return value
+  return {
+    intent: value.intent,
+    category: value.category,
+  }
+}
 
 const yuanValue = (cents?: number) => (
   cents === undefined ? '' : String(cents / 100)
@@ -54,24 +85,35 @@ const rangeSummary = (value: MarketplaceFilterValue) => {
   return ''
 }
 
-export default function MarketplaceFilters({ value, onChange }: Props) {
+export default function MarketplaceFilters({ value, campusControl, onChange }: Props) {
+  const [typeMenuVisible, setTypeMenuVisible] = useState(false)
+  const [typeMenuTop, setTypeMenuTop] = useState(0)
   const [sheetVisible, setSheetVisible] = useState(false)
   const [minYuan, setMinYuan] = useState('')
   const [maxYuan, setMaxYuan] = useState('')
   const [validation, setValidation] = useState('')
+  const currentTypeKey = selectedTypeKey(value)
+  const currentTypeLabel = typeOptions.find((item) => item.key === currentTypeKey)?.label
+    || '全部类型'
   const selectedQuickKey = useMemo(
     () => quickRanges.find((item) => sameRange(item.value, value))?.key || 'custom',
     [value],
   )
   const selectedPriceLabel = selectedQuickKey === 'all'
-    ? '不限'
+    ? '价格范围'
     : selectedQuickKey === 'custom'
       ? rangeSummary(value)
-      : quickRanges.find((item) => item.key === selectedQuickKey)?.label || '不限'
+      : quickRanges.find((item) => item.key === selectedQuickKey)?.label || '价格范围'
   const draftQuickKey = quickRanges.find((item) => (
     yuanValue(item.value.minPriceCents) === minYuan.trim()
     && yuanValue(item.value.maxPriceCents) === maxYuan.trim()
   ))?.key || 'custom'
+
+  useEffect(() => {
+    if (!typeMenuVisible) return undefined
+    setCustomTabBarHidden(true)
+    return () => setCustomTabBarHidden(false)
+  }, [typeMenuVisible])
 
   useEffect(() => {
     if (!sheetVisible) return
@@ -79,6 +121,37 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
     setMaxYuan(yuanValue(value.maxPriceCents))
     setValidation('')
   }, [sheetVisible, value.maxPriceCents, value.minPriceCents])
+
+  const openTypeMenu = () => {
+    const query = Taro.createSelectorQuery()
+    query.select('.life-hub-navigation').boundingClientRect()
+    query.exec((results) => {
+      const navigation = results[0] as { bottom?: number } | null
+      const top = Number(navigation?.bottom)
+      setTypeMenuTop(Number.isFinite(top) ? Math.max(0, top) : 0)
+      setTypeMenuVisible(true)
+    })
+  }
+
+  const selectType = (key: MarketplaceTypeKey) => {
+    const base = withoutFreePrice(value)
+    if (key === 'free') {
+      onChange({
+        ...value,
+        intent: 'sell',
+        category: undefined,
+        minPriceCents: 0,
+        maxPriceCents: 0,
+      })
+    } else {
+      onChange({
+        ...base,
+        intent: key === 'all' ? undefined : key,
+        category: undefined,
+      })
+    }
+    setTypeMenuVisible(false)
+  }
 
   const applyCustom = () => {
     const min = minYuan.trim() ? Number(minYuan) : undefined
@@ -105,41 +178,86 @@ export default function MarketplaceFilters({ value, onChange }: Props) {
 
   return (
     <>
-      <View className='market-filter-toolbar'>
-        <View className='market-intent-switch' ariaRole='tablist'>
-          {intentOptions.map((option) => (
-            <View
-              key={option.key}
-              className={(value.intent || 'all') === option.key
-                ? 'market-intent-switch__item market-intent-switch__item--active'
-                : 'market-intent-switch__item'}
-              hoverClass='market-filter-control--pressed'
-              ariaRole='button'
-              ariaLabel={`${(value.intent || 'all') === option.key ? '已选择，' : ''}${option.label}`}
-              onClick={() => onChange({
-                ...value,
-                intent: option.key === 'all' ? undefined : option.key,
-              })}
-            >
-              {option.label}
-            </View>
-          ))}
-        </View>
+      <View className='market-filter-toolbar life-service-filter-toolbar'>
         <View
-          className={`market-price-trigger ${selectedQuickKey !== 'all' ? 'market-price-trigger--active' : ''}`}
-          hoverClass='market-filter-control--pressed'
+          id='market-type-trigger'
+          className='life-service-filter-chip'
+          hoverClass='life-service-filter-control--pressed'
+          ariaRole='button'
+          ariaLabel={`类型筛选，当前${currentTypeLabel}`}
+          onClick={openTypeMenu}
+        >
+          <Text>{currentTypeLabel}</Text>
+          <Image
+            className={typeMenuVisible
+              ? 'life-service-filter-chip__chevron life-service-filter-chip__chevron--open'
+              : 'life-service-filter-chip__chevron'}
+            src={icons.chevron}
+            mode='aspectFit'
+          />
+        </View>
+
+        <View
+          id='market-price-trigger'
+          className='life-service-filter-chip'
+          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel={`价格筛选，当前${selectedPriceLabel}`}
           onClick={() => setSheetVisible(true)}
         >
-          <View className='market-price-trigger__label'>
-            <Text>价格</Text>
-            <Text className='market-price-trigger__separator'>·</Text>
-            <Text>{selectedPriceLabel}</Text>
-          </View>
-          <View className='market-price-trigger__chevron' />
+          <Text>{selectedPriceLabel}</Text>
+          <Image className='life-service-filter-chip__icon' src={icons.sort} mode='aspectFit' />
+        </View>
+
+        {campusControl}
+
+        <View className='life-service-filter-toolbar__divider' />
+        <View
+          className='life-service-filter-more'
+          hoverClass='life-service-filter-control--pressed'
+          ariaRole='button'
+          ariaLabel='打开价格筛选'
+          onClick={() => setSheetVisible(true)}
+        >
+          <Image src={icons.filter} mode='aspectFit' />
         </View>
       </View>
+
+      {typeMenuVisible && (
+        <View
+          className='market-type-dropdown-layer'
+          style={{ top: `${typeMenuTop}px` }}
+          catchMove
+          onClick={() => setTypeMenuVisible(false)}
+        >
+          <View
+            className='market-type-dropdown'
+            ariaRole='menu'
+            ariaLabel='闲置类型'
+            onClick={(event) => event.stopPropagation()}
+          >
+            {typeOptions.map((option) => {
+              const selected = option.key === currentTypeKey
+              return (
+                <View
+                  id={`market-type-option-${option.key}`}
+                  key={option.key}
+                  className={selected
+                    ? 'market-type-dropdown__item market-type-dropdown__item--active'
+                    : 'market-type-dropdown__item'}
+                  hoverClass='market-type-dropdown__item--pressed'
+                  ariaRole='menuitem'
+                  ariaLabel={`${selected ? '已选择，' : ''}${option.label}`}
+                  onClick={() => selectType(option.key)}
+                >
+                  <Text>{option.label}</Text>
+                  {selected && <Image src={icons.check} mode='aspectFit' />}
+                </View>
+              )
+            })}
+          </View>
+        </View>
+      )}
 
       <FilterSheet
         visible={sheetVisible}

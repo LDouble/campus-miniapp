@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
-import UserAvatarImage from '../../components/user-avatar-image'
+import UserAvatar from '../../components/user-avatar'
 import { plainStickerContent } from '../stickers/content'
 import {
   communityAuthorAvatarUrl,
@@ -103,14 +103,14 @@ export default function FreshBarrage({ posts, onOpen }: Props) {
                     onOpen(post)
                   }}
                 >
-                  <View className='fresh-barrage__avatar'>
-                    <UserAvatarImage
-                      src={communityAuthorAvatarUrl(post)}
-                      className='fresh-barrage__avatar-image'
-                      fallback={communityAuthorInitial(post)}
-                      lazyLoad
-                    />
-                  </View>
+                  <UserAvatar
+                    src={communityAuthorAvatarUrl(post)}
+                    className='fresh-barrage__avatar'
+                    imageClassName='fresh-barrage__avatar-image'
+                    fallback={communityAuthorInitial(post)}
+                    userId={post.author_deleted ? 0 : post.author_id}
+                    lazyLoad
+                  />
                   <Text className='fresh-barrage__content'>{content}</Text>
                 </View>
               )

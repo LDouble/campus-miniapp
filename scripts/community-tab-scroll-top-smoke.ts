@@ -6,6 +6,7 @@ const readSource = (path: string) => readFileSync(resolve(__dirname, path), 'utf
 
 const tabBarSource = readSource('../src/custom-tab-bar/index.js')
 const communityPageSource = readSource('../src/pages/community/index.tsx')
+const communityPageStyle = readSource('../src/pages/community/index.scss')
 
 assert.match(
   tabBarSource,
@@ -27,6 +28,16 @@ assert.match(
   communityPageSource,
   /displayedSection === 'community'[\s\S]*?<CommunityFeedPanel[\s\S]*?<LifeServiceListPanel/u,
   '四个场景应继续共用社区 Tab 页的页面级滚动容器',
+)
+assert.match(
+  communityPageStyle,
+  /\.community-page \.custom-navbar \{\s*z-index: 60;\s*\}/u,
+  '社区页状态栏保护层应高于吸顶顶部 Bar，避免滚动内容穿透',
+)
+assert.match(
+  communityPageStyle,
+  /\.community-page \.custom-navbar\.custom-navbar--compact-immersive:not\(\.custom-navbar--collapsed\) \.custom-navbar__fixed \{[\s\S]*?z-index: 60;[\s\S]*?background: var\(--campus-surface, #fff\);/u,
+  '沉浸式导航的状态栏区域应使用实色背景遮住滚动内容',
 )
 
 process.stdout.write('community tab scroll top smoke: ok\n')

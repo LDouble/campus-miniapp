@@ -318,10 +318,9 @@
     opacity: 0.82;
   }
 
-  page .community-post__action image,
-  page .community-detail-card__action image,
-  page .business-detail-comment__like image,
-  page .business-detail-composer__share image {
+  page .community-detail__more image,
+  page .community-detail__toolbar-action image,
+  page .business-detail-comment__like image {
     filter: brightness(1.75) saturate(0.86);
   }
 
@@ -329,7 +328,6 @@
     filter: brightness(1.75) saturate(0.86);
   }
 
-  page .community-post__action--liked image,
   page .business-detail-comment__like--active image {
     filter: brightness(1.12) saturate(1.08);
   }
@@ -345,11 +343,8 @@
   page .campus__orb--one { background: rgba(251, 146, 60, 0.07); }
   page .campus__orb--two { background: rgba(45, 212, 191, 0.06); }
 
-  page .campus__avatar,
   page .campus__avatar-image {
     background: var(--campus-icon-surface-orange, #3a291a);
-    border-color: var(--campus-border-strong, #2f4c73);
-    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.26);
   }
 
   page .campus__online { border-color: var(--campus-page, #0b1220); }
@@ -466,14 +461,58 @@
   }
 
   page .community-post {
-    border-color: var(--campus-border, #243244);
-    box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.2);
+    border-bottom-color: var(--campus-border, #243244);
+    background: var(--campus-surface, #111827);
+    box-shadow: none;
   }
 
   page .community-post__image-frame,
   page .community-post__image-frame image,
   page .community-post__image-reviewing {
     background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .community-post__author-line > text:first-child,
+  page .community-post__section-pill,
+  page .community-post__section-pill text,
+  page .community-post__section-label,
+  page .community-post__social-like,
+  page .community-post__comments-summary {
+    color: var(--campus-primary-strong, #93c5fd);
+  }
+
+  page .community-post__content {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .community-post__expand {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: linear-gradient(90deg, rgba(17, 24, 39, 0), var(--campus-surface, #111827) 28rpx);
+  }
+
+  page .community-post__time {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  page .community-post__more {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-border, #243244);
+  }
+
+  page .community-post__social {
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .community-post__social-divider {
+    background: var(--campus-border, #243244);
+  }
+
+  page .community-post__social-like image {
+    filter: brightness(1.48) saturate(0.82);
+  }
+
+  page .community-post__social-like--liked image {
+    filter: brightness(1.08) saturate(1.04);
   }
 
   // 社区首页、搜索与状态反馈。
@@ -506,15 +545,6 @@
   page .community-module-state__title { color: var(--campus-text-heading, #f8fafc); }
   page .community-module-state__message { color: var(--campus-text-secondary, #aab8ca); }
 
-  page .api-community__filter {
-    color: var(--campus-text-secondary, #aab8ca);
-    background: var(--campus-surface-subtle, #172033);
-    border-color: var(--campus-border, #243244);
-  }
-
-  page .api-community__filter text:first-child { color: var(--campus-text-body, #d7e0ec); }
-  page .api-community__filter text:last-child { color: var(--campus-text-muted, #8494aa); }
-
   page .api-community-search__submit {
     color: #fff;
     background: linear-gradient(90deg, #2563eb, #0e7490);
@@ -526,7 +556,6 @@
   }
 
   page .community-post__avatar-image { background: var(--campus-surface-subtle, #172033); }
-  page .community-post__meta-divider { background: var(--campus-border, #243244); }
 
   page .community-post__review-status--pending {
     color: #fbbf24;
@@ -537,16 +566,6 @@
     color: #fda4af;
     background: var(--campus-surface-danger, #3f1725);
   }
-
-  page .community-post__actions { border-top-color: var(--campus-border, #243244); }
-  page .community-post__action--pressed { background: var(--campus-surface-subtle, #172033); }
-
-  page .community-operations__campaign {
-    border: 1rpx solid var(--campus-border, #243244);
-    box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
-  }
-
-  page .community-operations__campaign text:last-child { color: var(--campus-text-muted, #8494aa); }
 
   page .api-community-state,
   page .api-community-load-more {
@@ -632,6 +651,57 @@
     background: var(--campus-surface-primary, #172554);
   }
 
+  page .community-detail,
+  page .community-detail__content,
+  page .community-detail__main,
+  page .business-detail-comments,
+  page .business-detail-composer {
+    background: var(--campus-surface, #111827);
+  }
+
+  page .community-detail__author-name,
+  page .community-detail__body,
+  page .business-detail-comments__heading > text:nth-child(2),
+  page .business-detail-comment__bubble,
+  page .business-detail-comment__reply-content {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  page .community-detail__author-meta,
+  page .business-detail-comment__author,
+  page .business-detail-comment__reply-relation,
+  page .business-detail-comment__time,
+  page .business-detail-comment__like-count {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  page .community-detail__topic,
+  page .community-detail__toolbar-action,
+  page .business-detail-comment__replies,
+  page .business-detail-composer input,
+  page .business-detail-composer textarea,
+  page .business-detail-composer__disabled {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  page .business-detail-comment__reply { background: transparent; }
+
+  page .community-detail__campus-label {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-detail__toolbar-action--liked {
+    color: #fde68a;
+    background: #38331a;
+  }
+
+  page .business-detail-comments__heading,
+  page .business-detail-composer {
+    border-color: var(--campus-border, #243244);
+  }
+
   page .community-detail-card__image-frame,
   page .community-detail-card__image-frame image,
   page .community-detail-card__image-reviewing {
@@ -683,18 +753,6 @@
   page .carpool-detail-route-card {
     background: var(--campus-surface-subtle, #172033);
     border-color: var(--campus-border, #243244);
-  }
-
-  page .business-card-avatar--errand {
-    color: #fdba74;
-    background: var(--campus-surface-errand, #3a2416);
-    border-color: rgba(251, 146, 60, 0.28);
-  }
-
-  page .business-card-avatar--carpool {
-    color: #a5b4fc;
-    background: var(--campus-icon-surface-purple, #2e254c);
-    border-color: rgba(165, 180, 252, 0.24);
   }
 
   page .business-status--errand,

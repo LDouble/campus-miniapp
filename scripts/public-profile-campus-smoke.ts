@@ -13,6 +13,10 @@ const repository = readFileSync(resolve(__dirname, '../src/features/life-service
 const profile = readFileSync(resolve(__dirname, '../src/pages/public-profile/index.tsx'), 'utf8')
 const publisher = readFileSync(resolve(__dirname, '../src/packages/social/publish/index.tsx'), 'utf8')
 const lifeList = readFileSync(resolve(__dirname, '../src/features/life-services/list-panel.tsx'), 'utf8')
+const lifeTopFilters = readFileSync(resolve(
+  __dirname,
+  '../src/features/life-services/top-filters.tsx',
+), 'utf8')
 const carpoolFilters = readFileSync(resolve(
   __dirname,
   '../src/features/life-services/components/carpool-filters.tsx',
@@ -87,12 +91,14 @@ assert.ok(carpoolFilters.includes("kind='destination'"))
 assert.ok(carpoolFilters.includes('ROUTE_SHORTCUTS'))
 assert.ok(carpoolFilters.includes('getRecentRouteValues(kind)'))
 assert.ok(carpoolFilters.includes('rememberRoutePair(origin, destination)'))
-assert.ok(carpoolFilters.includes("className='carpool-filter-toolbar'"))
+assert.ok(carpoolFilters.includes("className='carpool-filter-toolbar life-service-filter-toolbar'"))
 assert.ok(carpoolFilters.includes('customDateActive'))
 assert.ok(carpoolFilters.includes('advancedFilterCount(value)'))
-assert.ok(lifeList.includes('<CampusSelector'))
-assert.ok(lifeList.includes('allowAll'))
-assert.ok(lifeList.includes('onChange={setCampus}'))
+assert.ok(lifeTopFilters.includes('<CampusSelector'))
+assert.ok(lifeTopFilters.includes('allowAll'))
+assert.ok(lifeTopFilters.includes('onChange={onCampusChange}'))
+assert.ok(lifeList.includes('campus: campus || undefined'))
+assert.ok(lifeList.includes('onMarketFiltersChange({'))
 assert.ok(campusSelector.includes("import BottomSheet from '../../../components/bottom-sheet'"))
 assert.ok(campusSelector.includes("title='选择校区'"))
 assert.ok(campusOptions.includes("'三亚校区'"), '校区筛选缺少三亚校区')

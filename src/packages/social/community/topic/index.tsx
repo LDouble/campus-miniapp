@@ -111,12 +111,30 @@ export default function CommunityTopicPage() {
     void load(topicId)
   }, [load, topicId]))
 
-  useCampusShare(() => ({
-    title: topic ? `#${topic.name}｜海大校园话题` : '海大校园话题',
-    path: topicId ? '/packages/social/community/topic/index' : '/pages/community/index',
-    query: topicId ? { id: topicId } : undefined,
-    imageUrl: topic?.cover_url || undefined,
-  }))
+  useCampusShare((event) => {
+    const dataset = event.target?.dataset || {}
+    const postId = Number(dataset.postId)
+    if (event.from === 'button' && postId > 0) {
+      const shareTitle = typeof dataset.shareTitle === 'string'
+        ? dataset.shareTitle
+        : '海大校园动态'
+      const shareImage = typeof dataset.shareImage === 'string'
+        ? dataset.shareImage
+        : ''
+      const result = {
+        title: shareTitle,
+        path: '/packages/social/community/detail',
+        query: { id: postId, mode: 'post' },
+      }
+      return shareImage ? { ...result, imageUrl: shareImage } : result
+    }
+    return {
+      title: topic ? `#${topic.name}｜海大校园话题` : '海大校园话题',
+      path: topicId ? '/packages/social/community/topic/index' : '/pages/community/index',
+      query: topicId ? { id: topicId } : undefined,
+      imageUrl: topic?.cover_url || undefined,
+    }
+  })
 
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {
     const updated = post.liked

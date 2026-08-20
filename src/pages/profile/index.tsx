@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
-import UserAvatarImage from '../../components/user-avatar-image'
+import UserAvatar from '../../components/user-avatar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { getCurrentUser, updateCurrentAvatar, updateCurrentUsername } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
@@ -293,17 +293,16 @@ export default function ProfilePage() {
 
       <View className='profile-page__content'>
         <View className='profile-card motion-enter'>
-          <View
+          <UserAvatar
+            src={avatarUrl}
             className='profile-card__avatar'
+            imageClassName='profile-card__avatar-image'
+            fallback={displayName.slice(0, 1)}
+            userId={currentUser?.user.id}
             ariaRole='button'
             ariaLabel={savingAvatar ? '头像正在上传' : '更换头像'}
             onClick={() => void chooseAvatar()}
           >
-            <UserAvatarImage
-              src={avatarUrl}
-              className='profile-card__avatar-image'
-              fallback={displayName.slice(0, 1)}
-            />
             <Text className='profile-card__avatar-action'>
               {savingAvatar
                 ? `${avatarDraft?.progress || 0}%`
@@ -312,7 +311,7 @@ export default function ProfilePage() {
                   : '更换'}
             </Text>
             <View className='profile-card__status' />
-          </View>
+          </UserAvatar>
           <View
             className='profile-card__main'
             hoverClass='profile-card__main--pressed'
@@ -360,7 +359,7 @@ export default function ProfilePage() {
                   : checkinStatus?.enabled === false
                     ? '签到'
                     : '去签到'}
-              </Text>
+            </Text>
             </View>
           </View>
         </View>

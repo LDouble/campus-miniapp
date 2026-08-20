@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Image, Text, View } from '@tarojs/components'
-import type { CampusCircleHome, CampusCirclePostView, CampusCircleSectionView, CampusCircleTopicView } from '../../api/types'
+import { Text, View } from '@tarojs/components'
+import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -26,9 +26,6 @@ type Props = {
   pinnedPost?: CampusCirclePostView | null
   refreshSignal?: number
   searchFocusSignal?: number
-  filterLabel?: string
-  canFilter?: boolean
-  onOpenFilter?: () => void
   onSelectSection?: (sectionId: number) => void
 }
 
@@ -40,15 +37,8 @@ type CommunityFeedCacheEntry = {
   revision: number
 }
 
-type CommunityHomeCacheEntry = {
-  value: CampusCircleHome
-  refreshedAt: number
-  revision: number
-}
-
 const communityFeedCache = new Map<string, CommunityFeedCacheEntry>()
 const COMMUNITY_FEED_CACHE_LIMIT = 20
-let communityHomeCache: CommunityHomeCacheEntry | null = null
 
 const saveCommunityFeedCache = (key: string, entry: CommunityFeedCacheEntry) => {
   communityFeedCache.delete(key)
@@ -80,9 +70,6 @@ export default function CommunityFeedPanel({
   pinnedPost = null,
   refreshSignal = 0,
   searchFocusSignal = 0,
-  filterLabel = '全部',
-  canFilter = false,
-  onOpenFilter,
   onSelectSection,
 }: Props) {
   const [draftKeyword, setDraftKeyword] = useState('')
@@ -93,7 +80,6 @@ export default function CommunityFeedPanel({
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
-  const [home, setHome] = useState<CampusCircleHome | null>(null)
   const [searchFocused, setSearchFocused] = useState(false)
   const requestSequence = useRef(0)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
@@ -112,9 +98,7 @@ export default function CommunityFeedPanel({
   )
   const activeSectionId = activeSection?.id
   const sectionNameForPost = (post: CampusCirclePostView, fallback: string) => (
-    post.section_id === activeSectionId
-      ? ''
-      : sectionNames.get(post.section_id) || fallback
+    sectionNames.get(post.section_id) || fallback
   )
   const activeParentSectionId = activeSection?.parent_id
   const queryKey = useMemo(() => JSON.stringify({
@@ -201,39 +185,6 @@ export default function CommunityFeedPanel({
   }, [activeSectionId, load, queryKey, refreshSignal, sectionsReady])
 
   useEffect(() => {
-    let cancelled = false
-    const loadHome = async () => {
-      if (
-        communityHomeCache
-        && isLifeHubCacheReusable(
-          'community',
-          communityHomeCache.revision,
-          communityHomeCache.refreshedAt,
-        )
-      ) {
-        setHome(communityHomeCache.value)
-        return
-      }
-      try {
-        const result = await lifeServicesRepository.getCampusCircleHome()
-        if (!cancelled) {
-          communityHomeCache = {
-            value: result,
-            refreshedAt: Date.now(),
-            revision: getLifeHubRefreshRevision('community'),
-          }
-          setHome(result)
-        }
-      } catch {
-        // 首页聚合是增强信息，失败时保留原有最新流。
-        if (!cancelled) setHome(null)
-      }
-    }
-    void loadHome()
-    return () => { cancelled = true }
-  }, [refreshSignal])
-
-  useEffect(() => {
     if (searchFocusSignal > 0) setSearchFocused(true)
   }, [searchFocusSignal])
 
@@ -302,10 +253,6 @@ export default function CommunityFeedPanel({
     hideSearchKeyboard()
   }
 
-  const openTopic = (topic: CampusCircleTopicView) => {
-    Taro.navigateTo({ url: `/packages/social/community/topic/index?id=${topic.id}` })
-  }
-
   return (
     <View className='api-community'>
       <View
@@ -359,64 +306,6 @@ export default function CommunityFeedPanel({
             {normalizedDraftKeyword ? '搜索' : keyword ? '清除' : '取消'}
           </View>
         )}
-      </View>
-
-      {!keyword && home && (
-        <View className='community-operations'>
-          {home.hot_topics.length > 0 && (
-            <View className='community-operations__block'>
-              <Text className='community-operations__title'>热门话题</Text>
-              <View className='community-operations__topics'>
-                {home.hot_topics.map((topic) => (
-                  <View key={topic.id} onClick={() => openTopic(topic)}>#{topic.name}</View>
-                ))}
-              </View>
-            </View>
-          )}
-          {home.campaigns.length > 0 && (
-            <View className='community-operations__block'>
-              <Text className='community-operations__title'>正在进行</Text>
-              {home.campaigns.map((campaign) => (
-                <View key={campaign.id} className='community-operations__campaign' onClick={() => openTopic(campaign)}>
-                  {campaign.cover_url && <Image src={campaign.cover_url} mode='aspectFill' />}
-                  <View><Text>{campaign.name}</Text><Text>{campaign.description || `${campaign.post_count} 条动态`}</Text></View>
-                </View>
-              ))}
-            </View>
-          )}
-          {home.featured_posts.length > 0 && <Text className='community-operations__title'>精选动态</Text>}
-          {home.featured_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`featured-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={openAuthor} onSelectSection={onSelectSection} />
-          ))}
-          {home.recommended_posts.length > 0 && <Text className='community-operations__title'>推荐给你</Text>}
-          {home.recommended_posts.slice(0, 2).map((post) => (
-            <CommunityPostCard key={`recommended-${post.id}`} post={post} sectionName={sectionNameForPost(post, '校园社区')} onToggleLike={toggleLike} onOpen={openPost} onOpenAuthor={openAuthor} onSelectSection={onSelectSection} />
-          ))}
-        </View>
-      )}
-
-      <View className='api-community__heading'>
-        <View>
-          <Text>{keyword ? `“${keyword}”` : '最新动态'}</Text>
-          <Text>
-            {keyword
-              ? `${activeSection?.name || '当前板块'}内的搜索结果`
-              : '按发布时间排列'}
-          </Text>
-        </View>
-        <View className='api-community__heading-actions'>
-          <Text>{loading ? '加载中' : `${total} 条动态`}</Text>
-          {canFilter && (
-            <View
-              className='api-community__filter'
-              hoverClass='api-community__filter--pressed'
-              onClick={onOpenFilter}
-            >
-              <Text>{filterLabel}</Text>
-              <Text>筛选</Text>
-            </View>
-          )}
-        </View>
       </View>
 
       {!sectionsReady && <View className='api-community-state'>正在加载社区板块</View>}

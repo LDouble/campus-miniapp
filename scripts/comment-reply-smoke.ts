@@ -137,7 +137,10 @@ assert.doesNotMatch(
 assert.match(detailCommentsSource, /catchMove=\{composerOpen && !composerClosing\}/u)
 assert.match(detailCommentsSource, /onTouchStart=\{composerOpen && !composerClosing \? closeComposer : undefined\}/u)
 assert.doesNotMatch(detailCommentsSource, /\{composerOpen && \([\s\S]*business-detail-composer__backdrop/u)
-assert.match(detailCommentsSource, /<Text onTouchStart=\{closeComposer\}>取消<\/Text>/u)
+assert.match(
+  detailCommentsSource,
+  /id=\{`business-comment-cancel-reply-\$\{replyTarget\.id\}`\}[\s\S]*?onTouchStart=\{closeComposer\}/u,
+)
 assert.match(detailCommentsSource, /placeholder=\{replyTarget \? '写下回复\.\.\.' : placeholder\}/u)
 assert.doesNotMatch(
   detailCommentsSource,
@@ -179,6 +182,6 @@ assert.doesNotMatch(
   /\.business-detail-composer__replying text:last-child \{[^}]*--campus-danger/u,
   '取消回复不得使用危险红色',
 )
-assert.match(communityDetailStyle, /\.community-detail-card \+ \.business-detail-comments \{[^}]*margin-top: 0;[^}]*padding-top: 30rpx;/u)
+assert.match(communityDetailStyle, /\.community-detail__main \+ \.business-detail-comments \{[^}]*margin-top: 0;[^}]*padding-top: 0;/u)
 
 console.log('comment reply smoke: ok')

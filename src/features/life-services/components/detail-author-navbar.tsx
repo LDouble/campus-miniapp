@@ -1,5 +1,5 @@
 import { Text, View } from '@tarojs/components'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import { openPublicProfile } from '../../profile/public-profile'
 
 type DetailAuthorNavbarProps = {
@@ -24,14 +24,14 @@ export default function DetailAuthorNavbar({
       ariaLabel={`查看${name}的个人主页`}
       onClick={() => void openPublicProfile(userId)}
     >
-      <View className='business-detail-author__avatar'>
-        <UserAvatarImage
-          src={avatarUrl?.trim() || ''}
-          className='business-detail-author__avatar-image'
-          fallback={fallback}
-          lazyLoad
-        />
-      </View>
+      <UserAvatar
+        src={avatarUrl?.trim() || ''}
+        className='business-detail-author__avatar'
+        imageClassName='business-detail-author__avatar-image'
+        fallback={fallback}
+        userId={userId}
+        lazyLoad
+      />
       <Text>{name}</Text>
     </View>
   )

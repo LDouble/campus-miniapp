@@ -1,13 +1,20 @@
 import { useState } from 'react'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import BottomSheet from '../../../components/bottom-sheet'
 import { CAMPUS_OPTIONS, type CampusName } from '../campus'
 import './campus-selector.scss'
+
+const icons = {
+  chevron: require('../../../assets/community/topbar-chevron.svg'),
+  filter: require('../../../assets/community/topbar-filter.svg'),
+}
 
 type Props = {
   value?: CampusName | ''
   allowAll?: boolean
   label?: string
+  topbar?: boolean
+  iconOnly?: boolean
   onChange: (value: CampusName | '') => void
 }
 
@@ -15,6 +22,8 @@ export default function CampusSelector({
   value = '',
   allowAll = false,
   label = '切换校区',
+  topbar = false,
+  iconOnly = false,
   onChange,
 }: Props) {
   const [visible, setVisible] = useState(false)
@@ -27,17 +36,32 @@ export default function CampusSelector({
   return (
     <>
       <View
-        className='campus-selector__trigger'
+        className={[
+          'campus-selector__trigger',
+          topbar ? 'campus-selector__trigger--topbar' : '',
+          iconOnly ? 'campus-selector__trigger--icon-only' : '',
+        ].filter(Boolean).join(' ')}
         hoverClass='campus-selector__trigger--pressed'
         ariaRole='button'
         ariaLabel={`${label}，当前${selectedLabel}`}
         onClick={() => setVisible(true)}
       >
-        <Text className='campus-selector__trigger-label'>{label}</Text>
-        <View className='campus-selector__trigger-value'>
-          <Text>{selectedLabel}</Text>
-          <View className='campus-selector__chevron' />
-        </View>
+        {iconOnly ? (
+          <Image className='campus-selector__filter-icon' src={icons.filter} mode='aspectFit' />
+        ) : topbar ? (
+          <>
+            <Text className='campus-selector__topbar-value'>{selectedLabel}</Text>
+            <Image className='campus-selector__topbar-chevron' src={icons.chevron} mode='aspectFit' />
+          </>
+        ) : (
+          <>
+            <Text className='campus-selector__trigger-label'>{label}</Text>
+            <View className='campus-selector__trigger-value'>
+              <Text>{selectedLabel}</Text>
+              <View className='campus-selector__chevron' />
+            </View>
+          </>
+        )}
       </View>
 
       <BottomSheet

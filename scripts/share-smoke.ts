@@ -99,7 +99,7 @@ const sharePages = execFileSync(
   .split('\n')
   .filter(Boolean)
 
-assert.equal(sharePages.length, 17, '朋友圈配置检查应覆盖全部现有分享页面')
+assert.equal(sharePages.length, 18, '朋友圈配置检查应覆盖全部现有分享页面')
 for (const pagePath of sharePages) {
   const configPath = pagePath.replace(/\.tsx$/u, '.config.ts')
   const configSource = readFileSync(resolve(__dirname, '..', configPath), 'utf8')

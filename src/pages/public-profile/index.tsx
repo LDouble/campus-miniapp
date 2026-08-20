@@ -10,7 +10,7 @@ import type {
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
-import UserAvatarImage from '../../components/user-avatar-image'
+import UserAvatar from '../../components/user-avatar'
 import CommunityPostCard from '../../features/community/post-card'
 import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
 import '../../features/community/feed-panel.scss'
@@ -19,6 +19,7 @@ import ErrandCard from '../../features/life-services/components/errand-card'
 import MarketplaceCard from '../../features/life-services/components/marketplace-card'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import { useCampusShare } from '../../features/share'
 import '../../features/life-services/list-panel.scss'
 import './index.scss'
 
@@ -90,6 +91,30 @@ export default function PublicProfilePage() {
   const [profileError, setProfileError] = useState('')
   const [activeTab, setActiveTab] = useState<ProfileTab>('community')
   const [tabs, setTabs] = useState<Record<ProfileTab, TabState>>(initialTabs)
+
+  useCampusShare((event) => {
+    const dataset = event.target?.dataset || {}
+    const postId = Number(dataset.postId)
+    if (event.from === 'button' && postId > 0) {
+      const shareTitle = typeof dataset.shareTitle === 'string'
+        ? dataset.shareTitle
+        : '海大校园动态'
+      const shareImage = typeof dataset.shareImage === 'string'
+        ? dataset.shareImage
+        : ''
+      const result = {
+        title: shareTitle,
+        path: '/packages/social/community/detail',
+        query: { id: postId, mode: 'post' },
+      }
+      return shareImage ? { ...result, imageUrl: shareImage } : result
+    }
+    return {
+      title: profile ? `${profile.user.nickname}的海大校园主页` : '海大校园个人主页',
+      path: userId ? '/pages/public-profile/index' : '/pages/community/index',
+      query: userId ? { id: userId } : undefined,
+    }
+  })
 
   const updateTab = useCallback((tab: ProfileTab, update: Partial<TabState>) => {
     setTabs((current) => ({
@@ -270,13 +295,13 @@ export default function PublicProfilePage() {
         {!profileLoading && profile && (
           <>
             <View className='public-profile-hero motion-enter'>
-              <View className='public-profile-hero__avatar'>
-                <UserAvatarImage
-                  src={profile.user.avatar_url}
-                  className='public-profile-hero__avatar-image'
-                  fallback={profile.user.nickname.slice(0, 1) || '同'}
-                />
-              </View>
+              <UserAvatar
+                src={profile.user.avatar_url}
+                className='public-profile-hero__avatar'
+                imageClassName='public-profile-hero__avatar-image'
+                fallback={profile.user.nickname.slice(0, 1) || '同'}
+                userId={profile.user.id}
+              />
               <View className='public-profile-hero__identity'>
                 <View className='public-profile-hero__name-line'>
                   <Text>{profile.user.nickname}</Text>

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Picker, ScrollView, Text, View } from '@tarojs/components'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Image, Picker, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import {
   getRecentRouteValues,
@@ -10,6 +10,11 @@ import {
 import FilterSheet from './filter-sheet'
 import './filters.scss'
 
+const icons = {
+  chevron: require('../../../assets/community/topbar-chevron.svg'),
+  filter: require('../../../assets/community/topbar-filter.svg'),
+}
+
 export type CarpoolFilterValue = {
   origin?: string
   destination?: string
@@ -19,6 +24,7 @@ export type CarpoolFilterValue = {
 
 type Props = {
   value: CarpoolFilterValue
+  campusControl: ReactNode
   onChange: (value: CarpoolFilterValue) => void
 }
 
@@ -83,7 +89,7 @@ const RouteFilterSuggestions = ({
   )
 }
 
-export default function CarpoolFilters({ value, onChange }: Props) {
+export default function CarpoolFilters({ value, campusControl, onChange }: Props) {
   const [sheetVisible, setSheetVisible] = useState(false)
   const [draft, setDraft] = useState<CarpoolFilterValue>(value)
   const today = useMemo(() => localDate(0), [])
@@ -94,6 +100,20 @@ export default function CarpoolFilters({ value, onChange }: Props) {
     && value.departureDate !== tomorrow,
   )
   const count = advancedFilterCount(value) + (customDateActive ? 1 : 0)
+  const dateLabel = !value.departureDate
+    ? '全部日期'
+    : value.departureDate === today
+      ? '今天'
+      : value.departureDate === tomorrow
+        ? '明天'
+        : value.departureDate.slice(5).replace('-', '.')
+  const routeLabel = value.origin && value.destination
+    ? `${value.origin} - ${value.destination}`
+    : value.origin
+      ? `从 ${value.origin}`
+      : value.destination
+        ? `到 ${value.destination}`
+        : '全部路线'
 
   useEffect(() => {
     if (sheetVisible) {
@@ -112,85 +132,46 @@ export default function CarpoolFilters({ value, onChange }: Props) {
     value.seatsNeeded,
   ])
 
-  const summaries = [
-    value.origin ? { key: 'origin', label: `从 ${value.origin}` } : null,
-    value.destination ? { key: 'destination', label: `到 ${value.destination}` } : null,
-    customDateActive && value.departureDate
-      ? { key: 'departureDate', label: value.departureDate }
-      : null,
-    value.seatsNeeded ? { key: 'seatsNeeded', label: `${value.seatsNeeded} 人同行` } : null,
-  ].filter(Boolean) as Array<{ key: keyof CarpoolFilterValue; label: string }>
-
   return (
     <>
-      <View className='carpool-filter-toolbar'>
-        <View className='carpool-date-switch' ariaRole='tablist'>
-          {[
-            { key: 'all', label: '不限', value: undefined },
-            { key: 'today', label: '今天', value: today },
-            { key: 'tomorrow', label: '明天', value: tomorrow },
-          ].map((option) => {
-            const active = option.value === value.departureDate
-              || (option.key === 'all' && !value.departureDate)
-            return (
-              <View
-                key={option.key}
-                className={active
-                  ? 'carpool-date-switch__item carpool-date-switch__item--active'
-                  : 'carpool-date-switch__item'}
-                hoverClass='carpool-filter-control--pressed'
-                ariaRole='button'
-                ariaLabel={`${active ? '已选择，' : ''}${option.label}出发`}
-                onClick={() => onChange({ ...value, departureDate: option.value })}
-              >
-                {option.label}
-              </View>
-            )
-          })}
+      <View className='carpool-filter-toolbar life-service-filter-toolbar'>
+        <View
+          className='life-service-filter-chip'
+          hoverClass='life-service-filter-control--pressed'
+          ariaRole='button'
+          ariaLabel={`日期筛选，当前${dateLabel}`}
+          onClick={() => setSheetVisible(true)}
+        >
+          <Text>{dateLabel}</Text>
+          <Image className='life-service-filter-chip__chevron' src={icons.chevron} mode='aspectFit' />
         </View>
         <View
-          className={`carpool-more-trigger ${count > 0 ? 'carpool-more-trigger--active' : ''}`}
-          hoverClass='carpool-filter-control--pressed'
+          className='life-service-filter-chip life-service-filter-chip--route'
+          hoverClass='life-service-filter-control--pressed'
+          ariaRole='button'
+          ariaLabel={`路线筛选，当前${routeLabel}`}
+          onClick={() => setSheetVisible(true)}
+        >
+          <Text>{routeLabel}</Text>
+          <Image className='life-service-filter-chip__chevron' src={icons.chevron} mode='aspectFit' />
+        </View>
+
+        {campusControl}
+
+        <View className='life-service-filter-toolbar__divider' />
+        <View
+          className={count > 0
+            ? 'life-service-filter-more life-service-filter-more--active'
+            : 'life-service-filter-more'}
+          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel={`更多筛选${count > 0 ? `，已选择 ${count} 项` : ''}`}
           onClick={() => setSheetVisible(true)}
         >
-          <View className='carpool-more-trigger__label'>
-            <Text>筛选</Text>
-            {count > 0 && (
-              <>
-                <Text className='carpool-more-trigger__separator'>·</Text>
-                <Text>{count}</Text>
-              </>
-            )}
+          <Image src={icons.filter} mode='aspectFit' />
+          {count > 0 && <Text>{count}</Text>}
           </View>
-          <View className='carpool-more-trigger__chevron' />
-        </View>
       </View>
-
-      {summaries.length > 0 && (
-        <ScrollView className='filter-applied-scroll' scrollX enhanced showScrollbar={false}>
-          <View className='filter-applied filter-applied--carpool'>
-            <Text>已筛选</Text>
-            {summaries.map((item) => (
-              <View key={item.key} className='filter-applied__item'>
-                <Text>{item.label}</Text>
-                <View
-                  className='filter-applied__remove'
-                  ariaRole='button'
-                  ariaLabel={`移除筛选条件${item.label}`}
-                  onClick={() => onChange({ ...value, [item.key]: undefined })}
-                >
-                  移除
-                </View>
-              </View>
-            ))}
-            <View className='filter-applied__clear' ariaRole='button' ariaLabel='清除全部筛选条件' onClick={() => onChange({})}>
-              清除全部
-            </View>
-          </View>
-        </ScrollView>
-      )}
 
       <FilterSheet
         visible={sheetVisible}

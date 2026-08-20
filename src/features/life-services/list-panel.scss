@@ -22,7 +22,7 @@
   flex: none;
   box-sizing: border-box;
   border: 4rpx solid #8a94a2;
-  border-radius: 50%;
+  border-radius: 12rpx;
 }
 
 .life-search__icon::after {
@@ -840,17 +840,13 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid rgba(190, 219, 255, 0.5);
+  border: 0;
   border-radius: 50%;
-  background: var(--campus-surface-primary, #eff6ff);
-  color: var(--campus-primary-strong, #155dfc);
   font-size: 25rpx;
   font-weight: 760;
-  box-shadow: 0 2rpx 3rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   overflow: hidden;
 }
-
-.business-card-avatar--carpool { background: #eef2ff; color: #4f39f6; }
 
 .business-card-avatar__image {
   display: block;

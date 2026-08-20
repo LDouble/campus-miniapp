@@ -22,15 +22,10 @@ import {
   markLifeHubSectionFresh,
 } from './refresh-policy'
 import CarpoolCard from './components/carpool-card'
-import CarpoolFilters, {
-  type CarpoolFilterValue,
-} from './components/carpool-filters'
+import type { CarpoolFilterValue } from './components/carpool-filters'
 import ErrandCard from './components/errand-card'
 import MarketplaceCard from './components/marketplace-card'
-import MarketplaceFilters, {
-  type MarketplaceFilterValue,
-} from './components/marketplace-filters'
-import CampusSelector from './components/campus-selector'
+import type { MarketplaceFilterValue } from './components/marketplace-filters'
 import type { CampusName } from './campus'
 import './list-panel.scss'
 
@@ -59,7 +54,13 @@ type Props = {
   section: LifeServiceSection
   refreshSignal?: number
   searchFocusSignal?: number
+  campus: CampusName | ''
+  marketFilters: MarketplaceFilterValue
+  carpoolFilters: CarpoolFilterValue
   marketplaceSearchPrefill?: MarketplaceSearchPrefill | null
+  onCampusChange: (value: CampusName | '') => void
+  onMarketFiltersChange: (value: MarketplaceFilterValue) => void
+  onCarpoolFiltersChange: (value: CarpoolFilterValue) => void
   onMarketplaceSearchPrefillConsumed?: () => void
 }
 
@@ -119,14 +120,17 @@ export default function LifeServiceListPanel({
   section,
   refreshSignal = 0,
   searchFocusSignal = 0,
+  campus,
+  marketFilters,
+  carpoolFilters,
   marketplaceSearchPrefill = null,
+  onCampusChange,
+  onMarketFiltersChange,
+  onCarpoolFiltersChange,
   onMarketplaceSearchPrefillConsumed,
 }: Props) {
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
-  const [marketFilters, setMarketFilters] = useState<MarketplaceFilterValue>({})
-  const [carpoolFilters, setCarpoolFilters] = useState<CarpoolFilterValue>({})
-  const [campus, setCampus] = useState<CampusName | ''>('')
   const [items, setItems] = useState<ServiceItem[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -256,7 +260,7 @@ export default function LifeServiceListPanel({
     setCourseSearch(marketplaceSearchPrefill)
     setDraftKeyword(marketplaceSearchPrefill.courseName)
     setKeyword(marketplaceSearchPrefill.courseName)
-    setMarketFilters({
+    onMarketFiltersChange({
       intent: 'sell',
       category: 'course_material',
     })
@@ -264,6 +268,7 @@ export default function LifeServiceListPanel({
     onMarketplaceSearchPrefillConsumed?.()
   }, [
     marketplaceSearchPrefill,
+    onMarketFiltersChange,
     onMarketplaceSearchPrefillConsumed,
     section,
   ])
@@ -316,9 +321,9 @@ export default function LifeServiceListPanel({
     setCourseSearch(null)
     setDraftKeyword('')
     setKeyword('')
-    if (section === 'market') setMarketFilters({})
-    if (section === 'carpool') setCarpoolFilters({})
-    setCampus('')
+    if (section === 'market') onMarketFiltersChange({})
+    if (section === 'carpool') onCarpoolFiltersChange({})
+    onCampusChange('')
   }
 
   return (
@@ -370,22 +375,6 @@ export default function LifeServiceListPanel({
           搜索
         </View>
       </View>
-
-      <View className='life-campus-filter'>
-        <CampusSelector
-          value={campus}
-          allowAll
-          label='按校区发现'
-          onChange={setCampus}
-        />
-      </View>
-
-      {section === 'market' && (
-        <MarketplaceFilters value={marketFilters} onChange={setMarketFilters} />
-      )}
-      {section === 'carpool' && (
-        <CarpoolFilters value={carpoolFilters} onChange={setCarpoolFilters} />
-      )}
 
       <View className='life-panel__heading'>
         <View className='life-panel__heading-summary'>

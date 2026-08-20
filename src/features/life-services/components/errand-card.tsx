@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { ErrandView } from '../../../api/types'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
 import { apiDateTimeTimestamp } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
@@ -40,14 +40,14 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
       onClick={() => openDetail(item)}
     >
       <View className='business-card-header'>
-        <View className='business-card-avatar business-card-avatar--errand'>
-          <UserAvatarImage
-            src={item.author_avatar_url}
-            className='business-card-avatar__image'
-            fallback={authorInitial}
-            lazyLoad
-          />
-        </View>
+        <UserAvatar
+          src={item.author_avatar_url}
+          className='business-card-avatar business-card-avatar--errand'
+          imageClassName='business-card-avatar__image'
+          fallback={authorInitial}
+          userId={item.requester_id}
+          lazyLoad
+        />
         <View className='business-card-identity'>
           <View>
             <Text>{authorName}</Text>

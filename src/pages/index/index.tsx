@@ -30,7 +30,7 @@ import type {
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
-import UserAvatarImage from '../../components/user-avatar-image'
+import UserAvatar from '../../components/user-avatar'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
 import FreshBarrage from '../../features/community/fresh-barrage'
 import { showActionSheetSelection } from '../../utils/action-sheet'
@@ -44,7 +44,6 @@ import {
   communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
-  communityAuthorTone,
 } from '../../features/community/author'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
@@ -355,6 +354,7 @@ function Index() {
   ))
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarUserId, setAvatarUserId] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
   const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
   const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
@@ -466,6 +466,7 @@ function Index() {
     if (account.ok) {
       setUsername(account.value.user.username)
       setAvatarUrl(account.value.user.avatar_url || '')
+      setAvatarUserId(account.value.user.id)
     }
     setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))
     if (community.ok) {
@@ -720,14 +721,15 @@ function Index() {
 
       <View className='campus__header motion-enter'>
         <View className='campus__identity'>
-          <View className='campus__avatar'>
-            <UserAvatarImage
-              src={avatarUrl}
-              className='campus__avatar-image'
-              fallback={avatarText(username)}
-            />
+          <UserAvatar
+            className='campus__avatar'
+            imageClassName='campus__avatar-image'
+            src={avatarUrl}
+            fallback={avatarText(username)}
+            userId={avatarUserId}
+          >
             <View className='campus__online' />
-          </View>
+          </UserAvatar>
           <View className='campus__identity-copy'>
             <Text className='campus__eyebrow'>{academicCalendarLabel}</Text>
             <View
@@ -1151,14 +1153,14 @@ function Index() {
           >
             {index === 0 ? (<>
               <View className='news-card__topline'>
-                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <UserAvatarImage
-                    src={communityAuthorAvatarUrl(item)}
-                    className='news-card__avatar-image'
-                    fallback={communityAuthorInitial(item)}
-                    lazyLoad
-                  />
-                </View>
+                <UserAvatar
+                  src={communityAuthorAvatarUrl(item)}
+                  className='news-card__avatar'
+                  imageClassName='news-card__avatar-image'
+                  fallback={communityAuthorInitial(item)}
+                  userId={item.author_deleted ? 0 : item.author_id}
+                  lazyLoad
+                />
                 <View className='news-card__author'>
                   <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
                   <Text className='news-card__time'>
@@ -1200,14 +1202,14 @@ function Index() {
               </View>
             </>) : (
               <View className='news-card__compact-main'>
-                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <UserAvatarImage
-                    src={communityAuthorAvatarUrl(item)}
-                    className='news-card__avatar-image'
-                    fallback={communityAuthorInitial(item)}
-                    lazyLoad
-                  />
-                </View>
+                <UserAvatar
+                  src={communityAuthorAvatarUrl(item)}
+                  className='news-card__avatar'
+                  imageClassName='news-card__avatar-image'
+                  fallback={communityAuthorInitial(item)}
+                  userId={item.author_deleted ? 0 : item.author_id}
+                  lazyLoad
+                />
                 <View className='news-card__compact-copy'>
                   <View className='news-card__compact-meta'>
                     <Text>{communityAuthorName(item)} · {sectionNames[item.section_id] || '社区'}</Text>
