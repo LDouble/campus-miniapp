@@ -75,9 +75,9 @@
 
 .tab-bar__text {
   color: #90a1b9;
-  font-size: 20rpx;
+  font-size: 24rpx;
   font-weight: 500;
-  line-height: 24rpx;
+  line-height: 28rpx;
 }
 
 .tab-bar__item--active .tab-bar__text {

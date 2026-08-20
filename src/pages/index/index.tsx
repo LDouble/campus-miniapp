@@ -45,6 +45,7 @@ import {
   communityAuthorInitial,
   communityAuthorName,
 } from '../../features/community/author'
+import { plainStickerContent } from '../../features/stickers/content'
 import { formatDateTime } from '../../features/life-services/format'
 import { noticesRepository } from '../../features/notices/repository'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
@@ -340,6 +341,10 @@ const communitySectionNames = (sections: CampusCircleSectionView[]) => (
     })
     return names
   }, {})
+)
+
+const communityPostPreviewText = (post: CampusCirclePostView) => (
+  plainStickerContent(post.content || '').trim() || '分享了一组校园图片'
 )
 
 function Index() {
@@ -1174,7 +1179,7 @@ function Index() {
 
               <View className='news-card__body'>
                 <Text className='news-card__title'>
-                  {item.content?.trim() || '分享了一组校园图片'}
+                  {communityPostPreviewText(item)}
                 </Text>
                 {item.images[0] && (
                   <Image
@@ -1216,7 +1221,7 @@ function Index() {
                     <Text>{formatDateTime(item.published_at || item.created_at)}</Text>
                   </View>
                   <Text className='news-card__compact-title'>
-                    {item.content?.trim() || '分享了一组校园图片'}
+                    {communityPostPreviewText(item)}
                   </Text>
                 </View>
                 <Image className='news-card__compact-arrow' src={icons.arrow} mode='aspectFit' />

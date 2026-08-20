@@ -67,6 +67,11 @@ assert.ok(
   '首页课程卡片必须展示具体节次',
 )
 assert.ok(
+  homeSource.includes("plainStickerContent(post.content || '').trim()")
+    && (homeSource.match(/communityPostPreviewText\(item\)/gu)?.length || 0) === 2,
+  '首页社区摘要必须把贴纸标记转换为可读文本，不能直接暴露协议字符串',
+)
+assert.ok(
   !homeSource.includes('{item.startTime}'),
   '首页课程卡片不得展示具体上课时间',
 )
@@ -99,6 +104,31 @@ assert.match(
   freshBarrageStyleSource,
   /\.fresh-barrage__content\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;/u,
   '首页弹幕内容必须最多显示两行',
+)
+assert.match(
+  homeStyleSource,
+  /\.hero-card\s*\{[\s\S]*?&__title,[\s\S]*?&__subtitle\s*\{[^}]*display:\s*-webkit-box;[^}]*overflow:\s*hidden;[^}]*white-space:\s*normal;/u,
+  '首页所有 Hero 文案分支都必须具备长文本截断容器',
+)
+assert.match(
+  homeStyleSource,
+  /\.hero-card--notice \.hero-card__title\s*\{[^}]*-webkit-line-clamp:\s*2;/u,
+  '运营横幅标题必须最多显示两行',
+)
+assert.match(
+  homeStyleSource,
+  /\.hero-card--notice \.hero-card__subtitle\s*\{[^}]*-webkit-line-clamp:\s*1;/u,
+  '运营横幅副标题必须稳定为一行',
+)
+assert.match(
+  homeStyleSource,
+  /\.market-panel \.marketplace-card--compact\s*\{[\s\S]*?\.marketplace-card__description\s*\{[^}]*display:\s*-webkit-box;[^}]*white-space:\s*normal;[^}]*-webkit-line-clamp:\s*2;/u,
+  '首页二手卡片描述必须最多显示两行',
+)
+assert.match(
+  homeStyleSource,
+  /\.marketplace-card__description \.sticker-content__text\s*\{[^}]*white-space:\s*normal;/u,
+  '二手卡片内部 StickerContent 文本不得绕过宿主截断规则',
 )
 
 const periods: AcademicPeriod[] = [{
