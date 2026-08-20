@@ -104,6 +104,12 @@ assert.ok(
     && !homeSource.includes("../../features/community/fresh-barrage"),
   '首页不得再用悬浮弹幕覆盖校园动态区块',
 )
+assert.ok(
+  homeSource.includes('useDismissCommunityOverlaysOnScroll')
+    && homeSource.includes('dismissSignal={commentDismissSignal}')
+    && homeSource.includes('setCommentDismissSignal((current) => current + 1)'),
+  '首页滚动时必须收起帖子操作菜单，并经安全关闭信号收起评论输入',
+)
 
 assert.ok(
   homeSource.includes('getAcademicVerificationStatus({ force })'),
@@ -191,6 +197,19 @@ assert.ok(
     && homeSource.includes('openMarketplaceListing(marketplaceItem)'),
   '朋友圈 Feed 必须保留社区与二手各自的详情路由',
 )
+assert.match(homeSource, /id=\{`home-marketplace-more-\$\{marketplaceItem\.id\}`\}/u)
+assert.match(homeSource, /hoverStopPropagation/u)
+assert.match(homeSource, /toggleMarketplaceActions\(marketplaceItem\.id\)/u)
+assert.match(homeSource, /id=\{`home-marketplace-comment-\$\{marketplaceItem\.id\}`\}/u)
+assert.match(homeSource, /openMarketplaceComments\(marketplaceItem\)/u)
+assert.match(homeSource, /type:\s*'marketplace'[\s\S]*?dirtySection:\s*'market'/u)
+assert.match(homeSource, /latestMarketplaceComments\[marketplaceItem\.id\]/u)
+assert.match(
+  homeStyleSource,
+  /&__action\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;[\s\S]*?&::before\s*\{[\s\S]*?width:\s*72rpx;[\s\S]*?height:\s*56rpx;/u,
+  '首页二手 Feed 双点入口必须提供独立的 88rpx 点击热区',
+)
+assert.match(homeStyleSource, /&__action-menu\s*\{[\s\S]*?right:\s*96rpx;[\s\S]*?background:\s*var\(--ousea-ink-700,/u)
 assert.ok(
   homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中'")
     && homeSource.includes('`${holidayCountdown}天后开学`')
@@ -265,8 +284,18 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__social\s*\{[^}]*display:\s*flex;[^}]*border-radius:\s*12rpx;[^}]*background:\s*var\(--campus-surface-subtle,/u,
-  '帖子卡片必须使用首页风格的浅底互动摘要',
+  /\.community-post__action-menu\s*\{[^}]*top:\s*50%;[^}]*right:\s*96rpx;[^}]*border-radius:\s*12rpx;[^}]*background:\s*var\(--ousea-ink-700,/u,
+  '帖子卡片展开的互动菜单必须匹配微信式深灰横向容器',
+)
+assert.match(
+  communityPostStyleSource,
+  /\.community-post__more\s*\{[^}]*width:\s*88rpx;[^}]*height:\s*88rpx;/u,
+  '帖子卡片三个点必须提供足够大的触控热区',
+)
+assert.match(
+  communityPostStyleSource,
+  /\.community-post__comment-preview\s*\{/u,
+  '帖子卡片必须展示提交成功后的最新评论预览',
 )
 assert.match(
   communityPostStyleSource,
@@ -275,13 +304,13 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__social\s*\{[^}]*margin-top:\s*4rpx;/u,
-  '帖子卡片互动摘要必须保留首页垂直间距',
+  /\.community-post__action-menu\s*\{[^}]*top:\s*50%;[^}]*transform:\s*translateY\(-50%\);/u,
+  '帖子卡片互动菜单必须与时间/操作行垂直居中',
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__social-divider\s*\{[^}]*display:\s*none;/u,
-  '帖子卡片互动摘要内部不得显示横向分隔线',
+  /\.community-post__social-divider\s*\{[^}]*width:\s*1rpx;[^}]*height:\s*48rpx;[^}]*background:\s*rgba\(255, 255, 255, 0\.24\);/u,
+  '微信式互动菜单必须使用白色细分隔线区分点赞与评论',
 )
 
 const homeMomentsNow = new Date('2026-08-20T12:00:00+08:00').getTime()

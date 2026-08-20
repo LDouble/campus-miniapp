@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import {
+  Button,
   Image,
   Swiper,
   SwiperItem,
@@ -24,15 +25,19 @@ import {
 import type {
   CampusCirclePostView,
   CampusCircleSectionView,
+  CommentView,
   MarketplaceListingView,
   CalendarReminderView,
   DailyCheckinStatus,
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
+import StickerContent from '../../components/sticker-content'
 import UserAvatar from '../../components/user-avatar'
+import CommunityCommentSheet from '../../features/community/comment-sheet'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
 import CommunityPostCard from '../../features/community/post-card'
+import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
@@ -129,6 +134,7 @@ const icons = {
   clubs: require('../../assets/icons/clubs.svg'),
   campusCard: require('../../assets/icons/campus-card.svg'),
   campaign: require('../../assets/icons/campaign.svg'),
+  comment: require('../../assets/community/comment.svg'),
 }
 
 const homeFeatureFlags = {
@@ -395,6 +401,13 @@ function Index() {
   const [avatarUserId, setAvatarUserId] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
   const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
+  const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [marketplaceCommentItem, setMarketplaceCommentItem] = useState<MarketplaceListingView | null>(null)
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
+  const [openCommunityActionPostId, setOpenCommunityActionPostId] = useState<number | null>(null)
+  const [openMarketplaceActionId, setOpenMarketplaceActionId] = useState<number | null>(null)
+  const [latestCommunityComments, setLatestCommunityComments] = useState<Record<number, CommentView>>({})
+  const [latestMarketplaceComments, setLatestMarketplaceComments] = useState<Record<number, CommentView>>({})
   const [communitySectionNames, setCommunitySectionNames] = useState<Record<number, string>>({})
   const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
   const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>([])
@@ -652,12 +665,77 @@ function Index() {
   }
 
   const openCommunityPost = (item: CampusCirclePostView) => {
+    setOpenCommunityActionPostId(null)
+    setOpenMarketplaceActionId(null)
     saveCommunityFeedPin(item)
     void openLifeHub('community')
   }
 
+  const openCommunityComments = (item: CampusCirclePostView) => {
+    setOpenCommunityActionPostId(null)
+    setOpenMarketplaceActionId(null)
+    setMarketplaceCommentItem(null)
+    setCommentPost(item)
+  }
+
+  const toggleCommunityActions = (postId: number) => {
+    setOpenMarketplaceActionId(null)
+    setOpenCommunityActionPostId((current) => current === postId ? null : postId)
+  }
+
+  const closeCommunityActions = () => {
+    setOpenCommunityActionPostId(null)
+    setOpenMarketplaceActionId(null)
+  }
+
+  const updateLatestCommunityComment = (comment: CommentView) => {
+    setLatestCommunityComments((current) => ({ ...current, [comment.target_id]: comment }))
+  }
+
+  const toggleMarketplaceActions = (listingId: number) => {
+    setOpenCommunityActionPostId(null)
+    setOpenMarketplaceActionId((current) => current === listingId ? null : listingId)
+  }
+
+  const openMarketplaceComments = (item: MarketplaceListingView) => {
+    setOpenCommunityActionPostId(null)
+    setOpenMarketplaceActionId(null)
+    setCommentPost(null)
+    setMarketplaceCommentItem(item)
+  }
+
+  const updateLatestMarketplaceComment = (comment: CommentView) => {
+    setLatestMarketplaceComments((current) => ({ ...current, [comment.target_id]: comment }))
+  }
+
+  const dismissCommunityOverlays = useCallback(() => {
+    setOpenCommunityActionPostId(null)
+    setOpenMarketplaceActionId(null)
+    if (commentPost || marketplaceCommentItem) {
+      setCommentDismissSignal((current) => current + 1)
+    }
+  }, [commentPost, marketplaceCommentItem])
+
+  useDismissCommunityOverlaysOnScroll({
+    active: openCommunityActionPostId !== null
+      || openMarketplaceActionId !== null
+      || commentPost !== null
+      || marketplaceCommentItem !== null,
+    onDismiss: dismissCommunityOverlays,
+  })
+
+  const updateCommunityCommentCount = useCallback((postId: number, delta: number) => {
+    setCommunityPosts((current) => current.map((item) => (
+      item.id === postId
+        ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+        : item
+    )))
+  }, [])
+
   const openMarketplaceListing = (item: MarketplaceListingView) => {
     if (!fullMarketplaceNavigation) return
+    setOpenCommunityActionPostId(null)
+    setOpenMarketplaceActionId(null)
     fullMarketplaceNavigation.requestSubscription('marketplace')
     fullMarketplaceNavigation.saveSnapshot('marketplace', item)
     void Taro.navigateTo({
@@ -1213,8 +1291,13 @@ function Index() {
                   motionDelay={index + 1}
                   sectionName={communitySectionNames[communityItem.section_id] || '校园动态'}
                   timeFormatter={formatHomeMomentsTime}
+                  actionsOpen={openCommunityActionPostId === communityItem.id}
+                  onToggleActions={toggleCommunityActions}
+                  onCloseActions={closeCommunityActions}
+                  latestComment={latestCommunityComments[communityItem.id]}
                   onToggleLike={toggleCommunityLike}
                   onOpen={openCommunityPost}
+                  onOpenComments={openCommunityComments}
                 />
               )
             }
@@ -1227,15 +1310,18 @@ function Index() {
               url,
             }))
             const content = marketplaceListingPreviewText(marketplaceItem)
+            const marketplaceActionsOpen = openMarketplaceActionId === marketplaceItem.id
+            const latestMarketplaceComment = latestMarketplaceComments[marketplaceItem.id]
 
             return (
               <View
                 key={entry.key}
                 className={[
                   'moments-feed__item',
+                  marketplaceActionsOpen ? 'moments-feed__item--actions-open' : '',
                   'motion-enter',
                   `motion-enter--delay-${Math.min(index + 1, 4)}`,
-                ].join(' ')}
+                ].filter(Boolean).join(' ')}
                 hoverClass='moments-feed__item--pressed'
                 hoverStartTime={20}
                 hoverStayTime={120}
@@ -1271,21 +1357,107 @@ function Index() {
                     </View>
                   )}
 
-                  <View className='moments-feed__meta'>
+                  <View
+                    className='moments-feed__meta'
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <Text className='moments-feed__meta-copy'>
                       {formatHomeMomentsTime(marketplaceItem.created_at)} · {homeMomentsBusinessLabels.marketplace}
                     </Text>
-                    <View className='moments-feed__action'>
-                      <View />
-                      <View />
+                    <View className='moments-feed__meta-actions'>
+                      <Button
+                        id={`home-marketplace-more-${marketplaceItem.id}`}
+                        className='moments-feed__action'
+                        hoverClass='moments-feed__action--pressed'
+                        hoverStopPropagation
+                        hoverStartTime={20}
+                        hoverStayTime={120}
+                        ariaLabel={marketplaceActionsOpen ? '收起二手动态操作' : '展开二手动态操作'}
+                        onTouchStart={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          toggleMarketplaceActions(marketplaceItem.id)
+                        }}
+                      >
+                        <View />
+                        <View />
+                      </Button>
+                      {marketplaceActionsOpen && (
+                        <View
+                          className='moments-feed__action-menu'
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Button
+                            id={`home-marketplace-comment-${marketplaceItem.id}`}
+                            className='moments-feed__comment-action'
+                            hoverClass='moments-feed__comment-action--pressed'
+                            hoverStopPropagation
+                            hoverStartTime={20}
+                            hoverStayTime={120}
+                            ariaLabel='打开二手评论输入'
+                            onTouchStart={(event) => event.stopPropagation()}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              openMarketplaceComments(marketplaceItem)
+                            }}
+                          >
+                            <Image src={icons.comment} mode='aspectFit' />
+                            <Text>评论</Text>
+                          </Button>
+                        </View>
+                      )}
                     </View>
                   </View>
+
+                  {latestMarketplaceComment && (
+                    <View
+                      className='moments-feed__comment-preview'
+                      ariaLabel={`${latestMarketplaceComment.author_nickname}的评论：${plainStickerContent(latestMarketplaceComment.content)}`}
+                    >
+                      <Text className='moments-feed__comment-preview-author'>
+                        {latestMarketplaceComment.author_deleted
+                          ? '已注销用户'
+                          : latestMarketplaceComment.author_nickname}：
+                      </Text>
+                      <StickerContent
+                        content={latestMarketplaceComment.content}
+                        className='moments-feed__comment-preview-content'
+                        stickerClassName='moments-feed__comment-preview-sticker'
+                      />
+                    </View>
+                  )}
                 </View>
               </View>
             )
           })}
         </View>
       </View>
+      {commentPost ? (
+        <CommunityCommentSheet
+          key={commentPost.id}
+          post={commentPost}
+          onClose={() => setCommentPost(null)}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateCommunityCommentCount(commentPost.id, delta)}
+          onCommentCreated={updateLatestCommunityComment}
+        />
+      ) : marketplaceCommentItem ? (
+        <CommunityCommentSheet
+          key={`marketplace-${marketplaceCommentItem.id}`}
+          target={{
+            type: 'marketplace',
+            id: marketplaceCommentItem.id,
+            enabled: marketplaceCommentItem.status === 'published'
+              || marketplaceCommentItem.viewer_relation !== 'other',
+            tone: 'marketplace',
+            dirtySection: 'market',
+            placeholder: '友善交流，询问商品详情',
+          }}
+          onClose={() => setMarketplaceCommentItem(null)}
+          dismissSignal={commentDismissSignal}
+          onCommentCreated={updateLatestMarketplaceComment}
+        />
+      ) : null}
       </>)}
 
     </View>

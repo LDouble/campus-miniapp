@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
+import type { CampusCirclePostView, CampusCircleSectionView, CommentView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -13,6 +13,7 @@ import {
   markLifeHubSectionFresh,
 } from '../life-services/refresh-policy'
 import { openPublicProfile } from '../profile/public-profile'
+import CommunityCommentSheet from './comment-sheet'
 import { saveCommunityDetailSnapshot } from './detail-snapshot'
 import CommunityPostCard from './post-card'
 import './feed-panel.scss'
@@ -26,6 +27,8 @@ type Props = {
   pinnedPost?: CampusCirclePostView | null
   refreshSignal?: number
   searchFocusSignal?: number
+  overlayDismissSignal?: number
+  onOverlayVisibilityChange?: (visible: boolean) => void
   onSelectSection?: (sectionId: number) => void
 }
 
@@ -70,6 +73,8 @@ export default function CommunityFeedPanel({
   pinnedPost = null,
   refreshSignal = 0,
   searchFocusSignal = 0,
+  overlayDismissSignal = 0,
+  onOverlayVisibilityChange,
   onSelectSection,
 }: Props) {
   const [draftKeyword, setDraftKeyword] = useState('')
@@ -81,12 +86,32 @@ export default function CommunityFeedPanel({
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
+  const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
+  const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+  const [latestComments, setLatestComments] = useState<Record<number, CommentView>>({})
   const requestSequence = useRef(0)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
+  const lastOverlayDismissSignalRef = useRef(overlayDismissSignal)
 
   useEffect(() => {
     pendingPinnedPost.current = pinnedPost
   }, [pinnedPost])
+
+  useEffect(() => {
+    onOverlayVisibilityChange?.(openActionPostId !== null || commentPost !== null)
+  }, [commentPost, onOverlayVisibilityChange, openActionPostId])
+
+  useEffect(() => () => {
+    onOverlayVisibilityChange?.(false)
+  }, [onOverlayVisibilityChange])
+
+  useEffect(() => {
+    if (overlayDismissSignal === lastOverlayDismissSignalRef.current) return
+    lastOverlayDismissSignalRef.current = overlayDismissSignal
+    setOpenActionPostId(null)
+    if (commentPost) setCommentDismissSignal((current) => current + 1)
+  }, [commentPost, overlayDismissSignal])
 
   const sections = useMemo(
     () => flattenSections(sectionRoots),
@@ -204,9 +229,35 @@ export default function CommunityFeedPanel({
   }, [])
 
   const openPost = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
     requestWechatSubscriptionForModule('community')
     saveCommunityDetailSnapshot(post)
     Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
+
+  const openComments = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
+    setCommentPost(post)
+  }, [])
+
+  const toggleActions = useCallback((postId: number) => {
+    setOpenActionPostId((current) => current === postId ? null : postId)
+  }, [])
+
+  const closeActions = useCallback(() => {
+    setOpenActionPostId(null)
+  }, [])
+
+  const updateLatestComment = useCallback((comment: CommentView) => {
+    setLatestComments((current) => ({ ...current, [comment.target_id]: comment }))
+  }, [])
+
+  const updateCommentCount = useCallback((postId: number, delta: number) => {
+    setPosts((current) => current.map((item) => (
+      item.id === postId
+        ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+        : item
+    )))
   }, [])
 
   const openAuthor = useCallback((post: CampusCirclePostView) => {
@@ -352,8 +403,13 @@ export default function CommunityFeedPanel({
               post={post}
               motionDelay={index < 4 ? index + 1 : undefined}
               sectionName={sectionNameForPost(post, '未知板块')}
+              actionsOpen={openActionPostId === post.id}
+              onToggleActions={toggleActions}
+              onCloseActions={closeActions}
+              latestComment={latestComments[post.id]}
               onToggleLike={toggleLike}
               onOpen={openPost}
+              onOpenComments={openComments}
               onOpenAuthor={openAuthor}
               onSelectSection={onSelectSection}
             />
@@ -385,6 +441,16 @@ export default function CommunityFeedPanel({
         >
           {loadingMore ? '正在加载' : '查看更多'}
         </View>
+      )}
+      {commentPost && (
+        <CommunityCommentSheet
+          key={commentPost.id}
+          post={commentPost}
+          onClose={() => setCommentPost(null)}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
+          onCommentCreated={updateLatestComment}
+        />
       )}
     </View>
   )

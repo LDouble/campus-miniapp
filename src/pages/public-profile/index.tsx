@@ -4,6 +4,7 @@ import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
   CampusCirclePostView,
+  CommentView,
   ErrandView,
   MarketplaceListingView,
   PublicUserProfile,
@@ -11,8 +12,10 @@ import type {
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
+import CommunityCommentSheet from '../../features/community/comment-sheet'
 import CommunityPostCard from '../../features/community/post-card'
 import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import '../../features/community/feed-panel.scss'
 import CarpoolCard from '../../features/life-services/components/carpool-card'
 import ErrandCard from '../../features/life-services/components/errand-card'
@@ -91,6 +94,10 @@ export default function PublicProfilePage() {
   const [profileError, setProfileError] = useState('')
   const [activeTab, setActiveTab] = useState<ProfileTab>('community')
   const [tabs, setTabs] = useState<Record<ProfileTab, TabState>>(initialTabs)
+  const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
+  const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+  const [latestComments, setLatestComments] = useState<Record<number, CommentView>>({})
 
   useCampusShare((event) => {
     const dataset = event.target?.dataset || {}
@@ -204,8 +211,50 @@ export default function PublicProfilePage() {
   }
 
   const openCommunityPost = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
     saveCommunityDetailSnapshot(post)
     void Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
+
+  const openCommunityComments = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
+    setCommentPost(post)
+  }, [])
+
+  const toggleCommunityActions = useCallback((postId: number) => {
+    setOpenActionPostId((current) => current === postId ? null : postId)
+  }, [])
+
+  const closeCommunityActions = useCallback(() => {
+    setOpenActionPostId(null)
+  }, [])
+
+  const updateLatestCommunityComment = useCallback((comment: CommentView) => {
+    setLatestComments((current) => ({ ...current, [comment.target_id]: comment }))
+  }, [])
+
+  const dismissCommunityOverlays = useCallback(() => {
+    setOpenActionPostId(null)
+    if (commentPost) setCommentDismissSignal((current) => current + 1)
+  }, [commentPost])
+
+  useDismissCommunityOverlaysOnScroll({
+    active: openActionPostId !== null || commentPost !== null,
+    onDismiss: dismissCommunityOverlays,
+  })
+
+  const updateCommentCount = useCallback((postId: number, delta: number) => {
+    setTabs((current) => ({
+      ...current,
+      community: {
+        ...current.community,
+        items: (current.community.items as CampusCirclePostView[]).map((item) => (
+          item.id === postId
+            ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+            : item
+        )),
+      },
+    }))
   }, [])
 
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {
@@ -240,8 +289,13 @@ export default function PublicProfilePage() {
               key={post.id}
               post={post}
               sectionName='校园社区'
+              actionsOpen={openActionPostId === post.id}
+              onToggleActions={toggleCommunityActions}
+              onCloseActions={closeCommunityActions}
+              latestComment={latestComments[post.id]}
               onToggleLike={toggleLike}
               onOpen={openCommunityPost}
+              onOpenComments={openCommunityComments}
             />
           ))}
         </View>
@@ -371,6 +425,16 @@ export default function PublicProfilePage() {
           </>
         )}
       </View>
+      {commentPost && (
+        <CommunityCommentSheet
+          key={commentPost.id}
+          post={commentPost}
+          onClose={() => setCommentPost(null)}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
+          onCommentCreated={updateLatestCommunityComment}
+        />
+      )}
     </View>
   )
 }

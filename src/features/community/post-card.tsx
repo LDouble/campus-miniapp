@@ -1,6 +1,6 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { Button, Image, Text, View } from '@tarojs/components'
-import type { CampusCirclePostView } from '../../api/types'
+import type { CampusCirclePostView, CommentView } from '../../api/types'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
 import {
   communityAuthorAvatarUrl,
@@ -12,6 +12,7 @@ import StickerContent from '../../components/sticker-content'
 import { plainStickerContent } from '../stickers/content'
 
 const communityIcons = {
+  comment: require('../../assets/community/comment.svg'),
   heart: require('../../assets/community/feed-heart.svg'),
   heartActive: require('../../assets/community/heart-active.svg'),
 }
@@ -50,8 +51,13 @@ type Props = {
   sectionName: string
   motionDelay?: number
   timeFormatter?: (value?: string | null) => string
-  onToggleLike: (post: CampusCirclePostView) => void
+  onToggleLike: (post: CampusCirclePostView) => void | Promise<void>
   onOpen: (post: CampusCirclePostView) => void
+  onOpenComments: (post: CampusCirclePostView) => void
+  actionsOpen: boolean
+  onToggleActions: (postId: number) => void
+  onCloseActions: () => void
+  latestComment?: CommentView
   onOpenAuthor?: (post: CampusCirclePostView) => void
   onSelectSection?: (sectionId: number) => void
 }
@@ -63,9 +69,15 @@ function CommunityPostCard({
   timeFormatter,
   onToggleLike,
   onOpen,
+  onOpenComments,
+  actionsOpen,
+  onToggleActions,
+  onCloseActions,
+  latestComment,
   onOpenAuthor,
   onSelectSection,
 }: Props) {
+  const [likePending, setLikePending] = useState(false)
   const authorName = communityAuthorName(post)
   const authorInitial = communityAuthorInitial(post)
   const authorAvatarUrl = communityAuthorAvatarUrl(post)
@@ -91,7 +103,6 @@ function CommunityPostCard({
     post.is_recommended && '推荐',
     post.topic?.kind === 'campaign' && '活动',
   ].filter(Boolean) as string[]
-  const shareTitle = (readableContent || '海大校园动态').trim().slice(0, 28)
   const openAuthorOrPost = () => (
     !post.author_deleted && onOpenAuthor ? onOpenAuthor(post) : onOpen(post)
   )
@@ -102,6 +113,7 @@ function CommunityPostCard({
       className={[
         'community-post',
         'api-post',
+        actionsOpen ? 'community-post--actions-open' : '',
         motionDelay > 0 ? 'motion-enter' : '',
         motionDelay > 0 ? `motion-enter--delay-${Math.min(motionDelay, 4)}` : '',
       ].filter(Boolean).join(' ')}
@@ -203,7 +215,10 @@ function CommunityPostCard({
           )}
         </View>
 
-        <View className='community-post__meta'>
+        <View
+          className='community-post__meta'
+          onClick={(event) => event.stopPropagation()}
+        >
           <View className='community-post__meta-copy'>
             <Text className='community-post__time'>{publishedAt}</Text>
             {sectionName && (onSelectSection ? (
@@ -225,47 +240,89 @@ function CommunityPostCard({
               <Text className='community-post__section-label'> · {sectionName}</Text>
             ))}
           </View>
-          <Button
-            className='community-post__more'
-            openType='share'
-            data-post-id={post.id}
-            data-share-title={shareTitle}
-            data-share-image={post.images[0]?.url || ''}
-            hoverClass='community-post__more--pressed'
-            ariaLabel='分享这条动态'
-          >
-            <Text>••</Text>
-          </Button>
+          <View className='community-post__meta-actions'>
+            <Button
+              id={`community-post-more-${post.id}`}
+              className='community-post__more'
+              hoverClass='community-post__more--pressed'
+              hoverStopPropagation
+              hoverStartTime={20}
+              hoverStayTime={120}
+              ariaLabel={actionsOpen ? '收起动态操作' : '展开动态操作'}
+              onTouchStart={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation()
+                onToggleActions(post.id)
+              }}
+            >
+              <Text>••</Text>
+            </Button>
+            {actionsOpen && (
+              <View
+                className='community-post__social community-post__action-menu'
+                onClick={(event) => event.stopPropagation()}
+              >
+                <View
+                  className={post.liked
+                    ? 'community-post__social-like community-post__social-like--liked'
+                    : 'community-post__social-like'}
+                  hoverClass={!likePending ? 'community-post__social-row--pressed' : undefined}
+                  hoverStartTime={20}
+                  hoverStayTime={120}
+                  ariaRole='button'
+                  ariaLabel={likePending
+                    ? '点赞处理中'
+                    : `${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    if (likePending) return
+                    setLikePending(true)
+                    onCloseActions()
+                    void Promise.resolve(onToggleLike(post))
+                      .catch(() => undefined)
+                      .finally(() => setLikePending(false))
+                  }}
+                >
+                  <Image src={post.liked ? communityIcons.heartActive : communityIcons.heart} mode='aspectFit' />
+                  <Text>{likePending ? '处理中…' : post.liked ? '取消点赞' : '点赞'}</Text>
+                </View>
+                <View className='community-post__social-divider' />
+                <View
+                  className='community-post__comments-summary'
+                  hoverClass='community-post__social-row--pressed'
+                  hoverStartTime={20}
+                  hoverStayTime={120}
+                  ariaRole='button'
+                  ariaLabel='打开评论输入'
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onCloseActions()
+                    onOpenComments(post)
+                  }}
+                >
+                  <Image src={communityIcons.comment} mode='aspectFit' />
+                  <Text>评论</Text>
+                </View>
+              </View>
+            )}
+          </View>
         </View>
 
-        <View className='community-post__social'>
+        {latestComment && (
           <View
-            className={post.liked
-              ? 'community-post__social-like community-post__social-like--liked'
-              : 'community-post__social-like'}
-            hoverClass='community-post__social-row--pressed'
-            hoverStartTime={20}
-            hoverStayTime={120}
-            ariaRole='button'
-            ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
-            onClick={() => onToggleLike(post)}
+            className='community-post__comment-preview'
+            ariaLabel={`${latestComment.author_nickname}的评论：${plainStickerContent(latestComment.content)}`}
           >
-            <Image src={post.liked ? communityIcons.heartActive : communityIcons.heart} mode='aspectFit' />
-            <Text>{post.like_count > 0 ? `${post.like_count} 人赞过` : post.liked ? '已赞' : '赞'}</Text>
+            <Text className='community-post__comment-preview-author'>
+              {latestComment.author_deleted ? '已注销用户' : latestComment.author_nickname}：
+            </Text>
+            <StickerContent
+              content={latestComment.content}
+              className='community-post__comment-preview-content'
+              stickerClassName='community-post__comment-preview-sticker'
+            />
           </View>
-          <View className='community-post__social-divider' />
-          <View
-            className='community-post__comments-summary'
-            hoverClass='community-post__social-row--pressed'
-            hoverStartTime={20}
-            hoverStayTime={120}
-            ariaRole='button'
-            ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
-            onClick={() => onOpen(post)}
-          >
-            <Text>{post.comment_count > 0 ? `查看全部 ${post.comment_count} 条评论` : '查看评论'}</Text>
-          </View>
-        </View>
+        )}
       </View>
     </View>
   )

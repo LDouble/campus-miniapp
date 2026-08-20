@@ -513,6 +513,10 @@
 
   page .community-post__more {
     color: var(--campus-primary-strong, #93c5fd);
+    background: transparent;
+  }
+
+  page .community-post__more::before {
     background: var(--campus-border, #243244);
   }
 
@@ -520,16 +524,56 @@
     background: var(--campus-surface-subtle, #172033);
   }
 
+  page .community-post__action-menu {
+    background: var(--ousea-ink-700, #3a4759);
+    color: #fff;
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.28);
+  }
+
+  page .community-post__action-menu .community-post__social-like,
+  page .community-post__action-menu .community-post__comments-summary {
+    color: #fff;
+  }
+
   page .community-post__social-divider {
+    background: rgba(255, 255, 255, 0.24);
+  }
+
+  page .community-post__action-menu .community-post__social-like image,
+  page .community-post__action-menu .community-post__comments-summary image {
+    filter: brightness(0) invert(1);
+  }
+
+  page .community-post__action-menu .community-post__social-like--liked image {
+    filter: none;
+  }
+
+  page .community-post__comment-preview {
+    background: var(--campus-surface-primary, #172554);
+    color: var(--campus-text-body, #d7e0ec);
+  }
+
+  page .community-post__comment-preview-author {
+    color: var(--campus-primary-strong, #93c5fd);
+  }
+
+  page .moments-feed__action::before {
     background: var(--campus-border, #243244);
   }
 
-  page .community-post__social-like image {
-    filter: brightness(1.48) saturate(0.82);
+  page .moments-feed__action-menu {
+    background: var(--ousea-ink-700, #3a4759);
+    color: #fff;
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.28);
   }
 
-  page .community-post__social-like--liked image {
-    filter: brightness(1.08) saturate(1.04);
+  page .moments-feed__comment-preview {
+    background: var(--campus-surface-primary, #172554);
+    color: var(--campus-text-body, #d7e0ec);
+  }
+
+  page .moments-feed__comment-preview-author {
+    color: var(--campus-primary-strong, #93c5fd);
   }
 
   // 社区首页、搜索与状态反馈。

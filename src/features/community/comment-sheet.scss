@@ -1,0 +1,32 @@
+.community-comment-sheet {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  pointer-events: none;
+}
+
+.community-comment-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: transparent;
+}
+
+.community-comment-sheet__panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.community-comment-sheet .business-detail-composer {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community-comment-sheet__panel {
+    scroll-behavior: auto;
+  }
+}

@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
-import type { CampusCirclePostView, CampusCircleTopicView } from '../../../../api/types'
+import type { CampusCirclePostView, CampusCircleTopicView, CommentView } from '../../../../api/types'
 import { isApiError } from '../../../../api/client'
 import CustomNavbar from '../../../../components/custom-navbar'
 import {
@@ -11,8 +11,10 @@ import {
 } from '../../../../features/community/topic'
 import { lifeServicesRepository } from '../../../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../../../features/life-services/refresh-policy'
+import CommunityCommentSheet from '../../../../features/community/comment-sheet'
 import CommunityPostCard from '../../../../features/community/post-card'
 import { saveCommunityDetailSnapshot } from '../../../../features/community/detail-snapshot'
+import { useDismissCommunityOverlaysOnScroll } from '../../../../features/community/use-overlay-dismissal'
 import { useCampusShare } from '../../../../features/share'
 import './index.scss'
 import { openPublicProfile } from '../../../../features/profile/public-profile'
@@ -40,6 +42,10 @@ export default function CommunityTopicPage() {
   const [topicId, setTopicId] = useState(0)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
+  const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+  const [latestComments, setLatestComments] = useState<Record<number, CommentView>>({})
   const requestSequence = useRef(0)
 
   const load = useCallback(async (id: number, nextPage = 1, append = false) => {
@@ -144,8 +150,37 @@ export default function CommunityTopicPage() {
     markLifeHubSectionDirty('community')
   }, [])
   const openPost = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
     saveCommunityDetailSnapshot(post)
     return Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
+  const openComments = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
+    setCommentPost(post)
+  }, [])
+  const toggleActions = useCallback((postId: number) => {
+    setOpenActionPostId((current) => current === postId ? null : postId)
+  }, [])
+  const closeActions = useCallback(() => {
+    setOpenActionPostId(null)
+  }, [])
+  const updateLatestComment = useCallback((comment: CommentView) => {
+    setLatestComments((current) => ({ ...current, [comment.target_id]: comment }))
+  }, [])
+  const dismissCommunityOverlays = useCallback(() => {
+    setOpenActionPostId(null)
+    if (commentPost) setCommentDismissSignal((current) => current + 1)
+  }, [commentPost])
+  useDismissCommunityOverlaysOnScroll({
+    active: openActionPostId !== null || commentPost !== null,
+    onDismiss: dismissCommunityOverlays,
+  })
+  const updateCommentCount = useCallback((postId: number, delta: number) => {
+    setPosts((current) => current.map((item) => (
+      item.id === postId
+        ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+        : item
+    )))
   }, [])
   const openPublisher = useCallback(() => {
     if (!topic) return
@@ -234,8 +269,13 @@ export default function CommunityTopicPage() {
           key={post.id}
           post={post}
           sectionName='校园社区'
+          actionsOpen={openActionPostId === post.id}
+          onToggleActions={toggleActions}
+          onCloseActions={closeActions}
+          latestComment={latestComments[post.id]}
           onToggleLike={toggleLike}
           onOpen={openPost}
+          onOpenComments={openComments}
           onOpenAuthor={openPostAuthor}
         />
       ))}
@@ -265,6 +305,16 @@ export default function CommunityTopicPage() {
         >
           {loadingMore ? '正在加载…' : '查看更多'}
         </View>
+      )}
+      {commentPost && (
+        <CommunityCommentSheet
+          key={commentPost.id}
+          post={commentPost}
+          onClose={() => setCommentPost(null)}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
+          onCommentCreated={updateLatestComment}
+        />
       )}
     </View>
   </View>

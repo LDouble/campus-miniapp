@@ -24,8 +24,8 @@ for (const fragment of [
   'community-detail__author',
   'community-detail__body',
   'community-detail__images',
-  'community-detail__campus-label',
-  'community-detail__toolbar',
+  'community-detail__topic',
+  'community-detail__actions',
   'community-detail__more',
   'community-detail__review',
 ]) {
@@ -42,7 +42,11 @@ assert.match(detailSource, /post\.review_reason/u)
 assert.doesNotMatch(detailSource, /(?:关注(?:作者|用户)?|浏览量|地区|所在地区|定位)/u, '详情页不得渲染 Figma 示例关注、浏览量或地区数据')
 
 // 共享评论区必须完整包含标题、三类头像、真实点赞和统一输入栏。
-assert.match(commentsSource, /business-detail-comments__heading[\s\S]*?评论 \{displayTotal \?\? total\}/u)
+assert.match(
+  commentsSource,
+  /business-detail-comments__heading[\s\S]*?\{headingLabel \|\| `评论 \$\{displayTotal \?\? total\}`\}[\s\S]*?headingCountBadge/u,
+  '评论标题必须支持详情页的设计稿文案与数量胶囊',
+)
 assert.match(commentsSource, /business-detail-comment__avatar/u)
 assert.match(commentsSource, /business-detail-comment__reply-avatar/u)
 assert.match(commentsSource, /business-detail-composer__avatar/u)
@@ -62,7 +66,21 @@ assert.match(commentsSource, /business-detail-composer__publish/u)
 assert.match(detailStyle, /\.community-detail\s*\{[^}]*background:\s*var\(--campus-surface, #fff\);/u)
 assert.match(detailStyle, /\.community-detail__content\s*\{[^}]*padding:[^;]*env\(safe-area-inset-bottom\)/u)
 assert.match(detailStyle, /\.community-detail__main\s*\{[^}]*background:\s*var\(--campus-surface, #fff\);/u)
-assert.match(detailStyle, /\.community-detail__body\s*\{[^}]*font-size:\s*30rpx;[^}]*line-height:/u)
+assert.match(
+  detailStyle,
+  /\.community-detail__body\s*\{[^}]*color:\s*var\(--campus-text-heading, #1a2333\);[^}]*font-size:\s*var\(--ousea-font-size-body, 32rpx\);[^}]*font-weight:\s*var\(--ousea-font-weight-regular, 400\);[^}]*line-height:\s*var\(--ousea-line-height-post, 1.85\);/u,
+  '详情正文必须与列表共用 Ousea 正文排版 Token',
+)
+assert.match(
+  detailStyle,
+  /\.community-detail \.business-detail-comment__bubble \{[^}]*font-size:\s*var\(--ousea-font-size-body, 32rpx\);[^}]*line-height:\s*var\(--ousea-line-height-comment, 1.65\);/u,
+  '评论正文必须使用可读性更高的 Ousea 字号与行高 Token',
+)
+assert.match(
+  detailStyle,
+  /\.community-detail \.business-detail-comment__reply-relation,[\s\S]*?\.community-detail \.business-detail-comment__reply-target \{[^}]*color:\s*var\(--campus-text-secondary, #6b7a90\);/u,
+  '所有昵称必须使用统一的语义色',
+)
 assert.match(detailStyle, /\.community-detail__images[\s\S]*?border-radius:/u)
 assert.match(commentsStyle, /\.business-detail-comments\s*\{[^}]*background:\s*var\(--campus-surface, #fff\);/u)
 assert.match(commentsStyle, /\.business-detail-comment__bubble\s*\{[^}]*font-size:\s*28rpx;[^}]*line-height:/u)

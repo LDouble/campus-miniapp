@@ -113,8 +113,11 @@ assert.match(
   /font-family:\s*token\.\$font-family-sans;[^}]*font-size:\s*token\.\$font-size-body;[^}]*font-weight:\s*token\.\$font-weight-regular;[^}]*line-height:\s*token\.\$line-height-body;/u,
   '全局默认文字必须使用系统字体与正文完整语义角色',
 )
-assert.match(typographyStyle, /page \.community-post__content \{ font-size: 34rpx; \}/u)
-assert.match(typographyStyle, /page \.community-detail__body \{ font-size: 30rpx; \}/u)
+assert.match(
+  typographyStyle,
+  /page \.community-post__content,\s*page \.community-detail__body \{ font-size: var\(--ousea-font-size-body, 32rpx\); \}/u,
+  '社区列表与详情正文必须使用同一 Ousea 正文字号 Token',
+)
 assert.match(typographyStyle, /page \.business-detail-comment__bubble \{ font-size: 28rpx; \}/u)
 
 assert.doesNotMatch(homeStyle, /--home-(?:font|text)-/u, '首页不得重复定义全局字体或文本 Token')

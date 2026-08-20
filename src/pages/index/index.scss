@@ -2256,10 +2256,12 @@ page { background: var(--campus-page, #f4f7fb); }
 
 .moments-feed {
   &__item {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 20rpx;
     padding: 28rpx 32rpx;
+    overflow: visible;
     border-top: 0;
     transition: opacity 120ms ease;
 
@@ -2269,6 +2271,10 @@ page { background: var(--campus-page, #f4f7fb); }
 
     &--pressed {
       opacity: 0.7;
+    }
+
+    &--actions-open {
+      z-index: 20;
     }
   }
 
@@ -2362,11 +2368,14 @@ page { background: var(--campus-page, #f4f7fb); }
   }
 
   &__meta {
+    position: relative;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: space-between;
     min-height: 48rpx;
     padding: 12rpx 0 8rpx;
+    overflow: visible;
     color: var(--campus-text-muted, #a6b2c2);
     font-size: var(--ousea-font-size-caption, 24rpx);
     line-height: var(--ousea-line-height-ui, 1.4);
@@ -2380,24 +2389,150 @@ page { background: var(--campus-page, #f4f7fb); }
     white-space: nowrap;
   }
 
+  &__meta-actions {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    min-width: 88rpx;
+    flex: none;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
   &__action {
+    position: relative;
+    z-index: 3;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6rpx;
     flex: none;
-    width: 60rpx;
-    height: 36rpx;
-    margin-left: 16rpx;
-    background: var(--campus-surface-subtle, #f5f8fc);
-    border-radius: 8rpx;
+    width: 88rpx;
+    min-width: 88rpx;
+    height: 88rpx;
+    min-height: 88rpx;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
 
-    view {
+    &::before {
+      position: absolute;
+      width: 72rpx;
+      height: 56rpx;
+      border-radius: 16rpx;
+      background: var(--campus-surface-subtle, #f5f8fc);
+      content: '';
+      pointer-events: none;
+    }
+
+    &::after {
+      border: 0;
+    }
+
+    > view {
+      position: relative;
+      z-index: 1;
       width: 8rpx;
       height: 8rpx;
+      pointer-events: none;
       background: var(--campus-primary-strong, #1d5fd6);
       border-radius: 50%;
     }
+
+    &--pressed {
+      opacity: 0.62;
+    }
+  }
+
+  &__action-menu {
+    position: absolute;
+    z-index: 20;
+    top: 50%;
+    right: 96rpx;
+    display: flex;
+    width: 188rpx;
+    min-height: 88rpx;
+    box-sizing: border-box;
+    align-items: stretch;
+    border-radius: 12rpx;
+    background: var(--ousea-ink-700, #3a4759);
+    color: #fff;
+    box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.2);
+    transform: translateY(-50%);
+  }
+
+  &__comment-action {
+    display: flex;
+    min-width: 0;
+    min-height: 88rpx;
+    margin: 0;
+    padding: 0 24rpx;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 14rpx;
+    border: 0;
+    border-radius: 12rpx;
+    background: transparent;
+    color: #fff;
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-medium, 500);
+    line-height: 1.35;
+    white-space: nowrap;
+    box-shadow: none;
+
+    &::after {
+      border: 0;
+    }
+
+    image {
+      width: 40rpx;
+      height: 40rpx;
+      flex: none;
+      filter: brightness(0) invert(1);
+    }
+
+    &--pressed {
+      opacity: 0.64;
+    }
+  }
+
+  &__comment-preview {
+    display: flex;
+    min-width: 0;
+    margin-top: 4rpx;
+    padding: 12rpx 16rpx;
+    align-items: flex-start;
+    border-radius: 12rpx;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    color: var(--campus-text-body, #3a4759);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.5;
+  }
+
+  &__comment-preview-author {
+    flex: none;
+    color: var(--campus-primary-strong, #1d5fd6);
+    font-weight: var(--ousea-font-weight-medium, 500);
+  }
+
+  &__comment-preview-content {
+    display: -webkit-box;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  &__comment-preview-sticker {
+    width: 32rpx;
+    height: 32rpx;
   }
 
   > .home-section-state {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
   useDidHide,
   useDidShow,
@@ -13,6 +13,7 @@ import type {
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import CommunityFeedPanel from '../../features/community/feed-panel'
 import { consumeCommunityFeedPin } from '../../features/community/feed-pin'
+import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import {
   isLifeHubSection,
   lifeBusinessThemeList,
@@ -76,6 +77,8 @@ export default function CommunityPage() {
   >(null)
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [searchFocusSignal, setSearchFocusSignal] = useState(0)
+  const [communityOverlayVisible, setCommunityOverlayVisible] = useState(false)
+  const [communityOverlayDismissSignal, setCommunityOverlayDismissSignal] = useState(0)
   const [marketplaceSearchPrefill, setMarketplaceSearchPrefill] = useState<
     MarketplaceSearchPrefill | null
   >(null)
@@ -130,6 +133,15 @@ export default function CommunityPage() {
       subtitle: activeCommunityRoot.description || baseCopy.subtitle,
     }
     : baseCopy
+
+  const dismissCommunityOverlays = useCallback(() => {
+    setCommunityOverlayDismissSignal((current) => current + 1)
+  }, [])
+
+  useDismissCommunityOverlaysOnScroll({
+    active: displayedSection === 'community' && communityOverlayVisible,
+    onDismiss: dismissCommunityOverlays,
+  })
 
   useEffect(() => {
     setCustomTabBarPublishSection(displayedSection)
@@ -439,6 +451,8 @@ export default function CommunityPage() {
             pinnedPost={pinnedCommunityPost}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
+            overlayDismissSignal={communityOverlayDismissSignal}
+            onOverlayVisibilityChange={setCommunityOverlayVisible}
             onSelectSection={(sectionId) => setActiveCommunitySectionId(sectionId)}
           />
         ) : (

@@ -77,6 +77,10 @@ const detailCommentsSource = readFileSync(
   resolve(__dirname, '../src/features/life-services/components/detail-comments.tsx'),
   'utf8',
 )
+const communityCommentSheetSource = readFileSync(
+  resolve(__dirname, '../src/features/community/comment-sheet.tsx'),
+  'utf8',
+)
 const detailCommentsStyle = readFileSync(
   resolve(__dirname, '../src/features/life-services/components/detail-comments.scss'),
   'utf8',
@@ -109,6 +113,62 @@ assert.match(detailCommentsSource, /focusCommentTemporarily\(focusId\)/u)
 assert.match(detailCommentsSource, /focusCommentTemporarily\(created\.id\)/u)
 assert.match(detailCommentsSource, /current === commentId \? 0 : current/u)
 assert.match(detailCommentsSource, /const \[composerClosing, setComposerClosing\] = useState\(false\)/u)
+assert.match(detailCommentsSource, /initialComposerOpen\?: boolean/u)
+assert.match(detailCommentsSource, /initialComposerOpenedRef/u)
+assert.match(detailCommentsSource, /if \(!initialComposerOpen \|\| !enabled \|\| initialComposerOpenedRef\.current\) return/u)
+assert.match(detailCommentsSource, /closeComposerSignal\?: number/u)
+assert.match(detailCommentsSource, /lastCloseComposerSignalRef/u)
+assert.match(detailCommentsSource, /composerOnly\?: boolean/u)
+assert.match(detailCommentsSource, /if \(composerOnly\)/u)
+assert.match(detailCommentsSource, /\{!composerOnly && \(/u)
+assert.match(communityCommentSheetSource, /initialComposerOpen/u)
+assert.match(communityCommentSheetSource, /composerOnly/u)
+assert.match(communityCommentSheetSource, /closeComposerSignal/u)
+assert.match(communityCommentSheetSource, /onCommentCreated\?: \(comment: CommentView\) => void/u)
+assert.match(communityCommentSheetSource, /mutation\.type === 'create'/u)
+assert.match(communityCommentSheetSource, /onCommentCreated\?\.\(mutation\.comment\)/u)
+assert.match(communityCommentSheetSource, /type CommentSheetTarget/u)
+assert.match(communityCommentSheetSource, /targetType=\{targetType\}/u)
+assert.match(communityCommentSheetSource, /markLifeHubSectionDirty\(dirtySection\)/u)
+assert.match(communityCommentSheetSource, /dismissSignal\?: number/u)
+assert.match(communityCommentSheetSource, /lastDismissSignalRef/u)
+assert.match(communityCommentSheetSource, /requestClose\(\)/u)
+assert.match(
+  communityCommentSheetSource,
+  /setCustomTabBarHidden\(true\)[\s\S]*return \(\) => setCustomTabBarHidden\(false\)/u,
+  '列表评论框打开时必须隐藏自定义 TabBar，并在关闭后恢复',
+)
+assert.doesNotMatch(communityCommentSheetSource, /listComments|business-detail-comments/u)
+assert.match(
+  detailCommentsSource,
+  /business-detail-comment__reply-to[\s\S]*?回复[\s\S]*?business-detail-comment__reply-target/u,
+  '二级评论必须展示明确的回复对象',
+)
+assert.match(
+  communityDetailStyle,
+  /\.community-detail \.business-detail-comment__reply-relation,[\s\S]*?flex: none;[\s\S]*?overflow: visible;[\s\S]*?text-overflow: clip;/u,
+  '二级评论昵称不得被 flex 收缩截断',
+)
+assert.match(
+  detailCommentsSource,
+  /const isOwnComment = comment\.author_id === currentUserId[\s\S]*?const likeLabel = isOwnComment\s*\? `\$\{comment\.like_count\}赞`\s*:\s*String\(comment\.like_count\)/u,
+  '自己的评论应显示“x赞”，其他评论只显示爱心数量',
+)
+assert.match(
+  communityDetailStyle,
+  /\.community-detail \.business-detail-comment__like--own image \{\s*display: none;/u,
+  '自己的评论不得展示爱心',
+)
+assert.match(
+  detailCommentsSource,
+  /business-detail-comment__author'>\{commentAuthorName\(comment\)\}<\/Text>\s*\{comment\.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者<\/Text>\}/u,
+  '作者徽章必须紧随昵称展示',
+)
+assert.match(
+  detailCommentsSource,
+  /business-detail-comment__reply-content[\s\S]*?business-detail-comment__time business-detail-comment__time--footer/u,
+  '二级评论时间必须移到正文下方',
+)
 assert.match(detailCommentsSource, /const shouldFollowKeyboard = inputFocused \|\| keyboardHeight > 0/u)
 assert.match(detailCommentsSource, /setComposerClosing\(true\)[\s\S]*setInputFocused\(false\)[\s\S]*Taro\.hideKeyboard/u)
 assert.match(detailCommentsSource, /composerCloseSequenceRef\.current === closeSequence/u)
@@ -182,6 +242,10 @@ assert.doesNotMatch(
   /\.business-detail-composer__replying text:last-child \{[^}]*--campus-danger/u,
   '取消回复不得使用危险红色',
 )
-assert.match(communityDetailStyle, /\.community-detail__main \+ \.business-detail-comments \{[^}]*margin-top: 0;[^}]*padding-top: 0;/u)
+assert.match(
+  communityDetailStyle,
+  /\.community-detail__main \+ \.business-detail-comments \{[^}]*margin-top: 0;[^}]*padding-top: 30rpx;/u,
+  '帖子操作行和评论区应保留设计稿的紧凑间距',
+)
 
 console.log('comment reply smoke: ok')

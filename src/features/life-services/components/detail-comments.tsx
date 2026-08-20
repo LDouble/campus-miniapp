@@ -91,7 +91,13 @@ type DetailCommentsProps = {
   refreshKey?: number
   targetAuthorId?: number
   initialCommentId?: number
+  initialComposerOpen?: boolean
+  closeComposerSignal?: number
+  composerOnly?: boolean
+  onComposerClosed?: () => void
   displayTotal?: number
+  headingLabel?: string
+  headingCountBadge?: boolean
   headingActions?: ReactNode
   placeholder?: string
   tone?: Exclude<DetailCommentTarget, 'campus_circle_post'> | 'community'
@@ -154,11 +160,16 @@ const formatCommentDateTime = (value?: string | null) => (
 const renderCommentMeta = (
   comment: CommentView,
   liking: boolean,
+  currentUserId: number,
   onToggleLike: (comment: CommentView) => void,
   compact = false,
 ) => {
   const expectedAction = comment.liked ? 'unlike' : 'like'
   const canToggleLike = comment.available_actions.includes(expectedAction)
+  const isOwnComment = comment.author_id === currentUserId
+  const likeLabel = isOwnComment
+    ? `${comment.like_count}赞`
+    : String(comment.like_count)
 
   return (
     <View className='business-detail-comment__meta'>
@@ -167,6 +178,7 @@ const renderCommentMeta = (
         <View
           className={[
             'business-detail-comment__like',
+            isOwnComment ? 'business-detail-comment__like--own' : '',
             comment.liked ? 'business-detail-comment__like--active' : '',
             liking ? 'business-detail-comment__like--busy' : '',
           ].filter(Boolean).join(' ')}
@@ -181,18 +193,22 @@ const renderCommentMeta = (
             src={comment.liked ? icons.heartActive : compact ? icons.heartSmall : icons.heart}
             mode='aspectFit'
           />
-          <Text>{comment.like_count}</Text>
+          <Text>{likeLabel}</Text>
         </View>
       ) : (
         <View
-          className='business-detail-comment__like business-detail-comment__like--readonly'
+          className={[
+            'business-detail-comment__like',
+            'business-detail-comment__like--readonly',
+            isOwnComment ? 'business-detail-comment__like--own' : '',
+          ].filter(Boolean).join(' ')}
           ariaLabel={`当前 ${comment.like_count} 个赞`}
         >
           <Image
             src={comment.liked ? icons.heartActive : compact ? icons.heartSmall : icons.heart}
             mode='aspectFit'
           />
-          <Text>{comment.like_count}</Text>
+          <Text>{likeLabel}</Text>
         </View>
       )}
     </View>
@@ -207,6 +223,7 @@ const renderReplyTree = (
   enteringCommentId: number,
   removingCommentId: number,
   likingIds: ReadonlySet<number>,
+  currentUserId: number,
   onStartReply: (comment: CommentView) => void,
   onOpenActions: (comment: CommentView) => void,
   onToggleLike: (comment: CommentView) => void,
@@ -252,12 +269,17 @@ const renderReplyTree = (
               <Text className='business-detail-comment__reply-relation'>
                 {compactCommentName(commentAuthorName(comment))}
               </Text>
-              <Text className='business-detail-comment__time'>
-                {formatCommentDateTime(comment.created_at)}
-              </Text>
+              {replyTargetName && (
+                <>
+                  <Text className='business-detail-comment__reply-to'>回复</Text>
+                  <Text className='business-detail-comment__reply-target'>
+                    @{compactCommentName(replyTargetName)}
+                  </Text>
+                </>
+              )}
               {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
             </View>
-            {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike, true)}
+            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike, true)}
           </View>
           <View
             id={`detail-comment-reply-${comment.id}`}
@@ -269,6 +291,9 @@ const renderReplyTree = (
               stickerClassName='business-detail-comment__sticker'
             />
           </View>
+          <Text className='business-detail-comment__time business-detail-comment__time--footer'>
+            {formatCommentDateTime(comment.created_at)}
+          </Text>
         </View>
       </View>
       {children.length > 0 && (
@@ -281,6 +306,7 @@ const renderReplyTree = (
             enteringCommentId,
             removingCommentId,
             likingIds,
+            currentUserId,
             onStartReply,
             onOpenActions,
             onToggleLike,
@@ -299,6 +325,7 @@ type DetailCommentThreadProps = {
   enteringCommentId: number
   removingCommentId: number
   likingIds: ReadonlySet<number>
+  currentUserId: number
   onExpand: (rootId: number) => void
   onStartReply: (comment: CommentView) => void
   onOpenActions: (comment: CommentView) => void
@@ -313,6 +340,7 @@ const DetailCommentThread = memo(function DetailCommentThread({
   enteringCommentId,
   removingCommentId,
   likingIds,
+  currentUserId,
   onExpand,
   onStartReply,
   onOpenActions,
@@ -373,12 +401,9 @@ const DetailCommentThread = memo(function DetailCommentThread({
               onClick={() => openCommentAuthor(comment)}
             >
               <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
-              <Text className='business-detail-comment__time'>
-                {formatCommentDateTime(comment.created_at)}
-              </Text>
               {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
             </View>
-            {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
+            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike)}
           </View>
           <View
             id={`detail-comment-reply-${comment.id}`}
@@ -393,6 +418,9 @@ const DetailCommentThread = memo(function DetailCommentThread({
               stickerClassName='business-detail-comment__sticker'
             />
           </View>
+          <Text className='business-detail-comment__time business-detail-comment__time--footer'>
+            {formatCommentDateTime(comment.created_at)}
+          </Text>
           {showThreadAction && (
             <View className='business-detail-comment__thread-action' onClick={() => onExpand(comment.id)}>
               {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
@@ -415,6 +443,7 @@ const DetailCommentThread = memo(function DetailCommentThread({
             enteringCommentId,
             removingCommentId,
             likingIds,
+            currentUserId,
             onStartReply,
             onOpenActions,
             onToggleLike,
@@ -432,7 +461,13 @@ export default function DetailComments({
   refreshKey = 0,
   targetAuthorId,
   initialCommentId = 0,
+  initialComposerOpen = false,
+  closeComposerSignal = 0,
+  composerOnly = false,
+  onComposerClosed,
   displayTotal,
+  headingLabel,
+  headingCountBadge = false,
   headingActions,
   placeholder = '留言问问细节...',
   tone = targetType === 'campus_circle_post' ? 'community' : targetType,
@@ -474,6 +509,8 @@ export default function DetailComments({
   const threadsRef = useRef(threads)
   const pendingTimersRef = useRef(new Set<PendingTimer>())
   const composerCloseSequenceRef = useRef(0)
+  const initialComposerOpenedRef = useRef(false)
+  const lastCloseComposerSignalRef = useRef(closeComposerSignal)
   const composerClosingRef = useRef(false)
   const stickerPickerOpenRef = useRef(false)
   const contentSelectionStartRef = useRef(0)
@@ -672,8 +709,16 @@ export default function DetailComments({
   }, [clearPendingTimers, enabled, initialCommentId, refreshKey, targetId, targetType])
 
   useEffect(() => {
+    if (composerOnly) {
+      setComments([])
+      updateThreads(() => ({}))
+      setTotal(0)
+      setLoading(false)
+      setLoadingMore(false)
+      return
+    }
     void load(1, initialCommentId)
-  }, [initialCommentId, load, refreshKey])
+  }, [composerOnly, initialCommentId, load, refreshKey, updateThreads])
 
   const loadThread = useCallback((rootId: number) => {
     const existingRequest = threadInFlightRef.current.get(rootId)
@@ -797,6 +842,12 @@ export default function DetailComments({
     setStickerPickerOpen(false)
   }, [])
 
+  useEffect(() => {
+    if (!initialComposerOpen || !enabled || initialComposerOpenedRef.current) return
+    initialComposerOpenedRef.current = true
+    openComposer()
+  }, [enabled, initialComposerOpen, openComposer])
+
   const startReply = useCallback((comment: CommentView) => {
     setReplyTarget(comment)
     openComposer()
@@ -812,7 +863,8 @@ export default function DetailComments({
     setStickerPickerOpen(false)
     setReplyTarget(null)
     setKeyboardHeight(0)
-  }, [])
+    onComposerClosed?.()
+  }, [onComposerClosed])
 
   const closeComposer = useCallback(() => {
     const closeSequence = composerCloseSequenceRef.current + 1
@@ -842,6 +894,12 @@ export default function DetailComments({
     keyboardTransitionDuration,
     scheduleTimeout,
   ])
+
+  useEffect(() => {
+    if (lastCloseComposerSignalRef.current === closeComposerSignal) return
+    lastCloseComposerSignalRef.current = closeComposerSignal
+    closeComposer()
+  }, [closeComposer, closeComposerSignal])
 
   const handleComposerBlur = useCallback(() => {
     setInputFocused(false)
@@ -1071,10 +1129,16 @@ export default function DetailComments({
 
   return (
     <>
-      <View className='business-detail-comments'>
+      {!composerOnly && (
+        <View className='business-detail-comments'>
         <View className='business-detail-comments__heading'>
           <View />
-          <Text>评论 {displayTotal ?? total}</Text>
+          <Text>{headingLabel || `评论 ${displayTotal ?? total}`}</Text>
+          {headingCountBadge && (
+            <Text className='business-detail-comments__heading-count'>
+              {displayTotal ?? total}
+            </Text>
+          )}
           {headingActions && (
             <View className='business-detail-comments__heading-actions'>
               {headingActions}
@@ -1116,6 +1180,7 @@ export default function DetailComments({
             enteringCommentId={enteringCommentId}
             removingCommentId={removingCommentId}
             likingIds={likingIds}
+            currentUserId={composerAvatar.userId}
             onExpand={expandThread}
             onStartReply={startReply}
             onOpenActions={handleOpenCommentActions}
@@ -1127,7 +1192,8 @@ export default function DetailComments({
             {loadingMore ? '正在加载' : '查看更多评论'}
           </View>
         )}
-      </View>
+        </View>
+      )}
 
       {(enabled || actions.length > 0 || persistentContact) && (
         <>

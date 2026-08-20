@@ -22,7 +22,8 @@ page .community-post__meta { font-size: 26rpx; }
 page .community-post__review-status { font-size: 20rpx; }
 page .community-post__section-pill text,
 page .community-post__section-label { font-size: 26rpx; }
-page .community-post__content { font-size: 34rpx; }
+page .community-post__content,
+page .community-detail__body { font-size: var(--ousea-font-size-body, 32rpx); }
 page .community-post__expand { font-size: 34rpx; }
 page .community-post__social-like,
 page .community-post__comments-summary { font-size: 28rpx; }
@@ -40,7 +41,6 @@ page .community-level-badge--compact { font-size: 19rpx; }
 
 // 社区详情和评论树。
 page .community-detail-card__tags text { font-size: 22rpx; }
-page .community-detail__body { font-size: 30rpx; }
 page .community-detail-comments__heading > text { font-size: 25rpx; }
 page .community-detail-comments__author text:first-child { font-size: 26rpx; }
 page .community-detail-comments .community-comment__content { font-size: 28rpx; }
@@ -118,8 +118,8 @@ page .date-filter-picker text:last-child,
 page .filter-inline-clear { font-size: 25rpx; }
 
 @media (max-width: 360px) {
-  page .community-post__content { font-size: 32rpx; }
-  page .community-detail__body { font-size: 29rpx; }
+  page .community-post__content,
+  page .community-detail__body { font-size: var(--ousea-font-size-comment, 30rpx); }
 
   page .community-post__author-line > text:first-child { font-size: 30rpx; }
 

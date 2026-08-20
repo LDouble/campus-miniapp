@@ -15,6 +15,7 @@ import {
   communityAuthorName,
 } from '../../../features/community/author'
 import { consumeCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
+import CommunityLevelBadge from '../../../features/community/level-badge'
 import { openContentReport } from '../../../features/content-report'
 import DetailComments from '../../../features/life-services/components/detail-comments'
 import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
@@ -29,10 +30,10 @@ import { showActionSheetSelection } from '../../../utils/action-sheet'
 import './detail.scss'
 
 const communityDetailIcons = {
-  campusLink: require('../../../assets/community/detail-campus-link.svg'),
-  like: require('../../../assets/community/detail-like.svg'),
+  comment: require('../../../assets/community/comment.svg'),
+  heart: require('../../../assets/community/feed-heart.svg'),
+  heartActive: require('../../../assets/community/heart-active.svg'),
   more: require('../../../assets/community/detail-more.svg'),
-  report: require('../../../assets/community/detail-report.svg'),
   share: require('../../../assets/community/detail-share.svg'),
 }
 
@@ -205,6 +206,10 @@ export default function CommunityDetailPage() {
     if (selected) selected.run()
   }
 
+  const scrollToComments = () => {
+    void Taro.pageScrollTo({ selector: '.business-detail-comments', duration: 180 })
+  }
+
   return (
     <View className='community-detail'>
       <CustomNavbar title='帖子详情' showBack />
@@ -238,7 +243,10 @@ export default function CommunityDetailPage() {
                     userId={post.author_deleted ? 0 : post.author_id}
                   />
                   <View className='community-detail__author-copy'>
-                    <Text className='community-detail__author-name'>{communityAuthorName(post)}</Text>
+                    <View className='community-detail__author-name-row'>
+                      <Text className='community-detail__author-name'>{communityAuthorName(post)}</Text>
+                      <CommunityLevelBadge level={post.author_level} />
+                    </View>
                     <View className='community-detail__author-meta'>
                       <Text>{formatDetailDateTime(post.published_at || post.created_at)}</Text>
                       {post.status !== 'approved' && (
@@ -260,6 +268,10 @@ export default function CommunityDetailPage() {
                   </View>
                 )}
               </View>
+
+              {post.topic?.name && (
+                <View className='community-detail__topic'>#{post.topic.name}</View>
+              )}
 
               {post.content && (
                 <StickerContent
@@ -302,14 +314,41 @@ export default function CommunityDetailPage() {
                 </View>
               )}
 
-              <View className='community-detail__meta'>
-                {post.topic?.name && (
-                  <View className='community-detail__topic'>#{post.topic.name}</View>
-                )}
-                <View className='community-detail__campus-label'>
-                  <Text>中国海洋大学</Text>
-                  <Image src={communityDetailIcons.campusLink} mode='aspectFit' />
+              <View className='community-detail__actions'>
+                <View
+                  id='community-detail-like'
+                  className={post.liked
+                    ? 'community-detail__action community-detail__action--liked'
+                    : 'community-detail__action'}
+                  hoverClass='community-detail__action--pressed'
+                  ariaRole='button'
+                  ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
+                  onClick={() => void toggleLike()}
+                >
+                  <Image src={post.liked ? communityDetailIcons.heartActive : communityDetailIcons.heart} mode='aspectFit' />
+                  <Text>{post.like_count}</Text>
                 </View>
+                <View
+                  id='community-detail-comment'
+                  className='community-detail__action'
+                  hoverClass='community-detail__action--pressed'
+                  ariaRole='button'
+                  ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
+                  onClick={scrollToComments}
+                >
+                  <Image src={communityDetailIcons.comment} mode='aspectFit' />
+                  <Text>{post.comment_count}</Text>
+                </View>
+                <Button
+                  id='community-detail-share'
+                  className='community-detail__action community-detail__action--share'
+                  openType='share'
+                  hoverClass='community-detail__action--pressed'
+                  ariaLabel='分享这条动态'
+                >
+                  <Image src={communityDetailIcons.share} mode='aspectFit' />
+                  <Text>分享</Text>
+                </Button>
               </View>
 
               {post.review_reason && (
@@ -327,46 +366,8 @@ export default function CommunityDetailPage() {
               targetAuthorId={post.author_id}
               initialCommentId={focusedCommentId}
               displayTotal={post.comment_count}
-              headingActions={(
-                <View className='community-detail__toolbar'>
-                  <View
-                    id='community-detail-like'
-                    className={post.liked
-                      ? 'community-detail__toolbar-action community-detail__toolbar-action--liked'
-                      : 'community-detail__toolbar-action'}
-                    hoverClass='community-detail__toolbar-action--pressed'
-                    ariaRole='button'
-                    ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
-                    onClick={() => void toggleLike()}
-                  >
-                    <Image src={communityDetailIcons.like} mode='aspectFit' />
-                    <Text>{post.like_count}</Text>
-                  </View>
-                  <Button
-                    id='community-detail-share'
-                    className='community-detail__toolbar-action'
-                    openType='share'
-                    hoverClass='community-detail__toolbar-action--pressed'
-                    ariaLabel='分享这条动态'
-                  >
-                    <Image src={communityDetailIcons.share} mode='aspectFit' />
-                    <Text>分享</Text>
-                  </Button>
-                  {canReportPost && (
-                    <View
-                      id='community-detail-report'
-                      className='community-detail__toolbar-action'
-                      hoverClass='community-detail__toolbar-action--pressed'
-                      ariaRole='button'
-                      ariaLabel='举报这条动态'
-                      onClick={reportPost}
-                    >
-                      <Image src={communityDetailIcons.report} mode='aspectFit' />
-                      <Text>举报</Text>
-                    </View>
-                  )}
-                </View>
-              )}
+              headingLabel='全部评论'
+              headingCountBadge
               placeholder='友善交流，分享你的想法'
               tone='community'
               onApprovedDelta={(delta) => setPost((current) => current
