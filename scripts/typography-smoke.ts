@@ -22,11 +22,11 @@ const homeFontTokens = [...homeStyle.matchAll(/--home-font-(footnote|auxiliary|t
   }), {})
 
 assert.deepEqual(homeFontTokens, {
-  footnote: 24,
-  auxiliary: 28,
-  tertiary: 30,
-  secondary: 34,
-}, '首页字号必须按微信设计指南保持清晰的 12/14/15/17pt 语义层级')
+  footnote: 22,
+  auxiliary: 24,
+  tertiary: 28,
+  secondary: 32,
+}, '首页字号必须保留适合高密度信息流的紧凑语义层级')
 assert.ok(
   homeFontTokens.footnote < homeFontTokens.auxiliary
     && homeFontTokens.auxiliary < homeFontTokens.tertiary
@@ -35,8 +35,8 @@ assert.ok(
 )
 assert.match(
   homeStyle,
-  /\.section-heading__title,[\s\S]{0,260}font-size:\s*var\(--home-font-secondary\)/u,
-  '首页区块标题必须使用二级标题字号',
+  /\.section-heading__title,[\s\S]{0,260}font-size:\s*var\(--home-font-secondary\);[^}]*font-weight:\s*500;/u,
+  '首页区块标题必须使用紧凑二级标题字号与中等字重',
 )
 assert.match(
   homeStyle,
@@ -55,8 +55,23 @@ assert.match(
 )
 assert.match(
   tabBarStyle,
-  /\.tab-bar__text\s*\{[^}]*font-size:\s*24rpx;[^}]*line-height:\s*28rpx;/u,
-  '持续可见的 TabBar 标签不得低于 12pt 等效字号',
+  /\.tab-bar__text\s*\{[^}]*font-size:\s*22rpx;[^}]*font-weight:\s*400;[^}]*line-height:\s*26rpx;/u,
+  '持续可见的 TabBar 标签必须保持紧凑且使用正常字重',
+)
+assert.match(
+  tabBarStyle,
+  /\.tab-bar__item--active \.tab-bar__text\s*\{[^}]*font-weight:\s*500;/u,
+  'TabBar 激活态只应使用 500，避免出现明显的粗细跳变',
+)
+assert.match(
+  homeStyle,
+  /\.news-card__title,[\s\S]{0,180}font-weight:\s*400;/u,
+  '首页社区正文必须使用 400 字重',
+)
+assert.match(
+  homeStyle,
+  /\.marketplace-card__placeholder-headline,[\s\S]{0,360}font-weight:\s*400;/u,
+  '首页二手标题必须使用 400 字重',
 )
 
 const scssPaths = execFileSync('rg', ['--files', 'src', '-g', '*.scss'], { encoding: 'utf8' })

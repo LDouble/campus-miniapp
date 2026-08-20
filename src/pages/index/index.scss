@@ -2823,15 +2823,14 @@ page {
 }
 
 /*
- * 微信小程序设计指南字体层级：17pt 二级标题、15pt 三级标题、
- * 14pt 辅助内容、12pt 注释内容。首页按 750rpx 设计稿换算后，
- * 用统一令牌约束最终主题覆盖，避免历史样式把持续可见文字压得过小。
+ * 参考微信小程序设计指南的标题 / 正文 / 辅助语义，但针对高密度首页
+ * 使用紧凑字号，并显式压低历史样式遗留的重字重。
  */
 .campus {
-  --home-font-footnote: 24rpx;
-  --home-font-auxiliary: 28rpx;
-  --home-font-tertiary: 30rpx;
-  --home-font-secondary: 34rpx;
+  --home-font-footnote: 22rpx;
+  --home-font-auxiliary: 24rpx;
+  --home-font-tertiary: 28rpx;
+  --home-font-secondary: 32rpx;
 }
 
 .campus .custom-navbar__title,
@@ -2840,8 +2839,8 @@ page {
 .official-notices-home__title,
 .home-migrated__title {
   font-size: var(--home-font-secondary);
-  font-weight: 600;
-  line-height: 1.35;
+  font-weight: 500;
+  line-height: 1.3;
 }
 
 .campus__school,
@@ -2852,15 +2851,18 @@ page {
 .news-card__title,
 .news-card__compact-title {
   font-size: var(--home-font-tertiary);
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .campus__school,
 .schedule-card__day-label,
 .schedule-card__course-name,
-.today-task__title,
+.today-task__title {
+  font-weight: 500;
+}
+
 .official-notices-home__copy-title {
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .schedule-card__section,
@@ -2882,12 +2884,31 @@ page {
 .home-migrated__copy,
 .home-migrated__action {
   font-size: var(--home-font-auxiliary);
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
+.schedule-card__summary,
+.service-panel__subtitle,
+.service-panel__all,
+.section-heading__sub,
+.section-heading__more,
+.official-notices-home__more,
+.official-notices-home__empty,
+.hero-card__subtitle,
+.today-task__description,
 .news-card__author-name,
-.news-card__compact-meta text:first-child {
+.news-card__compact-meta text:first-child,
+.fresh-barrage__content,
+.home-section-state,
+.home-migrated__copy {
   font-weight: 400;
+}
+
+.schedule-card__section,
+.hero-card__action,
+.today-task__action,
+.home-migrated__action {
+  font-weight: 500;
 }
 
 .campus .custom-navbar__subtitle,
@@ -2915,7 +2936,36 @@ page {
 .home-migrated__eyebrow,
 .home-migrated__hint {
   font-size: var(--home-font-footnote);
-  line-height: 1.4;
+  line-height: 1.35;
+}
+
+.campus__eyebrow,
+.schedule-card__state,
+.today-card__important,
+.today-task__eyebrow,
+.section-heading__eyebrow,
+.official-notices-home__eyebrow,
+.news-card__tag text,
+.news-card__read,
+.fresh-barrage__avatar,
+.home-migrated__eyebrow {
+  font-weight: 500;
+}
+
+.campus .custom-navbar__subtitle,
+.schedule-card__date-label,
+.schedule-card__meta,
+.schedule-card__empty text:last-child,
+.today-card__event-date text:last-child,
+.today-card__reminder,
+.section-heading__count,
+.official-notices-home__meta,
+.official-notices-home__source,
+.hero-card__pill,
+.news-card__time,
+.news-card__metric,
+.home-migrated__hint {
+  font-weight: 400;
 }
 
 .campus__header {
@@ -2936,16 +2986,24 @@ page {
 .schedule-card__empty text:first-child,
 .today-card__event-date text:first-child {
   font-size: var(--home-font-auxiliary);
-  line-height: 1.45;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .service-panel__home-grid .service-panel__grid-item {
-  height: 126rpx;
+  height: 120rpx;
 }
 
 .service-panel__grid-name {
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.25;
+}
+
+.campus__avatar,
+.fresh-barrage__avatar,
+.marketplace-card__avatar,
+.news-card__avatar text {
+  font-weight: 500;
 }
 
 .official-notices-home__copy-title,
@@ -2961,19 +3019,23 @@ page {
 .news-card__title,
 .news-card__item--featured .news-card__title,
 .news-card__compact-title {
-  max-height: 88rpx;
+  max-height: 80rpx;
   font-size: var(--home-font-tertiary);
-  font-weight: 500;
-  line-height: 1.45;
+  font-weight: 400;
+  line-height: 1.4;
   -webkit-line-clamp: 2;
 }
 
 .hero-card {
-  min-height: 352rpx;
+  min-height: 336rpx;
+
+  &__content {
+    padding: 34rpx 0 30rpx 34rpx;
+  }
 
   &__slogan-swiper,
   &__slogan-slide {
-    height: 144rpx;
+    height: 132rpx;
   }
 
   &__title,
@@ -2987,27 +3049,34 @@ page {
   }
 
   &__title {
-    max-height: 94rpx;
-    font-size: 35rpx;
-    font-weight: 600;
-    line-height: 1.32;
+    max-height: 90rpx;
+    margin-bottom: 6rpx;
+    font-size: 34rpx;
+    font-weight: 500;
+    line-height: 1.3;
     -webkit-line-clamp: 2;
   }
 
   &__subtitle {
-    max-height: 40rpx;
+    max-height: 34rpx;
     margin-bottom: 0;
+    line-height: 1.4;
     -webkit-line-clamp: 1;
+  }
+
+  &__action {
+    min-height: 60rpx;
+    padding: 0 26rpx;
   }
 }
 
 .hero-card--notice .hero-card__title {
-  max-height: 94rpx;
+  max-height: 90rpx;
   -webkit-line-clamp: 2;
 }
 
 .hero-card--notice .hero-card__subtitle {
-  max-height: 40rpx;
+  max-height: 34rpx;
   -webkit-line-clamp: 1;
 }
 
@@ -3037,11 +3106,11 @@ page {
   .marketplace-card__footer,
   .marketplace-card__avatar {
     font-size: var(--home-font-footnote);
-    line-height: 1.4;
+    line-height: 1.35;
   }
 
   .marketplace-card__intent {
-    min-height: 42rpx;
+    min-height: 38rpx;
   }
 
   .marketplace-card__placeholder-kicker {
@@ -3054,11 +3123,11 @@ page {
   .marketplace-card__description {
     display: -webkit-box;
     min-height: 0;
-    max-height: 88rpx;
+    max-height: 80rpx;
     overflow: hidden;
     font-size: var(--home-font-tertiary);
-    font-weight: 500;
-    line-height: 1.45;
+    font-weight: 400;
+    line-height: 1.4;
     text-overflow: ellipsis;
     white-space: normal;
     -webkit-box-orient: vertical;
@@ -3076,7 +3145,20 @@ page {
   }
 
   .marketplace-card__footer {
-    min-height: 44rpx;
+    min-height: 40rpx;
+    font-weight: 400;
+  }
+
+  .marketplace-card__placeholder-kicker,
+  .marketplace-card__intent,
+  .marketplace-card__reviewing,
+  .marketplace-card__avatar {
+    font-weight: 500;
+  }
+
+  .marketplace-card__course,
+  .marketplace-card__footer > text:last-child {
+    font-weight: 400;
   }
 }
 
