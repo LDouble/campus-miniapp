@@ -2823,32 +2823,37 @@ page {
 }
 
 /*
- * 首页按全局语义字体 Token 组合层级。28rpx 及以下全部使用 Regular，
- * 避免不同 Android 系统字体把 Medium 映射得过粗。
+ * 首页使用系统字体与六级全局语义 Token。正文和重要正文保持 Regular，
+ * 卡片标题使用 Medium，只有页面标题和大标题使用 Semibold。
  */
 
-.campus .custom-navbar__title,
+.campus .custom-navbar__title {
+  font-size: var(--campus-font-size-page-title, 36rpx);
+  font-weight: var(--campus-font-weight-semibold, 600);
+  line-height: var(--campus-line-height-page-title, 54rpx);
+}
+
 .section-heading__title,
 .service-panel__title,
 .official-notices-home__title,
 .home-migrated__title {
-  font-size: var(--campus-font-title, 32rpx);
+  font-size: var(--campus-font-size-card-title, 32rpx);
   font-weight: var(--campus-font-weight-medium, 500);
-  line-height: var(--campus-line-height-heading, 1.3);
+  line-height: var(--campus-line-height-card-title, 48rpx);
 }
 
-.campus__school,
 .schedule-card__day-label,
 .schedule-card__course-name,
 .today-task__title,
 .official-notices-home__copy-title,
 .news-card__title,
 .news-card__compact-title {
-  font-size: var(--campus-font-body, 28rpx);
+  font-size: var(--campus-font-size-important-body, 30rpx);
   font-weight: var(--campus-font-weight-regular, 400);
-  line-height: var(--campus-line-height-body, 1.4);
+  line-height: var(--campus-line-height-important-body, 46rpx);
 }
 
+.campus__school,
 .schedule-card__section,
 .schedule-card__summary,
 .service-panel__subtitle,
@@ -2867,9 +2872,9 @@ page {
 .home-section-state,
 .home-migrated__copy,
 .home-migrated__action {
-  font-size: var(--campus-font-supporting, 24rpx);
+  font-size: var(--campus-font-size-body, 28rpx);
   font-weight: var(--campus-font-weight-regular, 400);
-  line-height: var(--campus-line-height-body, 1.4);
+  line-height: var(--campus-line-height-body, 44rpx);
 }
 
 .campus .custom-navbar__subtitle,
@@ -2898,28 +2903,40 @@ page {
 .fresh-barrage__avatar,
 .home-migrated__eyebrow,
 .home-migrated__hint {
-  font-size: var(--campus-font-caption, 22rpx);
+  font-size: var(--campus-font-size-auxiliary, 24rpx);
   font-weight: var(--campus-font-weight-regular, 400);
-  line-height: var(--campus-line-height-caption, 1.35);
+  line-height: var(--campus-line-height-auxiliary, 36rpx);
+}
+
+.schedule-card__section,
+.schedule-card__summary,
+.today-task__description,
+.service-panel__subtitle,
+.service-panel__grid-name,
+.section-heading__sub,
+.official-notices-home__empty,
+.news-card__author-name,
+.news-card__compact-meta text:first-child,
+.home-section-state:not(.home-section-state--error),
+.home-migrated__copy {
+  color: var(--campus-text-secondary, #4e5969);
 }
 
 .campus .custom-navbar__subtitle,
+.campus__eyebrow,
 .schedule-card__date-label,
 .schedule-card__meta,
+.schedule-card__state,
 .schedule-card__empty text:last-child,
 .today-card__event-date text:last-child,
-.today-task__description,
-.service-panel__subtitle,
-.section-heading__sub,
+.today-card__reminder,
 .section-heading__count,
 .official-notices-home__meta,
-.official-notices-home__empty,
 .news-card__time,
 .news-card__footer,
 .news-card__compact-meta text:last-child,
-.home-section-state:not(.home-section-state--error),
 .home-migrated__hint {
-  color: var(--campus-text-secondary, #62748e);
+  color: var(--campus-text-auxiliary, #86909c);
 }
 
 .campus__header {
@@ -2939,9 +2956,9 @@ page {
 
 .schedule-card__empty text:first-child,
 .today-card__event-date text:first-child {
-  font-size: var(--campus-font-supporting, 24rpx);
+  font-size: var(--campus-font-size-body, 28rpx);
   font-weight: var(--campus-font-weight-regular, 400);
-  line-height: var(--campus-line-height-body, 1.4);
+  line-height: var(--campus-line-height-body, 44rpx);
 }
 
 .today-task__marker {
@@ -2954,7 +2971,7 @@ page {
 
 .service-panel__grid-name {
   font-weight: var(--campus-font-weight-regular, 400);
-  line-height: 1.25;
+  line-height: var(--campus-line-height-auxiliary, 36rpx);
 }
 
 .campus__avatar,
@@ -2977,15 +2994,15 @@ page {
 .news-card__title,
 .news-card__item--featured .news-card__title,
 .news-card__compact-title {
-  max-height: 80rpx;
-  font-size: var(--campus-font-body, 28rpx);
+  max-height: 92rpx;
+  font-size: var(--campus-font-size-important-body, 30rpx);
   font-weight: var(--campus-font-weight-regular, 400);
-  line-height: var(--campus-line-height-body, 1.4);
+  line-height: var(--campus-line-height-important-body, 46rpx);
   -webkit-line-clamp: 2;
 }
 
 .hero-card {
-  min-height: 336rpx;
+  min-height: 374rpx;
 
   &__content {
     padding: 34rpx 0 30rpx 34rpx;
@@ -2993,7 +3010,7 @@ page {
 
   &__slogan-swiper,
   &__slogan-slide {
-    height: 132rpx;
+    height: 170rpx;
   }
 
   &__title,
@@ -3007,18 +3024,18 @@ page {
   }
 
   &__title {
-    max-height: 90rpx;
+    max-height: 120rpx;
     margin-bottom: 6rpx;
-    font-size: var(--campus-font-display, 34rpx);
-    font-weight: var(--campus-font-weight-medium, 500);
-    line-height: var(--campus-line-height-heading, 1.3);
+    font-size: var(--campus-font-size-large-title, 40rpx);
+    font-weight: var(--campus-font-weight-semibold, 600);
+    line-height: var(--campus-line-height-large-title, 60rpx);
     -webkit-line-clamp: 2;
   }
 
   &__subtitle {
-    max-height: 34rpx;
+    max-height: 44rpx;
     margin-bottom: 0;
-    line-height: var(--campus-line-height-body, 1.4);
+    line-height: var(--campus-line-height-body, 44rpx);
     -webkit-line-clamp: 1;
   }
 
@@ -3029,12 +3046,12 @@ page {
 }
 
 .hero-card--notice .hero-card__title {
-  max-height: 90rpx;
+  max-height: 120rpx;
   -webkit-line-clamp: 2;
 }
 
 .hero-card--notice .hero-card__subtitle {
-  max-height: 34rpx;
+  max-height: 44rpx;
   -webkit-line-clamp: 1;
 }
 
@@ -3063,8 +3080,8 @@ page {
   .marketplace-card__course,
   .marketplace-card__footer,
   .marketplace-card__avatar {
-    font-size: var(--campus-font-caption, 22rpx);
-    line-height: var(--campus-line-height-caption, 1.35);
+    font-size: var(--campus-font-size-auxiliary, 24rpx);
+    line-height: var(--campus-line-height-auxiliary, 36rpx);
   }
 
   .marketplace-card__intent {
@@ -3081,11 +3098,11 @@ page {
   .marketplace-card__description {
     display: -webkit-box;
     min-height: 0;
-    max-height: 80rpx;
+    max-height: 92rpx;
     overflow: hidden;
-    font-size: var(--campus-font-body, 28rpx);
+    font-size: var(--campus-font-size-important-body, 30rpx);
     font-weight: var(--campus-font-weight-regular, 400);
-    line-height: var(--campus-line-height-body, 1.4);
+    line-height: var(--campus-line-height-important-body, 46rpx);
     text-overflow: ellipsis;
     white-space: normal;
     -webkit-box-orient: vertical;
@@ -3098,13 +3115,14 @@ page {
   }
 
   .marketplace-card__price {
-    font-size: var(--campus-font-title, 32rpx);
-    font-weight: var(--campus-font-weight-emphasis, 600);
+    font-size: var(--campus-font-size-card-title, 32rpx);
+    font-weight: var(--campus-font-weight-semibold, 600);
+    line-height: var(--campus-line-height-card-title, 48rpx);
   }
 
   .marketplace-card__footer {
     min-height: 40rpx;
-    color: var(--campus-text-secondary, #62748e);
+    color: var(--campus-text-auxiliary, #86909c);
     font-weight: var(--campus-font-weight-regular, 400);
   }
 
@@ -3117,7 +3135,7 @@ page {
 
   .marketplace-card__course,
   .marketplace-card__footer > text:last-child {
-    color: var(--campus-text-secondary, #62748e);
+    color: var(--campus-text-auxiliary, #86909c);
     font-weight: var(--campus-font-weight-regular, 400);
   }
 }

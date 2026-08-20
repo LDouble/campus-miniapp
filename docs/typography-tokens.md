@@ -1,71 +1,79 @@
 # 全局字体 Token 规范
 
-## 设计目标
+## 设计基准
 
-本规范来自首页在一加 Ace 2、小米和微信开发者工具中的真机对比结果。它保留高密度校园首页的轻盈感，同时降低 Android 厂商字体在 `500` 及以上字重上的渲染差异。
+全局使用系统字体，不下载或内嵌自定义字体。字体栈为：
 
-字体 Token 是全局基础值，不代表所有页面必须使用同一字号。组件应按内容角色选取 Token，页面只在明确的业务场景中组合这些基础值，不再重复声明页面私有字号变量。
+```scss
+system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif
+```
 
-## 字号
+Token 以 375px 设计宽度为换算基准，`1px = 2rpx`。字号、字重和行高必须按完整语义角色组合，不能只取其中一项。
 
-| 语义角色 | CSS Token | Sass Token | 值 | 首页用途 |
-|---|---|---|---:|---|
-| 注释 | `--campus-font-caption` | `$font-size-caption` | `22rpx` | 时间、状态、来源、服务名称、TabBar |
-| 辅助 | `--campus-font-supporting` | `$font-size-supporting` | `24rpx` | 副标题、作者、次级操作 |
-| 正文 | `--campus-font-body` | `$font-size-body` | `28rpx` | 课程名、通知标题、社区与二手内容 |
-| 标题 | `--campus-font-title` | `$font-size-title` | `32rpx` | 首页区块标题、价格 |
-| 展示 | `--campus-font-display` | `$font-size-display` | `34rpx` | Hero 主标题 |
+## 字体角色
+
+| 语义角色 | 设计值 | CSS 字号 Token | CSS 行高 Token | Sass 字号 / 行高 Token | 首页用途 |
+|---|---|---|---|---|---|
+| 辅助信息 | 12px / 400 / 18px | `--campus-font-size-auxiliary: 24rpx` | `--campus-line-height-auxiliary: 36rpx` | `$font-size-auxiliary` / `$line-height-auxiliary` | 时间、状态、来源、服务名称、TabBar |
+| 正文 | 14px / 400 / 22px | `--campus-font-size-body: 28rpx` | `--campus-line-height-body: 44rpx` | `$font-size-body` / `$line-height-body` | 学校名、说明、作者、次级操作、空状态 |
+| 重要正文 | 15px / 400 / 23px | `--campus-font-size-important-body: 30rpx` | `--campus-line-height-important-body: 46rpx` | `$font-size-important-body` / `$line-height-important-body` | 课程名、通知和内容标题 |
+| 卡片标题 | 16px / 500 / 24px | `--campus-font-size-card-title: 32rpx` | `--campus-line-height-card-title: 48rpx` | `$font-size-card-title` / `$line-height-card-title` | 首页区块和卡片标题 |
+| 页面标题 | 18px / 600 / 27px | `--campus-font-size-page-title: 36rpx` | `--campus-line-height-page-title: 54rpx` | `$font-size-page-title` / `$line-height-page-title` | 页面导航标题 |
+| 大标题 | 20px / 600 / 30px | `--campus-font-size-large-title: 40rpx` | `--campus-line-height-large-title: 60rpx` | `$font-size-large-title` / `$line-height-large-title` | Hero 主标题 |
 
 ## 字重
 
-| 语义角色 | CSS Token | Sass Token | 值 | 使用约束 |
-|---|---|---|---:|---|
-| 常规 | `--campus-font-weight-regular` | `$font-weight-regular` | `400` | 28rpx 及以下文字默认使用 |
-| 中等 | `--campus-font-weight-medium` | `$font-weight-medium` | `500` | 仅用于 32rpx 栏目标题、34rpx Hero 等标题 |
-| 强调 | `--campus-font-weight-emphasis` | `$font-weight-emphasis` | `600` | 仅用于价格、关键数字等强强调信息 |
+| 语义角色 | CSS Token | Sass Token | 值 |
+|---|---|---|---:|
+| 常规 | `--campus-font-weight-regular` | `$font-weight-regular` | `400` |
+| 中等 | `--campus-font-weight-medium` | `$font-weight-medium` | `500` |
+| 半粗 | `--campus-font-weight-semibold` | `$font-weight-semibold` | `600` |
 
-不要通过提高字重修复小字号发虚。小字优先使用 `400`，并搭配 `--campus-text-secondary` 提升灰字对比度。TabBar 选中态只改变颜色和图标，不改变字重。
+正文和重要正文保持 `400`，卡片标题使用 `500`，只有页面标题、大标题和必要的数字强调使用 `600`。不要使用 `650`、`700`、`750` 等无法在不同 Android 系统字体中稳定映射的非规范字重。
 
-## 行高
+## 文本颜色
 
-| 语义角色 | CSS Token | Sass Token | 值 | 使用场景 |
-|---|---|---|---:|---|
-| 标题 | `--campus-line-height-heading` | `$line-height-heading` | `1.3` | 32–34rpx 标题 |
-| 注释 | `--campus-line-height-caption` | `$line-height-caption` | `1.35` | 22rpx 单行或短元信息 |
-| 正文 | `--campus-line-height-body` | `$line-height-body` | `1.4` | 24–28rpx 正文、说明和操作 |
+| 语义角色 | CSS Token | Sass Token | 浅色值 |
+|---|---|---|---|
+| 正文颜色 | `--campus-text-primary` | `$color-text-primary` | `#1F2329` |
+| 次要颜色 | `--campus-text-secondary` | `$color-text-secondary` | `#4E5969` |
+| 辅助颜色 | `--campus-text-auxiliary` | `$color-text-auxiliary` | `#86909C` |
 
-图标下方的单行标签、价格等特殊紧凑布局可保留组件级行高，但不应为普通正文创建新的页面私有 Token。
+暗色模式使用同名 Token 提供独立值。历史的 `heading`、`body`、`muted` 变量只作为兼容别名，新增样式应使用 `primary`、`secondary`、`auxiliary`。
 
 ## 使用方式
 
-普通 SCSS/WXSS 优先直接使用 CSS Token，并保留回退值：
+普通 SCSS/WXSS 直接组合完整角色，并保留回退值：
 
 ```scss
-.section-title {
-  font-size: var(--campus-font-title, 32rpx);
+.card-title {
+  color: var(--campus-text-primary, #1f2329);
+  font-size: var(--campus-font-size-card-title, 32rpx);
   font-weight: var(--campus-font-weight-medium, 500);
-  line-height: var(--campus-line-height-heading, 1.3);
+  line-height: var(--campus-line-height-card-title, 48rpx);
 }
 ```
 
-已经接入 Sass Token 的样式可以使用统一映射：
+已接入 Sass Token 的样式使用统一映射：
 
 ```scss
 @use '../../styles/tokens' as token;
 
-.card-body {
+.body-copy {
+  color: token.$color-text-primary;
   font-size: token.$font-size-body;
   font-weight: token.$font-weight-regular;
   line-height: token.$line-height-body;
 }
 ```
 
-自定义 TabBar 等原生组件可能受微信组件样式隔离影响，必须保留 Token 的 fallback，不能假设页面作用域中的自定义属性一定可见。
+自定义 TabBar 等原生组件受微信组件样式隔离影响，必须保留 Token fallback，并在组件内部重复声明系统字体栈。
 
 ## 维护规则
 
-1. 新组件按“注释、辅助、正文、标题、展示”选择字号，不按视觉感觉随意增加数值。
-2. 28rpx 及以下默认使用 `400`；若确需强调，优先调整颜色和信息层级。
-3. 不创建 `--home-font-*`、`--detail-font-*` 等重复页面 Token。
-4. 修改全局值时同时更新 `src/app.scss`、`src/styles/_tokens.scss` 与 `scripts/typography-smoke.ts`，并在至少两种 Android 字体环境中复核。
+1. 新组件先确定语义角色，再一次性使用对应字号、字重和行高。
+2. 不创建 `--home-font-*`、`--detail-font-*` 等页面私有字体 Token。
+3. 文本颜色只使用主、次、辅助三档；品牌色仅用于链接、选中和业务状态。
+4. 修改全局值时同时更新 `src/app.scss`、`src/styles/_tokens.scss` 与 `scripts/typography-smoke.ts`。
 5. 字号不得替代布局约束；生产长文本仍需使用单行省略或两行截断。
+6. 字体规范调整后必须在微信开发者工具和至少两种 Android 系统字体环境中复核。
