@@ -44,6 +44,23 @@ assert.ok(
       < homeSource.indexOf("official-notices-home__title'>全校通知"),
   'OFFICIAL 与全校通知必须由同一标题容器按顺序展示',
 )
+assert.equal(
+  homeSource.match(/className='section-heading__heading'/gu)?.length,
+  2,
+  '校园动态和二手区块必须共用单行标题容器',
+)
+assert.ok(
+  homeSource.includes('listMarketplace({ page: 1, pageSize: 2 })')
+    && homeSource.includes('const visibleMarketItems = marketItems.slice(0, 2)')
+    && homeSource.includes('visibleMarketItems.map((item) => (')
+    && !homeSource.includes("className='market-list__column'"),
+  '首页二手必须收敛为两条等宽预览，不能继续渲染四条瀑布流',
+)
+assert.ok(
+  !homeSource.includes('FreshBarrage')
+    && !homeSource.includes("../../features/community/fresh-barrage"),
+  '首页不得再用悬浮弹幕覆盖校园动态区块',
+)
 
 assert.ok(
   homeSource.includes('getAcademicVerificationStatus({ force })'),
@@ -155,6 +172,38 @@ assert.match(
   homeStyleSource,
   /\.official-notices-home\s*\{\s*padding:\s*18rpx 24rpx 12rpx;[\s\S]{0,440}&__heading\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*baseline;[^}]*white-space:\s*nowrap;/u,
   '官方通知中英文标题必须保持单行并对齐基线',
+)
+assert.match(
+  homeStyleSource,
+  /\.section-heading\s*\{[^}]*min-height:\s*82rpx;[\s\S]{0,260}&__heading\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*baseline;[^}]*white-space:\s*nowrap;/u,
+  '校园动态和二手标题必须使用统一的单行标题节奏',
+)
+for (const selector of ['community-panel', 'market-panel']) {
+  assert.match(
+    homeStyleSource,
+    new RegExp(`\\.${selector}\\s*\\{[^}]*padding:\\s*18rpx 24rpx 20rpx;[^}]*margin:\\s*0 0 24rpx;[^}]*overflow:\\s*hidden;[^}]*border-radius:\\s*40rpx;`, 'u'),
+    `${selector} 必须恢复为与首页上半区一致的完整卡片容器`,
+  )
+}
+assert.match(
+  homeStyleSource,
+  /\.news-card\s*\{\s*gap:\s*0;[\s\S]{0,360}&__item\s*\{[^}]*background:\s*transparent;[^}]*border-top:\s*1rpx solid var\(--campus-border,[^}]*box-shadow:\s*none;/u,
+  '校园动态必须在统一容器内呈现连续内容行，不能重复套卡片阴影',
+)
+assert.match(
+  homeStyleSource,
+  /\.market-list\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(280rpx,\s*1fr\)\);[^}]*align-items:\s*stretch;/u,
+  '首页二手网格必须在一条数据时自动铺满、两条数据时保持等宽',
+)
+assert.match(
+  homeStyleSource,
+  /\.market-panel \.marketplace-card--compact\s*\{[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*border-radius:\s*28rpx;[^}]*box-shadow:\s*none;/u,
+  '首页二手卡片必须等高填充网格并移除重复阴影',
+)
+assert.match(
+  homeStyleSource,
+  /\.market-panel \.marketplace-card--compact\s*\{[\s\S]{0,620}\.marketplace-card__placeholder-kicker\s*\{[^}]*display:\s*none;/u,
+  '首页窄版二手卡片必须隐藏与出售标签重叠的重复英文标识',
 )
 
 const periods: AcademicPeriod[] = [{

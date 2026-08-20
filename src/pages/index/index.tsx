@@ -32,7 +32,6 @@ import type {
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
 import { saveCommunityFeedPin } from '../../features/community/feed-pin'
-import FreshBarrage from '../../features/community/fresh-barrage'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
@@ -411,7 +410,7 @@ function Index() {
     const marketplacePromise = !isQualificationEdition
       && fullLifeServicesRepository
       && moduleEnabled('marketplace')
-      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 4 }))
+      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
       : Promise.resolve({ ok: false } as Settled<never>)
     const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
@@ -643,6 +642,7 @@ function Index() {
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
   const visibleCommunityPosts = communityPosts.slice(0, 3)
+  const visibleMarketItems = marketItems.slice(0, 2)
   const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
   const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
 
@@ -721,8 +721,6 @@ function Index() {
         compactImmersive
         collapsed={headerCollapsed}
       />
-
-      <FreshBarrage posts={communityPosts} onOpen={openCommunityPost} />
 
       <View className='campus__header motion-enter'>
         <View className='campus__identity'>
@@ -1110,7 +1108,7 @@ function Index() {
 
       <View className='community-panel'>
         <View className='section-heading section-heading--community'>
-          <View>
+          <View className='section-heading__heading'>
             <Text className='section-heading__eyebrow'>CAMPUS</Text>
             <Text className='section-heading__title'>校园新鲜事</Text>
           </View>
@@ -1230,7 +1228,7 @@ function Index() {
 
       <View className='market-panel'>
         <View className='section-heading section-heading--market'>
-          <View>
+          <View className='section-heading__heading'>
             <Text className='section-heading__eyebrow section-heading__eyebrow--market'>MARKET</Text>
             <Text className='section-heading__title'>同学们在淘</Text>
           </View>
@@ -1260,14 +1258,8 @@ function Index() {
             {!marketLoading && !marketError && marketItems.length === 0 && (
               <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
             )}
-            {!marketLoading && !marketError && FullMarketplaceCard && [0, 1].map((columnIndex) => (
-              <View key={columnIndex} className='market-list__column'>
-                {marketItems
-                  .filter((_, itemIndex) => itemIndex % 2 === columnIndex)
-                  .map((item) => (
-                    <FullMarketplaceCard key={item.id} item={item} variant='compact' />
-                  ))}
-              </View>
+            {!marketLoading && !marketError && FullMarketplaceCard && visibleMarketItems.map((item) => (
+              <FullMarketplaceCard key={item.id} item={item} variant='compact' />
             ))}
           </View>
         </View>

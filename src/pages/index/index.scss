@@ -2511,8 +2511,25 @@ page {
 }
 
 .section-heading {
+  min-height: 82rpx;
+  padding-bottom: 6rpx;
+  align-items: center;
+
+  &__heading {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 12rpx;
+    white-space: nowrap;
+  }
+
   &__title {
+    min-width: 0;
+    margin-bottom: 0;
+    overflow: hidden;
     color: var(--campus-text-heading, #1d293d);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__sub,
@@ -2522,63 +2539,67 @@ page {
 
   &__eyebrow,
   &__eyebrow--market {
+    flex: none;
+    margin-bottom: 0;
     color: var(--campus-primary, #2b7fff);
   }
 
   &__more {
+    min-height: 82rpx;
+    padding-left: 16rpx;
     color: var(--campus-primary-strong, #155dfc);
+  }
+
+  &--community,
+  &--market {
+    margin: 0;
   }
 }
 
 .community-panel {
-  padding: 0;
-  margin-top: 36rpx;
-  overflow: visible;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  padding: 18rpx 24rpx 20rpx;
+  margin: 0 0 24rpx;
+  overflow: hidden;
+  border-radius: 40rpx;
 }
 
 .market-panel {
-  padding: 0;
-  margin-top: 0;
-  overflow: visible;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  padding: 18rpx 24rpx 20rpx;
+  margin: 0 0 24rpx;
+  overflow: hidden;
+  border-radius: 40rpx;
 }
 
 .news-card {
-  gap: 14rpx;
+  gap: 0;
 
   &__item {
     min-height: 0;
-    padding: 20rpx 22rpx;
-    background: var(--campus-surface, #fff);
-    border-color: var(--campus-border, #f1f5f9);
-    border-radius: 32rpx;
-    box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.035);
+    padding: 18rpx 4rpx;
+    background: transparent;
+    border: 0;
+    border-top: 1rpx solid var(--campus-border, #f1f5f9);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   &__item--featured {
     min-height: 0;
-    padding: 24rpx;
-    background: var(--campus-surface, #fff);
-    border-color: var(--campus-border, #f1f5f9);
-    border-radius: 36rpx;
-    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.04);
+    padding: 20rpx 4rpx;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   &__item--compact {
     min-height: 104rpx;
-    padding: 18rpx 20rpx;
+    padding: 18rpx 4rpx;
     overflow: hidden;
-    background: var(--campus-surface, #fff);
-    border: 1rpx solid var(--campus-border, #f1f5f9);
-    border-radius: 28rpx;
-    box-shadow: 0 4rpx 14rpx rgba(0, 0, 0, 0.025);
+    background: transparent;
+    border: 0;
+    border-top: 1rpx solid var(--campus-border, #f1f5f9);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   &__item--pressed {
@@ -2685,19 +2706,12 @@ page {
 
 .market-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-  gap: 18rpx;
+  grid-template-columns: repeat(auto-fit, minmax(280rpx, 1fr));
+  align-items: stretch;
+  gap: 16rpx;
   width: 100%;
-  padding: 4rpx 0 18rpx;
+  padding: 8rpx 0 0;
   white-space: normal;
-}
-
-.market-list__column {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 18rpx;
 }
 
 .market-scroll {
@@ -2709,21 +2723,25 @@ page {
 
 .market-panel .marketplace-card--compact {
   width: 100%;
-  height: auto;
+  height: 100%;
   min-width: 0;
   flex-basis: auto;
   border: 1rpx solid var(--campus-border, #f1f5f9);
-  border-radius: 34rpx;
-  box-shadow: 0 8rpx 22rpx rgba(0, 0, 0, 0.04);
+  border-radius: 28rpx;
+  box-shadow: none;
 
   .marketplace-card__cover,
   .marketplace-card__cover--placeholder {
-    height: 184rpx;
-    flex-basis: 184rpx;
+    height: 168rpx;
+    flex-basis: 168rpx;
   }
 
   .marketplace-card__body {
     padding: 14rpx 16rpx 14rpx;
+  }
+
+  .marketplace-card__placeholder-kicker {
+    display: none;
   }
 
   .marketplace-card__description {
