@@ -56,17 +56,17 @@ assert.deepEqual(globalLineHeightTokens, {
 }, '全局行高 Token 必须对应 18 / 22 / 23 / 24 / 27 / 30px')
 
 const globalTextColorTokens = [...lightAppStyle.matchAll(
-  /--campus-text-(primary|secondary|auxiliary):\s*(#[\da-f]+);/gu,
+  /--campus-text-(primary|secondary|auxiliary):\s*var\(--ousea-(ink-\d+)\);/gu,
 )].reduce<Record<string, string>>((tokens, match) => ({
   ...tokens,
   [match[1]]: match[2],
 }), {})
 
 assert.deepEqual(globalTextColorTokens, {
-  primary: '#1f2329',
-  secondary: '#4e5969',
-  auxiliary: '#86909c',
-}, '浅色文本颜色必须严格使用正文、次要和辅助三档规范')
+  primary: 'ink-900',
+  secondary: 'ink-500',
+  auxiliary: 'ink-300',
+}, 'Campus 浅色文本语义必须严格映射 Ousea Ink Token')
 
 assert.match(
   tokenStyle,
@@ -96,9 +96,14 @@ for (const [name, lineHeight] of Object.entries(globalLineHeightTokens)) {
   )
 }
 for (const [name, color] of Object.entries(globalTextColorTokens)) {
+  const fallback = {
+    'ink-900': '#1a2333',
+    'ink-500': '#6b7a90',
+    'ink-300': '#a6b2c2',
+  }[color]
   assert.match(
     tokenStyle,
-    new RegExp(`\\$color-text-${name}:\\s*var\\(--campus-text-${name},\\s*${color}\\);`, 'u'),
+    new RegExp(`\\$color-text-${name}:\\s*var\\(--campus-text-${name},\\s*${fallback}\\);`, 'u'),
     `Sass Token 必须映射全局文本颜色：${name}`,
   )
 }
@@ -161,7 +166,7 @@ assert.match(
 )
 assert.match(
   tabBarStyle,
-  /\.tab-bar__text\s*\{[^}]*color:\s*#86909c;[^}]*font-family:\s*system-ui,[^}]*font-size:\s*var\(--campus-font-size-auxiliary,\s*24rpx\);[^}]*font-weight:\s*var\(--campus-font-weight-regular,\s*400\);[^}]*line-height:\s*var\(--campus-line-height-auxiliary,\s*36rpx\);/u,
+  /\.tab-bar__text\s*\{[^}]*color:\s*#a6b2c2;[^}]*font-family:\s*system-ui,[^}]*font-size:\s*var\(--campus-font-size-auxiliary,\s*24rpx\);[^}]*font-weight:\s*var\(--campus-font-weight-regular,\s*400\);[^}]*line-height:\s*var\(--campus-line-height-auxiliary,\s*36rpx\);/u,
   'TabBar 必须使用系统字体与完整辅助信息规范',
 )
 assert.match(

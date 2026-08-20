@@ -3,6 +3,12 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { getAcademicCalendarLabel } from '../src/pages/academic/utils'
 import type { AcademicPeriod } from '../src/pages/academic/types'
+import {
+  communitySectionNamesById,
+  formatHomeMomentsTime,
+  homeMomentsBusinessLabels,
+} from '../src/features/home/moments'
+import type { CampusCircleSectionView } from '../src/api/types'
 
 const homeSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.tsx'),
@@ -28,6 +34,33 @@ assert.ok(
   homeServiceKeysSource.includes("'classroom'"),
   '首页常用服务白名单必须包含空教室入口',
 )
+for (const serviceKey of [
+  'schedule',
+  'grades',
+  'exams',
+  'result',
+  'materials',
+  'calendar',
+  'errands',
+  'carpool',
+  'classroom',
+  'campus-card',
+]) {
+  assert.ok(
+    homeServiceKeysSource.includes(`'${serviceKey}'`),
+    `首页 5×2 常用服务必须包含 ${serviceKey}`,
+  )
+}
+assert.equal(
+  homeServiceKeysSource.match(/'[^']+'/gu)?.length,
+  10,
+  '首页常用服务必须固定为 5×2 的十个高频入口',
+)
+assert.ok(
+  homeSource.includes("name: '校园卡'")
+    && homeSource.includes("route: '/pages/campus-service/index?type=campus-card'"),
+  '校园卡入口必须跳转到可用的校园卡服务页',
+)
 assert.ok(
   homeSource.includes('<Text>{campusName}</Text>')
     && !homeSource.includes('中国海洋大学 · {campusName}'),
@@ -40,21 +73,27 @@ assert.ok(
 )
 assert.ok(
   homeSource.includes("className='official-notices-home__heading'")
-    && homeSource.indexOf("official-notices-home__eyebrow'>OFFICIAL")
-      < homeSource.indexOf("official-notices-home__title'>全校通知"),
-  'OFFICIAL 与全校通知必须由同一标题容器按顺序展示',
-)
-assert.equal(
-  homeSource.match(/className='section-heading__heading'/gu)?.length,
-  2,
-  '校园动态和二手区块必须共用单行标题容器',
+    && homeSource.includes("className='official-notices-home__heading-bar'")
+    && homeSource.includes("className='official-notices-home__title'>全校通知"),
+  '全校通知必须使用 Figma 对齐的蓝色标题标记',
 )
 assert.ok(
-  homeSource.includes('listMarketplace({ page: 1, pageSize: 2 })')
-    && homeSource.includes('const visibleMarketItems = marketItems.slice(0, 2)')
-    && homeSource.includes('visibleMarketItems.map((item) => (')
-    && !homeSource.includes("className='market-list__column'"),
-  '首页二手必须收敛为两条等宽预览，不能继续渲染四条瀑布流',
+  homeSource.includes("campaign: require('../../assets/icons/campaign.svg')")
+    && homeSource.includes("<Image src={icons.campaign} mode='aspectFit' />"),
+  '通知条目必须复用 Figma 对应的 campaign 矢量图标',
+)
+assert.ok(
+  homeSource.includes('listMarketplace({ page: 1, pageSize: 4 })')
+    && homeSource.includes('const homeMomentsFeed = buildHomeMomentsFeed(communityPosts, marketItems)')
+    && homeSource.includes('homeMomentsFeed.map((entry, index) => {'),
+  '首页必须把社区与二手真实数据合并为单一朋友圈 Feed',
+)
+assert.ok(
+  !homeSource.includes("className='community-panel'")
+    && !homeSource.includes("className='market-panel'")
+    && !homeSource.includes('同学们在淘')
+    && !homeSource.includes('FullMarketplaceCard'),
+  '首页必须删除旧校园动态卡片和独立二手区块',
 )
 assert.ok(
   !homeSource.includes('FreshBarrage')
@@ -101,7 +140,7 @@ assert.ok(
 )
 assert.ok(
   homeSource.includes("plainStickerContent(post.content || '').trim()")
-    && (homeSource.match(/communityPostPreviewText\(item\)/gu)?.length || 0) === 2,
+    && homeSource.includes('communityPostPreviewText(communityItem)'),
   '首页社区摘要必须把贴纸标记转换为可读文本，不能直接暴露协议字符串',
 )
 assert.ok(
@@ -110,8 +149,8 @@ assert.ok(
 )
 assert.match(
   homeStyleSource,
-  /&__pill\s*\{[\s\S]*?color:\s*var\(--campus-primary-strong,[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*0\.94\)/u,
-  '首页横幅标签必须使用深色文字搭配浅色底，不能白字叠白底',
+  /&__pill\s*\{[\s\S]*?color:\s*#fff;[\s\S]*?background:\s*rgba\(255,\s*255,\s*255,\s*0\.16\)/u,
+  '首页横幅标签必须使用 Ousea 渐变上的半透明白色胶囊',
 )
 assert.match(
   homeStyleSource,
@@ -120,8 +159,8 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /background:\s*linear-gradient\(\s*153deg,\s*#326ea9 0%,\s*#287992 48%,\s*#24766e 100%\s*\)/u,
-  '首页 hero 必须使用中等饱和度渐变，避免蓝青色过曝',
+  /background:\s*linear-gradient\(135deg,\s*var\(--ousea-ocean-600,[\s\S]*?var\(--ousea-ocean-500,[\s\S]*?var\(--ousea-wave-400,/u,
+  '首页 Hero 必须消费 Ousea Ocean 到 Wave 的全局渐变 Token',
 )
 assert.match(
   homeStyleSource,
@@ -130,8 +169,28 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /&__compact-title\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;/u,
-  '首页帖子摘要必须最多显示两行',
+  /\.moments-feed\s*\{[\s\S]*?&__media\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(3,/u,
+  '首页校园动态图片必须使用最多三列的朋友圈式网格',
+)
+assert.ok(
+  homeSource.includes("className='moments-panel__bar'")
+    && homeSource.includes("moments-panel__title'>校园动态")
+    && homeSource.includes('<Text>进社区</Text>'),
+  '校园动态标题区必须使用 Ousea 标记，并保留明确的社区入口',
+)
+assert.ok(
+  homeSource.includes("kind: 'community'")
+    && homeSource.includes("kind: 'marketplace'")
+    && homeSource.includes('openCommunityPost(communityItem)')
+    && homeSource.includes('openMarketplaceListing(marketplaceItem)'),
+  '朋友圈 Feed 必须保留社区与二手各自的详情路由',
+)
+assert.ok(
+  homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中'")
+    && homeSource.includes('`${holidayCountdown}天后开学`')
+    && !homeSource.includes("className='schedule-card__countdown'")
+    && !homeSource.includes('holidayCountdown ? coursePreview.dateLabel'),
+  '假期课表卡必须把动态开学倒计时放在主文案下方，并移除重复开学日期',
 )
 assert.match(
   freshBarrageStyleSource,
@@ -155,55 +214,107 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /\.market-panel \.marketplace-card--compact\s*\{[\s\S]*?\.marketplace-card__description\s*\{[^}]*display:\s*-webkit-box;[^}]*white-space:\s*normal;[^}]*-webkit-line-clamp:\s*2;/u,
-  '首页二手卡片描述必须最多显示两行',
+  /\.service-panel\s*\{\s*padding:\s*28rpx 20rpx 26rpx;[\s\S]{0,520}&__simple-head\s*\{[^}]*min-height:\s*48rpx;[^}]*padding:\s*0 12rpx 16rpx;/u,
+  '常用服务卡片必须使用 Figma 对齐的单行标题区',
 )
 assert.match(
   homeStyleSource,
-  /\.marketplace-card__description \.sticker-content__text\s*\{[^}]*white-space:\s*normal;/u,
-  '二手卡片内部 StickerContent 文本不得绕过宿主截断规则',
+  /&__heading-bar\s*\{[^}]*width:\s*8rpx;[^}]*height:\s*32rpx;[^}]*background:\s*linear-gradient\(180deg,\s*#2b7aef,\s*#38bdf8\);/u,
+  '常用服务标题必须保留 Ousea 海洋蓝渐变标记',
 )
 assert.match(
   homeStyleSource,
-  /\.service-panel\s*\{\s*padding:\s*16rpx 24rpx 14rpx;[\s\S]{0,260}&__simple-head\s*\{[^}]*min-height:\s*56rpx;[^}]*padding-bottom:\s*4rpx;/u,
-  '常用服务卡片必须使用紧凑的单行标题区',
+  /&__grid-icon,[\s\S]{0,700}width:\s*84rpx;[^}]*height:\s*84rpx;[^}]*background:\s*#f2f7fe;[^}]*border:\s*2rpx solid #e3effe;[^}]*border-radius:\s*26rpx;/u,
+  '常用服务图标底座必须匹配 Ousea 尺寸、底色、描边与圆角',
 )
 assert.match(
   homeStyleSource,
-  /\.official-notices-home\s*\{\s*padding:\s*18rpx 24rpx 12rpx;[\s\S]{0,440}&__heading\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*baseline;[^}]*white-space:\s*nowrap;/u,
-  '官方通知中英文标题必须保持单行并对齐基线',
+  /Figma 14:726[\s\S]*?\.official-notices-home\s*\{[^}]*padding:\s*0 32rpx 16rpx;[^}]*border-radius:\s*var\(--ousea-radius-card-lg,[^}]*box-shadow:\s*0 8rpx 16rpx rgba\(29, 95, 214, 0\.05\);/u,
+  '全校通知卡必须匹配 Figma 14:726 的白底、圆角与轻蓝阴影',
 )
 assert.match(
   homeStyleSource,
-  /\.section-heading\s*\{[^}]*min-height:\s*82rpx;[\s\S]{0,260}&__heading\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*baseline;[^}]*white-space:\s*nowrap;/u,
-  '校园动态和二手标题必须使用统一的单行标题节奏',
-)
-for (const selector of ['community-panel', 'market-panel']) {
-  assert.match(
-    homeStyleSource,
-    new RegExp(`\\.${selector}\\s*\\{[^}]*padding:\\s*18rpx 24rpx 20rpx;[^}]*margin:\\s*0 0 24rpx;[^}]*overflow:\\s*hidden;[^}]*border-radius:\\s*40rpx;`, 'u'),
-    `${selector} 必须恢复为与首页上半区一致的完整卡片容器`,
-  )
-}
-assert.match(
-  homeStyleSource,
-  /\.news-card\s*\{\s*gap:\s*0;[\s\S]{0,360}&__item\s*\{[^}]*background:\s*transparent;[^}]*border-top:\s*1rpx solid var\(--campus-border,[^}]*box-shadow:\s*none;/u,
-  '校园动态必须在统一容器内呈现连续内容行，不能重复套卡片阴影',
+  /&__icon\s*\{[^}]*width:\s*80rpx;[^}]*height:\s*80rpx;[^}]*background:\s*var\(--campus-surface-primary,[^}]*border-radius:\s*26rpx;/u,
+  '通知条目必须使用 Ousea 浅蓝图标底座',
 )
 assert.match(
   homeStyleSource,
-  /\.market-list\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(280rpx,\s*1fr\)\);[^}]*align-items:\s*stretch;/u,
-  '首页二手网格必须在一条数据时自动铺满、两条数据时保持等宽',
+  /&__copy-title\s*\{[^}]*display:\s*-webkit-box;[^}]*font-size:\s*var\(--ousea-font-size-label,[^}]*-webkit-line-clamp:\s*2;/u,
+  '通知标题必须支持两行并使用 Ousea label 字号',
 )
 assert.match(
   homeStyleSource,
-  /\.market-panel \.marketplace-card--compact\s*\{[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*border-radius:\s*28rpx;[^}]*box-shadow:\s*none;/u,
-  '首页二手卡片必须等高填充网格并移除重复阴影',
+  /\.moments-panel\s*\{[^}]*order:\s*7;[^}]*background:\s*var\(--campus-surface,[^}]*border-radius:\s*var\(--ousea-radius-card-lg,/u,
+  '朋友圈 Feed 必须是首页唯一的动态卡片容器',
 )
 assert.match(
   homeStyleSource,
-  /\.market-panel \.marketplace-card--compact\s*\{[\s\S]{0,620}\.marketplace-card__placeholder-kicker\s*\{[^}]*display:\s*none;/u,
-  '首页窄版二手卡片必须隐藏与出售标签重叠的重复英文标识',
+  /\.moments-feed\s*\{[\s\S]*?&__item\s*\{[^}]*display:\s*flex;[^}]*gap:\s*20rpx;[^}]*border-top:\s*0;/u,
+  '朋友圈 Feed 条目必须使用头像与正文并排的无分隔线连续布局',
+)
+assert.match(
+  homeStyleSource,
+  /&__name\s*\{[\s\S]{0,420}?color:\s*var\(--ousea-ocean-400,\s*#4c96f5\);[\s\S]{0,220}?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u,
+  '朋友圈 Feed 昵称必须使用 Ousea Ocean 400 与 Regular 400',
+)
+assert.match(
+  homeStyleSource,
+  /&__social\s*\{[^}]*display:\s*flex;[^}]*background:\s*var\(--campus-surface-subtle,[^}]*border-radius:\s*12rpx;/u,
+  '朋友圈 Feed 必须使用 Figma 对齐的浅底互动摘要',
+)
+assert.match(
+  homeStyleSource,
+  /&__meta\s*\{[^}]*padding:\s*12rpx 0 8rpx;[\s\S]{0,700}?&__social\s*\{[^}]*margin-top:\s*4rpx;/u,
+  '朋友圈 Feed 操作行与评论摘要必须保留垂直间距',
+)
+assert.match(
+  homeStyleSource,
+  /&--comments\s*\{[^}]*padding-top:\s*0;[^}]*border-top:\s*0;/u,
+  '朋友圈 Feed 评论摘要内部不得显示横向分隔线',
+)
+
+const homeMomentsNow = new Date('2026-08-20T12:00:00+08:00').getTime()
+assert.equal(
+  formatHomeMomentsTime('2026-08-20T08:00:00+08:00', homeMomentsNow),
+  '1天',
+  '首页 Feed 当天发布内容也必须统一显示为天数',
+)
+assert.equal(
+  formatHomeMomentsTime('2026-07-21T12:00:00+08:00', homeMomentsNow),
+  '30天',
+  '首页 Feed 30 天内必须统一显示为 x天',
+)
+assert.equal(
+  formatHomeMomentsTime('2026-07-20T12:00:00+08:00', homeMomentsNow),
+  '07月20日 12:00',
+  '首页 Feed 超过 30 天后必须恢复具体日期时间',
+)
+assert.deepEqual(
+  homeMomentsBusinessLabels,
+  { marketplace: '二手', errand: '跑腿', carpool: '找同行' },
+  '首页 Feed 业务板块名必须统一使用二手、跑腿、找同行',
+)
+const homeCommunitySections = [{
+  id: 1,
+  name: '校园生活',
+  children: [{ id: 2, name: '校园趣事', children: [] }],
+}] as CampusCircleSectionView[]
+assert.deepEqual(
+  communitySectionNamesById(homeCommunitySections),
+  { 1: '校园生活', 2: '校园趣事' },
+  '首页 Feed 社区项必须能解析真实子板块名',
+)
+assert.ok(
+  homeSource.includes("className='moments-feed__meta-copy'")
+    && homeSource.includes('{formatHomeMomentsTime(publishedAt)} · {sectionLabel}')
+    && homeSource.includes("communitySectionNames[communityItem.section_id] || '校园动态'")
+    && homeSource.includes('homeMomentsBusinessLabels.marketplace'),
+  '首页 Feed 时间后必须跟真实社区板块名或业务板块名',
+)
+assert.match(
+  homeStyleSource,
+  /&__meta-copy\s*\{[^}]*flex:\s*1;[^}]*min-width:\s*0;[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/u,
+  '首页 Feed 时间与板块名单行溢出时不得挤压双点操作',
 )
 
 const periods: AcademicPeriod[] = [{

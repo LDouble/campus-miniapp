@@ -32,7 +32,7 @@ assert.ok(
   '今日一件事关闭时不得渲染首页入口',
 )
 assert.ok(
-  homeSource.includes("<Text className='schedule-card__day-label'>{coursePreview.dayLabel}</Text>"),
+  homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中' : coursePreview.dayLabel"),
   '日程卡片必须显示真实的今天、明天或假期状态，不能固定写成今天',
 )
 assert.ok(
@@ -41,8 +41,10 @@ assert.ok(
 )
 assert.ok(
   homeSource.includes('<Text>{coursePreview.emptyText}</Text>')
-    && homeSource.includes('<Text>{coursePreview.emptyHint}</Text>'),
-  '日程空状态必须复用课表预览的真实状态文案',
+    && homeSource.includes('`${holidayCountdown}天后开学`')
+    && !homeSource.includes('holidayCountdown ? coursePreview.dateLabel')
+    && !homeSource.includes("className='schedule-card__countdown'"),
+  '假期日程空状态必须在主文案下显示倒计时，并移除重复开学日期与右侧倒计时块',
 )
 assert.ok(
   homeSource.includes('{coursePreview.items.map((item, index) => (')

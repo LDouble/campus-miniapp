@@ -45,7 +45,13 @@ import {
   communityAuthorName,
 } from '../../features/community/author'
 import { plainStickerContent } from '../../features/stickers/content'
-import { formatDateTime } from '../../features/life-services/format'
+import { formatMoney } from '../../features/life-services/format'
+import {
+  communitySectionNamesById,
+  formatHomeMomentsTime,
+  homeMomentsBusinessLabels,
+} from '../../features/home/moments'
+import { campusLabel } from '../../features/life-services/campus'
 import { noticesRepository } from '../../features/notices/repository'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
 import {
@@ -102,9 +108,12 @@ const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
   ? null
   : require('../../features/life-services/repository').lifeServicesRepository as typeof import('../../features/life-services/repository').lifeServicesRepository
 
-const FullMarketplaceCard = __CAMPUS_APP_EDITION__ === 'qualification'
+const fullMarketplaceNavigation = __CAMPUS_APP_EDITION__ === 'qualification'
   ? null
-  : require('../../features/life-services/components/marketplace-card').default as typeof import('../../features/life-services/components/marketplace-card').default
+  : {
+      requestSubscription: require('../../features/wechat-subscription').requestWechatSubscriptionForModule as typeof import('../../features/wechat-subscription').requestWechatSubscriptionForModule,
+      saveSnapshot: require('../../features/life-services/business-detail-snapshot').saveBusinessDetailSnapshot as typeof import('../../features/life-services/business-detail-snapshot').saveBusinessDetailSnapshot,
+    }
 
 const icons = {
   bell: require('../../assets/icons/bell.svg'),
@@ -124,6 +133,8 @@ const icons = {
   comment: require('../../assets/community/comment.svg'),
   heart: require('../../assets/community/heart.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
+  campusCard: require('../../assets/icons/campus-card.svg'),
+  campaign: require('../../assets/icons/campaign.svg'),
 }
 
 const homeFeatureFlags = {
@@ -162,6 +173,7 @@ const quickServices = [
   { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
   { key: 'carpool', name: '找同行', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
   { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
+  { key: 'campus-card', name: '校园卡', icon: icons.campusCard, tone: 'blue', route: '/pages/campus-service/index?type=campus-card' },
   { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
 ]
 
@@ -170,16 +182,12 @@ const homeServiceKeys = new Set([
   'grades',
   'exams',
   'result',
-  'pass-rate',
   'materials',
   'calendar',
-  'shuttle',
-  'community',
-  'market',
   'errands',
   'carpool',
   'classroom',
-  'clubs',
+  'campus-card',
 ])
 const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
 const migratedHomeServiceKeys = new Set([
@@ -332,19 +340,44 @@ const latestCommunityPosts = (items: CampusCirclePostView[]) => (
     .slice(0, 4)
 )
 
-const communitySectionNames = (sections: CampusCircleSectionView[]) => (
-  sections.reduce<Record<number, string>>((names, section) => {
-    names[section.id] = section.name
-    section.children.forEach((child) => {
-      names[child.id] = child.name
-    })
-    return names
-  }, {})
-)
-
 const communityPostPreviewText = (post: CampusCirclePostView) => (
   plainStickerContent(post.content || '').trim() || '分享了一组校园图片'
 )
+
+const communityPostPreviewImages = (post: CampusCirclePostView) => (
+  post.images.filter((image) => !!image.url).slice(0, 3)
+)
+
+const marketplaceListingPreviewText = (item: MarketplaceListingView) => {
+  const description = plainStickerContent(item.description).trim() || '发布了一件校内闲置'
+  return [description, formatMoney(item.price_cents), campusLabel(item.campus)]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+type HomeMomentsFeedItem =
+  | { kind: 'community'; key: string; timestamp: number; item: CampusCirclePostView }
+  | { kind: 'marketplace'; key: string; timestamp: number; item: MarketplaceListingView }
+
+const buildHomeMomentsFeed = (
+  communityItems: CampusCirclePostView[],
+  marketplaceItems: MarketplaceListingView[],
+) => [
+  ...communityItems.map((item): HomeMomentsFeedItem => ({
+    kind: 'community',
+    key: `community-${item.id}`,
+    timestamp: apiDateTimeTimestamp(item.published_at || item.created_at),
+    item,
+  })),
+  ...marketplaceItems.map((item): HomeMomentsFeedItem => ({
+    kind: 'marketplace',
+    key: `marketplace-${item.id}`,
+    timestamp: apiDateTimeTimestamp(item.created_at),
+    item,
+  })),
+]
+  .sort((left, right) => right.timestamp - left.timestamp)
+  .slice(0, 6)
 
 function Index() {
   useCampusShare(() => ({
@@ -361,7 +394,7 @@ function Index() {
   const [avatarUserId, setAvatarUserId] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
   const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
-  const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
+  const [communitySectionNames, setCommunitySectionNames] = useState<Record<number, string>>({})
   const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
   const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>([])
   const [calendar, setCalendar] = useState<Awaited<ReturnType<typeof loadAcademicCalendar>>['calendar']>(null)
@@ -410,7 +443,7 @@ function Index() {
     const marketplacePromise = !isQualificationEdition
       && fullLifeServicesRepository
       && moduleEnabled('marketplace')
-      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
+      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 4 }))
       : Promise.resolve({ ok: false } as Settled<never>)
     const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
@@ -480,9 +513,11 @@ function Index() {
       setCommunityPosts([])
       setCommunityError(moduleEnabled('community'))
     }
-    if (communitySections.ok) {
-      setSectionNames(communitySectionNames(communitySections.value.items))
-    }
+    setCommunitySectionNames(
+      communitySections.ok
+        ? communitySectionNamesById(communitySections.value.items as CampusCircleSectionView[])
+        : {},
+    )
     if (unread.ok) setUnreadCount(Number(unread.value.count) || 0)
     if (marketplace.ok) {
       setMarketItems(marketplace.value.items)
@@ -538,14 +573,6 @@ function Index() {
       '/pages/community/index',
       { tab: true, config: runtimeConfig },
     )
-  }
-
-  const openModule = (type: string) => {
-    if (['community', 'errands', 'market', 'carpool'].includes(type)) {
-      void openLifeHub(type as LifeHubSection)
-      return
-    }
-    Taro.showToast({ title: '服务入口已更新', icon: 'none' })
   }
 
   const openAcademic = (route: string) => {
@@ -614,6 +641,15 @@ function Index() {
     void openLifeHub('community')
   }
 
+  const openMarketplaceListing = (item: MarketplaceListingView) => {
+    if (!fullMarketplaceNavigation) return
+    fullMarketplaceNavigation.requestSubscription('marketplace')
+    fullMarketplaceNavigation.saveSnapshot('marketplace', item)
+    void Taro.navigateTo({
+      url: `/packages/social/marketplace/detail?id=${item.id}&snapshot=1`,
+    })
+  }
+
   const openOfficialNotices = () => {
     void Taro.navigateTo({ url: '/pages/official-notices/index' })
   }
@@ -641,10 +677,20 @@ function Index() {
     )
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
-  const visibleCommunityPosts = communityPosts.slice(0, 3)
-  const visibleMarketItems = marketItems.slice(0, 2)
+  const homeMomentsFeed = buildHomeMomentsFeed(communityPosts, marketItems)
+  const momentsLoading = communityLoading || marketLoading
+  const momentsError = (communityError || marketError) && homeMomentsFeed.length === 0
   const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
   const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
+  const holidayCountdown = coursePreview.dayLabel === '假期'
+    ? Math.max(1, Math.round(
+      (new Date(
+        coursePreview.targetDate.getFullYear(),
+        coursePreview.targetDate.getMonth(),
+        coursePreview.targetDate.getDate(),
+      ).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
+    ))
+    : null
 
   const toggleCalendarReminder = async (eventId: string) => {
     const existing = calendarReminders.find((item) => item.event_id === eventId)
@@ -766,7 +812,10 @@ function Index() {
       <View className='schedule-card today-card motion-enter motion-enter--delay-2'>
         <View className='schedule-card__header'>
           <View className='schedule-card__date'>
-            <Text className='schedule-card__day-label'>{coursePreview.dayLabel}</Text>
+            <View className='schedule-card__heading-bar' />
+            <Text className='schedule-card__day-label'>
+              {coursePreview.dayLabel === '假期' ? '假期中' : coursePreview.dayLabel}
+            </Text>
           </View>
           <View
             className='schedule-card__summary'
@@ -875,8 +924,10 @@ function Index() {
           </View>
         ) : (
           <View className='schedule-card__empty'>
-            <Text>{coursePreview.emptyText}</Text>
-            <Text>{coursePreview.emptyHint}</Text>
+            <View className='schedule-card__empty-copy'>
+              <Text>{coursePreview.emptyText}</Text>
+              <Text>{holidayCountdown ? `${holidayCountdown}天后开学` : coursePreview.emptyHint}</Text>
+            </View>
           </View>
         )}
       </View>
@@ -909,7 +960,10 @@ function Index() {
 
       <View className='service-panel motion-enter motion-enter--delay-3'>
         <View className='service-panel__simple-head'>
-          <Text className='service-panel__title'>常用服务</Text>
+          <View className='service-panel__heading'>
+            <View className='service-panel__heading-bar' />
+            <Text className='service-panel__title'>常用服务</Text>
+          </View>
           <View
             className='service-panel__all'
             hoverClass='service-panel__all--pressed'
@@ -949,7 +1003,7 @@ function Index() {
           onClick={openOfficialNotices}
         >
           <View className='official-notices-home__heading'>
-            <Text className='official-notices-home__eyebrow'>OFFICIAL</Text>
+            <View className='official-notices-home__heading-bar' />
             <Text className='official-notices-home__title'>全校通知</Text>
           </View>
           <View className='official-notices-home__more'>
@@ -970,6 +1024,9 @@ function Index() {
             ariaLabel={`查看通知：${item.title}`}
             onClick={() => openOfficialNotice(item)}
           >
+            <View className='official-notices-home__icon'>
+              <Image src={icons.campaign} mode='aspectFit' />
+            </View>
             <View className='official-notices-home__copy'>
               <Text className='official-notices-home__copy-title'>{item.title}</Text>
               <View className='official-notices-home__meta'>
@@ -1017,10 +1074,10 @@ function Index() {
         hoverStartTime={20}
         hoverStayTime={100}
         ariaRole={!runtimeBanner || bannerActionable ? 'button' : undefined}
-        ariaLabel={runtimeBanner?.title || '发现校园新鲜事'}
+        ariaLabel={runtimeBanner?.title || '查看开学安排'}
         onClick={() => runtimeBanner
           ? openRuntimeBanner(runtimeBanner)
-          : openModule('community')}
+          : openCalendar()}
       >
         <View className='hero-card__glow' />
         {runtimeBanner?.image_url && (
@@ -1036,7 +1093,7 @@ function Index() {
         <View className='hero-card__content'>
           <View className='hero-card__pill'>
             <View className='hero-card__pulse' />
-            <Text>{runtimeBanner ? '校园推荐' : '今日校园'}</Text>
+            <Text>{runtimeBanner ? '校园推荐' : '开学季'}</Text>
           </View>
           {runtimeBanner ? (
             <Swiper
@@ -1070,8 +1127,8 @@ function Index() {
             >
               {(slogans.length ? slogans : [{
                 id: 'fallback',
-                title: '海纳百川，取则行远',
-                subtitle: '一站式连接海大学习与生活',
+                title: '新学期，从这片海出发',
+                subtitle: '课表、成绩与校园服务触手可及',
               }]).map((slogan) => (
                 <SwiperItem key={slogan.id}>
                   <View className='hero-card__slogan-slide'>
@@ -1084,184 +1141,160 @@ function Index() {
           )}
           {(!runtimeBanner || bannerActionable) && (
             <View className='hero-card__action'>
-              <Text>{runtimeBanner ? '查看详情' : '发现校园新鲜事'}</Text>
+              <Text>{runtimeBanner ? '查看详情' : '查看开学安排'}</Text>
               <Image src={icons.arrow} mode='aspectFit' />
             </View>
           )}
         </View>
         {!runtimeBanner?.image_url && (
           <View className='hero-card__art'>
-            <View className='hero-card__sun' />
-            <View className='hero-card__cloud hero-card__cloud--one' />
-            <View className='hero-card__cloud hero-card__cloud--two' />
-            <View className='hero-card__building'>
-              <View className='hero-card__roof' />
-              <View className='hero-card__windows'>
-                <View /><View /><View />
-              </View>
+            <View className='hero-card__bubble hero-card__bubble--one' />
+            <View className='hero-card__bubble hero-card__bubble--two' />
+            <View className='hero-card__sailboat'>
+              <View className='hero-card__mast' />
+              <View className='hero-card__sail hero-card__sail--main' />
+              <View className='hero-card__sail hero-card__sail--small' />
+              <View className='hero-card__hull' />
             </View>
-            <View className='hero-card__tree hero-card__tree--one' />
-            <View className='hero-card__tree hero-card__tree--two' />
           </View>
         )}
       </View>
 
-      <View className='community-panel'>
-        <View className='section-heading section-heading--community'>
-          <View className='section-heading__heading'>
-            <Text className='section-heading__eyebrow'>CAMPUS</Text>
-            <Text className='section-heading__title'>校园新鲜事</Text>
+      <View className='moments-panel'>
+        <View className='moments-panel__header'>
+          <View className='moments-panel__heading'>
+            <View className='moments-panel__bar' />
+            <Text className='moments-panel__title'>校园动态</Text>
           </View>
           <View
-            className='section-heading__more'
-            hoverClass='section-heading__more--pressed'
+            className='moments-panel__more'
+            hoverClass='moments-panel__more--pressed'
             ariaRole='button'
-            ariaLabel='查看更多校园动态'
+            ariaLabel='进入校园社区'
             onClick={() => openLifeHub('community')}
           >
-            <Text>查看更多</Text>
+            <Text>进社区</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
 
-        <View className='news-card'>
-        {communityLoading && <View className='home-section-state'>正在加载校园动态</View>}
-        {!communityLoading && communityError && (
-          <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
-            动态加载失败，点击重试
-          </View>
-        )}
-        {!communityLoading && !communityError && visibleCommunityPosts.length === 0 && (
-          <View className='home-section-state'>暂时没有校园动态</View>
-        )}
-        {!communityLoading && !communityError && visibleCommunityPosts.map((item, index) => (
-          <View
-            key={item.id}
-            className={[
-              'news-card__item',
-              'motion-enter',
-              `motion-enter--delay-${Math.min(index + 1, 4)}`,
-              index === 0 ? 'news-card__item--featured' : 'news-card__item--compact',
-            ].join(' ')}
-            hoverClass='news-card__item--pressed'
-            hoverStartTime={20}
-            hoverStayTime={120}
-            ariaRole='button'
-            ariaLabel={`查看${communityAuthorName(item)}发布的动态`}
-            onClick={() => openCommunityPost(item)}
-          >
-            {index === 0 ? (<>
-              <View className='news-card__topline'>
-                <UserAvatar
-                  src={communityAuthorAvatarUrl(item)}
-                  className='news-card__avatar'
-                  imageClassName='news-card__avatar-image'
-                  fallback={communityAuthorInitial(item)}
-                  userId={item.author_deleted ? 0 : item.author_id}
-                  lazyLoad
-                />
-                <View className='news-card__author'>
-                  <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
-                  <Text className='news-card__time'>
-                    {formatDateTime(item.published_at || item.created_at)}
-                  </Text>
-                </View>
-                <View className='news-card__tag'>
-                  <Text>{sectionNames[item.section_id] || '社区'}</Text>
-                </View>
-              </View>
+        <View className='moments-feed'>
+          {momentsLoading && <View className='home-section-state'>正在加载校园动态</View>}
+          {!momentsLoading && momentsError && (
+            <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
+              动态加载失败，点击重试
+            </View>
+          )}
+          {!momentsLoading && !momentsError && homeMomentsFeed.length === 0 && (
+            <View className='home-section-state'>暂时没有校园动态</View>
+          )}
+          {!momentsLoading && homeMomentsFeed.map((entry, index) => {
+            const communityItem = entry.kind === 'community' ? entry.item : null
+            const marketplaceItem = entry.kind === 'marketplace' ? entry.item : null
+            const authorName = communityItem
+              ? communityAuthorName(communityItem)
+              : marketplaceItem?.author_nickname?.trim() || `发布者 #${marketplaceItem?.owner_id}`
+            const authorAvatarUrl = communityItem
+              ? communityAuthorAvatarUrl(communityItem)
+              : marketplaceItem?.author_avatar_url
+            const authorId = communityItem?.author_deleted
+              ? 0
+              : communityItem?.author_id || marketplaceItem?.owner_id || 0
+            const images = communityItem
+              ? communityPostPreviewImages(communityItem).map((image) => ({
+                  key: `community-image-${image.id}`,
+                  url: image.url,
+                }))
+              : (marketplaceItem?.image_urls || []).filter(Boolean).slice(0, 3).map((url, imageIndex) => ({
+                  key: `marketplace-image-${entry.item.id}-${imageIndex}`,
+                  url,
+                }))
+            const content = communityItem
+              ? communityPostPreviewText(communityItem)
+              : marketplaceListingPreviewText(entry.item as MarketplaceListingView)
+            const publishedAt = communityItem
+              ? communityItem.published_at || communityItem.created_at
+              : marketplaceItem?.created_at
+            const sectionLabel = communityItem
+              ? communitySectionNames[communityItem.section_id] || '校园动态'
+              : homeMomentsBusinessLabels.marketplace
 
-              <View className='news-card__body'>
-                <Text className='news-card__title'>
-                  {communityPostPreviewText(item)}
-                </Text>
-                {item.images[0] && (
-                  <Image
-                    className='news-card__cover'
-                    src={item.images[0].url}
-                    mode='aspectFill'
-                    lazyLoad
-                  />
-                )}
-              </View>
-
-              <View className='news-card__footer'>
-                <View className='news-card__metric'>
-                  <Image src={icons.heart} mode='aspectFit' />
-                  <Text>{item.like_count}</Text>
-                </View>
-                <View className='news-card__metric'>
-                  <Image src={icons.comment} mode='aspectFit' />
-                  <Text>{item.comment_count}</Text>
-                </View>
-                <View className='news-card__read'>
-                  <Text>去看看</Text>
-                  <Image src={icons.arrow} mode='aspectFit' />
-                </View>
-              </View>
-            </>) : (
-              <View className='news-card__compact-main'>
-                <UserAvatar
-                  src={communityAuthorAvatarUrl(item)}
-                  className='news-card__avatar'
-                  imageClassName='news-card__avatar-image'
-                  fallback={communityAuthorInitial(item)}
-                  userId={item.author_deleted ? 0 : item.author_id}
-                  lazyLoad
-                />
-                <View className='news-card__compact-copy'>
-                  <View className='news-card__compact-meta'>
-                    <Text>{communityAuthorName(item)} · {sectionNames[item.section_id] || '社区'}</Text>
-                    <Text>{formatDateTime(item.published_at || item.created_at)}</Text>
-                  </View>
-                  <Text className='news-card__compact-title'>
-                    {communityPostPreviewText(item)}
-                  </Text>
-                </View>
-                <Image className='news-card__compact-arrow' src={icons.arrow} mode='aspectFit' />
-              </View>
-            )}
-          </View>
-        ))}
-        </View>
-      </View>
-
-      <View className='market-panel'>
-        <View className='section-heading section-heading--market'>
-          <View className='section-heading__heading'>
-            <Text className='section-heading__eyebrow section-heading__eyebrow--market'>MARKET</Text>
-            <Text className='section-heading__title'>同学们在淘</Text>
-          </View>
-          <View
-            className='section-heading__more'
-            hoverClass='section-heading__more--pressed'
-            ariaRole='button'
-            ariaLabel='查看更多二手好物'
-            onClick={() => openModule('market')}
-          >
-            <Text>逛一逛</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
-          </View>
-        </View>
-
-        <View className='market-scroll'>
-          <View className='market-list'>
-            {marketLoading && <View className='home-section-state home-section-state--market'>正在加载校内闲置</View>}
-            {!marketLoading && marketError && (
+            return (
               <View
-                className='home-section-state home-section-state--market home-section-state--error'
-                onClick={() => void loadHome()}
+                key={entry.key}
+                className={[
+                  'moments-feed__item',
+                  'motion-enter',
+                  `motion-enter--delay-${Math.min(index + 1, 4)}`,
+                ].join(' ')}
+                hoverClass='moments-feed__item--pressed'
+                hoverStartTime={20}
+                hoverStayTime={120}
+                ariaRole='button'
+                ariaLabel={`查看${authorName}发布的${entry.kind === 'community' ? '动态' : '二手信息'}`}
+                onClick={() => communityItem
+                  ? openCommunityPost(communityItem)
+                  : marketplaceItem && openMarketplaceListing(marketplaceItem)}
               >
-                闲置加载失败，点击重试
+                <UserAvatar
+                  src={authorAvatarUrl}
+                  className='moments-feed__avatar'
+                  imageClassName='moments-feed__avatar-image'
+                  fallback={communityItem
+                    ? communityAuthorInitial(communityItem)
+                    : authorName.slice(0, 1) || '同'}
+                  userId={authorId}
+                  lazyLoad
+                />
+
+                <View className='moments-feed__main'>
+                  <Text className='moments-feed__name'>{authorName}</Text>
+                  <Text className='moments-feed__text'>{content}</Text>
+
+                  {images.length > 0 && (
+                    <View className={`moments-feed__media moments-feed__media--${images.length}`}>
+                      {images.map((image, imageIndex) => (
+                        <Image
+                          key={image.key}
+                          className='moments-feed__image'
+                          src={image.url}
+                          mode='aspectFill'
+                          lazyLoad
+                          ariaLabel={`${entry.kind === 'community' ? '动态' : '二手'}图片 ${imageIndex + 1}/${images.length}`}
+                        />
+                      ))}
+                    </View>
+                  )}
+
+                  <View className='moments-feed__meta'>
+                    <Text className='moments-feed__meta-copy'>
+                      {formatHomeMomentsTime(publishedAt)} · {sectionLabel}
+                    </Text>
+                    <View className='moments-feed__action'>
+                      <View />
+                      <View />
+                    </View>
+                  </View>
+
+                  {communityItem && (communityItem.like_count > 0 || communityItem.comment_count > 0) && (
+                    <View className='moments-feed__social'>
+                      {communityItem.like_count > 0 && (
+                        <View className='moments-feed__social-row moments-feed__social-row--like'>
+                          <Image src={icons.heart} mode='aspectFit' />
+                          <Text>{communityItem.like_count} 人赞过</Text>
+                        </View>
+                      )}
+                      {communityItem.comment_count > 0 && (
+                        <View className='moments-feed__social-row moments-feed__social-row--comments'>
+                          <Text>查看全部 {communityItem.comment_count} 条评论</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
               </View>
-            )}
-            {!marketLoading && !marketError && marketItems.length === 0 && (
-              <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
-            )}
-            {!marketLoading && !marketError && FullMarketplaceCard && visibleMarketItems.map((item) => (
-              <FullMarketplaceCard key={item.id} item={item} variant='compact' />
-            ))}
-          </View>
+            )
+          })}
         </View>
       </View>
       </>)}
