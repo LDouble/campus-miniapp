@@ -289,11 +289,11 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border: 0;
   border-radius: 50%;
-  background: var(--campus-surface-primary, #eff6ff);
-  color: var(--campus-primary, #2b7fff);
   font-size: 19rpx;
   font-weight: 700;
+  box-shadow: none;
 }
 
 .marketplace-card__avatar-image {

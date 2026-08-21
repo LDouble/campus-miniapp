@@ -106,6 +106,11 @@ assert.ok(clubsIndexSource.includes("viewMode === 'card'"), '社团广场应保�
 assert.ok(clubsIndexSource.includes("viewMode === 'directory'"), '社团广场应提供目录视图')
 assert.ok(clubsRepositorySource.includes("path: '/api/v1/clubs/directory'"), '社团目录应使用独立公开接口')
 assert.ok(
+  clubsIndexSource.includes("className='club-card__logo-placeholder'")
+    && clubsIndexSource.includes("className='club-directory-row__logo-placeholder'"),
+  '社团默认 Logo 应提供独立样式节点，避免暗色模式误处理用户上传图片',
+)
+assert.ok(
   clubsIndexStyles.includes('background: var(--campus-overlay, rgba(15, 23, 42, 0.42));'),
   '社团 Hero 的白色图标应使用高对比遮罩底板',
 )

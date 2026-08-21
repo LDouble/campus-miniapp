@@ -1,3 +1,5 @@
+import { userAvatarTone } from '../../components/user-avatar/tone'
+
 type CommunityAuthor = {
   author_id: number
   author_nickname?: string | null
@@ -17,7 +19,7 @@ export const communityAuthorInitial = (author: CommunityAuthor) => {
 }
 
 export const communityAuthorTone = (author: CommunityAuthor) => (
-  author.author_deleted ? 0 : Math.abs(author.author_id) % 4
+  author.author_deleted ? 0 : userAvatarTone(author.author_id)
 )
 
 export const communityAuthorAvatarUrl = (author: CommunityAuthor) => {

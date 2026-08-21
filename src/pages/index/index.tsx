@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
-import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Taro, {
+  useDidShow,
+  usePageScroll,
+  usePullDownRefresh,
+  useReachBottom,
+} from '@tarojs/taro'
 import {
   Image,
   Swiper,
@@ -22,17 +27,18 @@ import {
   hasAcademicCredential,
 } from '../../api/academic-credential'
 import type {
-  CampusCirclePostView,
-  CampusCircleSectionView,
-  MarketplaceListingView,
+  CommentView,
+  HomeFeedItemView,
   CalendarReminderView,
   DailyCheckinStatus,
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
-import UserAvatarImage from '../../components/user-avatar-image'
-import { saveCommunityFeedPin } from '../../features/community/feed-pin'
-import FreshBarrage from '../../features/community/fresh-barrage'
+import UserAvatar from '../../components/user-avatar'
+import CommunityCommentSheet from '../../features/community/comment-sheet'
+import CommunityPostCard, { type CommunityPostCommentPreview } from '../../features/community/post-card'
+import { mergePublicCommentPreview } from '../../features/community/comments'
+import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
@@ -41,12 +47,12 @@ import {
   resolveCoursePreview,
 } from '../../features/home/data'
 import {
-  communityAuthorAvatarUrl,
-  communityAuthorInitial,
-  communityAuthorName,
-  communityAuthorTone,
-} from '../../features/community/author'
-import { formatDateTime } from '../../features/life-services/format'
+  homeFeedItemToPost,
+  homeFeedBusinessPreview,
+  homeFeedKey,
+  sourceLabels as homeFeedSourceLabels,
+} from '../../features/home/feed-post-adapter'
+import { formatHomeMomentsTime } from '../../features/home/moments'
 import { noticesRepository } from '../../features/notices/repository'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
 import {
@@ -70,7 +76,7 @@ import {
   saveSelectedCampus,
 } from '../../features/runtime-config'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
-import { apiDateTimeTimestamp } from '../../utils/date-time'
+import { useLoadMoreSignal } from '../../hooks/use-load-more-signal'
 import { academicRepository } from '../academic/repository'
 import {
   requireCoursesForPeriod,
@@ -103,10 +109,6 @@ const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
   ? null
   : require('../../features/life-services/repository').lifeServicesRepository as typeof import('../../features/life-services/repository').lifeServicesRepository
 
-const FullMarketplaceCard = __CAMPUS_APP_EDITION__ === 'qualification'
-  ? null
-  : require('../../features/life-services/components/marketplace-card').default as typeof import('../../features/life-services/components/marketplace-card').default
-
 const icons = {
   bell: require('../../assets/icons/bell.svg'),
   academic: require('../../assets/icons/academic.svg'),
@@ -122,9 +124,10 @@ const icons = {
   shuttle: require('../../assets/icons/shuttle.svg'),
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
-  comment: require('../../assets/community/comment.svg'),
-  heart: require('../../assets/community/heart.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
+  campusCard: require('../../assets/icons/campus-card.svg'),
+  campaign: require('../../assets/icons/campaign.svg'),
+  arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
 
 const homeFeatureFlags = {
@@ -163,26 +166,10 @@ const quickServices = [
   { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
   { key: 'carpool', name: '找同行', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
   { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
+  { key: 'campus-card', name: '校园卡', icon: icons.campusCard, tone: 'blue', route: '/pages/campus-service/index?type=campus-card' },
   { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
 ]
 
-const homeServiceKeys = new Set([
-  'schedule',
-  'grades',
-  'exams',
-  'result',
-  'pass-rate',
-  'materials',
-  'calendar',
-  'shuttle',
-  'community',
-  'market',
-  'errands',
-  'carpool',
-  'classroom',
-  'clubs',
-])
-const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
 const migratedHomeServiceKeys = new Set([
   'materials',
   'community',
@@ -191,11 +178,6 @@ const migratedHomeServiceKeys = new Set([
   'carpool',
   'clubs',
 ])
-const serviceFeatureKeys: Record<string, string> = {
-  classroom: 'classroom',
-  shuttle: 'shuttle',
-  'campus-card': 'campus_card',
-}
 const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
   schedule: 'academic_schedule',
   grades: 'academic_grades',
@@ -217,6 +199,41 @@ const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   errands: 'errand',
   market: 'marketplace',
   carpool: 'carpool',
+}
+
+const HOME_FEED_PAGE_SIZE = 8
+const homeFeedSourceModules: Record<HomeFeedItemView['source_type'], MiniappModuleKey> = {
+  campus_circle_post: 'community',
+  marketplace_listing: 'marketplace',
+  errand: 'errand',
+  carpool: 'carpool',
+}
+
+const enabledHomeFeedItems = (
+  items: HomeFeedItemView[],
+  config: MiniappRuntimeConfig,
+) => items.filter((item) => (
+  resolveMiniappModule(config, homeFeedSourceModules[item.source_type]).state === 'enabled'
+))
+
+const mergeHomeFeedItems = (
+  current: HomeFeedItemView[],
+  incoming: HomeFeedItemView[],
+) => {
+  const byKey = new Map(current.map((item) => [homeFeedKey(item), item]))
+  incoming.forEach((item) => {
+    const currentItem = byKey.get(homeFeedKey(item))
+    byKey.set(homeFeedKey(item), currentItem
+      ? {
+          ...item,
+          comment_count: Math.max(currentItem.comment_count, item.comment_count),
+          comment_previews: currentItem.comment_previews.length
+            ? currentItem.comment_previews
+            : item.comment_previews,
+        }
+      : item)
+  })
+  return [...byKey.values()]
 }
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 type LifeHubSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -323,31 +340,26 @@ const loadHomeAcademic = async (
   return loadLatestAcademic(userId, cache, force)
 }
 
-const latestCommunityPosts = (items: CampusCirclePostView[]) => (
-  [...items]
-    .filter((item) => item.status === 'approved')
-    .sort((left, right) => (
-      apiDateTimeTimestamp(right.published_at || right.created_at)
-      - apiDateTimeTimestamp(left.published_at || left.created_at)
-    ))
-    .slice(0, 4)
-)
-
-const communitySectionNames = (sections: CampusCircleSectionView[]) => (
-  sections.reduce<Record<number, string>>((names, section) => {
-    names[section.id] = section.name
-    section.children.forEach((child) => {
-      names[child.id] = child.name
-    })
-    return names
-  }, {})
-)
-
 function Index() {
-  useCampusShare(() => ({
-    title: '海大校园｜一站式校园生活',
-    path: '/pages/index/index',
-  }))
+  useCampusShare((event) => {
+    const target = event.target as {
+      dataset?: Record<string, string | number>
+    } | undefined
+    const dataset = target?.dataset || {}
+    const postId = Number(dataset.postId)
+    const shareTitle = typeof dataset.shareTitle === 'string'
+      ? dataset.shareTitle
+      : '海大校园社区'
+    const shareImage = typeof dataset.shareImage === 'string'
+      ? dataset.shareImage
+      : ''
+    const result = {
+      title: postId > 0 ? shareTitle : '海大校园｜一站式校园生活',
+      path: postId > 0 ? '/packages/social/community/detail' : '/pages/index/index',
+      query: postId > 0 ? { id: postId, mode: 'post' } : undefined,
+    }
+    return shareImage ? { ...result, imageUrl: shareImage } : result
+  })
 
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
@@ -355,19 +367,33 @@ function Index() {
   ))
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarUserId, setAvatarUserId] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
-  const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
-  const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
+  const [homeFeedItems, setHomeFeedItems] = useState<HomeFeedItemView[]>([])
+  const [homeFeedPage, setHomeFeedPage] = useState(1)
+  const [homeFeedTotal, setHomeFeedTotal] = useState(0)
+  const [homeFeedLoadingMore, setHomeFeedLoadingMore] = useState(false)
+  const [homeFeedLoadMoreError, setHomeFeedLoadMoreError] = useState(false)
+  const [homeFeedRefreshing, setHomeFeedRefreshing] = useState(false)
+  const [homeFeedLoadMoreSignal, setHomeFeedLoadMoreSignal] = useState(0)
+  const [showHomeBackTop, setShowHomeBackTop] = useState(false)
+  const [homeCommentItem, setHomeCommentItem] = useState<HomeFeedItemView | null>(null)
+  const [homeCommentReplyTarget, setHomeCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
+  const [homeCommentSubmitting, setHomeCommentSubmitting] = useState(false)
+  const [openHomeActionKey, setOpenHomeActionKey] = useState<string | null>(null)
+  const [homeReactions, setHomeReactions] = useState<Record<string, {
+    liked: boolean
+    likeCount: number
+    likedByNicknames: string[]
+  }>>({})
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>([])
   const [calendar, setCalendar] = useState<Awaited<ReturnType<typeof loadAcademicCalendar>>['calendar']>(null)
   const [calendarReminders, setCalendarReminders] = useState<CalendarReminderView[]>([])
   const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinStatus | null>(null)
   const [userLevelTasks, setUserLevelTasks] = useState<UserLevelTask[]>([])
-  const [communityLoading, setCommunityLoading] = useState(true)
-  const [marketLoading, setMarketLoading] = useState(true)
-  const [communityError, setCommunityError] = useState(false)
-  const [marketError, setMarketError] = useState(false)
+  const [homeFeedLoading, setHomeFeedLoading] = useState(true)
+  const [homeFeedError, setHomeFeedError] = useState(false)
   const [coursePreview, setCoursePreview] = useState(() => (
     loadCachedCoursePreview(runtimeConfig, campusName)
   ))
@@ -375,13 +401,32 @@ function Index() {
     loadCachedAcademicLabel,
   )
   const [bannerIndex, setBannerIndex] = useState(0)
+  const homeFeedRequestSequence = useRef(0)
+  const homeFeedLoadingMoreRef = useRef(false)
+  const homeBackTopVisibleRef = useRef(false)
   const headerCollapsed = useCollapsingHeader({
     triggerSelector: '.campus__eyebrow',
     threshold: 48,
     releaseGap: 16,
   })
 
+  usePageScroll(({ scrollTop }) => {
+    const nextVisible = Number(scrollTop) > 480
+    if (nextVisible === homeBackTopVisibleRef.current) return
+    homeBackTopVisibleRef.current = nextVisible
+    setShowHomeBackTop(nextVisible)
+  })
+
+  useReachBottom(() => {
+    setHomeFeedLoadMoreSignal((current) => current + 1)
+  })
+
   const loadHome = useCallback(async (force = false) => {
+    const homeFeedRequestId = ++homeFeedRequestSequence.current
+    homeFeedLoadingMoreRef.current = false
+    setHomeFeedLoadingMore(false)
+    setHomeFeedLoadMoreError(false)
+    setHomeFeedRefreshing(true)
     const latestRuntimeConfig = await loadMiniappRuntimeConfig()
     const moduleEnabled = (key: MiniappModuleKey) => (
       resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
@@ -393,20 +438,12 @@ function Index() {
       : accountPromise.then((account) => academicStorage.getScheduleCache(
         account.ok ? account.value.user.id : getActiveAcademicUserId(),
       ))
-    const communityPromise = !isQualificationEdition
+    const homeFeedEnabled = ['community', 'marketplace', 'errand', 'carpool']
+      .some((key) => moduleEnabled(key as MiniappModuleKey))
+    const homeFeedPromise = !isQualificationEdition
       && fullLifeServicesRepository
-      && moduleEnabled('community')
-      ? settle(fullLifeServicesRepository.listCampusCirclePosts({ page: 1, pageSize: 8 }))
-      : Promise.resolve({ ok: false } as Settled<never>)
-    const communitySectionsPromise = !isQualificationEdition
-      && fullLifeServicesRepository
-      && moduleEnabled('community')
-      ? settle(fullLifeServicesRepository.listCampusCircleSections())
-      : Promise.resolve({ ok: false } as Settled<never>)
-    const marketplacePromise = !isQualificationEdition
-      && fullLifeServicesRepository
-      && moduleEnabled('marketplace')
-      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 4 }))
+      && homeFeedEnabled
+      ? settle(fullLifeServicesRepository.listHomeFeed({ page: 1, pageSize: HOME_FEED_PAGE_SIZE }))
       : Promise.resolve({ ok: false } as Settled<never>)
     const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
@@ -429,10 +466,8 @@ function Index() {
     ))
     const [
       account,
-      community,
-      communitySections,
+      homeFeed,
       unread,
-      marketplace,
       latestAcademic,
       latestOfficialNotices,
       latestCalendar,
@@ -441,10 +476,8 @@ function Index() {
       latestReminders,
     ] = await Promise.all([
       accountPromise,
-      communityPromise,
-      communitySectionsPromise,
+      homeFeedPromise,
       settle(noticesRepository.unreadCount()),
-      marketplacePromise,
       academicPromise,
       officialNoticesPromise,
       calendarPromise,
@@ -466,35 +499,73 @@ function Index() {
     if (account.ok) {
       setUsername(account.value.user.username)
       setAvatarUrl(account.value.user.avatar_url || '')
+      setAvatarUserId(account.value.user.id)
     }
     setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))
-    if (community.ok) {
-      setCommunityPosts(latestCommunityPosts(community.value.items))
-      setCommunityError(false)
-    } else {
-      setCommunityPosts([])
-      setCommunityError(moduleEnabled('community'))
-    }
-    if (communitySections.ok) {
-      setSectionNames(communitySectionNames(communitySections.value.items))
+    if (homeFeedRequestId === homeFeedRequestSequence.current) {
+      if (homeFeed.ok) {
+        setHomeFeedItems(enabledHomeFeedItems(homeFeed.value.items, latestRuntimeConfig))
+        setHomeFeedPage(homeFeed.value.page)
+        setHomeFeedTotal(Number(homeFeed.value.total))
+        setHomeReactions({})
+        setHomeFeedError(false)
+      } else {
+        setHomeFeedItems([])
+        setHomeFeedPage(1)
+        setHomeFeedTotal(0)
+        setHomeFeedError(homeFeedEnabled)
+      }
     }
     if (unread.ok) setUnreadCount(Number(unread.value.count) || 0)
-    if (marketplace.ok) {
-      setMarketItems(marketplace.value.items)
-      setMarketError(false)
-    } else {
-      setMarketItems([])
-      setMarketError(moduleEnabled('marketplace'))
-    }
     setOfficialNotices(latestOfficialNotices.ok ? latestOfficialNotices.value.items : [])
     setCalendar(latestCalendar.calendar)
     setDailyCheckin(latestCheckin.ok ? latestCheckin.value : null)
     setUserLevelTasks(latestTasks.ok ? latestTasks.value.items : [])
     setCalendarReminders(latestReminders.ok ? latestReminders.value.items : [])
-    setCommunityLoading(false)
-    setMarketLoading(false)
+    if (homeFeedRequestId === homeFeedRequestSequence.current) {
+      setHomeFeedLoading(false)
+      setHomeFeedRefreshing(false)
+    }
     Taro.stopPullDownRefresh()
   }, [])
+
+  const loadHomeFeedMore = useCallback(async () => {
+    if (
+      !fullLifeServicesRepository
+      || isQualificationEdition
+      || homeFeedLoadingMoreRef.current
+      || homeFeedRefreshing
+      || homeFeedItems.length >= homeFeedTotal
+    ) return
+
+    const requestId = ++homeFeedRequestSequence.current
+    homeFeedLoadingMoreRef.current = true
+    setHomeFeedLoadingMore(true)
+    setHomeFeedLoadMoreError(false)
+    try {
+      const latestRuntimeConfig = await loadMiniappRuntimeConfig()
+      const result = await fullLifeServicesRepository.listHomeFeed({
+        page: homeFeedPage + 1,
+        pageSize: HOME_FEED_PAGE_SIZE,
+      })
+      if (requestId !== homeFeedRequestSequence.current) return
+      setHomeFeedItems((current) => mergeHomeFeedItems(
+        current,
+        enabledHomeFeedItems(result.items, latestRuntimeConfig),
+      ))
+      setHomeFeedPage(result.page)
+      setHomeFeedTotal(Number(result.total))
+    } catch {
+      if (requestId === homeFeedRequestSequence.current) {
+        setHomeFeedLoadMoreError(true)
+      }
+    } finally {
+      if (requestId === homeFeedRequestSequence.current) {
+        homeFeedLoadingMoreRef.current = false
+        setHomeFeedLoadingMore(false)
+      }
+    }
+  }, [homeFeedItems.length, homeFeedPage, homeFeedRefreshing, homeFeedTotal])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -533,14 +604,6 @@ function Index() {
       '/pages/community/index',
       { tab: true, config: runtimeConfig },
     )
-  }
-
-  const openModule = (type: string) => {
-    if (['community', 'errands', 'market', 'carpool'].includes(type)) {
-      void openLifeHub(type as LifeHubSection)
-      return
-    }
-    Taro.showToast({ title: '服务入口已更新', icon: 'none' })
   }
 
   const openAcademic = (route: string) => {
@@ -604,10 +667,88 @@ function Index() {
     setCoursePreview(loadCachedCoursePreview(runtimeConfig, selectedCampus))
   }
 
-  const openCommunityPost = (item: CampusCirclePostView) => {
-    saveCommunityFeedPin(item)
-    void openLifeHub('community')
+  const openHomeFeedItem = (item: HomeFeedItemView) => {
+    setOpenHomeActionKey(null)
+    const routes: Record<HomeFeedItemView['source_type'], string> = {
+      campus_circle_post: `/packages/social/community/detail?id=${item.source_id}`,
+      marketplace_listing: `/packages/social/marketplace/detail?id=${item.source_id}`,
+      errand: `/packages/social/errands/detail?id=${item.source_id}`,
+      carpool: `/packages/social/carpool/detail?id=${item.source_id}`,
+    }
+    void Taro.navigateTo({ url: routes[item.source_type] })
   }
+
+  const toggleHomeFeedLike = async (item: HomeFeedItemView) => {
+    if (!fullLifeServicesRepository || item.source_type !== 'campus_circle_post') return
+    const key = homeFeedKey(item)
+    const current = homeReactions[key] || {
+      liked: item.liked,
+      likeCount: item.like_count,
+      likedByNicknames: item.liked_by_nicknames,
+    }
+    try {
+      const reaction = current.liked
+        ? await fullLifeServicesRepository.unlikeResource(item.source_id, 'campus_circle_post')
+        : await fullLifeServicesRepository.likeResource(item.source_id, 'campus_circle_post')
+      const currentUserName = username.trim()
+      const likedByNicknames = reaction.liked
+        ? currentUserName && !current.likedByNicknames.includes(currentUserName)
+          ? [currentUserName, ...current.likedByNicknames].slice(0, 5)
+          : current.likedByNicknames
+        : currentUserName
+          ? current.likedByNicknames.filter((nickname) => nickname !== currentUserName)
+          : current.likedByNicknames.slice(0, reaction.like_count)
+      setHomeReactions((reactions) => ({
+        ...reactions,
+        [key]: {
+          liked: reaction.liked,
+          likeCount: reaction.like_count,
+          likedByNicknames: likedByNicknames.slice(0, reaction.like_count),
+        },
+      }))
+    } catch {
+      Taro.showToast({ title: '操作失败，请稍后重试', icon: 'none' })
+    }
+  }
+
+  const updateHomeFeedComment = (target: HomeFeedItemView, comment: CommentView) => {
+    setHomeFeedItems((current) => current.map((item) => (
+      item.source_type === target.source_type && item.source_id === comment.target_id
+        ? {
+            ...item,
+            comment_previews: mergePublicCommentPreview(
+              item.comment_previews,
+              comment,
+              homeCommentReplyTarget,
+            ),
+          }
+        : item
+    )))
+  }
+
+  const dismissCommunityOverlays = useCallback(() => {
+    setOpenHomeActionKey(null)
+    if (homeCommentItem) {
+      setCommentDismissSignal((current) => current + 1)
+    }
+  }, [homeCommentItem])
+
+  const scrollHomeToTop = useCallback(() => {
+    void Taro.pageScrollTo({ scrollTop: 0, duration: 240 })
+  }, [])
+
+  useDismissCommunityOverlaysOnScroll({
+    active: openHomeActionKey !== null || (homeCommentItem !== null && !homeCommentSubmitting),
+    onDismiss: dismissCommunityOverlays,
+  })
+
+  const updateHomeFeedCommentCount = useCallback((target: HomeFeedItemView, delta: number) => {
+    setHomeFeedItems((current) => current.map((item) => (
+      item.source_type === target.source_type && item.source_id === target.source_id
+        ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+        : item
+    )))
+  }, [])
 
   const openOfficialNotices = () => {
     void Taro.navigateTo({ url: '/pages/official-notices/index' })
@@ -624,21 +765,38 @@ function Index() {
     30000,
     Math.max(3000, runtimeConfig.slogan_interval_ms),
   )
-  const campusConfig = runtimeConfig.campuses[campusName]
-  const visibleHomeServices = homeServices.filter((service) => {
+  const visibleHomeServices = quickServices.filter((service) => {
     if (isQualificationEdition && migratedHomeServiceKeys.has(service.key)) return false
-    const featureKey = serviceFeatureKeys[service.key]
     const moduleKey = serviceModuleKeys[service.key]
-    return (
-      (!featureKey || !campusConfig || campusConfig.features[featureKey] !== false)
-      && (!moduleKey
-        || resolveMiniappModule(runtimeConfig, moduleKey, campusName).state !== 'hidden')
-    )
+    if (!moduleKey) return false
+    return resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
-  const visibleCommunityPosts = communityPosts.slice(0, 3)
+  const homeFeedCanLoadMore = homeFeedItems.length < homeFeedTotal
+  useLoadMoreSignal({
+    signal: homeFeedLoadMoreSignal,
+    enabled: Boolean(fullLifeServicesRepository)
+      && !isQualificationEdition
+      && !homeFeedLoading
+      && !homeFeedRefreshing
+      && !homeFeedLoadingMore
+      && !homeFeedError
+      && homeFeedCanLoadMore,
+    onLoadMore: loadHomeFeedMore,
+  })
+  const momentsLoading = homeFeedLoading
+  const momentsError = homeFeedError && homeFeedItems.length === 0
   const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
   const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
+  const holidayCountdown = coursePreview.dayLabel === '假期'
+    ? Math.max(1, Math.round(
+      (new Date(
+        coursePreview.targetDate.getFullYear(),
+        coursePreview.targetDate.getMonth(),
+        coursePreview.targetDate.getDate(),
+      ).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
+    ))
+    : null
 
   const toggleCalendarReminder = async (eventId: string) => {
     const existing = calendarReminders.find((item) => item.event_id === eventId)
@@ -716,28 +874,26 @@ function Index() {
         collapsed={headerCollapsed}
       />
 
-      <FreshBarrage posts={communityPosts} onOpen={openCommunityPost} />
-
       <View className='campus__header motion-enter'>
         <View className='campus__identity'>
-          <View className='campus__avatar'>
-            <UserAvatarImage
-              src={avatarUrl}
-              className='campus__avatar-image'
-              fallback={avatarText(username)}
-            />
+          <UserAvatar
+            className='campus__avatar'
+            imageClassName='campus__avatar-image'
+            src={avatarUrl}
+            fallback={avatarText(username)}
+            userId={avatarUserId}
+          >
             <View className='campus__online' />
-          </View>
+          </UserAvatar>
           <View className='campus__identity-copy'>
             <Text className='campus__eyebrow'>{academicCalendarLabel}</Text>
             <View
               className='campus__school'
-              hoverClass='campus__school--pressed'
               ariaRole='button'
               ariaLabel={`切换校区，当前为${campusName}`}
               onClick={chooseCampus}
             >
-              <Text>中国海洋大学 · {campusName}</Text>
+              <Text>{campusName}</Text>
               <Image className='campus__chevron' src={icons.arrow} mode='aspectFit' />
             </View>
           </View>
@@ -745,9 +901,6 @@ function Index() {
         <View className='campus__header-actions'>
           <View
             className='icon-button motion-press'
-            hoverClass='motion-press--active'
-            hoverStartTime={20}
-            hoverStayTime={100}
             ariaRole='button'
             ariaLabel={unreadCount > 0 ? `消息，${unreadCount} 条未读` : '消息'}
             onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}
@@ -761,17 +914,18 @@ function Index() {
       <View className='schedule-card today-card motion-enter motion-enter--delay-2'>
         <View className='schedule-card__header'>
           <View className='schedule-card__date'>
-            <Text className='schedule-card__day-label'>今天</Text>
-            <Text className='schedule-card__date-label'>{coursePreview.dateLabel}</Text>
+            <View className='schedule-card__heading-bar' />
+            <Text className='schedule-card__day-label'>
+              {coursePreview.dayLabel === '假期' ? '假期中' : coursePreview.dayLabel}
+            </Text>
           </View>
           <View
             className='schedule-card__summary'
-            hoverClass='schedule-card__summary--pressed'
             ariaRole='button'
             ariaLabel='查看完整校历'
             onClick={openCalendar}
           >
-            <Text>全部日程</Text>
+            <Text>校历</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
@@ -787,7 +941,6 @@ function Index() {
                     ? 'schedule-card__course-row--ongoing'
                     : '',
                 ].filter(Boolean).join(' ')}
-                hoverClass='today-card__row--pressed'
                 ariaRole='button'
                 ariaLabel={`查看课表：${item.course.name}`}
                 onClick={openSchedule}
@@ -830,7 +983,6 @@ function Index() {
                     'today-card__event-row',
                     event.priority === 'important' ? 'today-card__event-row--important' : '',
                   ].filter(Boolean).join(' ')}
-                  hoverClass='today-card__row--pressed'
                   ariaRole='button'
                   ariaLabel={`查看校历：${event.title}`}
                   onClick={openCalendar}
@@ -854,7 +1006,6 @@ function Index() {
                         'today-card__reminder',
                         reminder ? 'today-card__reminder--active' : '',
                       ].filter(Boolean).join(' ')}
-                      hoverClass='today-card__reminder--pressed'
                       ariaRole='button'
                       ariaLabel={reminder ? '取消提醒' : '设置提醒'}
                       onClick={(clickEvent) => {
@@ -871,8 +1022,10 @@ function Index() {
           </View>
         ) : (
           <View className='schedule-card__empty'>
-            <Text>今天没有待办日程</Text>
-            <Text>课程、考试和推荐校历事件会汇总在这里</Text>
+            <View className='schedule-card__empty-copy'>
+              <Text>{coursePreview.emptyText}</Text>
+              <Text>{holidayCountdown ? `${holidayCountdown}天后开学` : coursePreview.emptyHint}</Text>
+            </View>
           </View>
         )}
       </View>
@@ -885,7 +1038,6 @@ function Index() {
             'motion-enter--delay-3',
             todayTask.completed ? 'today-task--completed' : '',
           ].filter(Boolean).join(' ')}
-          hoverClass='today-task--pressed'
           ariaRole='button'
           ariaLabel={`${todayTask.title}，${todayTask.actionLabel}`}
           onClick={openTodayTask}
@@ -905,13 +1057,12 @@ function Index() {
 
       <View className='service-panel motion-enter motion-enter--delay-3'>
         <View className='service-panel__simple-head'>
-          <View className='service-panel__title-group'>
+          <View className='service-panel__heading'>
+            <View className='service-panel__heading-bar' />
             <Text className='service-panel__title'>常用服务</Text>
-            <Text className='service-panel__subtitle'>学习生活，一触即达</Text>
           </View>
           <View
             className='service-panel__all'
-            hoverClass='service-panel__all--pressed'
             ariaRole='button'
             ariaLabel='查看全部服务'
             onClick={openAllServices}
@@ -925,7 +1076,6 @@ function Index() {
             <View
               key={item.key}
               className={`service-panel__grid-item service-panel__grid-item--${item.tone} service-panel__grid-item--key-${item.key}`}
-              hoverClass='service-panel__item--pressed'
               ariaRole='button'
               ariaLabel={item.name}
               onClick={() => openQuickService(item)}
@@ -942,13 +1092,12 @@ function Index() {
       <View className='official-notices-home motion-enter motion-enter--delay-4'>
         <View
           className='official-notices-home__head'
-          hoverClass='official-notices-home__head--pressed'
           ariaRole='button'
           ariaLabel='查看全部官方通知'
           onClick={openOfficialNotices}
         >
-          <View>
-            <Text className='official-notices-home__eyebrow'>OFFICIAL</Text>
+          <View className='official-notices-home__heading'>
+            <View className='official-notices-home__heading-bar' />
             <Text className='official-notices-home__title'>全校通知</Text>
           </View>
           <View className='official-notices-home__more'>
@@ -964,11 +1113,13 @@ function Index() {
           <View
             key={item.id}
             className='official-notices-home__item'
-            hoverClass='official-notices-home__item--pressed'
             ariaRole='button'
             ariaLabel={`查看通知：${item.title}`}
             onClick={() => openOfficialNotice(item)}
           >
+            <View className='official-notices-home__icon'>
+              <Image src={icons.campaign} mode='aspectFit' />
+            </View>
             <View className='official-notices-home__copy'>
               <Text className='official-notices-home__copy-title'>{item.title}</Text>
               <View className='official-notices-home__meta'>
@@ -994,7 +1145,6 @@ function Index() {
           <Text className='home-migrated__copy'>{migrationGuide.description}</Text>
           <View
             className='home-migrated__action'
-            hoverClass='home-migrated__action--pressed'
             onClick={() => void openMigratedFeaturePage({ module: 'community' })}
           >
             <Text>{migrationGuide.entry_button_text}</Text>
@@ -1012,14 +1162,11 @@ function Index() {
           runtimeBanner ? 'hero-card--notice' : '',
           runtimeBanner?.image_url ? 'hero-card--image' : '',
         ].filter(Boolean).join(' ')}
-        hoverClass='motion-press--active'
-        hoverStartTime={20}
-        hoverStayTime={100}
         ariaRole={!runtimeBanner || bannerActionable ? 'button' : undefined}
-        ariaLabel={runtimeBanner?.title || '发现校园新鲜事'}
+        ariaLabel={runtimeBanner?.title || '查看开学安排'}
         onClick={() => runtimeBanner
           ? openRuntimeBanner(runtimeBanner)
-          : openModule('community')}
+          : openCalendar()}
       >
         <View className='hero-card__glow' />
         {runtimeBanner?.image_url && (
@@ -1035,7 +1182,7 @@ function Index() {
         <View className='hero-card__content'>
           <View className='hero-card__pill'>
             <View className='hero-card__pulse' />
-            <Text>{runtimeBanner ? '校园推荐' : '今日校园'}</Text>
+            <Text>{runtimeBanner ? '校园推荐' : '开学季'}</Text>
           </View>
           {runtimeBanner ? (
             <Swiper
@@ -1069,8 +1216,8 @@ function Index() {
             >
               {(slogans.length ? slogans : [{
                 id: 'fallback',
-                title: '海纳百川，取则行远',
-                subtitle: '一站式连接海大学习与生活',
+                title: '新学期，从这片海出发',
+                subtitle: '课表、成绩与校园服务触手可及',
               }]).map((slogan) => (
                 <SwiperItem key={slogan.id}>
                   <View className='hero-card__slogan-slide'>
@@ -1083,192 +1230,156 @@ function Index() {
           )}
           {(!runtimeBanner || bannerActionable) && (
             <View className='hero-card__action'>
-              <Text>{runtimeBanner ? '查看详情' : '发现校园新鲜事'}</Text>
+              <Text>{runtimeBanner ? '查看详情' : '查看开学安排'}</Text>
               <Image src={icons.arrow} mode='aspectFit' />
             </View>
           )}
         </View>
         {!runtimeBanner?.image_url && (
           <View className='hero-card__art'>
-            <View className='hero-card__sun' />
-            <View className='hero-card__cloud hero-card__cloud--one' />
-            <View className='hero-card__cloud hero-card__cloud--two' />
-            <View className='hero-card__building'>
-              <View className='hero-card__roof' />
-              <View className='hero-card__windows'>
-                <View /><View /><View />
-              </View>
+            <View className='hero-card__bubble hero-card__bubble--one' />
+            <View className='hero-card__bubble hero-card__bubble--two' />
+            <View className='hero-card__sailboat'>
+              <View className='hero-card__mast' />
+              <View className='hero-card__sail hero-card__sail--main' />
+              <View className='hero-card__sail hero-card__sail--small' />
+              <View className='hero-card__hull' />
             </View>
-            <View className='hero-card__tree hero-card__tree--one' />
-            <View className='hero-card__tree hero-card__tree--two' />
           </View>
         )}
       </View>
 
-      <View className='community-panel'>
-        <View className='section-heading section-heading--community'>
-          <View>
-            <Text className='section-heading__eyebrow'>CAMPUS</Text>
-            <Text className='section-heading__title'>校园新鲜事</Text>
+      <View className='moments-panel'>
+        <View className='moments-panel__header'>
+          <View className='moments-panel__heading'>
+            <View className='moments-panel__bar' />
+            <Text className='moments-panel__title'>校园动态</Text>
           </View>
           <View
-            className='section-heading__more'
-            hoverClass='section-heading__more--pressed'
+            className='moments-panel__more'
             ariaRole='button'
-            ariaLabel='查看更多校园动态'
+            ariaLabel='进入校园社区'
             onClick={() => openLifeHub('community')}
           >
-            <Text>查看更多</Text>
+            <Text>进社区</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
 
-        <View className='news-card'>
-        {communityLoading && <View className='home-section-state'>正在加载校园动态</View>}
-        {!communityLoading && communityError && (
-          <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
-            动态加载失败，点击重试
-          </View>
-        )}
-        {!communityLoading && !communityError && visibleCommunityPosts.length === 0 && (
-          <View className='home-section-state'>暂时没有校园动态</View>
-        )}
-        {!communityLoading && !communityError && visibleCommunityPosts.map((item, index) => (
-          <View
-            key={item.id}
-            className={[
-              'news-card__item',
-              'motion-enter',
-              `motion-enter--delay-${Math.min(index + 1, 4)}`,
-              index === 0 ? 'news-card__item--featured' : 'news-card__item--compact',
-            ].join(' ')}
-            hoverClass='news-card__item--pressed'
-            hoverStartTime={20}
-            hoverStayTime={120}
-            ariaRole='button'
-            ariaLabel={`查看${communityAuthorName(item)}发布的动态`}
-            onClick={() => openCommunityPost(item)}
-          >
-            {index === 0 ? (<>
-              <View className='news-card__topline'>
-                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <UserAvatarImage
-                    src={communityAuthorAvatarUrl(item)}
-                    className='news-card__avatar-image'
-                    fallback={communityAuthorInitial(item)}
-                    lazyLoad
-                  />
-                </View>
-                <View className='news-card__author'>
-                  <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
-                  <Text className='news-card__time'>
-                    {formatDateTime(item.published_at || item.created_at)}
-                  </Text>
-                </View>
-                <View className='news-card__tag'>
-                  <Text>{sectionNames[item.section_id] || '社区'}</Text>
-                </View>
-              </View>
-
-              <View className='news-card__body'>
-                <Text className='news-card__title'>
-                  {item.content?.trim() || '分享了一组校园图片'}
-                </Text>
-                {item.images[0] && (
-                  <Image
-                    className='news-card__cover'
-                    src={item.images[0].url}
-                    mode='aspectFill'
-                    lazyLoad
-                  />
-                )}
-              </View>
-
-              <View className='news-card__footer'>
-                <View className='news-card__metric'>
-                  <Image src={icons.heart} mode='aspectFit' />
-                  <Text>{item.like_count}</Text>
-                </View>
-                <View className='news-card__metric'>
-                  <Image src={icons.comment} mode='aspectFit' />
-                  <Text>{item.comment_count}</Text>
-                </View>
-                <View className='news-card__read'>
-                  <Text>去看看</Text>
-                  <Image src={icons.arrow} mode='aspectFit' />
-                </View>
-              </View>
-            </>) : (
-              <View className='news-card__compact-main'>
-                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <UserAvatarImage
-                    src={communityAuthorAvatarUrl(item)}
-                    className='news-card__avatar-image'
-                    fallback={communityAuthorInitial(item)}
-                    lazyLoad
-                  />
-                </View>
-                <View className='news-card__compact-copy'>
-                  <View className='news-card__compact-meta'>
-                    <Text>{communityAuthorName(item)} · {sectionNames[item.section_id] || '社区'}</Text>
-                    <Text>{formatDateTime(item.published_at || item.created_at)}</Text>
-                  </View>
-                  <Text className='news-card__compact-title'>
-                    {item.content?.trim() || '分享了一组校园图片'}
-                  </Text>
-                </View>
-                <Image className='news-card__compact-arrow' src={icons.arrow} mode='aspectFit' />
-              </View>
-            )}
-          </View>
-        ))}
+        <View className='moments-feed'>
+          {momentsLoading && <View className='home-section-state'>正在加载校园动态</View>}
+          {!momentsLoading && momentsError && (
+            <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
+              动态加载失败，点击重试
+            </View>
+          )}
+          {!momentsLoading && !momentsError && homeFeedItems.length === 0 && (
+            <View className='home-section-state'>暂时没有校园动态</View>
+          )}
+          {!momentsLoading && homeFeedItems.map((item, index) => {
+            const key = homeFeedKey(item)
+            const post = homeFeedItemToPost(item, homeReactions[key])
+            const variant = item.source_type === 'marketplace_listing'
+              ? 'marketplace'
+              : item.source_type === 'campus_circle_post' ? 'community' : item.source_type
+            return (
+              <CommunityPostCard
+                key={`${key}-${item.version}`}
+                post={post}
+                instanceKey={key}
+                variant={variant}
+                businessPreview={homeFeedBusinessPreview(item) || undefined}
+                motionDelay={index + 1}
+                sectionName={homeFeedSourceLabels[item.source_type]}
+                timeFormatter={formatHomeMomentsTime}
+                actionsOpen={openHomeActionKey === key}
+                onToggleActions={() => setOpenHomeActionKey((current) => current === key ? null : key)}
+                onCloseActions={() => setOpenHomeActionKey(null)}
+                onToggleLike={item.source_type === 'campus_circle_post'
+                  ? () => toggleHomeFeedLike(item)
+                  : undefined}
+                onOpen={() => openHomeFeedItem(item)}
+                onOpenComments={() => {
+                  setOpenHomeActionKey(null)
+                  setHomeCommentSubmitting(false)
+                  setHomeCommentReplyTarget(null)
+                  setHomeCommentItem(item)
+                }}
+                onReplyComment={(_, comment) => {
+                  setOpenHomeActionKey(null)
+                  setHomeCommentSubmitting(false)
+                  setHomeCommentReplyTarget(comment)
+                  setHomeCommentItem(item)
+                }}
+              />
+            )
+          })}
+          {!momentsLoading && !momentsError && homeFeedCanLoadMore && (
+            <View className='moments-feed__load-more' ariaRole='status'>
+              {homeFeedLoadingMore
+                ? '正在加载更多…'
+                : homeFeedLoadMoreError
+                  ? '加载失败，请继续上滑重试'
+                  : '继续上滑加载更多'}
+            </View>
+          )}
+          {!momentsLoading && !momentsError && homeFeedItems.length > 0 && !homeFeedCanLoadMore && (
+            <View className='moments-feed__load-more moments-feed__load-more--end' ariaRole='status'>
+              没有更多了
+            </View>
+          )}
         </View>
       </View>
-
-      <View className='market-panel'>
-        <View className='section-heading section-heading--market'>
-          <View>
-            <Text className='section-heading__eyebrow section-heading__eyebrow--market'>MARKET</Text>
-            <Text className='section-heading__title'>同学们在淘</Text>
-          </View>
-          <View
-            className='section-heading__more'
-            hoverClass='section-heading__more--pressed'
-            ariaRole='button'
-            ariaLabel='查看更多二手好物'
-            onClick={() => openModule('market')}
-          >
-            <Text>逛一逛</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
-          </View>
-        </View>
-
-        <View className='market-scroll'>
-          <View className='market-list'>
-            {marketLoading && <View className='home-section-state home-section-state--market'>正在加载校内闲置</View>}
-            {!marketLoading && marketError && (
-              <View
-                className='home-section-state home-section-state--market home-section-state--error'
-                onClick={() => void loadHome()}
-              >
-                闲置加载失败，点击重试
-              </View>
-            )}
-            {!marketLoading && !marketError && marketItems.length === 0 && (
-              <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
-            )}
-            {!marketLoading && !marketError && FullMarketplaceCard && [0, 1].map((columnIndex) => (
-              <View key={columnIndex} className='market-list__column'>
-                {marketItems
-                  .filter((_, itemIndex) => itemIndex % 2 === columnIndex)
-                  .map((item) => (
-                    <FullMarketplaceCard key={item.id} item={item} variant='compact' />
-                  ))}
-              </View>
-            ))}
-          </View>
-        </View>
+      <View
+        className={`home-back-top ${showHomeBackTop ? 'home-back-top--visible' : ''}`}
+        ariaRole='button'
+        ariaLabel='返回顶部'
+        onClick={scrollHomeToTop}
+      >
+        <Image src={icons.arrowUp} mode='aspectFit' />
+        <Text>顶部</Text>
       </View>
+      {homeCommentItem ? (
+        <CommunityCommentSheet
+          key={`${homeCommentItem.source_type}-${homeCommentItem.source_id}`}
+          target={{
+            type: homeCommentItem.source_type === 'marketplace_listing'
+              ? 'marketplace'
+              : homeCommentItem.source_type === 'campus_circle_post'
+                ? 'campus_circle_post'
+                : homeCommentItem.source_type,
+            id: homeCommentItem.source_id,
+            enabled: true,
+            tone: homeCommentItem.source_type === 'marketplace_listing'
+              ? 'marketplace'
+              : homeCommentItem.source_type === 'campus_circle_post'
+                ? 'community'
+                : homeCommentItem.source_type,
+            dirtySection: homeCommentItem.source_type === 'marketplace_listing'
+              ? 'market'
+              : homeCommentItem.source_type === 'campus_circle_post'
+                ? 'community'
+                : homeCommentItem.source_type === 'errand' ? 'errands' : 'carpool',
+            placeholder: '友善交流，分享你的想法',
+          }}
+          initialReplyTarget={homeCommentReplyTarget ? {
+            id: homeCommentReplyTarget.id,
+            author_id: homeCommentReplyTarget.authorId,
+            author_deleted: homeCommentReplyTarget.authorDeleted,
+            author_nickname: homeCommentReplyTarget.authorNickname,
+            root_id: homeCommentReplyTarget.rootId,
+          } : null}
+          onClose={() => {
+            setHomeCommentItem(null)
+            setHomeCommentReplyTarget(null)
+            setHomeCommentSubmitting(false)
+          }}
+          onSubmittingChange={setHomeCommentSubmitting}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateHomeFeedCommentCount(homeCommentItem, delta)}
+          onCommentCreated={(comment) => updateHomeFeedComment(homeCommentItem, comment)}
+        />
+      ) : null}
       </>)}
 
     </View>

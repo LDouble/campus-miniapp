@@ -1,12 +1,24 @@
-import { useState } from 'react'
-import Taro, { useLoad } from '@tarojs/taro'
+import { useEffect, useState } from 'react'
+import Taro, { useDidShow, useLoad } from '@tarojs/taro'
 import { Text, View, WebView } from '@tarojs/components'
 import { decodeWebViewUrl } from '../../features/webview/url'
+import {
+  applyCampusThemeToCurrentPage,
+  applyCampusThemeToNativeChrome,
+} from '../../features/theme-preference'
 import './index.scss'
 
 export default function WebViewPage() {
   const [source, setSource] = useState('')
   const [error, setError] = useState('')
+
+  useDidShow(() => {
+    applyCampusThemeToNativeChrome()
+  })
+
+  useEffect(() => {
+    applyCampusThemeToCurrentPage()
+  }, [])
 
   useLoad((options) => {
     const target = decodeWebViewUrl(options.url)
@@ -30,7 +42,6 @@ export default function WebViewPage() {
       <Text className='webview-error__description'>{error || '链接正在加载'}</Text>
       <View
         className='webview-error__action'
-        hoverClass='webview-error__action--pressed'
         ariaRole='button'
         ariaLabel='返回上一页'
         onClick={() => Taro.navigateBack()}

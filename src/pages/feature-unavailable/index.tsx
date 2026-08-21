@@ -29,7 +29,6 @@ export default function FeatureUnavailablePage() {
           <Text className='feature-unavailable__message'>{message}</Text>
           <View
             className='feature-unavailable__action'
-            hoverClass='feature-unavailable__action--pressed'
             ariaRole='button'
             ariaLabel='返回首页'
             onClick={goHome}

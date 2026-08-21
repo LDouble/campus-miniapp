@@ -1,0 +1,67 @@
+{
+  "$schema": "https://tr.designtokens.org/format/",
+  "global": {
+    "color": {
+      "ocean": {
+        "50": { "value": "#F2F7FE", "type": "color", "description": "浅蓝底 / 信息条" },
+        "100": { "value": "#E3EFFE", "type": "color", "description": "徽章底 / 计数胶囊" },
+        "400": { "value": "#4C96F5", "type": "color", "description": "聚焦描边" },
+        "500": { "value": "#2B7AEF", "type": "color", "description": "主色 / 海洋蓝" },
+        "600": { "value": "#1D5FD6", "type": "color", "description": "主色加深 / 按压态" }
+      },
+      "wave": {
+        "400": { "value": "#38BDF8", "type": "color", "description": "辅助色 / 渐变收尾" }
+      },
+      "ink": {
+        "900": { "value": "#1A2333", "type": "color", "description": "主文字（禁用纯黑）" },
+        "700": { "value": "#3A4759", "type": "color", "description": "次级标题" },
+        "500": { "value": "#6B7A90", "type": "color", "description": "次文字 / 昵称" },
+        "300": { "value": "#A6B2C2", "type": "color", "description": "辅助文字 / 时间戳" }
+      },
+      "bg": {
+        "page": { "value": "#F5F8FC", "type": "color", "description": "页面底色" },
+        "line": { "value": "#E8EDF4", "type": "color", "description": "分隔线" }
+      },
+      "danger": {
+        "500": { "value": "#E5484D", "type": "color", "description": "警示 / 删除" },
+        "50": { "value": "#FDECEC", "type": "color", "description": "警示底色" }
+      },
+      "like": {
+        "500": { "value": "#F04E6B", "type": "color", "description": "点赞激活态" }
+      }
+    },
+    "fontSize": {
+      "badge": { "value": "10", "type": "fontSize", "description": "徽章文字" },
+      "caption": { "value": "12", "type": "fontSize", "description": "时间与辅助信息" },
+      "label": { "value": "13.5", "type": "fontSize", "description": "昵称 / 操作按钮" },
+      "comment": { "value": "15", "type": "fontSize", "description": "评论内容" },
+      "body": { "value": "16", "type": "fontSize", "description": "帖子正文" },
+      "title": { "value": "16.5", "type": "fontSize", "description": "模块标题" }
+    },
+    "fontWeight": {
+      "regular": { "value": "400", "type": "fontWeight" },
+      "medium": { "value": "500", "type": "fontWeight" },
+      "semibold": { "value": "600", "type": "fontWeight" },
+      "bold": { "value": "700", "type": "fontWeight" }
+    },
+    "lineHeight": {
+      "post": { "value": "1.85", "type": "lineHeight", "description": "帖子正文" },
+      "comment": { "value": "1.65", "type": "lineHeight", "description": "评论内容" },
+      "ui": { "value": "1.4", "type": "lineHeight", "description": "界面元素" }
+    },
+    "spacing": {
+      "space-1": { "value": "8", "type": "spacing", "description": "图标与文字" },
+      "space-2": { "value": "12", "type": "spacing", "description": "卡片内边距" },
+      "space-3": { "value": "16", "type": "spacing", "description": "模块间距" },
+      "space-4": { "value": "20", "type": "spacing", "description": "页面左右边距" },
+      "space-5": { "value": "32", "type": "spacing", "description": "大区块分隔" }
+    },
+    "borderRadius": {
+      "pill": { "value": "999", "type": "borderRadius", "description": "胶囊组件" },
+      "card-sm": { "value": "12", "type": "borderRadius", "description": "小卡片 / 缩略图" },
+      "card": { "value": "16", "type": "borderRadius", "description": "信息流卡片" },
+      "card-lg": { "value": "18", "type": "borderRadius", "description": "页面级卡片" },
+      "sheet": { "value": "22", "type": "borderRadius", "description": "底部动作面板顶部" }
+    }
+  }
+}

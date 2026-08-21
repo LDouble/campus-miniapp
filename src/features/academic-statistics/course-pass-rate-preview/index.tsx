@@ -86,7 +86,6 @@ export default function CoursePassRatePreview({
         loading ? 'course-reference--loading' : '',
         empty ? 'course-reference--empty' : '',
       ].filter(Boolean).join(' ')}
-      hoverClass='course-reference--pressed'
       onClick={openDetails}
     >
       <View className='course-reference__heading'>

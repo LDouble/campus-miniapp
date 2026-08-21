@@ -1,4 +1,4 @@
-<view wx:if="{{!hidden}}" class="tab-bar">
+<view wx:if="{{!hidden}}" class="tab-bar {{darkMode ? 'tab-bar--dark' : ''}}">
   <view class="tab-bar__dock">
     <view class="tab-bar__highlight" />
 

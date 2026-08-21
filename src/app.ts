@@ -13,6 +13,12 @@ import { installAppUpdate } from './features/app-update'
 import { initializeSystemState } from './state/system'
 import { preloadPublicData } from './state/public-data'
 import {
+  applyCampusThemeToNativeChrome,
+  applyCampusThemeToCurrentPage,
+  getCampusTheme,
+  initializeCampusTheme,
+} from './features/theme-preference'
+import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
 } from './features/wechat-subscription/module'
@@ -48,6 +54,7 @@ function App(props) {
   }, [stopPrivateMessageUnreadPolling])
 
   useLaunch(() => {
+    initializeCampusTheme()
     initializeSystemState()
     installAppUpdate()
     void preloadPublicData()
@@ -65,6 +72,8 @@ function App(props) {
     privateMessageUnreadVisibleRef.current = true
     privateMessageUnreadPollingGeneration.current += 1
     const generation = privateMessageUnreadPollingGeneration.current
+    applyCampusThemeToCurrentPage(getCampusTheme())
+    applyCampusThemeToNativeChrome(getCampusTheme())
     void preloadPublicData()
     void guardCurrentPage()
     if (!isQualificationEdition) {

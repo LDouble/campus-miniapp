@@ -120,7 +120,6 @@ export function AcademicLoadState({
       <Text className='academic-load-state__copy'>{resolvedMessage}</Text>
       <View
         className={`academic-load-state__action ${retrying ? 'academic-load-state__action--disabled' : ''}`}
-        hoverClass={retrying ? 'none' : 'academic-load-state__action--pressed'}
         onClick={() => {
           if (!retrying) handleAction()
         }}

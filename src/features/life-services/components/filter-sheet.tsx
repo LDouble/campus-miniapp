@@ -35,7 +35,6 @@ export default function FilterSheet({
         <View className='filter-sheet__actions'>
           <View
             className='filter-sheet__reset'
-            hoverClass='filter-sheet__reset--pressed'
             ariaRole='button'
             ariaLabel='重置筛选条件'
             onClick={onReset}
@@ -46,7 +45,6 @@ export default function FilterSheet({
             className={`filter-sheet__apply ${
               applying ? 'filter-sheet__apply--disabled' : ''
             }`}
-            hoverClass={applying ? 'none' : 'filter-sheet__apply--pressed'}
             ariaRole='button'
             ariaLabel={applying ? '正在筛选' : '应用筛选并查看结果'}
             onClick={() => !applying && onApply()}

@@ -5,34 +5,78 @@
 @use './components/sticker-picker/index' as sticker-picker;
 
 page {
-  --campus-primary: #2b7fff;
-  --campus-primary-strong: #155dfc;
-  --campus-primary-cyan: #00d3f3;
-  --campus-danger: #ff2056;
+  /* Ousea / Global primitives: the single source for new miniapp UI. */
+  --ousea-ocean-50: #f2f7fe;
+  --ousea-ocean-100: #e3effe;
+  --ousea-ocean-400: #4c96f5;
+  --ousea-ocean-500: #2b7aef;
+  --ousea-ocean-600: #1d5fd6;
+  --ousea-wave-400: #38bdf8;
+  --ousea-ink-900: #1a2333;
+  --ousea-ink-700: #3a4759;
+  --ousea-ink-500: #6b7a90;
+  --ousea-ink-300: #a6b2c2;
+  --ousea-bg-page: #f5f8fc;
+  --ousea-bg-line: #e8edf4;
+  --ousea-danger-500: #e5484d;
+  --ousea-danger-50: #fdecec;
+  --ousea-like-500: #f04e6b;
+  --ousea-font-size-badge: 20rpx;
+  --ousea-font-size-caption: 24rpx;
+  --ousea-font-size-label: 27rpx;
+  --ousea-font-size-comment: 30rpx;
+  --ousea-font-size-body: 32rpx;
+  --ousea-font-size-title: 33rpx;
+  --ousea-font-weight-regular: 400;
+  --ousea-font-weight-medium: 500;
+  --ousea-font-weight-semibold: 600;
+  --ousea-font-weight-bold: 700;
+  --ousea-line-height-post: 1.85;
+  --ousea-line-height-comment: 1.65;
+  --ousea-line-height-ui: 1.4;
+  --ousea-space-1: 16rpx;
+  --ousea-space-2: 24rpx;
+  --ousea-space-3: 32rpx;
+  --ousea-space-4: 40rpx;
+  --ousea-space-5: 64rpx;
+  --ousea-radius-pill: 999rpx;
+  --ousea-radius-card-sm: 24rpx;
+  --ousea-radius-card: 32rpx;
+  --ousea-radius-card-lg: 36rpx;
+  --ousea-radius-sheet: 44rpx;
+
+  /* Campus semantic compatibility layer, mapped onto Ousea / Global. */
+  --campus-primary: var(--ousea-ocean-500);
+  --campus-primary-strong: var(--ousea-ocean-600);
+  --campus-primary-cyan: var(--ousea-wave-400);
+  --campus-danger: var(--ousea-danger-500);
   --campus-success: #00bba7;
-  --campus-page: #f4f7fb;
+  --campus-like: var(--ousea-like-500);
+  --campus-page: var(--ousea-bg-page);
   --campus-surface: #fff;
-  --campus-surface-subtle: #f8fafc;
-  --campus-surface-primary: #eff6ff;
-  --campus-surface-danger: #fff1f2;
+  --campus-surface-subtle: var(--ousea-bg-page);
+  --campus-surface-primary: var(--ousea-ocean-50);
+  --campus-surface-danger: var(--ousea-danger-50);
   --campus-surface-errand: #fff7ed;
   --campus-surface-marketplace: #faf5ff;
   --campus-surface-success: #f0fdfa;
   --campus-surface-glass: rgba(255, 255, 255, 0.96);
   --campus-icon-surface: #f0f4f8;
-  --campus-icon-surface-blue: #e8f1ff;
+  --campus-icon-surface-blue: var(--ousea-ocean-100);
   --campus-icon-surface-cyan: #e6f9fc;
   --campus-icon-surface-green: #e9f8f3;
   --campus-icon-surface-orange: #fff3df;
   --campus-icon-surface-purple: #f3e8ff;
   --campus-icon-surface-pink: #ffeef3;
   --campus-overlay: rgba(15, 23, 42, 0.42);
-  --campus-text-heading: #1d293d;
-  --campus-text-body: #45556c;
-  --campus-text-secondary: #62748e;
-  --campus-text-muted: #90a1b9;
-  --campus-border: #f1f5f9;
-  --campus-border-strong: #dbeafe;
+  --campus-text-primary: var(--ousea-ink-900);
+  --campus-text-secondary: var(--ousea-ink-500);
+  --campus-text-auxiliary: var(--ousea-ink-300);
+  --campus-text-heading: var(--ousea-ink-900);
+  --campus-text-body: var(--ousea-ink-700);
+  --campus-text-muted: var(--campus-text-auxiliary);
+  --campus-border: var(--ousea-bg-line);
+  --campus-border-strong: var(--ousea-ocean-100);
   --campus-errand: #ff6900;
   --campus-errand-end: #ffb900;
   --campus-marketplace: #ad46ff;
@@ -40,18 +84,30 @@ page {
   --campus-carpool-end: #00d492;
   --campus-route-origin: #00d492;
   --campus-route-destination: #ff637e;
-  --campus-shadow-card: 0 8rpx 24rpx rgba(43, 127, 255, 0.08);
+  --campus-shadow-card: 0 8rpx 24rpx rgba(29, 95, 214, 0.08);
   --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.05);
-  --campus-font-caption: 22rpx;
-  --campus-font-supporting: 24rpx;
-  --campus-font-body: 28rpx;
-  --campus-font-title: 32rpx;
+  --campus-font-size-auxiliary: 24rpx;
+  --campus-font-size-body: 28rpx;
+  --campus-font-size-important-body: 30rpx;
+  --campus-font-size-card-title: 32rpx;
+  --campus-font-size-page-title: 36rpx;
+  --campus-font-size-large-title: 40rpx;
+  --campus-font-weight-regular: 400;
+  --campus-font-weight-medium: 500;
+  --campus-font-weight-semibold: 600;
+  --campus-line-height-auxiliary: 36rpx;
+  --campus-line-height-body: 44rpx;
+  --campus-line-height-important-body: 46rpx;
+  --campus-line-height-card-title: 48rpx;
+  --campus-line-height-page-title: 54rpx;
+  --campus-line-height-large-title: 60rpx;
 
   min-height: 100%;
-  color: token.$color-text-heading;
+  color: token.$color-text-primary;
   font-family: token.$font-family-sans;
-  font-size: 30rpx;
-  line-height: 1.5;
+  font-size: token.$font-size-body;
+  font-weight: token.$font-weight-regular;
+  line-height: token.$line-height-body;
   background: token.$color-page;
 }
 
@@ -62,6 +118,12 @@ input,
 textarea,
 button {
   box-sizing: border-box;
+}
+
+.campus-theme {
+  min-height: 100vh;
+  color: var(--campus-text-primary, #1a2333);
+  background: var(--campus-page, #f5f8fc);
 }
 
 // Shared motion primitives. Keep product motion short and limited to opacity
@@ -117,46 +179,46 @@ button {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  page {
-    --campus-primary: #60a5fa;
-    --campus-primary-strong: #93c5fd;
-    --campus-primary-cyan: #22d3ee;
-    --campus-danger: #fb7185;
-    --campus-success: #2dd4bf;
-    --campus-page: #0b1220;
-    --campus-surface: #111827;
-    --campus-surface-subtle: #172033;
-    --campus-surface-primary: #172554;
-    --campus-surface-danger: #3f1725;
-    --campus-surface-errand: #3a2416;
-    --campus-surface-marketplace: #2d1b3d;
-    --campus-surface-success: #102f2e;
-    --campus-surface-glass: rgba(17, 24, 39, 0.96);
-    --campus-icon-surface: #172033;
-    --campus-icon-surface-blue: #162a46;
-    --campus-icon-surface-cyan: #12343d;
-    --campus-icon-surface-green: #12352f;
-    --campus-icon-surface-orange: #3a291a;
-    --campus-icon-surface-purple: #2e254c;
-    --campus-icon-surface-pink: #3b202b;
-    --campus-overlay: rgba(0, 0, 0, 0.68);
-    --campus-text-heading: #f8fafc;
-    --campus-text-body: #d7e0ec;
-    --campus-text-secondary: #aab8ca;
-    --campus-text-muted: #8494aa;
-    --campus-border: #243244;
-    --campus-border-strong: #2f4c73;
-    --campus-errand: #fb923c;
-    --campus-errand-end: #fbbf24;
-    --campus-marketplace: #c084fc;
-    --campus-marketplace-end: #f0abfc;
-    --campus-carpool-end: #5eead4;
-    --campus-route-origin: #34d399;
-    --campus-route-destination: #fb7185;
-    --campus-shadow-card: 0 8rpx 24rpx rgba(0, 0, 0, 0.24);
-    --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.32);
+.campus-theme--dark {
+  --campus-primary: #60a5fa;
+  --campus-primary-strong: #93c5fd;
+  --campus-primary-cyan: #22d3ee;
+  --campus-danger: #fb7185;
+  --campus-success: #2dd4bf;
+  --campus-page: #0b1220;
+  --campus-surface: #111827;
+  --campus-surface-subtle: #172033;
+  --campus-surface-primary: #172554;
+  --campus-surface-danger: #3f1725;
+  --campus-surface-errand: #3a2416;
+  --campus-surface-marketplace: #2d1b3d;
+  --campus-surface-success: #102f2e;
+  --campus-surface-glass: rgba(17, 24, 39, 0.96);
+  --campus-icon-surface: #172033;
+  --campus-icon-surface-blue: #162a46;
+  --campus-icon-surface-cyan: #12343d;
+  --campus-icon-surface-green: #12352f;
+  --campus-icon-surface-orange: #3a291a;
+  --campus-icon-surface-purple: #2e254c;
+  --campus-icon-surface-pink: #3b202b;
+  --campus-overlay: rgba(0, 0, 0, 0.68);
+  --campus-text-primary: #f8fafc;
+  --campus-text-secondary: #aab8ca;
+  --campus-text-auxiliary: #8494aa;
+  --campus-text-heading: var(--campus-text-primary);
+  --campus-text-body: #d7e0ec;
+  --campus-text-muted: var(--campus-text-auxiliary);
+  --campus-border: #243244;
+  --campus-border-strong: #2f4c73;
+  --campus-errand: #fb923c;
+  --campus-errand-end: #fbbf24;
+  --campus-marketplace: #c084fc;
+  --campus-marketplace-end: #f0abfc;
+  --campus-carpool-end: #5eead4;
+  --campus-route-origin: #34d399;
+  --campus-route-destination: #fb7185;
+  --campus-shadow-card: 0 8rpx 24rpx rgba(0, 0, 0, 0.24);
+  --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.32);
 
-    color-scheme: dark;
-  }
+  color-scheme: dark;
 }

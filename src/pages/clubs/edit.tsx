@@ -339,10 +339,10 @@ export default function ClubEditorPage() {
               <View style={{ width: `${requiredCompleted / requiredItems.length * 100}%` }} />
             </View>
             <View className='club-editor-progress__nav'>
-              <View hoverClass='club-editor-progress__nav--pressed' ariaRole='button' ariaLabel='跳转到基础资料' onClick={() => scrollToSection('#club-section-basic')}>基础</View>
-              <View hoverClass='club-editor-progress__nav--pressed' ariaRole='button' ariaLabel='跳转到视觉形象' onClick={() => scrollToSection('#club-section-visual')}>形象</View>
-              <View hoverClass='club-editor-progress__nav--pressed' ariaRole='button' ariaLabel='跳转到宣传图集' onClick={() => scrollToSection('#club-section-gallery')}>图集</View>
-              <View hoverClass='club-editor-progress__nav--pressed' ariaRole='button' ariaLabel='跳转到文字介绍' onClick={() => scrollToSection('#club-section-copy')}>介绍</View>
+              <View ariaRole='button' ariaLabel='跳转到基础资料' onClick={() => scrollToSection('#club-section-basic')}>基础</View>
+              <View ariaRole='button' ariaLabel='跳转到视觉形象' onClick={() => scrollToSection('#club-section-visual')}>形象</View>
+              <View ariaRole='button' ariaLabel='跳转到宣传图集' onClick={() => scrollToSection('#club-section-gallery')}>图集</View>
+              <View ariaRole='button' ariaLabel='跳转到文字介绍' onClick={() => scrollToSection('#club-section-copy')}>介绍</View>
             </View>
           </View>
 
@@ -384,7 +384,7 @@ export default function ClubEditorPage() {
             <View className='club-image-fields'>
               <View className='club-image-field'>
                 <Text className='club-field__label'>Logo *</Text>
-                <View id='club-logo-picker' className='club-image-field__single club-image-field__single--logo' hoverClass='club-image-field__single--pressed' ariaRole='button' ariaLabel={logo ? '重新选择社团 Logo' : '选择社团 Logo'} onClick={() => void chooseSingleImage('logo')}>
+                <View id='club-logo-picker' className='club-image-field__single club-image-field__single--logo' ariaRole='button' ariaLabel={logo ? '重新选择社团 Logo' : '选择社团 Logo'} onClick={() => void chooseSingleImage('logo')}>
                   {logo ? <Image id={logo.media_id ? `club-logo-media-${logo.media_id}` : undefined} src={logo.preview_url} mode='aspectFill' ariaLabel='社团 Logo 预览' /> : <View><Image src={require('../../assets/icons/plus.svg')} mode='aspectFit' /><Text>选择 Logo</Text></View>}
                   {logo?.status === 'uploading' && <View className='club-image-field__progress'><View style={{ width: `${logo.progress}%` }} /></View>}
                 </View>
@@ -393,7 +393,7 @@ export default function ClubEditorPage() {
               </View>
               <View className='club-image-field'>
                 <Text className='club-field__label'>封面</Text>
-                <View className='club-image-field__single club-image-field__single--cover' hoverClass='club-image-field__single--pressed' ariaRole='button' ariaLabel={cover ? '重新选择社团封面' : '选择社团封面'} onClick={() => void chooseSingleImage('cover')}>
+                <View className='club-image-field__single club-image-field__single--cover' ariaRole='button' ariaLabel={cover ? '重新选择社团封面' : '选择社团封面'} onClick={() => void chooseSingleImage('cover')}>
                   {cover ? <Image src={cover.preview_url} mode='aspectFill' ariaLabel='社团封面预览' /> : <View><Image src={require('../../assets/icons/plus.svg')} mode='aspectFit' /><Text>选择 16:9 封面</Text></View>}
                   {cover?.status === 'uploading' && <View className='club-image-field__progress'><View style={{ width: `${cover.progress}%` }} /></View>}
                 </View>
@@ -426,7 +426,7 @@ export default function ClubEditorPage() {
                   </View>
                 </View>
               ))}
-              {gallery.length < MAX_CLUB_GALLERY_IMAGES && <View id='club-gallery-add' className='club-gallery-add' hoverClass='club-gallery-add--pressed' ariaRole='button' ariaLabel={`添加宣传图片，还可选择 ${MAX_CLUB_GALLERY_IMAGES - gallery.length} 张`} onClick={() => void chooseGallery()}><Image src={require('../../assets/icons/plus.svg')} mode='aspectFit' /><Text>添加宣传图片</Text><Text>还可选择 {MAX_CLUB_GALLERY_IMAGES - gallery.length} 张</Text></View>}
+              {gallery.length < MAX_CLUB_GALLERY_IMAGES && <View id='club-gallery-add' className='club-gallery-add' ariaRole='button' ariaLabel={`添加宣传图片，还可选择 ${MAX_CLUB_GALLERY_IMAGES - gallery.length} 张`} onClick={() => void chooseGallery()}><Image src={require('../../assets/icons/plus.svg')} mode='aspectFit' /><Text>添加宣传图片</Text><Text>还可选择 {MAX_CLUB_GALLERY_IMAGES - gallery.length} 张</Text></View>}
             </View>
           </View>
 

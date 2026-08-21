@@ -11,8 +11,11 @@ import {
 } from '../../../../features/community/topic'
 import { lifeServicesRepository } from '../../../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../../../features/life-services/refresh-policy'
-import CommunityPostCard from '../../../../features/community/post-card'
+import CommunityCommentSheet from '../../../../features/community/comment-sheet'
+import CommunityPostCard, { type CommunityPostCommentPreview } from '../../../../features/community/post-card'
+import { mergePublicCommentPreview } from '../../../../features/community/comments'
 import { saveCommunityDetailSnapshot } from '../../../../features/community/detail-snapshot'
+import { useDismissCommunityOverlaysOnScroll } from '../../../../features/community/use-overlay-dismissal'
 import { useCampusShare } from '../../../../features/share'
 import './index.scss'
 import { openPublicProfile } from '../../../../features/profile/public-profile'
@@ -40,6 +43,11 @@ export default function CommunityTopicPage() {
   const [topicId, setTopicId] = useState(0)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentReplyTarget, setCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
+  const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
   const requestSequence = useRef(0)
 
   const load = useCallback(async (id: number, nextPage = 1, append = false) => {
@@ -111,12 +119,30 @@ export default function CommunityTopicPage() {
     void load(topicId)
   }, [load, topicId]))
 
-  useCampusShare(() => ({
-    title: topic ? `#${topic.name}｜海大校园话题` : '海大校园话题',
-    path: topicId ? '/packages/social/community/topic/index' : '/pages/community/index',
-    query: topicId ? { id: topicId } : undefined,
-    imageUrl: topic?.cover_url || undefined,
-  }))
+  useCampusShare((event) => {
+    const dataset = event.target?.dataset || {}
+    const postId = Number(dataset.postId)
+    if (event.from === 'button' && postId > 0) {
+      const shareTitle = typeof dataset.shareTitle === 'string'
+        ? dataset.shareTitle
+        : '海大校园动态'
+      const shareImage = typeof dataset.shareImage === 'string'
+        ? dataset.shareImage
+        : ''
+      const result = {
+        title: shareTitle,
+        path: '/packages/social/community/detail',
+        query: { id: postId, mode: 'post' },
+      }
+      return shareImage ? { ...result, imageUrl: shareImage } : result
+    }
+    return {
+      title: topic ? `#${topic.name}｜海大校园话题` : '海大校园话题',
+      path: topicId ? '/packages/social/community/topic/index' : '/pages/community/index',
+      query: topicId ? { id: topicId } : undefined,
+      imageUrl: topic?.cover_url || undefined,
+    }
+  })
 
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {
     const updated = post.liked
@@ -126,8 +152,56 @@ export default function CommunityTopicPage() {
     markLifeHubSectionDirty('community')
   }, [])
   const openPost = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
     saveCommunityDetailSnapshot(post)
     return Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
+  const openComments = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(null)
+    setCommentPost(post)
+  }, [])
+  const openReply = useCallback((post: CampusCirclePostView, comment: CommunityPostCommentPreview) => {
+    setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(comment)
+    setCommentPost(post)
+  }, [])
+  const toggleActions = useCallback((postId: number) => {
+    setOpenActionPostId((current) => current === postId ? null : postId)
+  }, [])
+  const closeActions = useCallback(() => {
+    setOpenActionPostId(null)
+  }, [])
+  const updateLatestComment = useCallback((comment: Parameters<typeof mergePublicCommentPreview>[1]) => {
+    setPosts((current) => current.map((item) => (
+      item.id === comment.target_id
+        ? {
+            ...item,
+            comment_previews: mergePublicCommentPreview(
+              item.comment_previews,
+              comment,
+              commentReplyTarget,
+            ),
+          }
+        : item
+    )))
+  }, [commentReplyTarget])
+  const dismissCommunityOverlays = useCallback(() => {
+    setOpenActionPostId(null)
+    if (commentPost) setCommentDismissSignal((current) => current + 1)
+  }, [commentPost])
+  useDismissCommunityOverlaysOnScroll({
+    active: openActionPostId !== null || (commentPost !== null && !commentSubmitting),
+    onDismiss: dismissCommunityOverlays,
+  })
+  const updateCommentCount = useCallback((postId: number, delta: number) => {
+    setPosts((current) => current.map((item) => (
+      item.id === postId
+        ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+        : item
+    )))
   }, [])
   const openPublisher = useCallback(() => {
     if (!topic) return
@@ -175,7 +249,6 @@ export default function CommunityTopicPage() {
               </View>
               <View
                 className='community-topic-hero__action'
-                hoverClass='community-topic-hero__action--pressed'
                 ariaRole='button'
                 ariaLabel={`${participateLabel}：${topic.name}`}
                 onClick={openPublisher}
@@ -204,7 +277,6 @@ export default function CommunityTopicPage() {
           <Text>{error}</Text>
           <View
             className='community-topic-page__retry'
-            hoverClass='community-topic-page__retry--pressed'
             ariaRole='button'
             ariaLabel='重新加载话题'
             onClick={reload}
@@ -216,8 +288,13 @@ export default function CommunityTopicPage() {
           key={post.id}
           post={post}
           sectionName='校园社区'
+          actionsOpen={openActionPostId === post.id}
+          onToggleActions={toggleActions}
+          onCloseActions={closeActions}
           onToggleLike={toggleLike}
           onOpen={openPost}
+          onOpenComments={openComments}
+          onReplyComment={openReply}
           onOpenAuthor={openPostAuthor}
         />
       ))}
@@ -228,7 +305,6 @@ export default function CommunityTopicPage() {
           <Text>带上这个话题，成为第一个参与讨论的人</Text>
           <View
             className='community-topic-empty__action'
-            hoverClass='community-topic-empty__action--pressed'
             ariaRole='button'
             ariaLabel={`${participateLabel}：${topic.name}`}
             onClick={openPublisher}
@@ -240,13 +316,34 @@ export default function CommunityTopicPage() {
       {!loading && !error && posts.length < total && (
         <View
           className='api-community-load-more'
-          hoverClass='community-topic-empty__action--pressed'
           ariaRole='button'
           ariaLabel={loadingMore ? '正在加载更多话题动态' : '查看更多话题动态'}
           onClick={loadMore}
         >
           {loadingMore ? '正在加载…' : '查看更多'}
         </View>
+      )}
+      {commentPost && (
+        <CommunityCommentSheet
+          key={commentPost.id}
+          post={commentPost}
+          initialReplyTarget={commentReplyTarget ? {
+            id: commentReplyTarget.id,
+            author_id: commentReplyTarget.authorId,
+            author_deleted: commentReplyTarget.authorDeleted,
+            author_nickname: commentReplyTarget.authorNickname,
+            root_id: commentReplyTarget.rootId,
+          } : null}
+          onClose={() => {
+            setCommentPost(null)
+            setCommentReplyTarget(null)
+            setCommentSubmitting(false)
+          }}
+          onSubmittingChange={setCommentSubmitting}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
+          onCommentCreated={updateLatestComment}
+        />
       )}
     </View>
   </View>

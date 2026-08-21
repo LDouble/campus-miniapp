@@ -369,7 +369,6 @@ export default function ExamsPage() {
                     <View
                       key={exam.id}
                       className={`exam-card exam-card--${status}`}
-                      hoverClass='exam-card--pressed'
                       onClick={() => {
                         setActiveExam(exam)
                         setSheet('exam-detail')

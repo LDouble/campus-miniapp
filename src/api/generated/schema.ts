@@ -3338,6 +3338,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/home/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按公开时间聚合校园圈帖子、二手、跑腿和拼车内容 */
+        get: operations["ListHomeFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/marketplace/listings": {
         parameters: {
             query?: never;
@@ -5933,6 +5950,7 @@ export interface components {
              * @description 审核通过且公开可见的评论及回复总数
              */
             comment_count: number;
+            comment_previews: components["schemas"]["PublicCommentPreview"][];
             content: string | null;
             /** Format: date-time */
             created_at: string;
@@ -5945,6 +5963,7 @@ export interface components {
             /** Format: int64 */
             like_count: number;
             liked: boolean;
+            liked_by_nicknames: string[];
             /**
              * Format: date-time
              * @description 管理端运营置顶截止时间；未置顶或公开视图不返回
@@ -5997,6 +6016,7 @@ export interface components {
             name: string;
             /** Format: uint64 */
             parent_id: number | null;
+            show_on_home: boolean;
             slug: string;
             /** Format: int64 */
             sort_order: number;
@@ -6094,6 +6114,9 @@ export interface components {
             author_nickname: string;
             available_actions: components["schemas"]["CarpoolViewerAction"][];
             campus: string | null;
+            /** Format: int64 */
+            comment_count: number;
+            comment_previews: components["schemas"]["PublicCommentPreview"][];
             contact: string;
             contact_type: string;
             /** Format: date-time */
@@ -6104,6 +6127,9 @@ export interface components {
             destination: string;
             /** Format: uint64 */
             id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked_by_nicknames: string[];
             /** Format: int64 */
             occupied_seats: number;
             /** Format: uint64 */
@@ -7238,6 +7264,9 @@ export interface components {
             campus: string | null;
             /** Format: date-time */
             cancelled_at: string | null;
+            /** Format: int64 */
+            comment_count: number;
+            comment_previews: components["schemas"]["PublicCommentPreview"][];
             /** Format: date-time */
             completed_at: string | null;
             contact: string;
@@ -7253,6 +7282,9 @@ export interface components {
             dropoff_location: string;
             /** Format: uint64 */
             id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked_by_nicknames: string[];
             /** Format: date-time */
             picked_up_at: string | null;
             pickup_location: string;
@@ -7374,6 +7406,83 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        HomeFeedImageView: {
+            /** Format: uint64 */
+            media_id?: number | null;
+            url: string;
+        };
+        HomeFeedItemView: {
+            /** Format: int64 */
+            amount_cents?: number | null;
+            author_deleted: boolean;
+            /** Format: uint64 */
+            author_id: number;
+            author_nickname: string;
+            /** Format: int64 */
+            available_seats?: number | null;
+            campus?: string | null;
+            category?: string | null;
+            /** Format: int64 */
+            comment_count: number;
+            comment_previews: components["schemas"]["PublicCommentPreview"][];
+            content?: string | null;
+            currency?: string | null;
+            /** Format: date-time */
+            deadline?: string | null;
+            /** Format: date-time */
+            departure_at?: string | null;
+            destination?: string | null;
+            dropoff_location?: string | null;
+            /** Format: date-time */
+            feed_time: string;
+            images: components["schemas"]["HomeFeedImageView"][];
+            intent?: string | null;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
+            liked_by_nicknames: string[];
+            origin?: string | null;
+            pickup_location?: string | null;
+            /** Format: uint64 */
+            section_id?: number | null;
+            /** Format: uint64 */
+            source_id: number;
+            source_type: components["schemas"]["HomeFeedSourceType"];
+            /** Format: int64 */
+            total_seats?: number | null;
+            /** Format: uint64 */
+            version: number;
+        };
+        HomeFeedPage: {
+            items: components["schemas"]["HomeFeedItemView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        HomeFeedPageResponseBody: {
+            data: components["schemas"]["HomeFeedPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        HomeFeedSourceType: "campus_circle_post" | "marketplace_listing" | "errand" | "carpool";
+        PublicCommentPreview: {
+            /** Format: uint64 */
+            author_id: number;
+            author_nickname: string;
+            content: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            parent_id: number | null;
+            /** Format: uint64 */
+            reply_to_comment_id: number | null;
+            reply_to_nickname: string | null;
+            /** Format: uint64 */
+            root_id: number;
+        };
         MarketplaceListingImageView: {
             /** Format: uint64 */
             media_id?: number | null;
@@ -7398,6 +7507,9 @@ export interface components {
             campus: string | null;
             /** @enum {string} */
             category: "general" | "course_material";
+            /** Format: int64 */
+            comment_count: number;
+            comment_previews: components["schemas"]["PublicCommentPreview"][];
             contact: string;
             contact_type: string;
             course_code: string | null;
@@ -7412,6 +7524,9 @@ export interface components {
             images?: components["schemas"]["MarketplaceListingImageView"][];
             /** @enum {string} */
             intent: "sell" | "wanted";
+            /** Format: int64 */
+            like_count: number;
+            liked_by_nicknames: string[];
             /** Format: uint64 */
             owner_id: number;
             /** Format: int64 */
@@ -7742,7 +7857,7 @@ export interface components {
             message_id: number;
         };
         /** @enum {string} */
-        ReactionResourceType: "campus_circle_post" | "comment";
+        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
         ReactionState: {
             /** Format: int64 */
             like_count: number;
@@ -9137,6 +9252,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ErrorReportResponseBody"];
+            };
+        };
+        /** @description 首页公开内容聚合分页 */
+        HomeFeedPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["HomeFeedPageResponseBody"];
             };
         };
         /** @description 二手商品分页 */
@@ -11439,6 +11563,7 @@ export interface operations {
                     cover_url?: string;
                     /** Format: int64 */
                     sort_order: number;
+                    show_on_home?: boolean;
                 };
             };
         };
@@ -11468,6 +11593,7 @@ export interface operations {
                     cover_url?: string;
                     /** Format: int64 */
                     sort_order: number;
+                    show_on_home?: boolean;
                     /** Format: uint64 */
                     expected_version: number;
                 };
@@ -14224,6 +14350,21 @@ export interface operations {
             503: components["responses"]["Error"];
         };
     };
+    ListHomeFeed: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["HomeFeedPageResponse"];
+        };
+    };
     ListAdminMarketplaceListings: {
         parameters: {
             query?: {
@@ -15157,7 +15298,7 @@ export interface operations {
     LikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
             };
             header?: never;
             path: {
@@ -15175,7 +15316,7 @@ export interface operations {
     UnlikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
             };
             header?: never;
             path: {

@@ -17,13 +17,17 @@ import {
   formatStatus,
   remainingSeats,
 } from '../../../features/life-services/format'
-import DetailAuthorNavbar from '../../../features/life-services/components/detail-author-navbar'
+import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
 import DetailBusinessIntro from '../../../features/life-services/components/detail-business-intro'
 import DetailComments, {
   createBusinessContactComment,
 } from '../../../features/life-services/components/detail-comments'
+import DetailOverflowActions from '../../../features/life-services/components/detail-overflow-actions'
 import BusinessRoute from '../../../features/life-services/components/business-route'
-import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
+import {
+  buildDetailFooterActions,
+  splitDetailActions,
+} from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
 import {
   contactTypeLabel,
@@ -232,44 +236,48 @@ export default function CarpoolDetailPage() {
     busy: working,
     onAction: (action) => void runAction(action),
   }) : []
+  const { inlineActions, overflowActions } = splitDetailActions(
+    footerActions,
+    ['edit', 'cancel'],
+  )
 
   return (
     <View className='life-detail life-detail--carpool'>
-      <CustomNavbar
-        title='找同行详情'
-        showBack
-        barContent={item ? (
-          <DetailAuthorNavbar
-            avatarUrl={item.author_avatar_url}
-            nickname={item.author_nickname}
-            userId={item.organizer_id}
-          />
-        ) : undefined}
-      />
+      <CustomNavbar title='找同行详情' showBack />
       <View className='life-detail__content'>
         {loading && <View className='detail-state'>正在加载找同行信息</View>}
         {!loading && error && <View className='detail-state'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
         {!loading && item && (
           <>
+            <DetailAuthorHeader
+              avatarUrl={item.author_avatar_url}
+              nickname={item.author_nickname}
+              userId={item.organizer_id}
+              meta={<Text>{formatDateTime(item.created_at)}</Text>}
+              action={(
+                <View className='detail-overview__toolbar-actions'>
+                  {item.viewer_relation !== 'organizer' && (
+                    <View
+                      className='detail-overview__report'
+                      onClick={() => void openContentReport({
+                        resourceType: 'carpool',
+                        resourceId: item.id,
+                        resourceVersion: item.version,
+                      })}
+                    >
+                      举报
+                    </View>
+                  )}
+                  <DetailOverflowActions actions={overflowActions} />
+                </View>
+              )}
+            />
             <DetailBusinessIntro
               badges={[
                 campusLabel(item.campus),
                 formatStatus(item.status, item.review_status),
               ]}
-              description={item.description}
-              action={item.viewer_relation !== 'organizer' ? (
-                <View
-                  className='detail-overview__report'
-                  hoverClass='detail-report-link--pressed'
-                  onClick={() => void openContentReport({
-                    resourceType: 'carpool',
-                    resourceId: item.id,
-                    resourceVersion: item.version,
-                  })}
-                >
-                  举报
-                </View>
-              ) : undefined}
+              title={item.description}
             >
               <View className='carpool-detail-route-card'>
                 <BusinessRoute
@@ -338,7 +346,7 @@ export default function CarpoolDetailPage() {
               refreshKey={commentRefreshKey}
               targetAuthorId={item.organizer_id}
               tone='carpool'
-              actions={footerActions}
+              actions={inlineActions}
               persistentContact={persistentContact}
             />
           </>

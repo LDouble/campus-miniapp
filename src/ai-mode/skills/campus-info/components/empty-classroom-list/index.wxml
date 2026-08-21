@@ -1,4 +1,4 @@
-<view class="classroom-card">
+<view class="classroom-card {{darkMode ? 'classroom-card--dark' : ''}}">
   <view class="classroom-card__header">
     <view class="classroom-card__query">
       <text class="classroom-card__eyebrow">空教室</text>

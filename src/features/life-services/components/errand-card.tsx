@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import type { ErrandView } from '../../../api/types'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
 import { apiDateTimeTimestamp } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
@@ -13,6 +13,8 @@ import {
   formatStatus,
   relativeDeadline,
 } from '../format'
+
+const moreIcon = require('../../../assets/icons/more-horizontal.svg')
 
 const openDetail = (item: ErrandView) => {
   requestWechatSubscriptionForModule('errand')
@@ -36,18 +38,17 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
     <View
       id={`errand-card-${item.id}`}
       className='errand-card'
-      hoverClass='business-card--pressed'
       onClick={() => openDetail(item)}
     >
       <View className='business-card-header'>
-        <View className='business-card-avatar business-card-avatar--errand'>
-          <UserAvatarImage
-            src={item.author_avatar_url}
-            className='business-card-avatar__image'
-            fallback={authorInitial}
-            lazyLoad
-          />
-        </View>
+        <UserAvatar
+          src={item.author_avatar_url}
+          className='business-card-avatar business-card-avatar--errand'
+          imageClassName='business-card-avatar__image'
+          fallback={authorInitial}
+          userId={item.requester_id}
+          lazyLoad
+        />
         <View className='business-card-identity'>
           <View>
             <Text>{authorName}</Text>
@@ -57,7 +58,7 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
           </View>
           <Text>{relativeDeadline(item.deadline)}</Text>
         </View>
-        <Text className='business-card-more'>•••</Text>
+        <Image className='business-card-more' src={moreIcon} mode='aspectFit' />
       </View>
 
       <StickerContent

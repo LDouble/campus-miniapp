@@ -1,7 +1,11 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import { getSystemState } from '../../state/system'
+import {
+  applyCampusThemeToCurrentPage,
+  applyCampusThemeToNativeChrome,
+} from '../../features/theme-preference'
 import './index.scss'
 
 interface CustomNavbarProps {
@@ -72,6 +76,11 @@ function CustomNavbar({
   barContent,
   barContentClassName = '',
 }: CustomNavbarProps) {
+  useEffect(() => {
+    applyCampusThemeToCurrentPage()
+    applyCampusThemeToNativeChrome()
+  }, [])
+
   const metrics = getNavbarMetrics()
   const navbarHeight = metrics.statusBarHeight + metrics.navigationBarHeight
   const goBack = () => {
@@ -111,7 +120,6 @@ function CustomNavbar({
             {showBack && (
               <View
                 className='custom-navbar__back'
-                hoverClass='custom-navbar__back--pressed'
                 onClick={goBack}
               >
                 <View className='custom-navbar__back-icon' />
@@ -144,7 +152,6 @@ function CustomNavbar({
             <View
               className='custom-navbar__action'
               style={{ right: `${metrics.sideWidth + 6}px` }}
-              hoverClass='custom-navbar__action--pressed'
               ariaRole='button'
               ariaLabel={actionLabel}
               onClick={onAction}

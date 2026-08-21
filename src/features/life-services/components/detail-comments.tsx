@@ -1,9 +1,18 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import Taro from '@tarojs/taro'
-import { Button, Image, Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import type { CommentView } from '../../../api/types'
+import { getCurrentUser } from '../../../api/account'
 import { isApiError } from '../../../api/client'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
 import StickerContent from '../../../components/sticker-content'
 import StickerPicker from '../../../components/sticker-picker'
@@ -20,20 +29,25 @@ import {
   applyCommentReaction,
   commentLikeFailure,
 } from '../../community/comment-likes'
-import CommunityLevelBadge from '../../community/level-badge'
+import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dismissal'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import './detail-comments.scss'
 
 const icons = {
-  heart: require('../../../assets/community/heart.svg'),
+  heart: require('../../../assets/community/detail-comment-heart.svg'),
+  heartSmall: require('../../../assets/community/detail-comment-heart-small.svg'),
   heartActive: require('../../../assets/community/heart-active.svg'),
+  reply: require('../../../assets/community/detail-comment-reply.svg'),
   send: require('../../../assets/community/send.svg'),
-  share: require('../../../assets/community/share.svg'),
 }
 
 export type DetailCommentTarget = 'campus_circle_post' | 'marketplace' | 'errand' | 'carpool'
+export type DetailReplyTarget = Pick<
+  CommentView,
+  'id' | 'author_id' | 'author_deleted' | 'author_nickname' | 'root_id'
+>
 
 const openCommentAuthor = (comment: CommentView) => {
   if (!comment.author_deleted) void openPublicProfile(comment.author_id)
@@ -75,6 +89,49 @@ type PendingTimer = {
 
 const COMPOSER_CLOSE_DURATION = 180
 const COMMENT_FOCUS_DURATION = 2200
+const REPLY_TARGET_SCROLL_DURATION = 180
+const REPLY_TARGET_SCROLL_GAP = 12
+const REPLY_TARGET_SCROLL_DELAY = 80
+const REPLY_TARGET_DISMISS_SUPPRESSION = 800
+const REPLY_OPEN_DISMISS_SUPPRESSION = 1600
+
+type SelectorRect = {
+  bottom?: number
+  top?: number
+}
+
+type ViewportScroll = {
+  scrollTop?: number
+}
+
+const scrollReplyTargetAboveComposer = (
+  targetSelector: string,
+  isCurrentRequest: () => boolean,
+) => {
+  const query = Taro.createSelectorQuery()
+  query.select(targetSelector).boundingClientRect()
+  query.select('.business-detail-composer').boundingClientRect()
+  query.selectViewport().scrollOffset()
+  query.exec((results) => {
+    if (!isCurrentRequest()) return
+
+    const target = results[0] as SelectorRect | null
+    const composer = results[1] as SelectorRect | null
+    const viewport = results[2] as ViewportScroll | null
+    const targetBottom = Number(target?.bottom)
+    const composerTop = Number(composer?.top)
+    if (!Number.isFinite(targetBottom) || !Number.isFinite(composerTop)) return
+
+    const overlap = targetBottom - (composerTop - REPLY_TARGET_SCROLL_GAP)
+    if (overlap <= 0) return
+
+    suppressCommunityOverlayDismiss(REPLY_TARGET_DISMISS_SUPPRESSION)
+    void Taro.pageScrollTo({
+      scrollTop: Math.max(0, (Number(viewport?.scrollTop) || 0) + overlap),
+      duration: REPLY_TARGET_SCROLL_DURATION,
+    })
+  })
+}
 
 type DetailCommentsProps = {
   targetType: DetailCommentTarget
@@ -83,7 +140,17 @@ type DetailCommentsProps = {
   refreshKey?: number
   targetAuthorId?: number
   initialCommentId?: number
+  initialComposerOpen?: boolean
+  initialReplyTarget?: DetailReplyTarget | null
+  closeComposerSignal?: number
+  composerOnly?: boolean
+  onComposerClosed?: () => void
+  onSubmittingChange?: (submitting: boolean) => void
+  onReplyKeyboardHeightChange?: (height: number) => void
   displayTotal?: number
+  headingLabel?: string
+  showHeading?: boolean
+  headingActions?: ReactNode
   placeholder?: string
   tone?: Exclude<DetailCommentTarget, 'campus_circle_post'> | 'community'
   actions?: DetailFooterAction[]
@@ -121,7 +188,7 @@ const previewThreadStates = (items: CommentView[]) => items.reduce<Record<number
   {},
 )
 
-const commentAuthorName = (comment: CommentView) => (
+const commentAuthorName = (comment: Pick<CommentView, 'author_id' | 'author_deleted' | 'author_nickname'>) => (
   comment.author_deleted
     ? '已注销用户'
     : comment.author_nickname?.trim() || `用户 #${comment.author_id}`
@@ -131,46 +198,63 @@ const commentAuthorInitial = (comment: CommentView) => (
   Array.from(commentAuthorName(comment))[0] || '同'
 )
 
-const compactCommentName = (name: string, maxLength = 6) => {
-  const characters = Array.from(name.trim())
-  return characters.length > maxLength
-    ? `${characters.slice(0, maxLength).join('')}…`
-    : characters.join('')
-}
+const formatCommentDateTime = (value?: string | null) => (
+  formatDateTime(value).replace(/^(\d{2})月(\d{2})日/u, '$1-$2')
+)
 
 const renderCommentMeta = (
   comment: CommentView,
   liking: boolean,
+  currentUserId: number,
   onToggleLike: (comment: CommentView) => void,
+  compact = false,
 ) => {
   const expectedAction = comment.liked ? 'unlike' : 'like'
   const canToggleLike = comment.available_actions.includes(expectedAction)
+  const isOwnComment = comment.author_id === currentUserId
+  const likeLabel = isOwnComment
+    ? `${comment.like_count}赞`
+    : String(comment.like_count)
 
   return (
     <View className='business-detail-comment__meta'>
-      <Text>{formatDateTime(comment.created_at)}</Text>
       {comment.status !== 'approved' && <Text>{formatStatus(comment.status)}</Text>}
       {canToggleLike ? (
         <View
           className={[
             'business-detail-comment__like',
+            isOwnComment ? 'business-detail-comment__like--own' : '',
             comment.liked ? 'business-detail-comment__like--active' : '',
             liking ? 'business-detail-comment__like--busy' : '',
           ].filter(Boolean).join(' ')}
-          hoverClass={!liking ? 'business-detail-comment__like--pressed' : undefined}
-          hoverStartTime={20}
-          hoverStayTime={100}
           ariaRole='button'
           ariaLabel={`${liking ? '点赞处理中' : comment.liked ? '取消点赞' : '点赞'}，当前 ${comment.like_count} 个赞`}
-          onClick={!liking ? () => onToggleLike(comment) : undefined}
+          onClick={!liking ? (event) => {
+            event.stopPropagation()
+            onToggleLike(comment)
+          } : undefined}
         >
-          <Image src={comment.liked ? icons.heartActive : icons.heart} mode='aspectFit' />
-          <Text>{comment.like_count}</Text>
+          <Image
+            src={comment.liked ? icons.heartActive : compact ? icons.heartSmall : icons.heart}
+            mode='aspectFit'
+          />
+          <Text>{likeLabel}</Text>
         </View>
       ) : (
-        <Text className='business-detail-comment__like-count'>
-          {comment.like_count} 赞
-        </Text>
+        <View
+          className={[
+            'business-detail-comment__like',
+            'business-detail-comment__like--readonly',
+            isOwnComment ? 'business-detail-comment__like--own' : '',
+          ].filter(Boolean).join(' ')}
+          ariaLabel={`当前 ${comment.like_count} 个赞`}
+        >
+          <Image
+            src={comment.liked ? icons.heartActive : compact ? icons.heartSmall : icons.heart}
+            mode='aspectFit'
+          />
+          <Text>{likeLabel}</Text>
+        </View>
       )}
     </View>
   )
@@ -184,6 +268,7 @@ const renderReplyTree = (
   enteringCommentId: number,
   removingCommentId: number,
   likingIds: ReadonlySet<number>,
+  currentUserId: number,
   onStartReply: (comment: CommentView) => void,
   onOpenActions: (comment: CommentView) => void,
   onToggleLike: (comment: CommentView) => void,
@@ -198,32 +283,75 @@ const renderReplyTree = (
         id={`detail-comment-${comment.id}`}
         className={[
           'business-detail-comment__reply',
+          `business-detail-comment__reply--${comment.status}`,
           focusedCommentId === comment.id ? 'business-detail-comment__reply--focused' : '',
           enteringCommentId === comment.id ? 'business-detail-comment-node--entering' : '',
           removingCommentId === comment.id ? 'business-detail-comment-node--removing' : '',
         ].filter(Boolean).join(' ')}
+        onClick={() => onStartReply(comment)}
         onLongPress={() => onOpenActions(comment)}
       >
-        <View
-          className='business-detail-comment__reply-identity'
+        <UserAvatar
+          src={comment.author_deleted ? '' : comment.author_avatar_url}
+          className='business-detail-comment__reply-avatar'
+          imageClassName='business-detail-comment__reply-avatar-image'
+          fallback={commentAuthorInitial(comment)}
+          userId={comment.author_deleted ? 0 : comment.author_id}
+          lazyLoad
           ariaRole='button'
           ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
-          onClick={() => openCommentAuthor(comment)}
-        >
-          <Text className='business-detail-comment__reply-relation'>
-            {compactCommentName(commentAuthorName(comment))}
-            {replyTargetName ? `@${compactCommentName(replyTargetName)}` : ''}
-          </Text>
-          {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
-          <CommunityLevelBadge level={comment.author_level} compact />
+          onClick={(event) => {
+            event.stopPropagation()
+            openCommentAuthor(comment)
+          }}
+        />
+        <View className='business-detail-comment__reply-body'>
+          <View className='business-detail-comment__reply-header'>
+            <View
+              className='business-detail-comment__reply-identity'
+              ariaRole='button'
+              ariaLabel={replyTargetName
+                ? `查看${commentAuthorName(comment)}的个人主页，回复${replyTargetName}`
+                : `查看${commentAuthorName(comment)}的个人主页`}
+              onClick={(event) => {
+                event.stopPropagation()
+                openCommentAuthor(comment)
+              }}
+            >
+              <Text className='business-detail-comment__reply-relation'>
+                {commentAuthorName(comment)}
+              </Text>
+              {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
+              {replyTargetName && (
+                <>
+                  <Image
+                    className='business-detail-comment__reply-to'
+                    src={icons.reply}
+                    mode='aspectFit'
+                  />
+                  <Text className='business-detail-comment__reply-target'>
+                    {replyTargetName}
+                  </Text>
+                </>
+              )}
+            </View>
+          </View>
+          <View
+            id={`detail-comment-reply-${comment.id}`}
+            className='business-detail-comment__reply-content'
+          >
+            <StickerContent
+              content={comment.content}
+              stickerClassName='business-detail-comment__sticker'
+            />
+          </View>
+          <View className='business-detail-comment__footer'>
+            <Text className='business-detail-comment__time'>
+              {formatCommentDateTime(comment.created_at)}
+            </Text>
+            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike, true)}
+          </View>
         </View>
-        <View className='business-detail-comment__reply-content' onClick={() => onStartReply(comment)}>
-          <StickerContent
-            content={comment.content}
-            stickerClassName='business-detail-comment__sticker'
-          />
-        </View>
-        {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
       </View>
       {children.length > 0 && (
         <View className='business-detail-comment__reply-children'>
@@ -235,6 +363,7 @@ const renderReplyTree = (
             enteringCommentId,
             removingCommentId,
             likingIds,
+            currentUserId,
             onStartReply,
             onOpenActions,
             onToggleLike,
@@ -253,6 +382,7 @@ type DetailCommentThreadProps = {
   enteringCommentId: number
   removingCommentId: number
   likingIds: ReadonlySet<number>
+  currentUserId: number
   onExpand: (rootId: number) => void
   onStartReply: (comment: CommentView) => void
   onOpenActions: (comment: CommentView) => void
@@ -267,6 +397,7 @@ const DetailCommentThread = memo(function DetailCommentThread({
   enteringCommentId,
   removingCommentId,
   likingIds,
+  currentUserId,
   onExpand,
   onStartReply,
   onOpenActions,
@@ -301,33 +432,37 @@ const DetailCommentThread = memo(function DetailCommentThread({
     >
       <View
         id={`detail-comment-${comment.id}`}
-        className={`business-detail-comment ${focusedCommentId === comment.id ? 'business-detail-comment--focused' : ''}`}
+        className={[
+          'business-detail-comment',
+          `business-detail-comment--${comment.status}`,
+          focusedCommentId === comment.id ? 'business-detail-comment--focused' : '',
+        ].filter(Boolean).join(' ')}
       >
-        <View
+        <UserAvatar
+          src={comment.author_deleted ? '' : comment.author_avatar_url}
           className='business-detail-comment__avatar'
+          imageClassName='business-detail-comment__avatar-image'
+          fallback={commentAuthorInitial(comment)}
+          userId={comment.author_deleted ? 0 : comment.author_id}
+          lazyLoad
           ariaRole='button'
           ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
           onClick={() => openCommentAuthor(comment)}
-        >
-          <UserAvatarImage
-            src={comment.author_avatar_url || ''}
-            className='business-detail-comment__avatar-image'
-            fallback={commentAuthorInitial(comment)}
-            lazyLoad
-          />
-        </View>
+        />
         <View className='business-detail-comment__body'>
-          <View
-            className='business-detail-comment__identity'
-            ariaRole='button'
-            ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
-            onClick={() => openCommentAuthor(comment)}
-          >
-            <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
-            {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
-            <CommunityLevelBadge level={comment.author_level} compact />
+          <View className='business-detail-comment__header'>
+            <View
+              className='business-detail-comment__identity'
+              ariaRole='button'
+              ariaLabel={`查看${commentAuthorName(comment)}的个人主页`}
+              onClick={() => openCommentAuthor(comment)}
+            >
+              <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
+              {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
+            </View>
           </View>
           <View
+            id={`detail-comment-reply-${comment.id}`}
             className='business-detail-comment__bubble'
             ariaRole='button'
             ariaLabel='点击回复，长按查看更多操作'
@@ -339,7 +474,12 @@ const DetailCommentThread = memo(function DetailCommentThread({
               stickerClassName='business-detail-comment__sticker'
             />
           </View>
-          {renderCommentMeta(comment, likingIds.has(comment.id), onToggleLike)}
+          <View className='business-detail-comment__footer'>
+            <Text className='business-detail-comment__time'>
+              {formatCommentDateTime(comment.created_at)}
+            </Text>
+            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike)}
+          </View>
           {showThreadAction && (
             <View className='business-detail-comment__thread-action' onClick={() => onExpand(comment.id)}>
               {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
@@ -362,6 +502,7 @@ const DetailCommentThread = memo(function DetailCommentThread({
             enteringCommentId,
             removingCommentId,
             likingIds,
+            currentUserId,
             onStartReply,
             onOpenActions,
             onToggleLike,
@@ -379,7 +520,17 @@ export default function DetailComments({
   refreshKey = 0,
   targetAuthorId,
   initialCommentId = 0,
+  initialComposerOpen = false,
+  initialReplyTarget = null,
+  closeComposerSignal = 0,
+  composerOnly = false,
+  onComposerClosed,
+  onSubmittingChange,
+  onReplyKeyboardHeightChange,
   displayTotal,
+  headingLabel,
+  showHeading = true,
+  headingActions,
   placeholder = '留言问问细节...',
   tone = targetType === 'campus_circle_post' ? 'community' : targetType,
   actions = [],
@@ -395,7 +546,8 @@ export default function DetailComments({
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
   const [content, setContent] = useState('')
-  const [replyTarget, setReplyTarget] = useState<CommentView | null>(null)
+  const [replyTarget, setReplyTarget] = useState<DetailReplyTarget | null>(null)
+  const [replyAnchorSelector, setReplyAnchorSelector] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [withdrawingId, setWithdrawingId] = useState(0)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
@@ -410,6 +562,7 @@ export default function DetailComments({
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
   const [likingIds, setLikingIds] = useState<ReadonlySet<number>>(() => new Set())
+  const [composerAvatar, setComposerAvatar] = useState({ src: '', fallback: '同', userId: 0 })
   const mountedRef = useRef(true)
   const requestScopeRef = useRef(0)
   const listRequestSequenceRef = useRef(0)
@@ -419,6 +572,9 @@ export default function DetailComments({
   const threadsRef = useRef(threads)
   const pendingTimersRef = useRef(new Set<PendingTimer>())
   const composerCloseSequenceRef = useRef(0)
+  const replyTargetScrollSequenceRef = useRef(0)
+  const initialComposerOpenedRef = useRef(false)
+  const lastCloseComposerSignalRef = useRef(closeComposerSignal)
   const composerClosingRef = useRef(false)
   const stickerPickerOpenRef = useRef(false)
   const contentSelectionStartRef = useRef(0)
@@ -428,6 +584,20 @@ export default function DetailComments({
   const openCommentActionsRef = useRef<(comment: CommentView) => void>(() => {})
   const handleOpenCommentActions = useCallback((comment: CommentView) => {
     openCommentActionsRef.current(comment)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void getCurrentUser().then(({ user }) => {
+      if (!active) return
+      const username = user.username?.trim() || '同学'
+      setComposerAvatar({
+        src: user.avatar_url?.trim() || '',
+        fallback: Array.from(username)[0] || '同',
+        userId: user.id,
+      })
+    }).catch(() => undefined)
+    return () => { active = false }
   }, [])
 
   const clearPendingTimers = useCallback(() => {
@@ -603,8 +773,16 @@ export default function DetailComments({
   }, [clearPendingTimers, enabled, initialCommentId, refreshKey, targetId, targetType])
 
   useEffect(() => {
+    if (composerOnly) {
+      setComments([])
+      updateThreads(() => ({}))
+      setTotal(0)
+      setLoading(false)
+      setLoadingMore(false)
+      return
+    }
     void load(1, initialCommentId)
-  }, [initialCommentId, load, refreshKey])
+  }, [composerOnly, initialCommentId, load, refreshKey, updateThreads])
 
   const loadThread = useCallback((rootId: number) => {
     const existingRequest = threadInFlightRef.current.get(rootId)
@@ -728,10 +906,58 @@ export default function DetailComments({
     setStickerPickerOpen(false)
   }, [])
 
+  useEffect(() => {
+    if (!initialComposerOpen || !enabled || initialComposerOpenedRef.current) return
+    initialComposerOpenedRef.current = true
+    if (initialReplyTarget) {
+      suppressCommunityOverlayDismiss(REPLY_OPEN_DISMISS_SUPPRESSION)
+      setReplyTarget(initialReplyTarget)
+      setReplyAnchorSelector(composerOnly
+        ? `#community-comment-preview-${initialReplyTarget.id}`
+        : `#detail-comment-reply-${initialReplyTarget.id}`)
+    }
+    openComposer()
+  }, [composerOnly, enabled, initialComposerOpen, initialReplyTarget, openComposer])
+
   const startReply = useCallback((comment: CommentView) => {
+    suppressCommunityOverlayDismiss(REPLY_OPEN_DISMISS_SUPPRESSION)
+    replyTargetScrollSequenceRef.current += 1
     setReplyTarget(comment)
+    setReplyAnchorSelector(`#detail-comment-reply-${comment.id}`)
     openComposer()
   }, [openComposer])
+
+  const replyKeyboardHeight = replyAnchorSelector && composerOpen ? keyboardHeight : 0
+
+  useEffect(() => {
+    onReplyKeyboardHeightChange?.(replyKeyboardHeight)
+  }, [onReplyKeyboardHeightChange, replyKeyboardHeight])
+
+  useEffect(() => () => onReplyKeyboardHeightChange?.(0), [onReplyKeyboardHeightChange])
+
+  useEffect(() => {
+    replyTargetScrollSequenceRef.current += 1
+    const scrollSequence = replyTargetScrollSequenceRef.current
+    if (!composerOpen || keyboardHeight <= 0 || !replyAnchorSelector) return
+
+    const cancel = scheduleTimeout(() => {
+      scrollReplyTargetAboveComposer(replyAnchorSelector, () => (
+        mountedRef.current
+        && replyTargetScrollSequenceRef.current === scrollSequence
+      ))
+    }, Math.min(keyboardTransitionDuration, 360) + REPLY_TARGET_SCROLL_DELAY)
+
+    return () => {
+      cancel()
+      replyTargetScrollSequenceRef.current += 1
+    }
+  }, [
+    composerOpen,
+    keyboardHeight,
+    keyboardTransitionDuration,
+    replyAnchorSelector,
+    scheduleTimeout,
+  ])
 
   const finishComposerClose = useCallback(() => {
     composerCloseSequenceRef.current += 1
@@ -742,10 +968,13 @@ export default function DetailComments({
     setInputFocused(false)
     setStickerPickerOpen(false)
     setReplyTarget(null)
+    setReplyAnchorSelector('')
     setKeyboardHeight(0)
-  }, [])
+    onComposerClosed?.()
+  }, [onComposerClosed])
 
   const closeComposer = useCallback(() => {
+    replyTargetScrollSequenceRef.current += 1
     const closeSequence = composerCloseSequenceRef.current + 1
     composerCloseSequenceRef.current = closeSequence
     const shouldFollowKeyboard = inputFocused || keyboardHeight > 0
@@ -774,10 +1003,22 @@ export default function DetailComments({
     scheduleTimeout,
   ])
 
+  const handleComposerBackdropTouchStart = useCallback(() => {
+    if (!composerOpen || composerClosing || submitting) return
+    closeComposer()
+  }, [closeComposer, composerClosing, composerOpen, submitting])
+
+  useEffect(() => {
+    if (lastCloseComposerSignalRef.current === closeComposerSignal) return
+    lastCloseComposerSignalRef.current = closeComposerSignal
+    closeComposer()
+  }, [closeComposer, closeComposerSignal])
+
   const handleComposerBlur = useCallback(() => {
     setInputFocused(false)
+    if (composerOnly) return
     if (!composerClosingRef.current && !stickerPickerOpenRef.current) closeComposer()
-  }, [closeComposer])
+  }, [closeComposer, composerOnly])
 
   const handleKeyboardHeightChange = useCallback((event: {
     detail: { duration?: number; height?: number }
@@ -834,6 +1075,7 @@ export default function DetailComments({
     }
     const activeReplyTarget = replyTarget
     setSubmitting(true)
+    onSubmittingChange?.(true)
     try {
       const created = await lifeServicesRepository.createComment({
         target_type: targetType,
@@ -897,6 +1139,7 @@ export default function DetailComments({
         icon: 'none',
       })
     } finally {
+      onSubmittingChange?.(false)
       if (mountedRef.current) setSubmitting(false)
     }
   }
@@ -1002,12 +1245,19 @@ export default function DetailComments({
 
   return (
     <>
-      <View className='business-detail-comments'>
-        <View className='business-detail-comments__heading'>
-          <View />
-          <Text>全部评论</Text>
-          <Text>{displayTotal ?? total}</Text>
-        </View>
+      {!composerOnly && (
+        <View className='business-detail-comments'>
+        {showHeading && (
+          <View className='business-detail-comments__heading'>
+            <View />
+            <Text>{headingLabel || `评论 ${displayTotal ?? total}`}</Text>
+            {headingActions && (
+              <View className='business-detail-comments__heading-actions'>
+                {headingActions}
+              </View>
+            )}
+          </View>
+        )}
 
         {loading && (
           <View
@@ -1043,6 +1293,7 @@ export default function DetailComments({
             enteringCommentId={enteringCommentId}
             removingCommentId={removingCommentId}
             likingIds={likingIds}
+            currentUserId={composerAvatar.userId}
             onExpand={expandThread}
             onStartReply={startReply}
             onOpenActions={handleOpenCommentActions}
@@ -1054,7 +1305,17 @@ export default function DetailComments({
             {loadingMore ? '正在加载' : '查看更多评论'}
           </View>
         )}
-      </View>
+        </View>
+      )}
+
+      {!composerOnly && replyKeyboardHeight > 0 && (
+        <View
+          className='business-detail-comments__reply-viewport-reserve'
+          style={{
+            height: `calc(${replyKeyboardHeight}px + 320rpx + env(safe-area-inset-bottom))`,
+          }}
+        />
+      )}
 
       {(enabled || actions.length > 0 || persistentContact) && (
         <>
@@ -1064,10 +1325,10 @@ export default function DetailComments({
               && !composerClosing
               ? 'business-detail-composer__backdrop business-detail-composer__backdrop--active'
               : 'business-detail-composer__backdrop'}
-            catchMove={composerOpen && !composerClosing}
+            catchMove
             ariaRole={composerOpen && !composerClosing ? 'button' : undefined}
             ariaLabel={composerOpen && !composerClosing ? '关闭评论输入' : undefined}
-            onTouchStart={composerOpen && !composerClosing ? closeComposer : undefined}
+            onTouchStart={handleComposerBackdropTouchStart}
           />
           <View
             className='business-detail-composer'
@@ -1079,9 +1340,6 @@ export default function DetailComments({
           {persistentContact && !composerOpen && (
             <View
               className='business-detail-composer__persistent-contact'
-              hoverClass='business-detail-composer__persistent-contact--pressed'
-              hoverStartTime={20}
-              hoverStayTime={100}
               ariaRole='button'
               ariaLabel={`${persistentContact.label}，${persistentContact.value}，点击复制`}
               onClick={persistentContact.onCopy}
@@ -1095,12 +1353,28 @@ export default function DetailComments({
             </View>
           )}
           {replyTarget && (
-            <View className='business-detail-composer__replying'>
-              <Text>@{compactCommentName(commentAuthorName(replyTarget), 10)}</Text>
-              <Text onTouchStart={closeComposer}>取消</Text>
+            <View
+              id={`business-comment-replying-${replyTarget.id}`}
+              className='business-detail-composer__replying'
+            >
+              <Text>@{commentAuthorName(replyTarget)}</Text>
+              <Text
+                id={`business-comment-cancel-reply-${replyTarget.id}`}
+                onTouchStart={() => {
+                  if (!submitting) closeComposer()
+                }}
+              >取消</Text>
             </View>
           )}
           <View className='business-detail-composer__main'>
+            <UserAvatar
+              src={composerAvatar.src}
+              className='business-detail-composer__avatar'
+              imageClassName='business-detail-composer__avatar-image'
+              fallback={composerAvatar.fallback}
+              userId={composerAvatar.userId}
+              lazyLoad
+            />
             {enabled ? (
               <KeyboardSafeTextarea
                 id={`business-comment-${targetType}-${targetId}`}
@@ -1116,6 +1390,7 @@ export default function DetailComments({
                 showConfirmBar={false}
                 keepVisibleOnKeyboard={false}
                 placeholder={replyTarget ? '写下回复...' : placeholder}
+                placeholderClass='business-detail-composer__placeholder'
                 onFocus={() => {
                   openComposer()
                 }}
@@ -1162,14 +1437,11 @@ export default function DetailComments({
               <View className='business-detail-composer__disabled'>评论暂未开放</View>
             )}
             {enabled && composerOpen ? (
-              <>
+              <View className='business-detail-composer__input-actions'>
                 <View
                   className={stickerPickerOpen
                     ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'
                     : 'business-detail-composer__sticker-trigger'}
-                  hoverClass='business-detail-composer__sticker-trigger--pressed'
-                  hoverStartTime={20}
-                  hoverStayTime={100}
                   ariaRole='button'
                   ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
                   onClick={() => setStickerPickerVisible(!stickerPickerOpen)}
@@ -1177,6 +1449,7 @@ export default function DetailComments({
                   <Text>☺</Text>
                 </View>
                 <View
+                  id={`business-comment-submit-${targetType}-${targetId}`}
                   className={[
                     'business-detail-composer__publish',
                     `business-detail-composer__publish--${tone}`,
@@ -1184,11 +1457,13 @@ export default function DetailComments({
                   ].filter(Boolean).join(' ')}
                   ariaRole='button'
                   ariaLabel={submitting ? '评论发布中' : '发布评论'}
-                  onClick={!hasComposerContent || submitting ? undefined : () => void submit()}
+                  onClick={() => {
+                    if (hasComposerContent && !submitting) void submit()
+                  }}
                 >
                   <Image src={icons.send} mode='aspectFit' />
                 </View>
-              </>
+              </View>
             ) : (
               <>
                 {quickAction && (
@@ -1201,9 +1476,6 @@ export default function DetailComments({
                     <Image src={quickAction.active && quickAction.activeIcon ? quickAction.activeIcon : quickAction.icon} mode='aspectFit' />
                   </View>
                 )}
-                <Button className='business-detail-composer__share' openType='share'>
-                  <Image src={icons.share} mode='aspectFit' />
-                </Button>
               </>
             )}
             {!composerOpen && actions.length > 0 && (
@@ -1215,10 +1487,15 @@ export default function DetailComments({
                       'business-detail-composer__action',
                       `business-detail-composer__action--${action.emphasis || 'secondary'}`,
                       `business-detail-composer__action--${tone}`,
+                      action.busy ? 'business-detail-composer__action--busy' : '',
                     ].join(' ')}
-                    onClick={action.busy ? undefined : action.onClick}
+                    ariaRole='button'
+                    ariaLabel={action.busy ? `${action.label}处理中` : action.label}
+                    onClick={() => {
+                      if (!action.busy) action.onClick()
+                    }}
                   >
-                    {action.busy ? '处理中' : action.label}
+                    <Text>{action.busy ? '处理中' : action.label}</Text>
                   </View>
                 ))}
               </View>

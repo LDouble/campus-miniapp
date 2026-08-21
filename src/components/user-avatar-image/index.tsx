@@ -5,6 +5,7 @@ interface UserAvatarImageProps {
   src?: string | null
   className: string
   fallback: string
+  fallbackClassName?: string
   lazyLoad?: boolean
 }
 
@@ -12,13 +13,14 @@ export default function UserAvatarImage({
   src,
   className,
   fallback,
+  fallbackClassName,
   lazyLoad = false,
 }: UserAvatarImageProps) {
   const normalizedSrc = src?.trim() || ''
   const [failedSrc, setFailedSrc] = useState('')
 
   if (!normalizedSrc || failedSrc === normalizedSrc) {
-    return <Text>{fallback}</Text>
+    return <Text className={fallbackClassName}>{fallback}</Text>
   }
 
   return (

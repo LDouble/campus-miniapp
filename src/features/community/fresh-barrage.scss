@@ -57,12 +57,11 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  color: var(--campus-primary-strong, #155dfc);
   font-size: 22rpx;
   font-weight: 700;
-  background: var(--campus-surface-primary, #eff6ff);
-  border: 1rpx solid var(--campus-border-strong, #dbeafe);
+  border: 0;
   border-radius: 50%;
+  box-shadow: none;
 }
 
 .fresh-barrage__avatar-image {

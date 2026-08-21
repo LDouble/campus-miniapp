@@ -13,6 +13,7 @@ import type {
   ErrandOrderResult,
   ErrandView,
   ErrandViewPage,
+  HomeFeedPage,
   MarketplaceListingView,
   MarketplaceListingViewPage,
   MarketplaceTradeOrder,
@@ -108,6 +109,13 @@ const versionAction = <T>(path: string, version: number, scope: string) => (
 )
 
 export const lifeServicesRepository = {
+  listHomeFeed(search: PagingQuery = {}) {
+    return apiRequest<HomeFeedPage>({
+      path: '/api/v1/home/feed',
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
   getUserProfile(userId: number) {
     return apiRequest<PublicUserProfile>({ path: `/api/v1/users/${userId}/profile` })
   },

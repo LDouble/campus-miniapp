@@ -12,6 +12,10 @@ const homeSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.tsx'),
   'utf8',
 )
+const homeDataSource = readFileSync(
+  resolve(__dirname, '../src/features/home/data.ts'),
+  'utf8',
+)
 
 assert.match(
   homeSource,
@@ -26,6 +30,36 @@ assert.ok(
 assert.ok(
   homeSource.includes('{homeFeatureFlags.todayTask && todayTask && ('),
   '今日一件事关闭时不得渲染首页入口',
+)
+assert.ok(
+  homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中' : coursePreview.dayLabel"),
+  '日程卡片必须显示真实的今天、明天或假期状态，不能固定写成今天',
+)
+assert.ok(
+  !homeSource.includes('schedule-card__date-label'),
+  '日程卡片不得重复展示顶部已有的日期或开学信息',
+)
+assert.ok(
+  homeSource.includes('<Text>{coursePreview.emptyText}</Text>')
+    && homeSource.includes('`${holidayCountdown}天后开学`')
+    && !homeSource.includes('holidayCountdown ? coursePreview.dateLabel')
+    && !homeSource.includes("className='schedule-card__countdown'"),
+  '假期日程空状态必须在主文案下显示倒计时，并移除重复开学日期与右侧倒计时块',
+)
+assert.ok(
+  homeSource.includes('{coursePreview.items.map((item, index) => (')
+    && homeSource.includes('{todayCalendarEvents.map((event) => {'),
+  '首页日程必须继续聚合课程与推荐校历事件',
+)
+assert.ok(
+  !homeSource.includes('课程、考试和推荐校历事件会汇总在这里'),
+  '首页尚未接入考试数据时不得使用已汇总考试的误导文案',
+)
+
+assert.match(
+  homeDataSource,
+  /if \(!cache\) \{[\s\S]{0,220}return buildCoursePreview\(\s*today,\s*'今天',[\s\S]{0,120}false,\s*\)/u,
+  '课表尚未同步时必须停留在今天，不能自动切换到明天',
 )
 
 const calendar = {

@@ -180,10 +180,21 @@ export const resolveCoursePreview = (
 ): CoursePreview => {
   const today = startOfDay(now)
   const tomorrow = offsetDay(now, 1)
-  const currentPeriod = cache
-    ? resolvePeriodForDate(cache.periods, today)
-    : null
-  const upcomingPeriod = cache && !currentPeriod
+
+  if (!cache) {
+    return buildCoursePreview(
+      today,
+      '今天',
+      false,
+      [],
+      now,
+      limit,
+      false,
+    )
+  }
+
+  const currentPeriod = resolvePeriodForDate(cache.periods, today)
+  const upcomingPeriod = !currentPeriod
     ? resolveUpcomingPeriod(cache.periods, now)
     : null
 
@@ -209,9 +220,7 @@ export const resolveCoursePreview = (
     }
   }
 
-  const todayResult = cache
-    ? coursesOnDate(cache, customCourses, config, selectedCampus, today)
-    : { hasPeriod: false, items: [] }
+  const todayResult = coursesOnDate(cache, customCourses, config, selectedCampus, today)
   const remainingToday = todayResult.items.filter(
     (item) => item.endsAt.getTime() > now.getTime(),
   )
@@ -225,13 +234,11 @@ export const resolveCoursePreview = (
       remainingToday,
       now,
       limit,
-      !!cache,
+      true,
     )
   }
 
-  const tomorrowResult = cache
-    ? coursesOnDate(cache, customCourses, config, selectedCampus, tomorrow)
-    : { hasPeriod: false, items: [] }
+  const tomorrowResult = coursesOnDate(cache, customCourses, config, selectedCampus, tomorrow)
   return buildCoursePreview(
     tomorrow,
     '明天',
@@ -239,7 +246,7 @@ export const resolveCoursePreview = (
     tomorrowResult.items,
     now,
     limit,
-    !!cache,
+    true,
   )
 }
 

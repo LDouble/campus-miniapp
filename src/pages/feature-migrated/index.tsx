@@ -48,7 +48,6 @@ export default function FeatureMigratedPage() {
           <Text className='feature-migrated__message'>{migrationGuide.description}</Text>
           <View
             className='feature-migrated__action'
-            hoverClass='feature-migrated__action--pressed'
             ariaRole='button'
             ariaLabel={migrationGuide.open_button_text}
             onClick={openNewMiniapp}

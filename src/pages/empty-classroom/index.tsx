@@ -374,7 +374,6 @@ export default function EmptyClassroomPage() {
                     'empty-classroom-filter-chip',
                     campus === item ? 'empty-classroom-filter-chip--active' : '',
                   ].filter(Boolean).join(' ')}
-                  hoverClass='empty-classroom-filter-chip--pressed'
                   role='button'
                   ariaLabel={`切换至${item}`}
                   onClick={() => chooseCampus(item)}
@@ -412,7 +411,6 @@ export default function EmptyClassroomPage() {
                       'empty-classroom-weekdays__item',
                       calendarSelection.weekday === index + 1 ? 'empty-classroom-weekdays__active' : '',
                     ].filter(Boolean).join(' ')}
-                    hoverClass='empty-classroom-weekdays__pressed'
                     role='button'
                     ariaLabel={`选择${label}`}
                     onClick={() => chooseWeekday(index + 1)}
@@ -438,7 +436,6 @@ export default function EmptyClassroomPage() {
                         'empty-classroom-filter-chip--building',
                         building === item ? 'empty-classroom-filter-chip--active' : '',
                       ].filter(Boolean).join(' ')}
-                      hoverClass='empty-classroom-filter-chip--pressed'
                       role='button'
                       ariaLabel={`筛选${item === 'all' ? '全部楼栋' : item}`}
                       onClick={() => setBuilding(item)}
@@ -477,7 +474,6 @@ export default function EmptyClassroomPage() {
             {!errorText.includes('假期') && (
               <View
                 className='empty-classroom-empty__retry'
-                hoverClass='empty-classroom-empty__retry--pressed'
                 role='button'
                 ariaLabel='重新查询空教室'
                 onClick={() => void refresh()}
@@ -542,7 +538,6 @@ export default function EmptyClassroomPage() {
                     </View>
                     <View
                       className='empty-classroom-row__report'
-                      hoverClass='empty-classroom-row__report--pressed'
                       role='button'
                       ariaLabel={`反馈 ${classroom.room} 的占用情况`}
                       onClick={() => openReport(classroom)}
@@ -571,7 +566,6 @@ export default function EmptyClassroomPage() {
               {group.classrooms.length > INITIAL_BUILDING_ROWS && (
                 <View
                   className='empty-classroom-building__more'
-                  hoverClass='empty-classroom-building__more--pressed'
                   role='button'
                   ariaLabel={`${expandedBuildings[group.building] ? '收起' : '展开'}${group.building}教室列表`}
                   onClick={() => setExpandedBuildings((current) => ({ ...current, [group.building]: !current[group.building] }))}
@@ -699,7 +693,6 @@ export default function EmptyClassroomPage() {
                 <View
                   key={value}
                   className={reportCategory === value ? 'empty-classroom-report__category--active' : ''}
-                  hoverClass='empty-classroom-report__category--pressed'
                   role='button'
                   ariaLabel={`选择${label}占用类型`}
                   onClick={() => setReportCategory(value)}

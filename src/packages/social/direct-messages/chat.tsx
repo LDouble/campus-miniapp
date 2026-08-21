@@ -681,7 +681,6 @@ export default function DirectMessageChatPage() {
                       <View
                         className='direct-chat-message__image-frame'
                         style={privateMessageImageFrameSize(image.width, image.height)}
-                        hoverClass='direct-chat-message__image-frame--pressed'
                         ariaRole='button'
                         ariaLabel='预览图片消息'
                         onClick={() => void Taro.previewImage({
@@ -701,7 +700,6 @@ export default function DirectMessageChatPage() {
                     {image && imageFailed && (
                       <View
                         className='direct-chat-message__image-fallback'
-                        hoverClass='direct-chat-message__image-fallback--pressed'
                         ariaRole='button'
                         ariaLabel='重新加载图片消息'
                         onClick={() => retryMessageImage(message.id)}
@@ -741,7 +739,6 @@ export default function DirectMessageChatPage() {
               {selectedImage.status === 'failed' && imageRecoveryAction !== 'replace-image' ? (
                 <View
                   className='direct-chat-composer__image-action'
-                  hoverClass='direct-chat-composer__image-action--pressed'
                   ariaRole='button'
                   ariaLabel='重试上传图片'
                   onClick={retrySelectedImage}
@@ -752,7 +749,6 @@ export default function DirectMessageChatPage() {
             </View>
             <View
               className='direct-chat-composer__image-remove'
-              hoverClass='direct-chat-composer__image-remove--pressed'
               ariaRole='button'
               ariaLabel='删除待发送图片'
               onClick={removeSelectedImage}
@@ -811,7 +807,6 @@ export default function DirectMessageChatPage() {
             className={stickerPickerOpen
               ? 'direct-chat-composer__sticker direct-chat-composer__sticker--active'
               : 'direct-chat-composer__sticker'}
-            hoverClass='direct-chat-composer__sticker--pressed'
             ariaRole='button'
             ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
             onClick={() => changeStickerPickerOpen(!stickerPickerOpen)}
@@ -826,7 +821,6 @@ export default function DirectMessageChatPage() {
             className={selectedImage
               ? 'direct-chat-composer__image-trigger direct-chat-composer__image-trigger--disabled'
               : 'direct-chat-composer__image-trigger'}
-            hoverClass='direct-chat-composer__image-trigger--pressed'
             ariaRole='button'
             ariaLabel={selectedImage ? '已选择图片，请先发送或删除' : '选择图片'}
             onClick={() => void chooseImage()}
@@ -842,7 +836,6 @@ export default function DirectMessageChatPage() {
               'direct-chat-composer__send',
               !canSend ? 'direct-chat-composer__send--disabled' : '',
             ].filter(Boolean).join(' ')}
-            hoverClass='direct-chat-composer__send--pressed'
             ariaRole='button'
             ariaLabel={sending
               ? '正在发送消息'

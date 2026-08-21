@@ -146,7 +146,6 @@ export default function DirectMessagesPage() {
                 'direct-conversation-card',
                 conversation.unread_count > 0 ? 'direct-conversation-card--unread' : '',
               ].filter(Boolean).join(' ')}
-              hoverClass='direct-conversation-card--pressed'
               ariaRole='button'
               ariaLabel={`打开与${peerName(conversation)}的私信${conversation.unread_count > 0 ? `，${conversation.unread_count} 条未读` : ''}`}
               onClick={() => openConversation(conversation)}
