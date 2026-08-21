@@ -135,6 +135,24 @@ export const getWeekDates = (period: AcademicPeriod | undefined, week: number) =
   })
 }
 
+export const resolveHorizontalSwipeWeek = (
+  currentWeek: number,
+  totalWeeks: number,
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) => {
+  const deltaX = end.x - start.x
+  const deltaY = end.y - start.y
+  const boundedTotalWeeks = Math.max(1, totalWeeks)
+
+  if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+    return currentWeek
+  }
+
+  const nextWeek = currentWeek + (deltaX < 0 ? 1 : -1)
+  return Math.max(1, Math.min(boundedTotalWeeks, nextWeek))
+}
+
 const localDateOrdinal = (date: Date) => Date.UTC(
   date.getFullYear(),
   date.getMonth(),

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
+import type { ITouchEvent } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
@@ -49,6 +50,7 @@ import {
   getWeekDates,
   isSameDay,
   resolvePeriodId,
+  resolveHorizontalSwipeWeek,
   resolveScheduleAnchor,
   weekdays,
 } from '../utils'
@@ -265,6 +267,7 @@ export default function SchedulePage() {
   )
   const scheduleRequestRef = useRef(0)
   const firstPageShowRef = useRef(true)
+  const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
   const sectionTimes = Array.from({ length: 12 }, (_, index) => (
@@ -449,6 +452,31 @@ export default function SchedulePage() {
 
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
+  }
+
+  const handleWeekTouchStart = (event: ITouchEvent) => {
+    const touch = event.touches[0] || event.changedTouches[0]
+    if (!touch) return
+    weekTouchStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+
+  const handleWeekTouchEnd = (event: ITouchEvent) => {
+    const start = weekTouchStartRef.current
+    weekTouchStartRef.current = null
+    const touch = event.changedTouches[0] || event.touches[0]
+    if (!start || !touch) return
+
+    const nextWeek = resolveHorizontalSwipeWeek(
+      preferences.week,
+      schedulePeriod?.weeks || 20,
+      start,
+      { x: touch.clientX, y: touch.clientY },
+    )
+    if (nextWeek !== preferences.week) updatePreferences({ week: nextWeek })
+  }
+
+  const handleWeekTouchCancel = () => {
+    weekTouchStartRef.current = null
   }
 
   const refreshSchedule = useCallback(async () => {
@@ -755,7 +783,13 @@ export default function SchedulePage() {
   )
 
   const renderWeekSchedule = () => (
-    <View className='timetable'>
+    <View
+      className='timetable'
+      ariaLabel='课程表，左右滑动切换周次'
+      onTouchStart={handleWeekTouchStart}
+      onTouchEnd={handleWeekTouchEnd}
+      onTouchCancel={handleWeekTouchCancel}
+    >
       <View className='timetable__header'>
         <View className='timetable__corner'>节次</View>
         {weekDates.map((date, index) => (
