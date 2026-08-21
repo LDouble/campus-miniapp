@@ -156,6 +156,17 @@ const tabBarList = isQualificationEdition
   ? fullTabBarList.filter((item) => item.pagePath !== 'pages/community/index')
   : fullTabBarList
 
+const preloadPackageRoots = subPackages.map(({ root }) => root)
+const preloadRule = Object.fromEntries(
+  tabBarList.map(({ pagePath }) => [
+    pagePath,
+    {
+      network: 'all' as const,
+      packages: preloadPackageRoots,
+    },
+  ]),
+)
+
 const targetMiniProgramAppId = __CAMPUS_TARGET_WECHAT_APP_ID__.trim()
 
 const wechatAiModeConfig = isWechatAiEnabled
@@ -182,6 +193,7 @@ export default defineAppConfig({
     ...subPackages,
     ...(isWechatAiEnabled ? [{ root: 'skills', pages: [], independent: true }] : []),
   ],
+  preloadRule,
   window: {
     // Taro's types only list the resolved literals. WeChat resolves these
     // theme variables from theme.json before rendering the native chrome.
