@@ -331,7 +331,6 @@
 
   // 功能 SVG 使用固定描边色，暗色下统一提亮；用户上传的照片保持原色。
   & .campus__chevron,
-  & .icon-button > image,
   & .schedule-card__summary image,
   & .today-task__action image,
   & .section-heading__more image,
@@ -345,6 +344,9 @@
   & .module-card__arrow,
   & .cancellation-blocker__action image,
   & .profile-identity-entry__arrow,
+  & .profile-card__badge image,
+  & .profile-menu__icon image,
+  & .profile-identity-entry__icon image,
   & .materials-search image,
   & .materials-course-browser__search image,
   & .community-search-trigger image,
@@ -391,12 +393,6 @@
   }
 
   & .campus__online { border-color: var(--campus-page, #0b1220); }
-
-  & .icon-button::before {
-    background: var(--campus-surface, #111827);
-    border-color: var(--campus-border, #243244);
-    box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.22);
-  }
 
   & .hero-card {
     background: linear-gradient(128deg, #123c48 0%, #172554 54%, #3a291a 100%);

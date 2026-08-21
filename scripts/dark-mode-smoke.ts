@@ -105,7 +105,7 @@ for (const source of aiThemeFiles) {
   assert.doesNotMatch(source.style, /prefers-color-scheme/u)
 }
 assert.match(darkModeStyle, /\.campus-theme--dark\s*\{/u)
-assert.match(darkModeStyle, /& \.icon-button > image/u)
+assert.doesNotMatch(darkModeStyle, /icon-button/u)
 assert.match(darkModeStyle, /& \.service-panel__grid-icon/u)
 assert.match(darkModeStyle, /&\.campus \.custom-navbar__fixed/u)
 assert.match(darkModeStyle, /& \.schedule-card,/u)

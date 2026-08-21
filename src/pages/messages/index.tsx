@@ -11,7 +11,11 @@ import { noticesRepository } from '../../features/notices/repository'
 import { noticeActionRoute } from '../../features/notices/action-route'
 import { isQualificationEdition, type MigratedFeatureModule } from '../../features/app-edition'
 import { featureMigratedUrl } from '../../features/app-edition/navigation'
-import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
+import {
+  setCustomTabBarHidden,
+  setCustomTabBarUnreadCount,
+  syncCustomTabBar,
+} from '../../utils/tabbar'
 import './index.scss'
 
 type MessageType = '教务' | '互动' | '服务' | '系统'
@@ -62,6 +66,12 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const updateUnreadCount = (count: number) => {
+    const normalized = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
+    setUnreadCount(normalized)
+    setCustomTabBarUnreadCount(normalized)
+  }
+
   const load = async () => {
     setLoading(true)
     setError('')
@@ -73,7 +83,7 @@ export default function MessagesPage() {
       ])
       setMessages(page.items)
       setUnreadIds(unreadPage.items.map((item) => item.id))
-      setUnreadCount(Number(unread.count))
+      updateUnreadCount(Number(unread.count))
     } catch (loadError) {
       setError(isApiError(loadError) ? loadError.message : '消息加载失败，请稍后重试')
     } finally {
@@ -112,7 +122,7 @@ export default function MessagesPage() {
     setActive(message)
     if (unreadIds.includes(message.id)) {
       setUnreadIds((current) => current.filter((id) => id !== message.id))
-      setUnreadCount((current) => Math.max(0, current - 1))
+      updateUnreadCount(Math.max(0, unreadCount - 1))
       try {
         await noticesRepository.read(message.id)
       } catch {
@@ -125,7 +135,7 @@ export default function MessagesPage() {
     try {
       await noticesRepository.readAll()
       setUnreadIds([])
-      setUnreadCount(0)
+      updateUnreadCount(0)
     } catch (actionError) {
       Taro.showToast({
         title: isApiError(actionError) ? actionError.message : '操作失败',

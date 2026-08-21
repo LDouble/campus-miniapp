@@ -53,7 +53,6 @@ import {
   sourceLabels as homeFeedSourceLabels,
 } from '../../features/home/feed-post-adapter'
 import { formatHomeMomentsTime } from '../../features/home/moments'
-import { noticesRepository } from '../../features/notices/repository'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
 import {
   formatOfficialNoticeCompactDate,
@@ -110,7 +109,6 @@ const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
   : require('../../features/life-services/repository').lifeServicesRepository as typeof import('../../features/life-services/repository').lifeServicesRepository
 
 const icons = {
-  bell: require('../../assets/icons/bell.svg'),
   academic: require('../../assets/icons/academic.svg'),
   community: require('../../assets/icons/community.svg'),
   market: require('../../assets/icons/market.svg'),
@@ -376,7 +374,6 @@ function Index() {
   const [username, setUsername] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [avatarUserId, setAvatarUserId] = useState(0)
-  const [unreadCount, setUnreadCount] = useState(0)
   const [homeFeedItems, setHomeFeedItems] = useState<HomeFeedItemView[]>([])
   const [homeFeedPage, setHomeFeedPage] = useState(1)
   const [homeFeedTotal, setHomeFeedTotal] = useState(0)
@@ -475,7 +472,6 @@ function Index() {
     const [
       account,
       homeFeed,
-      unread,
       latestAcademic,
       latestOfficialNotices,
       latestCalendar,
@@ -485,7 +481,6 @@ function Index() {
     ] = await Promise.all([
       accountPromise,
       homeFeedPromise,
-      settle(noticesRepository.unreadCount()),
       academicPromise,
       officialNoticesPromise,
       calendarPromise,
@@ -524,7 +519,6 @@ function Index() {
         setHomeFeedError(homeFeedEnabled)
       }
     }
-    if (unread.ok) setUnreadCount(Number(unread.value.count) || 0)
     setOfficialNotices(latestOfficialNotices.ok ? latestOfficialNotices.value.items : [])
     setCalendar(latestCalendar.calendar)
     setDailyCheckin(latestCheckin.ok ? latestCheckin.value : null)
@@ -904,17 +898,6 @@ function Index() {
               <Text>{campusName}</Text>
               <Image className='campus__chevron' src={icons.arrow} mode='aspectFit' />
             </View>
-          </View>
-        </View>
-        <View className='campus__header-actions'>
-          <View
-            className='icon-button motion-press'
-            ariaRole='button'
-            ariaLabel={unreadCount > 0 ? `消息，${unreadCount} 条未读` : '消息'}
-            onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}
-          >
-            <Image src={icons.bell} mode='aspectFit' />
-            {unreadCount > 0 && <View className='icon-button__dot' />}
           </View>
         </View>
       </View>
