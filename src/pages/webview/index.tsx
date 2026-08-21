@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Taro, { useDidShow, useLoad } from '@tarojs/taro'
 import { Text, View, WebView } from '@tarojs/components'
 import { decodeWebViewUrl } from '../../features/webview/url'
 import {
-  applyCampusThemeToCurrentPage,
   applyCampusThemeToNativeChrome,
 } from '../../features/theme-preference'
 import './index.scss'
@@ -15,10 +14,6 @@ export default function WebViewPage() {
   useDidShow(() => {
     applyCampusThemeToNativeChrome()
   })
-
-  useEffect(() => {
-    applyCampusThemeToCurrentPage()
-  }, [])
 
   useLoad((options) => {
     const target = decodeWebViewUrl(options.url)

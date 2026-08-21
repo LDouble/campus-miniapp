@@ -3,7 +3,6 @@ import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import { getSystemState } from '../../state/system'
 import {
-  applyCampusThemeToCurrentPage,
   applyCampusThemeToNativeChrome,
 } from '../../features/theme-preference'
 import './index.scss'
@@ -79,7 +78,6 @@ function CustomNavbar({
   barContentClassName = '',
 }: CustomNavbarProps) {
   useEffect(() => {
-    applyCampusThemeToCurrentPage()
     applyCampusThemeToNativeChrome()
   }, [])
 
