@@ -7,6 +7,7 @@ import {
   isAcademicBindingRequiredError,
   openAcademicCredentialBinding,
 } from '../../../features/academic-verification/binding-guidance'
+import AcademicLoadStateCard from '../../../features/academic-verification/academic-load-state'
 import { resolveAcademicCacheNotice } from './academic-cache-notice'
 
 interface AcademicLoadStateProps {
@@ -114,19 +115,13 @@ export function AcademicLoadState({
     void openAcademicCredentialBinding()
   }
   return (
-    <View className='academic-load-state'>
-      <View className='academic-load-state__mark'>!</View>
-      <Text className='academic-load-state__title'>{resolvedTitle}</Text>
-      <Text className='academic-load-state__copy'>{resolvedMessage}</Text>
-      <View
-        className={`academic-load-state__action ${retrying ? 'academic-load-state__action--disabled' : ''}`}
-        onClick={() => {
-          if (!retrying) handleAction()
-        }}
-      >
-        {retrying ? '正在重试…' : state.actionLabel}
-      </View>
-    </View>
+    <AcademicLoadStateCard
+      title={resolvedTitle}
+      message={resolvedMessage}
+      actionLabel={retrying ? '正在重试…' : state.actionLabel}
+      actionDisabled={retrying}
+      onAction={handleAction}
+    />
   )
 }
 

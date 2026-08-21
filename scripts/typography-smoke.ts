@@ -172,7 +172,7 @@ assert.match(
 )
 assert.match(
   tabBarStyle,
-  /\.tab-bar__text\s*\{[^}]*color:\s*#a6b2c2;[^}]*font-family:\s*system-ui,[^}]*font-size:\s*var\(--campus-font-size-auxiliary,\s*24rpx\);[^}]*font-weight:\s*var\(--campus-font-weight-regular,\s*400\);[^}]*line-height:\s*var\(--campus-line-height-auxiliary,\s*36rpx\);/u,
+  /\.tab-bar__text\s*\{[^}]*color:\s*var\(--campus-text-muted,\s*#a6b2c2\);[^}]*font-family:\s*system-ui,[^}]*font-size:\s*var\(--campus-font-size-auxiliary,\s*24rpx\);[^}]*font-weight:\s*var\(--campus-font-weight-regular,\s*400\);[^}]*line-height:\s*var\(--campus-line-height-auxiliary,\s*36rpx\);/u,
   'TabBar 必须使用系统字体与完整辅助信息规范',
 )
 assert.match(

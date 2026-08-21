@@ -82,37 +82,37 @@ const themePreferenceLabels: Record<CampusThemePreference, string> = {
 const menus = [
   {
     key: 'schedule',
-    name: '我的课表',
+    name: '课表',
     icon: icons.schedule,
     route: '/pages/academic/schedule/index',
   },
   {
     key: 'materials',
-    name: '我的资料',
+    name: '资料',
     icon: icons.materials,
     route: '/pages/materials/index?view=mine',
   },
   {
     key: 'published',
-    name: '我的发布',
+    name: '发布',
     icon: icons.published,
     route: '/packages/social/my-services/index?section=published',
   },
   {
     key: 'accepted',
-    name: '我的接单',
+    name: '接单',
     icon: icons.accepted,
     route: '/packages/social/my-services/index?section=errands&relation=accepted',
   },
   {
     key: 'orders',
-    name: '我的订单',
+    name: '订单',
     icon: icons.orders,
     route: '/packages/social/my-services/index?section=orders&relation=all',
   },
   {
     key: 'carpool',
-    name: '我的同行',
+    name: '同行',
     icon: icons.carpool,
     route: '/packages/social/my-services/index?section=carpool&relation=all',
   },
@@ -719,7 +719,10 @@ export default function ProfilePage() {
 
         <View className='profile-section motion-enter motion-enter--delay-2'>
           <View className='profile-section__head'>
-            <Text className='profile-section__title'>我的服务</Text>
+            <View className='profile-section__heading'>
+              <View className='profile-section__heading-bar' />
+              <Text className='profile-section__title'>我的服务</Text>
+            </View>
             <Text className='profile-section__hint'>常用记录，一步直达</Text>
           </View>
           <View className='profile-menu'>
@@ -741,7 +744,10 @@ export default function ProfilePage() {
         </View>
 
         <View className='profile-section motion-enter motion-enter--delay-3'>
-          <Text className='profile-section__title'>显示与外观</Text>
+          <View className='profile-section__heading profile-section__heading--standalone'>
+            <View className='profile-section__heading-bar' />
+            <Text className='profile-section__title'>显示与外观</Text>
+          </View>
           <View className='profile-account-list'>
             <View
               className='profile-identity-entry profile-theme-entry'
@@ -769,7 +775,10 @@ export default function ProfilePage() {
         </View>
 
         <View className='profile-section motion-enter motion-enter--delay-3'>
-          <Text className='profile-section__title'>账号与身份</Text>
+          <View className='profile-section__heading profile-section__heading--standalone'>
+            <View className='profile-section__heading-bar' />
+            <Text className='profile-section__title'>账号与身份</Text>
+          </View>
           <View className='profile-account-list'>
             <View
               className='profile-identity-entry'

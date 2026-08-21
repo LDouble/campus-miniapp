@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
@@ -22,6 +22,8 @@ import { getPeriodLabel, resolvePeriodId } from '../utils'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
+const ACADEMIC_CHEVRON = require('../../../assets/icons/academic-chevron-down.svg')
+
 const defaultPreferences: AcademicPreferences = {
   section: 'schedule',
   schedulePeriodId: DEFAULT_PERIOD_ID,
@@ -234,8 +236,7 @@ export default function SelectionPage() {
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
       <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
-        <Text className='academic-toolbar__label'>选课学期</Text>
-        <View><Text>{getPeriodLabel(periods, preferences.schedulePeriodId)}</Text><Text className='academic-toolbar__chevron'>⌄</Text></View>
+        <View><Text>{getPeriodLabel(periods, preferences.schedulePeriodId)}</Text><Image className='academic-toolbar__chevron' src={ACADEMIC_CHEVRON} mode='aspectFit' /></View>
       </View>
       <View className='academic-toolbar__hint'><View /><Text>结果同步中</Text></View>
     </View>

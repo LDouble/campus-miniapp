@@ -10,6 +10,7 @@ import { installRequestLogging } from './features/request-logging'
 import { requestWechatSubscriptionForCurrentPage } from './features/wechat-subscription'
 import { registerWechatAiHandoff } from './features/wechat-ai/handoff'
 import { installAppUpdate } from './features/app-update'
+import { noticesRepository } from './features/notices/repository'
 import { initializeSystemState } from './state/system'
 import { preloadPublicData } from './state/public-data'
 import {
@@ -25,8 +26,18 @@ import {
 import { isQualificationEdition } from './features/app-edition'
 import { refreshPrivateMessageUnreadCount } from './features/direct-messages/unread'
 import { canRearmForegroundPrivateMessagePolling } from './features/direct-messages/polling'
+import { setCustomTabBarUnreadCount } from './utils/tabbar'
 // 全局样式
 import './app.scss'
+
+const refreshMessageUnreadCount = async () => {
+  try {
+    const unread = await noticesRepository.unreadCount()
+    setCustomTabBarUnreadCount(unread.count)
+  } catch {
+    // 登录态或网络暂不可用时保留本地角标，下一次 onShow 会重新校准。
+  }
+}
 
 function App(props) {
   const privateMessageUnreadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -75,6 +86,7 @@ function App(props) {
     applyCampusThemeToCurrentPage(getCampusTheme())
     applyCampusThemeToNativeChrome(getCampusTheme())
     void preloadPublicData()
+    void refreshMessageUnreadCount()
     void guardCurrentPage()
     if (!isQualificationEdition) {
       void loadMiniappRuntimeConfig().then((config) => {

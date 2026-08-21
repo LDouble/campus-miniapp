@@ -11,6 +11,7 @@ import {
   isAcademicBindingRequiredError,
   openAcademicCredentialBinding,
 } from '../../../features/academic-verification/binding-guidance'
+import AcademicLoadStateCard from '../../../features/academic-verification/academic-load-state'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './courses.scss'
@@ -198,26 +199,25 @@ export default function AcademicStatisticsCoursesPage() {
         )}
 
         {!loading && Boolean(loadError) && (
-          <View className='statistics-courses-empty'>
-            <Text className='statistics-courses-empty__title'>
-              {bindingRequired ? academicBindingGuidance.title : '暂时无法加载课程'}
-            </Text>
-            <Text className='statistics-courses-empty__copy'>{errorMessage}</Text>
-            <View
-              className='statistics-courses-empty__action'
-              ariaRole='button'
-              ariaLabel={bindingRequired ? academicBindingGuidance.actionLabel : '重新加载课程统计'}
-              onClick={() => {
-                if (bindingRequired) {
-                  void openAcademicCredentialBinding()
-                  return
-                }
-                void loadPage(1, keyword)
-              }}
-            >
-              {bindingRequired ? academicBindingGuidance.actionLabel : '重新加载'}
+          bindingRequired ? (
+            <AcademicLoadStateCard
+              title={academicBindingGuidance.title}
+              message={errorMessage}
+              actionLabel={academicBindingGuidance.actionLabel}
+              onAction={() => { void openAcademicCredentialBinding() }}
+            />
+          ) : (
+            <View className='statistics-courses-empty'>
+              <Text className='statistics-courses-empty__title'>暂时无法加载课程</Text>
+              <Text className='statistics-courses-empty__copy'>{errorMessage}</Text>
+              <View
+                className='statistics-courses-empty__action'
+                ariaRole='button'
+                ariaLabel='重新加载课程统计'
+                onClick={() => { void loadPage(1, keyword) }}
+              >重新加载</View>
             </View>
-          </View>
+          )
         )}
 
         {!loading && !loadError && items.length === 0 && (

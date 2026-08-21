@@ -20,6 +20,7 @@ import {
   isAcademicBindingRequiredError,
   openAcademicCredentialBinding,
 } from '../../../features/academic-verification/binding-guidance'
+import AcademicLoadStateCard from '../../../features/academic-verification/academic-load-state'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './index.scss'
@@ -251,25 +252,26 @@ export default function AcademicStatisticsPage() {
           </View>
         )}
         {!loading && Boolean(loadError) && (
-          <View className='statistics-empty'>
-            <View className='statistics-empty__art'><View /><View /></View>
-            <Text className='statistics-empty__title'>
-              {bindingRequired ? academicBindingGuidance.title : '暂时没有可展示的数据'}
-            </Text>
-            <Text className='statistics-empty__copy'>{errorMessage}</Text>
-            <View
-              className='statistics-empty__action'
-              ariaRole='button'
-              ariaLabel={bindingRequired ? academicBindingGuidance.actionLabel : '重新加载课程统计'}
-              onClick={() => {
-                if (bindingRequired) {
-                  void openAcademicCredentialBinding()
-                  return
-                }
-                void load()
-              }}
-            >{bindingRequired ? academicBindingGuidance.actionLabel : '重新加载'}</View>
-          </View>
+          bindingRequired ? (
+            <AcademicLoadStateCard
+              title={academicBindingGuidance.title}
+              message={errorMessage}
+              actionLabel={academicBindingGuidance.actionLabel}
+              onAction={() => { void openAcademicCredentialBinding() }}
+            />
+          ) : (
+            <View className='statistics-empty'>
+              <View className='statistics-empty__art'><View /><View /></View>
+              <Text className='statistics-empty__title'>暂时没有可展示的数据</Text>
+              <Text className='statistics-empty__copy'>{errorMessage}</Text>
+              <View
+                className='statistics-empty__action'
+                ariaRole='button'
+                ariaLabel='重新加载课程统计'
+                onClick={() => { void load() }}
+              >重新加载</View>
+            </View>
+          )
         )}
         {!loading && statistics && !loadError && (
           <>

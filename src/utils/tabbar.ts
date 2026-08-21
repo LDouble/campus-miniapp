@@ -8,6 +8,8 @@ import {
 
 export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
 
+const TAB_BAR_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
+
 const fullTabIndexes: Record<TabBarPage, number> = {
   home: 0,
   community: 1,
@@ -33,21 +35,36 @@ interface CustomTabBarInstance {
     hidden?: boolean
     darkMode?: boolean
     publishSection?: LifeHubSection
+    unreadCount?: number
     privateUnreadCount?: number
     privateUnreadLabel?: string
   }) => void
 }
 
+type TabBarPageInstance = {
+  getTabBar?: () => CustomTabBarInstance
+}
+
 const getCustomTabBar = () => {
-  const instancePage = Taro.getCurrentInstance().page as
-    | { getTabBar?: () => CustomTabBarInstance }
-    | undefined
+  const instancePage = Taro.getCurrentInstance().page as TabBarPageInstance | undefined
   if (instancePage?.getTabBar) return instancePage.getTabBar()
 
-  const pages = Taro.getCurrentPages() as Array<{ getTabBar?: () => CustomTabBarInstance }>
+  const pages = Taro.getCurrentPages() as TabBarPageInstance[]
   const page = pages[pages.length - 1]
-
   return page?.getTabBar?.()
+}
+
+const normalizeUnreadCount = (value: unknown) => {
+  const count = Number(value)
+  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
+}
+
+const getStoredUnreadCount = () => {
+  try {
+    return normalizeUnreadCount(Taro.getStorageSync(TAB_BAR_UNREAD_COUNT_KEY))
+  } catch {
+    return 0
+  }
 }
 
 /**
@@ -62,7 +79,20 @@ export function syncCustomTabBar(page: TabBarPage) {
     selected,
     hidden: false,
     darkMode: getCampusTheme() === 'dark',
+    unreadCount: getStoredUnreadCount(),
   })
+}
+
+export function setCustomTabBarUnreadCount(count: number) {
+  const unreadCount = normalizeUnreadCount(count)
+  try {
+    Taro.setStorageSync(TAB_BAR_UNREAD_COUNT_KEY, unreadCount)
+  } catch {
+    // TabBar 仍会同步当前实例；存储失败不阻断页面消息状态。
+  }
+  const sync = () => getCustomTabBar()?.setData({ unreadCount })
+  sync()
+  Taro.nextTick(sync)
 }
 
 export function setCustomTabBarHidden(hidden: boolean) {

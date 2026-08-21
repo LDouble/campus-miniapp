@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import {
   openCourseMarketplacePublisher,
@@ -45,6 +45,8 @@ import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
 const ALL_PERIOD_ID = 'all'
+const ACADEMIC_CHEVRON = require('../../../assets/icons/academic-chevron-down.svg')
+
 const defaultPreferences: AcademicPreferences = {
   section: 'grades',
   schedulePeriodId: DEFAULT_PERIOD_ID,
@@ -472,10 +474,9 @@ export default function GradesPage() {
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
       <View className='academic-toolbar__period' onClick={() => openSheet('period')}>
-        <Text className='academic-toolbar__label'>成绩范围</Text>
         <View>
           <Text>{preferences.gradePeriodId === ALL_PERIOD_ID ? '全部学期' : getGradePeriodLabel(periods, preferences.gradePeriodId)}</Text>
-          <Text className='academic-toolbar__chevron'>⌄</Text>
+          <Image className='academic-toolbar__chevron' src={ACADEMIC_CHEVRON} mode='aspectFit' />
         </View>
       </View>
       {simulationMode ? (
@@ -484,7 +485,7 @@ export default function GradesPage() {
           <View onClick={resetSimulation}>重置模拟</View>
         </View>
       ) : (
-        <View className='academic-toolbar__reset academic-toolbar__reset--simulate' onClick={enterSimulation}>模拟计算</View>
+        <View className='academic-toolbar__reset academic-toolbar__reset--simulate' onClick={enterSimulation}><Text>模拟计算</Text></View>
       )}
     </View>
   )

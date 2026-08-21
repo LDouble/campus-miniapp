@@ -105,6 +105,22 @@ const bindingGuidanceSource = readFileSync(
   resolve(__dirname, '../src/features/academic-verification/binding-guidance.ts'),
   'utf8',
 )
+const loadStateCardSource = readFileSync(
+  resolve(__dirname, '../src/features/academic-verification/academic-load-state.tsx'),
+  'utf8',
+)
+const loadStateStyle = readFileSync(
+  resolve(__dirname, '../src/features/academic-verification/academic-load-state.scss'),
+  'utf8',
+)
+const verificationStyle = readFileSync(
+  resolve(__dirname, '../src/pages/academic-verification/index.scss'),
+  'utf8',
+)
+const verificationSource = readFileSync(
+  resolve(__dirname, '../src/pages/academic-verification/index.tsx'),
+  'utf8',
+)
 assert.ok(
   loadStateSource.includes('isAcademicBindingRequiredError(error)')
     && bindingGuidanceSource.includes('还没有绑定教务账号')
@@ -112,6 +128,39 @@ assert.ok(
     && bindingGuidanceSource.includes("error.code === 'academic_verification_required'")
     && bindingGuidanceSource.includes('isMissingAcademicVerificationStatus(error.statusCode, error.code)'),
   '未绑定状态应展示清晰的绑定说明和操作',
+)
+assert.ok(
+  loadStateCardSource.includes("className='academic-load-state'")
+    && loadStateStyle.includes('background: var(--campus-surface')
+    && loadStateStyle.includes('border: 1rpx solid var(--campus-border')
+    && loadStateStyle.includes('background: var(--campus-primary')
+    && loadStateStyle.includes('var(--ousea-radius-card')
+    && loadStateStyle.includes('var(--ousea-font-size-title'),
+  '教务绑定引导卡必须使用 Ousea surface、line、ocean 和 typography token',
+)
+assert.ok(
+  verificationStyle.includes('background: var(--campus-page')
+    && verificationStyle.includes('background: var(--campus-surface')
+    && verificationStyle.includes('border: 1rpx solid var(--campus-border')
+    && verificationStyle.includes('background: var(--campus-primary')
+    && verificationStyle.includes('var(--ousea-radius-card')
+    && verificationStyle.includes('var(--ousea-font-size-label'),
+  '教务认证页必须使用 Ousea 页面、surface、line、ocean、圆角和字体 token',
+)
+assert.ok(
+  verificationSource.includes('verification-credential-guide__items')
+    && verificationSource.includes('密码为信息门户密码')
+    && verificationSource.includes('大小写')
+    && verificationSource.includes('全角/半角')
+    && verificationSource.includes('xmxjouc')
+    && verificationSource.includes('学历')
+    && verificationSource.includes('请选择你的身份')
+    && verificationSource.includes('信息门户认证')
+    && verificationSource.includes('材料认证')
+    && verificationSource.includes('录取通知书')
+    && verificationSource.includes('毕业证')
+    && !verificationSource.includes('请选择你使用的教务系统'),
+  '教务密码说明应分组展示，并明确密码来源、错误排查和人工联系入口',
 )
 
 for (const directory of ['grades', 'schedule', 'exams', 'selection']) {

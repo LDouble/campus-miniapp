@@ -23,6 +23,8 @@ export interface AcademicScheduleCache {
   periods: AcademicPeriod[]
   coursesByPeriod: Record<string, Course[]>
   coursesUpdatedAtByPeriod: Record<string, number>
+  /** 每个学期最近一次课表接口返回的全局提示。 */
+  scheduleNotesByPeriod?: Record<string, string>
   /** 旧版本的全局课程更新时间，仅用于读取迁移。 */
   updatedAt?: number
 }
@@ -84,6 +86,7 @@ const validCourse = (value: unknown): value is Course => {
     && typeof course.name === 'string'
     && typeof course.teacher === 'string'
     && typeof course.location === 'string'
+    && (course.note === undefined || typeof course.note === 'string')
     && (course.campus === undefined || typeof course.campus === 'string')
     && Number.isInteger(course.weekday)
     && Number.isInteger(course.startSection)
@@ -176,6 +179,12 @@ const validTimestampMap = (value: unknown): value is Record<string, number> => (
   && Object.values(value).every(validFiniteNumber)
 )
 
+const validStringMap = (value: unknown): value is Record<string, string> => (
+  !!value
+  && typeof value === 'object'
+  && Object.values(value).every(validString)
+)
+
 const validRecordsCache = (
   value: unknown,
   platformUserId: number,
@@ -226,6 +235,10 @@ const validScheduleCache = (
         cache.coursesUpdatedAtByPeriod === undefined
         && (cache.updatedAt === undefined || validFiniteNumber(cache.updatedAt))
       )
+    )
+    && (
+      cache.scheduleNotesByPeriod === undefined
+      || validStringMap(cache.scheduleNotesByPeriod)
     )
   )
 }
@@ -283,6 +296,9 @@ export const academicStorage = {
       ...value,
       coursesByPeriod,
       coursesUpdatedAtByPeriod: scheduleUpdatedAtByPeriod(value, coursesByPeriod),
+      scheduleNotesByPeriod: validStringMap(value.scheduleNotesByPeriod)
+        ? value.scheduleNotesByPeriod
+        : {},
     }
   },
   setScheduleCache: (
@@ -290,9 +306,11 @@ export const academicStorage = {
     periods: AcademicPeriod[],
     coursesByPeriod: Record<string, Course[]>,
     coursesUpdatedAtByPeriod: Record<string, number>,
+    scheduleNotesByPeriod: Record<string, string> = {},
   ) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return
     const sanitizedCourses = sanitizeCoursesByPeriod(coursesByPeriod)
+    const periodIds = new Set(periods.map((period) => period.id))
     safeWrite<AcademicScheduleCache>(scheduleCacheKey(platformUserId), {
       version: 1,
       platformUserId,
@@ -302,8 +320,12 @@ export const academicStorage = {
         Object.entries(coursesUpdatedAtByPeriod)
           .filter(([periodId, timestamp]) => (
             Object.prototype.hasOwnProperty.call(sanitizedCourses, periodId)
-            && validFiniteNumber(timestamp)
-          )),
+          && validFiniteNumber(timestamp)
+        )),
+      ),
+      scheduleNotesByPeriod: Object.fromEntries(
+        Object.entries(scheduleNotesByPeriod)
+          .filter(([periodId, note]) => periodIds.has(periodId) && validString(note)),
       ),
     })
   },

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 import { Button, Image, Text, View } from '@tarojs/components'
-import type { CampusCirclePostView } from '../../api/types'
+import type { CampusCirclePostView, PublicCommentPreview } from '../../api/types'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
 import {
   communityAuthorAvatarUrl,
@@ -11,6 +11,7 @@ import UserAvatar from '../../components/user-avatar'
 import StickerContent from '../../components/sticker-content'
 import { parseStickerContent, plainStickerContent } from '../stickers/content'
 import { orderPublicCommentPreviews } from './comments'
+import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
 
 const communityIcons = {
@@ -81,6 +82,7 @@ export type CommunityPostCommentPreview = {
   parentId: number | null
   replyToCommentId: number | null
   replyToNickname: string | null
+  image?: PublicCommentPreview['image']
 }
 
 function CommunityPostCard({
@@ -154,6 +156,7 @@ function CommunityPostCard({
     parentId: comment.parent_id,
     replyToCommentId: comment.reply_to_comment_id,
     replyToNickname: comment.reply_to_nickname,
+    image: comment.image,
     nested: Boolean(comment.parent_id && visibleRootIds.has(comment.root_id)),
   }))
   const likedByCopy = onToggleLike && post.liked_by_nicknames.length > 0
@@ -395,6 +398,13 @@ function CommunityPostCard({
                       className='community-post__comment-preview-content'
                       stickerClassName='community-post__comment-preview-sticker'
                     />
+                    {comment.image && (
+                      <CommentImage
+                        image={comment.image}
+                        compact
+                        label={`${comment.authorNickname}的评论图片`}
+                      />
+                    )}
                   </View>
                 ))}
                 {post.comment_count > 3 && (
