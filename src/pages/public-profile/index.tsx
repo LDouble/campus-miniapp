@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
@@ -22,6 +22,19 @@ import ErrandCard from '../../features/life-services/components/errand-card'
 import MarketplaceCard from '../../features/life-services/components/marketplace-card'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import {
+  directMessageChatUrl,
+  directMessagesListUrl,
+} from '../../features/direct-messages/navigation'
+import { privateMessagesRepository } from '../../features/direct-messages/repository'
+import { isQualificationEdition } from '../../features/app-edition'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import {
+  getMiniappRuntimeConfig,
+  loadMiniappRuntimeConfig,
+  openMiniappModule,
+  resolveMiniappModule,
+} from '../../features/runtime-config'
 import { useCampusShare } from '../../features/share'
 import '../../features/life-services/list-panel.scss'
 import './index.scss'
@@ -94,6 +107,8 @@ export default function PublicProfilePage() {
   const [profileError, setProfileError] = useState('')
   const [activeTab, setActiveTab] = useState<ProfileTab>('community')
   const [tabs, setTabs] = useState<Record<ProfileTab, TabState>>(initialTabs)
+  const [openingConversation, setOpeningConversation] = useState(false)
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
   const [commentReplyTarget, setCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
   const [commentSubmitting, setCommentSubmitting] = useState(false)
@@ -186,6 +201,10 @@ export default function PublicProfilePage() {
     void loadProfile(id)
   })
 
+  useDidShow(() => {
+    void loadMiniappRuntimeConfig().then(setRuntimeConfig)
+  })
+
   useEffect(() => {
     if (!userId || tabs[activeTab].loaded || tabs[activeTab].loading) return
     void loadTab(activeTab)
@@ -217,6 +236,45 @@ export default function PublicProfilePage() {
     void Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
   }, [])
 
+  const openPrivateConversation = async (subscriptionAlreadyRequested = false) => {
+    if (isQualificationEdition || !profile || profile.is_self || openingConversation) return
+    setOpeningConversation(true)
+    try {
+      const config = await loadMiniappRuntimeConfig()
+      setRuntimeConfig(config)
+      if (resolveMiniappModule(config, 'private_message').state !== 'enabled') {
+        await openMiniappModule('private_message', directMessagesListUrl, {
+          config,
+          subscriptionAlreadyRequested,
+        })
+        return
+      }
+      const conversation = await privateMessagesRepository.createConversation(profile.user.id)
+      await openMiniappModule(
+        'private_message',
+        directMessageChatUrl(conversation.id),
+        { config, subscriptionAlreadyRequested },
+      )
+    } catch (error) {
+      Taro.showToast({
+        title: isApiError(error) ? error.message : '暂时无法打开私信，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setOpeningConversation(false)
+    }
+  }
+
+  const beginPrivateConversation = () => {
+    const subscriptionAlreadyRequested = resolveMiniappModule(
+      runtimeConfig,
+      'private_message',
+    ).state === 'enabled' && requestWechatSubscriptionForModule(
+      'private_message',
+      runtimeConfig,
+    )
+    void openPrivateConversation(subscriptionAlreadyRequested)
+  }
   const openCommunityComments = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
     setCommentSubmitting(false)
@@ -396,6 +454,19 @@ export default function PublicProfilePage() {
                     ? '这里展示你未删除的校园发布'
                     : '仅展示对你公开可见的校园内容'}
                 </Text>
+                {!isQualificationEdition
+                  && !profile.is_self
+                  && resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden'
+                  && (
+                  <View
+                    className='public-profile-hero__message-action'
+                    ariaRole='button'
+                    ariaLabel={`给${profile.user.nickname}发私信`}
+                    onClick={beginPrivateConversation}
+                  >
+                    {openingConversation ? '正在打开' : '发私信'}
+                  </View>
+                )}
               </View>
             </View>
 

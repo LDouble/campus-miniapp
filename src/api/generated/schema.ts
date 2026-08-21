@@ -3544,6 +3544,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的图片上传与审核状态 */
+        get: operations["GetMedia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/{id}/complete": {
         parameters: {
             query?: never;
@@ -3555,6 +3572,23 @@ export interface paths {
         put?: never;
         /** 校验并完成图片上传 */
         post: operations["CompleteMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{id}/submit-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交我的私信图片内容安全审核 */
+        post: operations["SubmitPrivateMessageMediaReview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3882,6 +3916,93 @@ export interface paths {
         };
         /** 查看已发布全校通知 */
         get: operations["GetOfficialNotice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/private-messages/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 游标查询我的私信会话 */
+        get: operations["ListPrivateConversations"];
+        put?: never;
+        /** 获取或创建一对一私信会话 */
+        post: operations["CreatePrivateConversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/private-messages/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的私信会话 */
+        get: operations["GetPrivateConversation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/private-messages/conversations/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 游标查询会话消息 */
+        get: operations["ListPrivateMessages"];
+        put?: never;
+        /** 发送一条文字或图片私信 */
+        post: operations["CreatePrivateMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/private-messages/conversations/{id}/read-watermark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 单调更新收到消息的已读水位 */
+        put: operations["UpdatePrivateConversationRead"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/private-messages/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的私信未读数量 */
+        get: operations["GetPrivateMessageUnreadCount"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7528,7 +7649,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "comment";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "comment" | "private_message";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -7674,6 +7795,107 @@ export interface components {
             updated_at: string;
             /** Format: uint64 */
             version: number;
+        };
+        CreatePrivateConversationInput: {
+            /** Format: uint64 */
+            peer_id: number;
+        };
+        CreatePrivateMessageInput: {
+            content?: string;
+            /** Format: uint64 */
+            media_id?: number;
+        } & (unknown | unknown);
+        PrivateConversationPage: {
+            has_more: boolean;
+            items: components["schemas"]["PrivateConversationView"][];
+            next_cursor?: string | null;
+        };
+        PrivateConversationPageResponseBody: {
+            data: components["schemas"]["PrivateConversationPage"];
+            request_id: string;
+        };
+        PrivateConversationRead: {
+            /** Format: uint64 */
+            conversation_id: number;
+            /** Format: date-time */
+            last_read_at: string;
+            /** Format: uint64 */
+            last_read_message_id: number;
+        };
+        PrivateConversationReadResponseBody: {
+            data: components["schemas"]["PrivateConversationRead"];
+            request_id: string;
+        };
+        PrivateConversationResponseBody: {
+            data: components["schemas"]["PrivateConversationView"];
+            request_id: string;
+        };
+        PrivateConversationView: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            last_activity_at: string;
+            last_message?: components["schemas"]["PrivateMessageView"];
+            peer: components["schemas"]["PrivateMessagePeer"];
+            /** Format: uint64 */
+            unread_count: number;
+        };
+        PrivateMessageImage: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            /** Format: uri */
+            url: string;
+            /** Format: int64 */
+            width: number;
+        };
+        PrivateMessagePage: {
+            has_more: boolean;
+            items: components["schemas"]["PrivateMessageView"][];
+            next_cursor?: string | null;
+        };
+        PrivateMessagePageResponseBody: {
+            data: components["schemas"]["PrivateMessagePage"];
+            request_id: string;
+        };
+        PrivateMessagePeer: {
+            /** Format: uri */
+            avatar_url?: string | null;
+            deleted: boolean;
+            /** Format: uint64 */
+            id: number;
+            nickname: string;
+        };
+        PrivateMessageResponseBody: {
+            data: components["schemas"]["PrivateMessageView"];
+            request_id: string;
+        };
+        PrivateMessageUnreadCount: {
+            /** Format: uint64 */
+            count: number;
+        };
+        PrivateMessageUnreadCountResponseBody: {
+            data: components["schemas"]["PrivateMessageUnreadCount"];
+            request_id: string;
+        };
+        PrivateMessageView: {
+            content: string;
+            /** Format: uint64 */
+            conversation_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            image?: components["schemas"]["PrivateMessageImage"];
+            /** Format: uint64 */
+            sender_id: number;
+        };
+        UpdatePrivateConversationReadInput: {
+            /** Format: uint64 */
+            message_id: number;
         };
         /** @enum {string} */
         ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
@@ -9179,6 +9401,60 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeResponseBody"];
+            };
+        };
+        /** @description 私信会话游标列表 */
+        PrivateConversationPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PrivateConversationPageResponseBody"];
+            };
+        };
+        /** @description 私信已读水位 */
+        PrivateConversationReadResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PrivateConversationReadResponseBody"];
+            };
+        };
+        /** @description 私信会话 */
+        PrivateConversationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PrivateConversationResponseBody"];
+            };
+        };
+        /** @description 私信消息游标列表 */
+        PrivateMessagePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PrivateMessagePageResponseBody"];
+            };
+        };
+        /** @description 私信消息 */
+        PrivateMessageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PrivateMessageResponseBody"];
+            };
+        };
+        /** @description 私信未读数量 */
+        PrivateMessageUnreadCountResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PrivateMessageUnreadCountResponseBody"];
             };
         };
         /** @description 资源点赞状态 */
@@ -14426,6 +14702,21 @@ export interface operations {
             413: components["responses"]["Error"];
         };
     };
+    GetMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MediaResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     CompleteMedia: {
         parameters: {
             query?: never;
@@ -14451,6 +14742,23 @@ export interface operations {
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
             413: components["responses"]["Error"];
+        };
+    };
+    SubmitPrivateMessageMediaReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MediaResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     ListAdminNotices: {
@@ -14893,6 +15201,127 @@ export interface operations {
         responses: {
             200: components["responses"]["OfficialNoticeResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    ListPrivateConversations: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PrivateConversationPageResponse"];
+        };
+    };
+    CreatePrivateConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePrivateConversationInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["PrivateConversationResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetPrivateConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PrivateConversationResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListPrivateMessages: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                after_id?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PrivateMessagePageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CreatePrivateMessage: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePrivateMessageInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["PrivateMessageResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdatePrivateConversationRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePrivateConversationReadInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["PrivateConversationReadResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetPrivateMessageUnreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PrivateMessageUnreadCountResponse"];
         };
     };
     LikeResource: {

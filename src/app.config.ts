@@ -38,7 +38,9 @@ const fullPages = [
   'pages/clubs/index',
   'pages/clubs/detail',
   'pages/clubs/edit',
-  'pages/clubs/mine'
+  'pages/clubs/mine',
+  'pages/direct-messages/index',
+  'pages/direct-messages/chat'
 ]
 
 const qualificationExcludedPages = new Set([
@@ -56,7 +58,9 @@ const qualificationExcludedPages = new Set([
   'pages/clubs/index',
   'pages/clubs/detail',
   'pages/clubs/edit',
-  'pages/clubs/mine'
+  'pages/clubs/mine',
+  'pages/direct-messages/index',
+  'pages/direct-messages/chat'
 ])
 
 const mainPagePaths = new Set([
@@ -102,6 +106,8 @@ const packageDefinitions = [
       'marketplace/detail',
       'carpool/detail',
       'content-report/index',
+      'direct-messages/index',
+      'direct-messages/chat',
     ],
   },
 ]

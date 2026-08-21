@@ -95,6 +95,27 @@ page {
   line-height: 1.5;
 }
 
+.public-profile-hero__message-action {
+  display: inline-flex;
+  min-height: 60rpx;
+  padding: 0 20rpx;
+  margin-top: 16rpx;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid token.$color-border-strong;
+  border-radius: token.$radius-md;
+  background: token.$color-surface-primary;
+  color: token.$color-primary-strong;
+  font-size: 23rpx;
+  font-weight: 720;
+  transition: opacity token.$motion-press ease, transform token.$motion-press ease;
+}
+
+.public-profile-hero__message-action--pressed {
+  opacity: .7;
+  transform: scale(.98);
+}
+
 .public-profile-tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -278,7 +299,8 @@ page {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .public-profile-tab {
+  .public-profile-tab,
+  .public-profile-hero__message-action {
     transition: none;
   }
 }

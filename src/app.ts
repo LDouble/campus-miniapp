@@ -1,4 +1,4 @@
-import { createElement, useEffect } from 'react'
+import { createElement, useCallback, useEffect, useRef } from 'react'
 import Taro, { useDidShow, useDidHide, useLaunch } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import {
@@ -23,6 +23,9 @@ import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
 } from './features/wechat-subscription/module'
+import { isQualificationEdition } from './features/app-edition'
+import { refreshPrivateMessageUnreadCount } from './features/direct-messages/unread'
+import { canRearmForegroundPrivateMessagePolling } from './features/direct-messages/polling'
 import { setCustomTabBarUnreadCount } from './utils/tabbar'
 // 全局样式
 import './app.scss'
@@ -37,6 +40,30 @@ const refreshMessageUnreadCount = async () => {
 }
 
 function App(props) {
+  const privateMessageUnreadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const privateMessageUnreadVisibleRef = useRef(false)
+  const privateMessageUnreadPollingGeneration = useRef(0)
+
+  const stopPrivateMessageUnreadPolling = useCallback(() => {
+    if (privateMessageUnreadTimer.current) clearTimeout(privateMessageUnreadTimer.current)
+    privateMessageUnreadTimer.current = null
+  }, [])
+
+  const schedulePrivateMessageUnreadPolling = useCallback(() => {
+    stopPrivateMessageUnreadPolling()
+    if (isQualificationEdition || !privateMessageUnreadVisibleRef.current) return
+    const generation = privateMessageUnreadPollingGeneration.current
+    privateMessageUnreadTimer.current = setTimeout(() => {
+      void refreshPrivateMessageUnreadCount().catch(() => undefined).finally(() => {
+        if (canRearmForegroundPrivateMessagePolling(
+          privateMessageUnreadVisibleRef.current,
+          generation,
+          privateMessageUnreadPollingGeneration.current,
+        )) schedulePrivateMessageUnreadPolling()
+      })
+    }, 60_000)
+  }, [stopPrivateMessageUnreadPolling])
+
   useLaunch(() => {
     initializeCampusTheme()
     initializeSystemState()
@@ -53,15 +80,43 @@ function App(props) {
 
   // 对应 onShow
   useDidShow(() => {
+    privateMessageUnreadVisibleRef.current = true
+    privateMessageUnreadPollingGeneration.current += 1
+    const generation = privateMessageUnreadPollingGeneration.current
     applyCampusThemeToCurrentPage(getCampusTheme())
     applyCampusThemeToNativeChrome(getCampusTheme())
     void preloadPublicData()
     void refreshMessageUnreadCount()
     void guardCurrentPage()
+    if (!isQualificationEdition) {
+      void loadMiniappRuntimeConfig().then((config) => {
+        if (!canRearmForegroundPrivateMessagePolling(
+          privateMessageUnreadVisibleRef.current,
+          generation,
+          privateMessageUnreadPollingGeneration.current,
+        )) return
+        if (resolveMiniappModule(config, 'private_message').state !== 'enabled') {
+          void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+          return
+        }
+        void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+        schedulePrivateMessageUnreadPolling()
+      })
+    }
   })
 
   // 对应 onHide
-  useDidHide(() => {})
+  useDidHide(() => {
+    privateMessageUnreadVisibleRef.current = false
+    privateMessageUnreadPollingGeneration.current += 1
+    stopPrivateMessageUnreadPolling()
+  })
+
+  useEffect(() => () => {
+    privateMessageUnreadVisibleRef.current = false
+    privateMessageUnreadPollingGeneration.current += 1
+    stopPrivateMessageUnreadPolling()
+  }, [stopPrivateMessageUnreadPolling])
 
   return createElement(
     View,

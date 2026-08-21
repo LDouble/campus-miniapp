@@ -198,6 +198,51 @@ page {
   }
 }
 
+.profile-avatar-notice {
+  display: flex;
+  min-height: 72rpx;
+  padding: 0 20rpx;
+  margin-top: 12rpx;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  color: var(--campus-text-secondary, #62748e);
+  font-size: 22rpx;
+  line-height: 1.45;
+  background: var(--campus-surface-primary, #eff6ff);
+  border: 2rpx solid var(--campus-border, #f1f5f9);
+  border-radius: 20rpx;
+
+  text:first-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__action {
+    display: flex;
+    min-width: 112rpx;
+    min-height: 88rpx;
+    flex: none;
+    padding: 0 14rpx;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    color: var(--campus-primary, #2b7fff);
+    font-weight: 700;
+  }
+
+  &--rejected {
+    color: var(--campus-danger, #e11d48);
+    background: var(--campus-surface-danger, #fff1f2);
+    border-color: var(--campus-border, #f1f5f9);
+  }
+
+  &--unavailable {
+    color: var(--campus-text-secondary, #62748e);
+    background: var(--campus-surface-subtle, #f8fafc);
+  }
+}
+
 .profile-level {
   padding: 24rpx 28rpx;
   margin-top: 24rpx;

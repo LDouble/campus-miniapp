@@ -6,10 +6,14 @@ import { getCampusTheme, subscribeCampusTheme } from '../features/theme-preferen
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
 const unreadCountStorageKey = 'campus.messages.unread-count.v1'
+const privateUnreadCountStorageKey = 'campus.private-messages.unread-count.v1'
 
 const getStoredUnreadCount = () => {
-  const count = Number(wx.getStorageSync(unreadCountStorageKey))
-  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
+  const noticeCount = Number(wx.getStorageSync(unreadCountStorageKey))
+  const privateCount = Number(wx.getStorageSync(privateUnreadCountStorageKey))
+  const normalizedNoticeCount = Number.isFinite(noticeCount) ? Math.max(0, Math.floor(noticeCount)) : 0
+  const normalizedPrivateCount = Number.isFinite(privateCount) ? Math.max(0, Math.floor(privateCount)) : 0
+  return normalizedNoticeCount + normalizedPrivateCount
 }
 
 const fullTabs = [

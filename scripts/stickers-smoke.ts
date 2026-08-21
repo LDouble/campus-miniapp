@@ -28,6 +28,8 @@ const stickerPickerStyleSource = readFileSync(resolve(__dirname, '../src/compone
 assert.ok(!stickerPickerSource.includes('selectedIds'))
 assert.ok(!stickerPickerSource.includes('sticker-picker__item--selected'))
 assert.ok(!stickerPickerStyleSource.includes('&--selected'))
+assert.ok(stickerPickerSource.includes("require('../../assets/icons/smile.svg')"), '表情入口必须复用既有 smile 图标')
+assert.ok(!stickerPickerSource.includes('>☺<'), '表情入口不得使用 Emoji 图标')
 
 const publishSource = readFileSync(resolve(__dirname, '../src/packages/social/publish/index.tsx'), 'utf8')
 const publishStyleSource = readFileSync(resolve(__dirname, '../src/packages/social/publish/index.scss'), 'utf8')

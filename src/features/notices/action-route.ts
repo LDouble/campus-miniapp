@@ -3,8 +3,18 @@ const commentIdFromAction = (path: string) => {
   return match ? Number(match[1]) : 0
 }
 
-export const noticeActionRoute = (path: string) => {
+const directMessageActionPattern = /^\/packages\/social\/direct-messages\/chat\?id=([1-9]\d*)$/
+
+export const isPrivateMessageNoticeAction = (path: string) => directMessageActionPattern.test(path)
+
+export const noticeActionRoute = (
+  path: string,
+  options: { allowPrivateMessages?: boolean } = {},
+) => {
   if (!path) return ''
+  if (isPrivateMessageNoticeAction(path)) {
+    return options.allowPrivateMessages === false ? '' : path
+  }
   if (path.startsWith('/pages/')) return path
   const match = path.match(
     /^\/api\/v1\/(errands|marketplace\/listings|carpool\/trips|campus-circle\/posts)\/(\d+)/,

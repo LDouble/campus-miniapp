@@ -272,7 +272,6 @@ export default function CommunityDetailPage() {
                     className={post.liked
                       ? 'community-detail__action community-detail__action--liked'
                       : 'community-detail__action'}
-                    hoverClass='community-detail__action--pressed'
                     ariaRole='button'
                     ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
                     onClick={() => void toggleLike()}
@@ -285,7 +284,6 @@ export default function CommunityDetailPage() {
                   <View
                     id='community-detail-comment'
                     className='community-detail__action'
-                    hoverClass='community-detail__action--pressed'
                     ariaRole='button'
                     ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
                     onClick={scrollToComments}
@@ -296,7 +294,7 @@ export default function CommunityDetailPage() {
                 </View>
                 <View className='community-detail__action-slot'>
                   <Button
-                    hoverClass='community-detail__action--pressed'
+                    hoverClass='none'
                     id='community-detail-share'
                     className='community-detail__action community-detail__action--share'
                     openType='share'

@@ -1,0 +1,333 @@
+@use '../../../styles/tokens' as token;
+
+page {
+  background: token.$color-page;
+}
+
+.direct-messages-page {
+  min-height: 100vh;
+  color: token.$color-text-body;
+  background: token.$color-page;
+}
+
+.direct-messages-page__content {
+  padding: 24rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.direct-messages-intro {
+  display: flex;
+  min-height: 122rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 22rpx;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
+
+  > view {
+    min-width: 0;
+  }
+
+  > view text {
+    display: block;
+  }
+
+  > view text:first-child {
+    color: token.$color-text-heading;
+    font-size: 31rpx;
+    font-weight: 750;
+  }
+
+  > view text:last-child {
+    margin-top: 6rpx;
+    overflow: hidden;
+    color: token.$color-text-secondary;
+    font-size: 22rpx;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > text {
+    flex: none;
+    padding: 8rpx 14rpx;
+    margin-left: 18rpx;
+    border-radius: 999rpx;
+    background: token.$color-surface-primary;
+    color: token.$color-primary-strong;
+    font-size: 20rpx;
+    font-weight: 720;
+  }
+}
+
+.direct-conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.direct-conversation-card {
+  position: relative;
+  display: flex;
+  min-height: 128rpx;
+  padding: 22rpx 24rpx;
+  align-items: center;
+  box-sizing: border-box;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
+  transition: opacity token.$motion-press ease, transform token.$motion-press ease;
+
+  &--unread {
+    border-color: token.$color-border-strong;
+    background: token.$color-surface;
+  }
+
+  &--pressed {
+    opacity: .76;
+    transform: scale(.985);
+  }
+
+  &__avatar {
+    display: flex;
+    width: 78rpx;
+    height: 78rpx;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 3rpx solid token.$color-border-strong;
+    border-radius: 50%;
+    background: token.$color-surface-primary;
+    color: token.$color-primary-strong;
+    font-size: 27rpx;
+    font-weight: 720;
+  }
+
+  &__avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+
+  &__body {
+    min-width: 0;
+    margin-left: 18rpx;
+    flex: 1;
+
+    > text {
+      display: block;
+      padding-top: 8rpx;
+      overflow: hidden;
+      color: token.$color-text-secondary;
+      font-size: 23rpx;
+      line-height: 1.42;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__head {
+    display: flex;
+    gap: 12rpx;
+    align-items: center;
+    justify-content: space-between;
+
+    text:first-child {
+      min-width: 0;
+      overflow: hidden;
+      color: token.$color-text-heading;
+      font-size: 27rpx;
+      font-weight: 720;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    text:last-child {
+      flex: none;
+      color: token.$color-text-muted;
+      font-size: 19rpx;
+    }
+  }
+
+  &__unread {
+    display: flex;
+    min-width: 34rpx;
+    height: 34rpx;
+    padding: 0 8rpx;
+    margin-left: 12rpx;
+    align-items: center;
+    justify-content: center;
+    border: 3rpx solid token.$color-surface;
+    border-radius: 999rpx;
+    background: token.$color-primary;
+    color: token.$color-on-accent;
+    font-size: 18rpx;
+    font-weight: 720;
+  }
+}
+
+.direct-messages-state {
+  display: flex;
+  min-height: 300rpx;
+  padding: 32rpx;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-xl;
+  background: token.$color-surface;
+  color: token.$color-text-secondary;
+  font-size: 24rpx;
+  line-height: 1.6;
+  text-align: center;
+
+  > view {
+    display: flex;
+    min-height: 76rpx;
+    padding: 0 26rpx;
+    margin-top: 20rpx;
+    align-items: center;
+    justify-content: center;
+    border-radius: token.$radius-md;
+    background: token.$color-surface-primary;
+    color: token.$color-primary-strong;
+    font-weight: 720;
+  }
+
+  &--empty text:first-child {
+    color: token.$color-text-heading;
+    font-size: 28rpx;
+    font-weight: 740;
+  }
+
+  &--empty text:last-child {
+    margin-top: 8rpx;
+  }
+
+  &--error {
+    background: var(--campus-surface-danger, #fff1f2);
+    color: token.$color-danger;
+  }
+}
+
+.direct-messages-inline-error,
+.direct-messages-footer {
+  padding: 20rpx 4rpx 4rpx;
+  color: token.$color-text-muted;
+  font-size: 22rpx;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.direct-messages-inline-error {
+  color: token.$color-danger;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direct-conversation-card {
+    transition: none;
+  }
+}
+
+/* 私信列表与消息首页保持同一套微信式平面行。 */
+.direct-messages-page .custom-navbar__fixed {
+  background: token.$color-surface;
+  border-bottom-color: token.$color-border;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.direct-messages-page__content {
+  padding: var(--ousea-space-1, 16rpx) 0 calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.direct-conversation-list {
+  gap: 0;
+  background: token.$color-surface;
+}
+
+.direct-conversation-card {
+  min-height: 128rpx;
+  padding: var(--ousea-space-1, 16rpx) var(--ousea-space-3, 32rpx);
+  border: 0;
+  border-bottom: 1rpx solid token.$color-border;
+  border-radius: 0;
+  background: token.$color-surface;
+  transition: background-color 120ms ease, opacity 120ms ease;
+
+  &--unread { border-color: token.$color-border; }
+
+  &--pressed {
+    opacity: 1;
+    transform: none;
+    background: token.$color-surface-subtle;
+  }
+
+  &__avatar {
+    width: 84rpx;
+    height: 84rpx;
+    border: 0;
+    border-radius: 14rpx;
+    background: token.$color-surface-primary;
+  }
+
+  &__avatar-image { border-radius: 14rpx; }
+
+  &__body {
+    margin-left: var(--ousea-space-1, 16rpx);
+
+    > text {
+      padding-top: 8rpx;
+      color: token.$color-text-secondary;
+      font-size: var(--ousea-font-size-caption, 24rpx);
+      line-height: var(--ousea-line-height-ui, 1.4);
+    }
+  }
+
+  &__head {
+    gap: var(--ousea-space-1, 16rpx);
+
+    text:first-child {
+      color: token.$color-text-heading;
+      font-size: var(--ousea-font-size-label, 27rpx);
+      font-weight: var(--ousea-font-weight-medium, 500);
+    }
+
+    text:last-child {
+      color: token.$color-text-muted;
+      font-size: var(--ousea-font-size-caption, 24rpx);
+    }
+  }
+
+  &__unread {
+    min-width: 32rpx;
+    height: 32rpx;
+    padding: 0 6rpx;
+    margin-left: 8rpx;
+    border: 2rpx solid token.$color-surface;
+    background: token.$color-danger;
+    font-size: var(--ousea-font-size-badge, 20rpx);
+  }
+}
+
+.direct-messages-state {
+  min-height: 180rpx;
+  padding: var(--ousea-space-3, 32rpx);
+  border: 0;
+  border-bottom: 1rpx solid token.$color-border;
+  border-radius: 0;
+  background: token.$color-surface;
+}
+
+.direct-messages-inline-error,
+.direct-messages-footer {
+  padding-right: var(--ousea-space-3, 32rpx);
+  padding-left: var(--ousea-space-3, 32rpx);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direct-conversation-card { transition: none; }
+}

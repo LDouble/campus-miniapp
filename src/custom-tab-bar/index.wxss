@@ -86,6 +86,26 @@
   opacity: 0.9;
 }
 
+.tab-bar__badge {
+  position: absolute;
+  top: 8rpx;
+  right: 0;
+  display: flex;
+  min-width: 28rpx;
+  height: 28rpx;
+  padding: 0 7rpx;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 3rpx solid rgba(255, 255, 255, .96);
+  border-radius: 999rpx;
+  background: #e98c70;
+  color: #fff;
+  font-size: 17rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .tab-bar__text {
   color: var(--campus-text-muted, #a6b2c2);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
