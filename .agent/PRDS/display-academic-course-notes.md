@@ -54,6 +54,14 @@
 - 课程没有备注时不渲染标题或空白容器。
 - 自定义课程没有接口备注，继续保持现有编辑、删除和服务入口。
 
+### 课程参考与操作入口视觉补充
+
+- 课程没有有效 `pass_rate` 时不渲染课程参考卡片，不展示空状态占位。
+- 课程详情浮层使用统一的 Ousea 中性承载面，课程色只保留在左侧强调轨。
+- 课程服务入口合并为紧凑的主次操作卡，浅色和暗色模式均保持清晰对比。
+- 成绩、考试、选课结果共用的学期入口使用浅蓝信息层级；入口去掉重复的前置 label，采用单行布局直接展示完整学期名称，空间不足时仅做省略。
+- 选择面板保留触控高度并收紧圆角、留白和选项间距。
+
 ## 技术方案
 
 - 同步前端生成 schema：补充 `AcademicCourse.note` 与 `AcademicCourseListResponseBody.schedule_note`。
@@ -70,7 +78,9 @@
 - `src/pages/academic/types.ts`、`src/pages/academic/repository.ts`
 - `src/pages/academic/storage.ts`、`src/pages/academic/schedule/index.tsx`
 - `src/pages/academic/index.scss`、`src/styles/_dark-mode.scss`
+- `src/features/academic-statistics/course-pass-rate-preview/index.tsx`、`src/features/academic-statistics/course-pass-rate-preview/index.scss`
 - `scripts/academic-schedule-smoke.ts` 或相关课程表 smoke 测试
+- `scripts/academic-grades-ui-smoke.ts`、`scripts/academic-statistics-smoke.ts`
 
 ## 测试要求
 

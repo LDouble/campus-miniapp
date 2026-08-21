@@ -59,10 +59,7 @@
 
   &.verification-page {
     color: var(--campus-text-heading, #f8fafc);
-    background:
-      radial-gradient(circle at 94% 7%, rgba(96, 165, 250, 0.14), transparent 30%),
-      radial-gradient(circle at 5% 35%, rgba(34, 211, 238, 0.08), transparent 30%),
-      var(--campus-page, #0b1220);
+    background: var(--campus-page, #0b1220);
   }
 
   & .verification-loading,
@@ -74,25 +71,35 @@
     color: var(--campus-text-body, #d7e0ec);
     background: var(--campus-surface, #111827);
     border-color: var(--campus-border, #243244);
-    box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.24);
+    border-radius: var(--ousea-radius-card, 32rpx);
+    box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(0, 0, 0, 0.24));
   }
 
   & .verification-hero {
-    color: #fff;
-    background: linear-gradient(135deg, #1d4ed8, #0e7490);
-    border-color: var(--campus-border-strong, #2f4c73);
-    box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.26);
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    border-radius: var(--ousea-radius-card, 32rpx);
+    box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(0, 0, 0, 0.24));
   }
 
-  & .verification-hero--pending { background: linear-gradient(135deg, #1d4ed8, #4338ca); }
-  & .verification-hero--verified { background: linear-gradient(135deg, #0f766e, #0e7490 58%, #1d4ed8); }
+  & .verification-hero--pending { background: var(--campus-surface-primary, #172554); border-color: var(--campus-border-strong, #2f4c73); box-shadow: none; }
+  & .verification-hero--verified { background: var(--campus-surface-success, #102f2e); border-color: var(--campus-border-strong, #2f4c73); box-shadow: none; }
   & .verification-hero--rejected,
-  & .verification-hero--revoked { background: linear-gradient(135deg, #9f1239, #c2410c); }
-  & .verification-hero__orb { background: rgba(11, 18, 32, 0.28); border-color: rgba(255, 255, 255, 0.22); }
-  & .verification-hero__orb > view { color: #93c5fd; background: var(--campus-surface, #111827); }
+  & .verification-hero--revoked { background: var(--campus-surface-danger, #3f1725); border-color: var(--campus-danger, #fb7185); box-shadow: none; }
+  & .verification-hero__orb { background: var(--campus-surface-primary, #172554); border-color: var(--campus-border-strong, #2f4c73); box-shadow: none; }
+  & .verification-hero__orb > view { color: var(--campus-primary-strong, #93c5fd); background: transparent; }
   & .verification-hero--verified .verification-hero__orb > view { color: #5eead4; }
   & .verification-hero--rejected .verification-hero__orb > view,
   & .verification-hero--revoked .verification-hero__orb > view { color: #fda4af; }
+
+  & .verification-hero__eyebrow { color: var(--campus-primary-strong, #93c5fd); }
+  & .verification-hero--verified .verification-hero__eyebrow { color: var(--campus-success, #2dd4bf); }
+  & .verification-hero--rejected .verification-hero__eyebrow,
+  & .verification-hero--revoked .verification-hero__eyebrow { color: var(--campus-danger, #fb7185); }
+  & .verification-hero__title { color: var(--campus-text-heading, #f8fafc); }
+  & .verification-hero__description { color: var(--campus-text-secondary, #aab8ca); }
+  & .verification-hero__refreshing { color: var(--campus-text-muted, #8494aa); }
 
   & .verification-methods-heading text:first-child,
   & .verification-education__heading text:first-child,
@@ -122,8 +129,8 @@
   & .verification-education-option--active,
   & .verification-education-option--graduate.verification-education-option--active {
     background: var(--campus-surface-primary, #172554);
-    border-color: #3b82f6;
-    box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.24);
+    border-color: var(--campus-primary, #60a5fa);
+    box-shadow: none;
   }
 
   & .verification-method__copy text:first-child,
@@ -140,6 +147,11 @@
   & .verification-education-option__icon,
   & .verification-security__icon {
     background: var(--campus-icon-surface-blue, #162a46);
+  }
+
+  & .verification-method--active .verification-method__icon,
+  & .verification-education-option--active .verification-education-option__icon {
+    background: var(--campus-primary, #60a5fa);
   }
 
   & .verification-method__icon image,
@@ -177,7 +189,7 @@
     color: var(--campus-text-heading, #f8fafc);
   }
 
-  // 微信原生 input 在暗色模式下可能保留系统文字填充色；密码输入层还会遮住自绘掩码。
+  // 微信原生 input 在暗色模式下可能保留系统文字填充色，显式同步密码输入的文字和光标颜色。
   & .verification-field input.verification-field__input,
   & .verification-password-control input.verification-password-control__input {
     color: var(--campus-text-heading, #f8fafc);
@@ -187,15 +199,6 @@
 
   & .verification-password-control input.verification-password-control__input {
     background: transparent;
-  }
-
-  & .verification-password-control input.verification-password-control__input--masked {
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-  }
-
-  & .verification-password-control__mask {
-    color: var(--campus-text-heading, #f8fafc);
   }
 
   & .verification-field > text,
@@ -209,12 +212,35 @@
 
   & .verification-credential-guide {
     color: var(--campus-text-secondary, #aab8ca);
-    background: linear-gradient(135deg, #172554, #12343d);
+    background: var(--campus-surface-primary, #172554);
     border-color: var(--campus-border-strong, #2f4c73);
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
   }
 
-  & .verification-credential-guide text:first-child { color: #93c5fd; }
-  & .verification-credential-guide text:nth-child(3) { color: #fda4af; }
+  & .verification-credential-guide__title,
+  & .verification-credential-guide__index { color: var(--campus-primary-strong, #93c5fd); }
+  & .verification-credential-guide__index {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
+  & .verification-credential-guide__text { color: var(--campus-text-body, #d7e0ec); }
+
+  & .verification-password-coach-mark {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface-primary, #172554);
+    border-color: var(--campus-border-strong, #2f4c73);
+    box-shadow: none;
+  }
+  & .verification-password-coach-mark__title,
+  & .verification-password-coach-mark__dismiss {
+    color: var(--campus-primary-strong, #93c5fd);
+  }
+  & .verification-password-coach-mark__copy { color: var(--campus-text-body, #d7e0ec); }
+  & .verification-password-coach-mark__dismiss:active { background: var(--campus-surface, #111827); }
+  & .verification-password-coach-mark__arrow {
+    background: var(--campus-surface-primary, #172554);
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
 
   & .verification-review-note {
     background: var(--campus-surface-danger, #3f1725);
@@ -223,13 +249,16 @@
 
   & .verification-review-note text:first-child { color: #fda4af; }
   & .verification-review-note text:last-child { color: var(--campus-text-secondary, #aab8ca); }
-  & .verification-form__tag { color: #93c5fd; background: var(--campus-surface-primary, #172554); }
-  & .verification-form__tag--warm { color: #fdba74; background: var(--campus-surface-errand, #3a2416); }
+  & .verification-form__tag,
+  & .verification-form__tag--warm {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface-primary, #172554);
+  }
 
   & .verification-primary {
     color: #fff;
-    background: linear-gradient(135deg, #2563eb, #0e7490);
-    box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.24);
+    background: var(--campus-primary, #60a5fa);
+    box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(0, 0, 0, 0.24));
   }
 
   & .verification-primary--disabled {
@@ -248,9 +277,10 @@
   & .verification-upload > text:nth-last-child(2) { color: var(--campus-text-heading, #f8fafc); }
   & .verification-upload > text:last-child { color: var(--campus-text-muted, #8494aa); }
   & .verification-profile__badge { color: #6ee7b7; background: var(--campus-surface-success, #102f2e); }
+  & .verification-profile__avatar { background: var(--campus-primary, #60a5fa); }
   & .verification-security { background: var(--campus-surface-primary, #172554); border-color: var(--campus-border-strong, #2f4c73); }
   & .verification-credential-action { color: var(--campus-primary-strong, #93c5fd); }
-  & .verification-loading > view { background: linear-gradient(90deg, #172033, #243244, #172033); }
+  & .verification-loading > view { background: var(--campus-border, #243244); }
 
   & .materials-view-tabs {
     background: var(--campus-surface-subtle, #172033);
@@ -1676,6 +1706,52 @@
     background: var(--campus-border, #243244);
   }
 
+  & .academic-sheet__close {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: transparent;
+    border: 0;
+  }
+
+  & .academic-toolbar--simple .academic-toolbar__period {
+    color: var(--campus-text-body, #d7e0ec);
+    background: transparent;
+    border: 0;
+  }
+
+  & .academic-toolbar--simple .academic-toolbar__period > view {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  & .academic-toolbar--simple .academic-toolbar__chevron {
+    filter: brightness(0) saturate(100%) invert(73%) sepia(16%) saturate(1800%) hue-rotate(181deg) brightness(103%) contrast(98%);
+  }
+
+  & .course-reference {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: none;
+  }
+
+  & .course-reference__title { color: var(--campus-text-heading, #f8fafc); }
+  & .course-reference__hint { color: var(--campus-text-secondary, #aab8ca); }
+  & .course-reference__arrow { color: var(--campus-primary, #60a5fa); }
+  & .course-reference__metrics { border-top-color: var(--campus-border, #243244); }
+  & .course-reference__metrics > view { border-right-color: var(--campus-border, #243244); }
+  & .course-reference__metrics > view > text:first-child { color: var(--campus-primary-strong, #93c5fd); }
+  & .course-reference__metrics > view > text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+
+  & .course-resource-actions--course-card {
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+  }
+
+  & .course-resource-actions--course-card .course-resource-actions__secondary > view {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
   & .course-float-card__eyebrow { color: #fdba74; }
   & .course-float-card__title { color: var(--campus-text-heading, #f8fafc); }
   & .course-float-card__copy { color: var(--campus-text-muted, #8494aa); }
@@ -2147,4 +2223,83 @@
     background: linear-gradient(90deg, #172033 25%, #243244 50%, #172033 75%);
     border-color: var(--campus-border, #243244);
   }
+}
+
+// 校园身份认证沿用原生登录页式的细分隔布局；暗色模式仅切换语义色，不恢复卡片层级。
+.campus-theme--dark {
+  & .verification-hero,
+  & .verification-hero--pending,
+  & .verification-hero--verified,
+  & .verification-hero--rejected,
+  & .verification-hero--revoked,
+  & .verification-form,
+  & .verification-security,
+  & .verification-field-group,
+  & .verification-credential-guide {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  & .verification-methods,
+  & .verification-education,
+  & .verification-security {
+    border-color: var(--campus-border, #243244);
+  }
+
+  & .verification-method,
+  & .verification-education-option {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  & .verification-method--active,
+  & .verification-education-option--active,
+  & .verification-education-option--graduate.verification-education-option--active {
+    background: transparent;
+    border-color: transparent;
+    border-bottom-color: var(--campus-primary, #60a5fa);
+    box-shadow: none;
+  }
+
+  & .verification-method--active .verification-method__copy text:first-child,
+  & .verification-education-option--active .verification-education-option__copy text {
+    color: var(--campus-primary-strong, #93c5fd);
+  }
+
+  & .verification-form__tag,
+  & .verification-form__tag--warm {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+
+  & .verification-field-group .verification-field {
+    border-bottom-color: var(--campus-border, #243244);
+  }
+
+  & .verification-field-group .verification-field > text:not(.verification-field__feedback) {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  & .verification-field-group .verification-field input,
+  & .verification-field-group .verification-password-control {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  & .verification-credential-guide__title {
+    color: var(--campus-text-body, #d7e0ec);
+  }
+
+  & .verification-credential-guide__text {
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  & .verification-credential-guide {
+    border-left-color: var(--campus-border-strong, #2f4c73);
+  }
+
+  & .verification-security__icon { background: var(--campus-icon-surface-blue, #162a46); }
 }

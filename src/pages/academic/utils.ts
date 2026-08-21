@@ -67,7 +67,7 @@ export const formatExamTime = (startAt: string, endAt: string) => (
 )
 
 export const getPeriodLabel = (periods: AcademicPeriod[], id: string) => (
-  periods.find((period) => period.id === id)?.shortLabel || '选择学期'
+  periods.find((period) => period.id === id)?.label || '选择学期'
 )
 
 export const resolvePeriodId = (periods: AcademicPeriod[], preferredId: string) => {
@@ -120,8 +120,8 @@ export const deriveGradePeriods = (grades: GradeRecord[]): GradePeriod[] => {
 }
 
 export const getGradePeriodLabel = (periods: GradePeriod[], id: string) => (
-  periods.find((period) => period.id === id)?.shortLabel
-  || formatGradePeriod(id).shortLabel
+  periods.find((period) => period.id === id)?.label
+  || formatGradePeriod(id).label
 )
 
 export const getWeekDates = (period: AcademicPeriod | undefined, week: number) => {

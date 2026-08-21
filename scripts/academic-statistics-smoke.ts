@@ -79,4 +79,31 @@ for (const path of [
   )
 }
 
+for (const path of [
+  '../src/pages/academic/statistics/courses.tsx',
+  '../src/pages/academic/statistics/index.tsx',
+]) {
+  const source = readFileSync(resolve(__dirname, path), 'utf8')
+  assert.ok(
+    source.includes('AcademicLoadStateCard')
+      && source.includes('academicBindingGuidance.actionLabel'),
+    `${path} 的未绑定引导应复用统一的教务状态卡`,
+  )
+}
+
+const coursePassRatePreview = readFileSync(
+  resolve(__dirname, '../src/features/academic-statistics/course-pass-rate-preview/index.tsx'),
+  'utf8',
+)
+assert.match(
+  coursePassRatePreview,
+  /const nextData = result\.data && Number\.isFinite\(result\.data\.pass_rate\)/u,
+  '课程参考卡片只能接受带有效通过率的数据',
+)
+assert.match(
+  coursePassRatePreview,
+  /!data[\s\S]*?Number\.isFinite\(data\.pass_rate\)[\s\S]*?return null/u,
+  '没有有效通过率时不得渲染课程参考卡片',
+)
+
 console.log('academic-statistics smoke tests passed')

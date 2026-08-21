@@ -42,6 +42,10 @@ const academicSchemaSource = readFileSync(
   resolve(__dirname, '../src/api/generated/schema.ts'),
   'utf8',
 )
+const academicStyleSource = readFileSync(
+  resolve(__dirname, '../src/pages/academic/index.scss'),
+  'utf8',
+)
 
 assert.match(
   academicSchemaSource,
@@ -73,6 +77,21 @@ assert.match(
   schedulePageSource,
   /className='course-conflict-card__note'/u,
   '课程详情浮层必须展示课程备注',
+)
+assert.match(
+  academicStyleSource,
+  /详情卡片使用统一中性承载面[\s\S]*?\.course-float-card\s*\{[\s\S]*?background:\s*var\(--campus-surface/u,
+  '课程详情浮层应使用统一中性承载面',
+)
+assert.match(
+  academicStyleSource,
+  /\.course-resource-actions--course-card\s*\{[\s\S]*?border-radius:\s*var\(--ousea-radius-card-sm/u,
+  '课程操作入口应使用紧凑的 Ousea 卡片容器',
+)
+assert.match(
+  academicStyleSource,
+  /\.course-conflict-card\s*\{[\s\S]*?border-left-width:\s*8rpx[\s\S]*?border-left-color:\s*var\(--ousea-ocean-500/u,
+  '课程冲突卡片应使用左侧强调轨区分课程色',
 )
 
 const periodA = course('A-课程', 'A')

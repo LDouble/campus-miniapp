@@ -61,16 +61,17 @@ const cancelRetryBranch = pageSource.match(
   /if \(!shouldRetryWithEnglishSymbols\) \{([\s\S]*?)\n\s*\}/,
 )?.[1] || ''
 
-assert.ok(pageSource.includes('中国海洋大学信息门户（统一身份认证）'), '页面缺少信息门户来源提示')
-assert.ok(pageSource.includes('不是微信密码，也不是本小程序账号密码'), '页面缺少排除其他密码的提示')
+assert.ok(pageSource.includes('信息门户认证'), '页面缺少信息门户认证方式')
+assert.ok(pageSource.includes('密码为信息门户密码'), '页面缺少信息门户密码说明')
 assert.ok(
   pageSource.includes('const [passwordVisible, setPasswordVisible] = useState(false)'),
   '密码输入框必须默认隐藏密码',
 )
-assert.ok(pageSource.includes('const PASSWORD_REVEAL_DURATION = 1000'), '最后输入字符必须在 1 秒后隐藏')
-assert.ok(pageSource.includes("index === revealedIndex ? character : '*'"), '非最新字符必须显示为星号')
-assert.ok(pageSource.includes('onBlur={clearPasswordReveal}'), '密码输入框失焦时必须立即隐藏明文字符')
-assert.ok(!pageSource.includes('password={!passwordVisible}'), '不得依赖微信原生密码框的末位展示行为')
+assert.ok(pageSource.includes('password={!passwordVisible}'), '密码输入框必须使用原生 password 属性')
+assert.ok(pageSource.includes("ariaLabel={passwordVisible ? '隐藏密码' : '显示密码'}"), '密码显隐按钮必须提供可访问标签')
+assert.ok(pageSource.includes('verification-password-control__toggle'), '密码输入框必须提供显隐按钮')
+assert.ok(pageSource.includes('verification-password-coach-mark'), '密码错误后必须提供指向密码说明的 Coach Mark')
+assert.ok(pageSource.includes('setPasswordCoachMarkDismissed(true)'), 'Coach Mark 必须支持手动关闭')
 assert.ok(pageSource.includes("require('../../assets/icons/eye.svg')"), '密码隐藏时必须显示眼睛图标')
 assert.ok(pageSource.includes("require('../../assets/icons/eye-off.svg')"), '密码可见时必须显示划线眼睛图标')
 assert.ok(guardPosition >= 0 && guardPosition < requestPosition, '重复错误凭据必须在网络请求前拦截')

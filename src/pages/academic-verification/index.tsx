@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import Taro, {
   useDidShow,
   useLoad,
@@ -16,7 +16,6 @@ import {
 } from '../../components/keyboard-safe-input'
 import { getCurrentIdentity } from '../../api/account'
 import {
-  isAcademicEducationLevel,
   loadAcademicCredential,
   saveAcademicCredential,
 } from '../../api/academic-credential'
@@ -40,7 +39,6 @@ import {
 import {
   isRepeatedRejectedCredential,
   rejectedCredentialHint,
-  rejectedCredentialModal,
 } from '../../features/academic-verification/credential-rejection'
 import type {
   CredentialRejectionReason,
@@ -64,7 +62,6 @@ type SelectedMaterial = {
 }
 
 const MAX_MATERIAL_BYTES = 5 * 1024 * 1024
-const PASSWORD_REVEAL_DURATION = 1000
 const educationIcons: Record<AcademicEducationLevel, string> = {
   undergraduate: require('../../assets/icons/study.svg'),
   graduate: require('../../assets/icons/academic.svg'),
@@ -74,13 +71,8 @@ const verificationMethodIcons: Record<VerificationMethod, string> = {
   student_card: require('../../assets/icons/profile.svg'),
 }
 const securityIcon = require('../../assets/icons/result.svg')
-const passwordVisibleIcon = require('../../assets/icons/eye-off.svg')
-const passwordHiddenIcon = require('../../assets/icons/eye.svg')
-
-const maskPassword = (value: string, revealedIndex: number | null) =>
-  Array.from(value)
-    .map((character, index) => (index === revealedIndex ? character : '*'))
-    .join('')
+const passwordVisibleIcon = require('../../assets/icons/eye.svg')
+const passwordHiddenIcon = require('../../assets/icons/eye-off.svg')
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
@@ -118,43 +110,43 @@ const stateCopy: Record<VerificationState, {
   description: string
 }> = {
   unverified: {
-    eyebrow: 'GUEST · 待认证',
-    title: '完成校园身份认证',
-    description: '认证后即可发布、接单、交易和参与校园服务。',
+    eyebrow: '校园身份认证',
+    title: '绑定校园身份',
+    description: '绑定后即可查询课表、成绩、考试和选课。',
   },
   pending: {
-    eyebrow: 'UNDER REVIEW · 审核中',
-    title: '校园身份认证中',
-    description: '学生证申请已提交人工审核，结果会通过消息通知。',
+    eyebrow: '认证审核',
+    title: '材料审核中',
+    description: '认证材料已提交人工审核，结果会通过消息通知。',
   },
   verified: {
-    eyebrow: 'VERIFIED · 已认证',
+    eyebrow: '认证成功',
     title: '校园身份已通过',
     description: '你的账号已获得海大校园成员权限。',
   },
   rejected: {
-    eyebrow: 'NEEDS UPDATE · 需补充',
+    eyebrow: '需要补充',
     title: '认证申请未通过',
-    description: '请根据审核说明更新信息或重新上传学生证。',
+    description: '请根据审核说明更新信息或重新上传认证材料。',
   },
   revoked: {
-    eyebrow: 'EXPIRED · 已失效',
-    title: '校园身份需要重新认证',
+    eyebrow: '认证已失效',
+    title: '重新完成认证',
     description: '原校园身份已失效，完成认证后可恢复成员权限。',
   },
 }
 
 const credentialErrorMessage = (error: unknown) => {
   if (!isApiError(error)) {
-    return error instanceof Error ? error.message : '教务认证失败，请稍后重试'
+    return error instanceof Error ? error.message : '信息门户认证失败，请稍后重试'
   }
   if (error.code === 'invalid_academic_credentials') return '请访问信息门户确认或修改密码'
   if (error.code === 'academic_password_expired') return '请访问信息门户修改已过期密码'
   if (error.code === 'academic_account_restricted') return '请访问信息门户处理账号状态和密码'
   if (error.code === 'academic_credentials_limited') return '尝试次数过多，请稍后再试'
-  if (error.code === 'academic_provider_unavailable') return '教务认证服务暂不可用'
+  if (error.code === 'academic_provider_unavailable') return '信息门户认证服务暂不可用'
   if (error.code === 'invalid_education_level') return '请选择本科生或研究生'
-  if (error.code === 'academic_identity_type_mismatch') return '所选学生类型与教务系统不匹配，请确认后重试'
+  if (error.code === 'academic_identity_type_mismatch') return '所选身份与信息门户要求不匹配，请确认后重试'
   if (error.code === 'academic_challenge_required') return '校方要求验证码或设备确认，请等待 30 分钟后重试'
   return error.message
 }
@@ -174,9 +166,9 @@ export default function AcademicVerificationPage() {
   const [studentNo, setStudentNo] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
-  const [revealedPasswordIndex, setRevealedPasswordIndex] = useState<number | null>(null)
-  const passwordRevealTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [rejectedCredential, setRejectedCredential] = useState<RejectedAcademicCredential | null>(null)
+  const [credentialError, setCredentialError] = useState('')
+  const [passwordCoachMarkDismissed, setPasswordCoachMarkDismissed] = useState(false)
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel | null>(null)
   const [realName, setRealName] = useState('')
   const [selectedMaterial, setSelectedMaterial] = useState<SelectedMaterial | null>(null)
@@ -184,7 +176,6 @@ export default function AcademicVerificationPage() {
   const [working, setWorking] = useState(false)
   const [workingText, setWorkingText] = useState('')
   const [challengeRetryAt, setChallengeRetryAt] = useState(0)
-  const maskedPassword = maskPassword(password, revealedPasswordIndex)
   const currentCredentialRejected = rejectedCredential !== null
     && educationLevel !== null
     && isRepeatedRejectedCredential(rejectedCredential, {
@@ -192,41 +183,14 @@ export default function AcademicVerificationPage() {
       password,
       educationLevel,
     })
-
-  const clearPasswordReveal = () => {
-    if (passwordRevealTimer.current) {
-      clearTimeout(passwordRevealTimer.current)
-      passwordRevealTimer.current = null
-    }
-    setRevealedPasswordIndex(null)
-  }
-
-  const handlePasswordInput = (nextPassword: string, cursor?: number) => {
-    if (passwordRevealTimer.current) clearTimeout(passwordRevealTimer.current)
-
-    if (!passwordVisible && nextPassword.length > password.length) {
-      const nextCursor = Math.max(0, Math.min(cursor ?? nextPassword.length, nextPassword.length))
-      const revealedIndex = Math.max(0, Array.from(nextPassword.slice(0, nextCursor)).length - 1)
-      setRevealedPasswordIndex(revealedIndex)
-      passwordRevealTimer.current = setTimeout(() => {
-        setRevealedPasswordIndex(null)
-        passwordRevealTimer.current = null
-      }, PASSWORD_REVEAL_DURATION)
-    } else {
-      setRevealedPasswordIndex(null)
-    }
-
-    setPassword(nextPassword)
-  }
-
-  const togglePasswordVisibility = () => {
-    clearPasswordReveal()
-    setPasswordVisible((visible) => !visible)
-  }
-
-  useEffect(() => () => {
-    if (passwordRevealTimer.current) clearTimeout(passwordRevealTimer.current)
-  }, [])
+  const credentialFeedbackMessage = credentialError
+    || (rejectedCredential
+      ? currentCredentialRejected
+        ? rejectedCredentialHint(rejectedCredential.reason)
+        : '账号、密码或学生类型已修改，可以重新验证。'
+      : '')
+  const credentialFeedbackKind = credentialError || currentCredentialRejected ? 'error' : 'ready'
+  const showPasswordCoachMark = currentCredentialRejected && !passwordCoachMarkDismissed
 
   const loadStatus = async (silent = false, force = false) => {
     if (silent) setRefreshing(true)
@@ -239,10 +203,6 @@ export default function AcademicVerificationPage() {
       const identity = nextStatus.identity
       if (!studentNo) setStudentNo(identity?.student_no || request?.student_no || '')
       if (!realName) setRealName(identity?.real_name || request?.real_name || '')
-      const identityEducationLevel = identity?.education_level
-      if (isAcademicEducationLevel(identityEducationLevel)) {
-        setEducationLevel((current) => current || identityEducationLevel)
-      }
       if (request?.method === 'student_card' && request.status !== 'approved') {
         setMethod('student_card')
       }
@@ -268,7 +228,6 @@ export default function AcademicVerificationPage() {
       .then((currentUser) => {
         const credential = loadAcademicCredential(currentUser.user_id)
         setStudentNo((current) => current || credential.studentNo)
-        setEducationLevel((current) => current || credential.educationLevel)
       })
       .catch(() => {
         // 未绑定或旧版本凭据由页面正常引导重新填写。
@@ -359,12 +318,6 @@ export default function AcademicVerificationPage() {
       educationLevel,
     }
     if (rejectedCredential && isRepeatedRejectedCredential(rejectedCredential, attempt)) {
-      await Taro.showModal({
-        ...rejectedCredentialModal(rejectedCredential.reason),
-        showCancel: false,
-        confirmText: '我知道了',
-        confirmColor: '#5a9d88',
-      })
       return
     }
 
@@ -381,14 +334,17 @@ export default function AcademicVerificationPage() {
         educationLevel,
       })
       setPassword('')
+      setPasswordVisible(false)
       setRejectedCredential(null)
+      setCredentialError('')
+      setPasswordCoachMarkDismissed(false)
       setForceCredentialBinding(false)
       await loadStatus(true, true)
       await completeSuccess()
     }
 
     setWorking(true)
-    setWorkingText('正在连接教务系统')
+    setWorkingText('正在连接信息门户')
     try {
       await completeCredentialAttempt(password)
     } catch (initialSubmitError) {
@@ -419,8 +375,8 @@ export default function AcademicVerificationPage() {
         }
 
         submittedPassword = convertAcademicPasswordToEnglishSymbols(password)
-        clearPasswordReveal()
         setPassword(submittedPassword)
+        setCredentialError('')
         setWorkingText('已转换为英文符号，正在重新验证')
         try {
           await completeCredentialAttempt(submittedPassword)
@@ -452,21 +408,14 @@ export default function AcademicVerificationPage() {
           return
         }
         if (rejectionReason) {
+          setCredentialError('')
           setRejectedCredential({ ...submittedAttempt, reason: rejectionReason })
-          await Taro.showModal({
-            ...rejectedCredentialModal(rejectionReason),
-            showCancel: false,
-            confirmText: '我知道了',
-            confirmColor: '#5a9d88',
-          })
+          setPasswordCoachMarkDismissed(false)
           return
         }
       }
-      Taro.showToast({
-        title: credentialErrorMessage(submitError),
-        icon: 'none',
-        duration: 2600,
-      })
+      setRejectedCredential(null)
+      setCredentialError(credentialErrorMessage(submitError))
     } finally {
       setWorking(false)
       setWorkingText('')
@@ -477,11 +426,11 @@ export default function AcademicVerificationPage() {
     const normalizedRealName = realName.trim()
     const normalizedStudentNo = studentNo.trim()
     if (!normalizedRealName || !normalizedStudentNo) {
-      Taro.showToast({ title: '请填写姓名和学生证上的学号', icon: 'none' })
+      Taro.showToast({ title: '请填写姓名和学号', icon: 'none' })
       return
     }
     if (!selectedMaterial && !uploadedMaterial) {
-      Taro.showToast({ title: '请上传学生证图片', icon: 'none' })
+      Taro.showToast({ title: '请上传认证材料', icon: 'none' })
       return
     }
     if (working) return
@@ -532,8 +481,7 @@ export default function AcademicVerificationPage() {
   return (
     <View className='verification-page'>
       <CustomNavbar
-        title='校园身份认证'
-        subtitle='中国海洋大学'
+        title=''
         showBack
       />
 
@@ -587,7 +535,7 @@ export default function AcademicVerificationPage() {
                   <View className='verification-profile__facts'>
                     <View>
                       <Text>认证方式</Text>
-                      <Text>{identity.method === 'credentials' ? '教务账号' : '学生证审核'}</Text>
+                        <Text>{identity.method === 'credentials' ? '信息门户认证' : '材料审核'}</Text>
                     </View>
                     <View>
                       <Text>认证时间</Text>
@@ -608,13 +556,13 @@ export default function AcademicVerificationPage() {
                 <View
                   className='verification-credential-action'
                   ariaRole='button'
-                  ariaLabel='更新教务账号'
+                  ariaLabel='更新信息门户认证'
                   onClick={() => {
                     setMethod('credentials')
                     setForceCredentialBinding(true)
                   }}
                 >
-                  更新教务账号
+                  更新信息门户认证
                 </View>
                 <View
                   className='verification-primary'
@@ -638,30 +586,29 @@ export default function AcademicVerificationPage() {
 
                 {!forceCredentialBinding && (
                   <View className='verification-methods-block'>
-                    <View className='verification-methods-heading'>
-                      <Text>选择认证方式</Text>
-                      <Text>可随时切换</Text>
-                    </View>
                     <View className='verification-methods'>
                       {([
                         {
                           value: 'credentials',
-                          label: '教务账号',
-                          description: '推荐，验证后立即生效',
+                          label: '信息门户认证',
+                          description: '可登录信息门户',
+                          recommended: true,
                         },
                         {
                           value: 'student_card',
-                          label: '学生证认证',
-                          description: '无法登录教务时使用',
+                          label: '材料认证',
+                          description: '无法登录信息门户',
+                          recommended: false,
                         },
                       ] as const).map((item) => (
                         <View
                           key={item.value}
+                          id={`academic-verification-method-${item.value}`}
                           className={method === item.value
                             ? 'verification-method verification-method--active'
                             : 'verification-method'}
                           ariaRole='button'
-                          ariaLabel={`${item.label}，${item.description}`}
+                          ariaLabel={`${item.label}${item.recommended ? '，推荐方式' : ''}，${item.description}`}
                           onClick={() => setMethod(item.value)}
                         >
                           <View className='verification-method__icon'>
@@ -669,6 +616,7 @@ export default function AcademicVerificationPage() {
                           </View>
                           <View className='verification-method__copy'>
                             <Text>{item.label}</Text>
+                            {item.recommended && <View className='verification-method__tag'>推荐</View>}
                             <Text>{item.description}</Text>
                           </View>
                           <View className='verification-method__check'>
@@ -681,41 +629,28 @@ export default function AcademicVerificationPage() {
                 )}
 
                 {method === 'credentials' && (
-                  <View className='verification-form'>
-                    <View className='verification-form__heading'>
-                      <View>
-                        <Text>教务账号验证</Text>
-                        <Text>本科生、研究生均使用信息门户账号密码</Text>
-                      </View>
-                      <View className='verification-form__tag'>推荐</View>
-                    </View>
-                    <View className='verification-credential-guide'>
-                      <Text>密码填写说明</Text>
-                      <Text>请填写中国海洋大学信息门户（统一身份认证）的账号和密码。</Text>
-                      <Text>不是微信密码，也不是本小程序账号密码。</Text>
-                    </View>
+                  <View className='verification-form verification-form--credentials'>
                     <View className='verification-education'>
                       <View className='verification-education__heading'>
-                        <Text>学生类型</Text>
-                        <Text>请选择你使用的教务系统</Text>
+                        <Text>学历</Text>
+                        <Text>请选择你的身份</Text>
                       </View>
                       <View className='verification-education__options'>
                         {([
                           {
                             value: 'undergraduate',
                             label: '本科生',
-                            description: '信息门户账号密码',
                           },
                           {
                             value: 'graduate',
                             label: '研究生',
-                            description: '信息门户账号密码',
                           },
                         ] as const).map((item) => (
                           <View
                             key={item.value}
+                            id={`academic-verification-education-${item.value}`}
                             ariaRole='button'
-                            ariaLabel={`${item.label}，${item.description}`}
+                            ariaLabel={`${item.label}身份`}
                             className={[
                               'verification-education-option',
                               `verification-education-option--${item.value}`,
@@ -725,7 +660,10 @@ export default function AcademicVerificationPage() {
                               working ? 'verification-education-option--disabled' : '',
                             ].filter(Boolean).join(' ')}
                             onClick={() => {
-                              if (!working) setEducationLevel(item.value)
+                              if (!working) {
+                                setEducationLevel(item.value)
+                                setCredentialError('')
+                              }
                             }}
                           >
                             <View className='verification-education-option__icon'>
@@ -733,7 +671,6 @@ export default function AcademicVerificationPage() {
                             </View>
                             <View className='verification-education-option__copy'>
                               <Text>{item.label}</Text>
-                              <Text>{item.description}</Text>
                             </View>
                             <View className='verification-education-option__check'>
                               {educationLevel === item.value ? '✓' : ''}
@@ -742,82 +679,133 @@ export default function AcademicVerificationPage() {
                         ))}
                       </View>
                     </View>
-                    <View className='verification-field'>
-                      <Text>信息门户账号（学号）</Text>
-                      <KeyboardSafeInput
-                        id='academic-verification-student-no'
-                        className='verification-field__input'
-                        value={studentNo}
-                        maxlength={64}
-                        placeholder='请输入信息门户账号'
-                        placeholderClass='verification-placeholder'
-                        disabled={working}
-                        onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                        onInput={(event) => setStudentNo(event.detail.value)}
-                      />
-                    </View>
-                    <View className='verification-field'>
-                      <Text>信息门户密码</Text>
-                      <View className='verification-password-control'>
-                        <View className='verification-password-control__field'>
-                          {!passwordVisible && password && (
-                            <Text className='verification-password-control__mask'>
-                              {maskedPassword}
-                            </Text>
-                          )}
+                    <View className='verification-field-group'>
+                      <View className='verification-field'>
+                        <Text>学号</Text>
+                        <KeyboardSafeInput
+                          id='academic-verification-student-no'
+                          className='verification-field__input'
+                          value={studentNo}
+                          maxlength={64}
+                          placeholder='请输入学号或账号'
+                          placeholderClass='verification-placeholder'
+                          disabled={working}
+                          onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                          onInput={(event) => {
+                            setStudentNo(event.detail.value)
+                            setCredentialError('')
+                          }}
+                        />
+                      </View>
+                      <View className='verification-field'>
+                        <Text>密码</Text>
+                        <View className='verification-password-control'>
                           <KeyboardSafeInput
                             id='academic-verification-password'
-                            className={passwordVisible
-                              ? 'verification-password-control__input'
-                              : 'verification-password-control__input verification-password-control__input--masked'}
+                            className='verification-password-control__input'
+                            password={!passwordVisible}
                             value={password}
                             holdKeyboard
                             cursorColor='#2b7fff'
                             ariaLabel='信息门户密码'
                             maxlength={256}
-                            placeholder='验证成功后仅保存在本机'
+                            placeholder='请输入信息门户密码'
                             placeholderClass='verification-placeholder'
                             disabled={working}
                             onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                            onBlur={clearPasswordReveal}
-                            onInput={(event) => handlePasswordInput(event.detail.value, event.detail.cursor)}
+                            onInput={(event) => {
+                              setPassword(event.detail.value)
+                              setCredentialError('')
+                            }}
                           />
-                        </View>
-                        <View
-                          className='verification-password-control__toggle'
-                          ariaRole='button'
-                          ariaLabel={passwordVisible ? '隐藏密码' : '显示密码'}
-                          onClick={togglePasswordVisibility}
-                        >
-                          <Image
-                            className='verification-password-control__toggle-icon'
-                            src={passwordVisible ? passwordVisibleIcon : passwordHiddenIcon}
-                            mode='aspectFit'
-                          />
+                          <View
+                            className='verification-password-control__toggle'
+                            ariaRole='button'
+                            ariaLabel={passwordVisible ? '隐藏密码' : '显示密码'}
+                            onClick={() => setPasswordVisible((visible) => !visible)}
+                          >
+                            <Image
+                              className='verification-password-control__toggle-icon'
+                              src={passwordVisible ? passwordVisibleIcon : passwordHiddenIcon}
+                              mode='aspectFit'
+                            />
+                          </View>
                         </View>
                       </View>
-                      {rejectedCredential && (
-                        <Text className={currentCredentialRejected
-                          ? 'verification-field__feedback verification-field__feedback--error'
-                          : 'verification-field__feedback verification-field__feedback--ready'}
+                      {(rejectedCredential || credentialError) && (
+                        <View
+                          className={`verification-field__feedback verification-field__feedback--${credentialFeedbackKind}`}
+                          ariaRole='alert'
                         >
-                          {currentCredentialRejected
-                            ? rejectedCredentialHint(rejectedCredential.reason)
-                            : '账号、密码或学生类型已修改，可以重新验证。'}
-                        </Text>
+                          <Text className='verification-field__feedback-mark'>
+                            {credentialFeedbackKind === 'error' ? '!' : '✓'}
+                          </Text>
+                          <Text className='verification-field__feedback-text'>
+                            {credentialFeedbackMessage}
+                          </Text>
+                        </View>
                       )}
+                    </View>
+                    {showPasswordCoachMark && (
+                      <View
+                        className='verification-password-coach-mark'
+                        ariaRole='status'
+                        ariaLabel='密码错误处理说明'
+                      >
+                        <View className='verification-password-coach-mark__content'>
+                          <Text className='verification-password-coach-mark__title'>
+                            密码有问题？先看这里
+                          </Text>
+                          <Text className='verification-password-coach-mark__copy'>
+                            请按下面的说明检查大小写、全角/半角，并从信息门户复制最新密码。
+                          </Text>
+                        </View>
+                        <View
+                          className='verification-password-coach-mark__dismiss'
+                          ariaRole='button'
+                          ariaLabel='关闭密码说明'
+                          onClick={() => setPasswordCoachMarkDismissed(true)}
+                        >
+                          知道了
+                        </View>
+                        <View className='verification-password-coach-mark__arrow' />
+                      </View>
+                    )}
+                    <View className='verification-credential-guide'>
+                      <View className='verification-credential-guide__header'>
+                        <Text className='verification-credential-guide__title'>密码说明</Text>
+                      </View>
+                      <View className='verification-credential-guide__items'>
+                        <View className='verification-credential-guide__item'>
+                          <Text className='verification-credential-guide__index'>1</Text>
+                          <Text className='verification-credential-guide__text'>
+                            密码为信息门户密码。
+                          </Text>
+                        </View>
+                        <View className='verification-credential-guide__item'>
+                          <Text className='verification-credential-guide__index'>2</Text>
+                          <Text className='verification-credential-guide__text'>
+                            提示密码错误即表示密码错误，请确认大小写及字符的全角/半角。建议先登录信息门户，再复制密码到这里。
+                          </Text>
+                        </View>
+                        <View className='verification-credential-guide__item'>
+                          <Text className='verification-credential-guide__index'>3</Text>
+                          <Text className='verification-credential-guide__text'>
+                            如果仍无法登录，请添加 xmxjouc 联系。
+                          </Text>
+                        </View>
+                      </View>
                     </View>
                     <View
                       className={`verification-primary ${working || !educationLevel ? 'verification-primary--disabled' : ''}`}
                       ariaRole='button'
-                      ariaLabel='验证并绑定教务账号'
+                      ariaLabel='验证并绑定信息门户'
                       onClick={() => void submitCredentials()}
                     >
                       {working && method === 'credentials' ? workingText : '验证并绑定'}
                     </View>
                     <Text className='verification-form__footnote'>
-                      信息门户账号密码仅保存在本机小程序存储中，并随每次教务查询通过 HTTPS
-                      提交；服务端不持久化。更新绑定或注销账号时会清除本机记录。
+                      凭据仅保存在本机，查询时通过 HTTPS 提交；解绑后清除。
                     </Text>
                   </View>
                 )}
@@ -831,70 +819,72 @@ export default function AcademicVerificationPage() {
                     </View>
                     <Text>认证申请已提交</Text>
                     <Text>
-                      学生证材料已进入人工审核，提交于 {formatDateTime(request?.created_at)}。
+                      认证材料已进入人工审核，提交于 {formatDateTime(request?.created_at)}。
                       审核结果会通过消息通知。
                     </Text>
-                    <View onClick={() => setMethod('credentials')}>我可以使用教务账号验证</View>
+                    <View onClick={() => setMethod('credentials')}>我可以登录信息门户</View>
                   </View>
                 ) : !forceCredentialBinding && method === 'student_card' && (
-                  <View className='verification-form'>
+                  <View className='verification-form verification-form--material'>
                     <View className='verification-form__heading'>
                       <View>
-                        <Text>学生证人工认证</Text>
-                        <Text>适用于暂无可登录教务账号的同学</Text>
+                        <Text>材料认证</Text>
+                        <Text>适合无法登录信息门户的同学</Text>
                       </View>
                       <View className='verification-form__tag verification-form__tag--warm'>人工审核</View>
                     </View>
-                    <View className='verification-field'>
-                      <Text>真实姓名</Text>
-                      <KeyboardSafeInput
-                        id='academic-verification-real-name'
-                        value={realName}
-                        maxlength={100}
-                        placeholder='请输入学生证上的姓名'
-                        placeholderClass='verification-placeholder'
-                        onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                        onInput={(event) => setRealName(event.detail.value)}
-                      />
-                    </View>
-                    <View className='verification-field'>
-                      <Text>学号</Text>
-                      <KeyboardSafeInput
-                        id='academic-verification-card-student-no'
-                        value={studentNo}
-                        maxlength={64}
-                        placeholder='请输入学生证上的学号'
-                        placeholderClass='verification-placeholder'
-                        onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                        onInput={(event) => setStudentNo(event.detail.value)}
-                      />
+                    <View className='verification-field-group'>
+                      <View className='verification-field'>
+                        <Text>真实姓名</Text>
+                        <KeyboardSafeInput
+                          id='academic-verification-real-name'
+                          value={realName}
+                          maxlength={100}
+                          placeholder='请输入材料上的姓名'
+                          placeholderClass='verification-placeholder'
+                          onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                          onInput={(event) => setRealName(event.detail.value)}
+                        />
+                      </View>
+                      <View className='verification-field'>
+                        <Text>学号</Text>
+                        <KeyboardSafeInput
+                          id='academic-verification-card-student-no'
+                          value={studentNo}
+                          maxlength={64}
+                          placeholder='请输入材料上的学号'
+                          placeholderClass='verification-placeholder'
+                          onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                          onInput={(event) => setStudentNo(event.detail.value)}
+                        />
+                      </View>
                     </View>
                     <View
                       className={`verification-upload ${selectedMaterial ? 'verification-upload--selected' : ''}`}
                       ariaRole='button'
-                      ariaLabel={selectedMaterial ? '更换学生证图片' : '上传学生证图片'}
+                      ariaLabel={selectedMaterial ? '更换认证材料' : '上传认证材料'}
                       onClick={() => void chooseMaterial()}
                     >
                       {selectedMaterial ? (
                         <>
-                          <Image src={selectedMaterial.path} mode='aspectFill' />
+                          <Image src={selectedMaterial.path} mode='aspectFit' />
                           <View className='verification-upload__mask'>
-                            <Text>{uploadedMaterial ? '已安全上传' : '已选择学生证'}</Text>
+                            <Text>{uploadedMaterial ? '已安全上传' : '已选择认证材料'}</Text>
                             <Text>{(selectedMaterial.size / 1024 / 1024).toFixed(2)} MiB · 点击更换</Text>
                           </View>
                         </>
                       ) : (
                         <>
                           <View className='verification-upload__icon'>＋</View>
-                          <Text>上传学生证图片</Text>
-                          <Text>支持 JPEG、PNG、WebP，最大 5 MiB</Text>
+                          <Text>上传认证材料</Text>
+                          <Text>学生证、录取通知书或毕业证，支持 JPEG、PNG、WebP</Text>
                         </>
                       )}
                     </View>
                     <View
                       className={`verification-primary verification-primary--warm ${working ? 'verification-primary--disabled' : ''}`}
                       ariaRole='button'
-                      ariaLabel='提交学生证人工审核'
+                      ariaLabel='提交认证材料人工审核'
                       onClick={() => void submitStudentCard()}
                     >
                       {working && method === 'student_card' ? workingText : '提交人工审核'}
@@ -908,7 +898,7 @@ export default function AcademicVerificationPage() {
                   </View>
                   <View>
                     <Text>隐私材料受保护</Text>
-                    <Text>学生证使用私有加密存储，仅授权审核人员可查看，并按保留策略自动清理。</Text>
+                    <Text>认证材料仅审核人员可见，并按策略自动清理。</Text>
                   </View>
                 </View>
               </>

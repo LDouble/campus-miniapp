@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
@@ -31,6 +31,8 @@ import {
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
+const ACADEMIC_CHEVRON = require('../../../assets/icons/academic-chevron-down.svg')
+
 const defaultPreferences: AcademicPreferences = {
   section: 'exams',
   schedulePeriodId: DEFAULT_PERIOD_ID,
@@ -238,10 +240,9 @@ export default function ExamsPage() {
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
       <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
-        <Text className='academic-toolbar__label'>考试学期</Text>
         <View>
           <Text>{getPeriodLabel(periods, preferences.examPeriodId)}</Text>
-          <Text className='academic-toolbar__chevron'>⌄</Text>
+          <Image className='academic-toolbar__chevron' src={ACADEMIC_CHEVRON} mode='aspectFit' />
         </View>
       </View>
       <View className='academic-toolbar__hint'>
