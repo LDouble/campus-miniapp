@@ -55,7 +55,7 @@ const homeFeedItemToPost = (
   item: HomeFeedItemView,
   reaction?: { liked: boolean; likeCount: number; likedByNicknames: string[] },
 ): CampusCirclePostView => ({
-  author_avatar_url: null,
+  author_avatar_url: item.author_avatar_url ?? null,
   author_deleted: item.author_deleted,
   author_id: item.author_id,
   author_level: emptyAuthorLevel,

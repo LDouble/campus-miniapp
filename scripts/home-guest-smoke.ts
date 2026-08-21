@@ -195,13 +195,14 @@ assert.ok(
     && homeSource.includes('timeFormatter={formatHomeMomentsTime}')
     && feedAdapterSource.includes('liked: reaction?.liked ?? item.liked')
     && feedAdapterSource.includes('liked_by_nicknames: reaction?.likedByNicknames ?? item.liked_by_nicknames')
-    && feedAdapterSource.includes('comment_previews: item.comment_previews'),
+    && feedAdapterSource.includes('comment_previews: item.comment_previews')
+    && feedAdapterSource.includes('author_avatar_url: item.author_avatar_url ?? null'),
   '首页四类混排必须复用 CommunityPostCard 并接入真实点赞昵称和评论预览',
 )
 assert.match(
   generatedApiSource,
-  /HomeFeedItemView:[\s\S]*?liked: boolean;[\s\S]*?PublicCommentPreview:[\s\S]*?parent_id: number \| null;[\s\S]*?reply_to_comment_id: number \| null;[\s\S]*?reply_to_nickname: string \| null;[\s\S]*?root_id: number;/u,
-  '首页混排生成类型必须包含服务端点赞状态和二级评论关系字段',
+  /HomeFeedItemView:[\s\S]*?author_avatar_url\?: string \| null;[\s\S]*?liked: boolean;[\s\S]*?PublicCommentPreview:[\s\S]*?parent_id: number \| null;[\s\S]*?reply_to_comment_id: number \| null;[\s\S]*?reply_to_nickname: string \| null;[\s\S]*?root_id: number;/u,
+  '首页混排生成类型必须包含作者头像、点赞状态和二级评论关系字段',
 )
 assert.ok(
   feedAdapterSource.includes("title: '跑腿 · 待接单'")
