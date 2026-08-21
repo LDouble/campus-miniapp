@@ -197,7 +197,6 @@ export default function AccountCancellationPage() {
           </Text>
           <View
             className={`cancellation-button cancellation-button--primary ${submitting ? 'cancellation-button--disabled' : ''}`}
-            hoverClass='cancellation-button--pressed'
             ariaRole='button'
             ariaLabel='重新注册并继续使用'
             onClick={() => void resume()}
@@ -250,7 +249,6 @@ export default function AccountCancellationPage() {
           </View>
           <View
             className='cancellation-section__refresh'
-            hoverClass='cancellation-section__refresh--pressed'
             onClick={() => void loadPreflight()}
           >
             <Text>{loading ? '检查中' : '重新检查'}</Text>
@@ -272,7 +270,6 @@ export default function AccountCancellationPage() {
                 </View>
                 <View
                   className='cancellation-blocker__action'
-                  hoverClass='cancellation-blocker__action--pressed'
                   onClick={() => Taro.navigateTo({
                     url: isQualificationEdition
                       ? qualificationBlockerRoute(blocker.module)
@@ -302,7 +299,6 @@ export default function AccountCancellationPage() {
           'cancellation-button--danger',
           (!preflight?.can_cancel || submitting || loading) ? 'cancellation-button--disabled' : '',
         ].filter(Boolean).join(' ')}
-        hoverClass='cancellation-button--pressed'
         ariaRole='button'
         ariaLabel='确认注销当前账号'
         onClick={() => void cancelAccount()}

@@ -7,6 +7,8 @@ import {
   commentReplyTargetName,
   commentRootId,
   mergeLocalThreadReply,
+  mergePublicCommentPreview,
+  orderPublicCommentPreviews,
 } from '../src/features/community/comments'
 import { noticeActionRoute } from '../src/features/notices/action-route'
 
@@ -63,6 +65,61 @@ assert.deepEqual(merged.map((item) => item.id), [43, 44])
 assert.equal(merged[0].reply_count, 1)
 assert.strictEqual(mergeLocalThreadReply(merged, pendingReply), merged)
 
+const mergedPublicReply = mergePublicCommentPreview([
+  {
+    id: 41,
+    author_id: 7,
+    author_nickname: '海风同学',
+    parent_id: null,
+    root_id: 41,
+    reply_to_comment_id: null,
+    reply_to_nickname: null,
+    content: '根评论',
+    created_at: '2026-08-21T00:00:00+08:00',
+  },
+], {
+  ...pendingReply,
+  target_id: 12,
+  author_deleted: false,
+  content: '二级回复',
+  created_at: '2026-08-21T00:01:00+08:00',
+} as never, {
+  id: firstReply.id,
+  authorNickname: firstReply.author_nickname,
+})
+assert.deepEqual(mergedPublicReply.map((item) => item.id), [41, 44])
+assert.equal(mergedPublicReply[1].parent_id, 43)
+assert.equal(mergedPublicReply[1].root_id, 41)
+assert.equal(mergedPublicReply[1].reply_to_comment_id, 43)
+assert.equal(mergedPublicReply[1].reply_to_nickname, '木棉同学')
+
+const rootPreview = mergedPublicReply[0]
+const replyPreview = mergedPublicReply[1]
+const anotherRootPreview = {
+  ...rootPreview,
+  id: 55,
+  root_id: 55,
+  author_nickname: '山海同学',
+}
+assert.deepEqual(
+  orderPublicCommentPreviews([replyPreview, rootPreview, anotherRootPreview]).map((item) => item.id),
+  [41, 44, 55],
+)
+const localPreviewBeyondServerLimit = mergePublicCommentPreview(
+  [rootPreview, replyPreview, anotherRootPreview],
+  {
+    ...pendingReply,
+    id: 46,
+    target_id: 12,
+    author_deleted: false,
+    content: '刚刚追加的二级回复',
+    created_at: '2026-08-21T00:02:00+08:00',
+  } as never,
+  { id: firstReply.id, authorNickname: firstReply.author_nickname },
+)
+assert.equal(localPreviewBeyondServerLimit.length, 4)
+assert.deepEqual(localPreviewBeyondServerLimit.map((item) => item.id), [41, 46, 44, 55])
+
 const tree = buildCommentTree(root.id, [pendingReply, firstReply])
 assert.equal(tree.length, 1)
 assert.equal(tree[0].comment.id, firstReply.id)
@@ -104,6 +161,8 @@ const startReplySource = detailCommentsSource.match(
   /const startReply = useCallback\([\s\S]*?\n  const finishComposerClose/u,
 )?.[0] || ''
 assert.match(startReplySource, /setReplyTarget\(comment\)[\s\S]*openComposer\(\)/u)
+assert.match(startReplySource, /setReplyAnchorSelector\(`#detail-comment-reply-\$\{comment\.id\}`\)/u)
+assert.match(startReplySource, /replyTargetScrollSequenceRef\.current \+= 1/u)
 assert.doesNotMatch(startReplySource, /loadThread|updateThreads|getCommentThread/u)
 assert.match(detailCommentsSource, /const COMPOSER_CLOSE_DURATION = 180/u)
 assert.match(detailCommentsSource, /const COMMENT_FOCUS_DURATION = 2200/u)
@@ -133,6 +192,11 @@ assert.match(communityCommentSheetSource, /markLifeHubSectionDirty\(dirtySection
 assert.match(communityCommentSheetSource, /dismissSignal\?: number/u)
 assert.match(communityCommentSheetSource, /lastDismissSignalRef/u)
 assert.match(communityCommentSheetSource, /requestClose\(\)/u)
+assert.match(communityCommentSheetSource, /if \(closingRef\.current \|\| submittingRef\.current\) return/u)
+assert.match(communityCommentSheetSource, /onSubmittingChange=\{\(submitting\) => \{/u)
+assert.match(communityCommentSheetSource, /onSubmittingChange\?\.\(submitting\)/u)
+assert.match(detailCommentsSource, /onSubmittingChange\?\.\(true\)/u)
+assert.match(detailCommentsSource, /onSubmittingChange\?\.\(false\)/u)
 assert.match(
   communityCommentSheetSource,
   /setCustomTabBarHidden\(true\)[\s\S]*return \(\) => setCustomTabBarHidden\(false\)/u,
@@ -177,12 +241,31 @@ assert.match(detailCommentsSource, /const handleKeyboardHeightChange = useCallba
 assert.match(detailCommentsSource, /const handleComposerBlur = useCallback/u)
 assert.match(
   detailCommentsSource,
+  /const handleComposerBlur = useCallback\(\(\) => \{[\s\S]*?setInputFocused\(false\)[\s\S]*?if \(composerOnly\) return[\s\S]*?closeComposer\(\)/u,
+  '列表评论框不得因真机 Textarea blur 提前卸载并丢失本地回填',
+)
+assert.match(
+  detailCommentsSource,
   /if \(!composerClosingRef\.current && !stickerPickerOpenRef\.current\) closeComposer\(\)/u,
 )
 assert.match(detailCommentsSource, /onBlur=\{handleComposerBlur\}/u)
 assert.match(detailCommentsSource, /event\.detail\.duration/u)
 assert.match(detailCommentsSource, /transitionDuration: `\$\{keyboardTransitionDuration\}ms`/u)
 assert.match(detailCommentsSource, /onKeyboardHeightChange=\{handleKeyboardHeightChange\}/u)
+assert.match(detailCommentsSource, /`#community-comment-preview-\$\{initialReplyTarget\.id\}`/u)
+assert.match(detailCommentsSource, /query\.select\(targetSelector\)\.boundingClientRect\(\)/u)
+assert.match(detailCommentsSource, /query\.select\('\.business-detail-composer'\)\.boundingClientRect\(\)/u)
+assert.match(detailCommentsSource, /suppressCommunityOverlayDismiss\(REPLY_TARGET_DISMISS_SUPPRESSION\)/u)
+assert.match(detailCommentsSource, /suppressCommunityOverlayDismiss\(REPLY_OPEN_DISMISS_SUPPRESSION\)/u)
+assert.match(detailCommentsSource, /Taro\.pageScrollTo\(\{[\s\S]*?scrollTop:[\s\S]*?duration: REPLY_TARGET_SCROLL_DURATION/u)
+assert.match(detailCommentsSource, /business-detail-comments__reply-viewport-reserve/u)
+assert.match(detailCommentsSource, /onReplyKeyboardHeightChange\?\.\(replyKeyboardHeight\)/u)
+assert.match(communityCommentSheetSource, /community-comment-sheet__reply-viewport-reserve/u)
+assert.match(communityCommentSheetSource, /onReplyKeyboardHeightChange=\{setReplyKeyboardHeight\}/u)
+assert.match(
+  detailCommentsSource,
+  /const closeComposer = useCallback\(\(\) => \{\s*replyTargetScrollSequenceRef\.current \+= 1/u,
+)
 assert.doesNotMatch(detailCommentsSource, /onKeyboardVisibilityChange=/u)
 assert.doesNotMatch(
   detailCommentsSource,
@@ -194,12 +277,17 @@ assert.doesNotMatch(
   /business-detail-composer__control-spacer/u,
   '发布箭头占位样式应同步移除',
 )
-assert.match(detailCommentsSource, /catchMove=\{composerOpen && !composerClosing\}/u)
-assert.match(detailCommentsSource, /onTouchStart=\{composerOpen && !composerClosing \? closeComposer : undefined\}/u)
+assert.match(detailCommentsSource, /catchMove\s+ariaRole=/u)
+assert.match(detailCommentsSource, /const handleComposerBackdropTouchStart = useCallback/u)
+assert.match(detailCommentsSource, /onTouchStart=\{handleComposerBackdropTouchStart\}/u)
 assert.doesNotMatch(detailCommentsSource, /\{composerOpen && \([\s\S]*business-detail-composer__backdrop/u)
 assert.match(
   detailCommentsSource,
-  /id=\{`business-comment-cancel-reply-\$\{replyTarget\.id\}`\}[\s\S]*?onTouchStart=\{closeComposer\}/u,
+  /id=\{`business-comment-cancel-reply-\$\{replyTarget\.id\}`\}[\s\S]*?onTouchStart=\{\(\) => \{[\s\S]*?if \(!submitting\) closeComposer\(\)/u,
+)
+assert.match(
+  detailCommentsSource,
+  /business-detail-composer__publish--disabled[\s\S]*?onClick=\{\(\) => \{[\s\S]*?if \(hasComposerContent && !submitting\) void submit\(\)/u,
 )
 assert.match(detailCommentsSource, /placeholder=\{replyTarget \? '写下回复\.\.\.' : placeholder\}/u)
 assert.doesNotMatch(

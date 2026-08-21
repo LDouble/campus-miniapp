@@ -19,7 +19,6 @@ export default function DetailAuthorNavbar({
   return (
     <View
       className='business-detail-author'
-      hoverClass='business-detail-author--pressed'
       ariaRole='button'
       ariaLabel={`查看${name}的个人主页`}
       onClick={() => void openPublicProfile(userId)}

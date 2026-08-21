@@ -780,7 +780,6 @@ export default function SchedulePage() {
                 : relatedCount > 0
                   ? `${course.name}，同一时段另有 ${relatedCount} 门其他周次课程`
                   : `${course.name}，第 ${course.startSection} 到 ${course.endSection} 节`}
-              hoverClass='timetable-course--pressed'
               onClick={() => openCourse(course)}
             >
               {hasConflict ? (
@@ -841,7 +840,6 @@ export default function SchedulePage() {
               <View
                 key={getCourseScheduleKey(course)}
                 className='day-course'
-                hoverClass='day-course--pressed'
                 onClick={() => openCourse(course)}
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
@@ -1167,7 +1165,6 @@ export default function SchedulePage() {
       </View>
       <View
         className='academic-fab'
-        hoverClass='academic-fab--pressed'
         ariaRole='button'
         ariaLabel='添加自定义课程'
         onClick={() => openCourseForm()}

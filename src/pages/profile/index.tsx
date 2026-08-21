@@ -314,7 +314,6 @@ export default function ProfilePage() {
           </UserAvatar>
           <View
             className='profile-card__main'
-            hoverClass='profile-card__main--pressed'
             ariaRole='button'
             ariaLabel='查看我的公开个人主页'
             onClick={openMyPublicProfile}
@@ -334,7 +333,6 @@ export default function ProfilePage() {
                 identityVerified ? 'profile-card__badge--verified' : '',
                 identityPending ? 'profile-card__badge--pending' : '',
               ].filter(Boolean).join(' ')}
-              hoverClass='profile-card__badge--pressed'
               ariaRole='button'
               ariaLabel={`校园身份，${identityMeta}`}
               onClick={() => openMenu(identityMenu)}
@@ -347,7 +345,6 @@ export default function ProfilePage() {
                 'profile-card__checkin',
                 checkinStatus?.checked_in ? 'profile-card__checkin--done' : '',
               ].filter(Boolean).join(' ')}
-              hoverClass='profile-card__checkin--pressed'
               ariaRole='button'
               ariaLabel={checkinStatus?.checked_in ? '今日已签到，查看签到记录' : '前往每日签到'}
               onClick={() => Taro.navigateTo({ url: '/pages/daily-checkin/index' })}
@@ -374,7 +371,6 @@ export default function ProfilePage() {
         {userLevel && (
           <View
             className={`profile-level profile-level--${userLevel.theme} motion-enter motion-enter--delay-1`}
-            hoverClass='profile-level--pressed'
             ariaRole='button'
             ariaLabel={`社区等级，Lv.${userLevel.level} ${userLevel.name}`}
             onClick={() => Taro.navigateTo({ url: '/pages/user-level/index' })}
@@ -413,7 +409,6 @@ export default function ProfilePage() {
               <View
                 key={item.key}
                 className={`profile-menu__item profile-menu__item--${item.key}`}
-                hoverClass='profile-menu__item--pressed'
                 ariaRole='button'
                 ariaLabel={item.name}
                 onClick={() => openMenu(item)}
@@ -432,7 +427,6 @@ export default function ProfilePage() {
           <View className='profile-account-list'>
             <View
               className='profile-identity-entry'
-              hoverClass='profile-identity-entry--pressed'
               ariaRole='button'
               ariaLabel={`编辑昵称，当前为${currentUser?.user.username || '加载中'}`}
               onClick={beginUsernameEdit}
@@ -494,7 +488,6 @@ export default function ProfilePage() {
 
             <View
               className='profile-identity-entry'
-              hoverClass='profile-identity-entry--pressed'
               ariaRole='button'
               ariaLabel={`校园身份，${identityMeta}`}
               onClick={() => openMenu(identityMenu)}
@@ -515,7 +508,6 @@ export default function ProfilePage() {
 
             <View
               className='profile-identity-entry'
-              hoverClass='profile-identity-entry--pressed'
               ariaRole='button'
               ariaLabel='查看小程序用户隐私保护指引'
               onClick={() => void openPrivacy()}
@@ -536,7 +528,6 @@ export default function ProfilePage() {
 
             <View
               className='profile-identity-entry profile-identity-entry--danger'
-              hoverClass='profile-identity-entry--pressed'
               ariaRole='button'
               ariaLabel='注销当前账号'
               onClick={() => Taro.navigateTo({ url: '/pages/account-cancellation/index' })}

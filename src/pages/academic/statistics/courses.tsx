@@ -167,7 +167,6 @@ export default function AcademicStatisticsCoursesPage() {
             {!!query && (
               <View
                 className='statistics-search__clear'
-                hoverClass='statistics-search__clear--pressed'
                 ariaRole='button'
                 ariaLabel='清除课程搜索内容'
                 onClick={clearSearch}
@@ -176,7 +175,6 @@ export default function AcademicStatisticsCoursesPage() {
           </View>
           <View
             className='statistics-search__button'
-            hoverClass='statistics-search__button--pressed'
             ariaRole='button'
             ariaLabel='搜索课程'
             onClick={submitSearch}
@@ -207,7 +205,6 @@ export default function AcademicStatisticsCoursesPage() {
             <Text className='statistics-courses-empty__copy'>{errorMessage}</Text>
             <View
               className='statistics-courses-empty__action'
-              hoverClass='statistics-courses-empty__action--pressed'
               ariaRole='button'
               ariaLabel={bindingRequired ? academicBindingGuidance.actionLabel : '重新加载课程统计'}
               onClick={() => {
@@ -240,7 +237,6 @@ export default function AcademicStatisticsCoursesPage() {
               <View
                 key={item.course_code}
                 className='statistics-course-card'
-                hoverClass='statistics-course-card--pressed'
                 ariaRole='button'
                 ariaLabel={`查看${item.course_name}课程统计`}
                 onClick={() => openCourseStatistics({

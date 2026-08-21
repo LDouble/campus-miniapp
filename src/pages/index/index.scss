@@ -3217,13 +3217,14 @@ page {
   &__grid-item--purple &__grid-icon,
   &__grid-item--orange &__grid-icon,
   &__grid-item--cyan &__grid-icon,
+  &__grid-item--mint &__grid-icon,
   &__grid-item--green &__grid-icon,
   &__grid-item--pink &__grid-icon {
     width: 84rpx;
     height: 84rpx;
     margin-bottom: 14rpx;
-    background: #f2f7fe;
-    border: 2rpx solid #e3effe;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    border: 2rpx solid var(--ousea-ocean-100, #e3effe);
     border-radius: 26rpx;
     box-shadow: none;
 
@@ -3239,7 +3240,6 @@ page {
     font-weight: 500;
   }
 
-  /* 功能区统一使用 Ousea Ocean 500，降低多色入口带来的扫描噪声。 */
   &__grid-icon image {
     filter: brightness(0) saturate(100%) invert(43%) sepia(94%) saturate(2378%) hue-rotate(204deg) brightness(97%) contrast(93%);
   }

@@ -22,8 +22,12 @@ import DetailBusinessIntro from '../../../features/life-services/components/deta
 import DetailComments, {
   createBusinessContactComment,
 } from '../../../features/life-services/components/detail-comments'
+import DetailOverflowActions from '../../../features/life-services/components/detail-overflow-actions'
 import BusinessRoute from '../../../features/life-services/components/business-route'
-import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
+import {
+  buildDetailFooterActions,
+  splitDetailActions,
+} from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
 import {
   contactTypeLabel,
@@ -242,6 +246,10 @@ export default function ErrandDetailPage() {
     busy: working,
     onAction: (action) => void updateFromAction(action),
   }) : []
+  const { inlineActions, overflowActions } = splitDetailActions(
+    footerActions,
+    ['edit', 'cancel'],
+  )
 
   return (
     <View className='life-detail life-detail--errands'>
@@ -273,19 +281,23 @@ export default function ErrandDetailPage() {
                 formatStatus(item.status, item.review_status),
               ]}
               title={item.description}
-              action={item.viewer_relation !== 'publisher' ? (
-                <View
-                  className='detail-overview__report'
-                  hoverClass='detail-report-link--pressed'
-                  onClick={() => void openContentReport({
-                    resourceType: 'errand',
-                    resourceId: item.id,
-                    resourceVersion: item.version,
-                  })}
-                >
-                  举报
+              action={(
+                <View className='detail-overview__toolbar-actions'>
+                  {item.viewer_relation !== 'publisher' && (
+                    <View
+                      className='detail-overview__report'
+                      onClick={() => void openContentReport({
+                        resourceType: 'errand',
+                        resourceId: item.id,
+                        resourceVersion: item.version,
+                      })}
+                    >
+                      举报
+                    </View>
+                  )}
+                  <DetailOverflowActions actions={overflowActions} />
                 </View>
-              ) : undefined}
+              )}
             >
               <View className='detail-important-card detail-important-card--errand'>
                 <View className='detail-important-card__topline'>
@@ -351,7 +363,7 @@ export default function ErrandDetailPage() {
               refreshKey={commentRefreshKey}
               targetAuthorId={item.requester_id}
               tone='errand'
-              actions={footerActions}
+              actions={inlineActions}
               persistentContact={persistentContact}
             />
           </>

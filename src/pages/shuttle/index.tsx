@@ -310,7 +310,6 @@ export default function ShuttlePage() {
               <View
                 key={offset}
                 className={`shuttle-date-tabs__item ${serviceDate === key ? 'shuttle-date-tabs__active' : ''}`}
-                hoverClass='shuttle-date-tabs__pressed'
                 role='button'
                 ariaLabel={`查看${dayLabel(date, offset)}班次`}
                 onClick={() => setServiceDate(key)}
@@ -337,7 +336,6 @@ export default function ShuttlePage() {
         <ScrollView className='shuttle-campus-filter' scrollX enhanced showScrollbar={false}>
           <View
             className={campus === '全部校区' ? 'shuttle-campus-filter__active' : ''}
-            hoverClass='shuttle-campus-filter__pressed'
             role='button'
             ariaLabel='筛选全部校区校车'
             onClick={() => setCampus('全部校区')}
@@ -348,7 +346,6 @@ export default function ShuttlePage() {
             <View
               key={item}
               className={campus === item ? 'shuttle-campus-filter__active' : ''}
-              hoverClass='shuttle-campus-filter__pressed'
               role='button'
               ariaLabel={`筛选${item}校车`}
               onClick={() => setCampus(item)}
@@ -367,7 +364,6 @@ export default function ShuttlePage() {
             <View
               key={value}
               className={serviceFilter === value ? 'shuttle-type-filter__active' : ''}
-              hoverClass='shuttle-type-filter__pressed'
               role='button'
               ariaLabel={`筛选${label}`}
               onClick={() => setServiceFilter(value)}
@@ -384,7 +380,7 @@ export default function ShuttlePage() {
               <Text>仅显示可按此方向直达的班次</Text>
             </View>
             {!!(originStop || destinationStop) && (
-              <View hoverClass='shuttle-stop-filter__pressed' onClick={clearStopFilter}>清除</View>
+              <View onClick={clearStopFilter}>清除</View>
             )}
           </View>
           <View className='shuttle-stop-filter__body'>
@@ -400,7 +396,6 @@ export default function ShuttlePage() {
             </Picker>
             <View
               className={`shuttle-stop-filter__swap ${originStop && destinationStop ? '' : 'shuttle-stop-filter__swap--disabled'}`}
-              hoverClass={originStop && destinationStop ? 'shuttle-stop-filter__pressed' : 'none'}
               role='button'
               ariaLabel='交换出发点和目的地'
               onClick={swapStops}
@@ -448,7 +443,6 @@ export default function ShuttlePage() {
             <View
               key={route.id}
               className='shuttle-route-card'
-              hoverClass='shuttle-route-card--pressed'
               role='button'
               ariaLabel={`查看${route.name}线路详情`}
               onClick={() => openRoute(journey)}

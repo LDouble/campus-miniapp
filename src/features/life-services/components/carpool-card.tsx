@@ -38,7 +38,6 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
     <View
       id={`carpool-card-${item.id}`}
       className='carpool-card'
-      hoverClass='business-card--pressed'
       onClick={() => openDetail(item)}
     >
       <View className='business-card-header'>

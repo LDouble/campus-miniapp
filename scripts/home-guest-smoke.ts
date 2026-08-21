@@ -22,48 +22,60 @@ const homeStyleSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.scss'),
   'utf8',
 )
+const feedAdapterSource = readFileSync(
+  resolve(__dirname, '../src/features/home/feed-post-adapter.ts'),
+  'utf8',
+)
+const lifeServicesRepositorySource = readFileSync(
+  resolve(__dirname, '../src/features/life-services/repository.ts'),
+  'utf8',
+)
 const communityPostStyleSource = readFileSync(
   resolve(__dirname, '../src/features/community/feed-panel.scss'),
+  'utf8',
+)
+const generatedApiSource = readFileSync(
+  resolve(__dirname, '../src/api/generated/schema.ts'),
   'utf8',
 )
 const freshBarrageStyleSource = readFileSync(
   resolve(__dirname, '../src/features/community/fresh-barrage.scss'),
   'utf8',
 )
-const homeServiceKeysSource = homeSource.match(
-  /const homeServiceKeys = new Set\(\[([\s\S]*?)\]\)/,
+const visibleHomeServicesSource = homeSource.match(
+  /const visibleHomeServices = quickServices\.filter\(\(service\) => \{([\s\S]*?)\n  \}\)/,
+)?.[1] || ''
+const serviceModuleKeysSource = homeSource.match(
+  /const serviceModuleKeys:[\s\S]*?= \{([\s\S]*?)\n\}/,
 )?.[1] || ''
 
 assert.ok(
-  homeServiceKeysSource.includes("'classroom'"),
-  '首页常用服务白名单必须包含空教室入口',
+  !homeSource.includes('const homeServiceKeys')
+    && !homeSource.includes('const homeServices ='),
+  '首页常用服务不得再维护固定数量的二次白名单',
 )
-for (const serviceKey of [
-  'schedule',
-  'grades',
-  'exams',
-  'result',
-  'materials',
-  'calendar',
-  'errands',
-  'carpool',
-  'classroom',
-  'campus-card',
-]) {
-  assert.ok(
-    homeServiceKeysSource.includes(`'${serviceKey}'`),
-    `首页 5×2 常用服务必须包含 ${serviceKey}`,
-  )
-}
-assert.equal(
-  homeServiceKeysSource.match(/'[^']+'/gu)?.length,
-  10,
-  '首页常用服务必须固定为 5×2 的十个高频入口',
+assert.ok(
+  lifeServicesRepositorySource.includes("path: '/api/v1/home/feed'")
+    && lifeServicesRepositorySource.includes('page_size: search.pageSize || 20'),
+  '首页混排仓储必须请求 /api/v1/home/feed 并正确传递分页参数',
+)
+assert.ok(
+  visibleHomeServicesSource.includes('const moduleKey = serviceModuleKeys[service.key]')
+    && visibleHomeServicesSource.includes('if (!moduleKey) return false')
+    && visibleHomeServicesSource.includes(".state === 'enabled'"),
+  '首页常用服务必须只展示具有模块映射且运行时状态为 enabled 的入口',
 )
 assert.ok(
   homeSource.includes("name: '校园卡'")
-    && homeSource.includes("route: '/pages/campus-service/index?type=campus-card'"),
-  '校园卡入口必须跳转到可用的校园卡服务页',
+    && !serviceModuleKeysSource.includes("'campus-card'"),
+  '静态校园卡演示页可以保留，但没有真实模块协议前不得进入首页常用服务',
+)
+assert.ok(
+  serviceModuleKeysSource.includes("'pass-rate': 'academic_statistics'")
+    && serviceModuleKeysSource.includes("shuttle: 'shuttle'")
+    && serviceModuleKeysSource.includes("community: 'community'")
+    && serviceModuleKeysSource.includes("market: 'marketplace'"),
+  '首页入口注册表必须覆盖服务端已启用但旧固定十项遗漏的服务',
 )
 assert.ok(
   homeSource.includes('<Text>{campusName}</Text>')
@@ -87,10 +99,10 @@ assert.ok(
   '通知条目必须复用 Figma 对应的 campaign 矢量图标',
 )
 assert.ok(
-  homeSource.includes('listMarketplace({ page: 1, pageSize: 4 })')
-    && homeSource.includes('const homeMomentsFeed = buildHomeMomentsFeed(communityPosts, marketItems)')
-    && homeSource.includes('homeMomentsFeed.map((entry, index) => {'),
-  '首页必须把社区与二手真实数据合并为单一朋友圈 Feed',
+  homeSource.includes('listHomeFeed({ page: 1, pageSize: 8 })')
+    && homeSource.includes('homeFeedItems.map((item, index) => {')
+    && homeSource.includes('<CommunityPostCard'),
+  '首页必须消费后端混排接口并按服务端顺序渲染',
 )
 assert.ok(
   !homeSource.includes("className='community-panel'")
@@ -149,11 +161,33 @@ assert.ok(
   '首页课程卡片必须展示具体节次',
 )
 assert.ok(
-  homeSource.includes("import CommunityPostCard from '../../features/community/post-card'")
-    && !homeSource.includes("mode='home'")
-    && homeSource.includes('onToggleLike={toggleCommunityLike}')
-    && homeSource.includes('timeFormatter={formatHomeMomentsTime}'),
-  '首页社区动态必须复用统一帖子卡片组件并保留首页时间格式',
+  homeSource.includes("import CommunityPostCard, { type CommunityPostCommentPreview } from '../../features/community/post-card'")
+    && homeSource.includes('timeFormatter={formatHomeMomentsTime}')
+    && feedAdapterSource.includes('liked: reaction?.liked ?? item.liked')
+    && feedAdapterSource.includes('liked_by_nicknames: reaction?.likedByNicknames ?? item.liked_by_nicknames')
+    && feedAdapterSource.includes('comment_previews: item.comment_previews'),
+  '首页四类混排必须复用 CommunityPostCard 并接入真实点赞昵称和评论预览',
+)
+assert.match(
+  generatedApiSource,
+  /HomeFeedItemView:[\s\S]*?liked: boolean;[\s\S]*?PublicCommentPreview:[\s\S]*?parent_id: number \| null;[\s\S]*?reply_to_comment_id: number \| null;[\s\S]*?reply_to_nickname: string \| null;[\s\S]*?root_id: number;/u,
+  '首页混排生成类型必须包含服务端点赞状态和二级评论关系字段',
+)
+assert.ok(
+  feedAdapterSource.includes("title: '跑腿 · 待接单'")
+    && feedAdapterSource.includes('`报酬 ${reward}`')
+    && feedAdapterSource.includes('deadlineLimit(item.deadline, item.feed_time)'),
+  '跑腿摘要必须按 Figma 展示待接单、报酬和限时信息',
+)
+assert.match(
+  communityPostStyleSource,
+  /\.community-post__business-preview\s*\{[\s\S]*?padding:\s*16rpx 20rpx;[\s\S]*?gap:\s*18rpx;[\s\S]*?background:\s*var\(--ousea-grey-50, #f7f8fa\);/u,
+  '跑腿业务摘要必须匹配 Figma 的灰底、内边距和间距',
+)
+assert.match(
+  communityPostStyleSource,
+  /\.community-post__business-icon\s*\{[\s\S]*?width:\s*72rpx;[\s\S]*?height:\s*72rpx;[\s\S]*?background:\s*var\(--ousea-ocean-50, #f2f7fe\);/u,
+  '跑腿业务摘要图标必须匹配 Figma 的 72rpx 浅蓝图标块',
 )
 assert.ok(
   !homeSource.includes('{item.startTime}'),
@@ -180,8 +214,8 @@ assert.match(
   '首页 hero 高光透明度不得过高',
 )
 assert.match(
-  homeStyleSource,
-  /\.moments-feed\s*\{[\s\S]*?&__media\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(3,/u,
+  communityPostStyleSource,
+  /\.community-post__images\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3,/u,
   '首页校园动态图片必须使用最多三列的朋友圈式网格',
 )
 assert.ok(
@@ -191,25 +225,17 @@ assert.ok(
   '校园动态标题区必须使用 Ousea 标记，并保留明确的社区入口',
 )
 assert.ok(
-  homeSource.includes("kind: 'community'")
-    && homeSource.includes("kind: 'marketplace'")
-    && homeSource.includes('onOpen={openCommunityPost}')
-    && homeSource.includes('openMarketplaceListing(marketplaceItem)'),
-  '朋友圈 Feed 必须保留社区与二手各自的详情路由',
+  homeSource.includes('campus_circle_post: `/packages/social/community/detail?id=${item.source_id}`')
+    && homeSource.includes('marketplace_listing: `/packages/social/marketplace/detail?id=${item.source_id}`')
+    && homeSource.includes('errand: `/packages/social/errands/detail?id=${item.source_id}`')
+    && homeSource.includes('carpool: `/packages/social/carpool/detail?id=${item.source_id}`'),
+  '混排 Feed 必须保留四类内容各自的详情路由',
 )
-assert.match(homeSource, /id=\{`home-marketplace-more-\$\{marketplaceItem\.id\}`\}/u)
-assert.match(homeSource, /hoverStopPropagation/u)
-assert.match(homeSource, /toggleMarketplaceActions\(marketplaceItem\.id\)/u)
-assert.match(homeSource, /id=\{`home-marketplace-comment-\$\{marketplaceItem\.id\}`\}/u)
-assert.match(homeSource, /openMarketplaceComments\(marketplaceItem\)/u)
-assert.match(homeSource, /type:\s*'marketplace'[\s\S]*?dirtySection:\s*'market'/u)
-assert.match(homeSource, /latestMarketplaceComments\[marketplaceItem\.id\]/u)
 assert.match(
-  homeStyleSource,
-  /&__action\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;[\s\S]*?&::before\s*\{[\s\S]*?width:\s*72rpx;[\s\S]*?height:\s*56rpx;/u,
-  '首页二手 Feed 双点入口必须提供独立的 88rpx 点击热区',
+  communityPostStyleSource,
+  /\.community-post__more\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u,
+  '首页混排 Feed 双点入口必须提供稳定点击热区',
 )
-assert.match(homeStyleSource, /&__action-menu\s*\{[\s\S]*?right:\s*96rpx;[\s\S]*?background:\s*var\(--ousea-ink-700,/u)
 assert.ok(
   homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中'")
     && homeSource.includes('`${holidayCountdown}天后开学`')
@@ -249,8 +275,13 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /&__grid-icon,[\s\S]{0,700}width:\s*84rpx;[^}]*height:\s*84rpx;[^}]*background:\s*#f2f7fe;[^}]*border:\s*2rpx solid #e3effe;[^}]*border-radius:\s*26rpx;/u,
-  '常用服务图标底座必须匹配 Ousea 尺寸、底色、描边与圆角',
+  /&__grid-icon,[\s\S]{0,520}&__grid-item--pink &__grid-icon\s*\{[^}]*width:\s*84rpx;[^}]*height:\s*84rpx;[^}]*background:\s*var\(--ousea-ocean-50,[^}]*border:\s*2rpx solid var\(--ousea-ocean-100,[^}]*border-radius:\s*26rpx;/u,
+  '常用服务图标必须统一使用 Ousea 浅蓝底板、描边与圆角',
+)
+assert.match(
+  homeStyleSource,
+  /&__grid-icon image\s*\{\s*filter:\s*brightness\(0\) saturate\(100%\)[^;}]+;/u,
+  '常用服务图标必须统一使用蓝色滤镜',
 )
 assert.match(
   homeStyleSource,
@@ -273,14 +304,14 @@ assert.match(
   '朋友圈 Feed 必须是首页唯一的动态卡片容器',
 )
 assert.match(
-  homeStyleSource,
-  /\.moments-feed\s*\{[\s\S]*?&__item\s*\{[^}]*display:\s*flex;[^}]*gap:\s*20rpx;[^}]*border-top:\s*0;[\s\S]*?& \+ &\s*\{[^}]*border-top:\s*1rpx solid var\(--ousea-bg-line, #e8edf4\);/u,
+  communityPostStyleSource,
+  /\.community-post \+ \.community-post\s*\{[^}]*border-top:\s*1rpx solid var\(--ousea-bg-line, #e8edf4\);/u,
   '朋友圈 Feed 条目必须按照 Figma 使用浅色顶部分界线',
 )
 assert.match(
-  homeStyleSource,
-  /&__name\s*\{[\s\S]{0,420}?color:\s*var\(--ousea-ocean-400,\s*#4c96f5\);[\s\S]{0,220}?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u,
-  '朋友圈 Feed 昵称必须使用 Ousea Ocean 400 与 Regular 400',
+  communityPostStyleSource,
+  /\.community-post__author-line > text:first-child\s*\{[\s\S]{0,420}?color:\s*var\(--ousea-ocean-400,\s*#4c96f5\);[\s\S]{0,220}?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u,
+  '首页混排昵称必须与 CommunityPostCard 使用同一套 Ousea 样式',
 )
 assert.match(
   communityPostStyleSource,
@@ -354,17 +385,10 @@ assert.deepEqual(
   { 1: '校园生活', 2: '校园趣事' },
   '首页 Feed 社区项必须能解析真实子板块名',
 )
-assert.ok(
-  homeSource.includes("className='moments-feed__meta-copy'")
-    && homeSource.includes('{formatHomeMomentsTime(marketplaceItem.created_at)} · {homeMomentsBusinessLabels.marketplace}')
-    && homeSource.includes("communitySectionNames[communityItem.section_id] || '校园动态'")
-    && homeSource.includes('sectionName={communitySectionNames[communityItem.section_id] || \'校园动态\'}'),
-  '首页 Feed 时间后必须跟真实社区板块名或业务板块名',
-)
 assert.match(
   homeStyleSource,
-  /&__meta-copy\s*\{[^}]*flex:\s*1;[^}]*min-width:\s*0;[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/u,
-  '首页 Feed 时间与板块名单行溢出时不得挤压双点操作',
+  /&__time\s*\{[\s\S]*?color:\s*var\(--campus-text-muted,/u,
+  '首页 Feed 时间必须使用弱化文本 Token',
 )
 
 const periods: AcademicPeriod[] = [{

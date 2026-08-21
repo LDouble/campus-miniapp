@@ -22,8 +22,12 @@ import DetailBusinessIntro from '../../../features/life-services/components/deta
 import DetailComments, {
   createBusinessContactComment,
 } from '../../../features/life-services/components/detail-comments'
+import DetailOverflowActions from '../../../features/life-services/components/detail-overflow-actions'
 import BusinessRoute from '../../../features/life-services/components/business-route'
-import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
+import {
+  buildDetailFooterActions,
+  splitDetailActions,
+} from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
 import {
   contactTypeLabel,
@@ -232,6 +236,10 @@ export default function CarpoolDetailPage() {
     busy: working,
     onAction: (action) => void runAction(action),
   }) : []
+  const { inlineActions, overflowActions } = splitDetailActions(
+    footerActions,
+    ['edit', 'cancel'],
+  )
 
   return (
     <View className='life-detail life-detail--carpool'>
@@ -257,19 +265,23 @@ export default function CarpoolDetailPage() {
                 formatStatus(item.status, item.review_status),
               ]}
               description={item.description}
-              action={item.viewer_relation !== 'organizer' ? (
-                <View
-                  className='detail-overview__report'
-                  hoverClass='detail-report-link--pressed'
-                  onClick={() => void openContentReport({
-                    resourceType: 'carpool',
-                    resourceId: item.id,
-                    resourceVersion: item.version,
-                  })}
-                >
-                  举报
+              action={(
+                <View className='detail-overview__toolbar-actions'>
+                  {item.viewer_relation !== 'organizer' && (
+                    <View
+                      className='detail-overview__report'
+                      onClick={() => void openContentReport({
+                        resourceType: 'carpool',
+                        resourceId: item.id,
+                        resourceVersion: item.version,
+                      })}
+                    >
+                      举报
+                    </View>
+                  )}
+                  <DetailOverflowActions actions={overflowActions} />
                 </View>
-              ) : undefined}
+              )}
             >
               <View className='carpool-detail-route-card'>
                 <BusinessRoute
@@ -338,7 +350,7 @@ export default function CarpoolDetailPage() {
               refreshKey={commentRefreshKey}
               targetAuthorId={item.organizer_id}
               tone='carpool'
-              actions={footerActions}
+              actions={inlineActions}
               persistentContact={persistentContact}
             />
           </>

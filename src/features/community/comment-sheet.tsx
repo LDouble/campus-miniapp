@@ -4,16 +4,17 @@ import type { CampusCirclePostView, CommentView } from '../../api/types'
 import type { LifeHubSection } from '../life-services/business-theme'
 import DetailComments, {
   type DetailCommentTarget,
+  type DetailReplyTarget,
 } from '../life-services/components/detail-comments'
 import { markLifeHubSectionDirty } from '../life-services/refresh-policy'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
 import './comment-sheet.scss'
 
 type CommentSheetTarget = {
-  type: Exclude<DetailCommentTarget, 'campus_circle_post'>
+  type: DetailCommentTarget
   id: number
   enabled: boolean
-  tone: Exclude<DetailCommentTarget, 'campus_circle_post'>
+  tone: Exclude<DetailCommentTarget, 'campus_circle_post'> | 'community'
   dirtySection: LifeHubSection
   placeholder?: string
 }
@@ -22,7 +23,9 @@ type CommonProps = {
   onClose: () => void
   onApprovedDelta?: (delta: number) => void
   onCommentCreated?: (comment: CommentView) => void
+  onSubmittingChange?: (submitting: boolean) => void
   dismissSignal?: number
+  initialReplyTarget?: DetailReplyTarget | null
 }
 
 type Props = CommonProps & (
@@ -36,10 +39,14 @@ export default function CommunityCommentSheet({
   onClose,
   onApprovedDelta,
   onCommentCreated,
+  onSubmittingChange,
   dismissSignal = 0,
+  initialReplyTarget = null,
 }: Props) {
   const [closeSignal, setCloseSignal] = useState(0)
+  const [replyKeyboardHeight, setReplyKeyboardHeight] = useState(0)
   const closingRef = useRef(false)
+  const submittingRef = useRef(false)
   const lastDismissSignalRef = useRef(dismissSignal)
   const targetType = target?.type || 'campus_circle_post'
   const targetId = target?.id || post?.id || 0
@@ -54,7 +61,7 @@ export default function CommunityCommentSheet({
   }, [])
 
   const requestClose = useCallback(() => {
-    if (closingRef.current) return
+    if (closingRef.current || submittingRef.current) return
     closingRef.current = true
     setCloseSignal((current) => current + 1)
   }, [])
@@ -70,7 +77,16 @@ export default function CommunityCommentSheet({
   }, [dismissSignal, requestClose])
 
   return (
-    <View className='community-comment-sheet'>
+    <>
+      {replyKeyboardHeight > 0 && (
+        <View
+          className='community-comment-sheet__reply-viewport-reserve'
+          style={{
+            height: `calc(${replyKeyboardHeight}px + 320rpx + env(safe-area-inset-bottom))`,
+          }}
+        />
+      )}
+      <View className='community-comment-sheet'>
       <View
         className='community-comment-sheet__backdrop'
         ariaRole='button'
@@ -83,20 +99,27 @@ export default function CommunityCommentSheet({
           targetId={targetId}
           enabled={targetEnabled}
           initialComposerOpen
+          initialReplyTarget={initialReplyTarget}
           composerOnly
           closeComposerSignal={closeSignal}
           onComposerClosed={handleComposerClosed}
+          onSubmittingChange={(submitting) => {
+            submittingRef.current = submitting
+            onSubmittingChange?.(submitting)
+          }}
+          onReplyKeyboardHeightChange={setReplyKeyboardHeight}
           placeholder={placeholder}
           tone={targetTone}
           onApprovedDelta={onApprovedDelta}
           onMutation={(mutation) => {
             markLifeHubSectionDirty(dirtySection)
-            if (mutation.type === 'create' && mutation.comment.status === 'approved') {
+            if (mutation.type === 'create') {
               onCommentCreated?.(mutation.comment)
             }
           }}
         />
       </View>
-    </View>
+      </View>
+    </>
   )
 }

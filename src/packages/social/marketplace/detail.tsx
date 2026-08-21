@@ -28,7 +28,11 @@ import DetailAuthorNavbar from '../../../features/life-services/components/detai
 import DetailComments, {
   createBusinessContactComment,
 } from '../../../features/life-services/components/detail-comments'
-import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
+import DetailOverflowActions from '../../../features/life-services/components/detail-overflow-actions'
+import {
+  buildDetailFooterActions,
+  splitDetailActions,
+} from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
 import { plainStickerContent } from '../../../features/stickers/content'
 import '../../../features/life-services/detail.scss'
@@ -249,6 +253,10 @@ export default function MarketplaceDetailPage() {
     busy: working,
     onAction: (action) => void runAction(action),
   }) : []
+  const { inlineActions, overflowActions } = splitDetailActions(
+    footerActions,
+    ['edit', 'withdraw'],
+  )
 
   return (
     <View className='life-detail life-detail--market'>
@@ -306,19 +314,21 @@ export default function MarketplaceDetailPage() {
                     <Text>{formatStatus(item.status)}</Text>
                     <Text>{relationLabel}</Text>
                   </View>
-                  {item.viewer_relation !== 'owner' && (
-                    <View
-                      className='detail-overview__report'
-                      hoverClass='detail-report-link--pressed'
-                      onClick={() => void openContentReport({
-                        resourceType: 'marketplace_listing',
-                        resourceId: item.id,
-                        resourceVersion: item.version,
-                      })}
-                    >
-                      举报
-                    </View>
-                  )}
+                  <View className='detail-overview__toolbar-actions'>
+                    {item.viewer_relation !== 'owner' && (
+                      <View
+                        className='detail-overview__report'
+                        onClick={() => void openContentReport({
+                          resourceType: 'marketplace_listing',
+                          resourceId: item.id,
+                          resourceVersion: item.version,
+                        })}
+                      >
+                        举报
+                      </View>
+                    )}
+                    <DetailOverflowActions actions={overflowActions} />
+                  </View>
                 </View>
                 <StickerContent
                   content={item.description}
@@ -392,7 +402,7 @@ export default function MarketplaceDetailPage() {
               refreshKey={commentRefreshKey}
               targetAuthorId={item.owner_id}
               tone='marketplace'
-              actions={footerActions}
+              actions={inlineActions}
               persistentContact={persistentContact}
             />
           </>

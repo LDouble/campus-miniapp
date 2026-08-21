@@ -492,6 +492,11 @@
     color: var(--campus-text-heading, #f8fafc);
   }
 
+  page .community-post__business-preview,
+  page .community-post__business-icon {
+    background: var(--campus-surface-subtle, #172033);
+  }
+
   page .community-post__expand {
     color: var(--campus-primary-strong, #93c5fd);
     background: linear-gradient(90deg, rgba(17, 24, 39, 0), var(--campus-surface, #111827) 28rpx);
@@ -548,8 +553,11 @@
     filter: none;
   }
 
-  page .community-post__comment-preview {
+  page .community-post__engagement {
     background: var(--campus-surface-primary, #172554);
+  }
+
+  page .community-post__comment-preview {
     color: var(--campus-text-body, #d7e0ec);
   }
 

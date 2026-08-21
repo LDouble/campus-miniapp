@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import type { CampusCirclePostView, CampusCircleSectionView, CommentView } from '../../api/types'
+import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -14,8 +14,9 @@ import {
 } from '../life-services/refresh-policy'
 import { openPublicProfile } from '../profile/public-profile'
 import CommunityCommentSheet from './comment-sheet'
+import { mergePublicCommentPreview } from './comments'
 import { saveCommunityDetailSnapshot } from './detail-snapshot'
-import CommunityPostCard from './post-card'
+import CommunityPostCard, { type CommunityPostCommentPreview } from './post-card'
 import './feed-panel.scss'
 
 type Props = {
@@ -87,9 +88,10 @@ export default function CommunityFeedPanel({
   const [error, setError] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentReplyTarget, setCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
-  const [latestComments, setLatestComments] = useState<Record<number, CommentView>>({})
   const requestSequence = useRef(0)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
   const lastOverlayDismissSignalRef = useRef(overlayDismissSignal)
@@ -99,8 +101,10 @@ export default function CommunityFeedPanel({
   }, [pinnedPost])
 
   useEffect(() => {
-    onOverlayVisibilityChange?.(openActionPostId !== null || commentPost !== null)
-  }, [commentPost, onOverlayVisibilityChange, openActionPostId])
+    onOverlayVisibilityChange?.(
+      openActionPostId !== null || (commentPost !== null && !commentSubmitting),
+    )
+  }, [commentPost, commentSubmitting, onOverlayVisibilityChange, openActionPostId])
 
   useEffect(() => () => {
     onOverlayVisibilityChange?.(false)
@@ -237,6 +241,18 @@ export default function CommunityFeedPanel({
 
   const openComments = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(null)
+    setCommentPost(post)
+  }, [])
+
+  const openCommentReply = useCallback((
+    post: CampusCirclePostView,
+    comment: CommunityPostCommentPreview,
+  ) => {
+    setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(comment)
     setCommentPost(post)
   }, [])
 
@@ -248,9 +264,20 @@ export default function CommunityFeedPanel({
     setOpenActionPostId(null)
   }, [])
 
-  const updateLatestComment = useCallback((comment: CommentView) => {
-    setLatestComments((current) => ({ ...current, [comment.target_id]: comment }))
-  }, [])
+  const updateLatestComment = useCallback((comment: Parameters<typeof mergePublicCommentPreview>[1]) => {
+    setPosts((current) => current.map((item) => (
+      item.id === comment.target_id
+        ? {
+            ...item,
+            comment_previews: mergePublicCommentPreview(
+              item.comment_previews,
+              comment,
+              commentReplyTarget,
+            ),
+          }
+        : item
+    )))
+  }, [commentReplyTarget])
 
   const updateCommentCount = useCallback((postId: number, delta: number) => {
     setPosts((current) => current.map((item) => (
@@ -331,7 +358,6 @@ export default function CommunityFeedPanel({
         {draftKeyword && (
           <View
             className='api-community-search__clear'
-            hoverClass='api-community-search__control--pressed'
             ariaLabel='清除搜索内容'
             onClick={() => clearSearch(true)}
           >
@@ -347,7 +373,6 @@ export default function CommunityFeedPanel({
                 ? ''
                 : 'api-community-search__submit--secondary',
             ].filter(Boolean).join(' ')}
-            hoverClass='api-community-search__control--pressed'
             onClick={normalizedDraftKeyword
               ? submitSearch
               : keyword
@@ -406,10 +431,10 @@ export default function CommunityFeedPanel({
               actionsOpen={openActionPostId === post.id}
               onToggleActions={toggleActions}
               onCloseActions={closeActions}
-              latestComment={latestComments[post.id]}
               onToggleLike={toggleLike}
               onOpen={openPost}
               onOpenComments={openComments}
+              onReplyComment={openCommentReply}
               onOpenAuthor={openAuthor}
               onSelectSection={onSelectSection}
             />
@@ -424,7 +449,6 @@ export default function CommunityFeedPanel({
           <Text>{keyword ? '换个关键词试试吧' : '去统一发布器分享第一条内容'}</Text>
           {keyword && (
             <View
-              hoverClass='api-community-search__control--pressed'
               onClick={() => clearSearch(false)}
             >
               清除搜索
@@ -446,7 +470,19 @@ export default function CommunityFeedPanel({
         <CommunityCommentSheet
           key={commentPost.id}
           post={commentPost}
-          onClose={() => setCommentPost(null)}
+          initialReplyTarget={commentReplyTarget ? {
+            id: commentReplyTarget.id,
+            author_id: commentReplyTarget.authorId,
+            author_deleted: commentReplyTarget.authorDeleted,
+            author_nickname: commentReplyTarget.authorNickname,
+            root_id: commentReplyTarget.rootId,
+          } : null}
+          onClose={() => {
+            setCommentPost(null)
+            setCommentReplyTarget(null)
+            setCommentSubmitting(false)
+          }}
+          onSubmittingChange={setCommentSubmitting}
           dismissSignal={commentDismissSignal}
           onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
           onCommentCreated={updateLatestComment}

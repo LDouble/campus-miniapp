@@ -350,7 +350,6 @@ export default function CommunityPage() {
           </View>
           <View
             className='community-page__search-action'
-            hoverClass='community-page__search-action--pressed'
             ariaRole='button'
             ariaLabel={`搜索${pageCopy.title}`}
             onClick={() => void focusSearch()}
@@ -371,7 +370,6 @@ export default function CommunityPage() {
                     ? 'life-primary-tabs__item--active'
                     : ''
                 }`}
-                hoverClass='life-primary-tabs__item--pressed'
                 ariaRole='button'
                 ariaLabel={`切换到${section.label}`}
                 onClick={() => selectSection(section.key)}
@@ -394,7 +392,6 @@ export default function CommunityPage() {
                         ? 'community-root-tabs__item community-root-tabs__item--active'
                         : 'community-root-tabs__item'
                     }
-                    hoverClass='community-root-tabs__item--pressed'
                     ariaRole='button'
                     ariaLabel={activeCommunityRoot?.id === root.id && activeCommunityChildren.length > 0
                       ? `筛选${root.name}子板块`

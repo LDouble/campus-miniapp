@@ -53,9 +53,6 @@ export default function StickerPicker({
       <View
         key={`${keyPrefix}-${sticker.id}`}
         className='sticker-picker__item'
-        hoverClass='sticker-picker__item--pressed'
-        hoverStartTime={20}
-        hoverStayTime={100}
         ariaRole='button'
         ariaLabel={`${sticker.label}表情`}
         onClick={() => selectSticker(sticker)}
@@ -69,9 +66,6 @@ export default function StickerPicker({
     <View className={['sticker-picker', className].filter(Boolean).join(' ')}>
       <View
         className={open ? 'sticker-picker__trigger sticker-picker__trigger--active' : 'sticker-picker__trigger'}
-        hoverClass='sticker-picker__trigger--pressed'
-        hoverStartTime={20}
-        hoverStayTime={100}
         ariaRole='button'
         ariaLabel={open ? '收起校园鲨表情' : '选择校园鲨表情'}
         onClick={() => onOpenChange(!open)}

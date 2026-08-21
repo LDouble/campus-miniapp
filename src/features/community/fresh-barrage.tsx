@@ -95,7 +95,6 @@ export default function FreshBarrage({ posts, onOpen }: Props) {
                 <View
                   key={post.id}
                   className='fresh-barrage__item'
-                  hoverClass='fresh-barrage__item--pressed'
                   ariaRole='button'
                   ariaLabel={`查看校园动态：${content}`}
                   onClick={() => {

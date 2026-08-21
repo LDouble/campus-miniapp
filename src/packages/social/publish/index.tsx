@@ -323,7 +323,6 @@ const RouteSuggestions = ({
             className={currentValue === option
               ? 'publisher-route-suggestion publisher-route-suggestion--active'
               : 'publisher-route-suggestion'}
-            hoverClass='publisher-route-suggestion--pressed'
             ariaRole='button'
             ariaLabel={`${currentValue === option ? '已选择，' : ''}选择常用地点${option}`}
             onClick={() => onSelect(option)}
@@ -342,7 +341,6 @@ const RouteSuggestions = ({
                 className={currentValue === option
                   ? 'publisher-route-suggestion publisher-route-suggestion--recent publisher-route-suggestion--active'
                   : 'publisher-route-suggestion publisher-route-suggestion--recent'}
-                hoverClass='publisher-route-suggestion--pressed'
                 ariaRole='button'
                 ariaLabel={`${currentValue === option ? '已选择，' : ''}选择最近使用地点${option}`}
                 onClick={() => onSelect(option)}
@@ -1014,7 +1012,6 @@ export default function PublishPage() {
             <View
               key={item.key}
               className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
-              hoverClass={mode === 'create' ? 'publisher-type--pressed' : 'none'}
               ariaRole='button'
               ariaLabel={`${section === item.key ? '已选择，' : ''}${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
               onClick={() => selectSection(item.key)}
@@ -1054,7 +1051,6 @@ export default function PublishPage() {
                 <View className='publisher-market-intents'>
                   <View
                     className={form.marketIntent === 'sell' ? 'publisher-market-intent--active' : ''}
-                    hoverClass='publisher-market-intent--pressed'
                     ariaRole='button'
                     ariaLabel={`${form.marketIntent === 'sell' ? '已选择，' : ''}我要出售`}
                     onClick={() => selectMarketIntent('sell')}
@@ -1063,7 +1059,6 @@ export default function PublishPage() {
                   </View>
                   <View
                     className={form.marketIntent === 'wanted' ? 'publisher-market-intent--active' : ''}
-                    hoverClass='publisher-market-intent--pressed'
                     ariaRole='button'
                     ariaLabel={`${form.marketIntent === 'wanted' ? '已选择，' : ''}我要求购`}
                     onClick={() => selectMarketIntent('wanted')}
@@ -1148,7 +1143,6 @@ export default function PublishPage() {
                         className={stickerPickerOpen
                           ? 'publisher-composer-tool publisher-composer-tool--active'
                           : 'publisher-composer-tool'}
-                        hoverClass='publisher-composer-tool--pressed'
                         ariaRole='button'
                         ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
                         onClick={() => changeStickerPickerOpen(!stickerPickerOpen)}
@@ -1164,7 +1158,6 @@ export default function PublishPage() {
                           className={form.images.length >= MAX_PUBLISH_IMAGES
                             ? 'publisher-composer-tool publisher-composer-tool--disabled'
                             : 'publisher-composer-tool'}
-                          hoverClass='publisher-composer-tool--pressed'
                           ariaRole='button'
                           ariaLabel={form.images.length >= MAX_PUBLISH_IMAGES
                             ? `已达到 ${MAX_PUBLISH_IMAGES} 张图片上限`
@@ -1312,7 +1305,6 @@ export default function PublishPage() {
                             ? 'publisher-community-section--active'
                             : ''
                         }`}
-                        hoverClass='publisher-community-section--pressed'
                         onClick={() => update('communitySectionId', item.id)}
                       >
                         <Text>{item.name}</Text>
@@ -1325,8 +1317,8 @@ export default function PublishPage() {
                   <>
                     <SectionHeading title='关联话题（可选）' />
                     <View className='publisher-community-sections'>
-                      <View className={`publisher-community-section ${form.communityTopicId === 0 ? 'publisher-community-section--active' : ''}`} hoverClass='publisher-community-section--pressed' onClick={() => update('communityTopicId', 0)}><Text>不关联话题</Text><Text>普通动态</Text></View>
-                      {topics.map((item) => <View key={item.id} className={`publisher-community-section ${form.communityTopicId === item.id ? 'publisher-community-section--active' : ''}`} hoverClass='publisher-community-section--pressed' onClick={() => update('communityTopicId', item.id)}><Text>#{item.name}</Text><Text>{item.kind === 'campaign' ? '活动' : '话题'}</Text></View>)}
+                      <View className={`publisher-community-section ${form.communityTopicId === 0 ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', 0)}><Text>不关联话题</Text><Text>普通动态</Text></View>
+                      {topics.map((item) => <View key={item.id} className={`publisher-community-section ${form.communityTopicId === item.id ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', item.id)}><Text>#{item.name}</Text><Text>{item.kind === 'campaign' ? '活动' : '话题'}</Text></View>)}
                     </View>
                   </>
                 )}
@@ -1376,7 +1368,6 @@ export default function PublishPage() {
             {mode === 'create' && (
               <View
                 className='publisher-actions__draft'
-                hoverClass={submitting ? 'none' : 'publisher-actions__button--pressed'}
                 ariaRole='button'
                 ariaLabel='保存草稿并退出'
                 onClick={() => !submitting && saveAndLeave()}
@@ -1387,7 +1378,6 @@ export default function PublishPage() {
             <View
               id='publisher-submit'
               className={`publisher-actions__submit ${validationError || submitting ? 'publisher-actions__submit--disabled' : ''}`}
-              hoverClass={validationError || submitting ? 'none' : 'publisher-actions__button--pressed'}
               ariaRole='button'
               ariaLabel={submitting ? '正在提交' : validationError ? `暂不可提交，${validationError}` : '提交审核'}
               onClick={() => !validationError && !submitting && void submit()}

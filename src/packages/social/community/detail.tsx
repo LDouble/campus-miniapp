@@ -228,7 +228,6 @@ export default function CommunityDetailPage() {
               <View className='community-detail__author'>
                 <View
                   className='community-detail__author-trigger'
-                  hoverClass='community-detail__author-trigger--pressed'
                   ariaRole='button'
                   ariaLabel={`查看${communityAuthorName(post)}的个人主页`}
                   onClick={() => {
@@ -259,7 +258,6 @@ export default function CommunityDetailPage() {
                   <View
                     id='community-detail-more'
                     className='community-detail__more'
-                    hoverClass='community-detail__more--pressed'
                     ariaRole='button'
                     ariaLabel='更多帖子操作'
                     onClick={() => void openPostMenu()}
@@ -320,7 +318,6 @@ export default function CommunityDetailPage() {
                   className={post.liked
                     ? 'community-detail__action community-detail__action--liked'
                     : 'community-detail__action'}
-                  hoverClass='community-detail__action--pressed'
                   ariaRole='button'
                   ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
                   onClick={() => void toggleLike()}
@@ -331,7 +328,6 @@ export default function CommunityDetailPage() {
                 <View
                   id='community-detail-comment'
                   className='community-detail__action'
-                  hoverClass='community-detail__action--pressed'
                   ariaRole='button'
                   ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
                   onClick={scrollToComments}
@@ -340,10 +336,10 @@ export default function CommunityDetailPage() {
                   <Text>{post.comment_count}</Text>
                 </View>
                 <Button
+                  hoverClass='none'
                   id='community-detail-share'
                   className='community-detail__action community-detail__action--share'
                   openType='share'
-                  hoverClass='community-detail__action--pressed'
                   ariaLabel='分享这条动态'
                 >
                   <Image src={communityDetailIcons.share} mode='aspectFit' />

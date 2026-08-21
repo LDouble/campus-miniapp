@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 import { Button, Image, Text, View } from '@tarojs/components'
-import type { CampusCirclePostView, CommentView } from '../../api/types'
+import type { CampusCirclePostView } from '../../api/types'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
 import {
   communityAuthorAvatarUrl,
@@ -10,11 +10,15 @@ import {
 import UserAvatar from '../../components/user-avatar'
 import StickerContent from '../../components/sticker-content'
 import { plainStickerContent } from '../stickers/content'
+import { orderPublicCommentPreviews } from './comments'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
   heart: require('../../assets/community/feed-heart.svg'),
   heartActive: require('../../assets/community/heart-active.svg'),
+  marketplace: require('../../assets/icons/market.svg'),
+  errand: require('../../assets/icons/errands.svg'),
+  carpool: require('../../assets/icons/shuttle.svg'),
 }
 
 const CAMPUS_OFFSET_MILLISECONDS = 8 * 60 * 60 * 1000
@@ -51,15 +55,30 @@ type Props = {
   sectionName: string
   motionDelay?: number
   timeFormatter?: (value?: string | null) => string
-  onToggleLike: (post: CampusCirclePostView) => void | Promise<void>
+  onToggleLike?: (post: CampusCirclePostView) => void | Promise<void>
   onOpen: (post: CampusCirclePostView) => void
   onOpenComments: (post: CampusCirclePostView) => void
   actionsOpen: boolean
   onToggleActions: (postId: number) => void
   onCloseActions: () => void
-  latestComment?: CommentView
   onOpenAuthor?: (post: CampusCirclePostView) => void
   onSelectSection?: (sectionId: number) => void
+  variant?: 'community' | 'marketplace' | 'errand' | 'carpool'
+  instanceKey?: string
+  businessPreview?: { title: string; meta: string }
+  onReplyComment?: (post: CampusCirclePostView, comment: CommunityPostCommentPreview) => void
+}
+
+export type CommunityPostCommentPreview = {
+  id: number
+  authorId: number
+  authorDeleted: boolean
+  authorNickname: string
+  content: string
+  rootId: number
+  parentId: number | null
+  replyToCommentId: number | null
+  replyToNickname: string | null
 }
 
 function CommunityPostCard({
@@ -73,12 +92,16 @@ function CommunityPostCard({
   actionsOpen,
   onToggleActions,
   onCloseActions,
-  latestComment,
   onOpenAuthor,
   onSelectSection,
+  variant = 'community',
+  instanceKey,
+  businessPreview,
+  onReplyComment,
 }: Props) {
   const [likePending, setLikePending] = useState(false)
   const authorName = communityAuthorName(post)
+  const cardId = instanceKey || String(post.id)
   const authorInitial = communityAuthorInitial(post)
   const authorAvatarUrl = communityAuthorAvatarUrl(post)
   const visibleImages = post.images.slice(0, MAX_POST_IMAGES)
@@ -106,29 +129,53 @@ function CommunityPostCard({
   const openAuthorOrPost = () => (
     !post.author_deleted && onOpenAuthor ? onOpenAuthor(post) : onOpen(post)
   )
+  const orderedCommentPreviews = orderPublicCommentPreviews(post.comment_previews)
+  const visibleRootIds = new Set(
+    orderedCommentPreviews.filter((comment) => !comment.parent_id).map((comment) => comment.id),
+  )
+  const commentPreviews = orderedCommentPreviews.map((comment) => ({
+    id: comment.id,
+    authorId: comment.author_id,
+    authorDeleted: false,
+    authorNickname: comment.author_nickname,
+    content: comment.content,
+    rootId: comment.root_id,
+    parentId: comment.parent_id,
+    replyToCommentId: comment.reply_to_comment_id,
+    replyToNickname: comment.reply_to_nickname,
+    nested: Boolean(comment.parent_id && visibleRootIds.has(comment.root_id)),
+  }))
+  const likedByCopy = onToggleLike && post.liked_by_nicknames.length > 0
+    ? post.like_count > post.liked_by_nicknames.length
+      ? `${post.liked_by_nicknames.join('、')} 等 ${post.like_count} 人`
+      : post.liked_by_nicknames.join('、')
+    : onToggleLike && post.like_count > 0 ? `${post.like_count} 位同学` : ''
 
   return (
     <View
-      id={`community-post-${post.id}`}
+      id={`community-post-${cardId}`}
       className={[
         'community-post',
         'api-post',
+        `community-post--${variant}`,
         actionsOpen ? 'community-post--actions-open' : '',
         motionDelay > 0 ? 'motion-enter' : '',
         motionDelay > 0 ? `motion-enter--delay-${Math.min(motionDelay, 4)}` : '',
       ].filter(Boolean).join(' ')}
-      hoverClass='community-post__tap-area--pressed'
+      ariaRole='button'
+      ariaLabel={`查看动态：${readableContent || '校园图片动态'}`}
+      onClick={() => onOpen(post)}
     >
       <View
         className='community-post__avatar-button'
-        hoverClass='community-post__tap-area--pressed'
-        hoverStartTime={20}
-        hoverStayTime={120}
         ariaRole='button'
         ariaLabel={onOpenAuthor && !post.author_deleted
           ? `查看${authorName}的个人主页`
           : `查看${authorName}发布的动态`}
-        onClick={openAuthorOrPost}
+        onClick={(event) => {
+          event.stopPropagation()
+          openAuthorOrPost()
+        }}
       >
         <UserAvatar
           src={authorAvatarUrl}
@@ -143,14 +190,14 @@ function CommunityPostCard({
       <View className='community-post__main'>
         <View
           className='community-post__author'
-          hoverClass='community-post__tap-area--pressed'
-          hoverStartTime={20}
-          hoverStayTime={120}
           ariaRole='button'
           ariaLabel={onOpenAuthor && !post.author_deleted
             ? `查看${authorName}的个人主页`
             : `查看${authorName}发布的动态`}
-          onClick={openAuthorOrPost}
+          onClick={(event) => {
+            event.stopPropagation()
+            openAuthorOrPost()
+          }}
         >
           <View className='community-post__author-line'>
             <Text>{authorName}</Text>
@@ -164,12 +211,6 @@ function CommunityPostCard({
 
         <View
           className='community-post__body api-post__body'
-          hoverClass='community-post__tap-area--pressed'
-          hoverStartTime={20}
-          hoverStayTime={120}
-          ariaRole='button'
-          ariaLabel={`查看动态：${readableContent || '校园图片动态'}`}
-          onClick={() => onOpen(post)}
         >
           {operationBadges.length > 0 && (
             <View className='community-post__badges'>
@@ -187,6 +228,17 @@ function CommunityPostCard({
                 stickerClassName='community-post__content-sticker'
               />
               {contentIsClamped && <Text className='community-post__expand'>全文</Text>}
+            </View>
+          )}
+          {businessPreview && variant !== 'community' && (
+            <View className={`community-post__business-preview community-post__business-preview--${variant}`}>
+              <View className='community-post__business-icon'>
+                <Image src={communityIcons[variant]} mode='aspectFit' />
+              </View>
+              <View className='community-post__business-copy'>
+                <Text className='community-post__business-title'>{businessPreview.title}</Text>
+                <Text className='community-post__business-meta'>{businessPreview.meta}</Text>
+              </View>
             </View>
           )}
           {visibleImages.length > 0 && (
@@ -215,18 +267,12 @@ function CommunityPostCard({
           )}
         </View>
 
-        <View
-          className='community-post__meta'
-          onClick={(event) => event.stopPropagation()}
-        >
+        <View className='community-post__meta'>
           <View className='community-post__meta-copy'>
             <Text className='community-post__time'>{publishedAt}</Text>
             {sectionName && (onSelectSection ? (
               <View
                 className='community-post__section-pill'
-                hoverClass='community-post__section-pill--pressed'
-                hoverStartTime={20}
-                hoverStayTime={100}
                 ariaRole='button'
                 ariaLabel={`筛选${sectionName}板块`}
                 onClick={(event) => {
@@ -242,12 +288,9 @@ function CommunityPostCard({
           </View>
           <View className='community-post__meta-actions'>
             <Button
-              id={`community-post-more-${post.id}`}
+              id={`community-post-more-${cardId}`}
               className='community-post__more'
-              hoverClass='community-post__more--pressed'
-              hoverStopPropagation
-              hoverStartTime={20}
-              hoverStayTime={120}
+              hoverClass='none'
               ariaLabel={actionsOpen ? '收起动态操作' : '展开动态操作'}
               onTouchStart={(event) => event.stopPropagation()}
               onClick={(event) => {
@@ -262,36 +305,34 @@ function CommunityPostCard({
                 className='community-post__social community-post__action-menu'
                 onClick={(event) => event.stopPropagation()}
               >
-                <View
-                  className={post.liked
-                    ? 'community-post__social-like community-post__social-like--liked'
-                    : 'community-post__social-like'}
-                  hoverClass={!likePending ? 'community-post__social-row--pressed' : undefined}
-                  hoverStartTime={20}
-                  hoverStayTime={120}
-                  ariaRole='button'
-                  ariaLabel={likePending
-                    ? '点赞处理中'
-                    : `${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    if (likePending) return
-                    setLikePending(true)
-                    onCloseActions()
-                    void Promise.resolve(onToggleLike(post))
-                      .catch(() => undefined)
-                      .finally(() => setLikePending(false))
-                  }}
-                >
-                  <Image src={post.liked ? communityIcons.heartActive : communityIcons.heart} mode='aspectFit' />
-                  <Text>{likePending ? '处理中…' : post.liked ? '取消点赞' : '点赞'}</Text>
-                </View>
-                <View className='community-post__social-divider' />
+                {onToggleLike && (
+                  <>
+                    <View
+                      className={post.liked
+                        ? 'community-post__social-like community-post__social-like--liked'
+                        : 'community-post__social-like'}
+                      ariaRole='button'
+                      ariaLabel={likePending
+                        ? '点赞处理中'
+                        : `${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (likePending) return
+                        setLikePending(true)
+                        onCloseActions()
+                        void Promise.resolve(onToggleLike(post))
+                          .catch(() => undefined)
+                          .finally(() => setLikePending(false))
+                      }}
+                    >
+                      <Image src={post.liked ? communityIcons.heartActive : communityIcons.heart} mode='aspectFit' />
+                      <Text>{likePending ? '处理中…' : post.liked ? '取消点赞' : '点赞'}</Text>
+                    </View>
+                    <View className='community-post__social-divider' />
+                  </>
+                )}
                 <View
                   className='community-post__comments-summary'
-                  hoverClass='community-post__social-row--pressed'
-                  hoverStartTime={20}
-                  hoverStayTime={120}
                   ariaRole='button'
                   ariaLabel='打开评论输入'
                   onClick={(event) => {
@@ -308,19 +349,66 @@ function CommunityPostCard({
           </View>
         </View>
 
-        {latestComment && (
-          <View
-            className='community-post__comment-preview'
-            ariaLabel={`${latestComment.author_nickname}的评论：${plainStickerContent(latestComment.content)}`}
-          >
-            <Text className='community-post__comment-preview-author'>
-              {latestComment.author_deleted ? '已注销用户' : latestComment.author_nickname}：
-            </Text>
-            <StickerContent
-              content={latestComment.content}
-              className='community-post__comment-preview-content'
-              stickerClassName='community-post__comment-preview-sticker'
-            />
+        {(likedByCopy || commentPreviews.length > 0 || post.comment_count > 3) && (
+          <View className='community-post__engagement'>
+            {likedByCopy && (
+              <View className='community-post__liked-by'>
+                <Image src={communityIcons.heart} mode='aspectFit' />
+                <Text>{likedByCopy}</Text>
+              </View>
+            )}
+            {(commentPreviews.length > 0 || post.comment_count > 3) && (
+              <View className='community-post__comment-previews'>
+                {commentPreviews.map((comment) => (
+                  <View
+                    key={comment.id}
+                    id={`community-comment-preview-${comment.id}`}
+                    className={comment.nested
+                      ? 'community-post__comment-preview community-post__comment-preview--reply'
+                      : 'community-post__comment-preview'}
+                    ariaRole={onReplyComment ? 'button' : undefined}
+                    ariaLabel={comment.parentId && comment.replyToNickname
+                      ? `${comment.authorNickname}回复${comment.replyToNickname}：${plainStickerContent(comment.content)}`
+                      : `${comment.authorNickname}的评论：${plainStickerContent(comment.content)}`}
+                    onClick={onReplyComment ? (event) => {
+                      event.stopPropagation()
+                      onReplyComment(post, comment)
+                    } : undefined}
+                  >
+                    <Text className='community-post__comment-preview-author'>
+                      {comment.authorDeleted ? '已注销用户' : comment.authorNickname}
+                    </Text>
+                    {comment.parentId && comment.replyToNickname && (
+                      <>
+                        <Text className='community-post__comment-preview-relation'> 回复 </Text>
+                        <Text className='community-post__comment-preview-author'>
+                          {comment.replyToNickname}
+                        </Text>
+                      </>
+                    )}
+                    <Text>：</Text>
+                    <StickerContent
+                      content={comment.content}
+                      className='community-post__comment-preview-content'
+                      stickerClassName='community-post__comment-preview-sticker'
+                    />
+                  </View>
+                ))}
+                {post.comment_count > 3 && (
+                  <View
+                    className='community-post__comments-all'
+                    ariaRole='button'
+                    ariaLabel={`查看全部 ${post.comment_count} 条评论`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onOpen(post)
+                    }}
+                  >
+                    查看全部 {post.comment_count} 条评论
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         )}
       </View>

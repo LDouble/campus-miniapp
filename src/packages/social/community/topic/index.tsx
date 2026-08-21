@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
-import type { CampusCirclePostView, CampusCircleTopicView, CommentView } from '../../../../api/types'
+import type { CampusCirclePostView, CampusCircleTopicView } from '../../../../api/types'
 import { isApiError } from '../../../../api/client'
 import CustomNavbar from '../../../../components/custom-navbar'
 import {
@@ -12,7 +12,8 @@ import {
 import { lifeServicesRepository } from '../../../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../../../features/life-services/refresh-policy'
 import CommunityCommentSheet from '../../../../features/community/comment-sheet'
-import CommunityPostCard from '../../../../features/community/post-card'
+import CommunityPostCard, { type CommunityPostCommentPreview } from '../../../../features/community/post-card'
+import { mergePublicCommentPreview } from '../../../../features/community/comments'
 import { saveCommunityDetailSnapshot } from '../../../../features/community/detail-snapshot'
 import { useDismissCommunityOverlaysOnScroll } from '../../../../features/community/use-overlay-dismissal'
 import { useCampusShare } from '../../../../features/share'
@@ -43,9 +44,10 @@ export default function CommunityTopicPage() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentReplyTarget, setCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
-  const [latestComments, setLatestComments] = useState<Record<number, CommentView>>({})
   const requestSequence = useRef(0)
 
   const load = useCallback(async (id: number, nextPage = 1, append = false) => {
@@ -156,6 +158,14 @@ export default function CommunityTopicPage() {
   }, [])
   const openComments = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(null)
+    setCommentPost(post)
+  }, [])
+  const openReply = useCallback((post: CampusCirclePostView, comment: CommunityPostCommentPreview) => {
+    setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(comment)
     setCommentPost(post)
   }, [])
   const toggleActions = useCallback((postId: number) => {
@@ -164,15 +174,26 @@ export default function CommunityTopicPage() {
   const closeActions = useCallback(() => {
     setOpenActionPostId(null)
   }, [])
-  const updateLatestComment = useCallback((comment: CommentView) => {
-    setLatestComments((current) => ({ ...current, [comment.target_id]: comment }))
-  }, [])
+  const updateLatestComment = useCallback((comment: Parameters<typeof mergePublicCommentPreview>[1]) => {
+    setPosts((current) => current.map((item) => (
+      item.id === comment.target_id
+        ? {
+            ...item,
+            comment_previews: mergePublicCommentPreview(
+              item.comment_previews,
+              comment,
+              commentReplyTarget,
+            ),
+          }
+        : item
+    )))
+  }, [commentReplyTarget])
   const dismissCommunityOverlays = useCallback(() => {
     setOpenActionPostId(null)
     if (commentPost) setCommentDismissSignal((current) => current + 1)
   }, [commentPost])
   useDismissCommunityOverlaysOnScroll({
-    active: openActionPostId !== null || commentPost !== null,
+    active: openActionPostId !== null || (commentPost !== null && !commentSubmitting),
     onDismiss: dismissCommunityOverlays,
   })
   const updateCommentCount = useCallback((postId: number, delta: number) => {
@@ -228,7 +249,6 @@ export default function CommunityTopicPage() {
               </View>
               <View
                 className='community-topic-hero__action'
-                hoverClass='community-topic-hero__action--pressed'
                 ariaRole='button'
                 ariaLabel={`${participateLabel}：${topic.name}`}
                 onClick={openPublisher}
@@ -257,7 +277,6 @@ export default function CommunityTopicPage() {
           <Text>{error}</Text>
           <View
             className='community-topic-page__retry'
-            hoverClass='community-topic-page__retry--pressed'
             ariaRole='button'
             ariaLabel='重新加载话题'
             onClick={reload}
@@ -272,10 +291,10 @@ export default function CommunityTopicPage() {
           actionsOpen={openActionPostId === post.id}
           onToggleActions={toggleActions}
           onCloseActions={closeActions}
-          latestComment={latestComments[post.id]}
           onToggleLike={toggleLike}
           onOpen={openPost}
           onOpenComments={openComments}
+          onReplyComment={openReply}
           onOpenAuthor={openPostAuthor}
         />
       ))}
@@ -286,7 +305,6 @@ export default function CommunityTopicPage() {
           <Text>带上这个话题，成为第一个参与讨论的人</Text>
           <View
             className='community-topic-empty__action'
-            hoverClass='community-topic-empty__action--pressed'
             ariaRole='button'
             ariaLabel={`${participateLabel}：${topic.name}`}
             onClick={openPublisher}
@@ -298,7 +316,6 @@ export default function CommunityTopicPage() {
       {!loading && !error && posts.length < total && (
         <View
           className='api-community-load-more'
-          hoverClass='community-topic-empty__action--pressed'
           ariaRole='button'
           ariaLabel={loadingMore ? '正在加载更多话题动态' : '查看更多话题动态'}
           onClick={loadMore}
@@ -310,7 +327,19 @@ export default function CommunityTopicPage() {
         <CommunityCommentSheet
           key={commentPost.id}
           post={commentPost}
-          onClose={() => setCommentPost(null)}
+          initialReplyTarget={commentReplyTarget ? {
+            id: commentReplyTarget.id,
+            author_id: commentReplyTarget.authorId,
+            author_deleted: commentReplyTarget.authorDeleted,
+            author_nickname: commentReplyTarget.authorNickname,
+            root_id: commentReplyTarget.rootId,
+          } : null}
+          onClose={() => {
+            setCommentPost(null)
+            setCommentReplyTarget(null)
+            setCommentSubmitting(false)
+          }}
+          onSubmittingChange={setCommentSubmitting}
           dismissSignal={commentDismissSignal}
           onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
           onCommentCreated={updateLatestComment}

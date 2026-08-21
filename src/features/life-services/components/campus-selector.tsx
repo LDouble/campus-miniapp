@@ -41,7 +41,6 @@ export default function CampusSelector({
           topbar ? 'campus-selector__trigger--topbar' : '',
           iconOnly ? 'campus-selector__trigger--icon-only' : '',
         ].filter(Boolean).join(' ')}
-        hoverClass='campus-selector__trigger--pressed'
         ariaRole='button'
         ariaLabel={`${label}，当前${selectedLabel}`}
         onClick={() => setVisible(true)}
@@ -79,7 +78,6 @@ export default function CampusSelector({
                 className={selected
                   ? 'campus-selector__option campus-selector__option--active'
                   : 'campus-selector__option'}
-                hoverClass='campus-selector__option--pressed'
                 ariaRole='button'
                 ariaLabel={`${selected ? '已选择，' : ''}${option.label}`}
                 onClick={() => {

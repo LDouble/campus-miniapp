@@ -270,7 +270,7 @@ export default function SelectionPage() {
           <View className='selection-heading'><Text>{activeTab === 'failed' ? '未选课程' : '全部课程'}</Text><Text>{displayedRecords.length} 门</Text></View>
           {displayedRecords.map((record) => {
             const meta = statusMeta[record.status]
-            return <View key={record.id} className='selection-card' hoverClass='selection-card--pressed' onClick={() => { setActiveRecord(record); setSheet('detail') }}>
+            return <View key={record.id} className='selection-card' onClick={() => { setActiveRecord(record); setSheet('detail') }}>
               <View className={`selection-card__status selection-card__status--${record.status}`}><View /><Text>{meta.label}</Text></View>
               <Text className='selection-card__name'>{record.courseName}</Text>
               <Text className='selection-card__type'>{record.courseType} · {record.credit} 学分</Text>

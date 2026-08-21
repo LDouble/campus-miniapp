@@ -39,7 +39,6 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
         cover ? '' : 'marketplace-card--no-image',
         isWanted ? 'marketplace-card--wanted' : 'marketplace-card--sell',
       ].filter(Boolean).join(' ')}
-      hoverClass='marketplace-card--pressed'
       ariaRole='button'
       ariaLabel={`${isWanted ? '求购' : '出售'}，${readableDescription}，${formatMoney(item.price_cents)}`}
       onClick={() => openDetail(item)}

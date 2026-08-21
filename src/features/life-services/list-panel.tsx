@@ -367,7 +367,6 @@ export default function LifeServiceListPanel({
         <View
           id={`life-search-submit-${section}`}
           className='life-search__submit'
-          hoverClass='life-search__submit--pressed'
           ariaRole='button'
           ariaLabel='搜索校园内容'
           onClick={submitSearch}
@@ -388,7 +387,6 @@ export default function LifeServiceListPanel({
           {(keyword || hasStructuredFilters) && (
             <View
               className='life-panel__clear'
-              hoverClass='life-panel__action--pressed'
               ariaRole='button'
               ariaLabel='清除当前筛选条件'
               onClick={clearAll}
@@ -398,7 +396,6 @@ export default function LifeServiceListPanel({
           )}
           <View
             className='life-panel__mine'
-            hoverClass='life-panel__action--pressed'
             ariaRole='button'
             ariaLabel={`查看${myServicesLabels[section]}`}
             onClick={() => void Taro.navigateTo({ url: myServicesRoutes[section] })}
@@ -484,7 +481,6 @@ export default function LifeServiceListPanel({
             <View className='course-market-empty__actions'>
               <View
                 className='course-market-empty__primary'
-                hoverClass='course-market-empty__button--pressed'
                 onClick={() => void openCourseMarketplacePublisher({
                   ...courseSearch,
                   intent: 'wanted',
@@ -494,7 +490,6 @@ export default function LifeServiceListPanel({
               </View>
               <View
                 className='course-market-empty__secondary'
-                hoverClass='course-market-empty__button--pressed'
                 onClick={clearAll}
               >
                 查看全部资料

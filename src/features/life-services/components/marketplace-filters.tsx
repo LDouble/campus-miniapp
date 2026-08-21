@@ -182,7 +182,6 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
         <View
           id='market-type-trigger'
           className='life-service-filter-chip'
-          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel={`类型筛选，当前${currentTypeLabel}`}
           onClick={openTypeMenu}
@@ -200,7 +199,6 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
         <View
           id='market-price-trigger'
           className='life-service-filter-chip'
-          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel={`价格筛选，当前${selectedPriceLabel}`}
           onClick={() => setSheetVisible(true)}
@@ -214,7 +212,6 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
         <View className='life-service-filter-toolbar__divider' />
         <View
           className='life-service-filter-more'
-          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel='打开价格筛选'
           onClick={() => setSheetVisible(true)}
@@ -245,7 +242,6 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
                   className={selected
                     ? 'market-type-dropdown__item market-type-dropdown__item--active'
                     : 'market-type-dropdown__item'}
-                  hoverClass='market-type-dropdown__item--pressed'
                   ariaRole='menuitem'
                   ariaLabel={`${selected ? '已选择，' : ''}${option.label}`}
                   onClick={() => selectType(option.key)}
@@ -278,7 +274,6 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
                 className={draftQuickKey === range.key
                   ? 'market-price-option market-price-option--active'
                   : 'market-price-option'}
-                hoverClass='market-filter-control--pressed'
                 ariaRole='button'
                 ariaLabel={`${draftQuickKey === range.key ? '已选择，' : ''}${range.label}`}
                 onClick={() => {

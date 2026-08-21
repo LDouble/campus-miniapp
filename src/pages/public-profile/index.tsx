@@ -4,7 +4,6 @@ import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
   CampusCirclePostView,
-  CommentView,
   ErrandView,
   MarketplaceListingView,
   PublicUserProfile,
@@ -13,7 +12,8 @@ import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
 import CommunityCommentSheet from '../../features/community/comment-sheet'
-import CommunityPostCard from '../../features/community/post-card'
+import CommunityPostCard, { type CommunityPostCommentPreview } from '../../features/community/post-card'
+import { mergePublicCommentPreview } from '../../features/community/comments'
 import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
 import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import '../../features/community/feed-panel.scss'
@@ -95,9 +95,10 @@ export default function PublicProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>('community')
   const [tabs, setTabs] = useState<Record<ProfileTab, TabState>>(initialTabs)
   const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentReplyTarget, setCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
-  const [latestComments, setLatestComments] = useState<Record<number, CommentView>>({})
 
   useCampusShare((event) => {
     const dataset = event.target?.dataset || {}
@@ -218,6 +219,15 @@ export default function PublicProfilePage() {
 
   const openCommunityComments = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(null)
+    setCommentPost(post)
+  }, [])
+
+  const openCommunityReply = useCallback((post: CampusCirclePostView, comment: CommunityPostCommentPreview) => {
+    setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(comment)
     setCommentPost(post)
   }, [])
 
@@ -229,9 +239,26 @@ export default function PublicProfilePage() {
     setOpenActionPostId(null)
   }, [])
 
-  const updateLatestCommunityComment = useCallback((comment: CommentView) => {
-    setLatestComments((current) => ({ ...current, [comment.target_id]: comment }))
-  }, [])
+  const updateLatestCommunityComment = useCallback((comment: Parameters<typeof mergePublicCommentPreview>[1]) => {
+    setTabs((current) => ({
+      ...current,
+      community: {
+        ...current.community,
+        items: (current.community.items as CampusCirclePostView[]).map((item) => (
+          item.id === comment.target_id
+            ? {
+                ...item,
+                comment_previews: mergePublicCommentPreview(
+                  item.comment_previews,
+                  comment,
+                  commentReplyTarget,
+                ),
+              }
+            : item
+        )),
+      },
+    }))
+  }, [commentReplyTarget])
 
   const dismissCommunityOverlays = useCallback(() => {
     setOpenActionPostId(null)
@@ -239,7 +266,7 @@ export default function PublicProfilePage() {
   }, [commentPost])
 
   useDismissCommunityOverlaysOnScroll({
-    active: openActionPostId !== null || commentPost !== null,
+    active: openActionPostId !== null || (commentPost !== null && !commentSubmitting),
     onDismiss: dismissCommunityOverlays,
   })
 
@@ -292,10 +319,10 @@ export default function PublicProfilePage() {
               actionsOpen={openActionPostId === post.id}
               onToggleActions={toggleCommunityActions}
               onCloseActions={closeCommunityActions}
-              latestComment={latestComments[post.id]}
               onToggleLike={toggleLike}
               onOpen={openCommunityPost}
               onOpenComments={openCommunityComments}
+              onReplyComment={openCommunityReply}
             />
           ))}
         </View>
@@ -379,7 +406,6 @@ export default function PublicProfilePage() {
                   className={activeTab === tab.key
                     ? 'public-profile-tab public-profile-tab--active'
                     : 'public-profile-tab'}
-                  hoverClass='public-profile-tab--pressed'
                   ariaRole='button'
                   ariaLabel={`${tab.label}，${countForTab(tab.key)} 条`}
                   onClick={() => setActiveTab(tab.key)}
@@ -429,7 +455,19 @@ export default function PublicProfilePage() {
         <CommunityCommentSheet
           key={commentPost.id}
           post={commentPost}
-          onClose={() => setCommentPost(null)}
+          initialReplyTarget={commentReplyTarget ? {
+            id: commentReplyTarget.id,
+            author_id: commentReplyTarget.authorId,
+            author_deleted: commentReplyTarget.authorDeleted,
+            author_nickname: commentReplyTarget.authorNickname,
+            root_id: commentReplyTarget.rootId,
+          } : null}
+          onClose={() => {
+            setCommentPost(null)
+            setCommentReplyTarget(null)
+            setCommentSubmitting(false)
+          }}
+          onSubmittingChange={setCommentSubmitting}
           dismissSignal={commentDismissSignal}
           onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
           onCommentCreated={updateLatestCommunityComment}

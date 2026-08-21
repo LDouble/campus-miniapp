@@ -339,7 +339,6 @@ export default function ClubsPage() {
               className='clubs-search__clear'
               ariaRole='button'
               ariaLabel='清空搜索内容'
-              hoverClass='clubs-search__clear--pressed'
               onClick={() => {
                 setQuery('')
                 setKeyword('')
@@ -376,7 +375,6 @@ export default function ClubsPage() {
           className='clubs-workspace__mine'
           ariaRole='button'
           ariaLabel='查看我的社团资料和审核进度'
-          hoverClass='clubs-workspace__mine--pressed'
           onClick={() => Taro.navigateTo({ url: '/pages/clubs/mine' })}
         >
           <Text>我的社团资料</Text>
@@ -386,7 +384,6 @@ export default function ClubsPage() {
           className='clubs-workspace__create'
           ariaRole='button'
           ariaLabel='创建社团主页'
-          hoverClass='clubs-workspace__create--pressed'
           onClick={() => void createClub()}
         ><Text>＋</Text> 创建主页</View>
       </View>
@@ -459,7 +456,6 @@ export default function ClubsPage() {
             key={club.id}
             id={`club-card-${club.id}`}
             className='club-card'
-            hoverClass='club-card--pressed'
             ariaRole='button'
             ariaLabel={`查看${club.name}`}
             onClick={() => Taro.navigateTo({ url: `/pages/clubs/detail?id=${club.id}` })}
@@ -540,7 +536,6 @@ export default function ClubsPage() {
                         className='club-directory-row'
                         ariaRole='button'
                         ariaLabel={`查看${club.name}`}
-                        hoverClass='club-directory-row--pressed'
                         onClick={() => Taro.navigateTo({ url: `/pages/clubs/detail?id=${club.id}` })}
                       >
                         <View className='club-directory-row__logo'>

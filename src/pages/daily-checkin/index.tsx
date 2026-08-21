@@ -187,6 +187,7 @@ export default function DailyCheckinPage() {
                 </View>
               </View>
               <Button
+                hoverClass='none'
                 className={`daily-checkin-button${status.checked_in ? ' daily-checkin-button--done' : ''}`}
                 disabled={submitting || status.checked_in || !status.enabled}
                 loading={submitting}

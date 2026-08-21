@@ -84,7 +84,7 @@ export default function ClubDetailPage() {
           <View className='club-detail-state__icon'><Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' /></View>
           <Text className='club-detail-state__title'>暂时无法查看这个社团</Text>
           <Text className='club-detail-state__text'>{error}</Text>
-          {!!clubId && <View className='club-detail-state__action' hoverClass='club-detail-state__action--pressed' ariaRole='button' ariaLabel='重新加载社团详情' onClick={() => void load(clubId)}>重新加载</View>}
+          {!!clubId && <View className='club-detail-state__action' ariaRole='button' ariaLabel='重新加载社团详情' onClick={() => void load(clubId)}>重新加载</View>}
         </View>
       )}
 
@@ -112,7 +112,7 @@ export default function ClubDetailPage() {
 
           <View className='club-detail__share-row'>
             <Text>把喜欢的社团分享给同学</Text>
-            <Button className='club-detail__share' openType='share'>分享主页</Button>
+            <Button className='club-detail__share' hoverClass='none' openType='share'>分享主页</Button>
           </View>
 
           <View className='club-detail-section club-detail-section--intro'>
@@ -146,7 +146,6 @@ export default function ClubDetailPage() {
                     className='club-gallery__item'
                     ariaRole='button'
                     ariaLabel={`预览第 ${index + 1} 张宣传图${image.caption ? `，${image.caption}` : ''}`}
-                    hoverClass='club-gallery__item--pressed'
                     onClick={() => previewGallery(index)}
                   >
                     {!failedImages[`gallery-${image.media_id}`]
@@ -187,7 +186,6 @@ export default function ClubDetailPage() {
               className='club-viewer__close'
               ariaRole='button'
               ariaLabel='关闭图片预览'
-              hoverClass='club-viewer__close--pressed'
               onClick={() => setViewerIndex(null)}
             ><View /><View /></View>
             <Text>{viewerIndex + 1} / {club.gallery.length}</Text>

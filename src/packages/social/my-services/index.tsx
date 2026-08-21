@@ -131,7 +131,6 @@ function FilterStrip<TKey extends string>({
           <View
             key={item.key}
             className={`my-services-filter my-services-filter--${item.key} ${value === item.key ? 'my-services-filter--active' : ''}`}
-            hoverClass='my-services-filter--pressed'
             ariaRole='button'
             ariaLabel={`${label}：${item.label}`}
             onClick={() => onChange(item.key)}
@@ -457,7 +456,6 @@ export default function MyServicesPage() {
           </View>
           <View
             className='my-services-hero__publish'
-            hoverClass='my-services-hero__publish--pressed'
             ariaRole='button'
             ariaLabel='发布新内容'
             onClick={openPublish}
@@ -473,7 +471,6 @@ export default function MyServicesPage() {
               <View
                 key={item.key}
                 className={`my-services-tabs__item my-services-tabs__item--${item.key} ${view.section === item.key ? 'my-services-tabs__item--active' : ''}`}
-                hoverClass='my-services-tabs__item--pressed'
                 ariaRole='button'
                 ariaLabel={`查看${item.label}记录`}
                 onClick={() => selectSection(item.key)}
@@ -549,7 +546,6 @@ export default function MyServicesPage() {
               <View
                 key={`order:${order.id}`}
                 className='my-record-card my-record-card--order'
-                hoverClass='my-record-card--pressed'
                 ariaRole='button'
                 ariaLabel={`查看${order.title_snapshot}订单详情`}
                 onClick={() => openBusinessRecord(order)}
@@ -572,7 +568,6 @@ export default function MyServicesPage() {
                     {order.available_actions.includes('cancel') && (
                       <View
                         className='my-record-actions__secondary'
-                        hoverClass='my-record-actions__button--pressed'
                         ariaRole='button'
                         ariaLabel='取消订单'
                         onClick={(event) => {
@@ -586,7 +581,6 @@ export default function MyServicesPage() {
                     {order.available_actions.includes('complete') && (
                       <View
                         className='my-record-actions__primary'
-                        hoverClass='my-record-actions__button--pressed'
                         ariaRole='button'
                         ariaLabel='确认订单已完成'
                         onClick={(event) => {
@@ -605,7 +599,7 @@ export default function MyServicesPage() {
           if ('pickup_location' in item) {
             const errand = item as ErrandView
             return (
-              <View key={`errand:${errand.id}`} className='my-record-card my-record-card--errand' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看跑腿详情' onClick={() => openBusinessRecord(errand)}>
+              <View key={`errand:${errand.id}`} className='my-record-card my-record-card--errand' ariaRole='button' ariaLabel='查看跑腿详情' onClick={() => openBusinessRecord(errand)}>
                 <View className='my-record-card__top'>
                   <Text className='my-record-card__kind'>{errand.viewer_relation === 'runner' ? '我的接单' : '我发布的跑腿'}</Text>
                   <Text className='my-record-card__status'>{formatStatus(errand.status, errand.review_status)}</Text>
@@ -624,7 +618,7 @@ export default function MyServicesPage() {
           if ('price_cents' in item) {
             const listing = item as MarketplaceListingView
             return (
-              <View key={`market:${listing.id}`} className='my-record-card my-record-card--market' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看二手商品详情' onClick={() => openBusinessRecord(listing)}>
+              <View key={`market:${listing.id}`} className='my-record-card my-record-card--market' ariaRole='button' ariaLabel='查看二手商品详情' onClick={() => openBusinessRecord(listing)}>
                 <View className='my-record-card__top'>
                   <Text className='my-record-card__kind'>我发布的二手</Text><Text className='my-record-card__status'>{formatStatus(listing.status)}</Text>
                 </View>
@@ -639,7 +633,7 @@ export default function MyServicesPage() {
           if ('departure_at' in item) {
             const trip = item as CarpoolTripView
             return (
-              <View key={`carpool:${trip.id}`} className='my-record-card my-record-card--carpool' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看同行详情' onClick={() => openBusinessRecord(trip)}>
+              <View key={`carpool:${trip.id}`} className='my-record-card my-record-card--carpool' ariaRole='button' ariaLabel='查看同行详情' onClick={() => openBusinessRecord(trip)}>
                 <View className='my-record-card__top'>
                   <Text className='my-record-card__kind'>{trip.viewer_relation === 'participant' ? '我参与的同行' : '我发起的同行'}</Text>
                   <Text className='my-record-card__status'>{formatStatus(trip.status, trip.review_status)}</Text>
@@ -657,7 +651,7 @@ export default function MyServicesPage() {
           }
           const post = item as CampusCirclePostView
           return (
-            <View key={`post:${post.id}`} className='my-record-card' hoverClass='my-record-card--pressed' ariaRole='button' ariaLabel='查看动态详情' onClick={() => openBusinessRecord(post)}>
+            <View key={`post:${post.id}`} className='my-record-card' ariaRole='button' ariaLabel='查看动态详情' onClick={() => openBusinessRecord(post)}>
               <View className='my-record-card__top'>
                 <Text className='my-record-card__kind'>我发布的动态</Text><Text className='my-record-card__status'>{formatStatus(post.status)}</Text>
               </View>

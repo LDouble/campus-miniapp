@@ -36,7 +36,6 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
     <View
       id={`errand-card-${item.id}`}
       className='errand-card'
-      hoverClass='business-card--pressed'
       onClick={() => openDetail(item)}
     >
       <View className='business-card-header'>

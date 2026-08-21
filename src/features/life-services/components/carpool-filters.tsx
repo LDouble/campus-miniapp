@@ -75,7 +75,6 @@ const RouteFilterSuggestions = ({
               className={value === item
                 ? 'route-filter-suggestion route-filter-suggestion--active'
                 : 'route-filter-suggestion'}
-              hoverClass='route-filter-suggestion--pressed'
               ariaRole='button'
               ariaLabel={`将${kind === 'origin' ? '起点' : '终点'}设为${item}`}
               onClick={() => onSelect(item)}
@@ -137,7 +136,6 @@ export default function CarpoolFilters({ value, campusControl, onChange }: Props
       <View className='carpool-filter-toolbar life-service-filter-toolbar'>
         <View
           className='life-service-filter-chip'
-          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel={`日期筛选，当前${dateLabel}`}
           onClick={() => setSheetVisible(true)}
@@ -147,7 +145,6 @@ export default function CarpoolFilters({ value, campusControl, onChange }: Props
         </View>
         <View
           className='life-service-filter-chip life-service-filter-chip--route'
-          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel={`路线筛选，当前${routeLabel}`}
           onClick={() => setSheetVisible(true)}
@@ -163,7 +160,6 @@ export default function CarpoolFilters({ value, campusControl, onChange }: Props
           className={count > 0
             ? 'life-service-filter-more life-service-filter-more--active'
             : 'life-service-filter-more'}
-          hoverClass='life-service-filter-control--pressed'
           ariaRole='button'
           ariaLabel={`更多筛选${count > 0 ? `，已选择 ${count} 项` : ''}`}
           onClick={() => setSheetVisible(true)}
@@ -281,7 +277,6 @@ export default function CarpoolFilters({ value, campusControl, onChange }: Props
                     ? 'seat-filter-option seat-filter-option--active'
                     : 'seat-filter-option'
                 }
-                hoverClass='seat-filter-option--pressed'
                 ariaRole='button'
                 ariaLabel={`${draft.seatsNeeded === option.value ? '已选择，' : ''}${option.label}`}
                 onClick={() => setDraft((current) => ({

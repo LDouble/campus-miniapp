@@ -5,6 +5,12 @@
   pointer-events: none;
 }
 
+.community-comment-sheet__reply-viewport-reserve {
+  width: 100%;
+  flex: none;
+  pointer-events: none;
+}
+
 .community-comment-sheet__backdrop {
   position: absolute;
   inset: 0;

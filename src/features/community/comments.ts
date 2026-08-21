@@ -1,6 +1,11 @@
-import type { CommentView } from '../../api/types'
+import type { CommentView, PublicCommentPreview } from '../../api/types'
 
 type CommentReplyTarget = Pick<CommentView, 'id'>
+
+type PublicReplyTarget = {
+  id: number
+  authorNickname: string
+}
 
 type CommentReplyNode = Pick<
   CommentView,
@@ -82,6 +87,67 @@ export const mergeLocalThreadReply = <T extends CommentReplyNode>(
   ))
   next.push(created)
   return next.sort((left, right) => left.id - right.id)
+}
+
+export const commentToPublicPreview = (
+  comment: CommentView,
+  replyTarget: PublicReplyTarget | null = null,
+): PublicCommentPreview => ({
+  id: comment.id,
+  author_id: comment.author_id,
+  author_nickname: comment.author_deleted ? '已注销用户' : comment.author_nickname,
+  parent_id: comment.parent_id ?? null,
+  root_id: comment.root_id || comment.id,
+  reply_to_comment_id: comment.parent_id ?? null,
+  reply_to_nickname: comment.parent_id ? replyTarget?.authorNickname || null : null,
+  content: comment.content,
+  created_at: comment.created_at,
+})
+
+/** 保留服务端分组的新鲜度，同时保证可见根评论始终排在它的回复之前。 */
+export const orderPublicCommentPreviews = (items: PublicCommentPreview[]) => {
+  const groups = new Map<number, {
+    firstIndex: number
+    root: PublicCommentPreview | null
+    replies: PublicCommentPreview[]
+  }>()
+
+  items.forEach((item, index) => {
+    const groupId = item.parent_id ? item.root_id : item.id
+    const group = groups.get(groupId) || { firstIndex: index, root: null, replies: [] }
+    group.firstIndex = Math.min(group.firstIndex, index)
+    if (item.parent_id) group.replies.push(item)
+    else group.root = item
+    groups.set(groupId, group)
+  })
+
+  return [...groups.values()]
+    .sort((left, right) => left.firstIndex - right.firstIndex)
+    .flatMap((group) => group.root ? [group.root, ...group.replies] : group.replies)
+}
+
+/** 将本地新评论合并进服务端公开预览；回复会与对应根评论一起置顶展示。 */
+export const mergePublicCommentPreview = (
+  current: PublicCommentPreview[],
+  created: CommentView,
+  replyTarget: PublicReplyTarget | null = null,
+) => {
+  const preview = commentToPublicPreview(created, replyTarget)
+  const remaining = orderPublicCommentPreviews(
+    current.filter((item) => item.id !== preview.id),
+  )
+
+  if (!preview.parent_id) return orderPublicCommentPreviews([preview, ...remaining])
+
+  const rootIndex = remaining.findIndex((item) => item.id === preview.root_id)
+  if (rootIndex < 0) return orderPublicCommentPreviews([preview, ...remaining])
+
+  const root = remaining[rootIndex]
+  return orderPublicCommentPreviews([
+    root,
+    preview,
+    ...remaining.filter((_, index) => index !== rootIndex),
+  ])
 }
 
 export const commentReplyTargetName = (
