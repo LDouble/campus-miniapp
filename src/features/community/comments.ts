@@ -63,11 +63,13 @@ export const buildCampusCircleCommentInput = (
   postId: number,
   content: string,
   replyTarget: CommentReplyTarget | null,
+  mediaId?: number,
 ) => ({
   target_type: 'campus_circle_post' as const,
   target_id: postId,
   content: content.trim(),
   ...(replyTarget ? { parent_id: replyTarget.id } : {}),
+  ...(mediaId ? { media_id: mediaId } : {}),
 })
 
 export const commentRootId = (comment: Pick<CommentView, 'id' | 'root_id'>) => (
@@ -102,6 +104,14 @@ export const commentToPublicPreview = (
   reply_to_nickname: comment.parent_id ? replyTarget?.authorNickname || null : null,
   content: comment.content,
   created_at: comment.created_at,
+  image: comment.image
+    ? {
+      media_id: comment.image.media_id,
+      url: comment.image.url,
+      width: comment.image.width,
+      height: comment.image.height,
+    }
+    : null,
 })
 
 /** 保留服务端分组的新鲜度，同时保证可见根评论始终排在它的回复之前。 */

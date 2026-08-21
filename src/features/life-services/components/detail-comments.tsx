@@ -9,6 +9,7 @@ import {
 } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
+import { uploadMediaImage } from '../../../api/media'
 import type { CommentView } from '../../../api/types'
 import { getCurrentUser } from '../../../api/account'
 import { isApiError } from '../../../api/client'
@@ -16,6 +17,7 @@ import UserAvatar from '../../../components/user-avatar'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
 import StickerContent from '../../../components/sticker-content'
 import StickerPicker from '../../../components/sticker-picker'
+import CommentImage from '../../community/components/comment-image'
 import { openContentReport } from '../../content-report'
 import { openPublicProfile } from '../../profile/public-profile'
 import { insertStickerToken, serializeStickerTokens } from '../../stickers/content'
@@ -33,6 +35,13 @@ import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dis
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
+import {
+  COMMENT_IMAGE_MAX_DIMENSION,
+  DEFAULT_MEDIA_IMAGE_QUALITY,
+  MAX_COMMENT_IMAGES,
+} from '../../media/images'
+import type { MediaImageDraft } from '../../media/images'
+import { chooseMediaImages } from '../../media/selection'
 import './detail-comments.scss'
 
 const icons = {
@@ -94,6 +103,12 @@ const REPLY_TARGET_SCROLL_GAP = 12
 const REPLY_TARGET_SCROLL_DELAY = 80
 const REPLY_TARGET_DISMISS_SUPPRESSION = 800
 const REPLY_OPEN_DISMISS_SUPPRESSION = 1600
+
+const commentImageErrorMessage = (error: unknown) => (
+  isApiError(error)
+    ? error.message
+    : error instanceof Error ? error.message : '图片上传失败，请重试'
+)
 
 type SelectorRect = {
   bottom?: number
@@ -344,6 +359,12 @@ const renderReplyTree = (
               content={comment.content}
               stickerClassName='business-detail-comment__sticker'
             />
+            {comment.image && (
+              <CommentImage
+                image={comment.image}
+                label={`${commentAuthorName(comment)}的回复图片`}
+              />
+            )}
           </View>
           <View className='business-detail-comment__footer'>
             <Text className='business-detail-comment__time'>
@@ -473,6 +494,12 @@ const DetailCommentThread = memo(function DetailCommentThread({
               content={comment.content}
               stickerClassName='business-detail-comment__sticker'
             />
+            {comment.image && (
+              <CommentImage
+                image={comment.image}
+                label={`${commentAuthorName(comment)}的评论图片`}
+              />
+            )}
           </View>
           <View className='business-detail-comment__footer'>
             <Text className='business-detail-comment__time'>
@@ -546,6 +573,7 @@ export default function DetailComments({
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
   const [content, setContent] = useState('')
+  const [commentImage, setCommentImage] = useState<MediaImageDraft | null>(null)
   const [replyTarget, setReplyTarget] = useState<DetailReplyTarget | null>(null)
   const [replyAnchorSelector, setReplyAnchorSelector] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -577,6 +605,7 @@ export default function DetailComments({
   const lastCloseComposerSignalRef = useRef(closeComposerSignal)
   const composerClosingRef = useRef(false)
   const stickerPickerOpenRef = useRef(false)
+  const composerActionPendingRef = useRef(false)
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
   const focusedCommentClearRef = useRef<null | (() => void)>(null)
@@ -962,6 +991,7 @@ export default function DetailComments({
   const finishComposerClose = useCallback(() => {
     composerCloseSequenceRef.current += 1
     composerClosingRef.current = false
+    composerActionPendingRef.current = false
     stickerPickerOpenRef.current = false
     setComposerOpen(false)
     setComposerClosing(false)
@@ -1004,7 +1034,7 @@ export default function DetailComments({
   ])
 
   const handleComposerBackdropTouchStart = useCallback(() => {
-    if (!composerOpen || composerClosing || submitting) return
+    if (!composerOpen || composerClosing || submitting || composerActionPendingRef.current) return
     closeComposer()
   }, [closeComposer, composerClosing, composerOpen, submitting])
 
@@ -1017,7 +1047,11 @@ export default function DetailComments({
   const handleComposerBlur = useCallback(() => {
     setInputFocused(false)
     if (composerOnly) return
-    if (!composerClosingRef.current && !stickerPickerOpenRef.current) closeComposer()
+    if (
+      !composerClosingRef.current
+      && !stickerPickerOpenRef.current
+      && !composerActionPendingRef.current
+    ) closeComposer()
   }, [closeComposer, composerOnly])
 
   const handleKeyboardHeightChange = useCallback((event: {
@@ -1061,12 +1095,132 @@ export default function DetailComments({
     void Taro.hideKeyboard()
   }, [])
 
-  const hasComposerContent = Boolean(content.trim())
+  const restoreComposerFocus = useCallback(() => {
+    if (!mountedRef.current) return
+
+    composerActionPendingRef.current = true
+    composerCloseSequenceRef.current += 1
+    composerClosingRef.current = false
+    setComposerClosing(false)
+    setComposerOpen(true)
+    setKeyboardHeight(0)
+    // Native image selection dismisses the textarea. Toggle focus so the
+    // controlled textarea requests the keyboard again after the picker closes.
+    setInputFocused(false)
+    scheduleTimeout(() => {
+      if (!mountedRef.current) return
+      setComposerOpen(true)
+      setInputFocused(true)
+    }, 80)
+    scheduleTimeout(() => {
+      if (mountedRef.current) composerActionPendingRef.current = false
+    }, 420)
+  }, [scheduleTimeout])
+
+  const updateCommentImage = useCallback((
+    key: string,
+    updater: (current: MediaImageDraft) => MediaImageDraft,
+  ) => {
+    setCommentImage((current) => current?.key === key ? updater(current) : current)
+  }, [])
+
+  const uploadCommentImage = useCallback(async (image: MediaImageDraft) => {
+    if (!image.localPath) return
+    updateCommentImage(image.key, (current) => ({
+      ...current,
+      status: 'uploading',
+      progress: 0,
+      error: '',
+    }))
+    try {
+      const uploaded = await uploadMediaImage({
+        purpose: 'comment',
+        filePath: image.localPath,
+        mimeType: image.mimeType,
+        sizeBytes: image.sizeBytes,
+        onProgress: (progress) => updateCommentImage(image.key, (current) => ({
+          ...current,
+          status: 'uploading',
+          progress,
+        })),
+      })
+      updateCommentImage(image.key, (current) => ({
+        ...current,
+        mediaId: uploaded.id,
+        width: uploaded.width || current.width,
+        height: uploaded.height || current.height,
+        status: 'uploaded',
+        progress: 100,
+        error: '',
+      }))
+    } catch (error) {
+      const message = commentImageErrorMessage(error)
+      updateCommentImage(image.key, (current) => ({
+        ...current,
+        status: 'failed',
+        error: message,
+      }))
+      Taro.showToast({ title: message, icon: 'none' })
+    }
+  }, [updateCommentImage])
+
+  const chooseCommentImage = async () => {
+    composerActionPendingRef.current = true
+    const actionCloseSequence = composerCloseSequenceRef.current
+    try {
+      if (submitting) return
+      if (commentImage) {
+        Taro.showToast({ title: '请先删除当前图片，再添加新图片', icon: 'none' })
+        return
+      }
+      const selected = await chooseMediaImages({
+        count: MAX_COMMENT_IMAGES,
+        maxDimension: COMMENT_IMAGE_MAX_DIMENSION,
+        quality: DEFAULT_MEDIA_IMAGE_QUALITY,
+      })
+      const image = selected[0]
+      if (!image) return
+      if (!mountedRef.current) return
+      setCommentImage(image)
+      void uploadCommentImage(image)
+    } catch (error) {
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '图片选择失败，请重试',
+        icon: 'none',
+      })
+    } finally {
+      if (
+        mountedRef.current
+        && composerCloseSequenceRef.current === actionCloseSequence
+      ) {
+        restoreComposerFocus()
+      } else {
+        composerActionPendingRef.current = false
+      }
+    }
+  }
+
+  const hasUploadedCommentImage = commentImage?.status === 'uploaded'
+    && Boolean(commentImage.mediaId)
+  const hasComposerContent = Boolean(content.trim()) || hasUploadedCommentImage
 
   const submit = async () => {
     const value = serializeStickerTokens(content.trim())
-    if (!value || submitting || !enabled) {
-      if (!value) Taro.showToast({ title: '请输入评论内容或选择表情', icon: 'none' })
+    if (submitting || !enabled) return
+    if (commentImage?.status === 'uploading') {
+      Taro.showToast({ title: '图片仍在上传，请稍候', icon: 'none' })
+      return
+    }
+    if (commentImage?.status === 'failed') {
+      Taro.showToast({ title: '图片上传失败，请重试或删除', icon: 'none' })
+      return
+    }
+    if (commentImage && !hasUploadedCommentImage) {
+      Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
+      return
+    }
+    if (!value && !hasUploadedCommentImage) {
+      Taro.showToast({ title: '请输入评论内容或添加图片', icon: 'none' })
       return
     }
     if (value.length > 300) {
@@ -1082,6 +1236,7 @@ export default function DetailComments({
         target_id: targetId,
         content: value,
         ...(activeReplyTarget ? { parent_id: activeReplyTarget.id } : {}),
+        ...(commentImage?.mediaId ? { media_id: commentImage.mediaId } : {}),
       })
       if (!mountedRef.current) return
       if (activeReplyTarget) {
@@ -1121,6 +1276,7 @@ export default function DetailComments({
         }
       }, 320)
       setContent('')
+      setCommentImage(null)
       contentSelectionStartRef.current = 0
       contentSelectionEndRef.current = 0
       closeComposer()
@@ -1366,6 +1522,59 @@ export default function DetailComments({
               >取消</Text>
             </View>
           )}
+          {commentImage && (
+            <View className='business-detail-composer__image-attachment'>
+              <View
+                className='business-detail-composer__image-preview'
+                ariaRole='button'
+                ariaLabel={commentImage.status === 'failed'
+                  ? '图片上传失败，点击重试'
+                  : '预览待发布图片'}
+                onClick={() => {
+                  if (commentImage.status === 'failed') {
+                    void uploadCommentImage(commentImage)
+                    return
+                  }
+                  void Taro.previewImage({
+                    current: commentImage.previewUrl,
+                    urls: [commentImage.previewUrl],
+                  })
+                }}
+              >
+                <Image src={commentImage.previewUrl} mode='aspectFill' ariaLabel='待发布评论图片' />
+                {commentImage.status === 'uploading' && (
+                  <View className='business-detail-composer__image-status'>
+                    <Text>上传中 {commentImage.progress}%</Text>
+                    <View className='business-detail-composer__image-progress'>
+                      <View style={{ width: `${commentImage.progress}%` }} />
+                    </View>
+                  </View>
+                )}
+                {commentImage.status === 'failed' && (
+                  <View className='business-detail-composer__image-status business-detail-composer__image-status--failed'>
+                    <Text>上传失败 · 重试</Text>
+                  </View>
+                )}
+                <View
+                  className='business-detail-composer__image-remove'
+                  ariaRole='button'
+                  ariaLabel='删除待发布图片'
+                  hoverClass='business-detail-composer__image-remove--pressed'
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    if (!submitting) setCommentImage(null)
+                  }}
+                >
+                  <Text>×</Text>
+                </View>
+              </View>
+              {commentImage.status === 'failed' && (
+                <Text className='business-detail-composer__image-error'>
+                  {commentImage.error || '图片上传失败，请点击图片重试或删除'}
+                </Text>
+              )}
+            </View>
+          )}
           <View className='business-detail-composer__main'>
             <UserAvatar
               src={composerAvatar.src}
@@ -1392,6 +1601,7 @@ export default function DetailComments({
                 placeholder={replyTarget ? '写下回复...' : placeholder}
                 placeholderClass='business-detail-composer__placeholder'
                 onFocus={() => {
+                  composerActionPendingRef.current = false
                   openComposer()
                 }}
                 onBlur={handleComposerBlur}
@@ -1444,9 +1654,30 @@ export default function DetailComments({
                     : 'business-detail-composer__sticker-trigger'}
                   ariaRole='button'
                   ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
-                  onClick={() => setStickerPickerVisible(!stickerPickerOpen)}
+                  onTouchStart={() => {
+                    composerActionPendingRef.current = true
+                  }}
+                  onClick={() => {
+                    composerActionPendingRef.current = false
+                    setStickerPickerVisible(!stickerPickerOpen)
+                  }}
                 >
-                  <Text>☺</Text>
+                  <Image src={require('../../../assets/icons/smile.svg')} mode='aspectFit' />
+                </View>
+                <View
+                  className={commentImage
+                    ? 'business-detail-composer__image-trigger business-detail-composer__image-trigger--disabled'
+                    : 'business-detail-composer__image-trigger'}
+                  ariaRole='button'
+                  ariaLabel={commentImage ? '已添加 1 张图片，请先删除后更换' : '添加图片'}
+                  onTouchStart={() => {
+                    composerActionPendingRef.current = true
+                  }}
+                  onClick={() => {
+                    void chooseCommentImage()
+                  }}
+                >
+                  <Image src={require('../../../assets/icons/image.svg')} mode='aspectFit' />
                 </View>
                 <View
                   id={`business-comment-submit-${targetType}-${targetId}`}

@@ -6300,6 +6300,15 @@ export interface components {
         };
         /** @enum {string} */
         ClubVisibilityStatus: "unpublished" | "published" | "suspended";
+        CommentImageView: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            url: string;
+            /** Format: int64 */
+            width: number;
+        };
         CommentPage: {
             items: components["schemas"]["CommentView"][];
             page: number;
@@ -6343,6 +6352,7 @@ export interface components {
             /** Format: int64 */
             like_count: number;
             liked: boolean;
+            image?: components["schemas"]["CommentImageView"] | null;
             /** Format: uint64 */
             parent_id?: number | null;
             pinned: boolean;
@@ -7345,6 +7355,15 @@ export interface components {
         };
         /** @enum {string} */
         HomeFeedSourceType: "campus_circle_post" | "marketplace_listing" | "errand" | "carpool";
+        PublicCommentImagePreview: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            url: string;
+            /** Format: int64 */
+            width: number;
+        };
         PublicCommentPreview: {
             /** Format: uint64 */
             author_id: number;
@@ -7354,6 +7373,7 @@ export interface components {
             created_at: string;
             /** Format: uint64 */
             id: number;
+            image?: components["schemas"]["PublicCommentImagePreview"] | null;
             /** Format: uint64 */
             parent_id: number | null;
             /** Format: uint64 */
@@ -7487,7 +7507,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "comment";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -12614,6 +12634,8 @@ export interface operations {
                     target_id: number;
                     /** Format: uint64 */
                     parent_id?: number;
+                    /** Format: uint64 */
+                    media_id?: number | null;
                     content: string;
                 };
             };

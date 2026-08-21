@@ -57,6 +57,15 @@ assert.deepEqual(
     content: '根评论',
   },
 )
+assert.deepEqual(
+  buildCampusCircleCommentInput(12, '  带图评论  ', null, 88),
+  {
+    target_type: 'campus_circle_post',
+    target_id: 12,
+    content: '带图评论',
+    media_id: 88,
+  },
+)
 assert.equal(commentRootId(firstReply), 41)
 assert.equal(commentReplyTargetName(firstReply, [root, firstReply]), '海风同学')
 
@@ -140,6 +149,14 @@ const communityCommentSheetSource = readFileSync(
 )
 const detailCommentsStyle = readFileSync(
   resolve(__dirname, '../src/features/life-services/components/detail-comments.scss'),
+  'utf8',
+)
+const commentImageSource = readFileSync(
+  resolve(__dirname, '../src/features/community/components/comment-image.tsx'),
+  'utf8',
+)
+const commentImageStyle = readFileSync(
+  resolve(__dirname, '../src/features/community/components/comment-image.scss'),
   'utf8',
 )
 
@@ -248,12 +265,31 @@ assert.match(
 )
 assert.match(
   detailCommentsSource,
-  /if \(!composerClosingRef\.current && !stickerPickerOpenRef\.current\) closeComposer\(\)/u,
+  /if \([\s\S]*?composerClosingRef\.current[\s\S]*?stickerPickerOpenRef\.current[\s\S]*?composerActionPendingRef\.current[\s\S]*?closeComposer\(\)/u,
 )
 assert.match(detailCommentsSource, /onBlur=\{handleComposerBlur\}/u)
 assert.match(detailCommentsSource, /event\.detail\.duration/u)
 assert.match(detailCommentsSource, /transitionDuration: `\$\{keyboardTransitionDuration\}ms`/u)
 assert.match(detailCommentsSource, /onKeyboardHeightChange=\{handleKeyboardHeightChange\}/u)
+assert.match(detailCommentsSource, /purpose: 'comment'/u)
+assert.match(detailCommentsSource, /media_id: commentImage\.mediaId/u)
+assert.match(detailCommentsSource, /MAX_COMMENT_IMAGES/u)
+assert.match(detailCommentsSource, /const restoreComposerFocus = useCallback/u)
+assert.match(
+  detailCommentsSource,
+  /const actionCloseSequence = composerCloseSequenceRef\.current[\s\S]*?chooseMediaImages[\s\S]*?restoreComposerFocus\(\)/u,
+  '选图结束后必须恢复评论输入焦点',
+)
+assert.match(
+  detailCommentsSource,
+  /onClick=\{\(\) => \{\s*void chooseCommentImage\(\)/u,
+  '图片按钮点击后必须保持选图动作标记',
+)
+assert.match(detailCommentsSource, /上传失败 · 重试/u)
+assert.match(detailCommentsSource, /setCommentImage\(null\)/u)
+assert.match(commentImageSource, /previewContentImages\(url, \[url\]\)/u)
+assert.match(commentImageSource, /ariaLabel=\{`预览\$\{label\}`\}/u)
+assert.match(commentImageStyle, /community-comment-image--compact/u)
 assert.match(detailCommentsSource, /`#community-comment-preview-\$\{initialReplyTarget\.id\}`/u)
 assert.match(detailCommentsSource, /query\.select\(targetSelector\)\.boundingClientRect\(\)/u)
 assert.match(detailCommentsSource, /query\.select\('\.business-detail-composer'\)\.boundingClientRect\(\)/u)

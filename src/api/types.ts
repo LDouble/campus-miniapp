@@ -49,8 +49,10 @@ export type CampusCircleTopicPage = components['schemas']['CampusCircleTopicPage
 export type HomeFeedItemView = components['schemas']['HomeFeedItemView']
 export type HomeFeedPage = components['schemas']['HomeFeedPage']
 export type HomeFeedSourceType = components['schemas']['HomeFeedSourceType']
+export type PublicCommentImagePreview = components['schemas']['PublicCommentImagePreview']
 export type PublicCommentPreview = components['schemas']['PublicCommentPreview']
 
+export type CommentImageView = components['schemas']['CommentImageView']
 export type CommentView = components['schemas']['CommentView']
 export type CommentViewPage = components['schemas']['CommentPage']
 export type ContentReportView = components['schemas']['ContentReportView']
