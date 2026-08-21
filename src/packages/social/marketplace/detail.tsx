@@ -117,7 +117,7 @@ export default function MarketplaceDetailPage() {
   useCampusShare(() => ({
     title: item
       ? `${item.intent === 'wanted' ? '求购' : '闲置'}｜${plainStickerContent(item.description)}`
-      : '校园二手｜海大校园',
+      : '校园二手｜OUSea',
     path: id ? '/packages/social/marketplace/detail' : '/pages/community/index',
     query: id ? { id } : { section: 'market' },
     imageUrl: item?.status === 'published' ? item.image_urls[0] : undefined,

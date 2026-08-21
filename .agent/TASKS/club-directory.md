@@ -1,7 +1,7 @@
 ## Task: 社团宣传主页小程序闭环
 
 **ID:** club-directory
-**Label:** 海大校园小程序：社团宣传主页
+**Label:** OUSea小程序：社团宣传主页
 **Description:** 提供社团广场、公开详情、多图宣传资料编辑与我的社团审核状态闭环。
 **Type:** Feature
 **Status:** Done

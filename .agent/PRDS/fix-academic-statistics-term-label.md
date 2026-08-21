@@ -1,4 +1,4 @@
-# 海大校园小程序：修复通过率趋势学期标签
+# OUSea小程序：修复通过率趋势学期标签
 
 **Priority:** High
 **Status:** Done

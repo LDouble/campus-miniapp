@@ -1,4 +1,4 @@
-# 海大校园小程序：社区帖子详情 Figma 重构
+# OUSea小程序：社区帖子详情 Figma 重构
 
 **Priority:** High
 **Status:** Done

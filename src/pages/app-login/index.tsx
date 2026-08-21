@@ -22,7 +22,7 @@ const getWechatAppBridge = () => (
 export default function AppLoginPage() {
   const [state, setState] = useState('')
   const [status, setStatus] = useState<Status>('ready')
-  const [message, setMessage] = useState('确认后将安全返回海大校园 App')
+  const [message, setMessage] = useState('确认后将安全返回OUSea App')
 
   useLoad((options) => {
     setState(String(options.state || '').trim())
@@ -43,7 +43,7 @@ export default function AppLoginPage() {
     const bridge = getWechatAppBridge()
     if (!bridge?.navigateBackApplication) {
       setStatus('error')
-      setMessage('请从最新版海大校园 App 打开本页面')
+      setMessage('请从最新版OUSea App 打开本页面')
       return
     }
 
@@ -82,12 +82,12 @@ export default function AppLoginPage() {
   }
 
   return <View className='app-login'>
-    <CustomNavbar title='微信授权登录' subtitle='海大校园' />
+    <CustomNavbar title='微信授权登录' subtitle='OUSea' />
     <View className='app-login__content'>
       <View className='app-login__mark'>
         <Text>海</Text>
       </View>
-      <Text className='app-login__title'>登录海大校园 App</Text>
+      <Text className='app-login__title'>登录OUSea App</Text>
       <Text className='app-login__subtitle'>使用当前微信身份连接校园账号</Text>
 
       <View className='app-login__panel'>

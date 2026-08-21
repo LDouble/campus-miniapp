@@ -1,7 +1,7 @@
 ## Task: 展示课表全局提示与课程备注
 
 **ID:** display-academic-course-notes
-**Label:** 海大校园小程序：展示课表全局提示与课程备注
+**Label:** OUSea小程序：展示课表全局提示与课程备注
 **Description:** 接入课程表接口返回的 `schedule_note` 与课程 `note`，在课表页展示全局提示，并在课程详情浮层展示课程备注。
 **Type:** Enhancement
 **Status:** Done

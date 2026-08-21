@@ -1,4 +1,4 @@
-# 海大校园小程序：校园生活顶部 Bar Figma 复刻
+# OUSea小程序：校园生活顶部 Bar Figma 复刻
 
 **Priority:** High
 **Status:** Completed

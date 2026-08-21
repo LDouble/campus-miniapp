@@ -121,7 +121,7 @@ export default function PublicProfilePage() {
     if (event.from === 'button' && postId > 0) {
       const shareTitle = typeof dataset.shareTitle === 'string'
         ? dataset.shareTitle
-        : '海大校园动态'
+        : 'OUSea动态'
       const shareImage = typeof dataset.shareImage === 'string'
         ? dataset.shareImage
         : ''
@@ -133,7 +133,7 @@ export default function PublicProfilePage() {
       return shareImage ? { ...result, imageUrl: shareImage } : result
     }
     return {
-      title: profile ? `${profile.user.nickname}的海大校园主页` : '海大校园个人主页',
+      title: profile ? `${profile.user.nickname}的OUSea主页` : 'OUSea个人主页',
       path: userId ? '/pages/public-profile/index' : '/pages/community/index',
       query: userId ? { id: userId } : undefined,
     }

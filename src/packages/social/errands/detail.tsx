@@ -121,7 +121,7 @@ export default function ErrandDetailPage() {
   useCampusShare(() => ({
     title: item
       ? `${item.pickup_location} → ${item.dropoff_location}｜校园跑腿`
-      : '校园跑腿｜海大校园',
+      : '校园跑腿｜OUSea',
     path: id ? '/packages/social/errands/detail' : '/pages/community/index',
     query: id ? { id } : { section: 'errands' },
   }))

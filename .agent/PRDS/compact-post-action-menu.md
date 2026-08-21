@@ -1,4 +1,4 @@
-# 海大校园小程序：收紧帖子双点操作菜单
+# OUSea小程序：收紧帖子双点操作菜单
 
 **Priority:** High
 **Status:** Done

@@ -38,13 +38,13 @@ assert.deepEqual(
 assert.deepEqual(
   buildCampusShareMessage({
     title: '',
-    fallbackTitle: '海大校园话题',
+    fallbackTitle: 'OUSea话题',
     path: '/packages/social/community/topic/index',
     query: { id: 7 },
     imageUrl: 'https://example.com/topic.jpg',
   }),
   {
-    title: '海大校园话题',
+    title: 'OUSea话题',
     path: '/packages/social/community/topic/index?id=7',
     imageUrl: 'https://example.com/topic.jpg',
   },
@@ -75,11 +75,11 @@ assert.deepEqual(
 assert.deepEqual(
   buildCampusShareTimelineMessage({
     title: '',
-    fallbackTitle: '海大校园',
+    fallbackTitle: 'OUSea',
     path: '/pages/index/index',
     imageUrl: '   ',
   }),
-  { title: '海大校园' },
+  { title: 'OUSea' },
 )
 
 const shareHookSource = readFileSync(

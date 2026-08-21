@@ -1,4 +1,4 @@
-# 海大校园小程序：生活服务详情操作收进右上角菜单
+# OUSea小程序：生活服务详情操作收进右上角菜单
 
 **Priority:** High
 **Status:** Implemented

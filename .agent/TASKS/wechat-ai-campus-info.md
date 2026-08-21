@@ -1,7 +1,7 @@
 ## Task: 微信 AI 校园信息 Skill
 
 **ID:** wechat-ai-campus-info
-**Label:** 海大校园小程序：微信 AI 校园通知、校车与空教室能力
+**Label:** OUSea小程序：微信 AI 校园通知、校车与空教室能力
 **Description:** 将官方通知、校车与空教室三个公开只读场景封装为微信小程序 AI 开发模式 Skill，完成 Taro 构建集成、handoff 接力和微信开发者工具验证。
 **Type:** Feature
 **Status:** Testing

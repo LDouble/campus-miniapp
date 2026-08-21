@@ -79,7 +79,7 @@ export default function ShuttleDetailPage() {
   useCampusShare(() => ({
     title: route
       ? `${route.name}｜${journey?.origin || route.origin} → ${journey?.destination || route.destination}`
-      : '校园校车｜海大校园',
+      : '校园校车｜OUSea',
     path: route ? '/pages/shuttle/detail' : '/pages/shuttle/index',
     query: route ? {
       id: route.id,

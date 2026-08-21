@@ -122,7 +122,7 @@ const stateCopy: Record<VerificationState, {
   verified: {
     eyebrow: '认证成功',
     title: '校园身份已通过',
-    description: '你的账号已获得海大校园成员权限。',
+    description: '你的账号已获得OUSea成员权限。',
   },
   rejected: {
     eyebrow: '需要补充',

@@ -1,4 +1,4 @@
-# 海大校园小程序：首页字体规范与全局 Token
+# OUSea小程序：首页字体规范与全局 Token
 
 **Priority:** High
 **Status:** Done
