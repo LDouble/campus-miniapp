@@ -95,7 +95,10 @@ function App(props) {
           generation,
           privateMessageUnreadPollingGeneration.current,
         )) return
-        if (resolveMiniappModule(config, 'private_message').state !== 'enabled') return
+        if (resolveMiniappModule(config, 'private_message').state !== 'enabled') {
+          void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+          return
+        }
         void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
         schedulePrivateMessageUnreadPolling()
       })

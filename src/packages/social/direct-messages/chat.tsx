@@ -2,20 +2,24 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidHide, useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { createIdempotencyKey, isApiError } from '../../../api/client'
-import { getCurrentIdentity } from '../../../api/account'
+import { getCurrentIdentity, getCurrentUser } from '../../../api/account'
 import {
   getMedia,
   submitPrivateMessageMediaReview,
   uploadMediaImage,
 } from '../../../api/media'
-import CustomNavbar from '../../../components/custom-navbar'
+import CustomNavbar, { getNavbarMetrics } from '../../../components/custom-navbar'
+import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
 import StickerPicker from '../../../components/sticker-picker'
 import {
   KeyboardSafeInput,
   useKeyboardInset,
 } from '../../../components/keyboard-safe-input'
-import { formatDateTime } from '../../../features/life-services/format'
+import {
+  formatMessageTimelineTime,
+  shouldShowMessageTimelineTime,
+} from '../../../features/messages/time'
 import { parseDirectMessageConversationId } from '../../../features/direct-messages/navigation'
 import {
   canLoadDirectMessagePage,
@@ -52,6 +56,11 @@ const HISTORY_PAGE_SIZE = 50
 const POLL_INTERVAL_MS = 4_000
 const POLL_MAX_BACKOFF_MS = 30_000
 
+const avatarFallback = (value: string, fallback = '海') => {
+  const normalized = value.trim()
+  return normalized ? normalized.slice(0, 1).toUpperCase() : fallback
+}
+
 const imageDraftStatus = (image: MediaImageDraft) => {
   if (image.status === 'uploading' && image.error) return image.error
   if (image.status === 'uploading' && image.progress < 100) {
@@ -74,12 +83,15 @@ export default function DirectMessageChatPage() {
   const [conversation, setConversation] = useState<DirectMessageConversation | null>(null)
   const [messages, setMessages] = useState<DirectMessage[]>([])
   const [currentUserId, setCurrentUserId] = useState(0)
+  const [currentUserAvatarUrl, setCurrentUserAvatarUrl] = useState('')
+  const [currentUserName, setCurrentUserName] = useState('')
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(true)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [error, setError] = useState('')
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const [inputFocused, setInputFocused] = useState(false)
   const [scrollTarget, setScrollTarget] = useState('')
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
   const [selectedImage, setSelectedImage] = useState<MediaImageDraft | null>(null)
@@ -110,10 +122,17 @@ export default function DirectMessageChatPage() {
     if (keyboardHeight > 0) setStickerPickerOpen(false)
   }, [keyboardHeight])
 
+  useEffect(() => {
+    if (keyboardHeight <= 0 || !newestMessageIdRef.current) return
+    const target = `direct-chat-bottom-anchor-${newestMessageIdRef.current}`
+    setScrollTarget('')
+    Taro.nextTick(() => setScrollTarget(target))
+  }, [keyboardHeight])
+
   const setNewestMessageId = (items: DirectMessage[]) => {
     const newest = items.length ? items[items.length - 1].id : 0
     newestMessageIdRef.current = newest
-    if (newest) setScrollTarget(`direct-message-${newest}`)
+    if (newest) setScrollTarget(`direct-chat-bottom-anchor-${newest}`)
   }
 
   const updateSelectedImage = useCallback((updater: (current: MediaImageDraft | null) => MediaImageDraft | null) => {
@@ -333,16 +352,19 @@ export default function DirectMessageChatPage() {
     nextCursorRef.current = null
     hasMoreRef.current = true
     try {
-      const [loadedConversation, page, identity] = await Promise.all([
+      const [loadedConversation, page, identity, currentUser] = await Promise.all([
         privateMessagesRepository.getConversation(id),
         privateMessagesRepository.listMessages(id, { pageSize: HISTORY_PAGE_SIZE }),
         getCurrentIdentity(),
+        getCurrentUser().catch(() => null),
       ])
       if (version !== initialRequestVersion.current) return
       const resolvedMessages = mergeDirectMessages([], page.items)
       const resolvedCursor = page.next_cursor || null
       setConversation(loadedConversation)
       setCurrentUserId(identity.user_id)
+      setCurrentUserAvatarUrl(currentUser?.user.avatar_url?.trim() || '')
+      setCurrentUserName(currentUser?.user.username?.trim() || '')
       setMessages(resolvedMessages)
       setNewestMessageId(resolvedMessages)
       nextCursorRef.current = resolvedCursor
@@ -553,6 +575,13 @@ export default function DirectMessageChatPage() {
     if (open) void Taro.hideKeyboard()
   }
 
+  const dismissKeyboard = () => {
+    setInputFocused(false)
+    setStickerPickerOpen(false)
+    onKeyboardVisibilityChange(0)
+    void Taro.hideKeyboard().catch(() => undefined)
+  }
+
   const chooseImage = async () => {
     if (selectedImageRef.current) return
     if (draft.trim()) {
@@ -627,20 +656,40 @@ export default function DirectMessageChatPage() {
     stickerPickerOpen ? 'direct-chat-page--sticker-open' : '',
     selectedImage ? 'direct-chat-page--image-selected' : '',
   ].filter(Boolean).join(' ')
+const contentBottomPadding = stickerPickerOpen
+  ? '676rpx'
+  : selectedImage
+    ? '366rpx'
+    : '112rpx'
+  const contentStyle = {
+    paddingBottom: '0',
+  }
+  const navbarMetrics = getNavbarMetrics()
+  const navbarHeight = navbarMetrics.statusBarHeight + navbarMetrics.navigationBarHeight
+  const bottomAnchorId = `direct-chat-bottom-anchor-${newestMessageIdRef.current || 'empty'}`
+  const bottomSpacerStyle = {
+    height: `calc(${contentBottomPadding} + env(safe-area-inset-bottom))`,
+  }
+  const scrollStyle = {
+    height: `calc(100vh - ${navbarHeight + keyboardHeight}px)`,
+  }
 
   return (
     <View className={pageClassName}>
-      <CustomNavbar title={peerName} subtitle='私信' showBack />
+      <CustomNavbar title={peerName} showBack />
       <ScrollView
         className='direct-chat-page__scroll'
+        style={scrollStyle}
         scrollY
         enhanced
         showScrollbar={false}
         upperThreshold={100}
         scrollIntoView={scrollTarget}
+        onTouchStart={dismissKeyboard}
+        onScrollStart={dismissKeyboard}
         onScrollToUpper={() => void loadHistory()}
       >
-        <View className='direct-chat-page__content'>
+        <View className='direct-chat-page__content' style={contentStyle}>
           {loading && <View className='direct-chat-state'>正在加载会话</View>}
           {!loading && error && (
             <View className='direct-chat-state direct-chat-state--error'>
@@ -667,58 +716,95 @@ export default function DirectMessageChatPage() {
                   <Text>发一句问候，开始聊天吧</Text>
                 </View>
               )}
-              {messages.map((message) => {
+              {messages.map((message, index) => {
                 const isOwn = message.sender_id === currentUserId
                 const image = message.image
                 const imageFailed = image && failedImageMessageIds.includes(message.id)
+                const previousMessage = messages[index - 1]
+                const avatarName = isOwn
+                  ? avatarFallback(currentUserName)
+                  : conversation?.peer.deleted
+                    ? '已'
+                    : conversation?.peer.nickname.slice(0, 1) || '同'
                 return (
                   <View
                     key={message.id}
                     id={`direct-message-${message.id}`}
-                    className={isOwn ? 'direct-chat-message direct-chat-message--own' : 'direct-chat-message'}
+                    className='direct-chat-message-group'
                   >
-                    {image && !imageFailed && (
-                      <View
-                        className='direct-chat-message__image-frame'
-                        style={privateMessageImageFrameSize(image.width, image.height)}
-                        ariaRole='button'
-                        ariaLabel='预览图片消息'
-                        onClick={() => void Taro.previewImage({
-                          current: image.url,
-                          urls: [image.url],
-                        })}
-                      >
-                        <Image
-                          className='direct-chat-message__image'
-                          src={image.url}
-                          mode='aspectFill'
-                          lazyLoad
-                          onError={() => markMessageImageFailed(message.id)}
+                    {shouldShowMessageTimelineTime(
+                      message.created_at,
+                      previousMessage?.created_at,
+                    ) && (
+                      <View className='direct-chat-time-divider'>
+                        {formatMessageTimelineTime(message.created_at)}
+                      </View>
+                    )}
+                    <View className={isOwn ? 'direct-chat-message direct-chat-message--own' : 'direct-chat-message'}>
+                      {!isOwn && (
+                        <UserAvatar
+                          src={conversation?.peer.avatar_url}
+                          className='direct-chat-message__avatar'
+                          fallback={avatarName}
+                          shape='rounded'
+                          userId={conversation?.peer.id}
                         />
+                      )}
+                      <View className='direct-chat-message__body'>
+                        {image && !imageFailed && (
+                          <View
+                            className='direct-chat-message__image-frame'
+                            style={privateMessageImageFrameSize(image.width, image.height)}
+                            ariaRole='button'
+                            ariaLabel='预览图片消息'
+                            onClick={() => void Taro.previewImage({
+                              current: image.url,
+                              urls: [image.url],
+                            })}
+                          >
+                            <Image
+                              className='direct-chat-message__image'
+                              src={image.url}
+                              mode='aspectFill'
+                              lazyLoad
+                              onError={() => markMessageImageFailed(message.id)}
+                            />
+                          </View>
+                        )}
+                        {image && imageFailed && (
+                          <View
+                            className='direct-chat-message__image-fallback'
+                            ariaRole='button'
+                            ariaLabel='重新加载图片消息'
+                            onClick={() => retryMessageImage(message.id)}
+                          >
+                            <Text>图片加载失败</Text>
+                            <Text>点击重新加载</Text>
+                          </View>
+                        )}
+                        {!image && (
+                          <StickerContent
+                            content={message.content}
+                            className='direct-chat-message__content'
+                            stickerClassName='direct-chat-message__sticker'
+                          />
+                        )}
                       </View>
-                    )}
-                    {image && imageFailed && (
-                      <View
-                        className='direct-chat-message__image-fallback'
-                        ariaRole='button'
-                        ariaLabel='重新加载图片消息'
-                        onClick={() => retryMessageImage(message.id)}
-                      >
-                        <Text>图片加载失败</Text>
-                        <Text>点击重新加载</Text>
-                      </View>
-                    )}
-                    {!image && (
-                      <StickerContent
-                        content={message.content}
-                        className='direct-chat-message__content'
-                        stickerClassName='direct-chat-message__sticker'
-                      />
-                    )}
-                    <Text className='direct-chat-message__time'>{formatDateTime(message.created_at)}</Text>
+                      {isOwn && (
+                        <UserAvatar
+                          src={currentUserAvatarUrl}
+                          className='direct-chat-message__avatar'
+                          fallback={avatarName}
+                          shape='rounded'
+                          userId={currentUserId}
+                        />
+                      )}
+                    </View>
                   </View>
                 )
               })}
+              <View className='direct-chat-bottom-spacer' style={bottomSpacerStyle} />
+              <View id={bottomAnchorId} className='direct-chat-bottom-anchor' />
             </>
           )}
         </View>
@@ -764,12 +850,17 @@ export default function DirectMessageChatPage() {
             ) : (
               <KeyboardSafeInput
                 value={draft}
+                focus={inputFocused}
                 maxlength={2000}
                 placeholder='输入消息'
                 placeholderClass='direct-chat-composer__placeholder'
                 confirmType='send'
                 keepVisibleOnKeyboard={false}
-                onFocus={() => setStickerPickerOpen(false)}
+                onFocus={() => {
+                  setInputFocused(true)
+                  setStickerPickerOpen(false)
+                }}
+                onBlur={() => setInputFocused(false)}
                 onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                 onInput={(event) => {
                   const detail = event.detail as typeof event.detail & {

@@ -1,21 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import { plainStickerContent } from '../../../features/stickers/content'
-import { formatDateTime } from '../../../features/life-services/format'
+import { formatMessageListTime } from '../../../features/messages/time'
 import { directMessageChatUrl } from '../../../features/direct-messages/navigation'
 import {
   canLoadDirectMessagePage,
   mergeDirectMessageConversations,
 } from '../../../features/direct-messages/pagination'
 import { privateMessagesRepository } from '../../../features/direct-messages/repository'
-import {
-  refreshPrivateMessageUnreadCount,
-  subscribePrivateMessageUnreadCount,
-} from '../../../features/direct-messages/unread'
+import { refreshPrivateMessageUnreadCount } from '../../../features/direct-messages/unread'
 import type { DirectMessageConversation } from '../../../features/direct-messages/types'
 import './index.scss'
 
@@ -36,7 +33,6 @@ export default function DirectMessagesPage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
-  const [unreadCount, setUnreadCount] = useState(0)
   const requestVersion = useRef(0)
   const loadingMoreRef = useRef(false)
   const nextCursorRef = useRef<string | null>(null)
@@ -101,24 +97,14 @@ export default function DirectMessagesPage() {
 
   useReachBottom(() => void load(false))
 
-  useEffect(() => subscribePrivateMessageUnreadCount(setUnreadCount), [])
-
   const openConversation = (conversation: DirectMessageConversation) => {
     void Taro.navigateTo({ url: directMessageChatUrl(conversation.id) })
   }
 
   return (
     <View className='direct-messages-page'>
-      <CustomNavbar title='私信' subtitle={unreadCount > 0 ? `${unreadCount} 条未读` : '和同学聊聊'} showBack />
+      <CustomNavbar title='私信' showBack />
       <View className='direct-messages-page__content'>
-        <View className='direct-messages-intro motion-enter'>
-          <View>
-            <Text>校园私信</Text>
-            <Text>支持文字、图片和表情，请文明交流</Text>
-          </View>
-          {unreadCount > 0 && <Text>{unreadCount > 99 ? '99+' : unreadCount} 未读</Text>}
-        </View>
-
         {loading && (
           <View className='direct-messages-state'>正在加载会话</View>
         )}
@@ -150,18 +136,18 @@ export default function DirectMessagesPage() {
               ariaLabel={`打开与${peerName(conversation)}的私信${conversation.unread_count > 0 ? `，${conversation.unread_count} 条未读` : ''}`}
               onClick={() => openConversation(conversation)}
             >
-              <View className='direct-conversation-card__avatar'>
-                <UserAvatarImage
-                  src={conversation.peer.avatar_url}
-                  className='direct-conversation-card__avatar-image'
-                  fallback={peerName(conversation).slice(0, 1) || '同'}
-                  lazyLoad
-                />
-              </View>
+              <UserAvatar
+                src={conversation.peer.avatar_url}
+                className='direct-conversation-card__avatar'
+                imageClassName='direct-conversation-card__avatar-image'
+                fallback={peerName(conversation).slice(0, 1) || '同'}
+                shape='rounded'
+                userId={conversation.peer.id}
+              />
               <View className='direct-conversation-card__body'>
                 <View className='direct-conversation-card__head'>
                   <Text>{peerName(conversation)}</Text>
-                  <Text>{formatDateTime(conversation.last_activity_at)}</Text>
+                  <Text>{formatMessageListTime(conversation.last_activity_at)}</Text>
                 </View>
                 <Text>{preview(conversation)}</Text>
               </View>

@@ -231,3 +231,103 @@ page {
     transition: none;
   }
 }
+
+/* 私信列表与消息首页保持同一套微信式平面行。 */
+.direct-messages-page .custom-navbar__fixed {
+  background: token.$color-surface;
+  border-bottom-color: token.$color-border;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.direct-messages-page__content {
+  padding: var(--ousea-space-1, 16rpx) 0 calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.direct-conversation-list {
+  gap: 0;
+  background: token.$color-surface;
+}
+
+.direct-conversation-card {
+  min-height: 128rpx;
+  padding: var(--ousea-space-1, 16rpx) var(--ousea-space-3, 32rpx);
+  border: 0;
+  border-bottom: 1rpx solid token.$color-border;
+  border-radius: 0;
+  background: token.$color-surface;
+  transition: background-color 120ms ease, opacity 120ms ease;
+
+  &--unread { border-color: token.$color-border; }
+
+  &--pressed {
+    opacity: 1;
+    transform: none;
+    background: token.$color-surface-subtle;
+  }
+
+  &__avatar {
+    width: 84rpx;
+    height: 84rpx;
+    border: 0;
+    border-radius: 14rpx;
+    background: token.$color-surface-primary;
+  }
+
+  &__avatar-image { border-radius: 14rpx; }
+
+  &__body {
+    margin-left: var(--ousea-space-1, 16rpx);
+
+    > text {
+      padding-top: 8rpx;
+      color: token.$color-text-secondary;
+      font-size: var(--ousea-font-size-caption, 24rpx);
+      line-height: var(--ousea-line-height-ui, 1.4);
+    }
+  }
+
+  &__head {
+    gap: var(--ousea-space-1, 16rpx);
+
+    text:first-child {
+      color: token.$color-text-heading;
+      font-size: var(--ousea-font-size-label, 27rpx);
+      font-weight: var(--ousea-font-weight-medium, 500);
+    }
+
+    text:last-child {
+      color: token.$color-text-muted;
+      font-size: var(--ousea-font-size-caption, 24rpx);
+    }
+  }
+
+  &__unread {
+    min-width: 32rpx;
+    height: 32rpx;
+    padding: 0 6rpx;
+    margin-left: 8rpx;
+    border: 2rpx solid token.$color-surface;
+    background: token.$color-danger;
+    font-size: var(--ousea-font-size-badge, 20rpx);
+  }
+}
+
+.direct-messages-state {
+  min-height: 180rpx;
+  padding: var(--ousea-space-3, 32rpx);
+  border: 0;
+  border-bottom: 1rpx solid token.$color-border;
+  border-radius: 0;
+  background: token.$color-surface;
+}
+
+.direct-messages-inline-error,
+.direct-messages-footer {
+  padding-right: var(--ousea-space-3, 32rpx);
+  padding-left: var(--ousea-space-3, 32rpx);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direct-conversation-card { transition: none; }
+}

@@ -12,6 +12,7 @@ interface CustomNavbarProps {
   title: string
   subtitle?: string
   showBack?: boolean
+  onBack?: () => void
   theme?: 'light' | 'ocean'
   immersive?: boolean
   compactImmersive?: boolean
@@ -62,6 +63,7 @@ function CustomNavbar({
   title,
   subtitle,
   showBack = false,
+  onBack,
   theme = 'light',
   immersive = false,
   compactImmersive = false,
@@ -84,6 +86,11 @@ function CustomNavbar({
   const metrics = getNavbarMetrics()
   const navbarHeight = metrics.statusBarHeight + metrics.navigationBarHeight
   const goBack = () => {
+    if (onBack) {
+      onBack()
+      return
+    }
+
     const pages = Taro.getCurrentPages()
     if (pages.length > 1) {
       Taro.navigateBack()

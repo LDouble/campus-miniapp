@@ -8,7 +8,8 @@ import {
 
 export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
 
-const TAB_BAR_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
+const TAB_BAR_NOTICE_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
+const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v1'
 
 const fullTabIndexes: Record<TabBarPage, number> = {
   home: 0,
@@ -36,8 +37,6 @@ interface CustomTabBarInstance {
     darkMode?: boolean
     publishSection?: LifeHubSection
     unreadCount?: number
-    privateUnreadCount?: number
-    privateUnreadLabel?: string
   }) => void
 }
 
@@ -61,11 +60,23 @@ const normalizeUnreadCount = (value: unknown) => {
 
 const getStoredUnreadCount = () => {
   try {
-    return normalizeUnreadCount(Taro.getStorageSync(TAB_BAR_UNREAD_COUNT_KEY))
+    return normalizeUnreadCount(Taro.getStorageSync(TAB_BAR_NOTICE_UNREAD_COUNT_KEY))
   } catch {
     return 0
   }
 }
+
+const getStoredPrivateUnreadCount = () => {
+  try {
+    return normalizeUnreadCount(Taro.getStorageSync(TAB_BAR_PRIVATE_UNREAD_COUNT_KEY))
+  } catch {
+    return 0
+  }
+}
+
+const getStoredTotalUnreadCount = () => (
+  getStoredUnreadCount() + getStoredPrivateUnreadCount()
+)
 
 /**
  * 微信运行时会为每个 Tab 页创建一个自定义 TabBar 实例。
@@ -79,18 +90,18 @@ export function syncCustomTabBar(page: TabBarPage) {
     selected,
     hidden: false,
     darkMode: getCampusTheme() === 'dark',
-    unreadCount: getStoredUnreadCount(),
+    unreadCount: getStoredTotalUnreadCount(),
   })
 }
 
 export function setCustomTabBarUnreadCount(count: number) {
   const unreadCount = normalizeUnreadCount(count)
   try {
-    Taro.setStorageSync(TAB_BAR_UNREAD_COUNT_KEY, unreadCount)
+    Taro.setStorageSync(TAB_BAR_NOTICE_UNREAD_COUNT_KEY, unreadCount)
   } catch {
     // TabBar 仍会同步当前实例；存储失败不阻断页面消息状态。
   }
-  const sync = () => getCustomTabBar()?.setData({ unreadCount })
+  const sync = () => getCustomTabBar()?.setData({ unreadCount: getStoredTotalUnreadCount() })
   sync()
   Taro.nextTick(sync)
 }
@@ -106,8 +117,12 @@ export function setCustomTabBarPublishSection(publishSection: LifeHubSection) {
 export function syncPrivateMessageUnreadBadge(count: number) {
   if (isQualificationEdition) return
   const normalized = Math.max(0, Number(count) || 0)
-  getCustomTabBar()?.setData({
-    privateUnreadCount: normalized,
-    privateUnreadLabel: normalized > 99 ? '99+' : String(normalized),
-  })
+  try {
+    Taro.setStorageSync(TAB_BAR_PRIVATE_UNREAD_COUNT_KEY, normalized)
+  } catch {
+    // 私信角标同步失败时保留当前页面实例状态，不阻断消息页。
+  }
+  const sync = () => getCustomTabBar()?.setData({ unreadCount: getStoredTotalUnreadCount() })
+  sync()
+  Taro.nextTick(sync)
 }
