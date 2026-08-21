@@ -28,6 +28,7 @@ const icons = {
   errands: require('../../assets/icons/errands.svg'),
   academic: require('../../assets/icons/academic.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
+  bikeFaults: require('../../assets/icons/location.svg'),
 }
 
 type ServiceItem = {
@@ -97,6 +98,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
       { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
       { key: 'clubs', name: '社团广场', icon: icons.clubs, route: '/pages/clubs/index' },
+      { key: 'bike-faults', name: '小蓝故障', icon: icons.bikeFaults, route: '/pages/blue-bike-faults/index' },
     ],
   },
 ]

@@ -32,6 +32,7 @@ const fullPages = [
   'pages/shuttle/index',
   'pages/shuttle/detail',
   'pages/services/index',
+  'pages/blue-bike-faults/index',
   'pages/content-report/index',
   'pages/webview/index',
   'pages/feature-unavailable/index',
@@ -83,6 +84,7 @@ const packageDefinitions = [
   { root: 'pages/empty-classroom', sourceRoot: 'pages/empty-classroom', pages: ['index'] },
   { root: 'pages/calendar', sourceRoot: 'pages/calendar', pages: ['index'] },
   { root: 'pages/services', sourceRoot: 'pages/services', pages: ['index'] },
+  { root: 'pages/blue-bike-faults', sourceRoot: 'pages/blue-bike-faults', pages: ['index'] },
   { root: 'pages/public-profile', sourceRoot: 'pages/public-profile', pages: ['index'] },
   { root: 'pages/user-level', sourceRoot: 'pages/user-level', pages: ['index'] },
   { root: 'pages/daily-checkin', sourceRoot: 'pages/daily-checkin', pages: ['index'] },
@@ -185,6 +187,11 @@ export default defineAppConfig({
     backgroundColor: '@backgroundColor'
   },
   usingComponents: {},
+  permission: {
+    'scope.userLocation': {
+      desc: '用于标记故障小蓝所在位置',
+    },
+  },
   tabBar: {
     custom: true,
     color: '@tabBarColor',

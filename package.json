@@ -30,6 +30,7 @@
     "test:academic-statistics": "ts-node --transpile-only scripts/academic-statistics-smoke.ts",
     "test:home-guest": "ts-node --transpile-only scripts/home-guest-smoke.ts",
     "test:life-hub-refresh": "ts-node --transpile-only scripts/life-hub-refresh-smoke.ts",
+    "test:campus-crowd": "ts-node --transpile-only scripts/campus-crowd-smoke.ts",
     "test:contact-reveal": "ts-node --transpile-only scripts/contact-reveal-smoke.ts",
     "test:publisher-contact-storage": "ts-node --transpile-only scripts/publisher-contact-storage-smoke.ts",
     "test:migration-guide-copy": "ts-node --transpile-only scripts/migration-guide-copy-smoke.ts",
