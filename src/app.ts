@@ -13,6 +13,12 @@ import { installAppUpdate } from './features/app-update'
 import { initializeSystemState } from './state/system'
 import { preloadPublicData } from './state/public-data'
 import {
+  applyCampusThemeToNativeChrome,
+  applyCampusThemeToCurrentPage,
+  getCampusTheme,
+  initializeCampusTheme,
+} from './features/theme-preference'
+import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
 } from './features/wechat-subscription/module'
@@ -21,6 +27,7 @@ import './app.scss'
 
 function App(props) {
   useLaunch(() => {
+    initializeCampusTheme()
     initializeSystemState()
     installAppUpdate()
     void preloadPublicData()
@@ -35,6 +42,8 @@ function App(props) {
 
   // 对应 onShow
   useDidShow(() => {
+    applyCampusThemeToCurrentPage(getCampusTheme())
+    applyCampusThemeToNativeChrome(getCampusTheme())
     void preloadPublicData()
     void guardCurrentPage()
   })

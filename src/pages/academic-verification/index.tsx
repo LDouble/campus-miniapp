@@ -607,7 +607,6 @@ export default function AcademicVerificationPage() {
                 </View>
                 <View
                   className='verification-credential-action'
-                  hoverClass='verification-credential-action--pressed'
                   ariaRole='button'
                   ariaLabel='更新教务账号'
                   onClick={() => {
@@ -619,7 +618,6 @@ export default function AcademicVerificationPage() {
                 </View>
                 <View
                   className='verification-primary'
-                  hoverClass='verification-primary--pressed'
                   ariaRole='button'
                   ariaLabel='返回继续使用'
                   onClick={() => void finishAcademicVerification(replacedCurrentPage)}
@@ -662,7 +660,6 @@ export default function AcademicVerificationPage() {
                           className={method === item.value
                             ? 'verification-method verification-method--active'
                             : 'verification-method'}
-                          hoverClass='verification-method--pressed'
                           ariaRole='button'
                           ariaLabel={`${item.label}，${item.description}`}
                           onClick={() => setMethod(item.value)}
@@ -717,7 +714,6 @@ export default function AcademicVerificationPage() {
                         ] as const).map((item) => (
                           <View
                             key={item.value}
-                            hoverClass='verification-education-option--pressed'
                             ariaRole='button'
                             ariaLabel={`${item.label}，${item.description}`}
                             className={[
@@ -789,7 +785,6 @@ export default function AcademicVerificationPage() {
                         </View>
                         <View
                           className='verification-password-control__toggle'
-                          hoverClass='verification-password-control__toggle--pressed'
                           ariaRole='button'
                           ariaLabel={passwordVisible ? '隐藏密码' : '显示密码'}
                           onClick={togglePasswordVisibility}
@@ -814,7 +809,6 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View
                       className={`verification-primary ${working || !educationLevel ? 'verification-primary--disabled' : ''}`}
-                      hoverClass='verification-primary--pressed'
                       ariaRole='button'
                       ariaLabel='验证并绑定教务账号'
                       onClick={() => void submitCredentials()}
@@ -877,7 +871,6 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View
                       className={`verification-upload ${selectedMaterial ? 'verification-upload--selected' : ''}`}
-                      hoverClass='verification-upload--pressed'
                       ariaRole='button'
                       ariaLabel={selectedMaterial ? '更换学生证图片' : '上传学生证图片'}
                       onClick={() => void chooseMaterial()}
@@ -900,7 +893,6 @@ export default function AcademicVerificationPage() {
                     </View>
                     <View
                       className={`verification-primary verification-primary--warm ${working ? 'verification-primary--disabled' : ''}`}
-                      hoverClass='verification-primary--pressed'
                       ariaRole='button'
                       ariaLabel='提交学生证人工审核'
                       onClick={() => void submitStudentCard()}

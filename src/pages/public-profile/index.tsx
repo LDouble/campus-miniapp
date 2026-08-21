@@ -10,15 +10,19 @@ import type {
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
-import UserAvatarImage from '../../components/user-avatar-image'
-import CommunityPostCard from '../../features/community/post-card'
+import UserAvatar from '../../components/user-avatar'
+import CommunityCommentSheet from '../../features/community/comment-sheet'
+import CommunityPostCard, { type CommunityPostCommentPreview } from '../../features/community/post-card'
+import { mergePublicCommentPreview } from '../../features/community/comments'
 import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import '../../features/community/feed-panel.scss'
 import CarpoolCard from '../../features/life-services/components/carpool-card'
 import ErrandCard from '../../features/life-services/components/errand-card'
 import MarketplaceCard from '../../features/life-services/components/marketplace-card'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import { useCampusShare } from '../../features/share'
 import '../../features/life-services/list-panel.scss'
 import './index.scss'
 
@@ -90,6 +94,35 @@ export default function PublicProfilePage() {
   const [profileError, setProfileError] = useState('')
   const [activeTab, setActiveTab] = useState<ProfileTab>('community')
   const [tabs, setTabs] = useState<Record<ProfileTab, TabState>>(initialTabs)
+  const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
+  const [commentReplyTarget, setCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
+  const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+
+  useCampusShare((event) => {
+    const dataset = event.target?.dataset || {}
+    const postId = Number(dataset.postId)
+    if (event.from === 'button' && postId > 0) {
+      const shareTitle = typeof dataset.shareTitle === 'string'
+        ? dataset.shareTitle
+        : '海大校园动态'
+      const shareImage = typeof dataset.shareImage === 'string'
+        ? dataset.shareImage
+        : ''
+      const result = {
+        title: shareTitle,
+        path: '/packages/social/community/detail',
+        query: { id: postId, mode: 'post' },
+      }
+      return shareImage ? { ...result, imageUrl: shareImage } : result
+    }
+    return {
+      title: profile ? `${profile.user.nickname}的海大校园主页` : '海大校园个人主页',
+      path: userId ? '/pages/public-profile/index' : '/pages/community/index',
+      query: userId ? { id: userId } : undefined,
+    }
+  })
 
   const updateTab = useCallback((tab: ProfileTab, update: Partial<TabState>) => {
     setTabs((current) => ({
@@ -179,8 +212,76 @@ export default function PublicProfilePage() {
   }
 
   const openCommunityPost = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
     saveCommunityDetailSnapshot(post)
     void Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+  }, [])
+
+  const openCommunityComments = useCallback((post: CampusCirclePostView) => {
+    setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(null)
+    setCommentPost(post)
+  }, [])
+
+  const openCommunityReply = useCallback((post: CampusCirclePostView, comment: CommunityPostCommentPreview) => {
+    setOpenActionPostId(null)
+    setCommentSubmitting(false)
+    setCommentReplyTarget(comment)
+    setCommentPost(post)
+  }, [])
+
+  const toggleCommunityActions = useCallback((postId: number) => {
+    setOpenActionPostId((current) => current === postId ? null : postId)
+  }, [])
+
+  const closeCommunityActions = useCallback(() => {
+    setOpenActionPostId(null)
+  }, [])
+
+  const updateLatestCommunityComment = useCallback((comment: Parameters<typeof mergePublicCommentPreview>[1]) => {
+    setTabs((current) => ({
+      ...current,
+      community: {
+        ...current.community,
+        items: (current.community.items as CampusCirclePostView[]).map((item) => (
+          item.id === comment.target_id
+            ? {
+                ...item,
+                comment_previews: mergePublicCommentPreview(
+                  item.comment_previews,
+                  comment,
+                  commentReplyTarget,
+                ),
+              }
+            : item
+        )),
+      },
+    }))
+  }, [commentReplyTarget])
+
+  const dismissCommunityOverlays = useCallback(() => {
+    setOpenActionPostId(null)
+    if (commentPost) setCommentDismissSignal((current) => current + 1)
+  }, [commentPost])
+
+  useDismissCommunityOverlaysOnScroll({
+    active: openActionPostId !== null || (commentPost !== null && !commentSubmitting),
+    onDismiss: dismissCommunityOverlays,
+  })
+
+  const updateCommentCount = useCallback((postId: number, delta: number) => {
+    setTabs((current) => ({
+      ...current,
+      community: {
+        ...current.community,
+        items: (current.community.items as CampusCirclePostView[]).map((item) => (
+          item.id === postId
+            ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+            : item
+        )),
+      },
+    }))
   }, [])
 
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {
@@ -215,8 +316,13 @@ export default function PublicProfilePage() {
               key={post.id}
               post={post}
               sectionName='校园社区'
+              actionsOpen={openActionPostId === post.id}
+              onToggleActions={toggleCommunityActions}
+              onCloseActions={closeCommunityActions}
               onToggleLike={toggleLike}
               onOpen={openCommunityPost}
+              onOpenComments={openCommunityComments}
+              onReplyComment={openCommunityReply}
             />
           ))}
         </View>
@@ -270,13 +376,13 @@ export default function PublicProfilePage() {
         {!profileLoading && profile && (
           <>
             <View className='public-profile-hero motion-enter'>
-              <View className='public-profile-hero__avatar'>
-                <UserAvatarImage
-                  src={profile.user.avatar_url}
-                  className='public-profile-hero__avatar-image'
-                  fallback={profile.user.nickname.slice(0, 1) || '同'}
-                />
-              </View>
+              <UserAvatar
+                src={profile.user.avatar_url}
+                className='public-profile-hero__avatar'
+                imageClassName='public-profile-hero__avatar-image'
+                fallback={profile.user.nickname.slice(0, 1) || '同'}
+                userId={profile.user.id}
+              />
               <View className='public-profile-hero__identity'>
                 <View className='public-profile-hero__name-line'>
                   <Text>{profile.user.nickname}</Text>
@@ -300,7 +406,6 @@ export default function PublicProfilePage() {
                   className={activeTab === tab.key
                     ? 'public-profile-tab public-profile-tab--active'
                     : 'public-profile-tab'}
-                  hoverClass='public-profile-tab--pressed'
                   ariaRole='button'
                   ariaLabel={`${tab.label}，${countForTab(tab.key)} 条`}
                   onClick={() => setActiveTab(tab.key)}
@@ -346,6 +451,28 @@ export default function PublicProfilePage() {
           </>
         )}
       </View>
+      {commentPost && (
+        <CommunityCommentSheet
+          key={commentPost.id}
+          post={commentPost}
+          initialReplyTarget={commentReplyTarget ? {
+            id: commentReplyTarget.id,
+            author_id: commentReplyTarget.authorId,
+            author_deleted: commentReplyTarget.authorDeleted,
+            author_nickname: commentReplyTarget.authorNickname,
+            root_id: commentReplyTarget.rootId,
+          } : null}
+          onClose={() => {
+            setCommentPost(null)
+            setCommentReplyTarget(null)
+            setCommentSubmitting(false)
+          }}
+          onSubmittingChange={setCommentSubmitting}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateCommentCount(commentPost.id, delta)}
+          onCommentCreated={updateLatestCommunityComment}
+        />
+      )}
     </View>
   )
 }

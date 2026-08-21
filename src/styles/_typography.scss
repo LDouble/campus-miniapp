@@ -2,7 +2,7 @@
 page input,
 page textarea,
 page button {
-  font-size: var(--campus-font-body, 28rpx);
+  font-size: var(--campus-font-size-body, 28rpx);
 }
 
 // 社区一级、二级导航需要在小屏设备上仍然可快速识别。
@@ -16,23 +16,19 @@ page .community-module-state__message { font-size: 27rpx; }
 // 社区信息流：正文维持最强可读性，元信息和操作文字统一提升一个字号档位。
 page .api-community-search input { font-size: 27rpx; }
 page .api-community-search__submit { font-size: 26rpx; }
-page .api-community__heading > view:first-child text:first-child { font-size: 28rpx; }
-page .api-community__heading > view:first-child text:last-child,
-page .api-community__heading-actions > text { font-size: 22rpx; }
-page .api-community__filter text:first-child { font-size: 24rpx; }
-page .api-community__filter text:last-child { font-size: 20rpx; }
 page .community-post__avatar text { font-size: 25rpx; }
-page .community-post__author-line > text:first-child { font-size: 28rpx; }
-page .community-post__meta { font-size: 22rpx; }
+page .community-post__author-line > text:first-child { font-size: 30rpx; }
+page .community-post__meta { font-size: 26rpx; }
 page .community-post__review-status { font-size: 20rpx; }
-page .community-post__section-pill text { font-size: 21rpx; }
-page .community-post__content { font-size: 30rpx; }
-page .community-post__expand { font-size: 24rpx; }
+page .community-post__section-pill text,
+page .community-post__section-label { font-size: 26rpx; }
+page .community-post__content,
+page .community-detail__body { font-size: var(--ousea-font-size-body, 32rpx); }
+page .community-post__expand { font-size: 34rpx; }
+page .community-post__social-like,
+page .community-post__comments-summary { font-size: 28rpx; }
 page .community-post__image-more text:last-child { font-size: 20rpx; }
-page .community-post__action-label,
-page .community-post__action-count { font-size: 23rpx; }
 page .community-post__badges text { font-size: 24rpx; }
-page .community-operations__campaign text:last-child { font-size: 24rpx; }
 page .api-community-state { font-size: 27rpx; }
 page .api-community-state--empty > text:last-child,
 page .api-community-state--empty > text:nth-child(3) { font-size: 24rpx; }
@@ -45,7 +41,6 @@ page .community-level-badge--compact { font-size: 19rpx; }
 
 // 社区详情和评论树。
 page .community-detail-card__tags text { font-size: 22rpx; }
-page .community-detail-card__body { font-size: 30rpx; }
 page .community-detail-comments__heading > text { font-size: 25rpx; }
 page .community-detail-comments__author text:first-child { font-size: 26rpx; }
 page .community-detail-comments .community-comment__content { font-size: 28rpx; }
@@ -66,17 +61,22 @@ page .community-topic-feed-heading > view text:last-child,
 page .community-topic-feed-heading > text { font-size: 23rpx; }
 
 // 四类详情共用评论组件，保证社区、闲置、跑腿和找同行的阅读体验一致。
-page .business-detail-comments__heading > text:last-child { font-size: 25rpx; }
+page .detail-author-header__name { font-size: var(--ousea-font-size-comment); }
+page .detail-author-header__meta { font-size: var(--ousea-font-size-caption); }
+page .detail-overview__title,
+page .market-detail-title { font-size: var(--ousea-font-size-title); }
+page .business-detail-comments__heading > text:nth-child(2) { font-size: var(--ousea-font-size-comment); }
 page .business-detail-comments__state,
-page .business-detail-comments__more { font-size: 26rpx; }
-page .business-detail-comment__author { font-size: 26rpx; }
-page .business-detail-comment__author-badge { font-size: 20rpx; }
-page .business-detail-comment__bubble { font-size: 28rpx; }
-page .business-detail-comment__meta { font-size: 23rpx; }
+page .business-detail-comments__more { font-size: var(--ousea-font-size-caption); }
+page .business-detail-comment__author,
+page .business-detail-comment__reply-identity { font-size: var(--ousea-font-size-label); }
+page .business-detail-comment__author-badge { font-size: var(--ousea-font-size-badge); }
+page .business-detail-comment__bubble { font-size: var(--ousea-font-size-body); }
+page .business-detail-comment__reply-content { font-size: var(--ousea-font-size-comment); }
+page .business-detail-comment__meta,
+page .business-detail-comment__time { font-size: var(--ousea-font-size-caption); }
 page .business-detail-comment__thread-action,
-page .business-detail-comment__thread-error { font-size: 24rpx; }
-page .business-detail-comment__reply { font-size: 24rpx; }
-page .business-detail-comment__reply-content { font-size: 25rpx; }
+page .business-detail-comment__thread-error { font-size: var(--ousea-font-size-caption); }
 page .business-detail-composer input,
 page .business-detail-composer textarea,
 page .business-detail-composer__collapsed-input { font-size: 27rpx; }
@@ -124,9 +124,10 @@ page .filter-inline-clear { font-size: 25rpx; }
 
 @media (max-width: 360px) {
   page .community-post__content,
-  page .community-detail-card__body { font-size: 29rpx; }
+  page .community-detail__body { font-size: var(--ousea-font-size-comment, 30rpx); }
 
-  page .community-post__author-line > text:first-child,
+  page .community-post__author-line > text:first-child { font-size: 30rpx; }
+
   page .community-detail-comments .community-comment__content,
   page .business-detail-comment__bubble { font-size: 27rpx; }
 }

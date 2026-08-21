@@ -27,7 +27,7 @@ assert.match(rule('.tab-bar__publish-button'), /transform:\s*translateY\(-24rpx\
 assert.doesNotMatch(tabBarStyle, /height:\s*142rpx/u)
 assert.doesNotMatch(tabBarStyle, /bottom:\s*calc\(22rpx \+ env\(safe-area-inset-bottom\)\)/u)
 assert.doesNotMatch(tabBarStyle, /translateY\(-40rpx\)/u)
-assert.match(tabBarStyle, /@media \(prefers-color-scheme: dark\)/u)
+assert.match(tabBarStyle, /\.tab-bar--dark \.tab-bar__dock/u)
 
 for (const path of [
   'src/pages/index/index.scss',

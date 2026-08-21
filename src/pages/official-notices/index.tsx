@@ -227,7 +227,6 @@ export default function OfficialNoticesPage() {
         {!!query && (
           <View
             className='official-notices-search__clear'
-            hoverClass='official-notices-search__clear--pressed'
             ariaRole='button'
             ariaLabel='清除搜索内容'
             onClick={() => setQuery('')}
@@ -241,7 +240,6 @@ export default function OfficialNoticesPage() {
             <View
               key={item.value || 'all'}
               className={source === item.value ? 'is-active' : ''}
-              hoverClass='official-notices-sources__item--pressed'
               ariaRole='button'
               ariaLabel={`筛选${item.label}通知来源`}
               onClick={() => chooseSource(item.value)}
@@ -251,10 +249,10 @@ export default function OfficialNoticesPage() {
       </ScrollView>
 
       <View className='official-notices-filters'>
-        <View className='official-notices-filters__button' hoverClass='official-notices-filters__button--pressed' ariaRole='button' ariaLabel='选择通知分类' onClick={() => void chooseCategory()}>
+        <View className='official-notices-filters__button' ariaRole='button' ariaLabel='选择通知分类' onClick={() => void chooseCategory()}>
           {category ? officialNoticeCategoryLabels[category] : '全部分类'} <Text>⌄</Text>
         </View>
-        <View className='official-notices-filters__button' hoverClass='official-notices-filters__button--pressed' ariaRole='button' ariaLabel='选择通知时间范围' onClick={() => void chooseTime()}>
+        <View className='official-notices-filters__button' ariaRole='button' ariaLabel='选择通知时间范围' onClick={() => void chooseTime()}>
           {timeOptions[timeIndex].label} <Text>⌄</Text>
         </View>
         <Text>{hasMore ? `已加载 ${items.length} 条` : `${items.length} 条通知`}</Text>
@@ -266,7 +264,7 @@ export default function OfficialNoticesPage() {
       {!loading && error && (
         <View className='official-notices-state'>
           <Text>{error}</Text>
-          <View className='official-notices-state__retry' hoverClass='official-notices-state__retry--pressed' ariaRole='button' ariaLabel='重新加载通知' onClick={() => void load(true)}>重新加载</View>
+          <View className='official-notices-state__retry' ariaRole='button' ariaLabel='重新加载通知' onClick={() => void load(true)}>重新加载</View>
         </View>
       )}
       {!loading && !error && items.length === 0 && (
@@ -279,7 +277,6 @@ export default function OfficialNoticesPage() {
         <View
           key={item.id}
           className={`official-notice-card ${item.priority === 'important' ? 'official-notice-card--important' : ''}`}
-          hoverClass='official-notice-card--pressed'
           ariaRole='button'
           ariaLabel={`查看通知：${item.title}`}
           onClick={() => openDetail(item)}

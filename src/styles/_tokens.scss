@@ -1,28 +1,48 @@
-// 校园小程序视觉令牌。页面级差异只应覆盖业务强调色，不应重复定义基础色。
+// Ousea / Global 是校园小程序唯一的基础视觉源。
+// Campus 语义令牌是兼容层；页面不得重新声明同义基础值。
+
+// Ousea primitives
+$ousea-ocean-50: var(--ousea-ocean-50, #f2f7fe);
+$ousea-ocean-100: var(--ousea-ocean-100, #e3effe);
+$ousea-ocean-400: var(--ousea-ocean-400, #4c96f5);
+$ousea-ocean-500: var(--ousea-ocean-500, #2b7aef);
+$ousea-ocean-600: var(--ousea-ocean-600, #1d5fd6);
+$ousea-wave-400: var(--ousea-wave-400, #38bdf8);
+$ousea-ink-900: var(--ousea-ink-900, #1a2333);
+$ousea-ink-700: var(--ousea-ink-700, #3a4759);
+$ousea-ink-500: var(--ousea-ink-500, #6b7a90);
+$ousea-ink-300: var(--ousea-ink-300, #a6b2c2);
+$ousea-bg-page: var(--ousea-bg-page, #f5f8fc);
+$ousea-bg-line: var(--ousea-bg-line, #e8edf4);
+$ousea-danger-500: var(--ousea-danger-500, #e5484d);
+$ousea-danger-50: var(--ousea-danger-50, #fdecec);
+$ousea-like-500: var(--ousea-like-500, #f04e6b);
 
 // Brand and semantic colors
-$color-primary: var(--campus-primary, #2b7fff);
-$color-primary-strong: var(--campus-primary-strong, #155dfc);
-$color-primary-cyan: var(--campus-primary-cyan, #00d3f3);
-$color-danger: var(--campus-danger, #ff2056);
+$color-primary: var(--campus-primary, #2b7aef);
+$color-primary-strong: var(--campus-primary-strong, #1d5fd6);
+$color-primary-cyan: var(--campus-primary-cyan, #38bdf8);
+$color-danger: var(--campus-danger, #e5484d);
 $color-success: var(--campus-success, #00bba7);
 
 // Surfaces
-$color-page: var(--campus-page, #f4f7fb);
+$color-page: var(--campus-page, #f5f8fc);
 $color-surface: var(--campus-surface, #fff);
-$color-surface-subtle: var(--campus-surface-subtle, #f8fafc);
-$color-surface-primary: var(--campus-surface-primary, #eff6ff);
+$color-surface-subtle: var(--campus-surface-subtle, #f5f8fc);
+$color-surface-primary: var(--campus-surface-primary, #f2f7fe);
 $color-on-accent: #fff;
 
 // Text
-$color-text-heading: var(--campus-text-heading, #1d293d);
-$color-text-body: var(--campus-text-body, #45556c);
-$color-text-secondary: var(--campus-text-secondary, #62748e);
-$color-text-muted: var(--campus-text-muted, #90a1b9);
+$color-text-primary: var(--campus-text-primary, #1a2333);
+$color-text-secondary: var(--campus-text-secondary, #6b7a90);
+$color-text-auxiliary: var(--campus-text-auxiliary, #a6b2c2);
+$color-text-heading: $color-text-primary;
+$color-text-body: $color-text-primary;
+$color-text-muted: $color-text-auxiliary;
 
 // Borders
-$color-border: var(--campus-border, #f1f5f9);
-$color-border-strong: var(--campus-border-strong, #dbeafe);
+$color-border: var(--campus-border, #e8edf4);
+$color-border-strong: var(--campus-border-strong, #e3effe);
 
 // Business accents
 $color-community: $color-primary;
@@ -39,11 +59,52 @@ $color-route-origin: var(--campus-route-origin, #00d492);
 $color-route-destination: var(--campus-route-destination, #ff637e);
 
 // Typography
-$font-family-sans: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-$font-size-caption: var(--campus-font-caption, 22rpx);
-$font-size-supporting: var(--campus-font-supporting, 24rpx);
-$font-size-body: var(--campus-font-body, 28rpx);
-$font-size-title: var(--campus-font-title, 32rpx);
+$font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+$font-size-auxiliary: var(--campus-font-size-auxiliary, 24rpx);
+$font-size-body: var(--campus-font-size-body, 28rpx);
+$font-size-important-body: var(--campus-font-size-important-body, 30rpx);
+$font-size-card-title: var(--campus-font-size-card-title, 32rpx);
+$font-size-page-title: var(--campus-font-size-page-title, 36rpx);
+$font-size-large-title: var(--campus-font-size-large-title, 40rpx);
+$font-weight-regular: var(--campus-font-weight-regular, 400);
+$font-weight-medium: var(--campus-font-weight-medium, 500);
+$font-weight-semibold: var(--campus-font-weight-semibold, 600);
+$ousea-font-weight-regular: var(--ousea-font-weight-regular, 400);
+$ousea-font-weight-medium: var(--ousea-font-weight-medium, 500);
+$ousea-font-weight-semibold: var(--ousea-font-weight-semibold, 600);
+$font-weight-bold: var(--ousea-font-weight-bold, 700);
+$ousea-font-weight-bold: var(--ousea-font-weight-bold, 700);
+$line-height-auxiliary: var(--campus-line-height-auxiliary, 36rpx);
+$line-height-body: var(--campus-line-height-body, 44rpx);
+$line-height-important-body: var(--campus-line-height-important-body, 46rpx);
+$line-height-card-title: var(--campus-line-height-card-title, 48rpx);
+$line-height-page-title: var(--campus-line-height-page-title, 54rpx);
+$line-height-large-title: var(--campus-line-height-large-title, 60rpx);
+
+// Ousea typography primitives (375px canvas, 1px = 2rpx)
+$ousea-font-size-badge: var(--ousea-font-size-badge, 20rpx);
+$ousea-font-size-caption: var(--ousea-font-size-caption, 24rpx);
+$ousea-font-size-label: var(--ousea-font-size-label, 27rpx);
+$ousea-font-size-comment: var(--ousea-font-size-comment, 30rpx);
+$ousea-font-size-body: var(--ousea-font-size-body, 32rpx);
+$ousea-font-size-title: var(--ousea-font-size-title, 33rpx);
+$ousea-line-height-post: var(--ousea-line-height-post, 1.85);
+$ousea-line-height-comment: var(--ousea-line-height-comment, 1.65);
+$ousea-line-height-ui: var(--ousea-line-height-ui, 1.4);
+
+// Ousea spacing primitives
+$ousea-space-1: var(--ousea-space-1, 16rpx);
+$ousea-space-2: var(--ousea-space-2, 24rpx);
+$ousea-space-3: var(--ousea-space-3, 32rpx);
+$ousea-space-4: var(--ousea-space-4, 40rpx);
+$ousea-space-5: var(--ousea-space-5, 64rpx);
+
+// Ousea radius primitives
+$ousea-radius-pill: var(--ousea-radius-pill, 999rpx);
+$ousea-radius-card-sm: var(--ousea-radius-card-sm, 24rpx);
+$ousea-radius-card: var(--ousea-radius-card, 32rpx);
+$ousea-radius-card-lg: var(--ousea-radius-card-lg, 36rpx);
+$ousea-radius-sheet: var(--ousea-radius-sheet, 44rpx);
 
 // 8rpx spacing grid
 $space-1: 8rpx;
@@ -68,7 +129,7 @@ $motion-enter: 240ms;
 $motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
 // Elevation
-$shadow-card: var(--campus-shadow-card, 0 8rpx 24rpx rgba(43, 127, 255, 0.08));
+$shadow-card: var(--campus-shadow-card, 0 8rpx 24rpx rgba(29, 95, 214, 0.08));
 $shadow-sheet: var(--campus-shadow-sheet, 0 -8rpx 32rpx rgba(0, 0, 0, 0.05));
 
 // Interaction

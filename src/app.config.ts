@@ -83,6 +83,7 @@ const packageDefinitions = [
   { root: 'pages/empty-classroom', sourceRoot: 'pages/empty-classroom', pages: ['index'] },
   { root: 'pages/calendar', sourceRoot: 'pages/calendar', pages: ['index'] },
   { root: 'pages/services', sourceRoot: 'pages/services', pages: ['index'] },
+  { root: 'pages/campus-service', sourceRoot: 'pages/campus-service', pages: ['index', 'detail'] },
   { root: 'pages/public-profile', sourceRoot: 'pages/public-profile', pages: ['index'] },
   { root: 'pages/user-level', sourceRoot: 'pages/user-level', pages: ['index'] },
   { root: 'pages/daily-checkin', sourceRoot: 'pages/daily-checkin', pages: ['index'] },

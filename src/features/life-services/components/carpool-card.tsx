@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import type { CarpoolTripView } from '../../../api/types'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
@@ -12,6 +12,8 @@ import {
   formatStatus,
   remainingSeats,
 } from '../format'
+
+const moreIcon = require('../../../assets/icons/more-horizontal.svg')
 
 const openDetail = (item: CarpoolTripView) => {
   requestWechatSubscriptionForModule('carpool')
@@ -38,18 +40,17 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
     <View
       id={`carpool-card-${item.id}`}
       className='carpool-card'
-      hoverClass='business-card--pressed'
       onClick={() => openDetail(item)}
     >
       <View className='business-card-header'>
-        <View className='business-card-avatar business-card-avatar--carpool'>
-          <UserAvatarImage
-            src={item.author_avatar_url}
-            className='business-card-avatar__image'
-            fallback={authorInitial}
-            lazyLoad
-          />
-        </View>
+        <UserAvatar
+          src={item.author_avatar_url}
+          className='business-card-avatar business-card-avatar--carpool'
+          imageClassName='business-card-avatar__image'
+          fallback={authorInitial}
+          userId={item.organizer_id}
+          lazyLoad
+        />
         <View className='business-card-identity'>
           <View>
             <Text>{authorName}</Text>
@@ -59,7 +60,7 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
           </View>
           <Text>{departure.date} {departure.time}</Text>
         </View>
-        <Text className='business-card-more'>•••</Text>
+        <Image className='business-card-more' src={moreIcon} mode='aspectFit' />
       </View>
 
       {item.description && (

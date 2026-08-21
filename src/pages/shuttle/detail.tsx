@@ -261,7 +261,6 @@ export default function ShuttleDetailPage() {
                 <View
                   key={value}
                   className={activeTab === value ? 'shuttle-detail-tabs__active' : ''}
-                  hoverClass='shuttle-detail-tabs__pressed'
                   role='button'
                   ariaLabel={`查看${label}`}
                   onClick={() => setActiveTab(value)}
@@ -292,7 +291,6 @@ export default function ShuttleDetailPage() {
                             <View
                               key={time}
                               className={selectedJourneyTrip?.departureTime === time ? 'shuttle-detail-times__selected' : ''}
-                              hoverClass='shuttle-detail-times__pressed'
                               onClick={() => selectDeparture(time)}
                             >
                               {time}
@@ -306,7 +304,6 @@ export default function ShuttleDetailPage() {
                         <Text>即将发车</Text>
                         <View
                           className={`shuttle-departure-next ${selectedJourneyTrip?.departureTime === departureGroups.next ? 'shuttle-departure-next--selected' : ''}`}
-                          hoverClass='shuttle-detail-times__pressed'
                           onClick={() => selectDeparture(departureGroups.next)}
                         >
                           <View><View /><Text>{departureGroups.next}</Text></View>
@@ -322,7 +319,6 @@ export default function ShuttleDetailPage() {
                             <View
                               key={time}
                               className={selectedJourneyTrip?.departureTime === time ? 'shuttle-detail-times__selected' : ''}
-                              hoverClass='shuttle-detail-times__pressed'
                               onClick={() => selectDeparture(time)}
                             >
                               {time}
@@ -443,8 +439,8 @@ export default function ShuttleDetailPage() {
 
             <View className='shuttle-detail-actions'>
               <Button
+                hoverClass='none'
                 className='shuttle-detail-actions__share'
-                hoverClass='shuttle-detail-actions__pressed'
                 openType='share'
                 ariaLabel='分享当前校车路线'
               >
@@ -452,7 +448,6 @@ export default function ShuttleDetailPage() {
               </Button>
               <View
                 className='shuttle-detail-actions__refresh'
-                hoverClass='shuttle-detail-actions__pressed'
                 role='button'
                 ariaLabel='刷新当前线路班次'
                 onClick={refresh}

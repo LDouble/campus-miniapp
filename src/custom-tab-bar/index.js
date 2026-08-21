@@ -2,6 +2,7 @@ import {
   requestWechatSubscriptionForModule,
   requestWechatSubscriptionForPublishSection
 } from '../features/wechat-subscription'
+import { getCampusTheme, subscribeCampusTheme } from '../features/theme-preference'
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
 
@@ -36,6 +37,7 @@ Component({
   data: {
     selected: 0,
     hidden: false,
+    darkMode: getCampusTheme() === 'dark',
     publishSection: 'community',
     qualification,
     list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
@@ -43,7 +45,13 @@ Component({
 
   lifetimes: {
     attached() {
+      this.unsubscribeCampusTheme = subscribeCampusTheme((theme) => {
+        this.setData({ darkMode: theme === 'dark' })
+      })
       this.syncSelected()
+    },
+    detached() {
+      if (this.unsubscribeCampusTheme) this.unsubscribeCampusTheme()
     }
   },
 
@@ -63,9 +71,17 @@ Component({
         ? pages[pages.length - 1].route.replace(/^\//, '')
         : ''
       const selected = this.data.list.findIndex(item => item.pagePath === route)
+      const darkMode = getCampusTheme() === 'dark'
+      const nextData = {}
 
       if (selected >= 0 && selected !== this.data.selected) {
-        this.setData({ selected })
+        nextData.selected = selected
+      }
+      if (darkMode !== this.data.darkMode) {
+        nextData.darkMode = darkMode
+      }
+      if (Object.keys(nextData).length > 0) {
+        this.setData(nextData)
       }
     },
 

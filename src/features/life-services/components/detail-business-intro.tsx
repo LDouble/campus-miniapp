@@ -21,6 +21,13 @@ export default function DetailBusinessIntro({
 
   return (
     <View className='detail-overview detail-business-intro'>
+      {title?.trim() && (
+        <StickerContent
+          content={title.trim()}
+          className='detail-overview__title'
+          stickerClassName='detail-overview__sticker'
+        />
+      )}
       {(visibleBadges.length > 0 || action) && (
         <View className='detail-overview__toolbar'>
           <View className='detail-overview__badges'>
@@ -28,13 +35,6 @@ export default function DetailBusinessIntro({
           </View>
           {action}
         </View>
-      )}
-      {title?.trim() && (
-        <StickerContent
-          content={title.trim()}
-          className='detail-overview__title'
-          stickerClassName='detail-overview__sticker'
-        />
       )}
       {description?.trim() && (
         <StickerContent

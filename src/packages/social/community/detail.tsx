@@ -7,40 +7,44 @@ import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../../api/types'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
-import UserAvatarImage from '../../../components/user-avatar-image'
-import { openContentReport } from '../../../features/content-report'
-import { formatDateTime, formatStatus } from '../../../features/life-services/format'
-import { lifeServicesRepository } from '../../../features/life-services/repository'
-import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
-import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
+import StickerContent from '../../../components/sticker-content'
 import {
   communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
-  communityAuthorTone,
 } from '../../../features/community/author'
 import { consumeCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
 import CommunityLevelBadge from '../../../features/community/level-badge'
-import DetailAuthorNavbar from '../../../features/life-services/components/detail-author-navbar'
+import { openContentReport } from '../../../features/content-report'
+import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
 import DetailComments from '../../../features/life-services/components/detail-comments'
-import StickerContent from '../../../components/sticker-content'
-import { plainStickerContent } from '../../../features/stickers/content'
+import ContentImageGrid from '../../../features/community/components/content-image-grid'
 import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
+import { formatDateTime, formatStatus } from '../../../features/life-services/format'
+import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
+import { lifeServicesRepository } from '../../../features/life-services/repository'
 import { useCampusShare } from '../../../features/share'
-import { openPublicProfile } from '../../../features/profile/public-profile'
+import { plainStickerContent } from '../../../features/stickers/content'
+import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
+import { showActionSheetSelection } from '../../../utils/action-sheet'
 import './detail.scss'
 
 const communityDetailIcons = {
   comment: require('../../../assets/community/comment.svg'),
-  heart: require('../../../assets/community/heart.svg'),
+  heart: require('../../../assets/community/feed-heart.svg'),
   heartActive: require('../../../assets/community/heart-active.svg'),
-  share: require('../../../assets/community/share.svg'),
+  more: require('../../../assets/icons/more-horizontal.svg'),
+  share: require('../../../assets/community/detail-share.svg'),
 }
 
 const actionLabels: Record<string, string> = {
   edit: '编辑动态',
   withdraw: '删除动态',
 }
+
+const formatDetailDateTime = (value?: string | null) => (
+  formatDateTime(value).replace(/^(\d{2})月(\d{2})日/u, '$1-$2')
+)
 
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
@@ -119,7 +123,7 @@ export default function CommunityDetailPage() {
   const editPost = () => {
     if (!post) return
     requestWechatSubscriptionForModule('community')
-    Taro.navigateTo({
+    void Taro.navigateTo({
       url: `/packages/social/publish/index?section=community&mode=edit&id=${post.id}`,
     })
   }
@@ -153,21 +157,22 @@ export default function CommunityDetailPage() {
     }
   }
 
-  const previewPostImage = (current: string) => {
-    if (!post || !current) return
-    const urls = post.images.map((image) => image.url).filter(Boolean)
-    if (urls.length === 0) return
-    void Taro.previewImage({
-      current,
-      urls,
+  const canReportPost = Boolean(
+    post
+    && post.viewer_relation !== 'owner'
+    && post.viewer_relation !== 'admin',
+  )
+
+  const reportPost = () => {
+    if (!post || !canReportPost) return
+    void openContentReport({
+      resourceType: 'campus_circle_post',
+      resourceId: post.id,
+      resourceVersion: post.version,
     })
   }
 
-  const scrollToComments = () => {
-    void Taro.pageScrollTo({ selector: '.business-detail-comments', duration: 180 })
-  }
-
-  const footerActions = post ? buildDetailFooterActions({
+  const permissionActions = post ? buildDetailFooterActions({
     availableActions: post.available_actions,
     labels: actionLabels,
     priority: ['edit', 'withdraw'],
@@ -176,19 +181,28 @@ export default function CommunityDetailPage() {
     onAction: (action) => action === 'edit' ? editPost() : void deletePost(),
   }) : []
 
+  const postMenuItems = [
+    ...permissionActions.map((action) => ({
+      label: action.busy ? `${action.label}中` : action.label,
+      run: action.onClick,
+    })),
+    ...(canReportPost ? [{ label: '举报', run: reportPost }] : []),
+  ]
+
+  const openPostMenu = async () => {
+    if (postMenuItems.length === 0 || deletingPost) return
+    const tapIndex = await showActionSheetSelection(postMenuItems.map((item) => item.label))
+    const selected = tapIndex === null ? null : postMenuItems[tapIndex]
+    if (selected) selected.run()
+  }
+
+  const scrollToComments = () => {
+    void Taro.pageScrollTo({ selector: '.business-detail-comments', duration: 180 })
+  }
+
   return (
     <View className='community-detail'>
-      <CustomNavbar
-        title='动态详情'
-        showBack
-        barContent={post ? (
-          <DetailAuthorNavbar
-            avatarUrl={post.author_avatar_url}
-            nickname={communityAuthorName(post)}
-            userId={post.author_id}
-          />
-        ) : undefined}
-      />
+      <CustomNavbar title='帖子详情' showBack />
       <View className='community-detail__content'>
         {loading && <View className='community-detail-state'>正在加载动态</View>}
         {!loading && error && (
@@ -200,145 +214,101 @@ export default function CommunityDetailPage() {
 
         {!loading && !error && post && (
           <>
-            <View className='community-detail-card'>
-              <View
-                className='community-detail-card__top'
-                hoverClass='community-detail-card__top--pressed'
-                ariaRole='button'
-                ariaLabel={`查看${communityAuthorName(post)}的个人主页`}
-                onClick={() => {
-                  if (!post.author_deleted) void openPublicProfile(post.author_id)
-                }}
-              >
-                <View
-                  className={`community-detail-card__avatar community-detail-card__avatar--tone-${communityAuthorTone(post)}`}
-                >
-                  <UserAvatarImage
-                    src={communityAuthorAvatarUrl(post)}
-                    className='community-detail-card__avatar-image'
-                    fallback={communityAuthorInitial(post)}
-                    lazyLoad
-                  />
-                </View>
-                <View className='community-detail-card__author'>
-                  <View>
-                    <Text>{communityAuthorName(post)}</Text>
-                    <CommunityLevelBadge level={post.author_level} />
+            <View id='community-detail-post' className='community-detail__main'>
+              <DetailAuthorHeader
+                avatarUrl={communityAuthorAvatarUrl(post)}
+                nickname={communityAuthorName(post)}
+                fallback={communityAuthorInitial(post)}
+                userId={post.author_id}
+                profileEnabled={!post.author_deleted}
+                badge={<CommunityLevelBadge level={post.author_level} />}
+                meta={(
+                  <>
+                    <Text>{formatDetailDateTime(post.published_at || post.created_at)}</Text>
+                    {post.status !== 'approved' && (
+                      <Text className={`community-detail__review-status community-detail__review-status--${post.status}`}>
+                        {formatStatus(post.status)}
+                      </Text>
+                    )}
+                  </>
+                )}
+                action={postMenuItems.length > 0 ? (
+                  <View
+                    id='community-detail-more'
+                    className='community-detail__more'
+                    ariaRole='button'
+                    ariaLabel='更多帖子操作'
+                    onClick={() => void openPostMenu()}
+                  >
+                    <Image src={communityDetailIcons.more} mode='aspectFit' />
                   </View>
-                  <Text className='community-detail-card__time'>
-                    {formatDateTime(post.published_at || post.created_at)}
-                  </Text>
-                </View>
-                <View className='community-detail-card__status'>
-                  <View />
-                  <Text>{formatStatus(post.status)}</Text>
-                </View>
-              </View>
+                ) : undefined}
+              />
+
               {post.topic?.name && (
-                <View className='community-detail-card__toolbar'>
-                  <View className='community-detail-card__tags'>
-                    <Text>#{post.topic.name}</Text>
-                  </View>
-                </View>
+                <View className='community-detail__topic'>#{post.topic.name}</View>
               )}
+
               {post.content && (
                 <StickerContent
                   content={post.content}
-                  className='community-detail-card__body'
-                  stickerClassName='community-detail-card__body-sticker'
+                  className='community-detail__body community-detail-card__body'
+                  stickerClassName='community-detail__body-sticker'
                 />
               )}
+
               {post.images.length > 0 && (
-                <View className={post.images.length === 1
-                  ? 'community-detail-card__images community-detail-card__images--single'
-                  : 'community-detail-card__images'}
-                >
-                  {post.images.map((image, index) => (
-                    <View
-                      key={image.id}
-                      className='community-detail-card__image-frame'
-                      ariaRole={image.url ? 'button' : undefined}
-                      ariaLabel={image.url ? `预览第 ${index + 1} 张图片，共 ${post.images.length} 张` : undefined}
-                      onClick={() => previewPostImage(image.url)}
-                    >
-                      {image.url && (
-                        <Image
-                          src={image.url}
-                          mode={post.images.length === 1 ? 'widthFix' : 'aspectFill'}
-                          lazyLoad
-                        />
-                      )}
-                      {post.viewer_relation === 'owner' && post.status === 'pending_review' && (
-                        <View className={image.url
-                          ? 'community-detail-card__image-reviewing community-detail-card__image-reviewing--overlay'
-                          : 'community-detail-card__image-reviewing'}
-                        >
-                          <Text>图片审核中</Text>
-                        </View>
-                      )}
-                    </View>
-                  ))}
-                </View>
+                <ContentImageGrid
+                  images={post.images}
+                  pendingReview={post.viewer_relation === 'owner' && post.status === 'pending_review'}
+                  preview
+                />
               )}
-              <View className='community-detail-card__actions'>
-                <View
-                  className={
-                    post.liked
-                      ? 'community-detail-card__action community-detail-card__action--liked'
-                      : 'community-detail-card__action'
-                  }
-                  hoverClass='community-detail-card__action--pressed'
-                  hoverStartTime={20}
-                  hoverStayTime={120}
-                  ariaRole='button'
-                  ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
-                  onClick={() => void toggleLike()}
-                >
-                  <Image
-                    src={post.liked ? communityDetailIcons.heartActive : communityDetailIcons.heart}
-                    mode='aspectFit'
-                  />
-                  <Text>{post.like_count}</Text>
-                </View>
-                <View
-                  className='community-detail-card__action'
-                  hoverClass='community-detail-card__action--pressed'
-                  hoverStartTime={20}
-                  hoverStayTime={120}
-                  ariaRole='button'
-                  ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
-                  onClick={scrollToComments}
-                >
-                  <Image src={communityDetailIcons.comment} mode='aspectFit' />
-                  <Text>{post.comment_count}</Text>
-                </View>
-                <Button
-                  className='community-detail-card__action community-detail-card__action--icon'
-                  openType='share'
-                  hoverClass='community-detail-card__action--pressed'
-                  ariaLabel='分享这条动态'
-                >
-                  <Image src={communityDetailIcons.share} mode='aspectFit' />
-                </Button>
-                {post.viewer_relation !== 'owner'
-                  && post.viewer_relation !== 'admin' && (
+
+              <View className='community-detail__actions'>
+                <View className='community-detail__action-slot'>
                   <View
-                    className='community-detail-card__report'
-                    hoverClass='community-detail-card__action--pressed'
+                    id='community-detail-like'
+                    className={post.liked
+                      ? 'community-detail__action community-detail__action--liked'
+                      : 'community-detail__action'}
+                    hoverClass='community-detail__action--pressed'
                     ariaRole='button'
-                    ariaLabel='举报这条动态'
-                    onClick={() => void openContentReport({
-                      resourceType: 'campus_circle_post',
-                      resourceId: post.id,
-                      resourceVersion: post.version,
-                    })}
+                    ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
+                    onClick={() => void toggleLike()}
                   >
-                    举报
+                    <Image src={post.liked ? communityDetailIcons.heartActive : communityDetailIcons.heart} mode='aspectFit' />
+                    <Text>{post.like_count}</Text>
                   </View>
-                )}
+                </View>
+                <View className='community-detail__action-slot'>
+                  <View
+                    id='community-detail-comment'
+                    className='community-detail__action'
+                    hoverClass='community-detail__action--pressed'
+                    ariaRole='button'
+                    ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
+                    onClick={scrollToComments}
+                  >
+                    <Image src={communityDetailIcons.comment} mode='aspectFit' />
+                    <Text>{post.comment_count}</Text>
+                  </View>
+                </View>
+                <View className='community-detail__action-slot'>
+                  <Button
+                    hoverClass='community-detail__action--pressed'
+                    id='community-detail-share'
+                    className='community-detail__action community-detail__action--share'
+                    openType='share'
+                    ariaLabel='分享这条动态'
+                  >
+                    <Image src={communityDetailIcons.share} mode='aspectFit' />
+                  </Button>
+                </View>
               </View>
+
               {post.review_reason && (
-                <View className='community-detail-card__review'>
+                <View className='community-detail__review community-detail-card__review'>
                   <Text>审核说明</Text>
                   <Text>{post.review_reason}</Text>
                 </View>
@@ -351,17 +321,9 @@ export default function CommunityDetailPage() {
               enabled={post.status === 'approved'}
               targetAuthorId={post.author_id}
               initialCommentId={focusedCommentId}
-              displayTotal={post.comment_count}
+              showHeading={false}
               placeholder='友善交流，分享你的想法'
               tone='community'
-              actions={footerActions}
-              quickAction={{
-                active: post.liked,
-                activeIcon: communityDetailIcons.heartActive,
-                icon: communityDetailIcons.heart,
-                label: post.liked ? '取消点赞' : '点赞',
-                onClick: () => void toggleLike(),
-              }}
               onApprovedDelta={(delta) => setPost((current) => current
                 ? { ...current, comment_count: Math.max(0, current.comment_count + delta) }
                 : current)}

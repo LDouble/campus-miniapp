@@ -1,5 +1,5 @@
 .life-panel {
-  padding: 0 28rpx calc(170rpx + env(safe-area-inset-bottom));
+  padding: 0 28rpx;
 }
 
 .life-search {
@@ -22,7 +22,7 @@
   flex: none;
   box-sizing: border-box;
   border: 4rpx solid #8a94a2;
-  border-radius: 50%;
+  border-radius: 12rpx;
 }
 
 .life-search__icon::after {
@@ -717,16 +717,20 @@
 
 .life-load-more {
   display: flex;
-  min-height: 88rpx;
-  margin-top: 24rpx;
+  min-height: 56rpx;
+  margin-top: 8rpx;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid #e2e6ec;
-  border-radius: 24rpx;
-  background: var(--campus-surface, #fff);
-  color: #596777;
+  color: var(--campus-text-muted, #a6b2c2);
   font-size: 24rpx;
-  font-weight: 700;
+  font-weight: var(--ousea-font-weight-regular, 400);
+}
+
+.life-load-more--end {
+  box-sizing: border-box;
+  min-height: 48rpx;
+  margin-top: 0;
+  padding-bottom: 4rpx;
 }
 
 @keyframes skeleton-shimmer {
@@ -749,7 +753,8 @@
 
 /* Figma 2026-08 跑腿 / 闲置 / 拼车视觉覆盖 */
 .life-panel {
-  padding: 0 32rpx calc(152rpx + env(safe-area-inset-bottom));
+  // 底部导航避让由 .community-page 统一承担，列表自身不再重复留白。
+  padding: 0 32rpx;
 }
 
 .life-search {
@@ -840,17 +845,13 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid rgba(190, 219, 255, 0.5);
+  border: 0;
   border-radius: 50%;
-  background: var(--campus-surface-primary, #eff6ff);
-  color: var(--campus-primary-strong, #155dfc);
   font-size: 25rpx;
   font-weight: 760;
-  box-shadow: 0 2rpx 3rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   overflow: hidden;
 }
-
-.business-card-avatar--carpool { background: #eef2ff; color: #4f39f6; }
 
 .business-card-avatar__image {
   display: block;
@@ -871,14 +872,11 @@
 .business-card-identity > text { margin-top: 3rpx; color: var(--campus-text-muted, #90a1b9); font-size: 22rpx; }
 
 .business-card-more {
-  display: flex;
-  width: 54rpx;
-  height: 54rpx;
-  align-items: center;
-  justify-content: center;
-  color: #bfd0e5;
-  font-size: 24rpx;
-  letter-spacing: 2rpx;
+  display: block;
+  width: 36rpx;
+  height: 36rpx;
+  margin: 9rpx;
+  flex: none;
 }
 
 .business-status {
@@ -1029,7 +1027,5 @@
 }
 
 .life-load-more {
-  border: 1rpx solid var(--campus-border, #f1f5f9);
-  border-radius: 32rpx;
-  color: var(--campus-text-secondary, #62748e);
+  color: var(--campus-text-muted, #a6b2c2);
 }

@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
   useDidHide,
   useDidShow,
   useLoad,
   usePullDownRefresh,
+  useReachBottom,
 } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type {
@@ -13,6 +14,7 @@ import type {
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import CommunityFeedPanel from '../../features/community/feed-panel'
 import { consumeCommunityFeedPin } from '../../features/community/feed-pin'
+import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import {
   isLifeHubSection,
   lifeBusinessThemeList,
@@ -27,6 +29,10 @@ import {
 import LifeServiceListPanel, {
   type LifeServiceSection,
 } from '../../features/life-services/list-panel'
+import LifeServiceTopFilters from '../../features/life-services/top-filters'
+import type { MarketplaceFilterValue } from '../../features/life-services/components/marketplace-filters'
+import type { CarpoolFilterValue } from '../../features/life-services/components/carpool-filters'
+import type { CampusName } from '../../features/life-services/campus'
 import {
   consumeMarketplaceSearchPrefill,
   type MarketplaceSearchPrefill,
@@ -39,7 +45,6 @@ import {
 } from '../../features/runtime-config'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { useCampusShare } from '../../features/share'
-import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import {
   setCustomTabBarHidden,
   setCustomTabBarPublishSection,
@@ -48,7 +53,8 @@ import {
 import './index.scss'
 
 const icons = {
-  search: require('../../assets/icons/search.svg'),
+  search: require('../../assets/community/topbar-search.svg'),
+  chevron: require('../../assets/community/topbar-chevron.svg'),
 }
 
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
@@ -72,19 +78,19 @@ export default function CommunityPage() {
   >(null)
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [searchFocusSignal, setSearchFocusSignal] = useState(0)
+  const [communityOverlayVisible, setCommunityOverlayVisible] = useState(false)
+  const [communityOverlayDismissSignal, setCommunityOverlayDismissSignal] = useState(0)
+  const [loadMoreSignal, setLoadMoreSignal] = useState(0)
   const [marketplaceSearchPrefill, setMarketplaceSearchPrefill] = useState<
     MarketplaceSearchPrefill | null
   >(null)
+  const [campus, setCampus] = useState<CampusName | ''>('')
+  const [marketFilters, setMarketFilters] = useState<MarketplaceFilterValue>({})
+  const [carpoolFilters, setCarpoolFilters] = useState<CarpoolFilterValue>({})
   const hasShown = useRef(false)
   const communitySectionsFreshAt = useRef(0)
   const communitySectionsRequest = useRef(0)
   const navbarMetrics = getNavbarMetrics()
-  const navbarHeight = navbarMetrics.statusBarHeight + navbarMetrics.navigationBarHeight
-  const headerCollapsed = useCollapsingHeader({
-    triggerSelector: '.community-page__eyebrow',
-    threshold: 52,
-    releaseGap: 16,
-  })
 
   useLoad((options) => {
     if (!isLifeHubSection(options.section)) return
@@ -129,6 +135,15 @@ export default function CommunityPage() {
       subtitle: activeCommunityRoot.description || baseCopy.subtitle,
     }
     : baseCopy
+
+  const dismissCommunityOverlays = useCallback(() => {
+    setCommunityOverlayDismissSignal((current) => current + 1)
+  }, [])
+
+  useDismissCommunityOverlaysOnScroll({
+    active: displayedSection === 'community' && communityOverlayVisible,
+    onDismiss: dismissCommunityOverlays,
+  })
 
   useEffect(() => {
     setCustomTabBarPublishSection(displayedSection)
@@ -181,6 +196,11 @@ export default function CommunityPage() {
       return
     }
     if (module.state === 'hidden') return
+    if (section !== displayedSection) {
+      setCampus('')
+      setMarketFilters({})
+      setCarpoolFilters({})
+    }
     setMarketplaceSearchPrefill(null)
     setActiveSection(section)
     Taro.setStorageSync(LIFE_HUB_SECTION_KEY, section)
@@ -201,34 +221,8 @@ export default function CommunityPage() {
     if (selected) setActiveCommunitySectionId(selected.id)
   }
 
-  const scrollSearchBelowNavigation = () => new Promise<void>((resolve) => {
-    const query = Taro.createSelectorQuery()
-    query.select('.community-content-anchor').boundingClientRect()
-    query.select('.life-hub-navigation').boundingClientRect()
-    query.selectViewport().scrollOffset()
-    query.exec((results) => {
-      const content = results[0] as { top?: number } | null
-      const navigation = results[1] as { height?: number } | null
-      const viewport = results[2] as { scrollTop?: number } | null
-      const contentTop = Number(content?.top)
-      const navigationHeight = Number(navigation?.height)
-
-      if (!Number.isFinite(contentTop) || !Number.isFinite(navigationHeight)) {
-        resolve()
-        return
-      }
-
-      const currentScrollTop = Number(viewport?.scrollTop || 0)
-      const visibleTop = navbarHeight + navigationHeight + 8
-      void Taro.pageScrollTo({
-        scrollTop: Math.max(24, currentScrollTop + contentTop - visibleTop),
-        duration: 180,
-      }).then(() => resolve()).catch(() => resolve())
-    })
-  })
-
   const focusSearch = async () => {
-    await scrollSearchBelowNavigation()
+    await Taro.pageScrollTo({ scrollTop: 0, duration: 180 }).catch(() => undefined)
     setSearchFocusSignal((current) => current + 1)
   }
 
@@ -314,6 +308,10 @@ export default function CommunityPage() {
     Taro.stopPullDownRefresh()
   })
 
+  useReachBottom(() => {
+    setLoadMoreSignal((current) => current + 1)
+  })
+
   useCampusShare((event) => {
     const target = event.target as {
       dataset?: Record<string, string | number>
@@ -342,38 +340,31 @@ export default function CommunityPage() {
         title='社区'
         immersive
         compactImmersive
-        collapsed={headerCollapsed}
-        actionIcon={icons.search}
-        actionLabel={`搜索${pageCopy.title}`}
-        actionVisible={headerCollapsed && canUseDisplayedSection}
-        onAction={() => void focusSearch()}
+        collapsed={false}
       />
 
       <View
-        className='community-page__intro'
-        style={{ paddingRight: `${navbarMetrics.sideWidth + 8}px` }}
+        className='life-hub-navigation'
+        style={{ top: `${navbarMetrics.statusBarHeight}px` }}
       >
-        <View className='community-page__intro-copy'>
-          <Text className='community-page__eyebrow'>社区</Text>
-        </View>
         <View
-          className='community-page__search-action'
-          hoverClass='community-page__search-action--pressed'
-          ariaRole='button'
-          ariaLabel={`搜索${pageCopy.title}`}
-          onClick={() => void focusSearch()}
+          className='community-page__intro'
+          style={{ paddingRight: `${navbarMetrics.sideWidth + 8}px` }}
         >
-          <Image src={icons.search} mode='aspectFit' />
-          <Text>{baseCopy.searchHint}</Text>
+          <View className='community-page__intro-copy'>
+            <Text className='community-page__eyebrow'>社区</Text>
+          </View>
+          <View
+            className='community-page__search-action'
+            ariaRole='button'
+            ariaLabel={`搜索${pageCopy.title}`}
+            onClick={() => void focusSearch()}
+          >
+            <Image src={icons.search} mode='aspectFit' />
+            <Text>{lifeBusinessThemes.market.searchHint}</Text>
+          </View>
         </View>
-      </View>
 
-      <View
-        className={`life-hub-navigation ${
-          headerCollapsed ? 'life-hub-navigation--active' : ''
-        }`}
-        style={{ top: `${navbarHeight}px` }}
-      >
         <ScrollView className='life-primary-tabs' scrollX enhanced showScrollbar={false}>
           <View className='life-primary-tabs__inner'>
             {visibleLifeSections.map((section) => (
@@ -385,7 +376,6 @@ export default function CommunityPage() {
                     ? 'life-primary-tabs__item--active'
                     : ''
                 }`}
-                hoverClass='life-primary-tabs__item--pressed'
                 ariaRole='button'
                 ariaLabel={`切换到${section.label}`}
                 onClick={() => selectSection(section.key)}
@@ -396,9 +386,8 @@ export default function CommunityPage() {
           </View>
         </ScrollView>
 
-        {displayedSection === 'community' && communityRoots.length > 0 && (
-          <>
-            <ScrollView className='community-root-tabs' scrollX enhanced showScrollbar={false}>
+        {displayedSection === 'community' && (
+          <ScrollView className='community-root-tabs' scrollX enhanced showScrollbar={false}>
               <View className='community-root-tabs__inner'>
                 {communityRoots.map((root) => (
                   <View
@@ -409,18 +398,38 @@ export default function CommunityPage() {
                         ? 'community-root-tabs__item community-root-tabs__item--active'
                         : 'community-root-tabs__item'
                     }
-                    hoverClass='community-root-tabs__item--pressed'
                     ariaRole='button'
-                    ariaLabel={`筛选${root.name}`}
-                    onClick={() => selectCommunityRoot(root)}
+                    ariaLabel={activeCommunityRoot?.id === root.id && activeCommunityChildren.length > 0
+                      ? `筛选${root.name}子板块`
+                      : `筛选${root.name}`}
+                    onClick={() => {
+                      if (activeCommunityRoot?.id === root.id && activeCommunityChildren.length > 0) {
+                        void chooseCommunitySection()
+                        return
+                      }
+                      selectCommunityRoot(root)
+                    }}
                   >
-                    {root.name}
+                    <Text>{root.name}</Text>
+                    {activeCommunityRoot?.id === root.id && activeCommunityChildren.length > 0 && (
+                      <Image src={icons.chevron} mode='aspectFit' />
+                    )}
                   </View>
                 ))}
               </View>
-            </ScrollView>
+          </ScrollView>
+        )}
 
-          </>
+        {displayedSection !== 'community' && canUseDisplayedSection && (
+          <LifeServiceTopFilters
+            section={displayedSection as LifeServiceSection}
+            campus={campus}
+            marketFilters={marketFilters}
+            carpoolFilters={carpoolFilters}
+            onCampusChange={setCampus}
+            onMarketFiltersChange={setMarketFilters}
+            onCarpoolFiltersChange={setCarpoolFilters}
+          />
         )}
       </View>
 
@@ -445,13 +454,9 @@ export default function CommunityPage() {
             pinnedPost={pinnedCommunityPost}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
-            filterLabel={
-              activeCommunitySection?.parent_id === null
-                ? '全部'
-                : activeCommunitySection?.name || '全部'
-            }
-            canFilter={activeCommunityChildren.length > 0}
-            onOpenFilter={() => void chooseCommunitySection()}
+            overlayDismissSignal={communityOverlayDismissSignal}
+            loadMoreSignal={loadMoreSignal}
+            onOverlayVisibilityChange={setCommunityOverlayVisible}
             onSelectSection={(sectionId) => setActiveCommunitySectionId(sectionId)}
           />
         ) : (
@@ -460,7 +465,14 @@ export default function CommunityPage() {
             section={displayedSection as LifeServiceSection}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
+            loadMoreSignal={loadMoreSignal}
+            campus={campus}
+            marketFilters={marketFilters}
+            carpoolFilters={carpoolFilters}
             marketplaceSearchPrefill={marketplaceSearchPrefill}
+            onCampusChange={setCampus}
+            onMarketFiltersChange={setMarketFilters}
+            onCarpoolFiltersChange={setCarpoolFilters}
             onMarketplaceSearchPrefillConsumed={() => {
               setMarketplaceSearchPrefill(null)
             }}

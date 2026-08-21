@@ -47,3 +47,14 @@ export const buildDetailFooterActions = ({
     onClick: () => onAction(action),
   }))
 }
+
+export const splitDetailActions = (
+  actions: DetailFooterAction[],
+  overflowKeys: readonly string[],
+) => {
+  const overflow = new Set(overflowKeys)
+  return {
+    inlineActions: actions.filter((action) => !overflow.has(action.key)),
+    overflowActions: actions.filter((action) => overflow.has(action.key)),
+  }
+}

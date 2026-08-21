@@ -28,6 +28,7 @@ const icons = {
   errands: require('../../assets/icons/errands.svg'),
   academic: require('../../assets/icons/academic.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
+  campusCard: require('../../assets/icons/campus-card.svg'),
 }
 
 type ServiceItem = {
@@ -85,6 +86,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
     items: [
       { key: 'classroom', name: '空教室', icon: icons.academic, route: '/pages/empty-classroom/index' },
       { key: 'materials', name: '学习资料', icon: icons.materials, route: '/pages/materials/index' },
+      { key: 'campus-card', name: '校园卡', icon: icons.campusCard, route: '/pages/campus-service/index?type=campus-card' },
     ],
   },
   {
@@ -188,7 +190,6 @@ export default function Services() {
                 <View
                   key={item.key}
                   className='services-group__item'
-                  hoverClass='services-group__item--pressed'
                   role='button'
                   ariaLabel={`打开${item.name}`}
                   onClick={() => openService(item)}
@@ -211,7 +212,6 @@ export default function Services() {
             </View>
             <View
               className='services-migrated__action'
-              hoverClass='services-migrated__action--pressed'
               role='button'
               ariaLabel={migrationGuide.entry_button_text}
               onClick={() => void openMigratedFeaturePage({ module: 'community' })}

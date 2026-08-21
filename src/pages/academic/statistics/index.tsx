@@ -259,7 +259,6 @@ export default function AcademicStatisticsPage() {
             <Text className='statistics-empty__copy'>{errorMessage}</Text>
             <View
               className='statistics-empty__action'
-              hoverClass='statistics-empty__action--pressed'
               ariaRole='button'
               ariaLabel={bindingRequired ? academicBindingGuidance.actionLabel : '重新加载课程统计'}
               onClick={() => {
@@ -332,14 +331,12 @@ export default function AcademicStatisticsPage() {
                 <View className='trend-switch'>
                   <View
                     className={metric === 'pass_rate' ? 'trend-switch__item--active' : ''}
-                    hoverClass='trend-switch__item--pressed'
                     ariaRole='button'
                     ariaLabel='查看通过率趋势'
                     onClick={() => setMetric('pass_rate')}
                   >通过率</View>
                   <View
                     className={metric === 'average_score' ? 'trend-switch__item--active' : ''}
-                    hoverClass='trend-switch__item--pressed'
                     ariaRole='button'
                     ariaLabel='查看平均分趋势'
                     onClick={() => setMetric('average_score')}
@@ -417,7 +414,6 @@ export default function AcademicStatisticsPage() {
                     <View
                       key={teacher.teacher_key}
                       className={`instructor-card ${isCurrent ? 'instructor-card--current' : ''}`}
-                      hoverClass='instructor-card--pressed'
                       ariaRole='button'
                       ariaLabel={`查看${teacher.teacher_name}的历史统计`}
                       onClick={() => openTeacher(teacher)}
@@ -462,7 +458,6 @@ export default function AcademicStatisticsPage() {
             <View className='statistics-sheet__handle' />
             <View
               className='statistics-sheet__close'
-              hoverClass='statistics-sheet__close--pressed'
               ariaRole='button'
               ariaLabel='关闭教师统计详情'
               onClick={() => setSelectedTeacher(null)}

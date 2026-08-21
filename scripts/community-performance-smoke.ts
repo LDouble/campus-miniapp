@@ -10,7 +10,7 @@ const topicSource = readSource('../src/packages/social/community/topic/index.tsx
 const profileSource = readSource('../src/pages/public-profile/index.tsx')
 const commentsSource = readSource('../src/features/life-services/components/detail-comments.tsx')
 
-assert.match(cardSource, /import \{ memo \} from 'react'/u)
+assert.match(cardSource, /import \{[^}]*\bmemo\b[^}]*\} from 'react'/u)
 assert.match(cardSource, /export default memo\(CommunityPostCard\)/u)
 assert.match(cardSource, /motionDelay > 0 \? 'motion-enter' : ''/u)
 

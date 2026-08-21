@@ -927,9 +927,9 @@ export default function MaterialsPage() {
       <CustomNavbar title='课程资料' subtitle='中国海洋大学' showBack />
       <View className='materials-page__content'>
         <View className='materials-view-tabs'>
-          <View className={viewMode === 'browse' ? 'materials-view-tabs__active' : ''} hoverClass='materials-view-tabs__pressed' ariaRole='tab' ariaLabel='查看课程资料库' onClick={() => setViewMode('browse')}>资料库</View>
-          <View className={viewMode === 'mine' ? 'materials-view-tabs__active' : ''} hoverClass='materials-view-tabs__pressed' ariaRole='tab' ariaLabel='查看我的资料' onClick={() => setViewMode('mine')}>我的资料{drafts.length ? <Text>{drafts.length}</Text> : null}</View>
-          <View className={viewMode === 'feedbacks' ? 'materials-view-tabs__active' : ''} hoverClass='materials-view-tabs__pressed' ariaRole='tab' ariaLabel='查看我的反馈' onClick={() => setViewMode('feedbacks')}>我的反馈</View>
+          <View className={viewMode === 'browse' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看课程资料库' onClick={() => setViewMode('browse')}>资料库</View>
+          <View className={viewMode === 'mine' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看我的资料' onClick={() => setViewMode('mine')}>我的资料{drafts.length ? <Text>{drafts.length}</Text> : null}</View>
+          <View className={viewMode === 'feedbacks' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看我的反馈' onClick={() => setViewMode('feedbacks')}>我的反馈</View>
         </View>
         {viewMode !== 'feedbacks' && <View className='materials-search'>
           <Image src={icons.search} mode='aspectFit' />
@@ -963,17 +963,17 @@ export default function MaterialsPage() {
           </View>
         )}
         {viewMode !== 'feedbacks' && <View className='materials-actions'>
-          <View className={`materials-filter-button ${filtersActive ? 'materials-filter-button--active' : ''}`} hoverClass='materials-filter-button--pressed' ariaRole='button' ariaLabel='筛选课程资料' onClick={() => setSheet('filter')}><Text>筛选</Text>{filtersActive && <View />}</View>
+          <View className={`materials-filter-button ${filtersActive ? 'materials-filter-button--active' : ''}`} ariaRole='button' ariaLabel='筛选课程资料' onClick={() => setSheet('filter')}><Text>筛选</Text>{filtersActive && <View />}</View>
           <ScrollView scrollX showScrollbar={false} className='materials-course-scroll'>
-            <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} hoverClass='materials-course-chip--pressed' ariaRole='button' ariaLabel={`筛选课程：${item}`} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
+            <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} ariaRole='button' ariaLabel={`筛选课程：${item}`} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
           </ScrollView>
-          <View className='materials-upload-button' hoverClass='materials-upload-button--pressed' ariaRole='button' ariaLabel='分享课程资料' onClick={openUpload}>分享资料</View>
+          <View className='materials-upload-button' ariaRole='button' ariaLabel='分享课程资料' onClick={openUpload}>分享资料</View>
         </View>}
 
         {viewMode === 'browse' && <>
           <View className='materials-heading'><View><Text>课程资料</Text><Text>{limitToSourcePeriod && routeContext.periodId ? `${sourcePeriodLabel} · 仅展示已审核内容` : '全部学期 · 仅展示已审核内容'}</Text></View><Text>{materialsTotal} 份</Text></View>
           {loading && !materials.length ? <View className='materials-empty'><View /><Text>正在加载资料</Text><Text>请稍候</Text></View> : <View className='materials-list'>
-            {materials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
+            {materials.map((item) => <View key={item.id} className='material-card' onClick={() => openMaterialDetail(item)}>
               <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
               <View className='material-card__main'>
                 <Text className='material-card__title'>{item.title}</Text>
@@ -1008,7 +1008,7 @@ export default function MaterialsPage() {
               </View>
               <Text className='material-card__arrow'>›</Text>
             </View>}
-            {visibleMyMaterials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
+            {visibleMyMaterials.map((item) => <View key={item.id} className='material-card' onClick={() => openMaterialDetail(item)}>
               <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
               <View className='material-card__main'>
                 <Text className='material-card__title'>{item.title}</Text>
@@ -1049,7 +1049,7 @@ export default function MaterialsPage() {
         >
           <View className='materials-sheet__handle' />
           {sheet !== 'upload-course' && (
-          <View className='materials-sheet__close' hoverClass='materials-filter-button--pressed' ariaRole='button' ariaLabel='关闭弹层' onClick={closeSheet}>×</View>
+          <View className='materials-sheet__close' ariaRole='button' ariaLabel='关闭弹层' onClick={closeSheet}>×</View>
           )}
 
           {sheet === 'filter' && <View className='materials-sheet__body'>
@@ -1129,7 +1129,6 @@ export default function MaterialsPage() {
                         <View
                           key={`${item.id || 'candidate'}-${item.name}`}
                           className={`materials-course-picker__option ${selected ? 'materials-course-picker__option--active' : ''}`}
-                          hoverClass='materials-course-picker__option--pressed'
                           onClick={() => updateMetadata({
                             courseName: item.name,
                             courseId: item.id,
@@ -1227,7 +1226,6 @@ export default function MaterialsPage() {
                     <View
                       key={`${item.id || 'candidate'}-${item.name}`}
                       className={`materials-course-browser__option ${selected ? 'materials-course-browser__option--active' : ''}`}
-                      hoverClass='materials-course-browser__option--pressed'
                       onClick={() => selectUploadCourseOption(item)}
                     >
                       <View>

@@ -17,13 +17,17 @@ import {
   formatMoney,
   formatStatus,
 } from '../../../features/life-services/format'
-import DetailAuthorNavbar from '../../../features/life-services/components/detail-author-navbar'
+import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
 import DetailBusinessIntro from '../../../features/life-services/components/detail-business-intro'
 import DetailComments, {
   createBusinessContactComment,
 } from '../../../features/life-services/components/detail-comments'
+import DetailOverflowActions from '../../../features/life-services/components/detail-overflow-actions'
 import BusinessRoute from '../../../features/life-services/components/business-route'
-import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
+import {
+  buildDetailFooterActions,
+  splitDetailActions,
+} from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
 import {
   contactTypeLabel,
@@ -242,20 +246,14 @@ export default function ErrandDetailPage() {
     busy: working,
     onAction: (action) => void updateFromAction(action),
   }) : []
+  const { inlineActions, overflowActions } = splitDetailActions(
+    footerActions,
+    ['edit', 'cancel'],
+  )
 
   return (
     <View className='life-detail life-detail--errands'>
-      <CustomNavbar
-        title='跑腿详情'
-        showBack
-        barContent={item ? (
-          <DetailAuthorNavbar
-            avatarUrl={item.author_avatar_url}
-            nickname={item.author_nickname}
-            userId={item.requester_id}
-          />
-        ) : undefined}
-      />
+      <CustomNavbar title='跑腿详情' showBack />
       <View className='life-detail__content'>
         {loading && <View className='detail-state'>正在加载任务信息</View>}
         {!loading && error && (
@@ -266,6 +264,29 @@ export default function ErrandDetailPage() {
         )}
         {!loading && item && (
           <>
+            <DetailAuthorHeader
+              avatarUrl={item.author_avatar_url}
+              nickname={item.author_nickname}
+              userId={item.requester_id}
+              meta={<Text>{formatDateTime(item.created_at)}</Text>}
+              action={(
+                <View className='detail-overview__toolbar-actions'>
+                  {item.viewer_relation !== 'publisher' && (
+                    <View
+                      className='detail-overview__report'
+                      onClick={() => void openContentReport({
+                        resourceType: 'errand',
+                        resourceId: item.id,
+                        resourceVersion: item.version,
+                      })}
+                    >
+                      举报
+                    </View>
+                  )}
+                  <DetailOverflowActions actions={overflowActions} />
+                </View>
+              )}
+            />
             <DetailBusinessIntro
               badges={[
                 '跑腿',
@@ -273,19 +294,6 @@ export default function ErrandDetailPage() {
                 formatStatus(item.status, item.review_status),
               ]}
               title={item.description}
-              action={item.viewer_relation !== 'publisher' ? (
-                <View
-                  className='detail-overview__report'
-                  hoverClass='detail-report-link--pressed'
-                  onClick={() => void openContentReport({
-                    resourceType: 'errand',
-                    resourceId: item.id,
-                    resourceVersion: item.version,
-                  })}
-                >
-                  举报
-                </View>
-              ) : undefined}
             >
               <View className='detail-important-card detail-important-card--errand'>
                 <View className='detail-important-card__topline'>
@@ -351,7 +359,7 @@ export default function ErrandDetailPage() {
               refreshKey={commentRefreshKey}
               targetAuthorId={item.requester_id}
               tone='errand'
-              actions={footerActions}
+              actions={inlineActions}
               persistentContact={persistentContact}
             />
           </>

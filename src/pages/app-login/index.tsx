@@ -109,7 +109,6 @@ export default function AppLoginPage() {
 
       <View
         className={`app-login__button ${status === 'loading' ? 'app-login__button--loading' : ''}`}
-        hoverClass='app-login__button--pressed'
         onClick={authorize}
       >
         {status === 'loading' && <View className='app-login__spinner' />}

@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { MarketplaceListingView } from '../../../api/types'
-import UserAvatarImage from '../../../components/user-avatar-image'
+import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
 import { plainStickerContent } from '../../stickers/content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
@@ -39,7 +39,6 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
         cover ? '' : 'marketplace-card--no-image',
         isWanted ? 'marketplace-card--wanted' : 'marketplace-card--sell',
       ].filter(Boolean).join(' ')}
-      hoverClass='marketplace-card--pressed'
       ariaRole='button'
       ariaLabel={`${isWanted ? '求购' : '出售'}，${readableDescription}，${formatMoney(item.price_cents)}`}
       onClick={() => openDetail(item)}
@@ -79,14 +78,14 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
         )}
         <View className='marketplace-card__footer'>
           <View className='marketplace-card__author'>
-            <View className='marketplace-card__avatar'>
-              <UserAvatarImage
-                src={item.author_avatar_url}
-                className='marketplace-card__avatar-image'
-                fallback={authorInitial}
-                lazyLoad
-              />
-            </View>
+            <UserAvatar
+              src={item.author_avatar_url}
+              className='marketplace-card__avatar'
+              imageClassName='marketplace-card__avatar-image'
+              fallback={authorInitial}
+              userId={item.owner_id}
+              lazyLoad
+            />
             <Text>{authorName}</Text>
           </View>
           <Text>{campusLabel(item.campus)}</Text>

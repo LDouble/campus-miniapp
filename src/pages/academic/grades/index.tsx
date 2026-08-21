@@ -728,7 +728,6 @@ export default function GradesPage() {
                       <View
                         key={grade.id}
                         className={`grade-card ${simulationMode ? 'grade-card--simulation' : 'grade-card--original'} ${selected ? 'grade-card--selected' : ''}`}
-                        hoverClass='grade-card--pressed'
                         onClick={() => simulationMode ? openEditor(grade) : openGradeServices(grade)}
                       >
                         {simulationMode && (

@@ -34,19 +34,18 @@ page {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    color: var(--campus-primary-strong, #155dfc);
     font-size: 36rpx;
     font-weight: 750;
-    background: var(--campus-surface-primary, #eff6ff);
-    border: 4rpx solid var(--campus-border-strong, #dbeafe);
+    border: 0;
     border-radius: 50%;
+    box-shadow: none;
 
     &-image {
       display: block;
       width: 100%;
       height: 100%;
       background: var(--campus-surface-primary, #eff6ff);
-      border-radius: 50%;
+      border-radius: inherit;
     }
   }
 
@@ -375,6 +374,23 @@ page {
   border: 1rpx solid var(--campus-border, #f1f5f9);
   border-radius: 32rpx;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.03);
+}
+
+.profile-theme-entry {
+  &__icon image {
+    width: 38rpx;
+    height: 38rpx;
+  }
+
+  &__value {
+    flex: none;
+    margin-left: var(--ousea-space-1, 16rpx);
+    color: var(--campus-text-secondary, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
 }
 
 .profile-identity-entry {

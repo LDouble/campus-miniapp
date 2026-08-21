@@ -56,7 +56,6 @@ export default function BottomSheet({
             className='bottom-sheet__close'
             ariaRole='button'
             ariaLabel={`${closeLabel}${title}`}
-            hoverClass='bottom-sheet__close--pressed'
             onClick={onClose}
           >
             {closeLabel}
