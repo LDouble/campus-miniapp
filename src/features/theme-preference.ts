@@ -63,13 +63,32 @@ const readStoredPreference = (): CampusThemePreference => {
 
 const readSystemTheme = (): CampusTheme => {
   if (systemTheme) return systemTheme
+
   try {
-    const value = Taro.getAppBaseInfo().theme
-    systemTheme = isCampusTheme(value) ? value : 'light'
+    const appBaseInfo = typeof Taro.getAppBaseInfo === 'function'
+      ? Taro.getAppBaseInfo()
+      : undefined
+    if (isCampusTheme(appBaseInfo?.theme)) {
+      systemTheme = appBaseInfo.theme
+      return systemTheme
+    }
   } catch {
-    systemTheme = 'light'
+    // 部分基础库在首帧还未准备好 AppBaseInfo，继续尝试兼容 API。
   }
-  return systemTheme
+
+  try {
+    const systemInfo = typeof Taro.getSystemInfoSync === 'function'
+      ? Taro.getSystemInfoSync()
+      : undefined
+    if (isCampusTheme(systemInfo?.theme)) {
+      systemTheme = systemInfo.theme
+      return systemTheme
+    }
+  } catch {
+    // 兼容 API 不可用时回退浅色，但不缓存回退值，避免遮蔽后续主题读取。
+  }
+
+  return 'light'
 }
 
 export const getCampusThemePreference = (): CampusThemePreference => readStoredPreference()

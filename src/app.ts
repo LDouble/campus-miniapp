@@ -1,4 +1,4 @@
-import { createElement, useCallback, useEffect, useRef } from 'react'
+import { createElement, useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidShow, useDidHide, useLaunch } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import {
@@ -18,6 +18,8 @@ import {
   applyCampusThemeToCurrentPage,
   getCampusTheme,
   initializeCampusTheme,
+  subscribeCampusTheme,
+  type CampusTheme,
 } from './features/theme-preference'
 import {
   resolvePageSubscriptionModule,
@@ -40,6 +42,7 @@ const refreshMessageUnreadCount = async () => {
 }
 
 function App(props) {
+  const [campusTheme, setCampusTheme] = useState<CampusTheme>(() => getCampusTheme())
   const privateMessageUnreadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const privateMessageUnreadVisibleRef = useRef(false)
   const privateMessageUnreadPollingGeneration = useRef(0)
@@ -65,7 +68,8 @@ function App(props) {
   }, [stopPrivateMessageUnreadPolling])
 
   useLaunch(() => {
-    initializeCampusTheme()
+    const theme = initializeCampusTheme()
+    setCampusTheme(theme)
     initializeSystemState()
     installAppUpdate()
     void preloadPublicData()
@@ -78,13 +82,19 @@ function App(props) {
     installGlobalErrorReporting()
   }, [])
 
+  useEffect(() => subscribeCampusTheme((theme) => {
+    setCampusTheme(theme)
+  }), [])
+
   // 对应 onShow
   useDidShow(() => {
     privateMessageUnreadVisibleRef.current = true
     privateMessageUnreadPollingGeneration.current += 1
     const generation = privateMessageUnreadPollingGeneration.current
-    applyCampusThemeToCurrentPage(getCampusTheme())
-    applyCampusThemeToNativeChrome(getCampusTheme())
+    const theme = getCampusTheme()
+    setCampusTheme((currentTheme) => currentTheme === theme ? currentTheme : theme)
+    applyCampusThemeToCurrentPage(theme)
+    applyCampusThemeToNativeChrome(theme)
     void preloadPublicData()
     void refreshMessageUnreadCount()
     void guardCurrentPage()
@@ -120,7 +130,10 @@ function App(props) {
 
   return createElement(
     View,
-    { onClick: requestWechatSubscriptionForCurrentPage },
+    {
+      className: `campus-app-root campus-theme campus-theme--${campusTheme}`,
+      onClick: requestWechatSubscriptionForCurrentPage,
+    },
     props.children,
   )
 }

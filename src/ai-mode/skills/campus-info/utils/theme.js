@@ -9,7 +9,21 @@ const getCampusTheme = () => {
   }
 
   try {
-    return wx.getAppBaseInfo().theme === 'dark' ? 'dark' : 'light'
+    const appBaseInfo = typeof wx.getAppBaseInfo === 'function'
+      ? wx.getAppBaseInfo()
+      : null
+    if (appBaseInfo && (appBaseInfo.theme === 'dark' || appBaseInfo.theme === 'light')) {
+      return appBaseInfo.theme
+    }
+  } catch (_) {
+    // 基础库首帧暂时没有 AppBaseInfo 时继续尝试兼容 API。
+  }
+
+  try {
+    const systemInfo = typeof wx.getSystemInfoSync === 'function'
+      ? wx.getSystemInfoSync()
+      : null
+    return systemInfo && systemInfo.theme === 'dark' ? 'dark' : 'light'
   } catch (_) {
     return 'light'
   }

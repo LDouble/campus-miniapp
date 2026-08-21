@@ -69,7 +69,10 @@ const injectCampusThemeIntoPageRoots = (assets) => {
     '(function(){try{',
     "var p=wx.getStorageSync('campus-theme-preference');",
     "if(p==='light'||p==='dark')return p;",
-    "return wx.getAppBaseInfo&&wx.getAppBaseInfo().theme==='dark'?'dark':'light'",
+    "var a=wx.getAppBaseInfo&&wx.getAppBaseInfo();",
+    "if(a&&(a.theme==='light'||a.theme==='dark'))return a.theme;",
+    "var s=wx.getSystemInfoSync&&wx.getSystemInfoSync();",
+    "return s&&s.theme==='dark'?'dark':'light'",
     "}catch(e){return 'light'}})()",
   ].join('')
 

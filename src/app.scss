@@ -126,6 +126,13 @@ button {
   background: var(--campus-page, #f5f8fc);
 }
 
+// App 根节点在首帧就带上主题类，避免等待页面 onShow 或 setData 后才切换背景。
+.campus-app-root {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+}
+
 // Shared motion primitives. Keep product motion short and limited to opacity
 // and transforms so the same feedback stays smooth on lower-end devices.
 .motion-enter {
