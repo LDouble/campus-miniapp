@@ -115,6 +115,19 @@ assert.match(darkModeStyle, /& \.community-panel,/u)
 assert.match(darkModeStyle, /& \.market-panel/u)
 assert.match(darkModeStyle, /& \.service-panel \{/u)
 assert.match(darkModeStyle, /& \.service-panel__grid-icon image/u)
+assert.match(
+  darkModeStyle,
+  /&\.campus\.campus \.service-panel__grid-item--blue \.service-panel__grid-icon image/u,
+)
+assert.match(
+  darkModeStyle,
+  /&\.campus\.campus \.service-panel__grid-item--sand \.service-panel__grid-icon image/u,
+)
+assert.doesNotMatch(
+  darkModeStyle,
+  /&\.campus\.campus \.service-panel__grid-item--key-[\w-]+ \.service-panel__grid-icon/u,
+  '首页常用服务暗色样式应以 tone 为准，不能由业务 key 覆盖配色',
+)
 assert.match(darkModeStyle, /& \.today-card__event-row--important/u)
 assert.match(darkModeStyle, /& \.official-notices-home__source/u)
 assert.match(darkModeStyle, /& \.home-section-state/u)
@@ -146,6 +159,24 @@ assert.match(darkModeStyle, /& \.life-primary-tabs__item--active::after/u)
 assert.match(darkModeStyle, /& \.community-root-tabs__item--active/u)
 assert.match(darkModeStyle, /& \.community-page__search-action/u)
 assert.match(darkModeStyle, /& \.community-post__social/u)
+assert.match(
+  darkModeStyle,
+  /& \.community-post__engagement\s*\{[^}]*background:\s*var\(--campus-surface-subtle,\s*#172033\);[^}]*box-shadow:\s*inset 0 0 0 1rpx var\(--campus-border,\s*#243244\);/u,
+  '列表评论摘要应使用中性次级表面和暗色细边界',
+)
+assert.match(
+  darkModeStyle,
+  /& \.community-post__comment-previews\s*\{[^}]*border-top-color:\s*var\(--campus-border,\s*#243244\);/u,
+)
+assert.match(
+  darkModeStyle,
+  /& \.community-post__comment-preview-author\s*\{[^}]*color:\s*var\(--campus-text-secondary,\s*#aab8ca\);/u,
+  '暗色列表评论昵称应回落到次级文字层，而不是高饱和蓝色',
+)
+assert.match(
+  darkModeStyle,
+  /& \.community-post__comments-all\s*\{[^}]*color:\s*var\(--campus-primary-strong,\s*#93c5fd\);/u,
+)
 assert.match(darkModeStyle, /& \.community-feed-skeleton__line/u)
 assert.match(darkModeStyle, /& \.fresh-barrage__item/u)
 assert.match(darkModeStyle, /& \.community-level-badge--gold/u)

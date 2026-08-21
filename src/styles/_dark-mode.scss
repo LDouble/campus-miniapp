@@ -692,53 +692,77 @@
 
   &.campus.campus .service-panel__grid-icon {
     background: var(--campus-icon-surface, #172033);
-    border-color: var(--campus-border-strong, #2f4c73);
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1rpx rgba(148, 163, 184, 0.12);
   }
 
-  &.campus.campus .service-panel__grid-item--blue .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-schedule .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-result .service-panel__grid-icon {
+  // 首页服务入口只按数据声明的 tone 着色，避免 key 覆盖后出现图标与业务色错配。
+  &.campus.campus .service-panel__grid-item--blue .service-panel__grid-icon {
     background: var(--campus-icon-surface-blue, #162a46);
+    box-shadow: inset 0 0 0 1rpx rgba(96, 165, 250, 0.22);
   }
 
-  &.campus.campus .service-panel__grid-item--cyan .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-materials .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-carpool .service-panel__grid-icon {
+  &.campus.campus .service-panel__grid-item--cyan .service-panel__grid-icon {
     background: var(--campus-icon-surface-cyan, #12343d);
+    box-shadow: inset 0 0 0 1rpx rgba(34, 211, 238, 0.2);
   }
 
   &.campus.campus .service-panel__grid-item--green .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--mint .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-grades .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-shuttle .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-classroom .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-clubs .service-panel__grid-icon {
+  &.campus.campus .service-panel__grid-item--mint .service-panel__grid-icon {
     background: var(--campus-icon-surface-green, #12352f);
+    box-shadow: inset 0 0 0 1rpx rgba(52, 211, 153, 0.2);
   }
 
-  &.campus.campus .service-panel__grid-item--orange .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--sand .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-market .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-errands .service-panel__grid-icon {
+  &.campus.campus .service-panel__grid-item--orange .service-panel__grid-icon {
     background: var(--campus-icon-surface-orange, #3a291a);
+    box-shadow: inset 0 0 0 1rpx rgba(251, 146, 60, 0.2);
   }
 
-  &.campus.campus .service-panel__grid-item--purple .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-community .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-calendar .service-panel__grid-icon {
+  &.campus.campus .service-panel__grid-item--sand .service-panel__grid-icon {
+    background: var(--campus-icon-surface-orange, #3a291a);
+    box-shadow: inset 0 0 0 1rpx rgba(252, 211, 77, 0.2);
+  }
+
+  &.campus.campus .service-panel__grid-item--purple .service-panel__grid-icon {
     background: var(--campus-icon-surface-purple, #2e254c);
+    box-shadow: inset 0 0 0 1rpx rgba(192, 132, 252, 0.2);
   }
 
-  &.campus.campus .service-panel__grid-item--pink .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-exams .service-panel__grid-icon,
-  &.campus.campus .service-panel__grid-item--key-pass-rate .service-panel__grid-icon {
+  &.campus.campus .service-panel__grid-item--pink .service-panel__grid-icon {
     background: var(--campus-icon-surface-pink, #3b202b);
+    box-shadow: inset 0 0 0 1rpx rgba(251, 113, 133, 0.2);
   }
 
   &.campus.campus .service-panel__grid-icon image {
-    filter: brightness(0) saturate(100%) invert(80%) sepia(12%) saturate(1256%) hue-rotate(178deg) brightness(102%) contrast(98%);
     opacity: 0.96;
+  }
+
+  &.campus.campus .service-panel__grid-item--blue .service-panel__grid-icon image {
+    filter: brightness(0) saturate(100%) invert(84%) sepia(17%) saturate(1243%) hue-rotate(181deg) brightness(104%) contrast(98%);
+  }
+
+  &.campus.campus .service-panel__grid-item--cyan .service-panel__grid-icon image {
+    filter: brightness(0) saturate(100%) invert(86%) sepia(34%) saturate(1143%) hue-rotate(158deg) brightness(101%) contrast(96%);
+  }
+
+  &.campus.campus .service-panel__grid-item--green .service-panel__grid-icon image,
+  &.campus.campus .service-panel__grid-item--mint .service-panel__grid-icon image {
+    filter: brightness(0) saturate(100%) invert(84%) sepia(28%) saturate(776%) hue-rotate(99deg) brightness(96%) contrast(88%);
+  }
+
+  &.campus.campus .service-panel__grid-item--orange .service-panel__grid-icon image {
+    filter: brightness(0) saturate(100%) invert(79%) sepia(49%) saturate(710%) hue-rotate(328deg) brightness(103%) contrast(98%);
+  }
+
+  &.campus.campus .service-panel__grid-item--sand .service-panel__grid-icon image {
+    filter: brightness(0) saturate(100%) invert(88%) sepia(52%) saturate(1324%) hue-rotate(331deg) brightness(104%) contrast(98%);
+  }
+
+  &.campus.campus .service-panel__grid-item--purple .service-panel__grid-icon image {
+    filter: brightness(0) saturate(100%) invert(80%) sepia(25%) saturate(1407%) hue-rotate(208deg) brightness(103%) contrast(99%);
+  }
+
+  &.campus.campus .service-panel__grid-item--pink .service-panel__grid-icon image {
+    filter: brightness(0) saturate(100%) invert(77%) sepia(20%) saturate(868%) hue-rotate(303deg) brightness(102%) contrast(98%);
   }
 
   & .services-search,
@@ -1050,7 +1074,21 @@
   }
 
   & .community-post__engagement {
-    background: var(--campus-surface-primary, #172554);
+    background: var(--campus-surface-subtle, #172033);
+    box-shadow: inset 0 0 0 1rpx var(--campus-border, #243244);
+  }
+
+  & .community-post__liked-by image {
+    filter: brightness(0) saturate(100%) invert(84%) sepia(17%) saturate(1243%) hue-rotate(181deg) brightness(104%) contrast(98%);
+  }
+
+  & .community-post__comment-previews {
+    border-top-color: var(--campus-border, #243244);
+  }
+
+  & .community-post__engagement > .community-post__comment-previews:first-child {
+    padding-top: 0;
+    border-top: 0;
   }
 
   & .community-post__comment-preview {
@@ -1058,7 +1096,16 @@
   }
 
   & .community-post__comment-preview-author {
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  & .community-post__comment-preview-relation {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  & .community-post__comments-all {
     color: var(--campus-primary-strong, #93c5fd);
+    font-weight: var(--ousea-font-weight-medium, 500);
   }
 
   & .moments-feed__action::before {
