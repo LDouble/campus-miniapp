@@ -42,9 +42,15 @@ export const privateMessageImageFrameSize = (width: number, height: number) => {
   const safeWidth = Number(width) > 0 ? Number(width) : 1
   const safeHeight = Number(height) > 0 ? Number(height) : 1
   const aspect = safeWidth / safeHeight
-  const frameWidth = aspect >= 1 ? 440 : Math.max(220, Math.round(440 * aspect))
-  const frameHeight = Math.max(180, Math.min(560, Math.round(frameWidth / aspect)))
-  return { width: frameWidth, height: frameHeight }
+  const maxEdge = 260
+  const minEdge = 144
+  const frameWidth = aspect >= 1
+    ? maxEdge
+    : Math.max(minEdge, Math.round(maxEdge * aspect))
+  const frameHeight = aspect >= 1
+    ? Math.max(minEdge, Math.round(maxEdge / aspect))
+    : maxEdge
+  return { width: `${frameWidth}rpx`, height: `${frameHeight}rpx` }
 }
 
 export const privateMessageMediaReviewBackoff = (consecutiveLoadFailures: number) => {
