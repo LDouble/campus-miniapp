@@ -10,7 +10,7 @@ import {
   setCoursesForPeriod,
 } from '../src/pages/academic/schedule-courses'
 import { Course } from '../src/pages/academic/types'
-import { formatCourseWeeks } from '../src/pages/academic/utils'
+import { formatCourseWeeks, resolveHorizontalSwipeWeek } from '../src/pages/academic/utils'
 
 const course = (id: string, periodId: string): Course => ({
   id,
@@ -176,5 +176,36 @@ assert.equal(
   '周次应先去重排序，再分别合并连续、单双周区间',
 )
 assert.equal(formatCourseWeeks([]), '未设置', '空周次应显示兜底文案')
+
+assert.equal(
+  resolveHorizontalSwipeWeek(3, 20, { x: 240, y: 120 }, { x: 160, y: 124 }),
+  4,
+  '左滑应切换到下一周',
+)
+assert.equal(
+  resolveHorizontalSwipeWeek(3, 20, { x: 160, y: 120 }, { x: 240, y: 124 }),
+  2,
+  '右滑应切换到上一周',
+)
+assert.equal(
+  resolveHorizontalSwipeWeek(3, 20, { x: 240, y: 120 }, { x: 200, y: 180 }),
+  3,
+  '纵向滑动不应切换周次',
+)
+assert.equal(
+  resolveHorizontalSwipeWeek(1, 20, { x: 160, y: 120 }, { x: 240, y: 124 }),
+  1,
+  '第一周右滑不应越界',
+)
+assert.equal(
+  resolveHorizontalSwipeWeek(20, 20, { x: 240, y: 120 }, { x: 160, y: 124 }),
+  20,
+  '最后一周左滑不应越界',
+)
+assert.match(
+  schedulePageSource,
+  /onTouchStart=\{handleWeekTouchStart\}[\s\S]*?onTouchEnd=\{handleWeekTouchEnd\}/u,
+  '周课表网格必须接入左右滑动手势',
+)
 
 process.stdout.write('academic schedule isolation smoke: ok\n')
