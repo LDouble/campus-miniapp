@@ -5,12 +5,15 @@ import { resolve } from 'node:path'
 const readSource = (path: string) => readFileSync(resolve(__dirname, path), 'utf8')
 
 const cardSource = readSource('../src/features/community/post-card.tsx')
+const imageGridSource = readSource('../src/features/community/components/content-image-grid.tsx')
+const imageGridStyles = readSource('../src/features/community/components/content-image-grid.scss')
 const feedSource = readSource('../src/features/community/feed-panel.tsx')
 const communityPageSource = readSource('../src/pages/community/index.tsx')
 const topicSource = readSource('../src/packages/social/community/topic/index.tsx')
 const profileSource = readSource('../src/pages/public-profile/index.tsx')
 const overlayDismissalSource = readSource('../src/features/community/use-overlay-dismissal.ts')
 const feedStyles = readSource('../src/features/community/feed-panel.scss')
+const typographyStyles = readSource('../src/styles/_typography.scss')
 const profileStyles = readSource('../src/pages/public-profile/index.scss')
 const darkStyles = readSource('../src/styles/_dark-mode.scss')
 const heartAsset = readSource('../src/assets/community/feed-heart.svg')
@@ -28,8 +31,11 @@ assert.doesNotMatch(
   cardSource,
   /className='community-post__body api-post__body'[\s\S]{0,220}?onClick=/u,
 )
-assert.match(cardSource, /const MAX_POST_IMAGES = 3/u)
+assert.match(cardSource, /const MAX_POST_IMAGES = 9/u)
 assert.match(cardSource, /post\.images\.slice\(0, MAX_POST_IMAGES\)/u)
+assert.match(cardSource, /const onlyStickers = contentParts\.length > 0/u)
+assert.match(cardSource, /readableContent\.trim\(\)\.length <= 20/u)
+assert.match(cardSource, /compactContent \? 'community-post--compact-content' : ''/u)
 assert.match(cardSource, /timeFormatter\?: \(value\?: string \| null\) => string/u)
 assert.doesNotMatch(cardSource, /CommunityPostCardMode|isHomeMode|mode='home'/u)
 assert.match(cardSource, /community-post__avatar-button/u)
@@ -39,6 +45,10 @@ assert.match(cardSource, /community-post__main/u)
 assert.match(cardSource, /community-post__content-wrap--clamped/u)
 assert.match(cardSource, /useState\(false\)/u)
 assert.match(cardSource, /community-post__action-menu/u)
+assert.match(
+  cardSource,
+  /!onToggleLike[\s\S]*?community-post__action-menu--single[\s\S]*?post\.liked \? 'community-post__action-menu--liked'/u,
+)
 assert.match(cardSource, /actionsOpen:\s*boolean/u)
 assert.match(cardSource, /onToggleActions\(post\.id\)/u)
 assert.match(cardSource, /<Button[\s\S]*?id=\{`community-post-more-\$\{cardId\}`\}/u)
@@ -62,7 +72,20 @@ assert.doesNotMatch(
   cardSource,
   /className='community-post__meta'\s+onClick=\{\(event\) => event\.stopPropagation\(\)\}/u,
 )
-assert.match(cardSource, /图片审核中/u)
+assert.match(cardSource, /<ContentImageGrid[\s\S]*?images=\{visibleImages\}[\s\S]*?pendingReview=\{imagesPendingReview\}/u)
+assert.match(imageGridSource, /reviewLabel = '图片审核中'/u)
+assert.match(
+  cardSource,
+  /className=\{post\.author_deleted[\s\S]*?community-post__author-line--deleted/u,
+)
+assert.doesNotMatch(
+  cardSource,
+  /className='community-post__author-line'>[\s\S]{0,260}?community-post__review-status/u,
+)
+assert.match(
+  cardSource,
+  /className='community-post__meta-copy'>[\s\S]{0,260}?community-post__review-status/u,
+)
 assert.match(cardSource, /community-post__comment-preview/u)
 assert.match(cardSource, /id=\{`community-comment-preview-\$\{comment\.id\}`\}/u)
 assert.match(cardSource, /comment\.root_id/u)
@@ -120,21 +143,38 @@ assert.match(overlayDismissalSource, /export const suppressCommunityOverlayDismi
 assert.match(overlayDismissalSource, /Date\.now\(\) < dismissSuppressedUntil/u)
 
 assert.match(feedStyles, /\.community-post\s*\{[\s\S]*?display:\s*flex;[\s\S]*?padding:\s*28rpx 32rpx;[\s\S]*?gap:\s*20rpx;/u)
-assert.match(feedStyles, /\.community-post__avatar \{[\s\S]*?width:\s*80rpx;[\s\S]*?height:\s*80rpx;[\s\S]*?border-radius:\s*18rpx;/u)
-assert.match(feedStyles, /\.community-post__author-line > text:first-child \{[\s\S]*?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u)
+assert.match(feedStyles, /\.community-post__avatar \{[\s\S]*?width:\s*80rpx;[\s\S]*?height:\s*80rpx;/u)
+assert.match(feedStyles, /\.campus-user-avatar\.campus-user-avatar--circle\.community-post__avatar \{[^}]*border-radius:\s*18rpx;/u)
+assert.doesNotMatch(feedStyles, /@media \(max-width:\s*360px\)[\s\S]*?\.community-post__avatar[^}]*?(?:width|height):\s*72rpx;/u)
+assert.match(feedStyles, /\.community-post__author-line > text:first-child \{[\s\S]*?color:\s*var\(--campus-primary-strong,\s*#1d5fd6\);[\s\S]*?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);[\s\S]*?line-height:\s*42rpx;/u)
+assert.match(feedStyles, /\.community-post__author-line--deleted > text:first-child \{[^}]*color:\s*var\(--campus-text-secondary,\s*#6b7a90\);/u)
+assert.match(typographyStyles, /page \.community-post__author-line > text:first-child \{ font-size:\s*30rpx; \}/u)
 assert.match(feedStyles, /\.community-post__content-wrap--clamped \.community-post__content \{[\s\S]*?-webkit-line-clamp:\s*6;/u)
-assert.match(feedStyles, /\.community-post__images \{[\s\S]*?grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);[\s\S]*?gap:\s*8rpx;/u)
-assert.match(feedStyles, /\.community-post__images--1 \{[\s\S]*?width:\s*424rpx;[\s\S]*?height:\s*212rpx;/u)
+assert.match(feedStyles, /\.community-post--compact-content \.community-post__content \{[^}]*line-height:\s*1\.45;/u)
+assert.match(feedStyles, /\.community-post--compact-content \.community-post__meta \{[^}]*padding-top:\s*4rpx;/u)
+assert.match(imageGridStyles, /\.content-image-grid \{[\s\S]*?width:\s*472rpx;[\s\S]*?grid-template-columns:\s*repeat\(3, 152rpx\);[\s\S]*?gap:\s*8rpx;/u)
+assert.match(imageGridStyles, /\.content-image-grid--1 \{[\s\S]*?width:\s*424rpx;[\s\S]*?height:\s*212rpx;/u)
+assert.match(imageGridStyles, /\.content-image-grid--2 \{[^}]*width:\s*448rpx;[^}]*grid-template-columns:\s*repeat\(2, 220rpx\);/u)
+assert.match(imageGridStyles, /\.content-image-grid__image \{[^}]*width:\s*100%;[^}]*height:\s*100%;/u)
+assert.match(imageGridStyles, /\.content-image-grid__reviewing--overlay \{[\s\S]*?inset:\s*0;[\s\S]*?background:\s*rgba\(26, 35, 51, 0\.45\);/u)
+assert.match(feedStyles, /\.community-post__liked-by \{[\s\S]*?color:\s*var\(--campus-primary-strong,\s*#1d5fd6\);[\s\S]*?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u)
+assert.match(feedStyles, /\.community-post__comment-preview-author \{[^}]*color:\s*var\(--campus-primary-strong,\s*#1d5fd6\);[^}]*font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u)
 assert.match(feedStyles, /\.community-post__body \{[\s\S]*?z-index:\s*0;[\s\S]*?overflow:\s*hidden;/u)
 assert.match(feedStyles, /\.community-post__meta \{[\s\S]*?z-index:\s*2;/u)
 assert.match(feedStyles, /\.community-post__meta-actions \{[\s\S]*?z-index:\s*3;/u)
 assert.match(feedStyles, /\.community-post__more \{[\s\S]*?z-index:\s*3;/u)
 assert.match(feedStyles, /\.community-post__more \{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u)
-assert.match(feedStyles, /\.community-post__more::before \{[\s\S]*?width:\s*72rpx;[\s\S]*?height:\s*56rpx;/u)
-assert.match(feedStyles, /\.community-post__action-menu \{[\s\S]*?right:\s*96rpx;[\s\S]*?border-radius:\s*12rpx;[\s\S]*?background:\s*var\(--ousea-ink-700,/u)
+assert.match(feedStyles, /\.community-post__more::before \{[\s\S]*?width:\s*56rpx;[\s\S]*?height:\s*44rpx;/u)
+assert.match(feedStyles, /\.community-post__action-menu \{[\s\S]*?right:\s*96rpx;[\s\S]*?width:\s*266rpx;[\s\S]*?min-height:\s*88rpx;[\s\S]*?background:\s*transparent;/u)
+assert.match(feedStyles, /\.community-post__action-menu::before \{[\s\S]*?height:\s*72rpx;[\s\S]*?background:\s*var\(--ousea-ink-700,/u)
+assert.match(feedStyles, /\.community-post__action-menu--single \{[^}]*width:\s*136rpx;/u)
+assert.match(feedStyles, /\.community-post__action-menu--liked \{[^}]*width:\s*322rpx;/u)
 assert.match(feedStyles, /\.community-post__social-like,\s*\.community-post__comments-summary\s*\{[\s\S]*?font-weight:\s*var\(--ousea-font-weight-medium,\s*500\);/u)
+assert.match(feedStyles, /\.community-post__social-like,\s*\.community-post__comments-summary\s*\{[\s\S]*?width:\s*128rpx;[\s\S]*?padding:\s*0 16rpx;[\s\S]*?flex:\s*none;/u)
+assert.match(feedStyles, /\.community-post__social-like--liked \{[^}]*width:\s*184rpx;[^}]*min-width:\s*184rpx;/u)
+assert.match(feedStyles, /\.community-post__social-like image,\s*\.community-post__comments-summary image\s*\{[^}]*width:\s*32rpx;[^}]*height:\s*32rpx;/u)
 assert.doesNotMatch(feedStyles, /\.community-post__social-like--liked text \{[\s\S]*?font-weight:/u)
-assert.match(feedStyles, /\.community-post__social-divider \{[\s\S]*?width:\s*1rpx;[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.24\);/u)
+assert.match(feedStyles, /\.community-post__social-divider \{[\s\S]*?width:\s*1rpx;[\s\S]*?height:\s*40rpx;[\s\S]*?margin:\s*24rpx 0;[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.24\);/u)
 assert.match(feedStyles, /\.community-post__engagement \{[\s\S]*?background:\s*var\(--ousea-ocean-50,/u)
 assert.match(feedStyles, /\.community-post__comment-preview \{[\s\S]*?display:\s*block;[\s\S]*?overflow-wrap:\s*anywhere;/u)
 assert.doesNotMatch(
@@ -150,9 +190,12 @@ assert.match(feedStyles, /\.community-feed-skeleton__item \+ \.community-feed-sk
 assert.doesNotMatch(feedStyles, /community-post--home|community-post__social-summary/u)
 assert.match(feedStyles, /calc\(152rpx \+ env\(safe-area-inset-bottom\)\)/u)
 assert.match(profileStyles, /\.public-profile-feed \{\s*gap:\s*0;/u)
-assert.match(darkStyles, /page \.community-post__social \{/u)
-assert.match(darkStyles, /page \.community-post__action-menu \{/u)
-assert.match(darkStyles, /page \.community-post__expand \{/u)
+assert.match(darkStyles, /& \.community-post__social \{/u)
+assert.match(darkStyles, /& \.community-post__action-menu \{/u)
+assert.match(darkStyles, /& \.community-post__action-menu::before \{[^}]*background:\s*var\(--ousea-ink-700,/u)
+assert.match(darkStyles, /& \.community-post__author-line--deleted > text:first-child \{[^}]*color:\s*var\(--campus-text-secondary,\s*#aab8ca\);/u)
+assert.match(darkStyles, /& \.community-post__expand \{/u)
+assert.match(darkStyles, /& \.content-image-grid__reviewing--overlay \{[^}]*background:\s*rgba\(26, 35, 51, 0\.45\);/u)
 
 assert.match(heartAsset, /viewBox="0 0 13\.9968 13\.9968"/u)
 assert.match(heartAsset, /stroke="#576B95"/u)

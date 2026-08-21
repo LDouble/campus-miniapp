@@ -28,24 +28,23 @@ assert.match(detailSource, /const load = async[\s\S]*?getCampusCirclePost\(id\)/
 assert.match(detailSource, /CommunityLevelBadge/u)
 assert.match(detailSource, /id='community-detail-comment'/u)
 assert.match(detailSource, /post\.liked \? communityDetailIcons\.heartActive : communityDetailIcons\.heart/u)
-assert.match(detailSource, /headingLabel='全部评论'/u)
-assert.match(detailSource, /headingCountBadge/u)
+assert.match(detailSource, /showHeading=\{false\}/u)
+assert.doesNotMatch(detailSource, /headingLabel=/u)
+assert.doesNotMatch(detailSource, /headingCountBadge/u)
 assert.match(detailStyle, /Figma 2:3879/u)
-assert.match(detailStyle, /\.community-detail__main \{[\s\S]*?padding: 36rpx 36rpx 0;/u)
+assert.match(detailStyle, /\.community-detail__main \{[\s\S]*?padding: 32rpx 32rpx 0;/u)
 assert.doesNotMatch(detailStyle, /backdrop-filter:/u)
 assert.match(
   detailStyle,
-  /\.community-detail__actions \{[\s\S]*?border-top: 1rpx solid var\(--campus-border, #e8edf4\);/u,
+  /\.community-detail__actions \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);[\s\S]*?border-top: 1rpx solid var\(--campus-border, #e8edf4\);/u,
 )
+assert.equal((detailSource.match(/className='community-detail__action-slot'/gu) || []).length, 3)
+assert.match(detailStyle, /\.community-detail__action-slot \{[\s\S]*?justify-content: center;/u)
+assert.match(detailStyle, /\.community-detail__action \{[\s\S]*?width: auto;[\s\S]*?min-width: 88rpx;[\s\S]*?min-height: 88rpx;/u)
+assert.doesNotMatch(detailSource, /<Text>分享<\/Text>/u)
 assert.match(detailStyle, /community-detail-heart-pop/u)
-assert.match(
-  detailStyle,
-  /\.community-detail \.business-detail-comments__heading > view:first-child \{[\s\S]*?background: linear-gradient\(180deg, var\(--campus-primary, #2b7fff\), var\(--campus-primary-cyan, #00d3f3\)\);/u,
-)
-assert.match(
-  detailStyle,
-  /\.community-detail \.business-detail-comment__replies \{[\s\S]*?background: var\(--campus-surface-subtle, #f2f7fe\);/u,
-)
+assert.doesNotMatch(detailStyle, /\.community-detail \.business-detail-comments/u)
+assert.doesNotMatch(detailStyle, /\.community-detail \.business-detail-comment/u)
 
 for (const sourcePath of [
   '../src/features/community/feed-panel.tsx',

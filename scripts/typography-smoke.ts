@@ -8,7 +8,7 @@ const tokenStyle = readFileSync(resolve(__dirname, '../src/styles/_tokens.scss')
 const typographyStyle = readFileSync(resolve(__dirname, '../src/styles/_typography.scss'), 'utf8')
 const homeStyle = readFileSync(resolve(__dirname, '../src/pages/index/index.scss'), 'utf8')
 const tabBarStyle = readFileSync(resolve(__dirname, '../src/custom-tab-bar/index.wxss'), 'utf8')
-const lightAppStyle = appStyle.split('@media (prefers-color-scheme: dark)')[0]
+const lightAppStyle = appStyle.split('.campus-theme--dark')[0]
 
 const globalFontSizeTokens = [...appStyle.matchAll(
   /--campus-font-size-(auxiliary|body|important-body|card-title|page-title|large-title):\s*(\d+)rpx;/gu,
@@ -118,7 +118,10 @@ assert.match(
   /page \.community-post__content,\s*page \.community-detail__body \{ font-size: var\(--ousea-font-size-body, 32rpx\); \}/u,
   '社区列表与详情正文必须使用同一 Ousea 正文字号 Token',
 )
-assert.match(typographyStyle, /page \.business-detail-comment__bubble \{ font-size: 28rpx; \}/u)
+assert.match(
+  typographyStyle,
+  /page \.business-detail-comment__bubble \{ font-size: var\(--ousea-font-size-body\); \}[\s\S]*?page \.business-detail-comment__reply-content \{ font-size: var\(--ousea-font-size-comment\); \}/u,
+)
 
 assert.doesNotMatch(homeStyle, /--home-(?:font|text)-/u, '首页不得重复定义全局字体或文本 Token')
 assert.doesNotMatch(

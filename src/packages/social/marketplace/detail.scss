@@ -21,80 +21,6 @@
     margin-bottom: 20rpx;
   }
 
-  .market-detail-gallery,
-  .market-detail-gallery__swiper,
-  .market-detail-gallery__image,
-  .market-detail-gallery__empty {
-    width: 100%;
-    height: 620rpx;
-  }
-
-  .market-detail-gallery {
-    position: relative;
-  }
-
-  .market-detail-gallery__reviewing {
-    position: absolute;
-    z-index: 2;
-    right: 18rpx;
-    bottom: 18rpx;
-    padding: 9rpx 16rpx;
-    border-radius: 999rpx;
-    background: rgba(26, 38, 45, 0.72);
-    color: #fff;
-    font-size: 24rpx;
-    font-weight: 650;
-  }
-
-  .market-detail-gallery__image {
-    display: block;
-  }
-
-  .market-detail-gallery__empty {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 70rpx 54rpx;
-  }
-
-  .market-detail-gallery__empty--tone-0 {
-    background: #edf4ee;
-  }
-
-  .market-detail-gallery__empty--tone-1 {
-    background: #f4ede4;
-  }
-
-  .market-detail-gallery__empty--tone-2 {
-    background: #eaf1f2;
-  }
-
-  .market-detail-gallery__empty--tone-3 {
-    background: #f3ebea;
-  }
-
-  .market-detail-gallery__quote {
-    height: 80rpx;
-    color: rgba(57, 124, 116, 0.34);
-    font-size: 112rpx;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .market-detail-gallery__text {
-    display: -webkit-box;
-    overflow: hidden;
-    color: #2f3434;
-    font-size: 40rpx;
-    font-weight: 700;
-    line-height: 1.55;
-    text-overflow: ellipsis;
-    word-break: break-all;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 6;
-  }
-
   .market-detail-main {
     padding: 30rpx;
   }
@@ -355,29 +281,17 @@
 
   .life-detail__content { padding: 0 32rpx calc(170rpx + env(safe-area-inset-bottom)); background: var(--campus-surface, #fff); }
   .market-detail-hero { margin: 0; overflow: visible; border: 0; border-radius: 0; box-shadow: none; }
-  .market-detail-main { display: flex; padding: 34rpx 0 28rpx; flex-direction: column; }
-  .market-detail-toolbar { display: flex; margin-bottom: 18rpx; align-items: center; justify-content: space-between; gap: 20rpx; order: -3; }
+  .market-detail-main { display: flex; padding: 12rpx 0 24rpx; flex-direction: column; }
+  .market-detail-main--price { padding: 22rpx 0 28rpx; }
+  .market-detail-toolbar { display: flex; margin-bottom: var(--ousea-space-1, 16rpx); align-items: center; justify-content: space-between; gap: 20rpx; }
   .market-detail-badges { margin-bottom: 0; }
   .market-detail-badges text { padding: 7rpx 16rpx; background: #f3e8ff; color: #9810fa; font-size: 22rpx; }
   .market-detail-badges text:nth-child(n+2) { background: var(--campus-surface-primary, #eff6ff); color: var(--campus-primary, #2b7fff); }
-  .market-detail-title { display: block; order: -2; color: var(--campus-text-heading, #1d293d); font-size: 38rpx; font-weight: 800; line-height: 1.4; }
+  .market-detail-title { display: block; color: var(--campus-text-heading, #1a2333); font-size: var(--ousea-font-size-title, 33rpx); font-weight: var(--ousea-font-weight-medium, 500); line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
   .market-detail__sticker { width: 52rpx; height: 52rpx; }
-  .market-detail-price { margin-top: 18rpx; padding: 0; order: -1; align-items: center; border: 0; }
+  .market-detail-price { margin-top: 0; padding: 0; align-items: center; border: 0; }
   .market-detail-price > text { color: var(--campus-danger, #ff2056); font-size: 44rpx; }
   .market-detail-price > view { display: none; }
-  .market-detail-gallery { margin-top: 0; }
-  .market-detail-gallery,
-  .market-detail-gallery__swiper,
-  .market-detail-gallery__image,
-  .market-detail-gallery__empty { height: 470rpx; border-radius: 28rpx; }
-  .market-detail-gallery__image,
-  .market-detail-gallery__empty { overflow: hidden; }
-  .market-detail-gallery__empty--tone-0,
-  .market-detail-gallery__empty--tone-1,
-  .market-detail-gallery__empty--tone-2,
-  .market-detail-gallery__empty--tone-3 { background: var(--campus-border, #f1f5f9); }
-  .market-detail-gallery__quote { color: var(--campus-text-muted, #90a1b9); }
-  .market-detail-gallery__text { color: var(--campus-text-body, #314158); }
   .market-detail-contact,
   .market-detail-section { border-color: var(--campus-border, #f1f5f9); background: var(--campus-surface-subtle, #f8fafc); box-shadow: none; }
   .market-detail-description text,

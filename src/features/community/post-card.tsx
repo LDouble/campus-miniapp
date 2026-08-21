@@ -9,13 +9,15 @@ import {
 } from './author'
 import UserAvatar from '../../components/user-avatar'
 import StickerContent from '../../components/sticker-content'
-import { plainStickerContent } from '../stickers/content'
+import { parseStickerContent, plainStickerContent } from '../stickers/content'
 import { orderPublicCommentPreviews } from './comments'
+import ContentImageGrid from './components/content-image-grid'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
   heart: require('../../assets/community/feed-heart.svg'),
   heartActive: require('../../assets/community/heart-active.svg'),
+  more: require('../../assets/icons/more-horizontal.svg'),
   marketplace: require('../../assets/icons/market.svg'),
   errand: require('../../assets/icons/errands.svg'),
   carpool: require('../../assets/icons/shuttle.svg'),
@@ -23,7 +25,7 @@ const communityIcons = {
 
 const CAMPUS_OFFSET_MILLISECONDS = 8 * 60 * 60 * 1000
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1000
-const MAX_POST_IMAGES = 3
+const MAX_POST_IMAGES = 9
 
 const formatCommunityPostTime = (value?: string | null, now = Date.now()) => {
   const timestamp = apiDateTimeTimestamp(value)
@@ -119,6 +121,7 @@ function CommunityPostCard({
   const imagesPendingReview = post.viewer_relation === 'owner'
     && post.status === 'pending_review'
   const readableContent = plainStickerContent(post.content || '')
+  const contentParts = parseStickerContent(post.content || '')
   const contentIsClamped = readableContent.length > 90
   const operationBadges = [
     post.is_pinned && '置顶',
@@ -126,6 +129,14 @@ function CommunityPostCard({
     post.is_recommended && '推荐',
     post.topic?.kind === 'campaign' && '活动',
   ].filter(Boolean) as string[]
+  const onlyStickers = contentParts.length > 0 && contentParts.every((part) => (
+    part.type === 'sticker' || part.text.trim().length === 0
+  ))
+  const compactContent = Boolean(post.content)
+    && visibleImages.length === 0
+    && !businessPreview
+    && operationBadges.length === 0
+    && (onlyStickers || readableContent.trim().length <= 20)
   const openAuthorOrPost = () => (
     !post.author_deleted && onOpenAuthor ? onOpenAuthor(post) : onOpen(post)
   )
@@ -158,6 +169,7 @@ function CommunityPostCard({
         'community-post',
         'api-post',
         `community-post--${variant}`,
+        compactContent ? 'community-post--compact-content' : '',
         actionsOpen ? 'community-post--actions-open' : '',
         motionDelay > 0 ? 'motion-enter' : '',
         motionDelay > 0 ? `motion-enter--delay-${Math.min(motionDelay, 4)}` : '',
@@ -199,13 +211,11 @@ function CommunityPostCard({
             openAuthorOrPost()
           }}
         >
-          <View className='community-post__author-line'>
+          <View className={post.author_deleted
+            ? 'community-post__author-line community-post__author-line--deleted'
+            : 'community-post__author-line'}
+          >
             <Text>{authorName}</Text>
-            {reviewStatus && (
-              <Text className={`community-post__review-status community-post__review-status--${reviewStatus.tone}`}>
-                {reviewStatus.label}
-              </Text>
-            )}
           </View>
         </View>
 
@@ -242,34 +252,21 @@ function CommunityPostCard({
             </View>
           )}
           {visibleImages.length > 0 && (
-            <View className={`community-post__images community-post__images--${visibleImages.length}`}>
-              {visibleImages.map((image, index) => (
-                <View key={image.id} className='community-post__image-frame'>
-                  {image.url && (
-                    <Image
-                      src={image.url}
-                      mode='aspectFill'
-                      lazyLoad
-                      ariaLabel={`动态图片 ${index + 1}/${post.images.length}`}
-                    />
-                  )}
-                  {imagesPendingReview && (
-                    <View className={image.url
-                      ? 'community-post__image-reviewing community-post__image-reviewing--overlay'
-                      : 'community-post__image-reviewing'}
-                    >
-                      <Text>图片审核中</Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
+            <ContentImageGrid
+              images={visibleImages}
+              pendingReview={imagesPendingReview}
+            />
           )}
         </View>
 
         <View className='community-post__meta'>
           <View className='community-post__meta-copy'>
             <Text className='community-post__time'>{publishedAt}</Text>
+            {reviewStatus && (
+              <Text className={`community-post__review-status community-post__review-status--${reviewStatus.tone}`}>
+                {reviewStatus.label}
+              </Text>
+            )}
             {sectionName && (onSelectSection ? (
               <View
                 className='community-post__section-pill'
@@ -298,11 +295,17 @@ function CommunityPostCard({
                 onToggleActions(post.id)
               }}
             >
-              <Text>••</Text>
+              <Image src={communityIcons.more} mode='aspectFit' />
             </Button>
             {actionsOpen && (
               <View
-                className='community-post__social community-post__action-menu'
+                className={[
+                  'community-post__social',
+                  'community-post__action-menu',
+                  !onToggleLike
+                    ? 'community-post__action-menu--single'
+                    : post.liked ? 'community-post__action-menu--liked' : '',
+                ].filter(Boolean).join(' ')}
                 onClick={(event) => event.stopPropagation()}
               >
                 {onToggleLike && (

@@ -389,7 +389,7 @@ page {
   backdrop-filter: none;
 }
 
-@media (prefers-color-scheme: dark) {
+.campus-theme--dark {
   .community-page__eyebrow,
   .life-primary-tabs__item--active {
     color: var(--campus-text-heading, #f8fafc);

@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import type { CarpoolTripView } from '../../../api/types'
 import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
@@ -12,6 +12,8 @@ import {
   formatStatus,
   remainingSeats,
 } from '../format'
+
+const moreIcon = require('../../../assets/icons/more-horizontal.svg')
 
 const openDetail = (item: CarpoolTripView) => {
   requestWechatSubscriptionForModule('carpool')
@@ -58,7 +60,7 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
           </View>
           <Text>{departure.date} {departure.time}</Text>
         </View>
-        <Text className='business-card-more'>•••</Text>
+        <Image className='business-card-more' src={moreIcon} mode='aspectFit' />
       </View>
 
       {item.description && (

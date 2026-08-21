@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
@@ -30,7 +30,14 @@ import {
 import type { MediaImageDraft } from '../../features/media/images'
 import { chooseMediaImages } from '../../features/media/selection'
 import { syncCustomTabBar } from '../../utils/tabbar'
+import { showActionSheetSelection } from '../../utils/action-sheet'
 import { openPublicProfile } from '../../features/profile/public-profile'
+import {
+  getCampusThemePreference,
+  restartWithCampusThemePreference,
+  subscribeCampusTheme,
+  type CampusThemePreference,
+} from '../../features/theme-preference'
 import './index.scss'
 
 const icons = {
@@ -44,6 +51,22 @@ const icons = {
   identity: require('../../assets/icons/academic.svg'),
   privacy: require('../../assets/icons/study.svg'),
   account: require('../../assets/icons/profile.svg'),
+  theme: require('../../assets/icons/theme.svg'),
+}
+
+const themePreferenceOptions: Array<{
+  label: string
+  value: CampusThemePreference
+}> = [
+  { label: '跟随系统', value: 'system' },
+  { label: '打开', value: 'dark' },
+  { label: '关闭', value: 'light' },
+]
+
+const themePreferenceLabels: Record<CampusThemePreference, string> = {
+  system: '跟随系统',
+  dark: '打开',
+  light: '关闭',
 }
 
 const menus = [
@@ -101,6 +124,9 @@ const userAvatarUrl = (user?: CurrentUser['user'] | null) => (
 )
 
 export default function ProfilePage() {
+  const [themePreference, setThemePreferenceState] = useState<CampusThemePreference>(
+    getCampusThemePreference,
+  )
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [accountLoaded, setAccountLoaded] = useState(false)
@@ -111,6 +137,9 @@ export default function ProfilePage() {
   const [savingUsername, setSavingUsername] = useState(false)
   const [avatarDraft, setAvatarDraft] = useState<MediaImageDraft | null>(null)
   const [savingAvatar, setSavingAvatar] = useState(false)
+  useEffect(() => subscribeCampusTheme((_theme, preference) => {
+    setThemePreferenceState(preference)
+  }), [])
   const loadCurrentUser = async (showError = false, force = false) => {
     setAccountLoaded(false)
     try {
@@ -286,6 +315,15 @@ export default function ProfilePage() {
     }
     void openPublicProfile(currentUser.user.id)
   }
+  const chooseCampusTheme = async () => {
+    const selectedIndex = await showActionSheetSelection(
+      themePreferenceOptions.map((option) => option.label),
+    )
+    if (selectedIndex === null) return
+    const nextPreference = themePreferenceOptions[selectedIndex]?.value
+    if (!nextPreference || nextPreference === themePreference) return
+    restartWithCampusThemePreference(nextPreference)
+  }
 
   return (
     <View className='profile-page'>
@@ -419,6 +457,34 @@ export default function ProfilePage() {
                 <Text>{item.name}</Text>
               </View>
             ))}
+          </View>
+        </View>
+
+        <View className='profile-section motion-enter motion-enter--delay-3'>
+          <Text className='profile-section__title'>显示与外观</Text>
+          <View className='profile-account-list'>
+            <View
+              className='profile-identity-entry profile-theme-entry'
+              ariaRole='button'
+              ariaLabel={`深色模式，当前${themePreferenceLabels[themePreference]}`}
+              onClick={() => void chooseCampusTheme()}
+            >
+              <View className='profile-identity-entry__icon profile-theme-entry__icon'>
+                <Image src={icons.theme} mode='aspectFit' />
+              </View>
+              <View className='profile-identity-entry__main'>
+                <Text>深色模式</Text>
+                <Text>选择跟随系统或手动设置</Text>
+              </View>
+              <Text className='profile-theme-entry__value'>
+                {themePreferenceLabels[themePreference]}
+              </Text>
+              <Image
+                className='profile-identity-entry__arrow'
+                src={icons.arrow}
+                mode='aspectFit'
+              />
+            </View>
           </View>
         </View>
 

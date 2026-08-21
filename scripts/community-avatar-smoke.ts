@@ -24,6 +24,7 @@ assert.equal(communityAuthorTone({ author_id: 7 }), 3)
 assert.equal(communityAuthorTone({ author_id: 7, author_deleted: true }), 0)
 
 const cardSource = readFileSync(resolve(__dirname, '../src/features/community/post-card.tsx'), 'utf8')
+const imageGridSource = readFileSync(resolve(__dirname, '../src/features/community/components/content-image-grid.tsx'), 'utf8')
 assert.ok(cardSource.includes('communityAuthorAvatarUrl(post)'))
 assert.ok(cardSource.includes("imageClassName='community-post__avatar-image'"))
 assert.ok(cardSource.includes('<UserAvatar'))
@@ -32,17 +33,19 @@ assert.ok(cardSource.includes("post.status === 'pending_review'"))
 assert.ok(cardSource.includes("post.status === 'rejected'"))
 assert.ok(cardSource.includes("label: '审核中'"))
 assert.ok(cardSource.includes("label: '未通过'"))
-assert.ok(cardSource.includes('图片审核中'))
-assert.ok(cardSource.includes('community-post__image-reviewing--overlay'))
+assert.ok(cardSource.includes('<ContentImageGrid'))
+assert.ok(imageGridSource.includes("reviewLabel = '图片审核中'"))
+assert.ok(imageGridSource.includes('content-image-grid__reviewing--overlay'))
 assert.match(cardSource, /community-post__meta[\s\S]*?community-post__section-pill/u)
 assert.ok(cardSource.includes('onSelectSection(post.section_id)'))
 assert.ok(cardSource.includes('event.stopPropagation()'))
 
 const feedStyleSource = readFileSync(resolve(__dirname, '../src/features/community/feed-panel.scss'), 'utf8')
+const imageGridStyleSource = readFileSync(resolve(__dirname, '../src/features/community/components/content-image-grid.scss'), 'utf8')
 assert.ok(feedStyleSource.includes('.community-post__review-status--pending'))
 assert.ok(feedStyleSource.includes('.community-post__review-status--rejected'))
-assert.ok(feedStyleSource.includes('.community-post__image-reviewing'))
-assert.ok(feedStyleSource.includes('.community-post__image-reviewing--overlay'))
+assert.ok(imageGridStyleSource.includes('.content-image-grid__reviewing'))
+assert.ok(imageGridStyleSource.includes('.content-image-grid__reviewing--overlay'))
 assert.match(feedStyleSource, /\.community-post__avatar \{[\s\S]*?width: 80rpx;[\s\S]*?height: 80rpx;[\s\S]*?border-radius: 18rpx;/)
 assert.match(feedStyleSource, /\.community-post__avatar-image \{\s*border-radius: inherit;/)
 assert.match(feedStyleSource, /\.community-post__author-line > text:first-child \{[^}]*flex: 1;/u)
@@ -53,16 +56,21 @@ assert.match(levelBadgeStyleSource, /\.community-level-badge \{[^}]*flex: none;[
 
 const detailSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.tsx'), 'utf8')
 assert.equal((detailSource.match(/communityAuthorAvatarUrl\(/g) || []).length, 1)
-assert.ok(detailSource.includes("imageClassName='community-detail-card__avatar-image'"))
-assert.ok(detailSource.includes('community-detail-card__image-reviewing--overlay'))
+assert.ok(detailSource.includes('<DetailAuthorHeader'))
+assert.ok(detailSource.includes('<ContentImageGrid'))
+
+const detailAuthorHeaderSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/detail-author-header.tsx'), 'utf8')
+const detailAuthorHeaderStyleSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/detail-author-header.scss'), 'utf8')
+assert.match(detailAuthorHeaderSource, /shape='rounded'/u)
+assert.match(detailAuthorHeaderStyleSource, /\.detail-author-header__avatar \{[^}]*width: 80rpx;[^}]*height: 80rpx;/u)
 
 const detailCommentsSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/detail-comments.tsx'), 'utf8')
 assert.ok(detailCommentsSource.includes("imageClassName='business-detail-comment__avatar-image'"))
 assert.match(detailCommentsSource, /src=\{comment\.author_deleted \? '' : comment\.author_avatar_url\}/u)
 
 const detailStyleSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.scss'), 'utf8')
-assert.ok(detailStyleSource.includes('.community-detail-card__image-reviewing--overlay'))
-assert.match(detailStyleSource, /\.community-detail__avatar \{[\s\S]*?border-radius: 50%;/u)
+assert.ok(detailStyleSource.includes('.community-detail__review-status'))
+assert.doesNotMatch(detailStyleSource, /\.community-detail__(?:__author|__avatar|__author-name)/u)
 
 const detailCommentsStyleSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/detail-comments.scss'), 'utf8')
 const freshBarrageStyleSource = readFileSync(resolve(__dirname, '../src/features/community/fresh-barrage.scss'), 'utf8')
@@ -79,9 +87,8 @@ assert.ok(marketplaceCardSource.includes("item.viewer_relation === 'owner' && it
 assert.ok(marketplaceCardSource.includes('marketplace-card__reviewing'))
 
 const homeSource = readFileSync(resolve(__dirname, '../src/pages/index/index.tsx'), 'utf8')
-assert.ok(homeSource.includes("import CommunityPostCard from '../../features/community/post-card'"))
-assert.ok(homeSource.includes('onToggleLike={toggleCommunityLike}'))
-assert.ok(homeSource.includes("imageClassName='moments-feed__avatar-image'"))
+assert.match(homeSource, /import CommunityPostCard(?:,\s*\{[^}]+\})? from '\.\.\/\.\.\/features\/community\/post-card'/u)
+assert.match(homeSource, /onToggleLike=\{item\.source_type === 'campus_circle_post'[\s\S]*?toggleHomeFeedLike\(item\)[\s\S]*?: undefined\}/u)
 assert.ok(homeSource.includes("imageClassName='campus__avatar-image'"))
 assert.ok(homeSource.includes("setAvatarUrl(account.value.user.avatar_url || '')"))
 
@@ -98,18 +105,20 @@ assert.match(profileStyleSource, /&__avatar \{[\s\S]*?border-radius: 50%;[\s\S]*
 
 const avatarSource = readFileSync(resolve(__dirname, '../src/components/user-avatar/index.tsx'), 'utf8')
 const avatarStyleSource = readFileSync(resolve(__dirname, '../src/components/user-avatar/index.scss'), 'utf8')
-assert.match(avatarSource, /className=\{\[[\s\S]*?'campus-user-avatar'[\s\S]*?'campus-user-avatar--circle'/u)
+assert.match(avatarSource, /shape = 'circle'/u)
+assert.match(avatarSource, /`campus-user-avatar--\$\{shape\}`/u)
 assert.match(avatarSource, /`campus-user-avatar--tone-\$\{tone\}`/u)
 assert.match(avatarSource, /const tone = userAvatarTone\(userId\)/u)
 assert.match(avatarSource, /<UserAvatarImage[\s\S]*?fallbackClassName=/u)
 assert.match(avatarStyleSource, /\.campus-user-avatar\.campus-user-avatar--circle \{[\s\S]*?overflow: hidden;[\s\S]*?border-radius: 50%;/u)
+assert.match(avatarStyleSource, /\.campus-user-avatar\.campus-user-avatar--rounded \{[\s\S]*?border-radius: 18rpx;/u)
 assert.match(avatarStyleSource, /\.campus-user-avatar > \.campus-user-avatar__image \{[\s\S]*?border-radius: inherit;/u)
 assert.match(avatarStyleSource, /\.campus-user-avatar \{[^}]*border: 0;[^}]*box-shadow: none;/u)
 
 for (const [label, source, selector] of [
   ['社区列表', feedStyleSource, '\\.community-post__avatar'],
   ['首页弹幕', freshBarrageStyleSource, '\\.fresh-barrage__avatar'],
-  ['社区详情作者', detailStyleSource, '\\.community-detail__avatar'],
+  ['详情作者', detailAuthorHeaderStyleSource, '\\.detail-author-header__avatar'],
   ['生活服务列表', listPanelStyleSource, '\\.business-card-avatar'],
   ['二手列表', marketplaceCardStyleSource, '\\.marketplace-card__avatar'],
   ['公开主页', publicProfileStyleSource, '\\.public-profile-hero__avatar'],
@@ -123,12 +132,9 @@ for (const [label, source, selector] of [
   )
 }
 
-assert.match(
-  detailCommentsStyleSource,
-  /\.business-detail-author__avatar,[\s\S]*?\.business-detail-comment__avatar \{[^}]*border: 0;[^}]*box-shadow: none;/u,
-)
+assert.match(detailCommentsStyleSource, /\.business-detail-comment__avatar \{[^}]*border: 0;[^}]*box-shadow: none;/u)
 assert.match(profileStyleSource, /&__avatar \{[^}]*width: 104rpx;[^}]*border: 0;[^}]*box-shadow: none;/u)
-assert.doesNotMatch(darkModeStyleSource, /page \.campus__avatar,|page \.business-detail-(?:comment__avatar|comment__reply-avatar|composer__avatar)|page \.business-card-avatar--(?:errand|carpool)/u)
+assert.doesNotMatch(darkModeStyleSource, /& \.campus__avatar,|& \.business-detail-(?:comment__avatar|comment__reply-avatar|composer__avatar)|& \.business-card-avatar--(?:errand|carpool)/u)
 for (const [tone, background, color] of [
   [0, '#eaf3ff', '#2b7aef'],
   [1, '#edf4ff', '#2b7aef'],
@@ -150,9 +156,8 @@ for (const path of [
   '../src/features/life-services/components/carpool-card.tsx',
   '../src/features/life-services/components/errand-card.tsx',
   '../src/features/life-services/components/marketplace-card.tsx',
-  '../src/features/life-services/components/detail-author-navbar.tsx',
+  '../src/features/life-services/components/detail-author-header.tsx',
   '../src/features/life-services/components/detail-comments.tsx',
-  '../src/packages/social/community/detail.tsx',
 ]) {
   const source = readFileSync(resolve(__dirname, path), 'utf8')
   assert.match(source, /import UserAvatar from/u, `${path} 未接入公共头像组件`)
@@ -163,6 +168,9 @@ for (const path of [
     `${path} 存在未按用户稳定配色的头像`,
   )
 }
+
+assert.match(detailSource, /import DetailAuthorHeader from/u)
+assert.doesNotMatch(detailSource, /UserAvatarImage/u)
 
 const avatarImageSource = readFileSync(resolve(__dirname, '../src/components/user-avatar-image/index.tsx'), 'utf8')
 assert.ok(avatarImageSource.includes("mode='aspectFill'"))

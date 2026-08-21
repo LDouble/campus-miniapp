@@ -550,6 +550,12 @@
 .life-detail { background: var(--campus-page, #f4f7fb); color: var(--campus-text-heading, #1d293d); }
 .life-detail__content { padding: 0 32rpx calc(170rpx + env(safe-area-inset-bottom)); background: var(--campus-surface, #fff); }
 
+/* 评论区自带页面级 32rpx gutter；抵消业务详情容器的同值 gutter，避免双重缩进。 */
+.life-detail__content > .business-detail-comments {
+  margin-right: -32rpx;
+  margin-left: -32rpx;
+}
+
 .detail-overview {
   padding: 34rpx 0 38rpx;
   border: 0;
@@ -557,6 +563,10 @@
   background: var(--campus-surface, #fff);
   box-shadow: none;
 }
+
+.detail-author-header + .detail-overview { padding-top: 12rpx; }
+.detail-business-intro .detail-overview__title { margin-top: 0; }
+.detail-business-intro .detail-overview__title + .detail-overview__toolbar { margin-top: var(--ousea-space-1, 16rpx); }
 
 .detail-overview--carpool,
 .detail-overview--market { background: var(--campus-surface, #fff); }
@@ -566,7 +576,7 @@
 .life-detail--errands .detail-overview__badges text:first-child { background: #ffedd4; color: #f54900; }
 .life-detail--carpool .detail-overview__badges text:first-child { background: #cbfbf1; color: #009689; }
 
-.detail-overview__title { margin-top: 22rpx; color: var(--campus-text-heading, #1d293d); font-size: 30rpx; font-weight: 400; line-height: 1.5; }
+.detail-overview__title { margin-top: 22rpx; color: var(--campus-text-heading, #1a2333); font-size: var(--ousea-font-size-title, 33rpx); font-weight: var(--ousea-font-weight-medium, 500); line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
 .detail-overview__description { margin-top: 20rpx; color: var(--campus-text-body, #45556c); font-size: 28rpx; font-weight: 400; line-height: 1.65; }
 .detail-overview__summary { margin-top: 18rpx; padding-top: 0; border: 0; }
 .detail-overview__summary--primary > view { display: none; }
@@ -750,11 +760,6 @@
   border: 0;
   border-radius: 18rpx;
   background: transparent;
-  color: var(--ousea-ink-500, #62748e);
-  font-size: 30rpx;
-  font-weight: 800;
-  letter-spacing: 3rpx;
-  line-height: 1;
 }
 
 .detail-overflow-actions__trigger::before {
@@ -772,10 +777,11 @@
   border: 0;
 }
 
-.detail-overflow-actions__trigger text {
+.detail-overflow-actions__trigger image {
   position: relative;
   z-index: 1;
-  transform: translate(2rpx, -2rpx);
+  width: 36rpx;
+  height: 36rpx;
 }
 
 .detail-overflow-actions__backdrop {

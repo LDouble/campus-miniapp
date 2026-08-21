@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import type { ErrandView } from '../../../api/types'
 import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
@@ -13,6 +13,8 @@ import {
   formatStatus,
   relativeDeadline,
 } from '../format'
+
+const moreIcon = require('../../../assets/icons/more-horizontal.svg')
 
 const openDetail = (item: ErrandView) => {
   requestWechatSubscriptionForModule('errand')
@@ -56,7 +58,7 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
           </View>
           <Text>{relativeDeadline(item.deadline)}</Text>
         </View>
-        <Text className='business-card-more'>•••</Text>
+        <Image className='business-card-more' src={moreIcon} mode='aspectFit' />
       </View>
 
       <StickerContent

@@ -867,14 +867,11 @@
 .business-card-identity > text { margin-top: 3rpx; color: var(--campus-text-muted, #90a1b9); font-size: 22rpx; }
 
 .business-card-more {
-  display: flex;
-  width: 54rpx;
-  height: 54rpx;
-  align-items: center;
-  justify-content: center;
-  color: #bfd0e5;
-  font-size: 24rpx;
-  letter-spacing: 2rpx;
+  display: block;
+  width: 36rpx;
+  height: 36rpx;
+  margin: 9rpx;
+  flex: none;
 }
 
 .business-status {

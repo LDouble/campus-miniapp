@@ -376,6 +376,23 @@ page {
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.03);
 }
 
+.profile-theme-entry {
+  &__icon image {
+    width: 38rpx;
+    height: 38rpx;
+  }
+
+  &__value {
+    flex: none;
+    margin-left: var(--ousea-space-1, 16rpx);
+    color: var(--campus-text-secondary, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+}
+
 .profile-identity-entry {
   display: flex;
   min-height: 108rpx;

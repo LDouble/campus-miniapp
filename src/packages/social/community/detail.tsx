@@ -8,7 +8,6 @@ import type { CampusCirclePostView } from '../../../api/types'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
 import StickerContent from '../../../components/sticker-content'
-import UserAvatar from '../../../components/user-avatar'
 import {
   communityAuthorAvatarUrl,
   communityAuthorInitial,
@@ -17,12 +16,13 @@ import {
 import { consumeCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
 import CommunityLevelBadge from '../../../features/community/level-badge'
 import { openContentReport } from '../../../features/content-report'
+import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
 import DetailComments from '../../../features/life-services/components/detail-comments'
+import ContentImageGrid from '../../../features/community/components/content-image-grid'
 import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
 import { formatDateTime, formatStatus } from '../../../features/life-services/format'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
-import { openPublicProfile } from '../../../features/profile/public-profile'
 import { useCampusShare } from '../../../features/share'
 import { plainStickerContent } from '../../../features/stickers/content'
 import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
@@ -33,7 +33,7 @@ const communityDetailIcons = {
   comment: require('../../../assets/community/comment.svg'),
   heart: require('../../../assets/community/feed-heart.svg'),
   heartActive: require('../../../assets/community/heart-active.svg'),
-  more: require('../../../assets/community/detail-more.svg'),
+  more: require('../../../assets/icons/more-horizontal.svg'),
   share: require('../../../assets/community/detail-share.svg'),
 }
 
@@ -157,16 +157,6 @@ export default function CommunityDetailPage() {
     }
   }
 
-  const previewPostImage = (current: string) => {
-    if (!post || !current) return
-    const urls = post.images.map((image) => image.url).filter(Boolean)
-    if (urls.length === 0) return
-    void Taro.previewImage({
-      current,
-      urls,
-    })
-  }
-
   const canReportPost = Boolean(
     post
     && post.viewer_relation !== 'owner'
@@ -225,36 +215,24 @@ export default function CommunityDetailPage() {
         {!loading && !error && post && (
           <>
             <View id='community-detail-post' className='community-detail__main'>
-              <View className='community-detail__author'>
-                <View
-                  className='community-detail__author-trigger'
-                  ariaRole='button'
-                  ariaLabel={`查看${communityAuthorName(post)}的个人主页`}
-                  onClick={() => {
-                    if (!post.author_deleted) void openPublicProfile(post.author_id)
-                  }}
-                >
-                  <UserAvatar
-                    src={communityAuthorAvatarUrl(post)}
-                    className='community-detail__avatar'
-                    imageClassName='community-detail-card__avatar-image'
-                    fallback={communityAuthorInitial(post)}
-                    userId={post.author_deleted ? 0 : post.author_id}
-                  />
-                  <View className='community-detail__author-copy'>
-                    <View className='community-detail__author-name-row'>
-                      <Text className='community-detail__author-name'>{communityAuthorName(post)}</Text>
-                      <CommunityLevelBadge level={post.author_level} />
-                    </View>
-                    <View className='community-detail__author-meta'>
-                      <Text>{formatDetailDateTime(post.published_at || post.created_at)}</Text>
-                      {post.status !== 'approved' && (
-                        <Text className='community-detail__status'>{formatStatus(post.status)}</Text>
-                      )}
-                    </View>
-                  </View>
-                </View>
-                {postMenuItems.length > 0 && (
+              <DetailAuthorHeader
+                avatarUrl={communityAuthorAvatarUrl(post)}
+                nickname={communityAuthorName(post)}
+                fallback={communityAuthorInitial(post)}
+                userId={post.author_id}
+                profileEnabled={!post.author_deleted}
+                badge={<CommunityLevelBadge level={post.author_level} />}
+                meta={(
+                  <>
+                    <Text>{formatDetailDateTime(post.published_at || post.created_at)}</Text>
+                    {post.status !== 'approved' && (
+                      <Text className={`community-detail__review-status community-detail__review-status--${post.status}`}>
+                        {formatStatus(post.status)}
+                      </Text>
+                    )}
+                  </>
+                )}
+                action={postMenuItems.length > 0 ? (
                   <View
                     id='community-detail-more'
                     className='community-detail__more'
@@ -264,8 +242,8 @@ export default function CommunityDetailPage() {
                   >
                     <Image src={communityDetailIcons.more} mode='aspectFit' />
                   </View>
-                )}
-              </View>
+                ) : undefined}
+              />
 
               {post.topic?.name && (
                 <View className='community-detail__topic'>#{post.topic.name}</View>
@@ -280,71 +258,53 @@ export default function CommunityDetailPage() {
               )}
 
               {post.images.length > 0 && (
-                <View className={post.images.length === 1
-                  ? 'community-detail__images community-detail-card__images community-detail-card__images--single'
-                  : 'community-detail__images community-detail-card__images'}
-                >
-                  {post.images.map((image, index) => (
-                    <View
-                      key={image.id}
-                      className='community-detail__image-frame community-detail-card__image-frame'
-                      ariaRole={image.url ? 'button' : undefined}
-                      ariaLabel={image.url ? `预览第 ${index + 1} 张图片，共 ${post.images.length} 张` : undefined}
-                      onClick={() => previewPostImage(image.url)}
-                    >
-                      {image.url && (
-                        <Image
-                          src={image.url}
-                          mode={post.images.length === 1 ? 'widthFix' : 'aspectFill'}
-                          lazyLoad
-                        />
-                      )}
-                      {post.viewer_relation === 'owner' && post.status === 'pending_review' && (
-                        <View className={image.url
-                          ? 'community-detail-card__image-reviewing community-detail-card__image-reviewing--overlay'
-                          : 'community-detail-card__image-reviewing'}
-                        >
-                          <Text>图片审核中</Text>
-                        </View>
-                      )}
-                    </View>
-                  ))}
-                </View>
+                <ContentImageGrid
+                  images={post.images}
+                  pendingReview={post.viewer_relation === 'owner' && post.status === 'pending_review'}
+                  preview
+                />
               )}
 
               <View className='community-detail__actions'>
-                <View
-                  id='community-detail-like'
-                  className={post.liked
-                    ? 'community-detail__action community-detail__action--liked'
-                    : 'community-detail__action'}
-                  ariaRole='button'
-                  ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
-                  onClick={() => void toggleLike()}
-                >
-                  <Image src={post.liked ? communityDetailIcons.heartActive : communityDetailIcons.heart} mode='aspectFit' />
-                  <Text>{post.like_count}</Text>
+                <View className='community-detail__action-slot'>
+                  <View
+                    id='community-detail-like'
+                    className={post.liked
+                      ? 'community-detail__action community-detail__action--liked'
+                      : 'community-detail__action'}
+                    hoverClass='community-detail__action--pressed'
+                    ariaRole='button'
+                    ariaLabel={`${post.liked ? '取消点赞' : '点赞'}，当前 ${post.like_count} 个赞`}
+                    onClick={() => void toggleLike()}
+                  >
+                    <Image src={post.liked ? communityDetailIcons.heartActive : communityDetailIcons.heart} mode='aspectFit' />
+                    <Text>{post.like_count}</Text>
+                  </View>
                 </View>
-                <View
-                  id='community-detail-comment'
-                  className='community-detail__action'
-                  ariaRole='button'
-                  ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
-                  onClick={scrollToComments}
-                >
-                  <Image src={communityDetailIcons.comment} mode='aspectFit' />
-                  <Text>{post.comment_count}</Text>
+                <View className='community-detail__action-slot'>
+                  <View
+                    id='community-detail-comment'
+                    className='community-detail__action'
+                    hoverClass='community-detail__action--pressed'
+                    ariaRole='button'
+                    ariaLabel={`查看评论，当前 ${post.comment_count} 条评论`}
+                    onClick={scrollToComments}
+                  >
+                    <Image src={communityDetailIcons.comment} mode='aspectFit' />
+                    <Text>{post.comment_count}</Text>
+                  </View>
                 </View>
-                <Button
-                  hoverClass='none'
-                  id='community-detail-share'
-                  className='community-detail__action community-detail__action--share'
-                  openType='share'
-                  ariaLabel='分享这条动态'
-                >
-                  <Image src={communityDetailIcons.share} mode='aspectFit' />
-                  <Text>分享</Text>
-                </Button>
+                <View className='community-detail__action-slot'>
+                  <Button
+                    hoverClass='community-detail__action--pressed'
+                    id='community-detail-share'
+                    className='community-detail__action community-detail__action--share'
+                    openType='share'
+                    ariaLabel='分享这条动态'
+                  >
+                    <Image src={communityDetailIcons.share} mode='aspectFit' />
+                  </Button>
+                </View>
               </View>
 
               {post.review_reason && (
@@ -361,9 +321,7 @@ export default function CommunityDetailPage() {
               enabled={post.status === 'approved'}
               targetAuthorId={post.author_id}
               initialCommentId={focusedCommentId}
-              displayTotal={post.comment_count}
-              headingLabel='全部评论'
-              headingCountBadge
+              showHeading={false}
               placeholder='友善交流，分享你的想法'
               tone='community'
               onApprovedDelta={(delta) => setPost((current) => current

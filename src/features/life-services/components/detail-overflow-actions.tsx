@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Button, Text, View } from '@tarojs/components'
+import { Button, Image, Text, View } from '@tarojs/components'
 import type { BaseEventOrig } from '@tarojs/components/types/common'
 import { useDismissCommunityOverlaysOnScroll } from '../../community/use-overlay-dismissal'
 import type { DetailFooterAction } from './detail-comments'
+
+const moreIcon = require('../../../assets/icons/more-horizontal.svg')
 
 type DetailOverflowActionsProps = {
   actions: DetailFooterAction[]
@@ -54,7 +56,7 @@ export default function DetailOverflowActions({
           setOpen((current) => !current)
         }}
       >
-        <Text>•••</Text>
+        <Image src={moreIcon} mode='aspectFit' />
       </Button>
       {open && (
         <View className='detail-overflow-actions__menu' ariaRole='menu'>

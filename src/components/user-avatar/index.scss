@@ -16,6 +16,11 @@
   border-radius: 50%;
 }
 
+.campus-user-avatar.campus-user-avatar--rounded {
+  overflow: hidden;
+  border-radius: 18rpx;
+}
+
 .campus-user-avatar.campus-user-avatar--tone-0 {
   background: #eaf3ff;
   color: #2b7aef;

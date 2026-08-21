@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
-import { Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import CustomNavbar from '../../../components/custom-navbar'
 import StickerContent from '../../../components/sticker-content'
 import type { MarketplaceListingView } from '../../../api/types'
@@ -24,7 +24,7 @@ import {
   restoreParticipationContact,
   visibleParticipationContact,
 } from '../../../features/life-services/participation-contact-storage'
-import DetailAuthorNavbar from '../../../features/life-services/components/detail-author-navbar'
+import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
 import DetailComments, {
   createBusinessContactComment,
 } from '../../../features/life-services/components/detail-comments'
@@ -35,6 +35,7 @@ import {
 } from '../../../features/life-services/detail-actions'
 import { campusLabel } from '../../../features/life-services/campus'
 import { plainStickerContent } from '../../../features/stickers/content'
+import ContentImageGrid from '../../../features/community/components/content-image-grid'
 import '../../../features/life-services/detail.scss'
 import './detail.scss'
 
@@ -244,7 +245,6 @@ export default function MarketplaceDetailPage() {
       : item?.viewer_relation === 'seller'
         ? '我已响应'
         : item?.intent === 'wanted' ? '校内求购' : '校内在售'
-  const coverTone = item ? Math.abs(item.id) % 4 : 0
   const footerActions = item ? buildDetailFooterActions({
     availableActions: item.available_actions,
     labels: actionLabels,
@@ -260,52 +260,36 @@ export default function MarketplaceDetailPage() {
 
   return (
     <View className='life-detail life-detail--market'>
-      <CustomNavbar
-        title={item?.intent === 'wanted' ? '求购详情' : '闲置详情'}
-        showBack
-        barContent={item ? (
-          <DetailAuthorNavbar
-            avatarUrl={item.author_avatar_url}
-            nickname={item.author_nickname}
-            userId={item.owner_id}
-          />
-        ) : undefined}
-      />
+      <CustomNavbar title={item?.intent === 'wanted' ? '求购详情' : '闲置详情'} showBack />
       <View className='life-detail__content'>
         {loading && <View className='detail-state'>正在加载商品信息</View>}
         {!loading && error && <View className='detail-state'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
         {!loading && item && (
           <>
+            <DetailAuthorHeader
+              avatarUrl={item.author_avatar_url}
+              nickname={item.author_nickname}
+              userId={item.owner_id}
+              meta={<Text>{formatDateTime(item.created_at)}</Text>}
+              action={(
+                <View className='detail-overview__toolbar-actions'>
+                  {item.viewer_relation !== 'owner' && (
+                    <View
+                      className='detail-overview__report'
+                      onClick={() => void openContentReport({
+                        resourceType: 'marketplace_listing',
+                        resourceId: item.id,
+                        resourceVersion: item.version,
+                      })}
+                    >
+                      举报
+                    </View>
+                  )}
+                  <DetailOverflowActions actions={overflowActions} />
+                </View>
+              )}
+            />
             <View className='market-detail-hero'>
-              <View className='market-detail-gallery'>
-                {item.image_urls.length > 0 ? (
-                  <Swiper
-                    className='market-detail-gallery__swiper'
-                    indicatorDots={item.image_urls.length > 1}
-                    indicatorColor='rgba(255, 255, 255, 0.48)'
-                    indicatorActiveColor='#ffffff'
-                    circular={item.image_urls.length > 1}
-                  >
-                    {item.image_urls.map((url) => (
-                      <SwiperItem key={url}>
-                        <Image className='market-detail-gallery__image' src={url} mode='aspectFill' lazyLoad />
-                      </SwiperItem>
-                    ))}
-                  </Swiper>
-                ) : (
-                  <View className={`market-detail-gallery__empty market-detail-gallery__empty--tone-${coverTone}`}>
-                    <Text className='market-detail-gallery__quote'>“</Text>
-                    <StickerContent
-                      content={item.description}
-                      className='market-detail-gallery__text'
-                      stickerClassName='market-detail__sticker'
-                    />
-                  </View>
-                )}
-                {item.viewer_relation === 'owner' && item.status === 'pending_review' && (
-                  <Text className='market-detail-gallery__reviewing'>图片审核中</Text>
-                )}
-              </View>
               <View className='market-detail-main'>
                 <View className='market-detail-toolbar'>
                   <View className='market-detail-badges'>
@@ -314,27 +298,21 @@ export default function MarketplaceDetailPage() {
                     <Text>{formatStatus(item.status)}</Text>
                     <Text>{relationLabel}</Text>
                   </View>
-                  <View className='detail-overview__toolbar-actions'>
-                    {item.viewer_relation !== 'owner' && (
-                      <View
-                        className='detail-overview__report'
-                        onClick={() => void openContentReport({
-                          resourceType: 'marketplace_listing',
-                          resourceId: item.id,
-                          resourceVersion: item.version,
-                        })}
-                      >
-                        举报
-                      </View>
-                    )}
-                    <DetailOverflowActions actions={overflowActions} />
-                  </View>
                 </View>
                 <StickerContent
                   content={item.description}
                   className='market-detail-title'
                   stickerClassName='market-detail__sticker'
                 />
+              </View>
+              {item.image_urls.length > 0 && (
+                <ContentImageGrid
+                  images={item.image_urls.map((url, index) => ({ id: `${index}-${url}`, url }))}
+                  pendingReview={item.viewer_relation === 'owner' && item.status === 'pending_review'}
+                  preview
+                />
+              )}
+              <View className='market-detail-main market-detail-main--price'>
                 <View className='market-detail-price'>
                   <Text>{item.intent === 'wanted' ? '预算 ' : ''}{formatMoney(item.price_cents)}</Text>
                   <View>
@@ -343,11 +321,6 @@ export default function MarketplaceDetailPage() {
                   </View>
                 </View>
               </View>
-            </View>
-
-            <View className='business-detail-meta'>
-              <Text>{formatDateTime(item.created_at)}</Text>
-              <Text>校内面交</Text>
             </View>
 
             {item.status === 'rejected' && (

@@ -120,6 +120,12 @@ button {
   box-sizing: border-box;
 }
 
+.campus-theme {
+  min-height: 100vh;
+  color: var(--campus-text-primary, #1a2333);
+  background: var(--campus-page, #f5f8fc);
+}
+
 // Shared motion primitives. Keep product motion short and limited to opacity
 // and transforms so the same feedback stays smooth on lower-end devices.
 .motion-enter {
@@ -173,48 +179,46 @@ button {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  page {
-    --campus-primary: #60a5fa;
-    --campus-primary-strong: #93c5fd;
-    --campus-primary-cyan: #22d3ee;
-    --campus-danger: #fb7185;
-    --campus-success: #2dd4bf;
-    --campus-page: #0b1220;
-    --campus-surface: #111827;
-    --campus-surface-subtle: #172033;
-    --campus-surface-primary: #172554;
-    --campus-surface-danger: #3f1725;
-    --campus-surface-errand: #3a2416;
-    --campus-surface-marketplace: #2d1b3d;
-    --campus-surface-success: #102f2e;
-    --campus-surface-glass: rgba(17, 24, 39, 0.96);
-    --campus-icon-surface: #172033;
-    --campus-icon-surface-blue: #162a46;
-    --campus-icon-surface-cyan: #12343d;
-    --campus-icon-surface-green: #12352f;
-    --campus-icon-surface-orange: #3a291a;
-    --campus-icon-surface-purple: #2e254c;
-    --campus-icon-surface-pink: #3b202b;
-    --campus-overlay: rgba(0, 0, 0, 0.68);
-    --campus-text-primary: #f8fafc;
-    --campus-text-secondary: #aab8ca;
-    --campus-text-auxiliary: #8494aa;
-    --campus-text-heading: var(--campus-text-primary);
-    --campus-text-body: #d7e0ec;
-    --campus-text-muted: var(--campus-text-auxiliary);
-    --campus-border: #243244;
-    --campus-border-strong: #2f4c73;
-    --campus-errand: #fb923c;
-    --campus-errand-end: #fbbf24;
-    --campus-marketplace: #c084fc;
-    --campus-marketplace-end: #f0abfc;
-    --campus-carpool-end: #5eead4;
-    --campus-route-origin: #34d399;
-    --campus-route-destination: #fb7185;
-    --campus-shadow-card: 0 8rpx 24rpx rgba(0, 0, 0, 0.24);
-    --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.32);
+.campus-theme--dark {
+  --campus-primary: #60a5fa;
+  --campus-primary-strong: #93c5fd;
+  --campus-primary-cyan: #22d3ee;
+  --campus-danger: #fb7185;
+  --campus-success: #2dd4bf;
+  --campus-page: #0b1220;
+  --campus-surface: #111827;
+  --campus-surface-subtle: #172033;
+  --campus-surface-primary: #172554;
+  --campus-surface-danger: #3f1725;
+  --campus-surface-errand: #3a2416;
+  --campus-surface-marketplace: #2d1b3d;
+  --campus-surface-success: #102f2e;
+  --campus-surface-glass: rgba(17, 24, 39, 0.96);
+  --campus-icon-surface: #172033;
+  --campus-icon-surface-blue: #162a46;
+  --campus-icon-surface-cyan: #12343d;
+  --campus-icon-surface-green: #12352f;
+  --campus-icon-surface-orange: #3a291a;
+  --campus-icon-surface-purple: #2e254c;
+  --campus-icon-surface-pink: #3b202b;
+  --campus-overlay: rgba(0, 0, 0, 0.68);
+  --campus-text-primary: #f8fafc;
+  --campus-text-secondary: #aab8ca;
+  --campus-text-auxiliary: #8494aa;
+  --campus-text-heading: var(--campus-text-primary);
+  --campus-text-body: #d7e0ec;
+  --campus-text-muted: var(--campus-text-auxiliary);
+  --campus-border: #243244;
+  --campus-border-strong: #2f4c73;
+  --campus-errand: #fb923c;
+  --campus-errand-end: #fbbf24;
+  --campus-marketplace: #c084fc;
+  --campus-marketplace-end: #f0abfc;
+  --campus-carpool-end: #5eead4;
+  --campus-route-origin: #34d399;
+  --campus-route-destination: #fb7185;
+  --campus-shadow-card: 0 8rpx 24rpx rgba(0, 0, 0, 0.24);
+  --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.32);
 
-    color-scheme: dark;
-  }
+  color-scheme: dark;
 }

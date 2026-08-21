@@ -10,6 +10,7 @@ type UserAvatarProps = Omit<ComponentProps<typeof View>, 'children'> & {
   imageClassName?: string
   fallbackClassName?: string
   lazyLoad?: boolean
+  shape?: 'circle' | 'rounded'
   userId?: number | null
   children?: ReactNode
 }
@@ -21,6 +22,7 @@ export default function UserAvatar({
   imageClassName,
   fallbackClassName,
   lazyLoad = false,
+  shape = 'circle',
   userId,
   children,
   ...viewProps
@@ -32,7 +34,7 @@ export default function UserAvatar({
       {...viewProps}
       className={[
         'campus-user-avatar',
-        'campus-user-avatar--circle',
+        `campus-user-avatar--${shape}`,
         `campus-user-avatar--tone-${tone}`,
         className,
       ].filter(Boolean).join(' ')}

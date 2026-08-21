@@ -3158,7 +3158,7 @@ page {
 }
 
 .service-panel {
-  padding: 28rpx 20rpx 26rpx;
+  padding: 24rpx 20rpx 20rpx;
   margin-bottom: 24rpx;
   background: var(--campus-surface, #fff);
   border: 0;
@@ -3166,8 +3166,9 @@ page {
   box-shadow: 0 8rpx 16rpx rgba(29, 95, 214, 0.05);
 
   &__simple-head {
-    min-height: 48rpx;
-    padding: 0 12rpx 16rpx;
+    min-height: 96rpx;
+    padding: 0 12rpx 8rpx;
+    box-sizing: border-box;
   }
 
   &__heading {
@@ -3191,20 +3192,20 @@ page {
   }
 
   &__all {
-    min-width: 84rpx;
-    min-height: 64rpx;
+    min-width: 88rpx;
+    min-height: 88rpx;
     color: var(--campus-text-auxiliary, #a6b2c2);
   }
 
   &__home-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12rpx 4rpx;
+    gap: 8rpx 4rpx;
     margin: 0;
   }
 
   &__home-grid &__grid-item {
     width: auto;
-    height: 163rpx;
+    height: 132rpx;
   }
 
   &__grid-item {
@@ -3220,12 +3221,12 @@ page {
   &__grid-item--mint &__grid-icon,
   &__grid-item--green &__grid-icon,
   &__grid-item--pink &__grid-icon {
-    width: 84rpx;
-    height: 84rpx;
-    margin-bottom: 14rpx;
+    width: 76rpx;
+    height: 76rpx;
+    margin-bottom: 8rpx;
     background: var(--ousea-ocean-50, #f2f7fe);
     border: 2rpx solid var(--ousea-ocean-100, #e3effe);
-    border-radius: 26rpx;
+    border-radius: 24rpx;
     box-shadow: none;
 
     image {
@@ -3923,10 +3924,6 @@ page {
 
 .today-task__marker {
   font-weight: var(--campus-font-weight-regular, 400);
-}
-
-.service-panel__home-grid .service-panel__grid-item {
-  height: 163rpx;
 }
 
 .service-panel__grid-name {

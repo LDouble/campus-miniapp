@@ -182,7 +182,7 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
+.campus-theme--dark {
   .life-service-filter-chip,
   .life-service-filter-toolbar > .campus-selector__trigger--topbar:not(.campus-selector__trigger--icon-only) {
     background: var(--campus-surface-subtle, #172033);

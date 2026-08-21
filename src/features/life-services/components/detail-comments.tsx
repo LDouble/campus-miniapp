@@ -39,6 +39,7 @@ const icons = {
   heart: require('../../../assets/community/detail-comment-heart.svg'),
   heartSmall: require('../../../assets/community/detail-comment-heart-small.svg'),
   heartActive: require('../../../assets/community/heart-active.svg'),
+  reply: require('../../../assets/community/detail-comment-reply.svg'),
   send: require('../../../assets/community/send.svg'),
 }
 
@@ -148,7 +149,7 @@ type DetailCommentsProps = {
   onReplyKeyboardHeightChange?: (height: number) => void
   displayTotal?: number
   headingLabel?: string
-  headingCountBadge?: boolean
+  showHeading?: boolean
   headingActions?: ReactNode
   placeholder?: string
   tone?: Exclude<DetailCommentTarget, 'campus_circle_post'> | 'community'
@@ -196,13 +197,6 @@ const commentAuthorName = (comment: Pick<CommentView, 'author_id' | 'author_dele
 const commentAuthorInitial = (comment: CommentView) => (
   Array.from(commentAuthorName(comment))[0] || '同'
 )
-
-const compactCommentName = (name: string, maxLength = 6) => {
-  const characters = Array.from(name.trim())
-  return characters.length > maxLength
-    ? `${characters.slice(0, maxLength).join('')}…`
-    : characters.join('')
-}
 
 const formatCommentDateTime = (value?: string | null) => (
   formatDateTime(value).replace(/^(\d{2})月(\d{2})日/u, '$1-$2')
@@ -325,19 +319,22 @@ const renderReplyTree = (
               }}
             >
               <Text className='business-detail-comment__reply-relation'>
-                {compactCommentName(commentAuthorName(comment))}
+                {commentAuthorName(comment)}
               </Text>
+              {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
               {replyTargetName && (
                 <>
-                  <Text className='business-detail-comment__reply-to'>回复</Text>
+                  <Image
+                    className='business-detail-comment__reply-to'
+                    src={icons.reply}
+                    mode='aspectFit'
+                  />
                   <Text className='business-detail-comment__reply-target'>
-                    @{compactCommentName(replyTargetName)}
+                    {replyTargetName}
                   </Text>
                 </>
               )}
-              {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
             </View>
-            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike, true)}
           </View>
           <View
             id={`detail-comment-reply-${comment.id}`}
@@ -348,9 +345,12 @@ const renderReplyTree = (
               stickerClassName='business-detail-comment__sticker'
             />
           </View>
-          <Text className='business-detail-comment__time business-detail-comment__time--footer'>
-            {formatCommentDateTime(comment.created_at)}
-          </Text>
+          <View className='business-detail-comment__footer'>
+            <Text className='business-detail-comment__time'>
+              {formatCommentDateTime(comment.created_at)}
+            </Text>
+            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike, true)}
+          </View>
         </View>
       </View>
       {children.length > 0 && (
@@ -460,7 +460,6 @@ const DetailCommentThread = memo(function DetailCommentThread({
               <Text className='business-detail-comment__author'>{commentAuthorName(comment)}</Text>
               {comment.author_id === targetAuthorId && <Text className='business-detail-comment__author-badge'>作者</Text>}
             </View>
-            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike)}
           </View>
           <View
             id={`detail-comment-reply-${comment.id}`}
@@ -475,9 +474,12 @@ const DetailCommentThread = memo(function DetailCommentThread({
               stickerClassName='business-detail-comment__sticker'
             />
           </View>
-          <Text className='business-detail-comment__time business-detail-comment__time--footer'>
-            {formatCommentDateTime(comment.created_at)}
-          </Text>
+          <View className='business-detail-comment__footer'>
+            <Text className='business-detail-comment__time'>
+              {formatCommentDateTime(comment.created_at)}
+            </Text>
+            {renderCommentMeta(comment, likingIds.has(comment.id), currentUserId, onToggleLike)}
+          </View>
           {showThreadAction && (
             <View className='business-detail-comment__thread-action' onClick={() => onExpand(comment.id)}>
               {thread?.loading ? '加载回复中…' : `查看全部 ${comment.reply_count} 条回复`}
@@ -527,7 +529,7 @@ export default function DetailComments({
   onReplyKeyboardHeightChange,
   displayTotal,
   headingLabel,
-  headingCountBadge = false,
+  showHeading = true,
   headingActions,
   placeholder = '留言问问细节...',
   tone = targetType === 'campus_circle_post' ? 'community' : targetType,
@@ -1245,20 +1247,17 @@ export default function DetailComments({
     <>
       {!composerOnly && (
         <View className='business-detail-comments'>
-        <View className='business-detail-comments__heading'>
-          <View />
-          <Text>{headingLabel || `评论 ${displayTotal ?? total}`}</Text>
-          {headingCountBadge && (
-            <Text className='business-detail-comments__heading-count'>
-              {displayTotal ?? total}
-            </Text>
-          )}
-          {headingActions && (
-            <View className='business-detail-comments__heading-actions'>
-              {headingActions}
-            </View>
-          )}
-        </View>
+        {showHeading && (
+          <View className='business-detail-comments__heading'>
+            <View />
+            <Text>{headingLabel || `评论 ${displayTotal ?? total}`}</Text>
+            {headingActions && (
+              <View className='business-detail-comments__heading-actions'>
+                {headingActions}
+              </View>
+            )}
+          </View>
+        )}
 
         {loading && (
           <View
@@ -1358,7 +1357,7 @@ export default function DetailComments({
               id={`business-comment-replying-${replyTarget.id}`}
               className='business-detail-composer__replying'
             >
-              <Text>@{compactCommentName(commentAuthorName(replyTarget), 10)}</Text>
+              <Text>@{commentAuthorName(replyTarget)}</Text>
               <Text
                 id={`business-comment-cancel-reply-${replyTarget.id}`}
                 onTouchStart={() => {

@@ -103,6 +103,18 @@ for (const entry of [
 }
 
 const myServicesSource = readFileSync(resolve(__dirname, '../src/packages/social/my-services/index.tsx'), 'utf8')
+const marketplaceDetailSource = readFileSync(resolve(__dirname, '../src/packages/social/marketplace/detail.tsx'), 'utf8')
+assert.match(
+  marketplaceDetailSource,
+  /\{item\.image_urls\.length > 0 && \([\s\S]*?<ContentImageGrid[\s\S]*?images=\{item\.image_urls\.map/u,
+  'marketplace: only listings with real image URLs render the shared image grid',
+)
+assert.match(marketplaceDetailSource, /<ContentImageGrid[\s\S]*?preview/u)
+assert.doesNotMatch(
+  marketplaceDetailSource,
+  /market-detail-gallery__empty/u,
+  'marketplace: text-only listings never render a fake image card',
+)
 for (const kind of ['marketplace', 'errand', 'carpool']) {
   assert.match(myServicesSource, new RegExp(`saveBusinessDetailSnapshot\\('${kind}', item\\)`, 'u'))
 }

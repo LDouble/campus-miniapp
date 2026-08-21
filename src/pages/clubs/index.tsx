@@ -469,8 +469,8 @@ export default function ClubsPage() {
               <View className='club-card__visual-meta'>
                 <View className='club-card__logo'>
                   {club.logo?.url
-                    ? <Image src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
-                    : <Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
+                    ? <Image className='club-card__logo-image' src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
+                    : <Image className='club-card__logo-placeholder' src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
                 </View>
                 <Text className='club-card__category'>{club.category.name}</Text>
               </View>
@@ -540,8 +540,8 @@ export default function ClubsPage() {
                       >
                         <View className='club-directory-row__logo'>
                           {club.logo?.url
-                            ? <Image src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
-                            : <Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
+                            ? <Image className='club-directory-row__logo-image' src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
+                            : <Image className='club-directory-row__logo-placeholder' src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
                         </View>
                         <View className='club-directory-row__copy'>
                           <Text className='club-directory-row__name'>{club.name}</Text>

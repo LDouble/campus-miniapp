@@ -142,10 +142,6 @@ const detailCommentsStyle = readFileSync(
   resolve(__dirname, '../src/features/life-services/components/detail-comments.scss'),
   'utf8',
 )
-const communityDetailStyle = readFileSync(
-  resolve(__dirname, '../src/packages/social/community/detail.scss'),
-  'utf8',
-)
 
 assert.doesNotMatch(detailCommentsSource, /收起回复/u)
 assert.match(detailCommentsSource, /!thread\?\.expanded && hasHiddenReplies/u)
@@ -205,13 +201,19 @@ assert.match(
 assert.doesNotMatch(communityCommentSheetSource, /listComments|business-detail-comments/u)
 assert.match(
   detailCommentsSource,
-  /business-detail-comment__reply-to[\s\S]*?回复[\s\S]*?business-detail-comment__reply-target/u,
-  '二级评论必须展示明确的回复对象',
+  /business-detail-comment__reply-to[\s\S]*?src=\{icons\.reply\}[\s\S]*?business-detail-comment__reply-target/u,
+  '二级评论必须用统一 SVG 图标表达回复关系',
 )
 assert.match(
-  communityDetailStyle,
-  /\.community-detail \.business-detail-comment__reply-relation,[\s\S]*?flex: none;[\s\S]*?overflow: visible;[\s\S]*?text-overflow: clip;/u,
-  '二级评论昵称不得被 flex 收缩截断',
+  detailCommentsStyle,
+  /\.business-detail-comment__reply-identity \{[^}]*gap: 0;[^}]*white-space: nowrap;[\s\S]*?\.business-detail-comment__reply-relation,[\s\S]*?\.business-detail-comment__reply-target \{[^}]*flex: 0 1 auto;[^}]*text-overflow: ellipsis;[^}]*white-space: nowrap;/u,
+  '二级回复关系必须按内容紧贴排列，空间不足时两个昵称再收缩省略',
+)
+assert.doesNotMatch(detailCommentsSource, />\s*@\{replyTargetName\}\s*</u, '回复关系中的两个昵称之间不应插入 @')
+assert.match(
+  detailCommentsSource,
+  /business-detail-comment__reply-relation'>[\s\S]*?commentAuthorName\(comment\)[\s\S]*?comment\.author_id === targetAuthorId[\s\S]*?business-detail-comment__author-badge'>作者[\s\S]*?business-detail-comment__reply-to'[\s\S]*?src=\{icons\.reply\}[\s\S]*?business-detail-comment__reply-target/u,
+  '二级评论的作者标签必须紧跟评论者昵称，不能放在被回复者之后',
 )
 assert.match(
   detailCommentsSource,
@@ -219,8 +221,8 @@ assert.match(
   '自己的评论应显示“x赞”，其他评论只显示爱心数量',
 )
 assert.match(
-  communityDetailStyle,
-  /\.community-detail \.business-detail-comment__like--own image \{\s*display: none;/u,
+  detailCommentsStyle,
+  /\.business-detail-comment__like--own image \{ display: none; \}/u,
   '自己的评论不得展示爱心',
 )
 assert.match(
@@ -230,7 +232,7 @@ assert.match(
 )
 assert.match(
   detailCommentsSource,
-  /business-detail-comment__reply-content[\s\S]*?business-detail-comment__time business-detail-comment__time--footer/u,
+  /business-detail-comment__reply-content[\s\S]*?business-detail-comment__footer[\s\S]*?business-detail-comment__time/u,
   '二级评论时间必须移到正文下方',
 )
 assert.match(detailCommentsSource, /const shouldFollowKeyboard = inputFocused \|\| keyboardHeight > 0/u)
@@ -304,10 +306,11 @@ assert.match(detailCommentsSource, /className='business-detail-comments__skeleto
 assert.match(detailCommentsSource, /\[0, 1, 2\]\.map\(\(index\) =>/u)
 assert.match(detailCommentsSource, /!loading && comments\.length === 0/u)
 assert.match(detailCommentsStyle, /\.business-detail-comment__bubble \{[^}]*background: transparent;/u)
-assert.match(detailCommentsStyle, /\.business-detail-comment__author \{[^}]*--campus-text-muted/u)
-assert.match(detailCommentsStyle, /\.business-detail-comment__reply-identity \{[^}]*--campus-text-muted/u)
-assert.match(detailCommentsStyle, /business-detail-comment__reply--focused[^}]*box-shadow: inset/u)
-assert.match(detailCommentsStyle, /\.business-detail-comments__skeleton \{[^}]*min-height: 474rpx;/u)
+assert.match(detailCommentsStyle, /\.business-detail-comment__author \{[^}]*--campus-text-body/u)
+assert.match(detailCommentsStyle, /\.business-detail-comment__reply-identity \{[^}]*white-space: nowrap;/u)
+assert.match(detailCommentsStyle, /\.business-detail-comment__reply-content \{[^}]*overflow-wrap: anywhere;[^}]*white-space: pre-wrap;/u)
+assert.match(detailCommentsStyle, /business-detail-comment__reply--focused[^}]*box-shadow:/u)
+assert.match(detailCommentsStyle, /\.business-detail-comments__skeleton \{[^}]*min-height: 420rpx;/u)
 assert.match(detailCommentsStyle, /business-detail-comments-skeleton-shimmer/u)
 assert.match(detailCommentsStyle, /@media \(prefers-reduced-motion: reduce\)[\s\S]*business-detail-comments__skeleton-avatar/u)
 assert.match(detailCommentsStyle, /\.business-detail-composer \{[\s\S]*background: var\(--campus-surface, #fff\);/u)
@@ -331,9 +334,11 @@ assert.doesNotMatch(
   '取消回复不得使用危险红色',
 )
 assert.match(
-  communityDetailStyle,
-  /\.community-detail__main \+ \.business-detail-comments \{[^}]*margin-top: 0;[^}]*padding-top: 30rpx;/u,
-  '帖子操作行和评论区应保留设计稿的紧凑间距',
+  detailCommentsStyle,
+  /\.business-detail-comment__replies \{[^}]*margin: 0 0 12rpx 80rpx;[^}]*background: var\(--campus-surface-subtle, #f5f8fc\);/u,
+  '回复面板应固定缩进到一级评论正文列，面板内回复不得递归缩进',
 )
+assert.doesNotMatch(detailCommentsStyle, /\.business-detail-comment-thread\s*\{[^}]*border/u, '一级评论之间不得显示横线')
+assert.doesNotMatch(detailCommentsStyle, /\.business-detail-comment__reply-node \+[^}]*border-top/u, '回复之间不得显示横线')
 
 console.log('comment reply smoke: ok')

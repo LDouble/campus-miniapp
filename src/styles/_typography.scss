@@ -17,7 +17,7 @@ page .community-module-state__message { font-size: 27rpx; }
 page .api-community-search input { font-size: 27rpx; }
 page .api-community-search__submit { font-size: 26rpx; }
 page .community-post__avatar text { font-size: 25rpx; }
-page .community-post__author-line > text:first-child { font-size: 34rpx; }
+page .community-post__author-line > text:first-child { font-size: 30rpx; }
 page .community-post__meta { font-size: 26rpx; }
 page .community-post__review-status { font-size: 20rpx; }
 page .community-post__section-pill text,
@@ -61,17 +61,22 @@ page .community-topic-feed-heading > view text:last-child,
 page .community-topic-feed-heading > text { font-size: 23rpx; }
 
 // 四类详情共用评论组件，保证社区、闲置、跑腿和找同行的阅读体验一致。
-page .business-detail-comments__heading > text:last-child { font-size: 25rpx; }
+page .detail-author-header__name { font-size: var(--ousea-font-size-comment); }
+page .detail-author-header__meta { font-size: var(--ousea-font-size-caption); }
+page .detail-overview__title,
+page .market-detail-title { font-size: var(--ousea-font-size-title); }
+page .business-detail-comments__heading > text:nth-child(2) { font-size: var(--ousea-font-size-comment); }
 page .business-detail-comments__state,
-page .business-detail-comments__more { font-size: 26rpx; }
-page .business-detail-comment__author { font-size: 24rpx; }
-page .business-detail-comment__author-badge { font-size: 20rpx; }
-page .business-detail-comment__bubble { font-size: 28rpx; }
-page .business-detail-comment__meta { font-size: 23rpx; }
+page .business-detail-comments__more { font-size: var(--ousea-font-size-caption); }
+page .business-detail-comment__author,
+page .business-detail-comment__reply-identity { font-size: var(--ousea-font-size-label); }
+page .business-detail-comment__author-badge { font-size: var(--ousea-font-size-badge); }
+page .business-detail-comment__bubble { font-size: var(--ousea-font-size-body); }
+page .business-detail-comment__reply-content { font-size: var(--ousea-font-size-comment); }
+page .business-detail-comment__meta,
+page .business-detail-comment__time { font-size: var(--ousea-font-size-caption); }
 page .business-detail-comment__thread-action,
-page .business-detail-comment__thread-error { font-size: 24rpx; }
-page .business-detail-comment__reply { font-size: 24rpx; }
-page .business-detail-comment__reply-content { font-size: 26rpx; }
+page .business-detail-comment__thread-error { font-size: var(--ousea-font-size-caption); }
 page .business-detail-composer input,
 page .business-detail-composer textarea,
 page .business-detail-composer__collapsed-input { font-size: 27rpx; }

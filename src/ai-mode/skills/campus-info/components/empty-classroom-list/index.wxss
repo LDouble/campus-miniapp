@@ -180,8 +180,7 @@
   font-weight: 500;
 }
 
-@media (prefers-color-scheme: dark) {
-  .classroom-card {
+.classroom-card.classroom-card--dark {
     background-color: #172326;
     background-image: linear-gradient(135deg, #18302d 0%, #2a241d 100%);
     border-top-color: #3f5960;
@@ -189,20 +188,19 @@
     border-bottom-color: #3f5960;
     border-left-color: #3f5960;
     color: rgba(255, 255, 255, 0.9);
-  }
+}
 
-  .classroom-card__date,
-  .classroom-card__building,
-  .classroom-card__room-meta,
-  .classroom-card__facilities,
-  .classroom-card__empty-hint,
-  .classroom-card__notice,
-  .classroom-card__source {
+.classroom-card--dark .classroom-card__date,
+.classroom-card--dark .classroom-card__building,
+.classroom-card--dark .classroom-card__room-meta,
+.classroom-card--dark .classroom-card__facilities,
+.classroom-card--dark .classroom-card__empty-hint,
+.classroom-card--dark .classroom-card__notice,
+.classroom-card--dark .classroom-card__source {
     color: rgba(255, 255, 255, 0.45);
-  }
+}
 
-  .classroom-card__room,
-  .classroom-card__footer {
+.classroom-card--dark .classroom-card__room,
+.classroom-card--dark .classroom-card__footer {
     border-top-color: #3f5960;
-  }
 }

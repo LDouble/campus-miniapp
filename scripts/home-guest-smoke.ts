@@ -34,6 +34,10 @@ const communityPostStyleSource = readFileSync(
   resolve(__dirname, '../src/features/community/feed-panel.scss'),
   'utf8',
 )
+const contentImageGridStyleSource = readFileSync(
+  resolve(__dirname, '../src/features/community/components/content-image-grid.scss'),
+  'utf8',
+)
 const generatedApiSource = readFileSync(
   resolve(__dirname, '../src/api/generated/schema.ts'),
   'utf8',
@@ -214,8 +218,8 @@ assert.match(
   '首页 hero 高光透明度不得过高',
 )
 assert.match(
-  communityPostStyleSource,
-  /\.community-post__images\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3,/u,
+  contentImageGridStyleSource,
+  /\.content-image-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3,/u,
   '首页校园动态图片必须使用最多三列的朋友圈式网格',
 )
 assert.ok(
@@ -265,8 +269,13 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /\.service-panel\s*\{\s*padding:\s*28rpx 20rpx 26rpx;[\s\S]{0,520}&__simple-head\s*\{[^}]*min-height:\s*48rpx;[^}]*padding:\s*0 12rpx 16rpx;/u,
-  '常用服务卡片必须使用 Figma 对齐的单行标题区',
+  /\.service-panel\s*\{\s*padding:\s*24rpx 20rpx 20rpx;[\s\S]{0,620}&__simple-head\s*\{[^}]*min-height:\s*96rpx;[^}]*padding:\s*0 12rpx 8rpx;[^}]*box-sizing:\s*border-box;/u,
+  '常用服务卡片必须使用紧凑外壳，并为标题操作保留安全热区',
+)
+assert.match(
+  homeStyleSource,
+  /&__all\s*\{[^}]*min-width:\s*88rpx;[^}]*min-height:\s*88rpx;/u,
+  '常用服务“全部”入口必须保留 88rpx 触控热区',
 )
 assert.match(
   homeStyleSource,
@@ -275,8 +284,18 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /&__grid-icon,[\s\S]{0,520}&__grid-item--pink &__grid-icon\s*\{[^}]*width:\s*84rpx;[^}]*height:\s*84rpx;[^}]*background:\s*var\(--ousea-ocean-50,[^}]*border:\s*2rpx solid var\(--ousea-ocean-100,[^}]*border-radius:\s*26rpx;/u,
+  /&__grid-icon,[\s\S]{0,520}&__grid-item--pink &__grid-icon\s*\{[^}]*width:\s*76rpx;[^}]*height:\s*76rpx;[^}]*margin-bottom:\s*8rpx;[^}]*background:\s*var\(--ousea-ocean-50,[^}]*border:\s*2rpx solid var\(--ousea-ocean-100,[^}]*border-radius:\s*24rpx;/u,
   '常用服务图标必须统一使用 Ousea 浅蓝底板、描边与圆角',
+)
+assert.match(
+  homeStyleSource,
+  /&__home-grid\s*\{[^}]*gap:\s*8rpx 4rpx;[\s\S]{0,180}&__home-grid &__grid-item\s*\{[^}]*height:\s*132rpx;/u,
+  '常用服务宫格必须使用紧凑行距和 132rpx 安全触控高度',
+)
+assert.doesNotMatch(
+  homeStyleSource,
+  /\.service-panel__home-grid \.service-panel__grid-item\s*\{[^}]*height:\s*163rpx;/u,
+  '常用服务不得被后置样式重新拉高',
 )
 assert.match(
   homeStyleSource,
@@ -310,13 +329,13 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__author-line > text:first-child\s*\{[\s\S]{0,420}?color:\s*var\(--ousea-ocean-400,\s*#4c96f5\);[\s\S]{0,220}?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u,
-  '首页混排昵称必须与 CommunityPostCard 使用同一套 Ousea 样式',
+  /\.community-post__author-line > text:first-child\s*\{[\s\S]{0,420}?color:\s*var\(--campus-primary-strong,\s*#1d5fd6\);[\s\S]{0,220}?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);/u,
+  '首页混排昵称必须与 CommunityPostCard 使用同一套深海蓝 Regular 样式',
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__action-menu\s*\{[^}]*top:\s*50%;[^}]*right:\s*96rpx;[^}]*border-radius:\s*12rpx;[^}]*background:\s*var\(--ousea-ink-700,/u,
-  '帖子卡片展开的互动菜单必须匹配微信式深灰横向容器',
+  /\.community-post__action-menu::before\s*\{[^}]*top:\s*50%;[^}]*height:\s*72rpx;[^}]*border-radius:\s*12rpx;[^}]*background:\s*var\(--ousea-ink-700,/u,
+  '帖子卡片展开的互动菜单必须使用独立于触控盒的紧凑深灰可见层',
 )
 assert.match(
   communityPostStyleSource,
@@ -340,7 +359,7 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__social-divider\s*\{[^}]*width:\s*1rpx;[^}]*height:\s*48rpx;[^}]*background:\s*rgba\(255, 255, 255, 0\.24\);/u,
+  /\.community-post__social-divider\s*\{[^}]*width:\s*1rpx;[^}]*height:\s*40rpx;[^}]*background:\s*rgba\(255, 255, 255, 0\.24\);/u,
   '微信式互动菜单必须使用白色细分隔线区分点赞与评论',
 )
 

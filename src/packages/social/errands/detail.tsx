@@ -17,7 +17,7 @@ import {
   formatMoney,
   formatStatus,
 } from '../../../features/life-services/format'
-import DetailAuthorNavbar from '../../../features/life-services/components/detail-author-navbar'
+import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
 import DetailBusinessIntro from '../../../features/life-services/components/detail-business-intro'
 import DetailComments, {
   createBusinessContactComment,
@@ -253,17 +253,7 @@ export default function ErrandDetailPage() {
 
   return (
     <View className='life-detail life-detail--errands'>
-      <CustomNavbar
-        title='跑腿详情'
-        showBack
-        barContent={item ? (
-          <DetailAuthorNavbar
-            avatarUrl={item.author_avatar_url}
-            nickname={item.author_nickname}
-            userId={item.requester_id}
-          />
-        ) : undefined}
-      />
+      <CustomNavbar title='跑腿详情' showBack />
       <View className='life-detail__content'>
         {loading && <View className='detail-state'>正在加载任务信息</View>}
         {!loading && error && (
@@ -274,13 +264,11 @@ export default function ErrandDetailPage() {
         )}
         {!loading && item && (
           <>
-            <DetailBusinessIntro
-              badges={[
-                '跑腿',
-                campusLabel(item.campus),
-                formatStatus(item.status, item.review_status),
-              ]}
-              title={item.description}
+            <DetailAuthorHeader
+              avatarUrl={item.author_avatar_url}
+              nickname={item.author_nickname}
+              userId={item.requester_id}
+              meta={<Text>{formatDateTime(item.created_at)}</Text>}
               action={(
                 <View className='detail-overview__toolbar-actions'>
                   {item.viewer_relation !== 'publisher' && (
@@ -298,6 +286,14 @@ export default function ErrandDetailPage() {
                   <DetailOverflowActions actions={overflowActions} />
                 </View>
               )}
+            />
+            <DetailBusinessIntro
+              badges={[
+                '跑腿',
+                campusLabel(item.campus),
+                formatStatus(item.status, item.review_status),
+              ]}
+              title={item.description}
             >
               <View className='detail-important-card detail-important-card--errand'>
                 <View className='detail-important-card__topline'>

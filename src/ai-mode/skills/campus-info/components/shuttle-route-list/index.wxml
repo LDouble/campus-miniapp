@@ -1,4 +1,4 @@
-<view class="shuttle-card">
+<view class="shuttle-card {{darkMode ? 'shuttle-card--dark' : ''}}">
   <view class="shuttle-card__header">
     <text class="shuttle-card__title">校车安排</text>
     <text class="shuttle-card__count">共 {{totalCount}} 条</text>

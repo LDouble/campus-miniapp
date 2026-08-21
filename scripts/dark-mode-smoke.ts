@@ -11,11 +11,27 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const theme = JSON.parse(read('src/theme.json')) as ThemeDefinition
 const appConfig = read('src/app.config.ts')
+const appSource = read('src/app.ts')
 const appStyle = read('src/app.scss')
 const darkModeStyle = read('src/styles/_dark-mode.scss')
+const themePreference = read('src/features/theme-preference.ts')
+const weappCompatPlugin = read('config/plugins/weapp-compat.js')
+const profileSource = read('src/pages/profile/index.tsx')
 const shuttleDetailStyle = read('src/pages/shuttle/detail.scss')
 const tokens = read('src/styles/_tokens.scss')
+const tabBarSource = read('src/custom-tab-bar/index.js')
+const tabBarTemplate = read('src/custom-tab-bar/index.wxml')
 const tabBarStyle = read('src/custom-tab-bar/index.wxss')
+const aiThemeSource = read('src/ai-mode/skills/campus-info/utils/theme.js')
+const aiThemeFiles = [
+  'empty-classroom-list',
+  'official-notice-list',
+  'shuttle-route-list',
+].map((name) => ({
+  script: read(`src/ai-mode/skills/campus-info/components/${name}/index.js`),
+  template: read(`src/ai-mode/skills/campus-info/components/${name}/index.wxml`),
+  style: read(`src/ai-mode/skills/campus-info/components/${name}/index.wxss`),
+}))
 
 const requiredThemeKeys = [
   'navigationBarBackgroundColor',
@@ -41,56 +57,137 @@ for (const key of requiredThemeKeys) {
 
 assert.notEqual(theme.light.backgroundColor, theme.dark.backgroundColor)
 assert.notEqual(theme.light.navigationBarTextStyle, theme.dark.navigationBarTextStyle)
-assert.match(appStyle, /@media \(prefers-color-scheme: dark\)/u)
+assert.match(appStyle, /\.campus-theme--dark\s*\{/u)
 assert.match(appStyle, /--campus-surface:\s*#111827/u)
 assert.match(appStyle, /--campus-icon-surface-orange:\s*#3a291a/u)
 assert.match(tokens, /\$color-on-accent:\s*#fff/u)
 assert.doesNotMatch(tokens, /\$color-on-accent:\s*var\(--campus-surface/u)
-assert.match(tabBarStyle, /@media \(prefers-color-scheme: dark\)/u)
-assert.match(darkModeStyle, /page \.icon-button > image/u)
-assert.match(darkModeStyle, /page \.service-panel__grid-icon/u)
-assert.match(darkModeStyle, /page \.errand-card,/u)
-assert.match(darkModeStyle, /page \.errand-route,/u)
-assert.match(darkModeStyle, /page \.marketplace-card__placeholder/u)
-assert.match(darkModeStyle, /page \.life-primary-tabs__inner/u)
-assert.match(darkModeStyle, /page \.life-primary-tabs__item--active/u)
-assert.match(darkModeStyle, /page \.community-root-tabs__item--active/u)
-assert.match(darkModeStyle, /page \.community-page__search-action/u)
-assert.match(darkModeStyle, /page \.community-post__social/u)
-assert.match(darkModeStyle, /page \.community-feed-skeleton__line/u)
-assert.match(darkModeStyle, /page \.fresh-barrage__item/u)
-assert.match(darkModeStyle, /page \.community-level-badge--gold/u)
-assert.match(darkModeStyle, /page \.community-topic-hero/u)
-assert.match(darkModeStyle, /page \.community-detail__main/u)
-assert.match(darkModeStyle, /page \.community-detail__toolbar-action/u)
-assert.match(darkModeStyle, /page \.community-detail-card__review/u)
-assert.match(darkModeStyle, /page \.business-detail-comments/u)
-assert.match(darkModeStyle, /page \.business-detail-composer/u)
-assert.match(darkModeStyle, /page \.verification-method--active/u)
-assert.match(darkModeStyle, /page \.verification-education-option--active/u)
-assert.match(darkModeStyle, /page \.verification-password-control/u)
+assert.doesNotMatch(appStyle, /@media \(prefers-color-scheme: dark\)/u)
+assert.match(appSource, /initializeCampusTheme\(\)/u)
+assert.match(themePreference, /CAMPUS_THEME_STORAGE_KEY/u)
+assert.match(themePreference, /CampusThemePreference = 'system' \| CampusTheme/u)
+assert.match(themePreference, /Taro\.getCurrentPages\(\)/u)
+assert.match(themePreference, /page\.setData\?\.\(\{ __campusTheme: theme \}\)/u)
+assert.doesNotMatch(themePreference, /document\.body/u)
+assert.match(weappCompatPlugin, /injectCampusThemeIntoPageRoots/u)
+assert.match(weappCompatPlugin, /campus-theme campus-theme--/u)
+assert.match(weappCompatPlugin, /root:root,t:__campusTheme/u)
+assert.match(weappCompatPlugin, /componentConfig\.component === true/u)
+assert.match(weappCompatPlugin, /__campusTheme:\$\{initialThemeExpression\}/u)
+assert.match(weappCompatPlugin, /wx\.getStorageSync\('campus-theme-preference'\)/u)
+assert.match(weappCompatPlugin, /wx\.getAppBaseInfo\(\)\.theme/u)
+assert.match(themePreference, /Taro\.setStorageSync/u)
+assert.match(themePreference, /Taro\.onThemeChange/u)
+assert.match(themePreference, /setNavigationBarColor/u)
+assert.match(themePreference, /setBackgroundColor/u)
+assert.match(themePreference, /setTabBarStyle/u)
+assert.match(profileSource, /<Text>深色模式<\/Text>/u)
+assert.match(profileSource, /\{ label: '跟随系统', value: 'system' \}/u)
+assert.match(profileSource, /\{ label: '打开', value: 'dark' \}/u)
+assert.match(profileSource, /\{ label: '关闭', value: 'light' \}/u)
+assert.match(profileSource, /showActionSheetSelection/u)
+assert.match(profileSource, /restartWithCampusThemePreference\(nextPreference\)/u)
+assert.match(profileSource, /profile-theme-entry__value/u)
+assert.doesNotMatch(profileSource, /<Switch/u)
+assert.match(themePreference, /wx\.restartMiniProgram\(\{/u)
+assert.match(themePreference, /path: '\/pages\/index\/index'/u)
+assert.match(themePreference, /Taro\.reLaunch\(\{ url: '\/pages\/index\/index' \}\)/u)
+assert.match(tabBarTemplate, /tab-bar--dark/u)
+assert.match(tabBarSource, /getCampusTheme\(\) === 'dark'/u)
+assert.match(tabBarStyle, /\.tab-bar--dark \.tab-bar__dock/u)
+assert.doesNotMatch(tabBarStyle, /@media \(prefers-color-scheme: dark\)/u)
+assert.match(aiThemeSource, /campus-theme-preference/u)
+assert.match(aiThemeSource, /wx\.getAppBaseInfo\(\)\.theme/u)
+for (const source of aiThemeFiles) {
+  assert.match(source.script, /getCampusTheme\(\) === 'dark'/u)
+  assert.match(source.template, /darkMode \?/u)
+  assert.match(source.style, /--dark/u)
+  assert.doesNotMatch(source.style, /prefers-color-scheme/u)
+}
+assert.match(darkModeStyle, /\.campus-theme--dark\s*\{/u)
+assert.match(darkModeStyle, /& \.icon-button > image/u)
+assert.match(darkModeStyle, /& \.service-panel__grid-icon/u)
+assert.match(darkModeStyle, /&\.campus \.custom-navbar__fixed/u)
+assert.match(darkModeStyle, /& \.schedule-card,/u)
+assert.match(darkModeStyle, /& \.today-task,/u)
+assert.match(darkModeStyle, /& \.official-notices-home,/u)
+assert.match(darkModeStyle, /& \.community-panel,/u)
+assert.match(darkModeStyle, /& \.market-panel/u)
+assert.match(darkModeStyle, /& \.service-panel \{/u)
+assert.match(darkModeStyle, /& \.service-panel__grid-icon image/u)
+assert.match(darkModeStyle, /& \.today-card__event-row--important/u)
+assert.match(darkModeStyle, /& \.official-notices-home__source/u)
+assert.match(darkModeStyle, /& \.home-section-state/u)
+assert.match(darkModeStyle, /& \.home-migrated/u)
+assert.match(darkModeStyle, /&\.campus\.campus \.schedule-card/u)
+assert.match(darkModeStyle, /&\.campus\.campus \.schedule-card__courses/u)
+assert.match(darkModeStyle, /&\.campus\.campus \.schedule-card__meta/u)
+assert.match(darkModeStyle, /&\.campus\.campus \.hero-card/u)
+assert.match(darkModeStyle, /&\.campus\.campus \.hero-card\.hero-card--image \.hero-card__banner-image/u)
+assert.match(darkModeStyle, /brightness\(0\.72\) saturate\(0\.88\)/u)
+assert.match(darkModeStyle, /&\.clubs-page \.clubs-hero/u)
+assert.match(darkModeStyle, /&\.clubs-page \.clubs-search,/u)
+assert.match(darkModeStyle, /&\.clubs-page \.clubs-category--active/u)
+assert.match(darkModeStyle, /&\.clubs-page \.clubs-viewbar__modes/u)
+assert.match(darkModeStyle, /&\.clubs-page \.club-card__logo-placeholder/u)
+assert.match(darkModeStyle, /&\.clubs-page \.club-directory-row/u)
+assert.match(darkModeStyle, /&\.clubs-page \.clubs-inline-error/u)
+assert.match(darkModeStyle, /& \.errand-card,/u)
+assert.match(darkModeStyle, /& \.errand-route,/u)
+assert.match(darkModeStyle, /& \.marketplace-card__placeholder/u)
+assert.match(darkModeStyle, /& \.life-primary-tabs__inner/u)
+assert.match(darkModeStyle, /& \.life-primary-tabs__item--active/u)
 assert.match(
   darkModeStyle,
-  /page \.verification-field input\.verification-field__input/u,
+  /& \.life-primary-tabs__item--active\s*\{[^}]*background:\s*transparent/u,
+  '社区业务主 Tab 的暗色选中态不应使用整块纯蓝背景',
+)
+assert.match(darkModeStyle, /& \.life-primary-tabs__item--active::after/u)
+assert.match(darkModeStyle, /& \.community-root-tabs__item--active/u)
+assert.match(darkModeStyle, /& \.community-page__search-action/u)
+assert.match(darkModeStyle, /& \.community-post__social/u)
+assert.match(darkModeStyle, /& \.community-feed-skeleton__line/u)
+assert.match(darkModeStyle, /& \.fresh-barrage__item/u)
+assert.match(darkModeStyle, /& \.community-level-badge--gold/u)
+assert.match(darkModeStyle, /& \.community-topic-hero/u)
+assert.match(darkModeStyle, /& \.community-detail__main/u)
+assert.match(darkModeStyle, /& \.community-detail__action image/u)
+assert.match(darkModeStyle, /& \.community-detail__action--liked/u)
+assert.doesNotMatch(darkModeStyle, /& \.community-detail__toolbar-action/u)
+assert.match(darkModeStyle, /& \.community-detail-card__review/u)
+assert.match(darkModeStyle, /& \.business-detail-comments/u)
+assert.match(darkModeStyle, /& \.business-detail-composer/u)
+assert.match(darkModeStyle, /& \.business-detail-composer__persistent-contact-icon/u)
+assert.match(darkModeStyle, /& \.business-detail-composer__publish--marketplace::before/u)
+assert.match(darkModeStyle, /& \.detail-state/u)
+assert.match(darkModeStyle, /& \.detail-review-alert/u)
+assert.match(darkModeStyle, /&\.life-detail--market \.market-detail-badges/u)
+assert.match(darkModeStyle, /&\.life-detail--carpool \.detail-inline-action/u)
+assert.match(darkModeStyle, /& \.verification-method--active/u)
+assert.match(darkModeStyle, /& \.verification-education-option--active/u)
+assert.match(darkModeStyle, /& \.verification-password-control/u)
+assert.match(
+  darkModeStyle,
+  /& \.verification-field input\.verification-field__input/u,
   '教务账号输入框缺少暗色文字色',
 )
 assert.match(
   darkModeStyle,
-  /page \.verification-password-control input\.verification-password-control__input--masked/u,
+  /& \.verification-password-control input\.verification-password-control__input--masked/u,
   '密码输入框缺少暗色掩码处理',
 )
 assert.match(
   darkModeStyle,
-  /page \.verification-password-control__mask/u,
+  /& \.verification-password-control__mask/u,
   '密码掩码缺少暗色文字色',
 )
-assert.match(darkModeStyle, /page \.verification-upload/u)
-assert.match(darkModeStyle, /page \.bottom-sheet-layer/u)
-assert.match(darkModeStyle, /page \.academic-sheet,/u)
-assert.match(darkModeStyle, /page \.period-options__item--active/u)
-assert.match(darkModeStyle, /page \.grade-summary,/u)
-assert.match(darkModeStyle, /page \.shuttle-detail-panel/u)
-assert.match(darkModeStyle, /page \.shuttle-detail-actions/u)
+assert.match(darkModeStyle, /& \.verification-upload/u)
+assert.match(darkModeStyle, /& \.bottom-sheet-layer/u)
+assert.match(darkModeStyle, /& \.academic-sheet,/u)
+assert.match(darkModeStyle, /& \.period-options__item--active/u)
+assert.match(darkModeStyle, /& \.grade-summary,/u)
+assert.match(darkModeStyle, /& \.shuttle-detail-panel/u)
+assert.match(darkModeStyle, /& \.shuttle-detail-actions/u)
 assert.match(
   shuttleDetailStyle,
   /&__bus\s*\{[^}]*background:\s*rgba\(18,\s*73,\s*142,\s*0\.26\)/u,
@@ -101,7 +198,7 @@ assert.match(
   /&__direction\s*\{[^}]*background:\s*rgba\(18,\s*73,\s*142,\s*0\.22\)/u,
   '校车详情起终点长条不得使用白色背景',
 )
-assert.match(darkModeStyle, /page \.calendar-hero,/u)
+assert.match(darkModeStyle, /& \.calendar-hero,/u)
 assert.doesNotMatch(darkModeStyle, /page\s+image\s*\{/u, '不能全局反色用户上传的图片')
 
 const pageConfigPaths = require('node:child_process')
@@ -152,6 +249,9 @@ assert.ok(contrast('#8494aa', '#0b1220') >= 4.5, '暗色辅助文字与页面背
 assert.ok(contrast('#aab8ca', '#172033') >= 4.5, '暗色社区未选中标签对比度不足')
 assert.ok(contrast('#ffffff', '#0e7490') >= 4.5, '暗色社区选中标签对比度不足')
 assert.ok(contrast('#ffffff', '#2563eb') >= 4.5, '暗色社区主操作文字对比度不足')
+assert.ok(contrast('#ffffff', '#7e22ce') >= 4.5, '暗色闲置主操作文字对比度不足')
+assert.ok(contrast('#ffffff', '#c2410c') >= 4.5, '暗色跑腿主操作文字对比度不足')
+assert.ok(contrast('#ffffff', '#0f766e') >= 4.5, '暗色找同行主操作文字对比度不足')
 assert.ok(contrast('#fde68a', '#38331a') >= 4.5, '暗色社区等级徽章对比度不足')
 assert.ok(contrast('#ffffff', '#1d4ed8') >= 4.5, '暗色学业与校车头图文字对比度不足')
 assert.ok(contrast('#93c5fd', '#172554') >= 4.5, '暗色浮层选项文字对比度不足')
