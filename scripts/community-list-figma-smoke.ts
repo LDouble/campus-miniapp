@@ -188,7 +188,12 @@ assert.match(feedStyles, /\.community-post\s*\{[\s\S]*?border-bottom:\s*0;/u)
 assert.match(feedStyles, /\.community-post \+ \.community-post\s*\{[\s\S]*?border-top:\s*1rpx solid var\(--ousea-bg-line, #e8edf4\);/u)
 assert.match(feedStyles, /\.community-feed-skeleton__item \+ \.community-feed-skeleton__item\s*\{[\s\S]*?border-top:\s*1rpx solid var\(--ousea-bg-line, #e8edf4\);/u)
 assert.doesNotMatch(feedStyles, /community-post--home|community-post__social-summary/u)
-assert.match(feedStyles, /calc\(152rpx \+ env\(safe-area-inset-bottom\)\)/u)
+assert.match(feedStyles, /\.api-community \{[\s\S]*?padding: 0 32rpx;/u)
+assert.doesNotMatch(
+  feedStyles,
+  /calc\(152rpx \+ env\(safe-area-inset-bottom\)\)/u,
+  '社区列表不应重复叠加页面级底部安全区留白',
+)
 assert.match(profileStyles, /\.public-profile-feed \{\s*gap:\s*0;/u)
 assert.match(darkStyles, /& \.community-post__social \{/u)
 assert.match(darkStyles, /& \.community-post__action-menu \{/u)

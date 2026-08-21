@@ -4,6 +4,7 @@ import Taro, {
   useDidShow,
   useLoad,
   usePullDownRefresh,
+  useReachBottom,
 } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type {
@@ -79,6 +80,7 @@ export default function CommunityPage() {
   const [searchFocusSignal, setSearchFocusSignal] = useState(0)
   const [communityOverlayVisible, setCommunityOverlayVisible] = useState(false)
   const [communityOverlayDismissSignal, setCommunityOverlayDismissSignal] = useState(0)
+  const [loadMoreSignal, setLoadMoreSignal] = useState(0)
   const [marketplaceSearchPrefill, setMarketplaceSearchPrefill] = useState<
     MarketplaceSearchPrefill | null
   >(null)
@@ -306,6 +308,10 @@ export default function CommunityPage() {
     Taro.stopPullDownRefresh()
   })
 
+  useReachBottom(() => {
+    setLoadMoreSignal((current) => current + 1)
+  })
+
   useCampusShare((event) => {
     const target = event.target as {
       dataset?: Record<string, string | number>
@@ -449,6 +455,7 @@ export default function CommunityPage() {
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
             overlayDismissSignal={communityOverlayDismissSignal}
+            loadMoreSignal={loadMoreSignal}
             onOverlayVisibilityChange={setCommunityOverlayVisible}
             onSelectSection={(sectionId) => setActiveCommunitySectionId(sectionId)}
           />
@@ -458,6 +465,7 @@ export default function CommunityPage() {
             section={displayedSection as LifeServiceSection}
             refreshSignal={refreshSignal}
             searchFocusSignal={searchFocusSignal}
+            loadMoreSignal={loadMoreSignal}
             campus={campus}
             marketFilters={marketFilters}
             carpoolFilters={carpoolFilters}

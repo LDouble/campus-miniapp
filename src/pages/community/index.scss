@@ -4,7 +4,8 @@ page {
 
 .community-page {
   min-height: 100vh;
-  padding-bottom: 164rpx;
+  // 页面统一承担底部 TabBar 避让，末页提示不会被底栏覆盖。
+  padding-bottom: calc(112rpx + env(safe-area-inset-bottom));
   color: var(--campus-text-heading, #1d293d);
   background:
     linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 510rpx),

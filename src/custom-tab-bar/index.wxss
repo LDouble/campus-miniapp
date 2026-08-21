@@ -11,7 +11,7 @@
 .tab-bar__dock {
   position: absolute;
   right: 46rpx;
-  bottom: calc(10rpx + env(safe-area-inset-bottom));
+  bottom: calc(0rpx + env(safe-area-inset-bottom));
   left: 46rpx;
   display: flex;
   height: 112rpx;

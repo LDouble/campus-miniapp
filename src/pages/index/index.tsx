@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
-import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Taro, {
+  useDidShow,
+  usePageScroll,
+  usePullDownRefresh,
+  useReachBottom,
+} from '@tarojs/taro'
 import {
   Image,
   Swiper,
@@ -71,6 +76,7 @@ import {
   saveSelectedCampus,
 } from '../../features/runtime-config'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
+import { useLoadMoreSignal } from '../../hooks/use-load-more-signal'
 import { academicRepository } from '../academic/repository'
 import {
   requireCoursesForPeriod,
@@ -121,6 +127,7 @@ const icons = {
   clubs: require('../../assets/icons/clubs.svg'),
   campusCard: require('../../assets/icons/campus-card.svg'),
   campaign: require('../../assets/icons/campaign.svg'),
+  arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
 
 const homeFeatureFlags = {
@@ -192,6 +199,41 @@ const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   errands: 'errand',
   market: 'marketplace',
   carpool: 'carpool',
+}
+
+const HOME_FEED_PAGE_SIZE = 8
+const homeFeedSourceModules: Record<HomeFeedItemView['source_type'], MiniappModuleKey> = {
+  campus_circle_post: 'community',
+  marketplace_listing: 'marketplace',
+  errand: 'errand',
+  carpool: 'carpool',
+}
+
+const enabledHomeFeedItems = (
+  items: HomeFeedItemView[],
+  config: MiniappRuntimeConfig,
+) => items.filter((item) => (
+  resolveMiniappModule(config, homeFeedSourceModules[item.source_type]).state === 'enabled'
+))
+
+const mergeHomeFeedItems = (
+  current: HomeFeedItemView[],
+  incoming: HomeFeedItemView[],
+) => {
+  const byKey = new Map(current.map((item) => [homeFeedKey(item), item]))
+  incoming.forEach((item) => {
+    const currentItem = byKey.get(homeFeedKey(item))
+    byKey.set(homeFeedKey(item), currentItem
+      ? {
+          ...item,
+          comment_count: Math.max(currentItem.comment_count, item.comment_count),
+          comment_previews: currentItem.comment_previews.length
+            ? currentItem.comment_previews
+            : item.comment_previews,
+        }
+      : item)
+  })
+  return [...byKey.values()]
 }
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 type LifeHubSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -328,6 +370,13 @@ function Index() {
   const [avatarUserId, setAvatarUserId] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
   const [homeFeedItems, setHomeFeedItems] = useState<HomeFeedItemView[]>([])
+  const [homeFeedPage, setHomeFeedPage] = useState(1)
+  const [homeFeedTotal, setHomeFeedTotal] = useState(0)
+  const [homeFeedLoadingMore, setHomeFeedLoadingMore] = useState(false)
+  const [homeFeedLoadMoreError, setHomeFeedLoadMoreError] = useState(false)
+  const [homeFeedRefreshing, setHomeFeedRefreshing] = useState(false)
+  const [homeFeedLoadMoreSignal, setHomeFeedLoadMoreSignal] = useState(0)
+  const [showHomeBackTop, setShowHomeBackTop] = useState(false)
   const [homeCommentItem, setHomeCommentItem] = useState<HomeFeedItemView | null>(null)
   const [homeCommentReplyTarget, setHomeCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
   const [homeCommentSubmitting, setHomeCommentSubmitting] = useState(false)
@@ -352,13 +401,32 @@ function Index() {
     loadCachedAcademicLabel,
   )
   const [bannerIndex, setBannerIndex] = useState(0)
+  const homeFeedRequestSequence = useRef(0)
+  const homeFeedLoadingMoreRef = useRef(false)
+  const homeBackTopVisibleRef = useRef(false)
   const headerCollapsed = useCollapsingHeader({
     triggerSelector: '.campus__eyebrow',
     threshold: 48,
     releaseGap: 16,
   })
 
+  usePageScroll(({ scrollTop }) => {
+    const nextVisible = Number(scrollTop) > 480
+    if (nextVisible === homeBackTopVisibleRef.current) return
+    homeBackTopVisibleRef.current = nextVisible
+    setShowHomeBackTop(nextVisible)
+  })
+
+  useReachBottom(() => {
+    setHomeFeedLoadMoreSignal((current) => current + 1)
+  })
+
   const loadHome = useCallback(async (force = false) => {
+    const homeFeedRequestId = ++homeFeedRequestSequence.current
+    homeFeedLoadingMoreRef.current = false
+    setHomeFeedLoadingMore(false)
+    setHomeFeedLoadMoreError(false)
+    setHomeFeedRefreshing(true)
     const latestRuntimeConfig = await loadMiniappRuntimeConfig()
     const moduleEnabled = (key: MiniappModuleKey) => (
       resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
@@ -375,7 +443,7 @@ function Index() {
     const homeFeedPromise = !isQualificationEdition
       && fullLifeServicesRepository
       && homeFeedEnabled
-      ? settle(fullLifeServicesRepository.listHomeFeed({ page: 1, pageSize: 8 }))
+      ? settle(fullLifeServicesRepository.listHomeFeed({ page: 1, pageSize: HOME_FEED_PAGE_SIZE }))
       : Promise.resolve({ ok: false } as Settled<never>)
     const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
@@ -434,19 +502,19 @@ function Index() {
       setAvatarUserId(account.value.user.id)
     }
     setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))
-    if (homeFeed.ok) {
-      const sourceModules: Record<HomeFeedItemView['source_type'], MiniappModuleKey> = {
-        campus_circle_post: 'community',
-        marketplace_listing: 'marketplace',
-        errand: 'errand',
-        carpool: 'carpool',
+    if (homeFeedRequestId === homeFeedRequestSequence.current) {
+      if (homeFeed.ok) {
+        setHomeFeedItems(enabledHomeFeedItems(homeFeed.value.items, latestRuntimeConfig))
+        setHomeFeedPage(homeFeed.value.page)
+        setHomeFeedTotal(Number(homeFeed.value.total))
+        setHomeReactions({})
+        setHomeFeedError(false)
+      } else {
+        setHomeFeedItems([])
+        setHomeFeedPage(1)
+        setHomeFeedTotal(0)
+        setHomeFeedError(homeFeedEnabled)
       }
-      setHomeFeedItems(homeFeed.value.items.filter((item) => moduleEnabled(sourceModules[item.source_type])))
-      setHomeReactions({})
-      setHomeFeedError(false)
-    } else {
-      setHomeFeedItems([])
-      setHomeFeedError(homeFeedEnabled)
     }
     if (unread.ok) setUnreadCount(Number(unread.value.count) || 0)
     setOfficialNotices(latestOfficialNotices.ok ? latestOfficialNotices.value.items : [])
@@ -454,9 +522,50 @@ function Index() {
     setDailyCheckin(latestCheckin.ok ? latestCheckin.value : null)
     setUserLevelTasks(latestTasks.ok ? latestTasks.value.items : [])
     setCalendarReminders(latestReminders.ok ? latestReminders.value.items : [])
-    setHomeFeedLoading(false)
+    if (homeFeedRequestId === homeFeedRequestSequence.current) {
+      setHomeFeedLoading(false)
+      setHomeFeedRefreshing(false)
+    }
     Taro.stopPullDownRefresh()
   }, [])
+
+  const loadHomeFeedMore = useCallback(async () => {
+    if (
+      !fullLifeServicesRepository
+      || isQualificationEdition
+      || homeFeedLoadingMoreRef.current
+      || homeFeedRefreshing
+      || homeFeedItems.length >= homeFeedTotal
+    ) return
+
+    const requestId = ++homeFeedRequestSequence.current
+    homeFeedLoadingMoreRef.current = true
+    setHomeFeedLoadingMore(true)
+    setHomeFeedLoadMoreError(false)
+    try {
+      const latestRuntimeConfig = await loadMiniappRuntimeConfig()
+      const result = await fullLifeServicesRepository.listHomeFeed({
+        page: homeFeedPage + 1,
+        pageSize: HOME_FEED_PAGE_SIZE,
+      })
+      if (requestId !== homeFeedRequestSequence.current) return
+      setHomeFeedItems((current) => mergeHomeFeedItems(
+        current,
+        enabledHomeFeedItems(result.items, latestRuntimeConfig),
+      ))
+      setHomeFeedPage(result.page)
+      setHomeFeedTotal(Number(result.total))
+    } catch {
+      if (requestId === homeFeedRequestSequence.current) {
+        setHomeFeedLoadMoreError(true)
+      }
+    } finally {
+      if (requestId === homeFeedRequestSequence.current) {
+        homeFeedLoadingMoreRef.current = false
+        setHomeFeedLoadingMore(false)
+      }
+    }
+  }, [homeFeedItems.length, homeFeedPage, homeFeedRefreshing, homeFeedTotal])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -624,6 +733,10 @@ function Index() {
     }
   }, [homeCommentItem])
 
+  const scrollHomeToTop = useCallback(() => {
+    void Taro.pageScrollTo({ scrollTop: 0, duration: 240 })
+  }, [])
+
   useDismissCommunityOverlaysOnScroll({
     active: openHomeActionKey !== null || (homeCommentItem !== null && !homeCommentSubmitting),
     onDismiss: dismissCommunityOverlays,
@@ -659,6 +772,18 @@ function Index() {
     return resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
+  const homeFeedCanLoadMore = homeFeedItems.length < homeFeedTotal
+  useLoadMoreSignal({
+    signal: homeFeedLoadMoreSignal,
+    enabled: Boolean(fullLifeServicesRepository)
+      && !isQualificationEdition
+      && !homeFeedLoading
+      && !homeFeedRefreshing
+      && !homeFeedLoadingMore
+      && !homeFeedError
+      && homeFeedCanLoadMore,
+    onLoadMore: loadHomeFeedMore,
+  })
   const momentsLoading = homeFeedLoading
   const momentsError = homeFeedError && homeFeedItems.length === 0
   const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
@@ -1189,7 +1314,30 @@ function Index() {
               />
             )
           })}
+          {!momentsLoading && !momentsError && homeFeedCanLoadMore && (
+            <View className='moments-feed__load-more' ariaRole='status'>
+              {homeFeedLoadingMore
+                ? '正在加载更多…'
+                : homeFeedLoadMoreError
+                  ? '加载失败，请继续上滑重试'
+                  : '继续上滑加载更多'}
+            </View>
+          )}
+          {!momentsLoading && !momentsError && homeFeedItems.length > 0 && !homeFeedCanLoadMore && (
+            <View className='moments-feed__load-more moments-feed__load-more--end' ariaRole='status'>
+              没有更多了
+            </View>
+          )}
         </View>
+      </View>
+      <View
+        className={`home-back-top ${showHomeBackTop ? 'home-back-top--visible' : ''}`}
+        ariaRole='button'
+        ariaLabel='返回顶部'
+        onClick={scrollHomeToTop}
+      >
+        <Image src={icons.arrowUp} mode='aspectFit' />
+        <Text>顶部</Text>
       </View>
       {homeCommentItem ? (
         <CommunityCommentSheet

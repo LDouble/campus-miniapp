@@ -103,11 +103,37 @@ assert.ok(
   '通知条目必须复用 Figma 对应的 campaign 矢量图标',
 )
 assert.ok(
-  homeSource.includes('listHomeFeed({ page: 1, pageSize: 8 })')
+  homeSource.includes('const HOME_FEED_PAGE_SIZE = 8')
+    && homeSource.includes('listHomeFeed({ page: 1, pageSize: HOME_FEED_PAGE_SIZE })')
     && homeSource.includes('homeFeedItems.map((item, index) => {')
     && homeSource.includes('<CommunityPostCard'),
   '首页必须消费后端混排接口并按服务端顺序渲染',
 )
+assert.ok(
+  homeSource.includes('useReachBottom')
+    && homeSource.includes('usePageScroll')
+    && homeSource.includes('useLoadMoreSignal')
+    && homeSource.includes('listHomeFeed({\n        page: homeFeedPage + 1,\n        pageSize: HOME_FEED_PAGE_SIZE,\n      })')
+    && homeSource.includes('homeFeedCanLoadMore'),
+  '首页校园动态必须支持自动触底分页，并沿用共享分页信号',
+)
+assert.ok(
+  homeSource.includes('homeFeedItems.length > 0 && !homeFeedCanLoadMore')
+    && homeSource.includes('没有更多了'),
+  '首页 Feed 到达末页后必须展示没有更多了提示',
+)
+assert.ok(
+  homeSource.includes('home-back-top')
+    && homeSource.includes("ariaLabel='返回顶部'")
+    && homeSource.includes('Taro.pageScrollTo({ scrollTop: 0, duration: 240 })'),
+  '首页下滚后必须提供返回顶部操作',
+)
+assert.match(
+  homeStyleSource,
+  /\.home-back-top\s*\{[\s\S]*?bottom:\s*calc\(176rpx \+ env\(safe-area-inset-bottom\)\);/u,
+  '返回顶部按钮必须保持 88rpx 热区并避开底部安全区',
+)
+assert.match(homeStyleSource, /\.home-back-top\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u)
 assert.ok(
   !homeSource.includes("className='community-panel'")
     && !homeSource.includes("className='market-panel'")

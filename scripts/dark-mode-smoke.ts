@@ -131,6 +131,8 @@ assert.doesNotMatch(
 assert.match(darkModeStyle, /& \.today-card__event-row--important/u)
 assert.match(darkModeStyle, /& \.official-notices-home__source/u)
 assert.match(darkModeStyle, /& \.home-section-state/u)
+assert.match(darkModeStyle, /& \.moments-feed__load-more/u)
+assert.match(darkModeStyle, /& \.home-back-top \{/u)
 assert.match(darkModeStyle, /& \.home-migrated/u)
 assert.match(darkModeStyle, /&\.campus\.campus \.schedule-card/u)
 assert.match(darkModeStyle, /&\.campus\.campus \.schedule-card__courses/u)

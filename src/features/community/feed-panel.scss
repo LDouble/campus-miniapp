@@ -1,5 +1,6 @@
 .api-community {
-  padding: 0 32rpx calc(152rpx + env(safe-area-inset-bottom));
+  // 底部导航避让由 .community-page 统一承担，避免列表和页面重复叠加。
+  padding: 0 32rpx;
 }
 
 .api-community-search {
@@ -768,16 +769,20 @@
 
 .api-community-load-more {
   display: flex;
-  min-height: 88rpx;
-  margin-top: 24rpx;
+  min-height: 56rpx;
+  margin-top: 8rpx;
   align-items: center;
   justify-content: center;
-  border: 1rpx solid var(--campus-border, #e1eaf6);
-  border-radius: 24rpx;
-  background: var(--campus-surface, #fff);
-  color: var(--campus-primary-strong, #155dfc);
+  color: var(--campus-text-muted, #a6b2c2);
   font-size: 24rpx;
-  font-weight: 700;
+  font-weight: var(--ousea-font-weight-regular, 400);
+}
+
+.api-community-load-more--end {
+  box-sizing: border-box;
+  min-height: 48rpx;
+  margin-top: 0;
+  padding-bottom: 4rpx;
 }
 
 .community-feed-skeleton {

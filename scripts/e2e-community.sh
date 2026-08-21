@@ -649,10 +649,13 @@ if [[ "$first_page_count" != "20" ]]; then
   echo "社区第一页应为 20 条，实际为 ${first_page_count}。" >&2
   exit 1
 fi
-tap '#community-load-more'
+wechat automation_viewport_action \
+  --project "$MINIAPP_DIR" \
+  --action pageScrollTo \
+  --scroll-top 100000 >/dev/null
 loaded_count="$(query_count '.api-post' 3)"
 if (( loaded_count <= 20 )); then
-  echo "点击查看更多后列表没有追加数据。" >&2
+  echo "上滑触底后列表没有自动追加数据。" >&2
   exit 1
 fi
 wechat simulator_screenshot \

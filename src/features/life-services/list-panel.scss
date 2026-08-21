@@ -1,5 +1,5 @@
 .life-panel {
-  padding: 0 28rpx calc(170rpx + env(safe-area-inset-bottom));
+  padding: 0 28rpx;
 }
 
 .life-search {
@@ -717,16 +717,20 @@
 
 .life-load-more {
   display: flex;
-  min-height: 88rpx;
-  margin-top: 24rpx;
+  min-height: 56rpx;
+  margin-top: 8rpx;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid #e2e6ec;
-  border-radius: 24rpx;
-  background: var(--campus-surface, #fff);
-  color: #596777;
+  color: var(--campus-text-muted, #a6b2c2);
   font-size: 24rpx;
-  font-weight: 700;
+  font-weight: var(--ousea-font-weight-regular, 400);
+}
+
+.life-load-more--end {
+  box-sizing: border-box;
+  min-height: 48rpx;
+  margin-top: 0;
+  padding-bottom: 4rpx;
 }
 
 @keyframes skeleton-shimmer {
@@ -749,7 +753,8 @@
 
 /* Figma 2026-08 跑腿 / 闲置 / 拼车视觉覆盖 */
 .life-panel {
-  padding: 0 32rpx calc(152rpx + env(safe-area-inset-bottom));
+  // 底部导航避让由 .community-page 统一承担，列表自身不再重复留白。
+  padding: 0 32rpx;
 }
 
 .life-search {
@@ -1022,7 +1027,5 @@
 }
 
 .life-load-more {
-  border: 1rpx solid var(--campus-border, #f1f5f9);
-  border-radius: 32rpx;
-  color: var(--campus-text-secondary, #62748e);
+  color: var(--campus-text-muted, #a6b2c2);
 }

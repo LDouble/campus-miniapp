@@ -532,6 +532,15 @@
     color: var(--campus-text-secondary, #aab8ca);
   }
 
+  & .moments-feed__load-more {
+    color: var(--campus-text-muted, #8494aa);
+  }
+
+  & .home-back-top {
+    background: var(--ousea-ocean-600, #1d5fd6);
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.3);
+  }
+
   & .home-migrated {
     background: linear-gradient(135deg, var(--campus-surface-primary, #172554), var(--campus-surface, #111827));
     border-color: var(--campus-border-strong, #2f4c73);

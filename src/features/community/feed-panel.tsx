@@ -5,6 +5,7 @@ import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/ty
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { useLoadMoreSignal } from '../../hooks/use-load-more-signal'
 import { lifeServicesRepository } from '../life-services/repository'
 import {
   getLifeHubRefreshRevision,
@@ -29,6 +30,7 @@ type Props = {
   refreshSignal?: number
   searchFocusSignal?: number
   overlayDismissSignal?: number
+  loadMoreSignal?: number
   onOverlayVisibilityChange?: (visible: boolean) => void
   onSelectSection?: (sectionId: number) => void
 }
@@ -75,6 +77,7 @@ export default function CommunityFeedPanel({
   refreshSignal = 0,
   searchFocusSignal = 0,
   overlayDismissSignal = 0,
+  loadMoreSignal = 0,
   onOverlayVisibilityChange,
   onSelectSection,
 }: Props) {
@@ -93,6 +96,7 @@ export default function CommunityFeedPanel({
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
   const requestSequence = useRef(0)
+  const loadingMoreRef = useRef(false)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
   const lastOverlayDismissSignalRef = useRef(overlayDismissSignal)
 
@@ -137,6 +141,8 @@ export default function CommunityFeedPanel({
   }), [activeParentSectionId, activeSectionId, keyword])
   const load = useCallback(async (nextPage = 1, append = false) => {
     if (!activeSectionId) return
+    if (append && loadingMoreRef.current) return
+    if (append) loadingMoreRef.current = true
     const requestId = ++requestSequence.current
     append ? setLoadingMore(true) : setLoading(true)
     setError('')
@@ -180,6 +186,7 @@ export default function CommunityFeedPanel({
         ? loadError.message
         : '没有连接到校园社区，请稍后重试')
     } finally {
+      if (append) loadingMoreRef.current = false
       if (requestId === requestSequence.current) {
         setLoading(false)
         setLoadingMore(false)
@@ -292,6 +299,15 @@ export default function CommunityFeedPanel({
   }, [])
 
   const canLoadMore = posts.length < total
+  const loadNextPage = useCallback(() => {
+    void load(page + 1, true)
+  }, [load, page])
+
+  useLoadMoreSignal({
+    signal: loadMoreSignal,
+    enabled: !loading && !loadingMore && !error && canLoadMore,
+    onLoadMore: loadNextPage,
+  })
   const normalizedDraftKeyword = draftKeyword.trim()
 
   const hideSearchKeyboard = () => {
@@ -461,9 +477,13 @@ export default function CommunityFeedPanel({
         <View
           className='api-community-load-more'
           id='community-load-more'
-          onClick={() => !loadingMore && void load(page + 1, true)}
         >
-          {loadingMore ? '正在加载' : '查看更多'}
+          {loadingMore ? '正在加载更多…' : '继续上滑加载更多'}
+        </View>
+      )}
+      {sectionsReady && !sectionsError && activeSection && !loading && !error && posts.length > 0 && !canLoadMore && (
+        <View className='api-community-load-more api-community-load-more--end' ariaRole='status'>
+          没有更多了
         </View>
       )}
       {commentPost && (

@@ -4,5 +4,6 @@ export default definePageConfig({
   navigationStyle: 'custom',
   backgroundColor: '@backgroundColor',
   enablePullDownRefresh: true,
+  onReachBottomDistance: 160,
   usingComponents: {}
 })

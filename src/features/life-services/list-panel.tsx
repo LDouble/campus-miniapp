@@ -8,6 +8,7 @@ import type {
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { useLoadMoreSignal } from '../../hooks/use-load-more-signal'
 import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { lifeBusinessThemes } from './business-theme'
 import type { LifeHubSection } from './business-theme'
@@ -54,6 +55,7 @@ type Props = {
   section: LifeServiceSection
   refreshSignal?: number
   searchFocusSignal?: number
+  loadMoreSignal?: number
   campus: CampusName | ''
   marketFilters: MarketplaceFilterValue
   carpoolFilters: CarpoolFilterValue
@@ -120,6 +122,7 @@ export default function LifeServiceListPanel({
   section,
   refreshSignal = 0,
   searchFocusSignal = 0,
+  loadMoreSignal = 0,
   campus,
   marketFilters,
   carpoolFilters,
@@ -140,6 +143,7 @@ export default function LifeServiceListPanel({
   const [searchFocused, setSearchFocused] = useState(false)
   const [courseSearch, setCourseSearch] = useState<MarketplaceSearchPrefill | null>(null)
   const requestSequence = useRef(0)
+  const loadingMoreRef = useRef(false)
   const copy = lifeBusinessThemes[section]
   const queryKey = useMemo(() => JSON.stringify({
     section,
@@ -150,6 +154,8 @@ export default function LifeServiceListPanel({
   }), [campus, carpoolFilters, keyword, marketFilters, section])
 
   const load = useCallback(async (nextPage = 1, append = false) => {
+    if (append && loadingMoreRef.current) return
+    if (append) loadingMoreRef.current = true
     const requestId = ++requestSequence.current
     append ? setLoadingMore(true) : setLoading(true)
     setError('')
@@ -204,6 +210,7 @@ export default function LifeServiceListPanel({
         ? loadError.message
         : '没有连接到校园服务，请稍后重试')
     } finally {
+      if (append) loadingMoreRef.current = false
       if (requestId === requestSequence.current) {
         setLoading(false)
         setLoadingMore(false)
@@ -274,6 +281,15 @@ export default function LifeServiceListPanel({
   ])
 
   const canLoadMore = items.length < total
+  const loadNextPage = useCallback(() => {
+    void load(page + 1, true)
+  }, [load, page])
+
+  useLoadMoreSignal({
+    signal: loadMoreSignal,
+    enabled: !loading && !loadingMore && !error && canLoadMore,
+    onLoadMore: loadNextPage,
+  })
   const hasSectionFilters = section === 'market'
     ? marketFilters.intent !== undefined
       || marketFilters.category !== undefined
@@ -505,9 +521,13 @@ export default function LifeServiceListPanel({
         <View
           className='life-load-more'
           id={`life-load-more-${section}`}
-          onClick={() => !loadingMore && void load(page + 1, true)}
         >
-          {loadingMore ? '正在加载' : '查看更多'}
+          {loadingMore ? '正在加载更多…' : '继续上滑加载更多'}
+        </View>
+      )}
+      {!loading && !error && items.length > 0 && !canLoadMore && (
+        <View className='life-load-more life-load-more--end' ariaRole='status'>
+          没有更多了
         </View>
       )}
     </View>
