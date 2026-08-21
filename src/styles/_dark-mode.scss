@@ -1680,6 +1680,22 @@
   & .course-float-card__title { color: var(--campus-text-heading, #f8fafc); }
   & .course-float-card__copy { color: var(--campus-text-muted, #8494aa); }
 
+  & .schedule-note,
+  & .course-conflict-card__note {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface-primary, #172554);
+    border-color: var(--campus-border-strong, #2f4c73);
+  }
+
+  & .schedule-note__label,
+  & .course-conflict-card__note-label {
+    color: var(--campus-primary-strong, #93c5fd);
+    background: var(--campus-surface, #111827);
+  }
+
+  & .schedule-note__copy,
+  & .course-conflict-card__note-copy { color: var(--campus-text-body, #d7e0ec); }
+
   & .period-options__item,
   & .week-options__item,
   & .grade-level-options > view,

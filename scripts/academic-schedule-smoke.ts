@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   getCourseScheduleKey,
   getCoursesForPeriod,
@@ -23,6 +25,55 @@ const course = (id: string, periodId: string): Course => ({
   color: 'aqua',
   source: 'official',
 })
+
+const academicRepositorySource = readFileSync(
+  resolve(__dirname, '../src/pages/academic/repository.ts'),
+  'utf8',
+)
+const academicStorageSource = readFileSync(
+  resolve(__dirname, '../src/pages/academic/storage.ts'),
+  'utf8',
+)
+const schedulePageSource = readFileSync(
+  resolve(__dirname, '../src/pages/academic/schedule/index.tsx'),
+  'utf8',
+)
+const academicSchemaSource = readFileSync(
+  resolve(__dirname, '../src/api/generated/schema.ts'),
+  'utf8',
+)
+
+assert.match(
+  academicSchemaSource,
+  /AcademicCourse:\s*\{[\s\S]*?note:\s*string;/u,
+  '教务课程接口必须声明课程备注字段',
+)
+assert.match(
+  academicSchemaSource,
+  /AcademicCourseListResponseBody:\s*\{[\s\S]*?schedule_note:\s*string;/u,
+  '教务课表接口必须声明全局课表备注字段',
+)
+assert.match(academicRepositorySource, /note:\s*course\.note/u, '课程映射必须保留课程备注')
+assert.match(
+  academicRepositorySource,
+  /scheduleNote:\s*result\.scheduleNote/u,
+  '课表仓储必须保留全局课表备注',
+)
+assert.match(
+  academicStorageSource,
+  /scheduleNotesByPeriod/u,
+  '课表缓存必须按学期保存全局课表备注',
+)
+assert.match(
+  schedulePageSource,
+  /schedule-note__track--marquee[\s\S]*?schedule-note__copy--duplicate/u,
+  '课表页必须用双文本无缝跑马灯展示全局课表备注',
+)
+assert.match(
+  schedulePageSource,
+  /className='course-conflict-card__note'/u,
+  '课程详情浮层必须展示课程备注',
+)
 
 const periodA = course('A-课程', 'A')
 const periodB = course('B-课程', 'B')

@@ -1551,6 +1551,83 @@ page {
   }
 }
 
+.schedule-note {
+  display: flex;
+  min-height: 72rpx;
+  align-items: center;
+  gap: var(--ousea-space-1, 16rpx);
+  padding: 16rpx var(--ousea-space-2, 24rpx);
+  margin: 0 0 var(--ousea-space-2, 24rpx);
+  color: var(--ousea-ink-700, #3a4759);
+  background: var(--ousea-ocean-50, #f2f7fe);
+  border: 1rpx solid var(--ousea-ocean-100, #e3effe);
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+
+  &__label {
+    display: flex;
+    min-height: 36rpx;
+    padding: 0 12rpx;
+    flex: none;
+    align-items: center;
+    color: #fff;
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+    background: var(--ousea-ocean-500, #2b7aef);
+    border-radius: var(--ousea-radius-pill, 999rpx);
+  }
+
+  &__viewport {
+    min-width: 0;
+    height: 36rpx;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &__track {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    height: 36rpx;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  &__track--marquee {
+    animation: schedule-note-marquee 14s linear 1s infinite;
+  }
+
+  &__copy {
+    display: block;
+    width: max-content;
+    flex: none;
+    color: inherit;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 36rpx;
+    white-space: nowrap;
+  }
+
+  &__copy--duplicate {
+    margin-left: 48rpx;
+  }
+}
+
+@keyframes schedule-note-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(-50% - 24rpx), 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-note__track--marquee {
+    animation: none;
+  }
+}
+
+.academic-content--schedule-week > .schedule-note {
+  margin-right: 22rpx;
+  margin-left: 22rpx;
+}
+
 .academic-state {
   color: #7b9298;
   font-size: 25rpx;
@@ -1920,6 +1997,31 @@ page {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+  }
+
+  &__note {
+    display: flex;
+    padding: var(--ousea-space-2, 24rpx);
+    margin-top: var(--ousea-space-2, 24rpx);
+    flex-direction: column;
+    gap: 8rpx;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    border: 1rpx solid var(--ousea-ocean-100, #e3effe);
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+  }
+
+  &__note-label {
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__note-copy {
+    color: var(--ousea-ink-700, #3a4759);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: var(--ousea-line-height-comment, 1.65);
+    overflow-wrap: anywhere;
   }
 
   &__actions {

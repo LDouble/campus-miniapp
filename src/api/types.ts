@@ -95,6 +95,7 @@ export type ApiSuccessEnvelope<T> = {
   data: T
   request_id: string
   cache?: AcademicCacheMetadata | null
+  schedule_note?: string
 }
 
 export type ApiErrorEnvelope = {

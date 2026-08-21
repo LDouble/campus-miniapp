@@ -276,11 +276,13 @@ const loadLatestAcademic = async (
   const periods = periodsResult.value
   let coursesByPeriod = cache ? cache.coursesByPeriod : {}
   let coursesUpdatedAtByPeriod = cache?.coursesUpdatedAtByPeriod || {}
+  let scheduleNotesByPeriod = cache?.scheduleNotesByPeriod || {}
   academicStorage.setScheduleCache(
     userId,
     periods,
     coursesByPeriod,
     coursesUpdatedAtByPeriod,
+    scheduleNotesByPeriod,
   )
 
   const { periodId } = resolveScheduleAnchor(periods)
@@ -305,11 +307,16 @@ const loadLatestAcademic = async (
           ...coursesUpdatedAtByPeriod,
           [periodId]: updatedAt,
         }
+        scheduleNotesByPeriod = {
+          ...scheduleNotesByPeriod,
+          [periodId]: coursesResult.value.scheduleNote ?? '',
+        }
         academicStorage.setScheduleCache(
           userId,
           periods,
           coursesByPeriod,
           coursesUpdatedAtByPeriod,
+          scheduleNotesByPeriod,
         )
       } catch {
         // 串学期响应不得污染首页课表缓存；课表页会继续提供显式重试入口。
@@ -323,6 +330,7 @@ const loadLatestAcademic = async (
     periods,
     coursesByPeriod,
     coursesUpdatedAtByPeriod,
+    scheduleNotesByPeriod,
   } satisfies AcademicScheduleCache
 }
 
