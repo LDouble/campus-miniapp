@@ -5,6 +5,12 @@ import {
 import { getCampusTheme, subscribeCampusTheme } from '../features/theme-preference'
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
+const unreadCountStorageKey = 'campus.messages.unread-count.v1'
+
+const getStoredUnreadCount = () => {
+  const count = Number(wx.getStorageSync(unreadCountStorageKey))
+  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
+}
 
 const fullTabs = [
   {
@@ -38,6 +44,7 @@ Component({
     selected: 0,
     hidden: false,
     darkMode: getCampusTheme() === 'dark',
+    unreadCount: getStoredUnreadCount(),
     publishSection: 'community',
     qualification,
     list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
@@ -79,6 +86,10 @@ Component({
       }
       if (darkMode !== this.data.darkMode) {
         nextData.darkMode = darkMode
+      }
+      const unreadCount = getStoredUnreadCount()
+      if (unreadCount !== this.data.unreadCount) {
+        nextData.unreadCount = unreadCount
       }
       if (Object.keys(nextData).length > 0) {
         this.setData(nextData)

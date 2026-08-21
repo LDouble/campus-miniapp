@@ -3536,7 +3536,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 创建社区、二手或头像图片的 OSS 直传目标 */
+        /** 创建社区、二手、评论或头像图片的 OSS 直传目标 */
         post: operations["CreateMediaUploadTarget"];
         delete?: never;
         options?: never;
@@ -4828,6 +4828,7 @@ export interface components {
             id: string;
             location: string;
             name: string;
+            note: string;
             period_id: string;
             /** Format: int32 */
             start_section: number;
@@ -4840,6 +4841,7 @@ export interface components {
             cache?: components["schemas"]["AcademicQueryCache"] | null;
             data: components["schemas"]["AcademicCourse"][];
             request_id: string;
+            schedule_note: string;
         };
         AcademicCourseSelection: {
             campus: string;
@@ -6300,6 +6302,25 @@ export interface components {
         };
         /** @enum {string} */
         ClubVisibilityStatus: "unpublished" | "published" | "suspended";
+        CommentCreateInput: {
+            content: string;
+            /** Format: uint64 */
+            media_id?: number | null;
+            /** Format: uint64 */
+            parent_id?: number | null;
+            /** Format: uint64 */
+            target_id: number;
+            target_type: components["schemas"]["CommentTargetType"];
+        };
+        CommentImageView: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            url: string;
+            /** Format: int64 */
+            width: number;
+        };
         CommentPage: {
             items: components["schemas"]["CommentView"][];
             page: number;
@@ -6325,6 +6346,15 @@ export interface components {
             data: components["schemas"]["CommentThread"];
             request_id: string;
         };
+        CommentUpdateInput: {
+            content: string;
+            /** Format: uint64 */
+            expected_version: number;
+            /** Format: uint64 */
+            media_id?: number;
+            /** @default false */
+            remove_image: boolean;
+        };
         CommentView: {
             author_avatar_url: string | null;
             author_deleted: boolean;
@@ -6340,6 +6370,7 @@ export interface components {
             depth: number;
             /** Format: uint64 */
             id: number;
+            image?: components["schemas"]["CommentImageView"];
             /** Format: int64 */
             like_count: number;
             liked: boolean;
@@ -7345,6 +7376,15 @@ export interface components {
         };
         /** @enum {string} */
         HomeFeedSourceType: "campus_circle_post" | "marketplace_listing" | "errand" | "carpool";
+        PublicCommentImagePreview: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            url: string;
+            /** Format: int64 */
+            width: number;
+        };
         PublicCommentPreview: {
             /** Format: uint64 */
             author_id: number;
@@ -7354,6 +7394,7 @@ export interface components {
             created_at: string;
             /** Format: uint64 */
             id: number;
+            image?: components["schemas"]["PublicCommentImagePreview"];
             /** Format: uint64 */
             parent_id: number | null;
             /** Format: uint64 */
@@ -7487,7 +7528,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "comment";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -12607,15 +12648,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    /** @enum {string} */
-                    target_type: "activity" | "marketplace" | "errand" | "carpool" | "campus_circle_post";
-                    /** Format: uint64 */
-                    target_id: number;
-                    /** Format: uint64 */
-                    parent_id?: number;
-                    content: string;
-                };
+                "application/json": components["schemas"]["CommentCreateInput"];
             };
         };
         responses: {
@@ -12653,11 +12686,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    content: string;
-                    /** Format: uint64 */
-                    expected_version: number;
-                };
+                "application/json": components["schemas"]["CommentUpdateInput"];
             };
         };
         responses: {

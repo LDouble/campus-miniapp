@@ -51,6 +51,7 @@ const mapCourse = (course: AcademicCourse): Course => ({
   periodId: course.period_id,
   courseCode: course.course_code,
   name: course.name,
+  note: course.note,
   teacher: course.teacher,
   location: course.location,
   campus: course.campus,
@@ -124,6 +125,7 @@ const mapQueryResult = <Source, Target>(
 ): AcademicQueryResult<Target> => ({
   records: result.records.map(map),
   ...(result.cache ? { cache: result.cache } : {}),
+  ...(result.scheduleNote !== undefined ? { scheduleNote: result.scheduleNote } : {}),
 })
 
 let pendingGradeRequest: Promise<AcademicQueryResult<GradeRecord>> | null = null

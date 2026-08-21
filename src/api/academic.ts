@@ -43,6 +43,7 @@ const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBo
 export type AcademicQueryResult<T> = {
   records: T[]
   cache?: AcademicCacheMetadata
+  scheduleNote?: string
 }
 
 const academicPost = async <T>(path: string, periodId?: string): Promise<AcademicQueryResult<T>> => {
@@ -52,6 +53,7 @@ const academicPost = async <T>(path: string, periodId?: string): Promise<Academi
     return {
       records: response.data,
       ...(response.cache ? { cache: response.cache } : {}),
+      ...(response.scheduleNote !== undefined ? { scheduleNote: response.scheduleNote } : {}),
     }
   } catch (error) {
     if (

@@ -105,7 +105,7 @@ for (const source of aiThemeFiles) {
   assert.doesNotMatch(source.style, /prefers-color-scheme/u)
 }
 assert.match(darkModeStyle, /\.campus-theme--dark\s*\{/u)
-assert.match(darkModeStyle, /& \.icon-button > image/u)
+assert.doesNotMatch(darkModeStyle, /icon-button/u)
 assert.match(darkModeStyle, /& \.service-panel__grid-icon/u)
 assert.match(darkModeStyle, /&\.campus \.custom-navbar__fixed/u)
 assert.match(darkModeStyle, /& \.schedule-card,/u)
@@ -199,6 +199,7 @@ assert.match(darkModeStyle, /&\.life-detail--carpool \.detail-inline-action/u)
 assert.match(darkModeStyle, /& \.verification-method--active/u)
 assert.match(darkModeStyle, /& \.verification-education-option--active/u)
 assert.match(darkModeStyle, /& \.verification-password-control/u)
+assert.match(darkModeStyle, /& \.verification-password-coach-mark/u)
 assert.match(
   darkModeStyle,
   /& \.verification-field input\.verification-field__input/u,
@@ -206,13 +207,8 @@ assert.match(
 )
 assert.match(
   darkModeStyle,
-  /& \.verification-password-control input\.verification-password-control__input--masked/u,
-  '密码输入框缺少暗色掩码处理',
-)
-assert.match(
-  darkModeStyle,
-  /& \.verification-password-control__mask/u,
-  '密码掩码缺少暗色文字色',
+  /& \.verification-password-control input\.verification-password-control__input\s*\{/u,
+  '密码输入框缺少暗色文字色',
 )
 assert.match(darkModeStyle, /& \.verification-upload/u)
 assert.match(darkModeStyle, /& \.bottom-sheet-layer/u)

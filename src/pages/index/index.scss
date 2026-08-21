@@ -9,7 +9,7 @@ page { background: var(--campus-page, #f4f7fb); }
   flex-direction: column;
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 0 28rpx calc(152rpx + env(safe-area-inset-bottom));
+  padding: 0 28rpx calc(112rpx + env(safe-area-inset-bottom));
   overflow: hidden;
   color: var(--campus-text-heading, #294653);
   background:
@@ -54,13 +54,11 @@ page { background: var(--campus-page, #f4f7fb); }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-right: 200rpx;
     margin: 8rpx 0 24rpx;
     order: 1;
   }
 
   &__identity,
-  &__header-actions,
   &__school {
     display: flex;
     align-items: center;
@@ -148,51 +146,6 @@ page { background: var(--campus-page, #f4f7fb); }
     transform: rotate(90deg);
   }
 
-  &__header-actions {
-    flex: none;
-    gap: 16rpx;
-    margin-left: 12rpx;
-  }
-
-}
-
-.icon-button {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80rpx;
-  height: 80rpx;
-
-  &::before {
-    position: absolute;
-    width: 64rpx;
-    height: 64rpx;
-    content: '';
-    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
-    border: 2rpx solid rgba(255, 255, 255, 0.96);
-    border-radius: 18rpx;
-    box-shadow: 5rpx 7rpx 15rpx rgba(49, 101, 119, 0.05);
-  }
-
-  image {
-    position: relative;
-    z-index: 1;
-    width: 30rpx;
-    height: 30rpx;
-  }
-
-  &__dot {
-    position: absolute;
-    top: 1rpx;
-    right: 1rpx;
-    z-index: 2;
-    width: 11rpx;
-    height: 11rpx;
-    background: #ff6e78;
-    border: 3rpx solid #fff;
-    border-radius: inherit;
-  }
 }
 
 .hero-card {
@@ -3009,7 +2962,7 @@ page {
 }
 
 .campus {
-  padding: 0 32rpx calc(152rpx + env(safe-area-inset-bottom));
+  padding: 0 32rpx calc(112rpx + env(safe-area-inset-bottom));
   color: var(--campus-text-heading, #1d293d);
   background:
     linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 510rpx),
@@ -3061,20 +3014,6 @@ page {
     color: var(--campus-text-heading, #1d293d);
     font-size: 27rpx;
     font-weight: 750;
-  }
-}
-
-.icon-button {
-  &::before {
-    background: var(--campus-surface, #fff);
-    border-color: rgba(255, 255, 255, 0.6);
-    border-radius: 50%;
-    box-shadow: 4rpx 4rpx 8rpx rgba(0, 0, 0, 0.04);
-  }
-
-  &__dot {
-    background: var(--campus-danger, #ff2056);
-    border-color: #fff;
   }
 }
 
@@ -3947,10 +3886,6 @@ page {
 .news-card__compact-meta text:last-child,
 .home-migrated__hint {
   color: var(--campus-text-auxiliary, #86909c);
-}
-
-.campus__header {
-  padding-right: 180rpx;
 }
 
 .campus__identity-copy {

@@ -58,6 +58,56 @@ const DEFAULT_PERIOD_ID = '2025-2026-2'
 const icons = {
   semester: require('../../../assets/icons/calendar.svg'),
 }
+
+const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
+const SCHEDULE_NOTE_COPY_ID = 'academic-schedule-note-copy'
+
+const ScheduleNoteMarquee = ({ content }: { content: string }) => {
+  const note = content.trim()
+  const [marquee, setMarquee] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    setMarquee(false)
+    Taro.nextTick(() => {
+      const query = Taro.createSelectorQuery()
+      query.select(`#${SCHEDULE_NOTE_VIEWPORT_ID}`).boundingClientRect()
+      query.select(`#${SCHEDULE_NOTE_COPY_ID}`).boundingClientRect()
+      query.exec((results) => {
+        if (!active) return
+        const viewport = results[0] as { width?: number } | null
+        const copy = results[1] as { width?: number } | null
+        const viewportWidth = Number(viewport?.width)
+        const copyWidth = Number(copy?.width)
+        setMarquee(
+          Number.isFinite(viewportWidth)
+          && Number.isFinite(copyWidth)
+          && copyWidth > viewportWidth + 1,
+        )
+      })
+    })
+    return () => {
+      active = false
+    }
+  }, [note])
+
+  return (
+    <View
+      className='schedule-note'
+      ariaRole='status'
+      ariaLabel={`课表提示：${note}${marquee ? '，提示文字会自动滚动' : ''}`}
+    >
+      <Text className='schedule-note__label'>课表提示</Text>
+      <View id={SCHEDULE_NOTE_VIEWPORT_ID} className='schedule-note__viewport'>
+        <View className={`schedule-note__track ${marquee ? 'schedule-note__track--marquee' : ''}`}>
+          <Text id={SCHEDULE_NOTE_COPY_ID} className='schedule-note__copy'>{note}</Text>
+          {marquee && <Text className='schedule-note__copy schedule-note__copy--duplicate'>{note}</Text>}
+        </View>
+      </View>
+    </View>
+  )
+}
+
 const defaultPreferences: AcademicPreferences = {
   section: 'schedule',
   schedulePeriodId: DEFAULT_PERIOD_ID,
@@ -102,6 +152,7 @@ function CourseDetailCard({
   onFindMaterials,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
+  const courseNote = course.note?.trim() || ''
   return (
     <View className={[
       'course-conflict-card',
@@ -126,6 +177,12 @@ function CourseDetailCard({
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
           <View><Text>来源</Text><Text>{course.source === 'custom' ? '自定义课程' : '教务课程'}</Text></View>
         </View>
+        {courseNote && (
+          <View className='course-conflict-card__note'>
+            <Text className='course-conflict-card__note-label'>课程备注</Text>
+            <Text className='course-conflict-card__note-copy'>{courseNote}</Text>
+          </View>
+        )}
         {course.source === 'official' && course.courseCode && (
           <CoursePassRatePreview
             courseCode={course.courseCode}
@@ -195,6 +252,9 @@ export default function SchedulePage() {
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache
       ?.coursesUpdatedAtByPeriod[preferences.schedulePeriodId] || 0,
+  )
+  const [scheduleNote, setScheduleNote] = useState(
+    initialScheduleCache?.scheduleNotesByPeriod?.[preferences.schedulePeriodId] || '',
   )
   const [initialized, setInitialized] = useState(false)
   const [sheet, setSheet] = useState<ScheduleSheet>(null)
@@ -275,6 +335,7 @@ export default function SchedulePage() {
           records,
           currentCache ? currentCache.coursesByPeriod : {},
           currentCache?.coursesUpdatedAtByPeriod || {},
+          currentCache?.scheduleNotesByPeriod || {},
         )
         applyPeriods(records)
       })
@@ -301,6 +362,7 @@ export default function SchedulePage() {
     const periodId = preferences.schedulePeriodId
     if (!periods.some((period) => period.id === periodId)) return
     const cache = academicStorage.getScheduleCache(academicUserId)
+    setScheduleNote(cache?.scheduleNotesByPeriod?.[periodId] || '')
     const hasCachedCourses = Boolean(
       cache
       && Object.prototype.hasOwnProperty.call(
@@ -329,6 +391,7 @@ export default function SchedulePage() {
         const courses = requireCoursesForPeriod(result.records, periodId)
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         const updatedAt = Date.now()
+        const nextScheduleNote = result.scheduleNote ?? ''
         academicStorage.setScheduleCache(
           academicUserId,
           periods,
@@ -341,11 +404,16 @@ export default function SchedulePage() {
             ...(currentCache?.coursesUpdatedAtByPeriod || {}),
             [periodId]: updatedAt,
           },
+          {
+            ...(currentCache?.scheduleNotesByPeriod || {}),
+            [periodId]: nextScheduleNote,
+          },
         )
         setOfficialCoursesByPeriod((current) => (
           setCoursesForPeriod(current, periodId, courses)
         ))
         setCacheUpdatedAt(updatedAt)
+        setScheduleNote(nextScheduleNote)
         setUsingCache(false)
         setServerCache(result.cache || null)
       })
@@ -412,6 +480,7 @@ export default function SchedulePage() {
         : []
       const currentCache = academicStorage.getScheduleCache(academicUserId)
       const updatedAt = Date.now()
+      const nextScheduleNote = courseResult?.scheduleNote ?? ''
       academicStorage.setScheduleCache(
         academicUserId,
         records,
@@ -428,6 +497,12 @@ export default function SchedulePage() {
             [schedulePeriodId]: updatedAt,
           }
           : currentCache?.coursesUpdatedAtByPeriod || {},
+        schedulePeriodId
+          ? {
+            ...(currentCache?.scheduleNotesByPeriod || {}),
+            [schedulePeriodId]: nextScheduleNote,
+          }
+          : currentCache?.scheduleNotesByPeriod || {},
       )
       setPeriods(records)
       if (schedulePeriodId) {
@@ -436,6 +511,7 @@ export default function SchedulePage() {
         ))
       }
       setCacheUpdatedAt(schedulePeriodId ? updatedAt : 0)
+      setScheduleNote(schedulePeriodId ? nextScheduleNote : '')
       setUsingCache(false)
       setServerCache(courseResult?.cache || null)
       setPreferences((current) => ({
@@ -1159,6 +1235,9 @@ export default function SchedulePage() {
               localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
               localFallback={Boolean(loadError)}
             />
+            {scheduleNote.trim() && (
+              <ScheduleNoteMarquee content={scheduleNote} />
+            )}
             {preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
           </>
         )}

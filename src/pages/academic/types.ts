@@ -19,6 +19,7 @@ export interface Course {
   periodId: string
   courseCode?: string
   name: string
+  note?: string
   teacher: string
   location: string
   campus?: string

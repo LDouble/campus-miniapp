@@ -31,6 +31,7 @@ export type ApiSuccessResponse<T> = {
   data: T
   requestId: string
   cache?: AcademicCacheMetadata
+  scheduleNote?: string
 }
 
 export class ApiError extends Error {
@@ -224,6 +225,9 @@ export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<Ap
     data: response.data.data,
     requestId: String(response.data.request_id || ''),
     ...(response.data.cache ? { cache: response.data.cache } : {}),
+    ...(typeof response.data.schedule_note === 'string'
+      ? { scheduleNote: response.data.schedule_note }
+      : {}),
   }
 }
 
