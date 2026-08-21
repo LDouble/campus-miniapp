@@ -1,7 +1,7 @@
 ## Task: Guest 教务认证门槛与小程序绑定闭环
 
 **ID:** academic-verification-gate
-**Label:** 海大校园：Guest 教务认证门槛与双路径绑定
+**Label:** OUSea：Guest 教务认证门槛与双路径绑定
 **Description:** 让微信登录后的新用户保持 guest 身份；访问需要校园身份的功能时返回稳定业务错误，并由小程序引导至教务账号或学生证认证页面，认证成功后恢复原业务流程。
 **Type:** Feature
 **Status:** Done

@@ -199,7 +199,7 @@ export default defineAppConfig({
     // theme variables from theme.json before rendering the native chrome.
     backgroundTextStyle: '@backgroundTextStyle' as 'dark',
     navigationBarBackgroundColor: '@navigationBarBackgroundColor',
-    navigationBarTitleText: '海大校园',
+    navigationBarTitleText: 'OUSea',
     navigationBarTextStyle: '@navigationBarTextStyle' as 'black',
     backgroundColor: '@backgroundColor'
   },

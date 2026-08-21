@@ -1,7 +1,7 @@
 ## Task: 接入首页校园动态混排流
 
 **ID:** integrate-section-home-feed
-**Label:** 海大校园小程序：接入首页校园动态混排流
+**Label:** OUSea小程序：接入首页校园动态混排流
 **Description:** 接入服务端首页混排接口，在首页按发布时间展示校园圈、二手、跑腿和找同行内容，并展示真实点赞人数与评论预览。
 **Type:** Feature
 **Status:** Done

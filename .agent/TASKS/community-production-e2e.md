@@ -1,7 +1,7 @@
 ## Task: 社区模块上线级 E2E
 
 **ID:** community-production-e2e
-**Label:** 海大校园小程序：社区评价、列表、审核与分层发帖
+**Label:** OUSea小程序：社区评价、列表、审核与分层发帖
 **Description:** 修复社区父子板块数据链路，建立覆盖评价、列表、审核、子模块发帖和父模块发帖的可重复微信开发者工具 E2E，并完成上线准出检查。
 **Type:** Enhancement
 **Status:** Done

@@ -1,7 +1,7 @@
 ## Task: 修复通过率趋势学期标签
 
 **ID:** fix-academic-statistics-term-label
-**Label:** 海大校园小程序：修复通过率趋势学期标签
+**Label:** OUSea小程序：修复通过率趋势学期标签
 **Description:** 修复通过率课程趋势和教师趋势把学期代码后缀错误映射为季节的问题，并改用服务端学期标签作为展示事实来源。
 **Type:** Bug
 **Status:** Done

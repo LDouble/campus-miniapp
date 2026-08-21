@@ -125,7 +125,7 @@ export default function CommunityTopicPage() {
     if (event.from === 'button' && postId > 0) {
       const shareTitle = typeof dataset.shareTitle === 'string'
         ? dataset.shareTitle
-        : '海大校园动态'
+        : 'OUSea动态'
       const shareImage = typeof dataset.shareImage === 'string'
         ? dataset.shareImage
         : ''
@@ -137,7 +137,7 @@ export default function CommunityTopicPage() {
       return shareImage ? { ...result, imageUrl: shareImage } : result
     }
     return {
-      title: topic ? `#${topic.name}｜海大校园话题` : '海大校园话题',
+      title: topic ? `#${topic.name}｜OUSea话题` : 'OUSea话题',
       path: topicId ? '/packages/social/community/topic/index' : '/pages/community/index',
       query: topicId ? { id: topicId } : undefined,
       imageUrl: topic?.cover_url || undefined,

@@ -109,7 +109,7 @@ export default function CalendarPage() {
     [result.calendar, selectedTermID],
   )
   useCampusShare(() => ({
-    title: `${level === 'graduate' ? '研究生' : '本科生'}校历｜海大校园`,
+    title: `${level === 'graduate' ? '研究生' : '本科生'}校历｜OUSea`,
     path: '/pages/calendar/index',
   }))
   const state = useMemo(() => (

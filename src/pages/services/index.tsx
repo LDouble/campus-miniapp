@@ -105,7 +105,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
 
 export default function Services() {
   useCampusShare(() => ({
-    title: '海大校园服务｜学业、出行与校园生活',
+    title: 'OUSea服务｜学业、出行与校园生活',
     path: '/pages/services/index',
   }))
 

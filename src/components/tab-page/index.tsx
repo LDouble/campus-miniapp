@@ -75,7 +75,7 @@ function TabPage({
           </View>
           <View>
             <Text className='tab-page__hero-title'>{data.subtitle}</Text>
-            <Text className='tab-page__hero-subtitle'>海大校园服务</Text>
+            <Text className='tab-page__hero-subtitle'>OUSea服务</Text>
           </View>
           <View className='tab-page__wave tab-page__wave--one' />
           <View className='tab-page__wave tab-page__wave--two' />
@@ -91,7 +91,7 @@ function TabPage({
 
         <View className='tab-page__heading'>
           <Text>为你推荐</Text>
-          <Text>海大校园服务</Text>
+          <Text>OUSea服务</Text>
         </View>
 
         <View className='tab-page__cards'>

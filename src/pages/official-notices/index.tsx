@@ -70,7 +70,7 @@ const handoffTimeIndex = (value?: string) => {
 
 export default function OfficialNoticesPage() {
   useCampusShare(() => ({
-    title: '全校通知｜海大校园',
+    title: '全校通知｜OUSea',
     path: '/pages/official-notices/index',
   }))
 

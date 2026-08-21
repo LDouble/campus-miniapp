@@ -1,7 +1,7 @@
 ## Task: 校园生活顶部 Bar Figma 复刻
 
 **ID:** community-top-bar-figma-rebuild
-**Label:** 海大校园小程序：校园生活顶部 Bar Figma 复刻
+**Label:** OUSea小程序：校园生活顶部 Bar Figma 复刻
 **Description:** 依据 Figma 节点 173:837、171:324 和 171:572 重构校园生活聚合页顶部 Bar，覆盖社区、闲置、跑腿和找同行四个业务状态，同时保留现有真实交互与动态配置。
 **Type:** Enhancement
 **Status:** Done

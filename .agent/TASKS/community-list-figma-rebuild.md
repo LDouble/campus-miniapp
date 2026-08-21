@@ -1,7 +1,7 @@
 ## Task: 社区统一列表卡片 Figma 重构
 
 **ID:** community-list-figma-rebuild
-**Label:** 海大校园小程序：社区统一列表卡片 Figma 重构
+**Label:** OUSea小程序：社区统一列表卡片 Figma 重构
 **Description:** 依据 Figma 节点 `171:2` 重构社区帖子信息流，并由社区首页、话题页和个人主页共同复用同一套帖子卡片结构、视觉和真实交互。
 **Type:** Refactor
 **Status:** Done

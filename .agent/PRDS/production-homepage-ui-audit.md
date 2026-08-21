@@ -1,4 +1,4 @@
-# 海大校园小程序：生产域名首页 UI 验收
+# OUSea小程序：生产域名首页 UI 验收
 
 **Priority:** High
 **Status:** Done

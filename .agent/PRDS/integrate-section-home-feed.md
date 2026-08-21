@@ -1,4 +1,4 @@
-# 海大校园小程序：接入首页校园动态混排流
+# OUSea小程序：接入首页校园动态混排流
 
 **Priority:** High
 **Status:** Done

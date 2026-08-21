@@ -97,7 +97,7 @@ export default function CommunityDetailPage() {
   })
 
   useCampusShare(() => ({
-    title: plainStickerContent(post?.content || '').trim().slice(0, 28) || '海大校园动态',
+    title: plainStickerContent(post?.content || '').trim().slice(0, 28) || 'OUSea动态',
     path: '/packages/social/community/detail',
     query: { id: postId, mode: 'post' },
     imageUrl: post?.images[0]?.url,

@@ -320,7 +320,7 @@ export default function CommunityPage() {
     const postId = Number(dataset.postId)
     const shareTitle = typeof dataset.shareTitle === 'string'
       ? dataset.shareTitle
-      : '海大校园社区'
+      : 'OUSea社区'
     const shareImage = typeof dataset.shareImage === 'string'
       ? dataset.shareImage
       : ''

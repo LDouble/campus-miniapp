@@ -119,7 +119,7 @@ export default function CarpoolDetailPage() {
   useCampusShare(() => ({
     title: item
       ? `${item.origin} → ${item.destination}｜校园同行`
-      : '校园找同行｜海大校园',
+      : '校园找同行｜OUSea',
     path: id ? '/packages/social/carpool/detail' : '/pages/community/index',
     query: id ? { id } : { section: 'carpool' },
   }))

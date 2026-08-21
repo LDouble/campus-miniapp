@@ -126,7 +126,7 @@ function ModulePage() {
         </View>
         <View className='module-hero__copy'>
           <Text className='module-hero__title'>{data.slogan}</Text>
-          <Text className='module-hero__slogan'>海大校园服务</Text>
+          <Text className='module-hero__slogan'>OUSea服务</Text>
         </View>
         <View className='module-hero__deco'>
           <View /><View /><View />

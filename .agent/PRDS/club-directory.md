@@ -1,4 +1,4 @@
-# 海大校园小程序：社团宣传主页
+# OUSea小程序：社团宣传主页
 
 **Priority:** High
 **Status:** Done

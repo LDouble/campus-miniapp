@@ -1,4 +1,4 @@
-# 海大校园小程序：社区模块上线级 E2E
+# OUSea小程序：社区模块上线级 E2E
 
 **Priority:** High
 **Status:** Done

@@ -1,4 +1,4 @@
-const DEFAULT_SHARE_TITLE = '海大校园'
+const DEFAULT_SHARE_TITLE = 'OUSea'
 const MAX_SHARE_TITLE_LENGTH = 36
 
 type ShareQueryValue = string | number | boolean | null | undefined

@@ -1,4 +1,4 @@
-# 海大校园小程序：校园生活服务后端联动重构
+# OUSea小程序：校园生活服务后端联动重构
 
 **Priority:** High
 **Status:** In Progress

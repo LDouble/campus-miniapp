@@ -355,12 +355,12 @@ function Index() {
     const postId = Number(dataset.postId)
     const shareTitle = typeof dataset.shareTitle === 'string'
       ? dataset.shareTitle
-      : '海大校园社区'
+      : 'OUSea社区'
     const shareImage = typeof dataset.shareImage === 'string'
       ? dataset.shareImage
       : ''
     const result = {
-      title: postId > 0 ? shareTitle : '海大校园｜一站式校园生活',
+      title: postId > 0 ? shareTitle : 'OUSea｜一站式校园生活',
       path: postId > 0 ? '/packages/social/community/detail' : '/pages/index/index',
       query: postId > 0 ? { id: postId, mode: 'post' } : undefined,
     }
@@ -870,7 +870,7 @@ function Index() {
   return (
     <View className='campus'>
       <CustomNavbar
-        title='海大校园'
+        title='OUSea'
         immersive
         compactImmersive
         collapsed={headerCollapsed}
