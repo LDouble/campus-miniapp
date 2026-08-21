@@ -3338,6 +3338,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的收藏 */
+        get: operations["ListMyFavorites"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/favorites/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询资源收藏状态 */
+        get: operations["GetFavoriteState"];
+        /** 收藏资源 */
+        put: operations["AddFavorite"];
+        post?: never;
+        /** 取消收藏资源 */
+        delete: operations["RemoveFavorite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/home/feed": {
         parameters: {
             query?: never;
@@ -7437,6 +7473,36 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        FavoriteItem: {
+            /** Format: date-time */
+            favorited_at: string;
+            /** Format: uint64 */
+            resource_id: number;
+            resource_type: components["schemas"]["FavoriteResourceType"];
+        };
+        FavoritePage: {
+            items: components["schemas"]["FavoriteItem"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        FavoritePageResponseBody: {
+            data: components["schemas"]["FavoritePage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+        FavoriteState: {
+            favorited: boolean;
+            /** Format: uint64 */
+            resource_id: number;
+            resource_type: components["schemas"]["FavoriteResourceType"];
+        };
+        FavoriteStateResponseBody: {
+            data: components["schemas"]["FavoriteState"];
+            request_id: string;
+        };
         HomeFeedImageView: {
             /** Format: uint64 */
             media_id?: number | null;
@@ -7445,6 +7511,7 @@ export interface components {
         HomeFeedItemView: {
             /** Format: int64 */
             amount_cents?: number | null;
+            author_avatar_url?: string | null;
             author_deleted: boolean;
             /** Format: uint64 */
             author_id: number;
@@ -7649,7 +7716,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "comment" | "private_message";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -7694,7 +7761,7 @@ export interface components {
             moderation_status: "pending" | "checking" | "passed" | "manual_review" | "rejected" | "error" | "manual_approved" | "manual_rejected";
             purpose: components["schemas"]["MediaPurpose"];
             /** @enum {string} */
-            status: "pending" | "promoting" | "ready" | "expired";
+            status: "pending" | "promoting" | "ready" | "deleting" | "expired";
             /** Format: uint64 */
             version: number;
             /** Format: int64 */
@@ -9293,6 +9360,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ErrorReportResponseBody"];
+            };
+        };
+        /** @description 我的收藏分页 */
+        FavoritePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["FavoritePageResponseBody"];
+            };
+        };
+        /** @description 资源收藏状态 */
+        FavoriteStateResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["FavoriteStateResponseBody"];
             };
         };
         /** @description 首页公开内容聚合分页 */
@@ -14377,6 +14462,75 @@ export interface operations {
             400: components["responses"]["Error"];
             429: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    ListMyFavorites: {
+        parameters: {
+            query?: {
+                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FavoritePageResponse"];
+        };
+    };
+    GetFavoriteState: {
+        parameters: {
+            query: {
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FavoriteStateResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    AddFavorite: {
+        parameters: {
+            query: {
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FavoriteStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RemoveFavorite: {
+        parameters: {
+            query: {
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FavoriteStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     ListHomeFeed: {

@@ -180,5 +180,6 @@ assert.ok(avatarImageSource.includes('return <Text className={fallbackClassName}
 const schemaSource = readFileSync(resolve(__dirname, '../src/api/generated/schema.ts'), 'utf8')
 assert.match(schemaSource, /CampusCirclePostView: \{\n\s+author_avatar_url: string \| null;/)
 assert.match(schemaSource, /CommentView: \{\n\s+author_avatar_url: string \| null;/)
+assert.match(schemaSource, /HomeFeedItemView: \{[\s\S]*?author_avatar_url\?: string \| null;/)
 
 process.stdout.write('community avatar smoke: ok\n')
