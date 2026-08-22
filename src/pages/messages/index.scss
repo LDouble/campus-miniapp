@@ -126,6 +126,7 @@
 .messages-page {
   color: var(--campus-text-heading, #1d293d);
   background: var(--campus-page, #f4f7fb);
+  padding-bottom: calc(96rpx + env(safe-area-inset-bottom));
 }
 
 .messages-page__content { padding: 24rpx 28rpx calc(36rpx + env(safe-area-inset-bottom)); }

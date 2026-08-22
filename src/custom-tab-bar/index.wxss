@@ -4,7 +4,7 @@
   bottom: 0;
   left: 0;
   z-index: 100;
-  height: calc(112rpx + env(safe-area-inset-bottom));
+  height: calc(96rpx + env(safe-area-inset-bottom));
   background: var(--campus-surface, #fff);
   border-top: 1rpx solid var(--campus-border, #e8edf4);
   pointer-events: none;
@@ -16,7 +16,7 @@
   bottom: 0;
   left: 0;
   display: flex;
-  height: calc(112rpx + env(safe-area-inset-bottom));
+  height: calc(96rpx + env(safe-area-inset-bottom));
   padding: 0 8rpx env(safe-area-inset-bottom);
   overflow: visible;
   box-sizing: border-box;
@@ -33,7 +33,7 @@
   position: relative;
   display: flex;
   min-width: 0;
-  height: 112rpx;
+  height: 96rpx;
   flex: 1;
   flex-direction: column;
   align-items: center;
@@ -44,7 +44,7 @@
   position: relative;
   display: flex;
   width: 100%;
-  height: 112rpx;
+  height: 96rpx;
   flex-direction: column;
   align-items: center;
   justify-content: center;

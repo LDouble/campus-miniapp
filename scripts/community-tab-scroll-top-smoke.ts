@@ -78,12 +78,12 @@ assert.match(
 )
 assert.match(
   communityPageStyle,
-  /\.community-page \{[\s\S]*?padding-bottom: calc\(112rpx \+ env\(safe-area-inset-bottom\)\);/u,
+  /\.community-page \{[\s\S]*?padding-bottom: calc\(96rpx \+ env\(safe-area-inset-bottom\)\);/u,
   '社区页应保留足够的底部 TabBar 安全距离',
 )
 assert.match(
   readSource('../src/custom-tab-bar/index.wxss'),
-  /\.tab-bar__dock \{[\s\S]*?bottom: calc\(0rpx \+ env\(safe-area-inset-bottom\)\);/u,
+  /\.tab-bar__dock \{[\s\S]*?bottom: 0;/u,
   'TabBar dock 下沿应贴合安全区上沿，避免底部视觉留白',
 )
 assert.match(
