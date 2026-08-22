@@ -37,6 +37,9 @@ export default function DirectMessagesPage() {
   const loadingMoreRef = useRef(false)
   const nextCursorRef = useRef<string | null>(null)
   const hasMoreRef = useRef(true)
+  const firstDidShow = useRef(true)
+  const openedConversationIdRef = useRef(0)
+  const conversationSyncRequest = useRef(0)
 
   const load = async (reset = true) => {
     if (!reset && !canLoadDirectMessagePage(
@@ -83,8 +86,34 @@ export default function DirectMessagesPage() {
     }
   }
 
+  const syncOpenedConversation = async () => {
+    const conversationId = openedConversationIdRef.current
+    if (!conversationId) return
+    openedConversationIdRef.current = 0
+    const requestId = ++conversationSyncRequest.current
+    const listVersion = requestVersion.current
+    try {
+      const latest = await privateMessagesRepository.getConversation(conversationId)
+      if (
+        requestId !== conversationSyncRequest.current
+        || listVersion !== requestVersion.current
+      ) return
+      // 只更新当前会话摘要，不重置列表、分页游标或滚动位置。
+      setConversations((current) => current.map((item) => (
+        item.id === latest.id ? latest : item
+      )))
+    } catch {
+      // 返回列表时的摘要同步失败不影响已有列表，下拉刷新可重试。
+    }
+  }
+
   useDidShow(() => {
-    void load(true)
+    if (firstDidShow.current) {
+      firstDidShow.current = false
+      void load(true)
+    } else {
+      void syncOpenedConversation()
+    }
     void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
   })
 
@@ -98,6 +127,7 @@ export default function DirectMessagesPage() {
   useReachBottom(() => void load(false))
 
   const openConversation = (conversation: DirectMessageConversation) => {
+    openedConversationIdRef.current = conversation.id
     void Taro.navigateTo({ url: directMessageChatUrl(conversation.id) })
   }
 

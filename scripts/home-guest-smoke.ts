@@ -14,6 +14,18 @@ const homeSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.tsx'),
   'utf8',
 )
+const servicesSource = readFileSync(
+  resolve(__dirname, '../src/pages/services/index.tsx'),
+  'utf8',
+)
+const campusServiceSource = readFileSync(
+  resolve(__dirname, '../src/pages/campus-service/index.tsx'),
+  'utf8',
+)
+const campusServiceDetailSource = readFileSync(
+  resolve(__dirname, '../src/pages/campus-service/detail.tsx'),
+  'utf8',
+)
 const homeDataSource = readFileSync(
   resolve(__dirname, '../src/features/home/data.ts'),
   'utf8',
@@ -70,9 +82,15 @@ assert.ok(
   '首页常用服务必须只展示具有模块映射且运行时状态为 enabled 的入口',
 )
 assert.ok(
-  homeSource.includes("name: '校园卡'")
+  !homeSource.includes("key: 'campus-card'")
     && !serviceModuleKeysSource.includes("'campus-card'"),
-  '静态校园卡演示页可以保留，但没有真实模块协议前不得进入首页常用服务',
+  '校园卡功能屏蔽后不得进入首页常用服务',
+)
+assert.ok(
+  !servicesSource.includes("key: 'campus-card'")
+    && campusServiceSource.includes("options.type === 'campus-card'")
+    && campusServiceDetailSource.includes("options.type === 'campus-card'"),
+  '校园卡功能屏蔽后不得出现在全部服务，直达旧路由也必须回到服务页',
 )
 assert.ok(
   serviceModuleKeysSource.includes("'pass-rate': 'academic_statistics'")
@@ -121,6 +139,18 @@ assert.ok(
   homeSource.includes('homeFeedItems.length > 0 && !homeFeedCanLoadMore')
     && homeSource.includes('没有更多了'),
   '首页 Feed 到达末页后必须展示没有更多了提示',
+)
+assert.ok(
+  homeStyleSource.includes('.community-post {')
+    && homeStyleSource.includes('padding-top: 20rpx;')
+    && homeStyleSource.includes('line-height: var(--ousea-line-height-comment, 1.65)'),
+  '首页 Feed 帖子盒模型必须保持紧凑，操作按钮不额外撑高',
+)
+assert.ok(
+  homeSource.includes('const homeHasShown = useRef(false)')
+    && homeSource.includes('if (homeHasShown.current) return')
+    && homeSource.includes('homeHasShown.current = true'),
+  '首页从详情返回时必须保留 Feed 分页状态，完整刷新交给下拉刷新',
 )
 assert.ok(
   homeSource.includes('home-back-top')
@@ -264,8 +294,8 @@ assert.ok(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__more\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u,
-  '首页混排 Feed 双点入口必须提供稳定点击热区',
+  /\.community-post__more\s*\{[\s\S]*?width:\s*56rpx;[\s\S]*?height:\s*44rpx;/u,
+  '首页混排 Feed 双点入口尺寸必须与可见底板一致',
 )
 assert.ok(
   homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中'")
@@ -296,7 +326,7 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /\.service-panel\s*\{\s*padding:\s*24rpx 20rpx 20rpx;[\s\S]{0,620}&__simple-head\s*\{[^}]*min-height:\s*96rpx;[^}]*padding:\s*0 12rpx 8rpx;[^}]*box-sizing:\s*border-box;/u,
+  /\.service-panel\s*\{\s*padding:\s*18rpx 20rpx 14rpx;[\s\S]{0,620}&__simple-head\s*\{[^}]*min-height:\s*88rpx;[^}]*padding:\s*0 12rpx 4rpx;[^}]*box-sizing:\s*border-box;/u,
   '常用服务卡片必须使用紧凑外壳，并为标题操作保留安全热区',
 )
 assert.match(
@@ -366,8 +396,8 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__more\s*\{[^}]*width:\s*88rpx;[^}]*height:\s*88rpx;/u,
-  '帖子卡片三个点必须提供足够大的触控热区',
+  /\.community-post__more\s*\{[^}]*width:\s*56rpx;[^}]*height:\s*44rpx;/u,
+  '帖子卡片三个点不应额外撑开布局',
 )
 assert.match(
   communityPostStyleSource,

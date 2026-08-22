@@ -29,8 +29,12 @@ import { isQualificationEdition } from './features/app-edition'
 import { refreshPrivateMessageUnreadCount } from './features/direct-messages/unread'
 import { canRearmForegroundPrivateMessagePolling } from './features/direct-messages/polling'
 import { setCustomTabBarUnreadCount } from './utils/tabbar'
+import { installWechatRuntimeCompat } from './features/wechat-runtime-compat'
 // 全局样式
 import './app.scss'
+
+// 必须在页面脚本注册前安装，避免 Taro 为每个页面暴露无用的 onResize 生命周期。
+installWechatRuntimeCompat()
 
 const refreshMessageUnreadCount = async () => {
   try {

@@ -162,8 +162,9 @@ assert.match(feedStyles, /\.community-post__comment-preview-author \{[^}]*color:
 assert.match(feedStyles, /\.community-post__body \{[\s\S]*?z-index:\s*0;[\s\S]*?overflow:\s*hidden;/u)
 assert.match(feedStyles, /\.community-post__meta \{[\s\S]*?z-index:\s*2;/u)
 assert.match(feedStyles, /\.community-post__meta-actions \{[\s\S]*?z-index:\s*3;/u)
+assert.match(feedStyles, /\.community-post__meta-actions \{[\s\S]*?min-width:\s*56rpx;/u)
 assert.match(feedStyles, /\.community-post__more \{[\s\S]*?z-index:\s*3;/u)
-assert.match(feedStyles, /\.community-post__more \{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u)
+assert.match(feedStyles, /\.community-post__more \{[\s\S]*?width:\s*56rpx;[\s\S]*?height:\s*44rpx;/u)
 assert.match(feedStyles, /\.community-post__more::before \{[\s\S]*?width:\s*56rpx;[\s\S]*?height:\s*44rpx;/u)
 assert.match(feedStyles, /\.community-post__action-menu \{[\s\S]*?right:\s*96rpx;[\s\S]*?width:\s*266rpx;[\s\S]*?min-height:\s*88rpx;[\s\S]*?background:\s*transparent;/u)
 assert.match(feedStyles, /\.community-post__action-menu::before \{[\s\S]*?height:\s*72rpx;[\s\S]*?background:\s*var\(--ousea-ink-700,/u)
@@ -177,6 +178,11 @@ assert.doesNotMatch(feedStyles, /\.community-post__social-like--liked text \{[\s
 assert.match(feedStyles, /\.community-post__social-divider \{[\s\S]*?width:\s*1rpx;[\s\S]*?height:\s*40rpx;[\s\S]*?margin:\s*24rpx 0;[\s\S]*?background:\s*rgba\(255, 255, 255, 0\.24\);/u)
 assert.match(feedStyles, /\.community-post__engagement \{[\s\S]*?background:\s*var\(--ousea-ocean-50,/u)
 assert.match(feedStyles, /\.community-post__comment-preview \{[\s\S]*?display:\s*block;[\s\S]*?overflow-wrap:\s*anywhere;/u)
+assert.doesNotMatch(
+  feedStyles,
+  /\.community-post__comment-previews\s*\{[^}]*border-top:/u,
+  '评论摘要区域不应在二级评论上方显示横线',
+)
 assert.doesNotMatch(
   feedStyles,
   /\.community-post__comment-preview--reply\s*\{[\s\S]*?(?:padding-left|margin-left):/u,

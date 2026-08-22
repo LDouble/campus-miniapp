@@ -17,15 +17,15 @@ const rule = (selector: string) => {
 
 assert.match(
   rule('.tab-bar'),
-  /height:\s*calc\(112rpx \+ env\(safe-area-inset-bottom\)\)/u,
+  /height:\s*calc\(96rpx \+ env\(safe-area-inset-bottom\)\)/u,
 )
 assert.match(rule('.tab-bar__dock'), /bottom:\s*0/u)
 assert.match(
   rule('.tab-bar__dock'),
-  /height:\s*calc\(112rpx \+ env\(safe-area-inset-bottom\)\)/u,
+  /height:\s*calc\(96rpx \+ env\(safe-area-inset-bottom\)\)/u,
 )
-assert.match(rule('.tab-bar__item'), /height:\s*112rpx/u)
-assert.match(rule('.tab-bar__pill'), /height:\s*112rpx/u)
+assert.match(rule('.tab-bar__item'), /height:\s*96rpx/u)
+assert.match(rule('.tab-bar__pill'), /height:\s*96rpx/u)
 assert.match(tabBarStyle, /\.tab-bar__badge\s*\{/u)
 assert.match(tabBarTemplate, /unreadCount > 0/u)
 assert.match(appSource, /noticesRepository\.unreadCount\(\)/u)
@@ -41,10 +41,12 @@ assert.match(tabBarStyle, /\.tab-bar--dark \.tab-bar__dock/u)
 for (const path of [
   'src/pages/index/index.scss',
   'src/pages/community/index.scss',
+  'src/pages/messages/index.scss',
+  'src/pages/profile/index.scss',
 ]) {
   assert.match(
     read(path),
-    /calc\(112rpx \+ env\(safe-area-inset-bottom\)\)/u,
+    /calc\(96rpx \+ env\(safe-area-inset-bottom\)\)/u,
     `${path} 未同步收紧底部内容留白`,
   )
 }

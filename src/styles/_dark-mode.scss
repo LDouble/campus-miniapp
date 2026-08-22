@@ -1117,15 +1117,6 @@
     filter: brightness(0) saturate(100%) invert(84%) sepia(17%) saturate(1243%) hue-rotate(181deg) brightness(104%) contrast(98%);
   }
 
-  & .community-post__comment-previews {
-    border-top-color: var(--campus-border, #243244);
-  }
-
-  & .community-post__engagement > .community-post__comment-previews:first-child {
-    padding-top: 0;
-    border-top: 0;
-  }
-
   & .community-post__comment-preview {
     color: var(--campus-text-body, #d7e0ec);
   }

@@ -9,7 +9,7 @@ page { background: var(--campus-page, #f4f7fb); }
   flex-direction: column;
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 0 28rpx calc(112rpx + env(safe-area-inset-bottom));
+  padding: 0 28rpx calc(96rpx + env(safe-area-inset-bottom));
   overflow: hidden;
   color: var(--campus-text-heading, #294653);
   background:
@@ -1171,6 +1171,11 @@ page { background: var(--campus-page, #f4f7fb); }
     margin-top: 8rpx;
   }
 
+  &__scroll {
+    height: 276rpx;
+    box-sizing: border-box;
+  }
+
   &__course-row {
     min-height: 62rpx;
     border-top: 2rpx solid rgba(75, 115, 116, 0.075);
@@ -1993,8 +1998,8 @@ page { background: var(--campus-page, #f4f7fb); }
 
   &__item {
     display: flex;
-    min-height: 160rpx;
-    padding: 24rpx 8rpx 24rpx 0;
+    min-height: 144rpx;
+    padding: 16rpx 8rpx 16rpx 0;
     align-items: center;
     gap: 24rpx;
     border-top: 0;
@@ -2160,8 +2165,8 @@ page { background: var(--campus-page, #f4f7fb); }
 
   &__header {
     justify-content: space-between;
-    min-height: 84rpx;
-    padding: 24rpx 32rpx 4rpx;
+    min-height: 76rpx;
+    padding: 18rpx 32rpx 2rpx;
   }
 
   &__heading {
@@ -2205,6 +2210,37 @@ page { background: var(--campus-page, #f4f7fb); }
       opacity: 0.62;
     }
   }
+
+  // 首页 Feed 以连续信息流为主，收紧内容间距；操作按钮与可见底板保持一致。
+  .community-post {
+    padding-top: 20rpx;
+    padding-bottom: 20rpx;
+  }
+
+  .community-post__content {
+    line-height: var(--ousea-line-height-comment, 1.65);
+  }
+
+  .community-post--compact-content .community-post__content {
+    line-height: 1.45;
+  }
+
+  .community-post__meta {
+    padding-top: 4rpx;
+    padding-bottom: 4rpx;
+  }
+
+  .community-post__engagement {
+    margin-top: 0;
+    padding-top: 10rpx;
+    padding-bottom: 10rpx;
+    gap: 6rpx;
+  }
+
+  .community-post__comment-previews {
+    padding-top: 6rpx;
+    gap: 4rpx;
+  }
 }
 
 .moments-feed {
@@ -2213,7 +2249,7 @@ page { background: var(--campus-page, #f4f7fb); }
     display: flex;
     align-items: flex-start;
     gap: 20rpx;
-    padding: 28rpx 32rpx;
+    padding: 20rpx 32rpx;
     overflow: visible;
     border-top: 0;
     transition: opacity 120ms ease;
@@ -2805,7 +2841,7 @@ page .campus {
 }
 
 .community-panel {
-  padding: 18rpx 24rpx 20rpx;
+  padding: 16rpx 24rpx 16rpx;
   border: 0;
   border-radius: var(--ousea-radius-card-lg, 36rpx);
   box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(29, 95, 214, 0.08));
@@ -2962,7 +2998,7 @@ page {
 }
 
 .campus {
-  padding: 0 32rpx calc(112rpx + env(safe-area-inset-bottom));
+  padding: 0 32rpx calc(96rpx + env(safe-area-inset-bottom));
   color: var(--campus-text-heading, #1d293d);
   background:
     linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 510rpx),
@@ -3116,6 +3152,7 @@ page {
 }
 
 .today-task {
+  padding: 20rpx;
   margin-bottom: 24rpx;
   border-radius: 32rpx;
 
@@ -3146,7 +3183,7 @@ page {
 }
 
 .service-panel {
-  padding: 24rpx 20rpx 20rpx;
+  padding: 18rpx 20rpx 14rpx;
   margin-bottom: 24rpx;
   background: var(--campus-surface, #fff);
   border: 0;
@@ -3154,8 +3191,8 @@ page {
   box-shadow: 0 8rpx 16rpx rgba(29, 95, 214, 0.05);
 
   &__simple-head {
-    min-height: 96rpx;
-    padding: 0 12rpx 8rpx;
+    min-height: 88rpx;
+    padding: 0 12rpx 4rpx;
     box-sizing: border-box;
   }
 
@@ -3241,7 +3278,7 @@ page {
 }
 
 .official-notices-home {
-  padding: 18rpx 24rpx 12rpx;
+  padding: 14rpx 24rpx 8rpx;
   margin-bottom: 24rpx;
   border-radius: 40rpx;
 
@@ -3950,10 +3987,10 @@ page {
 }
 
 .hero-card {
-  min-height: 374rpx;
+  min-height: 344rpx;
 
   &__content {
-    padding: 34rpx 0 30rpx 34rpx;
+    padding: 28rpx 0 24rpx 34rpx;
   }
 
   &__slogan-swiper,
@@ -4126,4 +4163,278 @@ page {
   .market-card {
     transition: none;
   }
+}
+
+/* 校历卡片：首页只保留必要信息，并维持舒展的阅读节奏。 */
+.schedule-card {
+  padding: 18rpx 28rpx 14rpx;
+  border-radius: var(--ousea-radius-card-lg, 36rpx);
+
+  &__header {
+    min-height: 64rpx;
+  }
+
+  &__day-label {
+    color: var(--campus-text-heading, #1a2333);
+    font-size: var(--ousea-font-size-title, 33rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__summary {
+    min-height: 64rpx;
+    color: var(--campus-primary, #2b7aef);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__courses {
+    margin-top: 8rpx;
+  }
+
+  &__timeline-scroll {
+    position: relative;
+    overflow: hidden;
+  }
+
+  &__timeline {
+    position: relative;
+  }
+
+  &__timeline-line {
+    position: absolute;
+    top: 28rpx;
+    bottom: 28rpx;
+    left: 28rpx;
+    width: 2rpx;
+    background: var(--campus-border-strong, #e3effe);
+    border-radius: var(--ousea-radius-pill, 999rpx);
+  }
+
+  &__course-row {
+    position: relative;
+    align-items: flex-start;
+    min-height: 76rpx;
+    padding: 8rpx 0;
+    border-top: 0;
+  }
+
+  &__timeline-marker {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 56rpx;
+    min-width: 56rpx;
+    padding-top: 10rpx;
+    margin-right: 16rpx;
+    flex: none;
+  }
+
+  &__timeline-dot {
+    position: relative;
+    z-index: 1;
+    width: 16rpx;
+    height: 16rpx;
+    background: var(--campus-text-auxiliary, #a6b2c2);
+    border-radius: 50%;
+
+    &--event {
+      background: var(--campus-text-auxiliary, #a6b2c2);
+    }
+  }
+
+  &__course-row--active &__timeline-dot {
+    width: 20rpx;
+    height: 20rpx;
+    background: var(--campus-surface, #fff);
+    border: 6rpx solid var(--campus-primary, #2b7aef);
+  }
+
+  &__course-copy {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__course-name {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: var(--campus-line-height-important-body, 46rpx);
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 8rpx;
+    margin-top: 0;
+    overflow: hidden;
+    color: var(--campus-text-secondary, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: var(--ousea-line-height-ui, 1.4);
+    white-space: nowrap;
+
+    image {
+      flex: none;
+      width: 20rpx;
+      height: 20rpx;
+      margin-right: 0;
+      opacity: 0.72;
+    }
+
+    text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .schedule-card__meta-divider {
+      flex: none;
+      overflow: visible;
+      color: var(--campus-text-auxiliary, #a6b2c2);
+    }
+  }
+
+  &__event-divider {
+    height: 2rpx;
+    margin: 10rpx 0 6rpx 72rpx;
+    background: linear-gradient(
+      90deg,
+      var(--ousea-bg-line, #e8edf4),
+      rgba(232, 237, 244, 0.42) 64%,
+      rgba(232, 237, 244, 0)
+    );
+    opacity: 0.86;
+  }
+
+  &__scroll-cue {
+    position: absolute;
+    top: 50%;
+    bottom: auto;
+    left: -6rpx;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 38rpx;
+    height: 76rpx;
+    margin-top: 0;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  &__scroll-cue-arrow {
+    width: 24rpx;
+    height: 24rpx;
+    opacity: 0.82;
+
+    &--up {
+      animation: schedule-scroll-cue-up 1.8s ease-in-out infinite;
+      transform: rotate(-90deg) translateX(2rpx);
+    }
+
+    &--down {
+      margin-top: -2rpx;
+      animation: schedule-scroll-cue-down 1.8s ease-in-out 120ms infinite;
+      transform: rotate(90deg) translateX(2rpx);
+    }
+  }
+
+  &__more {
+    display: flex;
+    min-height: 56rpx;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4rpx;
+    margin-top: 4rpx;
+    color: var(--campus-primary, #2b7aef);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: var(--ousea-line-height-ui, 1.4);
+
+    image {
+      width: 20rpx;
+      height: 20rpx;
+      opacity: 0.72;
+    }
+  }
+}
+
+.today-card__event-row {
+  align-items: flex-start;
+}
+
+.today-card__event-row--first {
+  padding-top: 6rpx;
+}
+
+.today-card__event-row--important {
+  padding-right: 8rpx;
+  padding-left: 8rpx;
+}
+
+.today-card__event-date {
+  display: block;
+  width: auto;
+  min-width: 0;
+  margin-top: 0;
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  white-space: nowrap;
+
+  text:first-child {
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+}
+
+@keyframes schedule-scroll-cue-up {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: rotate(-90deg) translateX(5rpx);
+  }
+
+  50% {
+    opacity: 1;
+    transform: rotate(-90deg) translateX(-6rpx);
+  }
+}
+
+@keyframes schedule-scroll-cue-down {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: rotate(90deg) translateX(5rpx);
+  }
+
+  50% {
+    opacity: 1;
+    transform: rotate(90deg) translateX(-6rpx);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-card__scroll-cue-arrow {
+    animation: none;
+    opacity: 0.82;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .schedule-card__event-divider {
+    background: linear-gradient(
+      90deg,
+      var(--campus-border, #243244),
+      rgba(36, 50, 68, 0.42) 64%,
+      rgba(36, 50, 68, 0)
+    );
+  }
+
+  .schedule-card__scroll-cue-arrow {
+    filter: brightness(0) invert(1);
+  }
+
 }

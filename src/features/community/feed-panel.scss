@@ -398,7 +398,7 @@
   position: relative;
   z-index: 3;
   display: flex;
-  min-width: 88rpx;
+  min-width: 56rpx;
   flex: none;
   align-items: center;
   justify-content: flex-end;
@@ -457,10 +457,10 @@
   position: relative;
   z-index: 3;
   display: flex;
-  width: 88rpx;
-  min-width: 88rpx;
-  height: 88rpx;
-  min-height: 88rpx;
+  width: 56rpx;
+  min-width: 56rpx;
+  height: 44rpx;
+  min-height: 44rpx;
   margin: 0;
   padding: 0;
   flex: none;
@@ -468,7 +468,7 @@
   justify-content: center;
   overflow: visible;
   border: 0;
-  border-radius: 50%;
+  border-radius: 12rpx;
   background: transparent;
   box-shadow: none;
 }
@@ -653,9 +653,12 @@
   display: flex;
   min-width: 0;
   padding-top: 8rpx;
-  border-top: 1rpx solid var(--ousea-bg-line, #e8edf4);
   flex-direction: column;
   gap: 6rpx;
+}
+
+.community-post__engagement > .community-post__comment-previews:first-child {
+  padding-top: 0;
 }
 
 .community-post__comment-preview {
