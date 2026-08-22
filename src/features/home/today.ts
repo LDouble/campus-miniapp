@@ -56,7 +56,7 @@ export const calendarEventDateLabel = (
   const tomorrow = localDate(tomorrowDate)
   if (event.start_date <= today && event.end_date >= today) return '今天'
   if (event.start_date === tomorrow) return '明天'
-  return `${Number(event.start_date.slice(5, 7))}月${Number(event.start_date.slice(8, 10))}日`
+  return `${Number(event.start_date.slice(5, 7))}.${Number(event.start_date.slice(8, 10))}`
 }
 
 export const resolveTodayTask = (

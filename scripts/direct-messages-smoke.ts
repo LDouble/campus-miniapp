@@ -243,6 +243,19 @@ assert.ok(messagesPage.includes("resolveMiniappModule(runtimeConfig, 'private_me
 assert.ok(messagesPage.includes('canOpenNoticeAction'), '隐藏模块不得显示私信通知 CTA')
 assert.ok(conversationPage.includes('plainStickerContent'), '会话预览必须将表情降级为可读文本')
 assert.ok(conversationPage.includes('在同学的个人主页点“发私信”开始聊天'), '私信会话页必须提供开始聊天引导')
+assert.ok(
+  conversationPage.includes('const firstDidShow = useRef(true)')
+    && conversationPage.includes('if (firstDidShow.current)')
+    && conversationPage.includes('void load(true)')
+    && conversationPage.includes('void syncOpenedConversation()'),
+  '私信列表返回详情时不得重置已加载分页',
+)
+assert.ok(
+  conversationPage.includes('openedConversationIdRef')
+    && conversationPage.includes('privateMessagesRepository.getConversation(conversationId)')
+    && conversationPage.includes('只更新当前会话摘要'),
+  '私信列表返回详情后必须非阻塞同步当前会话摘要',
+)
 assert.ok(!conversationStyle.includes('radial-gradient'), '私信会话页不得保留旧的径向渐变背景')
 assert.ok(publicProfile.includes('!profile.is_self'), '个人主页不得展示给自己的私信入口')
 assert.ok(publicProfile.includes('isQualificationEdition'), '资格版不得显示个人主页私信入口')

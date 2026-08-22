@@ -121,13 +121,3 @@ page .route-filter-suggestions > text { font-size: 22rpx; }
 page .route-filter-suggestion { font-size: 24rpx; }
 page .date-filter-picker text:last-child,
 page .filter-inline-clear { font-size: 25rpx; }
-
-@media (max-width: 360px) {
-  page .community-post__content,
-  page .community-detail__body { font-size: var(--ousea-font-size-comment, 30rpx); }
-
-  page .community-post__author-line > text:first-child { font-size: 30rpx; }
-
-  page .community-detail-comments .community-comment__content,
-  page .business-detail-comment__bubble { font-size: 27rpx; }
-}

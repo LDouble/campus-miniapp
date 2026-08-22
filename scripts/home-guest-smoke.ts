@@ -123,6 +123,18 @@ assert.ok(
   '首页 Feed 到达末页后必须展示没有更多了提示',
 )
 assert.ok(
+  homeStyleSource.includes('.community-post {')
+    && homeStyleSource.includes('padding-top: 20rpx;')
+    && homeStyleSource.includes('line-height: var(--ousea-line-height-comment, 1.65)'),
+  '首页 Feed 帖子盒模型必须保持紧凑，操作按钮不额外撑高',
+)
+assert.ok(
+  homeSource.includes('const homeHasShown = useRef(false)')
+    && homeSource.includes('if (homeHasShown.current) return')
+    && homeSource.includes('homeHasShown.current = true'),
+  '首页从详情返回时必须保留 Feed 分页状态，完整刷新交给下拉刷新',
+)
+assert.ok(
   homeSource.includes('home-back-top')
     && homeSource.includes("ariaLabel='返回顶部'")
     && homeSource.includes('Taro.pageScrollTo({ scrollTop: 0, duration: 240 })'),
@@ -264,8 +276,8 @@ assert.ok(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__more\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u,
-  '首页混排 Feed 双点入口必须提供稳定点击热区',
+  /\.community-post__more\s*\{[\s\S]*?width:\s*56rpx;[\s\S]*?height:\s*44rpx;/u,
+  '首页混排 Feed 双点入口尺寸必须与可见底板一致',
 )
 assert.ok(
   homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中'")
@@ -296,7 +308,7 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /\.service-panel\s*\{\s*padding:\s*24rpx 20rpx 20rpx;[\s\S]{0,620}&__simple-head\s*\{[^}]*min-height:\s*96rpx;[^}]*padding:\s*0 12rpx 8rpx;[^}]*box-sizing:\s*border-box;/u,
+  /\.service-panel\s*\{\s*padding:\s*18rpx 20rpx 14rpx;[\s\S]{0,620}&__simple-head\s*\{[^}]*min-height:\s*88rpx;[^}]*padding:\s*0 12rpx 4rpx;[^}]*box-sizing:\s*border-box;/u,
   '常用服务卡片必须使用紧凑外壳，并为标题操作保留安全热区',
 )
 assert.match(
@@ -366,8 +378,8 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__more\s*\{[^}]*width:\s*88rpx;[^}]*height:\s*88rpx;/u,
-  '帖子卡片三个点必须提供足够大的触控热区',
+  /\.community-post__more\s*\{[^}]*width:\s*56rpx;[^}]*height:\s*44rpx;/u,
+  '帖子卡片三个点不应额外撑开布局',
 )
 assert.match(
   communityPostStyleSource,

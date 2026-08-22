@@ -108,10 +108,15 @@ for (const [name, color] of Object.entries(globalTextColorTokens)) {
   )
 }
 
-assert.match(
+assert.doesNotMatch(
   appStyle,
-  /font-family:\s*token\.\$font-family-sans;[^}]*font-size:\s*token\.\$font-size-body;[^}]*font-weight:\s*token\.\$font-weight-regular;[^}]*line-height:\s*token\.\$line-height-body;/u,
-  '全局默认文字必须使用系统字体与正文完整语义角色',
+  /font-family:\s*token\.\$font-family-sans;/u,
+  '页面根样式不应强制覆盖系统字体',
+)
+assert.doesNotMatch(
+  typographyStyle,
+  /@media\s*\(\s*max-width:\s*360px\s*\)/u,
+  '全局排版不应包含 360px 小屏字体断点',
 )
 assert.match(
   typographyStyle,

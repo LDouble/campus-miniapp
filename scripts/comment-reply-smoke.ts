@@ -366,6 +366,21 @@ assert.match(
 )
 assert.doesNotMatch(
   detailCommentsStyle,
+  /\.business-detail-composer__replying \{[^}]*min-height:\s*44rpx;/u,
+  '回复提示条不得使用全局 44rpx 最小热区',
+)
+assert.doesNotMatch(
+  detailCommentsStyle,
+  /\.business-detail-composer__replying text:last-child \{[^}]*min-height:\s*44rpx;/u,
+  '取消回复不得使用全局 44rpx 最小热区',
+)
+assert.match(
+  detailCommentsStyle,
+  /\.business-detail-composer__replying \{[^}]*padding: 0 8rpx 10rpx;[^}]*line-height: var\(--ousea-line-height-ui, 1\.4\);/u,
+  '回复提示条应保留适当上下间距并使用局部行高',
+)
+assert.doesNotMatch(
+  detailCommentsStyle,
   /\.business-detail-composer__replying text:last-child \{[^}]*--campus-danger/u,
   '取消回复不得使用危险红色',
 )

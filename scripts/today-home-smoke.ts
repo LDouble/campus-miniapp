@@ -48,8 +48,19 @@ assert.ok(
 )
 assert.ok(
   homeSource.includes('{coursePreview.items.map((item, index) => (')
-    && homeSource.includes('{todayCalendarEvents.map((event) => {'),
+    && homeSource.includes('{todayCalendarEvents.map((event, eventIndex) => {'),
   '首页日程必须继续聚合课程与推荐校历事件',
+)
+assert.ok(
+  homeSource.includes('const HOME_COURSE_PREVIEW_LIMIT = 8')
+    && homeSource.includes('const SCHEDULE_SCROLL_VISIBLE_ROWS = 3')
+    && homeSource.includes('const scheduleRowCount = coursePreview.items.length + todayCalendarEvents.length')
+    && homeSource.includes('const scheduleCanScroll = scheduleRowCount > SCHEDULE_SCROLL_VISIBLE_ROWS')
+    && homeSource.includes("className='schedule-card__timeline-scroll'")
+    && homeSource.includes("className='schedule-card__scroll'")
+    && homeSource.includes("className='schedule-card__scroll-cue'")
+    && homeSource.includes("ariaLabel='课表提醒可以上下滑动查看'"),
+  '首页课程超过可视范围时必须提供卡内滚动和无文字动效提示',
 )
 assert.ok(
   !homeSource.includes('课程、考试和推荐校历事件会汇总在这里'),

@@ -7,6 +7,7 @@ import Taro, {
 } from '@tarojs/taro'
 import {
   Image,
+  ScrollView,
   Swiper,
   SwiperItem,
   Text,
@@ -132,6 +133,9 @@ const homeFeatureFlags = {
   todayTask: false,
 } as const
 
+const HOME_COURSE_PREVIEW_LIMIT = 8
+const SCHEDULE_SCROLL_VISIBLE_ROWS = 3
+
 const quickServices = [
   {
     key: 'schedule',
@@ -255,6 +259,8 @@ const loadCachedCoursePreview = (
     academicStorage.getCustomCourses(),
     config,
     campusName,
+    new Date(),
+    HOME_COURSE_PREVIEW_LIMIT,
   )
 }
 
@@ -408,6 +414,7 @@ function Index() {
   const [bannerIndex, setBannerIndex] = useState(0)
   const homeFeedRequestSequence = useRef(0)
   const homeFeedLoadingMoreRef = useRef(false)
+  const homeHasShown = useRef(false)
   const homeBackTopVisibleRef = useRef(false)
   const headerCollapsed = useCollapsingHeader({
     triggerSelector: '.campus__eyebrow',
@@ -498,6 +505,8 @@ function Index() {
       academicStorage.getCustomCourses(),
       latestRuntimeConfig,
       selectedCampus,
+      new Date(),
+      HOME_COURSE_PREVIEW_LIMIT,
     ))
     if (account.ok) {
       setUsername(account.value.user.username)
@@ -582,6 +591,9 @@ function Index() {
       void Taro.reLaunch({ url: '/pages/account-cancellation/index?success=1' })
       return
     }
+    // 首页从详情返回时保留 Feed 分页和滚动位置，完整刷新交给下拉刷新。
+    if (homeHasShown.current) return
+    homeHasShown.current = true
     void loadHome()
   })
 
@@ -789,6 +801,14 @@ function Index() {
   const momentsLoading = homeFeedLoading
   const momentsError = homeFeedError && homeFeedItems.length === 0
   const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
+  const scheduleRowCount = coursePreview.items.length + todayCalendarEvents.length
+  const scheduleCanScroll = scheduleRowCount > SCHEDULE_SCROLL_VISIBLE_ROWS
+  const ongoingCourseIndex = coursePreview.items.findIndex((item) => item.status === 'ongoing')
+  const highlightedCourseIndex = ongoingCourseIndex >= 0
+    ? ongoingCourseIndex
+    : coursePreview.items.length > 0
+      ? 0
+      : -1
   const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
   const holidayCountdown = coursePreview.dayLabel === '假期'
     ? Math.max(1, Math.round(
@@ -867,6 +887,88 @@ function Index() {
       && !!normalizeWebViewUrl(runtimeBanner.action.value))
   )
 
+  const scheduleTimeline = (
+    <View className='schedule-card__timeline'>
+      <View className='schedule-card__timeline-line' />
+      {coursePreview.items.map((item, index) => (
+        <View
+          key={`${item.course.id}-${item.startsAt.getTime()}`}
+          className={[
+            'schedule-card__course-row',
+            index === highlightedCourseIndex
+              ? 'schedule-card__course-row--active'
+              : '',
+          ].filter(Boolean).join(' ')}
+          ariaRole='button'
+          ariaLabel={`查看课表：${item.course.name}`}
+          onClick={openSchedule}
+        >
+          <View className='schedule-card__timeline-marker'>
+            <View className='schedule-card__timeline-dot' />
+          </View>
+          <View className='schedule-card__course-copy'>
+            <Text className='schedule-card__course-name'>{item.course.name}</Text>
+            <View className='schedule-card__meta'>
+              <Text>第 {item.course.startSection}-{item.course.endSection} 节</Text>
+              <Text className='schedule-card__meta-divider'>·</Text>
+              <Image src={icons.location} mode='aspectFit' />
+              <Text>{item.course.location || '地点待定'}</Text>
+            </View>
+          </View>
+        </View>
+      ))}
+      {todayCalendarEvents.length > 0 && coursePreview.items.length > 0 && (
+        <View className='schedule-card__event-divider' />
+      )}
+      {todayCalendarEvents.map((event, eventIndex) => {
+        const reminder = calendarReminders.find((item) => item.event_id === event.id)
+        return (
+          <View
+            key={`calendar-${event.id}`}
+            className={[
+              'schedule-card__course-row',
+              'today-card__event-row',
+              eventIndex === 0 ? 'today-card__event-row--first' : '',
+              event.priority === 'important' ? 'today-card__event-row--important' : '',
+            ].filter(Boolean).join(' ')}
+            ariaRole='button'
+            ariaLabel={`查看校历：${event.title}`}
+            onClick={openCalendar}
+          >
+            <View className='schedule-card__timeline-marker'>
+              <View className='schedule-card__timeline-dot schedule-card__timeline-dot--event' />
+            </View>
+            <View className='schedule-card__course-copy'>
+              <View className='today-card__event-title-line'>
+                <Text className='schedule-card__course-name'>{event.title}</Text>
+                {event.priority === 'important' && <Text className='today-card__important'>重要</Text>}
+              </View>
+              <View className='today-card__event-date'>
+                <Text>{calendarEventDateLabel(event)}</Text>
+              </View>
+            </View>
+            {event.remindable && (
+              <View
+                className={[
+                  'today-card__reminder',
+                  reminder ? 'today-card__reminder--active' : '',
+                ].filter(Boolean).join(' ')}
+                ariaRole='button'
+                ariaLabel={reminder ? '取消提醒' : '设置提醒'}
+                onClick={(clickEvent) => {
+                  clickEvent.stopPropagation()
+                  void toggleCalendarReminder(event.id)
+                }}
+              >
+                {reminder ? `已设 ${reminder.advance_days} 天` : '提醒我'}
+              </View>
+            )}
+          </View>
+        )
+      })}
+    </View>
+  )
+
   return (
     <View className='campus'>
       <CustomNavbar
@@ -923,93 +1025,47 @@ function Index() {
 
         {(coursePreview.items.length > 0 || todayCalendarEvents.length > 0) ? (
           <View className='schedule-card__courses'>
-            {coursePreview.items.map((item, index) => (
+            <View className='schedule-card__timeline-scroll'>
+              {scheduleCanScroll ? (
+                <ScrollView
+                  className='schedule-card__scroll'
+                  scrollY
+                  enhanced
+                  showScrollbar={false}
+                >
+                  {scheduleTimeline}
+                </ScrollView>
+              ) : scheduleTimeline}
+              {scheduleCanScroll && (
+                <View
+                  className='schedule-card__scroll-cue'
+                  ariaRole='img'
+                  ariaLabel='课表提醒可以上下滑动查看'
+                >
+                  <Image
+                    className='schedule-card__scroll-cue-arrow schedule-card__scroll-cue-arrow--up'
+                    src={icons.arrow}
+                    mode='aspectFit'
+                  />
+                  <Image
+                    className='schedule-card__scroll-cue-arrow schedule-card__scroll-cue-arrow--down'
+                    src={icons.arrow}
+                    mode='aspectFit'
+                  />
+                </View>
+              )}
+            </View>
+            {coursePreview.hiddenCount > 0 && (
               <View
-                key={`${item.course.id}-${item.startsAt.getTime()}`}
-                className={[
-                  'schedule-card__course-row',
-                  item.status === 'ongoing'
-                    ? 'schedule-card__course-row--ongoing'
-                    : '',
-                ].filter(Boolean).join(' ')}
+                className='schedule-card__more'
                 ariaRole='button'
-                ariaLabel={`查看课表：${item.course.name}`}
+                ariaLabel={`查看剩余 ${coursePreview.hiddenCount} 节课程`}
                 onClick={openSchedule}
               >
-                <Text className='schedule-card__section'>
-                  第 {item.course.startSection}-{item.course.endSection} 节
-                </Text>
-                <View className='schedule-card__course-copy'>
-                  <Text className='schedule-card__course-name'>
-                    {item.course.name}
-                  </Text>
-                  <View className='schedule-card__meta'>
-                    <Image src={icons.location} mode='aspectFit' />
-                    <Text>{item.course.location || '地点待定'}</Text>
-                    {item.status === 'ongoing' && (
-                      <Text>· {item.statusText}</Text>
-                    )}
-                  </View>
-                </View>
-                {item.status === 'ongoing' && (
-                  <Text className='schedule-card__state'>上课中</Text>
-                )}
-                {item.status === 'upcoming'
-                  && coursePreview.dayLabel === '今天'
-                  && index === 0
-                  && (
-                    <Text className='schedule-card__state schedule-card__state--next'>
-                      下一节
-                    </Text>
-                  )}
+                <Text>还有 {coursePreview.hiddenCount} 节课程</Text>
+                <Image src={icons.arrow} mode='aspectFit' />
               </View>
-            ))}
-            {todayCalendarEvents.map((event) => {
-              const reminder = calendarReminders.find((item) => item.event_id === event.id)
-              return (
-                <View
-                  key={`calendar-${event.id}`}
-                  className={[
-                    'schedule-card__course-row',
-                    'today-card__event-row',
-                    event.priority === 'important' ? 'today-card__event-row--important' : '',
-                  ].filter(Boolean).join(' ')}
-                  ariaRole='button'
-                  ariaLabel={`查看校历：${event.title}`}
-                  onClick={openCalendar}
-                >
-                  <View className='today-card__event-date'>
-                    <Text>{calendarEventDateLabel(event)}</Text>
-                    <Text>{event.type === 'registration' ? '教务' : '校历'}</Text>
-                  </View>
-                  <View className='schedule-card__course-copy'>
-                    <View className='today-card__event-title-line'>
-                      <Text className='schedule-card__course-name'>{event.title}</Text>
-                      {event.priority === 'important' && <Text className='today-card__important'>重要</Text>}
-                    </View>
-                    <View className='schedule-card__meta'>
-                      <Text>{event.description || '查看校历详情'}</Text>
-                    </View>
-                  </View>
-                  {event.remindable && (
-                    <View
-                      className={[
-                        'today-card__reminder',
-                        reminder ? 'today-card__reminder--active' : '',
-                      ].filter(Boolean).join(' ')}
-                      ariaRole='button'
-                      ariaLabel={reminder ? '取消提醒' : '设置提醒'}
-                      onClick={(clickEvent) => {
-                        clickEvent.stopPropagation()
-                        void toggleCalendarReminder(event.id)
-                      }}
-                    >
-                      {reminder ? `已设 ${reminder.advance_days} 天` : '提醒我'}
-                    </View>
-                  )}
-                </View>
-              )
-            })}
+            )}
           </View>
         ) : (
           <View className='schedule-card__empty'>

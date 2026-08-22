@@ -171,9 +171,10 @@ assert.match(
   /& \.community-post__engagement\s*\{[^}]*background:\s*var\(--campus-surface-subtle,\s*#172033\);[^}]*box-shadow:\s*inset 0 0 0 1rpx var\(--campus-border,\s*#243244\);/u,
   '列表评论摘要应使用中性次级表面和暗色细边界',
 )
-assert.match(
+assert.doesNotMatch(
   darkModeStyle,
-  /& \.community-post__comment-previews\s*\{[^}]*border-top-color:\s*var\(--campus-border,\s*#243244\);/u,
+  /& \.community-post__comment-previews\s*\{[^}]*border-top(?:-color)?:/u,
+  '暗色评论摘要区域不应恢复二级评论上方的横线',
 )
 assert.match(
   darkModeStyle,
