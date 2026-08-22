@@ -47,7 +47,7 @@ export const loadApiEndpoints = (
     ),
     production: normalizeUrl(
       environment.TARO_APP_PRODUCTION_API_BASE_URL
-      || defaultProductionApiBaseUrl,
+      || (requireIsolation ? defaultProductionApiBaseUrl : legacy),
     ),
   }
 
