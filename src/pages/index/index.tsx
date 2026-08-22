@@ -124,7 +124,6 @@ const icons = {
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
-  campusCard: require('../../assets/icons/campus-card.svg'),
   campaign: require('../../assets/icons/campaign.svg'),
   arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
@@ -168,7 +167,6 @@ const quickServices = [
   { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
   { key: 'carpool', name: '找同行', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
   { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
-  { key: 'campus-card', name: '校园卡', icon: icons.campusCard, tone: 'blue', route: '/pages/campus-service/index?type=campus-card' },
   { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
 ]
 

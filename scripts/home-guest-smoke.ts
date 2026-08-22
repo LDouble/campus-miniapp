@@ -14,6 +14,18 @@ const homeSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.tsx'),
   'utf8',
 )
+const servicesSource = readFileSync(
+  resolve(__dirname, '../src/pages/services/index.tsx'),
+  'utf8',
+)
+const campusServiceSource = readFileSync(
+  resolve(__dirname, '../src/pages/campus-service/index.tsx'),
+  'utf8',
+)
+const campusServiceDetailSource = readFileSync(
+  resolve(__dirname, '../src/pages/campus-service/detail.tsx'),
+  'utf8',
+)
 const homeDataSource = readFileSync(
   resolve(__dirname, '../src/features/home/data.ts'),
   'utf8',
@@ -70,9 +82,15 @@ assert.ok(
   '首页常用服务必须只展示具有模块映射且运行时状态为 enabled 的入口',
 )
 assert.ok(
-  homeSource.includes("name: '校园卡'")
+  !homeSource.includes("key: 'campus-card'")
     && !serviceModuleKeysSource.includes("'campus-card'"),
-  '静态校园卡演示页可以保留，但没有真实模块协议前不得进入首页常用服务',
+  '校园卡功能屏蔽后不得进入首页常用服务',
+)
+assert.ok(
+  !servicesSource.includes("key: 'campus-card'")
+    && campusServiceSource.includes("options.type === 'campus-card'")
+    && campusServiceDetailSource.includes("options.type === 'campus-card'"),
+  '校园卡功能屏蔽后不得出现在全部服务，直达旧路由也必须回到服务页',
 )
 assert.ok(
   serviceModuleKeysSource.includes("'pass-rate': 'academic_statistics'")

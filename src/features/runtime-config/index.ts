@@ -203,7 +203,7 @@ export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
     {
       id: 'west-coast-guide-demo',
       title: '西海岸校区服务指南',
-      subtitle: '校车、空教室与校园卡服务一站直达',
+      subtitle: '校车、空教室与校园生活服务一站直达',
       image_url: '',
       campuses: ['西海岸校区'],
       action: {
