@@ -391,36 +391,31 @@ page {
 
 .profile-menu {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 152rpx));
-  column-gap: var(--ousea-space-2, 24rpx);
-  row-gap: var(--ousea-space-1, 16rpx);
-  justify-content: center;
-  padding: 0 0 20rpx;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8rpx 4rpx;
+  padding: 0 20rpx 20rpx;
   background: transparent;
 
   &__item {
     display: flex;
-    width: 152rpx;
-    box-sizing: border-box;
     min-width: 0;
-    min-height: 120rpx;
-    padding: 4rpx 8rpx;
+    width: auto;
+    height: 132rpx;
+    box-sizing: border-box;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-
-    // 收藏等新增入口不足一整行时保持九宫格的视觉居中。
-    &:last-child:nth-child(3n + 1) {
-      grid-column: 2;
-    }
+    border-radius: 28rpx;
+    transition: opacity 150ms ease, background-color 150ms ease;
 
     > text {
       max-width: 100%;
-      margin-top: 8rpx;
+      margin-top: 0;
       overflow: hidden;
-      color: var(--campus-text-body, var(--ousea-ink-700, #3a4759));
-      font-size: var(--ousea-font-size-label, 27rpx);
-      font-weight: var(--ousea-font-weight-medium, 500);
+      color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+      font-size: var(--ousea-font-size-caption, 24rpx);
+      font-weight: var(--ousea-font-weight-regular, 400);
+      line-height: 33rpx;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -429,17 +424,27 @@ page {
   // 功能入口统一使用 Ousea 蓝色单色图标，避免业务色同时抢占视觉层级。
   &__icon {
     display: flex;
-    width: 64rpx;
-    height: 64rpx;
+    width: 76rpx;
+    height: 76rpx;
+    margin-bottom: 8rpx;
     align-items: center;
     justify-content: center;
-    background: transparent;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    border: 2rpx solid var(--ousea-ocean-100, #e3effe);
+    border-radius: 24rpx;
+    box-shadow: none;
 
     image {
-      width: 46rpx;
-      height: 46rpx;
+      width: 44rpx;
+      height: 44rpx;
       filter: brightness(0) saturate(100%) invert(43%) sepia(94%) saturate(2378%) hue-rotate(204deg) brightness(97%) contrast(93%);
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-menu__item {
+    transition: none;
   }
 }
 
