@@ -128,6 +128,11 @@ assert.match(types, /export \{ favoriteDetailURL, favoriteResourceKey \} from '\
 const profile = source('../src/pages/profile/index.tsx')
 assert.match(profile, /收藏/u, '个人页提供收藏入口')
 assert.match(profile, /\/pages\/favorites\/index/u, '收藏入口指向收藏列表页')
+const profileStyle = source('../src/pages/profile/index.scss')
+assert.match(profileStyle, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*152rpx\)\)/u, '我的服务保留紧凑三列九宫格')
+assert.match(profileStyle, /column-gap:\s*var\(--ousea-space-2,\s*24rpx\)/u, '我的服务九宫格使用 token 间距')
+assert.match(profileStyle, /justify-content:\s*center/u, '我的服务九宫格整体居中')
+assert.match(profileStyle, /&:last-child:nth-child\(3n \+ 1\)\s*\{\s*grid-column:\s*2/u, '我的服务不满一行时最后入口居中')
 
 const appConfig = source('../src/app.config.ts')
 assert.match(appConfig, /root: 'pages\/favorites'/u, '收藏列表配置为分包页面')
