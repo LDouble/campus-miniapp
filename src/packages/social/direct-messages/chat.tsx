@@ -584,14 +584,16 @@ export default function DirectMessageChatPage() {
     }
   }
 
+  const imageInFlight = Boolean(selectedImage && selectedImage.status !== 'failed')
+
   const sendFromButton = () => {
-    if (!draft.trim() || selectedImage || sending || !conversationId) return
+    if (!draft.trim() || imageInFlight || sending || !conversationId) return
     requestWechatSubscriptionForModule('private_message')
     void send()
   }
 
   const changeStickerPickerOpen = (open: boolean) => {
-    if (open && selectedImageRef.current) {
+    if (open && selectedImageRef.current && selectedImageRef.current.status !== 'failed') {
       Taro.showToast({ title: '图片消息不能与表情混发', icon: 'none' })
       return
     }
@@ -607,7 +609,7 @@ export default function DirectMessageChatPage() {
   }
 
   const chooseImage = async () => {
-    if (selectedImageRef.current) return
+    if (selectedImageRef.current && selectedImageRef.current.status !== 'failed') return
     if (draft.trim()) {
       Taro.showToast({ title: '图片消息不能与文字混发，请先发送或清空文字', icon: 'none' })
       return
@@ -682,17 +684,14 @@ export default function DirectMessageChatPage() {
     ? '已注销用户'
     : conversation?.peer.nickname || '私信'
 
-  const canSend = Boolean(conversationId) && !sending && !selectedImage && Boolean(draft.trim())
+  const canSend = Boolean(conversationId) && !sending && !imageInFlight && Boolean(draft.trim())
   const pageClassName = [
     'direct-chat-page',
     stickerPickerOpen ? 'direct-chat-page--sticker-open' : '',
-    selectedImage ? 'direct-chat-page--image-selected' : '',
   ].filter(Boolean).join(' ')
 const contentBottomPadding = stickerPickerOpen
   ? '676rpx'
-  : selectedImage
-    ? '366rpx'
-    : '112rpx'
+  : '112rpx'
   const contentStyle = {
     paddingBottom: '0',
   }
@@ -953,7 +952,7 @@ const contentBottomPadding = stickerPickerOpen
       >
         <View className='direct-chat-composer__main'>
           <View className='direct-chat-composer__field'>
-            {selectedImage ? (
+            {imageInFlight ? (
               <Text className='direct-chat-composer__image-hint'>图片将单独发送</Text>
             ) : (
               <KeyboardSafeInput
@@ -1017,11 +1016,11 @@ const contentBottomPadding = stickerPickerOpen
             />
           </View>
           <View
-            className={selectedImage
+            className={imageInFlight
               ? 'direct-chat-composer__image-trigger direct-chat-composer__image-trigger--disabled'
               : 'direct-chat-composer__image-trigger'}
             ariaRole='button'
-            ariaLabel={selectedImage ? '图片正在自动发送，请稍候' : '选择图片'}
+            ariaLabel={imageInFlight ? '图片正在自动发送，请稍候' : '选择图片'}
             onClick={() => void chooseImage()}
           >
             <Image
@@ -1036,14 +1035,14 @@ const contentBottomPadding = stickerPickerOpen
               !canSend ? 'direct-chat-composer__send--disabled' : '',
             ].filter(Boolean).join(' ')}
             ariaRole='button'
-            ariaLabel={selectedImage
+            ariaLabel={imageInFlight
               ? '图片正在自动发送'
               : sending
               ? '正在发送消息'
               : !canSend ? '发送消息，当前不可用' : '发送消息'}
             onClick={sendFromButton}
           >
-            {selectedImage ? (sending ? '发送中' : '自动发送') : sending ? '发送中' : '发送'}
+            {imageInFlight ? (sending ? '发送中' : '自动发送') : sending ? '发送中' : '发送'}
           </View>
         </View>
         <StickerPicker

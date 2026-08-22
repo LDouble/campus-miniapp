@@ -26,10 +26,6 @@ page {
   padding-bottom: calc(676rpx + env(safe-area-inset-bottom));
 }
 
-.direct-chat-page--image-selected .direct-chat-page__content {
-  padding-bottom: calc(366rpx + env(safe-area-inset-bottom));
-}
-
 .direct-chat-state,
 .direct-chat-empty {
   display: flex;
