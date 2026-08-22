@@ -63,9 +63,9 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: var(--ousea-font-size-badge, 20rpx);
+  font-size: var(--ousea-font-size-badge, 10.48PX);
   font-weight: var(--ousea-font-weight-semibold, 600);
-  line-height: 1;
+  line-height: 10.48PX;
   white-space: nowrap;
   background: var(--campus-danger, #e5484d);
   border: 2rpx solid var(--campus-surface, #fff);
@@ -82,7 +82,7 @@
   display: block;
   width: 36rpx;
   height: 36rpx;
-  margin-bottom: 4rpx;
+  margin-bottom: 2.1PX;
   opacity: 0.9;
 }
 
@@ -101,17 +101,17 @@
   border-radius: 999rpx;
   background: #e98c70;
   color: #fff;
-  font-size: 17rpx;
+  font-size: 8.91PX;
   font-weight: 700;
-  line-height: 1;
+  line-height: 8.91PX;
 }
 
 .tab-bar__text {
   color: var(--campus-text-muted, #a6b2c2);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-  font-size: var(--campus-font-size-auxiliary, 24rpx);
+  font-size: var(--campus-font-size-auxiliary, 12.58PX);
   font-weight: var(--campus-font-weight-regular, 400);
-  line-height: var(--campus-line-height-auxiliary, 36rpx);
+  line-height: var(--campus-line-height-auxiliary, 18.86PX);
 }
 
 .tab-bar__item--active .tab-bar__text {

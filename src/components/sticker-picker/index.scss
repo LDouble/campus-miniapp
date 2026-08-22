@@ -38,16 +38,16 @@
   }
 
   &__section {
-    padding: 24rpx 28rpx 8rpx;
+    padding: 12.58PX 28rpx 4.19PX;
     box-sizing: border-box;
   }
 
   &__section-title {
     display: block;
-    margin-bottom: 18rpx;
+    margin-bottom: 9.43PX;
     color: var(--campus-text-secondary, #62748e);
-    font-size: 24rpx;
-    line-height: 1.4;
+    font-size: 12.58PX;
+    line-height: 17.61PX;
   }
 
   &__list,
@@ -55,11 +55,11 @@
     display: grid;
     grid-template-columns: repeat(7, 80rpx);
     justify-content: space-between;
-    row-gap: 16rpx;
+    row-gap: 8.38PX;
   }
 
   &__recent-list {
-    margin-bottom: 8rpx;
+    margin-bottom: 4.19PX;
   }
 
   &__item {

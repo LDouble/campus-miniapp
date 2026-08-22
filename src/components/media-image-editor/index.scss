@@ -1,6 +1,6 @@
 .media-image-editor {
-  padding: 22rpx;
-  margin-top: 16rpx;
+  padding: 11.53PX 22rpx;
+  margin-top: 8.38PX;
   background: var(--campus-surface, #fff);
   border: 2rpx solid var(--campus-border, #e4ebf5);
   border-radius: 28rpx;
@@ -10,7 +10,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 14rpx;
+    margin-bottom: 7.34PX;
 
     > view text {
       display: block;
@@ -18,22 +18,23 @@
 
     > view text:first-child {
       color: var(--campus-text-heading, #1d293d);
-      font-size: 28rpx;
+      font-size: 14.67PX;
       font-weight: 750;
     }
 
     > view text:last-child,
     > text {
-      margin-top: 4rpx;
+      margin-top: 2.1PX;
       color: var(--campus-text-muted, #90a1b9);
-      font-size: 22rpx;
+      font-size: 11.53PX;
     }
   }
 
   &__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
   }
 
   &__item,
@@ -62,9 +63,9 @@
     position: absolute;
     top: 8rpx;
     left: 8rpx;
-    padding: 4rpx 9rpx;
+    padding: 2.1PX 9rpx;
     color: #fff;
-    font-size: 20rpx;
+    font-size: 10.48PX;
     font-weight: 700;
     background: rgba(216, 117, 103, 0.9);
     border-radius: 12rpx;
@@ -80,13 +81,13 @@
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 32rpx;
-    line-height: 1;
+    font-size: 16.77PX;
+    line-height: 16.77PX;
     background: rgba(29, 41, 61, 0.72);
     border-radius: 50%;
     z-index: 3;
 
-    > text { line-height: 1; }
+    > text { line-height: 16.77PX; }
   }
 
   &__uploading {
@@ -94,13 +95,13 @@
     right: 0;
     bottom: 0;
     left: 0;
-    padding-top: 18rpx;
+    padding-top: 9.43PX;
     color: #fff;
-    font-size: 19rpx;
+    font-size: 9.96PX;
     text-align: center;
     background: linear-gradient(transparent, rgba(29, 41, 61, 0.78));
 
-    > text { display: block; padding-bottom: 8rpx; }
+    > text { display: block; padding-bottom: 4.19PX; }
   }
 
   &__progress {
@@ -122,7 +123,7 @@
     justify-content: center;
     color: #fff;
     padding: 0 12rpx;
-    font-size: 21rpx;
+    font-size: 11PX;
     font-weight: 700;
     background: rgba(111, 66, 59, 0.62);
     z-index: 2;
@@ -148,12 +149,12 @@
       height: 42rpx;
       align-items: center;
       justify-content: center;
-      font-size: 34rpx;
+      font-size: 17.82PX;
 
-      > text { line-height: 1; }
+      > text { line-height: 17.82PX; }
     }
 
-    > text { font-size: 19rpx; font-weight: 700; }
+    > text { font-size: 9.96PX; font-weight: 700; }
 
     .is-disabled { opacity: 0.32; }
   }
@@ -168,8 +169,8 @@
 
     border-style: dashed;
 
-    image { width: 34rpx; height: 34rpx; margin-bottom: 7rpx; }
-    text { font-size: 22rpx; font-weight: 700; }
-    text:last-child { margin-top: 3rpx; color: var(--campus-text-muted, #90a1b9); font-size: 18rpx; font-weight: 500; }
+    image { width: 34rpx; height: 34rpx; margin-bottom: 3.67PX; }
+    text { font-size: 11.53PX; font-weight: 700; }
+    text:last-child { margin-top: 1.57PX; color: var(--campus-text-muted, #90a1b9); font-size: 9.43PX; font-weight: 500; }
   }
 }

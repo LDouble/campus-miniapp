@@ -3,8 +3,9 @@
 .market-filter-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 204rpx;
-  gap: 12rpx;
-  padding: 2rpx 0 18rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
+  padding: 1.05PX 0 9.43PX;
   align-items: center;
 }
 
@@ -13,8 +14,9 @@
   min-width: 0;
   height: token.$touch-target-min;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2rpx;
-  padding: 3rpx;
+  row-gap: 1.05PX;
+  column-gap: 2rpx;
+  padding: 1.57PX 3rpx;
   box-sizing: border-box;
   background: token.$color-surface-subtle;
   border: 2rpx solid #e8edf4;
@@ -28,7 +30,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 600;
   border-radius: 12rpx;
   transition:
@@ -69,17 +71,17 @@
 
 .market-price-trigger__label text:first-child {
   color: token.$color-text-muted;
-  font-size: 22rpx;
-  line-height: 1.4;
+  font-size: 11.53PX;
+  line-height: 16.14PX;
 }
 
 .market-price-trigger__label text:last-child {
   max-width: 110rpx;
   overflow: hidden;
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 680;
-  line-height: 1.4;
+  line-height: 17.61PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -87,7 +89,7 @@
 .market-price-trigger__separator {
   margin: 0 6rpx;
   color: var(--campus-border, #cbd5e1);
-  font-size: 22rpx;
+  font-size: 11.53PX;
 }
 
 .market-price-trigger--active {
@@ -116,8 +118,9 @@
 .market-price-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: token.$space-2;
-  margin-top: 18rpx;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
+  margin-top: 9.43PX;
 }
 
 .market-price-option {
@@ -126,7 +129,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 650;
   background: token.$color-surface-subtle;
   border: 2rpx solid token.$color-border;
@@ -142,8 +145,9 @@
 .carpool-filter-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 204rpx;
-  gap: 12rpx;
-  padding: 2rpx 0 18rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
+  padding: 1.05PX 0 9.43PX;
   align-items: center;
 }
 
@@ -152,8 +156,9 @@
   min-width: 0;
   height: token.$touch-target-min;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2rpx;
-  padding: 3rpx;
+  row-gap: 1.05PX;
+  column-gap: 2rpx;
+  padding: 1.57PX 3rpx;
   box-sizing: border-box;
   background: token.$color-surface-subtle;
   border: 2rpx solid #e8edf4;
@@ -167,7 +172,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 600;
   border-radius: 12rpx;
   transition:
@@ -204,7 +209,7 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 680;
   white-space: nowrap;
 }
@@ -243,8 +248,9 @@
 .filter-quick-row {
   display: inline-flex;
   min-width: 100%;
-  gap: token.$space-2;
-  padding: 2rpx 0 18rpx;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
+  padding: 1.05PX 0 9.43PX;
   box-sizing: border-box;
 }
 
@@ -252,7 +258,7 @@
   width: 2rpx;
   height: 40rpx;
   flex: 0 0 2rpx;
-  margin: 24rpx 4rpx;
+  margin: 12.58PX 4rpx;
   background: token.$color-border-strong;
 }
 
@@ -265,7 +271,7 @@
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 600;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
@@ -304,11 +310,12 @@
 .filter-applied {
   display: flex;
   min-height: token.$touch-target-min;
-  margin-bottom: 18rpx;
+  margin-bottom: 9.43PX;
   align-items: center;
-  gap: token.$space-2;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .filter-applied__item {
@@ -316,7 +323,8 @@
   min-height: token.$touch-target-min;
   padding-left: 18rpx;
   align-items: center;
-  gap: token.$space-1;
+  row-gap: token.$space-block-1;
+  column-gap: token.$space-1;
   color: #9333ea;
   background: var(--campus-surface-marketplace, #faf5ff);
   border-radius: token.$radius-sm;
@@ -341,7 +349,7 @@
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-secondary;
-  font-size: 23rpx;
+  font-size: 12.05PX;
   font-weight: 650;
 }
 
@@ -351,16 +359,17 @@
 }
 
 .filter-sheet__content {
-  padding: 4rpx 28rpx 28rpx;
+  padding: 2.1PX 28rpx 14.67PX;
   box-sizing: border-box;
 }
 
 .filter-sheet__actions {
   display: grid;
   grid-template-columns: 190rpx minmax(0, 1fr);
-  gap: token.$space-2;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
   flex: none;
-  padding: 18rpx 28rpx calc(18rpx + env(safe-area-inset-bottom));
+  padding: 9.43PX 28rpx calc(18rpx + env(safe-area-inset-bottom));
   background: token.$color-surface;
   border-top: 2rpx solid token.$color-border;
 }
@@ -372,7 +381,7 @@
   align-items: center;
   justify-content: center;
   border-radius: token.$radius-md;
-  font-size: 27rpx;
+  font-size: 14.15PX;
   font-weight: 720;
 }
 
@@ -398,7 +407,7 @@
 }
 
 .filter-section {
-  padding: 28rpx 0 token.$space-3;
+  padding: 14.67PX 0 token.$space-block-3;
 }
 
 .filter-section + .filter-section {
@@ -412,29 +421,30 @@
 
 .filter-section__title {
   color: token.$color-text-heading;
-  font-size: 27rpx;
+  font-size: 14.15PX;
   font-weight: 720;
 }
 
 .filter-section__description {
-  margin-top: 6rpx;
+  margin-top: 3.14PX;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .price-range {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 48rpx minmax(0, 1fr);
-  gap: 10rpx;
-  margin-top: 20rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
+  margin-top: 10.48PX;
   align-items: flex-end;
 }
 
 .price-range > view > text {
   display: block;
-  margin-bottom: 10rpx;
+  margin-bottom: 5.24PX;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .price-range__divider {
@@ -443,7 +453,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-muted;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .filter-input,
@@ -462,7 +472,7 @@
 .filter-input > text {
   margin-right: token.$space-1;
   color: token.$color-marketplace;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 700;
 }
 
@@ -472,18 +482,18 @@
   height: 84rpx;
   flex: 1;
   color: token.$color-text-body;
-  font-size: 27rpx;
+  font-size: 14.15PX;
 }
 
 .filter-validation {
   display: block;
-  margin-top: 14rpx;
+  margin-top: 7.34PX;
   color: token.$color-danger;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .route-filter-fields {
-  margin-top: 20rpx;
+  margin-top: 10.48PX;
 }
 
 .route-filter-field > text {
@@ -495,14 +505,14 @@
   justify-content: center;
   flex: none;
   color: #008f82;
-  font-size: 23rpx;
+  font-size: 12.05PX;
   font-weight: 760;
   background: var(--campus-surface-success, #f0fdfa);
   border-radius: 50%;
 }
 
 .route-filter-field--destination {
-  margin-top: 20rpx;
+  margin-top: 10.48PX;
 }
 
 .route-filter-field--destination > text {
@@ -511,14 +521,14 @@
 }
 
 .route-filter-suggestions {
-  margin-top: 12rpx;
+  margin-top: 6.29PX;
 }
 
 .route-filter-suggestions > text {
   display: block;
-  margin-bottom: token.$space-1;
+  margin-bottom: token.$space-block-1;
   color: token.$color-text-secondary;
-  font-size: 22rpx;
+  font-size: 11.53PX;
   font-weight: 600;
 }
 
@@ -530,8 +540,9 @@
 .route-filter-suggestions__row {
   display: inline-flex;
   min-width: 100%;
-  gap: token.$space-2;
-  padding-bottom: 4rpx;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
+  padding-bottom: 2.1PX;
   box-sizing: border-box;
 }
 
@@ -543,7 +554,7 @@
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 600;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
@@ -566,19 +577,19 @@
 }
 
 .date-filter-picker {
-  margin-top: 18rpx;
+  margin-top: 9.43PX;
   justify-content: space-between;
 }
 
 .date-filter-picker text:first-child {
   color: token.$color-text-body;
-  font-size: 27rpx;
+  font-size: 14.15PX;
   font-weight: 650;
 }
 
 .date-filter-picker text:last-child {
   color: token.$color-primary;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 650;
 }
 
@@ -588,14 +599,15 @@
   align-items: center;
   justify-content: flex-end;
   color: token.$color-primary-strong;
-  font-size: 25rpx;
+  font-size: 13.1PX;
 }
 
 .seat-filter-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: token.$space-2;
-  margin-top: 18rpx;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
+  margin-top: 9.43PX;
 }
 
 .seat-filter-option {
@@ -604,7 +616,7 @@
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 650;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
@@ -621,16 +633,17 @@
   opacity: 0.72;
 }
 
-@media (max-width: 360px) {
+@media (max-width: 360PX) {
   .market-filter-toolbar,
   .carpool-filter-toolbar {
     grid-template-columns: minmax(0, 1fr) 196rpx;
-    gap: 8rpx;
+    row-gap: 4.19PX;
+    column-gap: 8rpx;
   }
 
   .market-intent-switch__item,
   .carpool-date-switch__item {
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 
   .market-price-trigger,
@@ -646,7 +659,8 @@
 
   .price-range {
     grid-template-columns: minmax(0, 1fr) 36rpx minmax(0, 1fr);
-    gap: 6rpx;
+    row-gap: 3.14PX;
+    column-gap: 6rpx;
   }
 
   .filter-input {

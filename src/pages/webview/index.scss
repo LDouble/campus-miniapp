@@ -4,7 +4,7 @@ page {
 
 .webview-error {
   min-height: 100vh;
-  padding: 220rpx 40rpx calc(80rpx + env(safe-area-inset-bottom));
+  padding: 115.28PX 40rpx calc(80rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   background:
     linear-gradient(180deg, var(--campus-surface-primary, #eff6ff) 0, rgba(239, 246, 255, 0) 460rpx),
@@ -14,13 +14,13 @@ page {
   &__mark {
     width: 92rpx;
     height: 92rpx;
-    margin: 0 auto 26rpx;
+    margin: 0 auto 13.62PX;
     border-radius: 26rpx;
     background: var(--campus-surface-primary, #eff6ff);
     color: var(--campus-primary, #2b7fff);
-    font-size: 44rpx;
+    font-size: 23.06PX;
     font-weight: 750;
-    line-height: 92rpx;
+    line-height: 48.21PX;
   }
 
   &__title,
@@ -31,29 +31,29 @@ page {
 
   &__title {
     color: var(--campus-text-heading, #1d293d);
-    font-size: 34rpx;
+    font-size: 17.82PX;
     font-weight: 800;
   }
 
   &__description {
-    margin-top: 14rpx;
+    margin-top: 7.34PX;
     overflow-wrap: anywhere;
     color: var(--campus-text-secondary, #62748e);
-    font-size: 24rpx;
-    line-height: 1.65;
+    font-size: 12.58PX;
+    line-height: 20.75PX;
   }
 
   &__action {
     display: flex;
     width: 100%;
     min-height: 78rpx;
-    margin: 38rpx auto 0;
+    margin: 19.91PX auto 0;
     align-items: center;
     justify-content: center;
     border-radius: 22rpx;
     background: var(--campus-primary, #2b7fff);
     color: #fff;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
     box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.18);
     transition: opacity 150ms ease;

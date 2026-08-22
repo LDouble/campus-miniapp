@@ -11,13 +11,13 @@ page {
 }
 
 .public-profile-page__content {
-  padding: 24rpx token.$space-4 calc(96rpx + env(safe-area-inset-bottom));
+  padding: 12.58PX token.$space-4 calc(96rpx + env(safe-area-inset-bottom));
 }
 
 .public-profile-hero {
   display: flex;
   min-height: 184rpx;
-  padding: token.$space-4;
+  padding: token.$space-block-4 token.$space-4;
   align-items: center;
   box-sizing: border-box;
   border: 2rpx solid token.$color-border;
@@ -53,26 +53,27 @@ page {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 12rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
 }
 
 .public-profile-hero__name-line > text:first-child {
   overflow: hidden;
   color: token.$color-text-heading;
-  font-size: 36rpx;
+  font-size: 18.86PX;
   font-weight: 760;
-  line-height: 1.35;
+  line-height: 25.47PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .public-profile-hero__name-line > text:last-child:not(:first-child) {
-  padding: 7rpx 14rpx;
+  padding: 3.67PX 14rpx;
   flex: none;
   border-radius: token.$radius-pill;
   background: token.$color-surface-primary;
   color: token.$color-primary-strong;
-  font-size: 20rpx;
+  font-size: 10.48PX;
   font-weight: 700;
 }
 
@@ -82,31 +83,31 @@ page {
 }
 
 .public-profile-hero__level {
-  margin-top: 8rpx;
+  margin-top: 4.19PX;
   color: token.$color-primary-strong;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 650;
 }
 
 .public-profile-hero__hint {
-  margin-top: 8rpx;
+  margin-top: 4.19PX;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
-  line-height: 1.5;
+  font-size: 12.58PX;
+  line-height: 18.86PX;
 }
 
 .public-profile-hero__message-action {
   display: inline-flex;
   min-height: 60rpx;
   padding: 0 20rpx;
-  margin-top: 16rpx;
+  margin-top: 8.38PX;
   align-items: center;
   justify-content: center;
   border: 2rpx solid token.$color-border-strong;
   border-radius: token.$radius-md;
   background: token.$color-surface-primary;
   color: token.$color-primary-strong;
-  font-size: 23rpx;
+  font-size: 12.05PX;
   font-weight: 720;
   transition: opacity token.$motion-press ease, transform token.$motion-press ease;
 }
@@ -119,9 +120,10 @@ page {
 .public-profile-tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8rpx;
-  margin-top: token.$space-3;
-  padding: 8rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
+  margin-top: token.$space-block-3;
+  padding: 4.19PX 8rpx;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-lg;
   background: token.$color-surface;
@@ -131,7 +133,7 @@ page {
   display: flex;
   min-width: 0;
   min-height: token.$touch-target-min;
-  padding: 8rpx 4rpx;
+  padding: 4.19PX 4rpx;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -142,14 +144,14 @@ page {
 }
 
 .public-profile-tab text:first-child {
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 650;
 }
 
 .public-profile-tab text:last-child {
-  margin-top: 3rpx;
+  margin-top: 1.57PX;
   color: token.$color-text-muted;
-  font-size: 21rpx;
+  font-size: 11PX;
   font-weight: 600;
 }
 
@@ -169,7 +171,7 @@ page {
 .public-profile-section-heading {
   display: flex;
   min-height: 96rpx;
-  padding: 28rpx 2rpx 16rpx;
+  padding: 14.67PX 2rpx 8.38PX;
   align-items: center;
   justify-content: space-between;
 }
@@ -184,15 +186,15 @@ page {
 
 .public-profile-section-heading > view text:first-child {
   color: token.$color-text-heading;
-  font-size: 30rpx;
+  font-size: 15.72PX;
   font-weight: 720;
 }
 
 .public-profile-section-heading > view text:last-child,
 .public-profile-section-heading > text {
-  margin-top: 4rpx;
+  margin-top: 2.1PX;
   color: token.$color-text-muted;
-  font-size: 22rpx;
+  font-size: 11.53PX;
 }
 
 .public-profile-feed,
@@ -200,7 +202,8 @@ page {
 .public-profile-page .carpool-list {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  row-gap: 10.48PX;
+  column-gap: 20rpx;
 }
 
 .public-profile-feed {
@@ -210,7 +213,7 @@ page {
 .public-profile-state {
   display: flex;
   min-height: 240rpx;
-  padding: token.$space-4;
+  padding: token.$space-block-4 token.$space-4;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -219,15 +222,15 @@ page {
   border-radius: token.$radius-xl;
   background: token.$color-surface;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
-  line-height: 1.6;
+  font-size: 12.58PX;
+  line-height: 20.12PX;
   text-align: center;
 }
 
 .public-profile-state > view {
   display: flex;
   min-height: token.$touch-target-min;
-  margin-top: token.$space-3;
+  margin-top: token.$space-block-3;
   padding: 0 token.$space-3;
   align-items: center;
   justify-content: center;
@@ -246,38 +249,38 @@ page {
 
 .public-profile-state--empty text:first-child {
   color: token.$color-text-heading;
-  font-size: 27rpx;
+  font-size: 14.15PX;
   font-weight: 700;
 }
 
 .public-profile-state--empty text:last-child {
-  margin-top: 8rpx;
+  margin-top: 4.19PX;
   color: token.$color-text-muted;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .public-profile-load-more {
   display: flex;
   min-height: token.$touch-target-min;
-  margin-top: token.$space-3;
+  margin-top: token.$space-block-3;
   align-items: center;
   justify-content: center;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-lg;
   background: token.$color-surface;
   color: token.$color-primary-strong;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 700;
 }
 
-@media (max-width: 360px) {
+@media (max-width: 360PX) {
   .public-profile-page__content {
     padding-right: 24rpx;
     padding-left: 24rpx;
   }
 
   .public-profile-hero {
-    padding: 24rpx;
+    padding: 12.58PX 24rpx;
   }
 
   .public-profile-hero__avatar {
@@ -290,11 +293,11 @@ page {
   }
 
   .public-profile-hero__name-line > text:first-child {
-    font-size: 32rpx;
+    font-size: 16.77PX;
   }
 
   .public-profile-tab text:first-child {
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 }
 

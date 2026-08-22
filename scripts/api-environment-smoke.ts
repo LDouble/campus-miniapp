@@ -14,15 +14,15 @@ const endpoints = {
   production: 'https://api.example.invalid',
 }
 
-assert.equal(resolveApiBaseUrl('develop', endpoints), 'https://review-api.example.invalid')
+assert.equal(resolveApiBaseUrl('develop', endpoints), 'https://api.example.invalid')
 assert.equal(resolveApiBaseUrl('trial', endpoints), 'https://api.example.invalid')
 assert.equal(resolveApiBaseUrl('release', endpoints), 'https://api.example.invalid')
-assert.equal(resolveApiBaseUrl('unexpected', endpoints), 'https://review-api.example.invalid')
+assert.equal(resolveApiBaseUrl('unexpected', endpoints), 'https://api.example.invalid')
 assert.equal(normalizeMiniProgramEnvVersion(undefined), 'develop')
 
 assert.deepEqual(loadApiEndpoints({ TARO_APP_API_BASE_URL: 'http://localhost:8080/' }, false), {
   review: 'http://localhost:8080',
-  production: 'http://localhost:8080',
+  production: defaultProductionApiBaseUrl,
 })
 assert.deepEqual(loadApiEndpoints({
   TARO_APP_PRODUCTION_API_BASE_URL: endpoints.production,

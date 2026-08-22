@@ -11,13 +11,13 @@ page {
 
   &__content {
     width: 100%;
-    padding: 80rpx 32rpx calc(64rpx + env(safe-area-inset-bottom));
+    padding: 41.92PX 32rpx calc(64rpx + env(safe-area-inset-bottom));
     box-sizing: border-box;
   }
 
   &__card {
     width: 100%;
-    padding: 58rpx 34rpx 36rpx;
+    padding: 30.39PX 34rpx 18.86PX;
     box-sizing: border-box;
     border: 1rpx solid var(--campus-border, #e8eef6);
     border-radius: 30rpx;
@@ -33,7 +33,8 @@ page {
     margin: 0 auto;
     align-items: center;
     justify-content: center;
-    gap: 7rpx;
+    row-gap: 3.67PX;
+    column-gap: 7rpx;
     border-radius: 26rpx;
     background: var(--campus-surface-primary, #eff6ff);
 
@@ -52,32 +53,32 @@ page {
   }
 
   &__title {
-    margin-top: 24rpx;
+    margin-top: 12.58PX;
     color: var(--campus-text-heading, #1d293d);
-    font-size: 34rpx;
+    font-size: 17.82PX;
     font-weight: 800;
   }
 
   &__message {
-    margin-top: 14rpx;
+    margin-top: 7.34PX;
     overflow-wrap: anywhere;
     color: var(--campus-text-secondary, #62748e);
-    font-size: 24rpx;
-    line-height: 1.65;
+    font-size: 12.58PX;
+    line-height: 20.75PX;
   }
 
   &__action {
     display: flex;
     width: 100%;
     min-height: 78rpx;
-    margin: 34rpx auto 0;
+    margin: 17.82PX auto 0;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
     border-radius: 22rpx;
     background: var(--campus-primary, #2b7fff);
     color: #fff;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
     box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.18);
     transition: opacity 150ms ease;

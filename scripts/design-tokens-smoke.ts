@@ -33,24 +33,33 @@ const expectedCssVariables: Record<string, string> = {
   '--ousea-danger-500': '#e5484d',
   '--ousea-danger-50': '#fdecec',
   '--ousea-like-500': '#f04e6b',
-  '--ousea-font-size-badge': '20rpx',
-  '--ousea-font-size-caption': '24rpx',
-  '--ousea-font-size-label': '27rpx',
-  '--ousea-font-size-comment': '30rpx',
-  '--ousea-font-size-body': '32rpx',
-  '--ousea-font-size-title': '33rpx',
+  '--ousea-font-size-badge': '10.48px',
+  '--ousea-font-size-caption': '12.58px',
+  '--ousea-font-size-label': '14.15px',
+  '--ousea-font-size-comment': '15.72px',
+  '--ousea-font-size-body': '16.77px',
+  '--ousea-font-size-title': '17.29px',
   '--ousea-font-weight-regular': '400',
   '--ousea-font-weight-medium': '500',
   '--ousea-font-weight-semibold': '600',
   '--ousea-font-weight-bold': '700',
-  '--ousea-line-height-post': '1.85',
-  '--ousea-line-height-comment': '1.65',
-  '--ousea-line-height-ui': '1.4',
+  '--ousea-line-height-badge': '14.67px',
+  '--ousea-line-height-caption': '17.61px',
+  '--ousea-line-height-label': '19.81px',
+  '--ousea-line-height-post': '31.02px',
+  '--ousea-line-height-comment': '25.94px',
+  '--ousea-line-height-title': '24.21px',
+  '--ousea-line-height-ui': '19.91px',
   '--ousea-space-1': '16rpx',
   '--ousea-space-2': '24rpx',
   '--ousea-space-3': '32rpx',
   '--ousea-space-4': '40rpx',
   '--ousea-space-5': '64rpx',
+  '--ousea-space-block-1': '8.38px',
+  '--ousea-space-block-2': '12.58px',
+  '--ousea-space-block-3': '16.77px',
+  '--ousea-space-block-4': '20.96px',
+  '--ousea-space-block-5': '33.54px',
   '--ousea-radius-pill': '999rpx',
   '--ousea-radius-card-sm': '24rpx',
   '--ousea-radius-card': '32rpx',
@@ -69,7 +78,7 @@ for (const [name, value] of Object.entries(expectedCssVariables)) {
   assert.equal(cssVariables[name], value, `${name} 必须与 Ousea / Global 源一致`)
   assert.match(
     sassTokens,
-    new RegExp(`\\$${name.slice(2)}:\\s*var\\(${name},\\s*${value.replace('.', '\\.')}\\);`, 'u'),
+    new RegExp(`\\$${name.slice(2)}:\\s*var\\(${name},\\s*${value.replace('.', '\\.')}\\);`, 'iu'),
     `${name} 必须有同名 Sass 映射`,
   )
 }
@@ -81,8 +90,8 @@ assert.equal(
 )
 assert.equal(
   (tokenJson.global.fontSize as Record<string, TokenLeaf>).label.value,
-  '13.5',
-  '设计 Token JSON 必须保留 13.5px label 精度',
+  '14.15PX',
+  '设计 Token JSON 必须保留 14.15PX label 精度',
 )
 assert.match(master, /Ousea \/ Global[^。]*唯一基础视觉源/u)
 assert.match(master, /不得新建[^。\n]*同义基础 Token/u)

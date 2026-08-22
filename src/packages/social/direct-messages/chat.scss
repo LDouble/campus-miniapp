@@ -18,7 +18,7 @@ page {
 
 .direct-chat-page__content {
   min-height: 100%;
-  padding: 24rpx 28rpx calc(112rpx + env(safe-area-inset-bottom));
+  padding: 12.58PX 28rpx calc(112rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 
@@ -34,7 +34,7 @@ page {
 .direct-chat-empty {
   display: flex;
   min-height: 320rpx;
-  padding: 32rpx;
+  padding: 16.77PX 32rpx;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -43,8 +43,8 @@ page {
   border-radius: token.$radius-xl;
   background: token.$color-surface;
   color: token.$color-text-secondary;
-  font-size: 26rpx;
-  line-height: 1.6;
+  font-size: 13.62PX;
+  line-height: 21.8PX;
   text-align: center;
 }
 
@@ -52,7 +52,7 @@ page {
   display: flex;
   min-height: 76rpx;
   padding: 0 26rpx;
-  margin-top: 20rpx;
+  margin-top: 10.48PX;
   align-items: center;
   justify-content: center;
   border-radius: token.$radius-md;
@@ -68,26 +68,26 @@ page {
 
 .direct-chat-empty text:first-child {
   color: token.$color-text-heading;
-  font-size: 30rpx;
+  font-size: 15.72PX;
   font-weight: 740;
 }
 
 .direct-chat-empty text:last-child {
-  margin-top: 8rpx;
+  margin-top: 4.19PX;
 }
 
 .direct-chat-history {
   min-height: 60rpx;
-  padding: 10rpx 0 18rpx;
+  padding: 5.24PX 0 9.43PX;
   color: token.$color-text-muted;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   text-align: center;
 }
 
 .direct-chat-message {
   display: flex;
   max-width: 82%;
-  margin: 16rpx 0;
+  margin: 8.38PX 0;
   flex-direction: column;
   align-items: flex-start;
 }
@@ -99,13 +99,13 @@ page {
 
 .direct-chat-message__content {
   display: block;
-  padding: 20rpx 24rpx;
+  padding: 10.48PX 24rpx;
   border: 2rpx solid token.$color-border;
   border-radius: 26rpx 26rpx 26rpx 8rpx;
   background: token.$color-surface;
   color: token.$color-text-body;
-  font-size: 30rpx;
-  line-height: 1.55;
+  font-size: 15.72PX;
+  line-height: 24.37PX;
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -152,7 +152,7 @@ page {
   display: flex;
   width: 254rpx;
   min-height: 180rpx;
-  padding: 22rpx;
+  padding: 11.53PX 22rpx;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -161,8 +161,8 @@ page {
   border-radius: 26rpx 26rpx 26rpx 8rpx;
   background: token.$color-surface-subtle;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
-  line-height: 1.55;
+  font-size: 12.58PX;
+  line-height: 19.49PX;
 }
 
 .direct-chat-message--own .direct-chat-message__image-fallback {
@@ -171,9 +171,9 @@ page {
 }
 
 .direct-chat-message__image-fallback text:last-child {
-  margin-top: 6rpx;
+  margin-top: 3.14PX;
   color: token.$color-text-muted;
-  font-size: 22rpx;
+  font-size: 11.53PX;
 }
 
 .direct-chat-message__image-fallback--pressed {
@@ -181,10 +181,10 @@ page {
 }
 
 .direct-chat-message__time {
-  margin: 7rpx 8rpx 0;
+  margin: 3.67PX 8rpx 0;
   color: token.$color-text-muted;
-  font-size: 22rpx;
-  line-height: 1.4;
+  font-size: 11.53PX;
+  line-height: 16.14PX;
 }
 
 .direct-chat-composer {
@@ -194,7 +194,7 @@ page {
   z-index: 40;
   display: flex;
   min-height: 116rpx;
-  padding: 14rpx 28rpx calc(14rpx + env(safe-area-inset-bottom));
+  padding: 7.34PX 28rpx calc(14rpx + env(safe-area-inset-bottom));
   flex-direction: column;
   box-sizing: border-box;
   border-top: 2rpx solid token.$color-border;
@@ -212,8 +212,8 @@ page {
 .direct-chat-composer__image-draft {
   display: flex;
   min-height: 122rpx;
-  padding: 12rpx;
-  margin-bottom: 12rpx;
+  padding: 6.29PX 12rpx;
+  margin-bottom: 6.29PX;
   align-items: center;
   box-sizing: border-box;
   border: 2rpx solid token.$color-border;
@@ -236,8 +236,8 @@ page {
   flex: 1;
   align-items: center;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
-  line-height: 1.45;
+  font-size: 12.58PX;
+  line-height: 18.24PX;
 }
 
 .direct-chat-composer__image-meta > text {
@@ -258,7 +258,7 @@ page {
   justify-content: center;
   border-radius: 16rpx;
   color: token.$color-primary-strong;
-  font-size: 22rpx;
+  font-size: 11.53PX;
   font-weight: 680;
 }
 
@@ -288,12 +288,12 @@ page {
   width: 100%;
   height: 84rpx;
   color: token.$color-text-body;
-  font-size: 28rpx;
+  font-size: 14.67PX;
 }
 
 .direct-chat-composer__image-hint {
   color: token.$color-text-secondary;
-  font-size: 28rpx;
+  font-size: 14.67PX;
 }
 
 .direct-chat-composer__placeholder {
@@ -365,7 +365,7 @@ page {
   border-radius: token.$radius-md;
   background: token.$color-primary;
   color: token.$color-on-accent;
-  font-size: 26rpx;
+  font-size: 13.62PX;
   font-weight: 740;
   transition: opacity 120ms ease, transform 120ms ease;
 }
@@ -383,7 +383,7 @@ page {
 
 .direct-chat-sticker-picker--open {
   display: block;
-  margin-top: 12rpx;
+  margin-top: 6.29PX;
 }
 
 .direct-chat-sticker-picker .sticker-picker__trigger {
@@ -424,7 +424,7 @@ page {
 }
 
 .direct-chat-page__content {
-  padding-top: var(--ousea-space-1, 16rpx);
+  padding-top: var(--ousea-space-block-1, 8.38PX);
   padding-right: var(--ousea-space-3, 32rpx);
   padding-left: var(--ousea-space-3, 32rpx);
 }
@@ -432,12 +432,12 @@ page {
 .direct-chat-time-divider {
   display: flex;
   min-height: 52rpx;
-  padding: 20rpx 0 12rpx;
+  padding: 10.48PX 0 6.29PX;
   align-items: center;
   justify-content: center;
   color: token.$color-text-muted;
-  font-size: var(--ousea-font-size-caption, 24rpx);
-  line-height: var(--ousea-line-height-ui, 1.4);
+  font-size: var(--ousea-font-size-caption, 12.58PX);
+  line-height: var(--ousea-line-height-ui, 19.91PX);
 }
 
 .direct-chat-message-group {
@@ -460,10 +460,11 @@ page {
   display: flex;
   width: 100%;
   max-width: none;
-  margin: 0 0 20rpx;
+  margin: 0 0 10.48PX;
   flex-direction: row;
   align-items: flex-start;
-  gap: var(--ousea-space-1, 16rpx);
+  row-gap: var(--ousea-space-block-1, 8.38PX);
+  column-gap: var(--ousea-space-1, 16rpx);
 }
 
 .direct-chat-message--own {
@@ -476,7 +477,7 @@ page {
 .direct-chat-message__avatar {
   width: 72rpx;
   height: 72rpx;
-  margin-top: 2rpx;
+  margin-top: 1.05PX;
   border-radius: 16rpx;
 }
 
@@ -495,13 +496,13 @@ page {
 
 .direct-chat-message__content {
   max-width: 100%;
-  padding: 18rpx 20rpx;
+  padding: 9.43PX 20rpx;
   border: 0;
   border-radius: 20rpx 20rpx 20rpx 6rpx;
   background: token.$color-surface;
   color: token.$color-text-body;
-  font-size: var(--ousea-font-size-comment, 30rpx);
-  line-height: var(--ousea-line-height-comment, 1.65);
+  font-size: var(--ousea-font-size-comment, 15.72PX);
+  line-height: var(--ousea-line-height-comment, 25.94PX);
   box-shadow: none;
 }
 
@@ -542,7 +543,7 @@ page {
 
 .direct-chat-composer {
   min-height: 104rpx;
-  padding: 10rpx var(--ousea-space-2, 24rpx) calc(10rpx + env(safe-area-inset-bottom));
+  padding: 5.24PX var(--ousea-space-2, 24rpx) calc(10rpx + env(safe-area-inset-bottom));
   border-top: 1rpx solid token.$color-border;
   background: token.$color-surface;
   box-shadow: none;
@@ -570,7 +571,7 @@ page {
   min-height: 80rpx;
   border-radius: token.$radius-md;
   background: token.$color-primary;
-  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-size: var(--ousea-font-size-caption, 12.58PX);
 }
 
 .direct-chat-composer__image-draft {

@@ -34,23 +34,23 @@
   &__content {
     position: relative;
     z-index: 1;
-    padding: 24rpx 28rpx calc(68rpx + env(safe-area-inset-bottom));
+    padding: 12.58PX 28rpx calc(68rpx + env(safe-area-inset-bottom));
   }
 
   &__heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 34rpx 4rpx 18rpx;
+    margin: 17.82PX 4rpx 9.43PX;
 
     text:first-child {
-      font-size: 30rpx;
+      font-size: 15.72PX;
       font-weight: 720;
       color: var(--campus-text-heading, #21465c);
     }
 
     text:last-child {
-      font-size: 23rpx;
+      font-size: 12.05PX;
       color: var(--campus-text-muted, #809693);
     }
   }
@@ -124,7 +124,8 @@
 }
 
 .statistics-courses__content { padding-bottom: calc(88rpx + env(safe-area-inset-bottom)); }
-.statistics-courses__heading { min-width: 0; gap: 16rpx; }
+.statistics-courses__heading { min-width: 0; row-gap: 8.38PX;
+ column-gap: 16rpx; }
 .statistics-courses__heading text:first-child { min-width: 0; overflow: hidden; color: var(--campus-text-heading, #1d293d); text-overflow: ellipsis; white-space: nowrap; }
 .statistics-courses__heading text:last-child { flex: none; color: var(--campus-text-muted, #90a1b9); white-space: nowrap; }
 
@@ -142,7 +143,8 @@
   background: var(--campus-surface, #fff);
   box-shadow: 0 7rpx 22rpx rgba(15, 23, 42, .04);
 
-  &__head { gap: 16rpx; }
+  &__head { row-gap: 8.38PX;
+ column-gap: 16rpx; }
   &__name { display: -webkit-box; color: var(--campus-text-heading, #1d293d); overflow-wrap: anywhere; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   &__code { overflow: hidden; color: var(--campus-text-muted, #90a1b9); text-overflow: ellipsis; white-space: nowrap; }
   &__rate { min-width: 108rpx; }
@@ -190,7 +192,8 @@
 
 .statistics-search {
   display: flex;
-  gap: 16rpx;
+  row-gap: 8.38PX;
+  column-gap: 16rpx;
   align-items: center;
 
   &__field {
@@ -200,7 +203,8 @@
     height: 88rpx;
     padding: 0 22rpx;
     align-items: center;
-    gap: 14rpx;
+    row-gap: 7.34PX;
+    column-gap: 14rpx;
     border: 2rpx solid rgba(255, 255, 255, 0.96);
     border-radius: 24rpx;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
@@ -219,7 +223,7 @@
       flex: 1;
       min-width: 0;
       height: 88rpx;
-      font-size: 25rpx;
+      font-size: 13.1PX;
       color: var(--campus-text-body, #31515b);
     }
   }
@@ -230,8 +234,8 @@
 
   &__clear {
     flex: none;
-    padding: 16rpx 0 16rpx 14rpx;
-    font-size: 23rpx;
+    padding: 8.38PX 0 8.38PX 14rpx;
+    font-size: 12.05PX;
     color: var(--campus-text-muted, #71817f);
   }
 
@@ -245,7 +249,7 @@
     border-radius: 24rpx;
     background: linear-gradient(135deg, #55b7bd, #469cae 62%, #e98c70);
     box-shadow: 8rpx 12rpx 24rpx rgba(70, 156, 174, 0.18);
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 650;
     color: #fff;
 
@@ -268,8 +272,9 @@
 }
 
 .statistics-courses-state {
-  gap: 20rpx;
-  font-size: 24rpx;
+  row-gap: 10.48PX;
+  column-gap: 20rpx;
+  font-size: 12.58PX;
 
   &__loader {
     width: 42rpx;
@@ -289,24 +294,24 @@
   padding: 0 54rpx;
 
   &__title {
-    font-size: 29rpx;
+    font-size: 15.2PX;
     font-weight: 720;
     color: var(--campus-text-heading, #294653);
   }
 
   &__copy {
-    margin-top: 12rpx;
-    font-size: 25rpx;
-    line-height: 1.6;
+    margin-top: 6.29PX;
+    font-size: 13.1PX;
+    line-height: 20.96PX;
     color: var(--campus-text-muted, #809693);
   }
 
   &__action {
-    margin-top: 26rpx;
-    padding: 18rpx 34rpx;
+    margin-top: 13.62PX;
+    padding: 9.43PX 34rpx;
     border-radius: 22rpx;
     background: #e2f3ee;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 650;
     color: #469cae;
   }
@@ -315,18 +320,19 @@
 .statistics-course-list {
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+  row-gap: 9.43PX;
+  column-gap: 18rpx;
 
   &__footer {
-    padding: 20rpx 0 8rpx;
-    font-size: 23rpx;
+    padding: 10.48PX 0 4.19PX;
+    font-size: 12.05PX;
     color: #8a9997;
     text-align: center;
   }
 }
 
 .statistics-course-card {
-  padding: 26rpx 28rpx 24rpx;
+  padding: 13.62PX 28rpx 12.58PX;
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 32rpx;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
@@ -344,7 +350,8 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 24rpx;
+    row-gap: 12.58PX;
+    column-gap: 24rpx;
   }
 
   &__identity {
@@ -352,21 +359,22 @@
     min-width: 0;
     flex: 1;
     flex-direction: column;
-    gap: 8rpx;
+    row-gap: 4.19PX;
+    column-gap: 8rpx;
   }
 
   &__name {
     overflow: hidden;
-    font-size: 29rpx;
+    font-size: 15.2PX;
     font-weight: 720;
-    line-height: 1.45;
+    line-height: 22.04PX;
     color: var(--campus-text-heading, #21465c);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__code {
-    font-size: 23rpx;
+    font-size: 12.05PX;
     color: var(--campus-text-muted, #809693);
   }
 
@@ -377,15 +385,15 @@
     flex-direction: column;
 
     text:first-child {
-      font-size: 38rpx;
+      font-size: 19.91PX;
       font-weight: 760;
-      line-height: 1.1;
+      line-height: 21.9PX;
       color: #469cae;
     }
 
     text:last-child {
-      margin-top: 7rpx;
-      font-size: 21rpx;
+      margin-top: 3.67PX;
+      font-size: 11PX;
       color: var(--campus-text-muted, #809693);
     }
   }
@@ -393,25 +401,27 @@
   &__metrics {
     position: relative;
     display: flex;
-    margin-top: 24rpx;
-    padding-top: 22rpx;
+    margin-top: 12.58PX;
+    padding-top: 11.53PX;
     align-items: flex-end;
-    gap: 38rpx;
+    row-gap: 19.91PX;
+    column-gap: 38rpx;
     border-top: 2rpx solid rgba(83, 133, 127, 0.08);
 
     > view {
       display: flex;
       flex-direction: column;
-      gap: 5rpx;
+      row-gap: 2.62PX;
+      column-gap: 5rpx;
 
       text:first-child {
-        font-size: 25rpx;
+        font-size: 13.1PX;
         font-weight: 680;
         color: var(--campus-text-body, #31515b);
       }
 
       text:last-child {
-        font-size: 21rpx;
+        font-size: 11PX;
         color: #8a9997;
       }
     }
@@ -419,9 +429,9 @@
 
   &__confidence {
     margin-left: auto;
-    padding: 8rpx 14rpx;
+    padding: 4.19PX 14rpx;
     border-radius: 16rpx;
-    font-size: 21rpx;
+    font-size: 11PX;
     color: #53857f;
     background: #e9f5f2;
 

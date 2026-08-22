@@ -3,8 +3,8 @@
   display: flex;
   width: 100%;
   min-height: 0;
-  padding: 28rpx;
-  margin: 20rpx 0;
+  padding: 14.67PX 28rpx;
+  margin: 10.48PX 0;
   align-items: stretch;
   flex-direction: column;
   color: var(--campus-text-body, #3a4759);
@@ -18,7 +18,8 @@
     display: flex;
     min-width: 0;
     align-items: flex-start;
-    gap: 16rpx;
+    row-gap: 8.38PX;
+    column-gap: 16rpx;
   }
 
   &__mark {
@@ -29,9 +30,9 @@
     justify-content: center;
     flex: none;
     color: var(--campus-primary-strong, #1d5fd6);
-    font-size: var(--ousea-font-size-label, 27rpx);
+    font-size: var(--ousea-font-size-label, 14.15PX);
     font-weight: var(--ousea-font-weight-bold, 700);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
     background: var(--campus-surface-primary, #f2f7fe);
     border: 1rpx solid var(--campus-border-strong, #e3effe);
     border-radius: 50%;
@@ -40,23 +41,23 @@
   &__heading-copy {
     min-width: 0;
     flex: 1;
-    padding-top: 2rpx;
+    padding-top: 1.05PX;
   }
 
   &__title {
     display: block;
     color: var(--campus-text-heading, #1a2333);
-    font-size: var(--ousea-font-size-title, 33rpx);
+    font-size: var(--ousea-font-size-title, 17.29PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
   }
 
   &__copy {
     display: block;
-    margin-top: 8rpx;
+    margin-top: 4.19PX;
     color: var(--campus-text-secondary, #6b7a90);
-    font-size: var(--ousea-font-size-caption, 24rpx);
-    line-height: var(--ousea-line-height-comment, 1.65);
+    font-size: var(--ousea-font-size-caption, 12.58PX);
+    line-height: var(--ousea-line-height-comment, 25.94PX);
   }
 
   &__action {
@@ -65,13 +66,13 @@
     min-width: 0;
     min-height: 88rpx;
     padding: 0 24rpx;
-    margin-top: 24rpx;
+    margin-top: 12.58PX;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: var(--ousea-font-size-label, 27rpx);
+    font-size: var(--ousea-font-size-label, 14.15PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
     background: var(--campus-primary, #2b7aef);
     border: 0;
     border-radius: var(--ousea-radius-card-sm, 24rpx);

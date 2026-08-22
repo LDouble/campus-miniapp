@@ -98,19 +98,19 @@
   &__title {
     max-width: 100%;
     overflow: hidden;
-    font-size: 30rpx;
+    font-size: 15.72PX;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 18.86PX;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__subtitle {
     max-width: 100%;
-    margin-top: 3rpx;
+    margin-top: 1.57PX;
     overflow: hidden;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 23rpx;
+    font-size: 12.05PX;
     letter-spacing: 1rpx;
     text-overflow: ellipsis;
     white-space: nowrap;

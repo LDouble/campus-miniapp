@@ -12,12 +12,12 @@ page {
     var(--campus-page, #f4f7fb);
 
   &__content {
-    padding: 70rpx 32rpx 0;
+    padding: 36.68PX 32rpx 0;
   }
 
   &__card {
     width: 100%;
-    padding: 58rpx 34rpx 38rpx;
+    padding: 30.39PX 34rpx 19.91PX;
     box-sizing: border-box;
     border: 1rpx solid var(--campus-border, #e8eef6);
     border-radius: 30rpx;
@@ -36,9 +36,9 @@ page {
     border-radius: 26rpx;
     background: linear-gradient(135deg, var(--campus-primary, #2b7fff), #00b8e6);
     color: #fff;
-    font-size: 42rpx;
+    font-size: 22.01PX;
     font-weight: 600;
-    line-height: 1;
+    line-height: 22.01PX;
     box-shadow: 0 9rpx 20rpx rgba(43, 127, 255, 0.2);
   }
 
@@ -50,19 +50,19 @@ page {
   }
 
   &__title {
-    margin-top: 24rpx;
+    margin-top: 12.58PX;
     overflow-wrap: anywhere;
     color: var(--campus-text-heading, #1d293d);
-    font-size: 34rpx;
+    font-size: 17.82PX;
     font-weight: 800;
   }
 
   &__message {
-    margin-top: 14rpx;
+    margin-top: 7.34PX;
     overflow-wrap: anywhere;
     color: var(--campus-text-secondary, #62748e);
-    font-size: 24rpx;
-    line-height: 1.65;
+    font-size: 12.58PX;
+    line-height: 20.75PX;
   }
 
   &__action {
@@ -70,7 +70,7 @@ page {
     width: 100%;
     min-height: 78rpx;
     padding: 0 22rpx;
-    margin-top: 34rpx;
+    margin-top: 17.82PX;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
@@ -78,7 +78,7 @@ page {
     border-radius: 22rpx;
     background: var(--campus-primary, #2b7fff);
     color: #fff;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
     box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.18);
     transition: opacity 150ms ease;
@@ -89,11 +89,11 @@ page {
   }
 
   &__hint {
-    margin-top: 18rpx;
+    margin-top: 9.43PX;
     overflow-wrap: anywhere;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 23rpx;
-    line-height: 1.5;
+    font-size: 12.05PX;
+    line-height: 18.08PX;
   }
 }
 

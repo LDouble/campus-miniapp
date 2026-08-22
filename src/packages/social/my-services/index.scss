@@ -11,7 +11,7 @@ page {
 
   &__content {
     width: 100%;
-    padding: 20rpx 24rpx calc(64rpx + env(safe-area-inset-bottom));
+    padding: 10.48PX 24rpx calc(64rpx + env(safe-area-inset-bottom));
     box-sizing: border-box;
   }
 
@@ -26,12 +26,13 @@ page {
 .my-services-hero {
   display: flex;
   min-height: 142rpx;
-  padding: 24rpx;
-  margin-bottom: 18rpx;
+  padding: 12.58PX 24rpx;
+  margin-bottom: 9.43PX;
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  gap: 24rpx;
+  row-gap: 12.58PX;
+  column-gap: 24rpx;
   border: 1rpx solid var(--campus-border, #e8eef6);
   border-radius: 28rpx;
   background:
@@ -58,25 +59,25 @@ page {
 
 .my-services-hero__eyebrow {
   color: var(--campus-primary, #2b7fff);
-  font-size: 20rpx;
+  font-size: 10.48PX;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 12.58PX;
   letter-spacing: 1.4rpx;
 }
 
 .my-services-hero__title {
-  margin-top: 8rpx;
+  margin-top: 4.19PX;
   color: var(--campus-text-heading, #1d293d);
-  font-size: 32rpx;
+  font-size: 16.77PX;
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 20.96PX;
 }
 
 .my-services-hero__summary {
-  margin-top: 8rpx;
+  margin-top: 4.19PX;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 24rpx;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
 }
 
 .my-services-hero__publish {
@@ -88,12 +89,13 @@ page {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
   border: 1rpx solid rgba(255, 255, 255, 0.78);
   border-radius: 22rpx;
   background: linear-gradient(100deg, var(--campus-primary, #2b7fff), #00b8e6);
   color: #fff;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 750;
   box-shadow: 0 8rpx 18rpx rgba(43, 127, 255, 0.2);
   transition: opacity 160ms ease;
@@ -133,7 +135,7 @@ page {
 
 .my-services-tabs {
   width: 100%;
-  margin-bottom: 12rpx;
+  margin-bottom: 6.29PX;
   white-space: nowrap;
 }
 
@@ -141,9 +143,10 @@ page {
   display: flex;
   width: 100%;
   min-width: 100%;
-  padding: 6rpx;
+  padding: 3.14PX 6rpx;
   box-sizing: border-box;
-  gap: 4rpx;
+  row-gap: 2.1PX;
+  column-gap: 4rpx;
   border: 1rpx solid rgba(226, 232, 240, 0.72);
   border-radius: 999rpx;
   background: rgba(241, 245, 249, 0.86);
@@ -160,7 +163,7 @@ page {
   box-sizing: border-box;
   border-radius: 999rpx;
   color: var(--campus-text-secondary, #62748e);
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 700;
   transition: opacity 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
@@ -178,20 +181,21 @@ page {
 
 .my-services-filter-scroll {
   width: 100%;
-  margin-bottom: 12rpx;
+  margin-bottom: 6.29PX;
   white-space: nowrap;
 }
 
 .my-services-filter-scroll--secondary {
-  margin-top: -2rpx;
+  margin-top: -1.05PX;
 }
 
 .my-services-filters {
   display: inline-flex;
   min-width: 100%;
-  padding: 2rpx 0;
+  padding: 1.05PX 0;
   box-sizing: border-box;
-  gap: 8rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
 }
 
 .my-services-filter {
@@ -207,7 +211,7 @@ page {
   border-radius: 999rpx;
   background: transparent;
   color: var(--campus-text-secondary, #62748e);
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 650;
   transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
 }
@@ -228,10 +232,11 @@ page {
   width: 100%;
   min-height: 76rpx;
   padding: 0 20rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 8.38PX;
   align-items: center;
   box-sizing: border-box;
-  gap: 14rpx;
+  row-gap: 7.34PX;
+  column-gap: 14rpx;
   border: 1rpx solid var(--campus-border, #e8eef6);
   border-radius: 22rpx;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
@@ -242,7 +247,7 @@ page {
     height: 72rpx;
     flex: 1;
     color: var(--campus-text-body, #314158);
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 }
 
@@ -270,18 +275,18 @@ page {
 }
 
 .my-services-search__clear {
-  padding: 20rpx 0 20rpx 14rpx;
+  padding: 10.48PX 0 10.48PX 14rpx;
   flex: none;
   color: var(--campus-primary, #2b7fff);
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 650;
 }
 
 .my-record-card {
   position: relative;
   width: 100%;
-  padding: 24rpx;
-  margin-bottom: 16rpx;
+  padding: 12.58PX 24rpx;
+  margin-bottom: 8.38PX;
   box-sizing: border-box;
   border: 1rpx solid var(--campus-border, #edf2f7);
   border-radius: 26rpx;
@@ -300,19 +305,20 @@ page {
   min-width: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 12rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
 }
 
 .my-record-card__kind,
 .my-record-card__status {
   display: block;
   min-width: 0;
-  padding: 7rpx 12rpx;
+  padding: 3.67PX 12rpx;
   overflow: hidden;
   box-sizing: border-box;
   border-radius: 999rpx;
-  font-size: 22rpx;
-  line-height: 1.25;
+  font-size: 11.53PX;
+  line-height: 14.41PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -368,32 +374,32 @@ page {
 }
 
 .my-record-card__title {
-  padding-top: 14rpx;
+  padding-top: 7.34PX;
   color: var(--campus-text-heading, #1d293d);
-  font-size: 28rpx;
+  font-size: 14.67PX;
   font-weight: 750;
-  line-height: 1.42;
+  line-height: 20.83PX;
   -webkit-line-clamp: 2;
 }
 
 .my-record-card__body {
-  padding-top: 12rpx;
+  padding-top: 6.29PX;
   color: var(--campus-text-body, #45556c);
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 400;
-  line-height: 1.55;
+  line-height: 19.49PX;
   -webkit-line-clamp: 3;
 }
 
 .my-record-card__amount {
   display: block;
   max-width: 100%;
-  padding-top: 14rpx;
+  padding-top: 7.34PX;
   overflow: hidden;
   color: var(--campus-danger, #ff2056);
-  font-size: 34rpx;
+  font-size: 17.82PX;
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 22.27PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -402,16 +408,17 @@ page {
   display: flex;
   width: 100%;
   min-width: 0;
-  padding: 17rpx 18rpx;
-  margin-top: 16rpx;
+  padding: 8.91PX 18rpx;
+  margin-top: 8.38PX;
   align-items: center;
   box-sizing: border-box;
-  gap: 12rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
   border: 1rpx solid var(--campus-border, #f1f5f9);
   border-radius: 18rpx;
   background: var(--campus-surface-subtle, #f8fafc);
   color: var(--campus-text-body, #314158);
-  font-size: 25rpx;
+  font-size: 13.1PX;
 
   text {
     min-width: 0;
@@ -457,11 +464,11 @@ page {
 }
 
 .my-record-card__footer {
-  padding-top: 16rpx;
-  margin-top: 18rpx;
+  padding-top: 8.38PX;
+  margin-top: 9.43PX;
   border-top: 1rpx solid var(--campus-border, #f1f5f9);
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 23rpx;
+  font-size: 12.05PX;
 
   text {
     min-width: 0;
@@ -485,10 +492,11 @@ page {
 
 .my-record-actions {
   display: flex;
-  padding-top: 16rpx;
+  padding-top: 8.38PX;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
 
   > view {
     display: flex;
@@ -500,7 +508,7 @@ page {
     justify-content: center;
     box-sizing: border-box;
     border-radius: 18rpx;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 720;
     transition: opacity 150ms ease;
   }
@@ -525,13 +533,13 @@ page {
 .my-services-state {
   display: flex;
   min-height: 330rpx;
-  padding: 40rpx 24rpx;
+  padding: 20.96PX 24rpx;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   flex-direction: column;
   color: var(--campus-text-secondary, #62748e);
-  font-size: 24rpx;
+  font-size: 12.58PX;
   text-align: center;
 
   > view {
@@ -539,7 +547,7 @@ page {
     min-width: 172rpx;
     min-height: 70rpx;
     padding: 0 22rpx;
-    margin-top: 20rpx;
+    margin-top: 10.48PX;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
@@ -563,11 +571,11 @@ page {
     min-width: 76rpx;
     min-height: 76rpx;
     padding: 0;
-    margin: 0 0 18rpx;
+    margin: 0 0 9.43PX;
     border-radius: 24rpx;
     background: var(--campus-border, #f1f5f9);
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 23rpx;
+    font-size: 12.05PX;
     letter-spacing: 1rpx;
   }
 
@@ -577,28 +585,28 @@ page {
   }
 
   &--empty text:last-of-type {
-    margin-top: 7rpx;
+    margin-top: 3.67PX;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 
   &--empty > .my-services-state__action {
     min-width: 160rpx;
     min-height: 66rpx;
-    margin-top: 22rpx;
+    margin-top: 11.53PX;
     border-radius: 18rpx;
     background: var(--campus-primary, #2b7fff);
     color: #fff;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     box-shadow: 0 7rpx 16rpx rgba(43, 127, 255, 0.16);
   }
 }
 
 .my-services-load-more {
-  padding: 24rpx 16rpx 10rpx;
+  padding: 12.58PX 16rpx 5.24PX;
   overflow-wrap: anywhere;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 23rpx;
+  font-size: 12.05PX;
   text-align: center;
 }
 

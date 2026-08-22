@@ -10,16 +10,17 @@ page {
   background: token.$color-page;
 
   &__content {
-    padding: 16rpx 28rpx calc(244rpx + env(safe-area-inset-bottom));
+    padding: 8.38PX 28rpx calc(244rpx + env(safe-area-inset-bottom));
   }
 }
 
 .publisher-types {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: token.$space-1;
-  padding: token.$space-1;
-  margin-bottom: token.$space-3;
+  row-gap: token.$space-block-1;
+  column-gap: token.$space-1;
+  padding: token.$space-block-1 token.$space-1;
+  margin-bottom: token.$space-block-3;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-lg;
@@ -32,7 +33,7 @@ page {
   align-items: center;
   justify-content: center;
   color: token.$color-text-body;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 600;
   border-radius: token.$radius-md;
   transition:
@@ -70,16 +71,16 @@ page {
 .publisher-intro {
   display: flex;
   min-height: token.$touch-target-min;
-  margin-bottom: token.$space-1;
+  margin-bottom: token.$space-block-1;
   align-items: center;
   justify-content: space-between;
 
   &__title {
     min-width: 0;
     color: token.$color-text-heading;
-    font-size: 34rpx;
+    font-size: 17.82PX;
     font-weight: 760;
-    line-height: 1.35;
+    line-height: 24.05PX;
   }
 
   &__meta {
@@ -87,10 +88,11 @@ page {
     min-width: 0;
     flex: none;
     align-items: center;
-    gap: token.$space-2;
+    row-gap: token.$space-block-2;
+    column-gap: token.$space-2;
     margin-left: token.$space-2;
     color: token.$color-text-muted;
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 
   &__clear {
@@ -105,47 +107,47 @@ page {
 }
 
 .publisher-section {
-  padding: 28rpx 28rpx 24rpx;
-  margin-top: 20rpx;
+  padding: 14.67PX 28rpx 12.58PX;
+  margin-top: 10.48PX;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-xl;
 
   &__head {
-    margin-bottom: token.$space-1;
+    margin-bottom: token.$space-block-1;
   }
 
   &__title {
     display: block;
     color: token.$color-text-heading;
-    font-size: 30rpx;
+    font-size: 15.72PX;
     font-weight: 720;
-    line-height: 1.4;
+    line-height: 22.01PX;
   }
 
   &__hint {
     display: block;
-    margin: 4rpx 0 token.$space-2;
+    margin: 2.1PX 0 token.$space-block-2;
     color: token.$color-text-secondary;
-    font-size: 24rpx;
-    line-height: 1.5;
+    font-size: 12.58PX;
+    line-height: 18.86PX;
   }
 
   &--content {
-    padding: token.$space-3;
+    padding: token.$space-block-3 token.$space-3;
   }
 
   &--campus {
-    padding-bottom: 12rpx;
+    padding-bottom: 6.29PX;
   }
 
   &--market-context {
-    padding: 18rpx 22rpx 4rpx;
+    padding: 9.43PX 22rpx 2.1PX;
   }
 }
 
 .publisher-field {
-  padding: 22rpx 0 token.$space-1;
+  padding: 11.53PX 0 token.$space-block-1;
 
   & + & {
     border-top: 2rpx solid token.$color-border;
@@ -153,18 +155,18 @@ page {
 
   &__label {
     display: block;
-    margin-bottom: 12rpx;
+    margin-bottom: 6.29PX;
     color: token.$color-text-body;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 680;
-    line-height: 1.5;
+    line-height: 18.86PX;
   }
 
   &__help {
     display: block;
-    margin: 10rpx 4rpx 0;
+    margin: 5.24PX 4rpx 0;
     color: token.$color-text-muted;
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 
   &--content {
@@ -190,13 +192,13 @@ page {
     height: 84rpx;
     flex: 1;
     color: token.$color-text-heading;
-    font-size: 26rpx;
+    font-size: 13.62PX;
   }
 
   > text {
     margin-left: 12rpx;
     color: token.$color-text-body;
-    font-size: 25rpx;
+    font-size: 13.1PX;
   }
 }
 
@@ -205,7 +207,7 @@ page {
 }
 
 .publisher-textarea {
-  padding: 20rpx 20rpx 12rpx;
+  padding: 10.48PX 20rpx 6.29PX;
   background: token.$color-surface-subtle;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-md;
@@ -215,15 +217,15 @@ page {
     min-height: 212rpx;
     max-height: 480rpx;
     color: token.$color-text-heading;
-    font-size: 27rpx;
-    line-height: 1.62;
+    font-size: 14.15PX;
+    line-height: 22.92PX;
   }
 
   > text {
     display: block;
-    margin-top: token.$space-1;
+    margin-top: token.$space-block-1;
     color: token.$color-text-muted;
-    font-size: 21rpx;
+    font-size: 11PX;
     text-align: right;
   }
 }
@@ -231,7 +233,7 @@ page {
 .publisher-composer-toolbar {
   display: flex;
   min-height: 68rpx;
-  margin-top: 12rpx;
+  margin-top: 6.29PX;
   align-items: center;
   justify-content: space-between;
   border-top: 2rpx solid token.$color-border;
@@ -240,13 +242,14 @@ page {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: 8rpx;
+    row-gap: 4.19PX;
+    column-gap: 8rpx;
   }
 
   > text {
     flex: none;
     color: token.$color-text-muted;
-    font-size: 21rpx;
+    font-size: 11PX;
   }
 }
 
@@ -259,7 +262,7 @@ page {
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-secondary;
-  font-size: 22rpx;
+  font-size: 11.53PX;
   font-weight: 650;
   border-radius: token.$radius-sm;
   transition:
@@ -289,7 +292,7 @@ page {
 }
 
 .publisher-sticker-picker {
-  margin-top: 16rpx;
+  margin-top: 8.38PX;
 
   .sticker-picker__trigger {
     display: none;
@@ -299,7 +302,8 @@ page {
 .publisher-picker-row {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: token.$space-2;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
 
   picker,
   picker > view {
@@ -313,7 +317,7 @@ page {
     align-items: center;
     box-sizing: border-box;
     color: token.$color-text-body;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     background: token.$color-surface-subtle;
     border: 2rpx solid token.$color-border;
     border-radius: token.$radius-md;
@@ -329,7 +333,7 @@ page {
       height: 84rpx;
       align-items: center;
       color: token.$color-primary;
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 700;
     }
   }
@@ -339,13 +343,13 @@ page {
     height: 84rpx;
     flex: 1;
     color: token.$color-text-heading;
-    font-size: 26rpx;
+    font-size: 13.62PX;
   }
 }
 
 .publisher-route-suggestions {
-  margin: 4rpx 0 12rpx;
-  padding: token.$space-2;
+  margin: 2.1PX 0 6.29PX;
+  padding: token.$space-block-2 token.$space-2;
   background: token.$color-surface-subtle;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-md;
@@ -353,19 +357,20 @@ page {
 
 .publisher-route-suggestions__label {
   display: block;
-  margin: 0 2rpx 10rpx;
+  margin: 0 2rpx 5.24PX;
   color: token.$color-text-secondary;
-  font-size: 22rpx;
+  font-size: 11.53PX;
 }
 
 .publisher-route-suggestions__items {
   display: flex;
   flex-wrap: wrap;
-  gap: token.$space-2;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
 }
 
 .publisher-route-suggestions__items + .publisher-route-suggestions__label {
-  margin-top: token.$space-2;
+  margin-top: token.$space-block-2;
 }
 
 .publisher-route-suggestion {
@@ -376,7 +381,7 @@ page {
   justify-content: center;
   box-sizing: border-box;
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 600;
   background: token.$color-surface;
   border: 2rpx solid token.$color-border;
@@ -405,8 +410,8 @@ page {
 }
 
 .publisher-note {
-  padding: 18rpx 20rpx;
-  margin-top: 18rpx;
+  padding: 9.43PX 20rpx;
+  margin-top: 9.43PX;
   background: token.$color-surface-subtle;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-md;
@@ -414,17 +419,17 @@ page {
   text {
     display: block;
     color: token.$color-text-body;
-    font-size: 23rpx;
-    line-height: 1.5;
+    font-size: 12.05PX;
+    line-height: 18.08PX;
   }
 
   text + text {
-    margin-top: token.$space-1;
+    margin-top: token.$space-block-1;
     color: token.$color-text-muted;
   }
 
   &--compact {
-    padding: token.$space-2 18rpx;
+    padding: token.$space-block-2 18rpx;
 
     text {
       font-weight: 600;
@@ -434,9 +439,10 @@ page {
 
 .publisher-market-intents {
   display: flex;
-  gap: token.$space-1;
-  padding: token.$space-1;
-  margin-bottom: 18rpx;
+  row-gap: token.$space-block-1;
+  column-gap: token.$space-1;
+  padding: token.$space-block-1 token.$space-1;
+  margin-bottom: 9.43PX;
   background: token.$color-surface-subtle;
   border-radius: token.$radius-md;
 
@@ -447,7 +453,7 @@ page {
     align-items: center;
     justify-content: center;
     color: token.$color-text-body;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
     border-radius: token.$radius-sm;
   }
@@ -467,9 +473,10 @@ page {
   min-height: token.$touch-target-min;
   align-items: center;
   justify-content: space-between;
-  gap: token.$space-2;
-  padding: 12rpx 18rpx;
-  margin-bottom: token.$space-1;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
+  padding: 6.29PX 18rpx;
+  margin-bottom: token.$space-block-1;
   background: token.$color-surface-subtle;
   border: 2rpx solid token.$color-border;
   border-radius: token.$radius-sm;
@@ -487,14 +494,14 @@ page {
 
     text:first-child {
       color: token.$color-text-body;
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 720;
     }
 
     text:last-child {
-      margin-top: 4rpx;
+      margin-top: 2.1PX;
       color: token.$color-text-muted;
-      font-size: 22rpx;
+      font-size: 11.53PX;
     }
   }
 
@@ -506,7 +513,7 @@ page {
     align-items: center;
     justify-content: center;
     color: token.$color-primary;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     font-weight: 680;
   }
 }
@@ -514,15 +521,16 @@ page {
 .publisher-community-sections {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: token.$space-2;
-  margin: 20rpx 0 token.$space-2;
+  row-gap: token.$space-block-2;
+  column-gap: token.$space-2;
+  margin: 10.48PX 0 token.$space-block-2;
 }
 
 .publisher-community-section {
   position: relative;
   min-width: 0;
   min-height: token.$touch-target-min;
-  padding: 16rpx 18rpx;
+  padding: 8.38PX 18rpx;
   box-sizing: border-box;
   overflow: hidden;
   background: token.$color-surface-subtle;
@@ -536,16 +544,16 @@ page {
   text:first-child {
     overflow: hidden;
     color: token.$color-text-body;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   text:last-child {
-    margin-top: 4rpx;
+    margin-top: 2.1PX;
     color: token.$color-text-muted;
-    font-size: 20rpx;
+    font-size: 10.48PX;
   }
 
   &--active {
@@ -580,7 +588,7 @@ page {
   align-items: center;
   justify-content: center;
   color: token.$color-text-muted;
-  font-size: 25rpx;
+  font-size: 13.1PX;
 }
 
 .publisher-actions {
@@ -589,7 +597,7 @@ page {
   bottom: 0;
   left: 0;
   z-index: 20;
-  padding: 14rpx 28rpx calc(16rpx + env(safe-area-inset-bottom));
+  padding: 7.34PX 28rpx calc(16rpx + env(safe-area-inset-bottom));
   background: token.$color-surface;
   border-top: 2rpx solid token.$color-border;
   box-shadow: token.$shadow-sheet;
@@ -601,7 +609,7 @@ page {
   &__status {
     display: flex;
     min-width: 0;
-    margin-bottom: 10rpx;
+    margin-bottom: 5.24PX;
     align-items: center;
 
     view {
@@ -616,7 +624,7 @@ page {
     text {
       overflow: hidden;
       color: token.$color-text-body;
-      font-size: 22rpx;
+      font-size: 11.53PX;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -634,7 +642,8 @@ page {
 
   &__buttons {
     display: flex;
-    gap: token.$space-2;
+    row-gap: token.$space-block-2;
+    column-gap: token.$space-2;
   }
 
   &__draft,
@@ -643,7 +652,7 @@ page {
     min-height: token.$touch-target-min;
     align-items: center;
     justify-content: center;
-    font-size: 26rpx;
+    font-size: 13.62PX;
     font-weight: 720;
     border-radius: token.$radius-md;
     transition: opacity token.$motion-press ease;
@@ -687,20 +696,21 @@ page {
   background: linear-gradient(135deg, token.$color-carpool, token.$color-carpool-end);
 }
 
-@media (max-width: 360px) {
+@media (max-width: 360PX) {
   .publisher-page__content {
     padding-right: 20rpx;
     padding-left: 20rpx;
   }
 
   .publisher-types {
-    gap: 4rpx;
-    padding: 4rpx;
+    row-gap: 2.1PX;
+    column-gap: 4rpx;
+    padding: 2.1PX 4rpx;
   }
 
   .publisher-type {
     min-height: token.$touch-target-min;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 
   .publisher-intro {
@@ -721,13 +731,14 @@ page {
 
   .publisher-picker-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 0.84fr);
-    gap: token.$space-1;
+    row-gap: token.$space-block-1;
+    column-gap: token.$space-1;
   }
 
   .publisher-picker-row picker > view {
     padding-right: 12rpx;
     padding-left: 12rpx;
-    font-size: 25rpx;
+    font-size: 13.1PX;
   }
 
   .publisher-contact {

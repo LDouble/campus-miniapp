@@ -8,7 +8,7 @@ page {
   background: var(--campus-page, #f4f7fb);
 
   &__content {
-    padding: 22rpx 28rpx calc(60rpx + env(safe-area-inset-bottom));
+    padding: 11.53PX 28rpx calc(60rpx + env(safe-area-inset-bottom));
   }
 }
 
@@ -17,7 +17,7 @@ page {
   align-items: center;
   height: 86rpx;
   padding: 0 24rpx;
-  margin-bottom: 24rpx;
+  margin-bottom: 12.58PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 28rpx;
@@ -35,7 +35,7 @@ page {
     flex: 1;
     height: 100%;
     color: #31545d;
-    font-size: 27rpx;
+    font-size: 14.15PX;
   }
 
   &__placeholder {
@@ -44,8 +44,8 @@ page {
 }
 
 .services-group {
-  padding: 25rpx 22rpx 20rpx;
-  margin-bottom: 20rpx;
+  padding: 13.1PX 22rpx 10.48PX;
+  margin-bottom: 10.48PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 32rpx;
@@ -55,7 +55,7 @@ page {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    padding: 0 5rpx 18rpx;
+    padding: 0 5rpx 9.43PX;
 
     > view {
       display: flex;
@@ -65,25 +65,25 @@ page {
 
   &__title {
     color: #2b5059;
-    font-size: 26rpx;
+    font-size: 13.62PX;
     font-weight: 750;
   }
 
   &__subtitle {
-    margin-top: 4rpx;
+    margin-top: 2.1PX;
     color: #8da09d;
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 
   &__count {
     color: #89a09d;
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 
   &__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    row-gap: 10rpx;
+    row-gap: 5.24PX;
   }
 
   &__item {
@@ -94,7 +94,7 @@ page {
     min-width: 0;
     min-height: 132rpx;
     color: #3a5b63;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     border-radius: 22rpx;
     transition: opacity 150ms ease, background-color 150ms ease;
 
@@ -110,7 +110,7 @@ page {
     justify-content: center;
     width: 60rpx;
     height: 60rpx;
-    margin-bottom: 9rpx;
+    margin-bottom: 4.72PX;
     background: #e7f4f1;
     border-radius: 20rpx;
 
@@ -169,9 +169,10 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24rpx;
-  padding: 28rpx;
-  margin-top: 24rpx;
+  row-gap: 12.58PX;
+  column-gap: 24rpx;
+  padding: 14.67PX 28rpx;
+  margin-top: 12.58PX;
   background: linear-gradient(135deg, #e8f5f2, #fff0df);
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 32rpx;
@@ -189,22 +190,22 @@ page {
 
   &__title {
     color: #2b5059;
-    font-size: 27rpx;
+    font-size: 14.15PX;
     font-weight: 750;
   }
 
   &__copy {
-    margin-top: 8rpx;
+    margin-top: 4.19PX;
     color: #748d89;
-    font-size: 23rpx;
-    line-height: 1.55;
+    font-size: 12.05PX;
+    line-height: 18.69PX;
   }
 
   &__action {
     flex: none;
-    padding: 18rpx 22rpx;
+    padding: 9.43PX 22rpx;
     color: #fff;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
     background: #4d9786;
     border-radius: 20rpx;

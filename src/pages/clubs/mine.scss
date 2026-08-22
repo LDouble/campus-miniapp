@@ -15,8 +15,8 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 26rpx 28rpx;
-  margin: 18rpx 28rpx 22rpx;
+  padding: 13.62PX 28rpx;
+  margin: 9.43PX 28rpx 11.53PX;
   background: linear-gradient(135deg, #dcefe8, #f3e7d7);
   border: 2rpx solid rgba(255, 255, 255, 0.9);
   border-radius: 34rpx;
@@ -31,21 +31,21 @@ page {
 
   &__title {
     color: #295148;
-    font-size: 31rpx;
+    font-size: 16.24PX;
     font-weight: 800;
   }
 
   &__text {
-    margin-top: 8rpx;
+    margin-top: 4.19PX;
     color: #526b65;
-    font-size: 25rpx;
-    line-height: 1.55;
+    font-size: 13.1PX;
+    line-height: 20.31PX;
   }
 
   &__meta {
-    margin-top: 9rpx;
+    margin-top: 4.72PX;
     color: #3f6e61;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
   }
 
@@ -58,14 +58,14 @@ page {
     height: 88rpx;
     margin-left: 18rpx;
     color: #fff;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 750;
     background: #3f7668;
     border-radius: 24rpx;
 
     text {
       margin-right: 5rpx;
-      font-size: 28rpx;
+      font-size: 14.67PX;
     }
 
     &--pressed {
@@ -79,8 +79,8 @@ page {
 }
 
 .my-club-card {
-  padding: 26rpx;
-  margin-bottom: 20rpx;
+  padding: 13.62PX 26rpx;
+  margin-bottom: 10.48PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
   border-radius: 32rpx;
@@ -120,24 +120,24 @@ page {
     display: -webkit-box;
     overflow: hidden;
     color: #294f46;
-    font-size: 29rpx;
+    font-size: 15.2PX;
     font-weight: 800;
-    line-height: 1.35;
+    line-height: 20.52PX;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
 
   &__category {
-    margin-top: 6rpx;
+    margin-top: 3.14PX;
     color: #526b65;
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 
   &__status {
     flex: none;
-    padding: 10rpx 16rpx;
+    padding: 5.24PX 16rpx;
     margin-left: 12rpx;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     font-weight: 750;
     border-radius: 99rpx;
 
@@ -165,8 +165,8 @@ page {
   &__progress {
     display: flex;
     align-items: flex-start;
-    padding: 19rpx 20rpx;
-    margin-top: 20rpx;
+    padding: 9.96PX 20rpx;
+    margin-top: 10.48PX;
     background: #f2f6f3;
     border-radius: 21rpx;
 
@@ -183,7 +183,7 @@ page {
     flex: none;
     width: 16rpx;
     height: 16rpx;
-    margin: 8rpx 15rpx 0 0;
+    margin: 4.19PX 15rpx 0 0;
     background: #688078;
     border: 5rpx solid rgba(104, 128, 120, 0.17);
     border-radius: 50%;
@@ -213,46 +213,47 @@ page {
 
     text:first-child {
       color: #31594f;
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 800;
     }
 
     text:last-child {
-      margin-top: 5rpx;
+      margin-top: 2.62PX;
       color: #526b65;
-      font-size: 24rpx;
-      line-height: 1.5;
+      font-size: 12.58PX;
+      line-height: 18.86PX;
     }
   }
 
   &__reason {
     display: flex;
     flex-direction: column;
-    padding: 19rpx 20rpx;
-    margin-top: 14rpx;
+    padding: 9.96PX 20rpx;
+    margin-top: 7.34PX;
     background: #fff4f0;
     border-radius: 20rpx;
 
     text:first-child {
       color: #934d42;
-      font-size: 23rpx;
+      font-size: 12.05PX;
       font-weight: 750;
     }
 
     text:last-child {
-      margin-top: 7rpx;
+      margin-top: 3.67PX;
       color: #744b44;
-      font-size: 25rpx;
-      line-height: 1.55;
+      font-size: 13.1PX;
+      line-height: 20.31PX;
     }
   }
 
   &__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 12rpx;
-    padding-top: 16rpx;
-    margin-top: 16rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
+    padding-top: 8.38PX;
+    margin-top: 8.38PX;
     border-top: 2rpx solid #edf1ed;
 
     > view {
@@ -264,7 +265,7 @@ page {
       height: 88rpx;
       padding: 0 16rpx;
       color: #38685c;
-      font-size: 25rpx;
+      font-size: 13.1PX;
       font-weight: 750;
       background: #edf5f1;
       border-radius: 22rpx;
@@ -293,7 +294,7 @@ page {
   display: flex;
   align-items: center;
   flex-direction: column;
-  padding: 82rpx 40rpx;
+  padding: 42.97PX 40rpx;
   text-align: center;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border-radius: 34rpx;
@@ -314,17 +315,17 @@ page {
   }
 
   &__title {
-    margin-top: 24rpx;
+    margin-top: 12.58PX;
     color: #31564d;
-    font-size: 29rpx;
+    font-size: 15.2PX;
     font-weight: 750;
   }
 
   &__text {
-    margin-top: 12rpx;
+    margin-top: 6.29PX;
     color: #526b65;
-    font-size: 24rpx;
-    line-height: 1.6;
+    font-size: 12.58PX;
+    line-height: 20.12PX;
   }
 
   &__action {
@@ -333,9 +334,9 @@ page {
     justify-content: center;
     min-width: 200rpx;
     height: 88rpx;
-    margin-top: 28rpx;
+    margin-top: 14.67PX;
     color: #fff;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 700;
     background: #3f7668;
     border-radius: 26rpx;
@@ -344,7 +345,7 @@ page {
 
 .my-club-card--skeleton > view {
   height: 30rpx;
-  margin: 20rpx 0;
+  margin: 10.48PX 0;
   background: linear-gradient(90deg, #e9eee9 25%, #f6f7f3 37%, #e9eee9 63%);
   background-size: 400% 100%;
   border-radius: 10rpx;
@@ -373,7 +374,8 @@ page {
 
 page { background: var(--campus-page, #f4f7fb); }
 .my-clubs-page { color: var(--campus-text-heading, #1d293d); background: var(--campus-page, #f4f7fb); padding-bottom: calc(76rpx + env(safe-area-inset-bottom)); }
-.my-clubs-intro { gap: 16rpx; background: linear-gradient(135deg, var(--campus-text-heading, #1d293d), var(--campus-primary, #2b7fff)); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 14rpx 36rpx rgba(29, 41, 61, 0.16); }
+.my-clubs-intro { row-gap: 8.38PX;
+ column-gap: 16rpx; background: linear-gradient(135deg, var(--campus-text-heading, #1d293d), var(--campus-primary, #2b7fff)); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 14rpx 36rpx rgba(29, 41, 61, 0.16); }
 .my-clubs-intro__title { color: #fff; }
 .my-clubs-intro__text { display: -webkit-box; overflow: hidden; color: rgba(255, 255, 255, 0.74); -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .my-clubs-intro__meta { overflow: hidden; color: rgba(255, 255, 255, 0.9); text-overflow: ellipsis; white-space: nowrap; }
@@ -397,7 +399,7 @@ page { background: var(--campus-page, #f4f7fb); }
 @media (max-width: 640rpx) {
   .my-clubs-intro { padding-right: 22rpx; padding-left: 22rpx; }
   .my-clubs-intro__action { min-width: 112rpx; margin-left: 8rpx; }
-  .my-club-card { padding: 22rpx; }
+  .my-club-card { padding: 11.53PX 22rpx; }
   .my-club-card__status { max-width: 126rpx; padding-right: 12rpx; padding-left: 12rpx; }
   .my-club-card__actions > view { min-width: 132rpx; }
 }

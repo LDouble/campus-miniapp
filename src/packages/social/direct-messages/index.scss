@@ -11,14 +11,14 @@ page {
 }
 
 .direct-messages-page__content {
-  padding: 24rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 12.58PX 28rpx calc(48rpx + env(safe-area-inset-bottom));
 }
 
 .direct-messages-intro {
   display: flex;
   min-height: 122rpx;
-  padding: 24rpx 28rpx;
-  margin-bottom: 22rpx;
+  padding: 12.58PX 28rpx;
+  margin-bottom: 11.53PX;
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
@@ -36,27 +36,27 @@ page {
 
   > view text:first-child {
     color: token.$color-text-heading;
-    font-size: 31rpx;
+    font-size: 16.24PX;
     font-weight: 750;
   }
 
   > view text:last-child {
-    margin-top: 6rpx;
+    margin-top: 3.14PX;
     overflow: hidden;
     color: token.$color-text-secondary;
-    font-size: 22rpx;
+    font-size: 11.53PX;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   > text {
     flex: none;
-    padding: 8rpx 14rpx;
+    padding: 4.19PX 14rpx;
     margin-left: 18rpx;
     border-radius: 999rpx;
     background: token.$color-surface-primary;
     color: token.$color-primary-strong;
-    font-size: 20rpx;
+    font-size: 10.48PX;
     font-weight: 720;
   }
 }
@@ -64,14 +64,15 @@ page {
 .direct-conversation-list {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  row-gap: 8.38PX;
+  column-gap: 16rpx;
 }
 
 .direct-conversation-card {
   position: relative;
   display: flex;
   min-height: 128rpx;
-  padding: 22rpx 24rpx;
+  padding: 11.53PX 24rpx;
   align-items: center;
   box-sizing: border-box;
   border: 2rpx solid token.$color-border;
@@ -101,7 +102,7 @@ page {
     border-radius: 50%;
     background: token.$color-surface-primary;
     color: token.$color-primary-strong;
-    font-size: 27rpx;
+    font-size: 14.15PX;
     font-weight: 720;
   }
 
@@ -118,11 +119,11 @@ page {
 
     > text {
       display: block;
-      padding-top: 8rpx;
+      padding-top: 4.19PX;
       overflow: hidden;
       color: token.$color-text-secondary;
-      font-size: 23rpx;
-      line-height: 1.42;
+      font-size: 12.05PX;
+      line-height: 17.11PX;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -130,7 +131,8 @@ page {
 
   &__head {
     display: flex;
-    gap: 12rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
     align-items: center;
     justify-content: space-between;
 
@@ -138,7 +140,7 @@ page {
       min-width: 0;
       overflow: hidden;
       color: token.$color-text-heading;
-      font-size: 27rpx;
+      font-size: 14.15PX;
       font-weight: 720;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -147,7 +149,7 @@ page {
     text:last-child {
       flex: none;
       color: token.$color-text-muted;
-      font-size: 19rpx;
+      font-size: 9.96PX;
     }
   }
 
@@ -163,7 +165,7 @@ page {
     border-radius: 999rpx;
     background: token.$color-primary;
     color: token.$color-on-accent;
-    font-size: 18rpx;
+    font-size: 9.43PX;
     font-weight: 720;
   }
 }
@@ -171,7 +173,7 @@ page {
 .direct-messages-state {
   display: flex;
   min-height: 300rpx;
-  padding: 32rpx;
+  padding: 16.77PX 32rpx;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -180,15 +182,15 @@ page {
   border-radius: token.$radius-xl;
   background: token.$color-surface;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
-  line-height: 1.6;
+  font-size: 12.58PX;
+  line-height: 20.12PX;
   text-align: center;
 
   > view {
     display: flex;
     min-height: 76rpx;
     padding: 0 26rpx;
-    margin-top: 20rpx;
+    margin-top: 10.48PX;
     align-items: center;
     justify-content: center;
     border-radius: token.$radius-md;
@@ -199,12 +201,12 @@ page {
 
   &--empty text:first-child {
     color: token.$color-text-heading;
-    font-size: 28rpx;
+    font-size: 14.67PX;
     font-weight: 740;
   }
 
   &--empty text:last-child {
-    margin-top: 8rpx;
+    margin-top: 4.19PX;
   }
 
   &--error {
@@ -215,10 +217,10 @@ page {
 
 .direct-messages-inline-error,
 .direct-messages-footer {
-  padding: 20rpx 4rpx 4rpx;
+  padding: 10.48PX 4rpx 2.1PX;
   color: token.$color-text-muted;
-  font-size: 22rpx;
-  line-height: 1.5;
+  font-size: 11.53PX;
+  line-height: 17.29PX;
   text-align: center;
 }
 
@@ -241,7 +243,7 @@ page {
 }
 
 .direct-messages-page__content {
-  padding: var(--ousea-space-1, 16rpx) 0 calc(48rpx + env(safe-area-inset-bottom));
+  padding: var(--ousea-space-block-1, 8.38PX) 0 calc(48rpx + env(safe-area-inset-bottom));
 }
 
 .direct-conversation-list {
@@ -251,7 +253,7 @@ page {
 
 .direct-conversation-card {
   min-height: 128rpx;
-  padding: var(--ousea-space-1, 16rpx) var(--ousea-space-3, 32rpx);
+  padding: var(--ousea-space-block-1, 8.38PX) var(--ousea-space-3, 32rpx);
   border: 0;
   border-bottom: 1rpx solid token.$color-border;
   border-radius: 0;
@@ -280,25 +282,26 @@ page {
     margin-left: var(--ousea-space-1, 16rpx);
 
     > text {
-      padding-top: 8rpx;
+      padding-top: 4.19PX;
       color: token.$color-text-secondary;
-      font-size: var(--ousea-font-size-caption, 24rpx);
-      line-height: var(--ousea-line-height-ui, 1.4);
+      font-size: var(--ousea-font-size-caption, 12.58PX);
+      line-height: var(--ousea-line-height-ui, 19.91PX);
     }
   }
 
   &__head {
-    gap: var(--ousea-space-1, 16rpx);
+    row-gap: var(--ousea-space-block-1, 8.38PX);
+    column-gap: var(--ousea-space-1, 16rpx);
 
     text:first-child {
       color: token.$color-text-heading;
-      font-size: var(--ousea-font-size-label, 27rpx);
+      font-size: var(--ousea-font-size-label, 14.15PX);
       font-weight: var(--ousea-font-weight-medium, 500);
     }
 
     text:last-child {
       color: token.$color-text-muted;
-      font-size: var(--ousea-font-size-caption, 24rpx);
+      font-size: var(--ousea-font-size-caption, 12.58PX);
     }
   }
 
@@ -309,13 +312,13 @@ page {
     margin-left: 8rpx;
     border: 2rpx solid token.$color-surface;
     background: token.$color-danger;
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
   }
 }
 
 .direct-messages-state {
   min-height: 180rpx;
-  padding: var(--ousea-space-3, 32rpx);
+  padding: var(--ousea-space-block-3, 16.77PX) var(--ousea-space-3, 32rpx);
   border: 0;
   border-bottom: 1rpx solid token.$color-border;
   border-radius: 0;

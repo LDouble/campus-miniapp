@@ -17,8 +17,8 @@ page {
 .profile-card {
   display: flex;
   min-height: 184rpx;
-  padding: 28rpx;
-  margin-top: 16rpx;
+  padding: 14.67PX 28rpx;
+  margin-top: 8.38PX;
   box-sizing: border-box;
   align-items: center;
   background: var(--campus-surface, #fff);
@@ -36,7 +36,7 @@ page {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    font-size: var(--ousea-font-size-title, 33rpx);
+    font-size: var(--ousea-font-size-title, 17.29PX);
     font-weight: var(--ousea-font-weight-bold, 700);
     border: 0;
     border-radius: 50%;
@@ -56,11 +56,11 @@ page {
     right: 0;
     bottom: 0;
     left: 0;
-    padding: 5rpx 0 6rpx;
+    padding: 2.62PX 0 3.14PX;
     color: #fff;
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: 1;
+    line-height: 10.48PX;
     text-align: center;
     background: var(--campus-primary, var(--ousea-ocean-500, #2b7aef));
   }
@@ -91,24 +91,24 @@ page {
 
   &__public-link {
     display: block;
-    margin-top: 9rpx;
+    margin-top: 4.72PX;
     color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
-    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-size: var(--ousea-font-size-caption, 12.58PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
   }
 
   &__name {
     color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
-    font-size: var(--ousea-font-size-title, 33rpx);
+    font-size: var(--ousea-font-size-title, 17.29PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
   }
 
   &__school {
-    margin-top: 7rpx;
+    margin-top: 3.67PX;
     color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
-    font-size: var(--ousea-font-size-caption, 24rpx);
-    line-height: var(--ousea-line-height-comment, 1.65);
+    font-size: var(--ousea-font-size-caption, 12.58PX);
+    line-height: var(--ousea-line-height-comment, 25.94PX);
   }
 
   &__actions {
@@ -131,7 +131,7 @@ page {
     justify-content: flex-end;
     box-sizing: border-box;
     color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
     text-align: right;
     background: transparent;
@@ -176,12 +176,13 @@ page {
   display: flex;
   min-height: 72rpx;
   padding: 0 20rpx;
-  margin-top: 12rpx;
+  margin-top: 6.29PX;
   align-items: center;
   justify-content: space-between;
-  gap: 18rpx;
+  row-gap: 9.43PX;
+  column-gap: 18rpx;
   color: var(--campus-danger, var(--ousea-danger-500, #e5484d));
-  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-size: var(--ousea-font-size-caption, 12.58PX);
   background: var(--campus-surface-danger, var(--ousea-danger-50, #fdecec));
   border: 1rpx solid var(--campus-danger, var(--ousea-danger-500, #e5484d));
   border-radius: var(--ousea-radius-card-sm, 24rpx);
@@ -202,13 +203,14 @@ page {
   display: flex;
   min-height: 72rpx;
   padding: 0 20rpx;
-  margin-top: 12rpx;
+  margin-top: 6.29PX;
   align-items: center;
   justify-content: space-between;
-  gap: 18rpx;
+  row-gap: 9.43PX;
+  column-gap: 18rpx;
   color: var(--campus-text-secondary, #62748e);
-  font-size: 22rpx;
-  line-height: 1.45;
+  font-size: 11.53PX;
+  line-height: 16.72PX;
   background: var(--campus-surface-primary, #eff6ff);
   border: 2rpx solid var(--campus-border, #f1f5f9);
   border-radius: 20rpx;
@@ -244,8 +246,8 @@ page {
 }
 
 .profile-level {
-  padding: 24rpx 28rpx;
-  margin-top: 24rpx;
+  padding: 12.58PX 28rpx;
+  margin-top: 12.58PX;
   color: var(--campus-text-body, var(--ousea-ink-700, #3a4759));
   background: var(--campus-surface, #fff);
   border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
@@ -264,13 +266,13 @@ page {
 
     &:first-child {
       color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
-      font-size: var(--ousea-font-size-caption, 24rpx);
+      font-size: var(--ousea-font-size-caption, 12.58PX);
     }
 
     &:last-child {
-      margin-top: 5rpx;
+      margin-top: 2.62PX;
       color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
-      font-size: var(--ousea-font-size-comment, 30rpx);
+      font-size: var(--ousea-font-size-comment, 15.72PX);
       font-weight: var(--ousea-font-weight-semibold, 600);
     }
   }
@@ -284,19 +286,19 @@ page {
 
     text:first-child {
       color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
-      font-size: var(--ousea-font-size-comment, 30rpx);
+      font-size: var(--ousea-font-size-comment, 15.72PX);
       font-weight: var(--ousea-font-weight-semibold, 600);
     }
 
     text:last-child {
       color: var(--campus-text-muted, var(--ousea-ink-300, #a6b2c2));
-      font-size: var(--ousea-font-size-badge, 20rpx);
+      font-size: var(--ousea-font-size-badge, 10.48PX);
     }
   }
 
   &__track {
     height: 12rpx;
-    margin-top: 16rpx;
+    margin-top: 8.38PX;
     overflow: hidden;
     background: var(--campus-surface-primary, var(--ousea-ocean-50, #f2f7fe));
     border-radius: var(--ousea-radius-pill, 999rpx);
@@ -309,9 +311,9 @@ page {
   }
 
   &__foot {
-    margin-top: 12rpx;
+    margin-top: 6.29PX;
     color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
 
     text:first-child {
       max-width: 62%;
@@ -323,7 +325,7 @@ page {
 }
 
 .profile-section {
-  margin-top: 24rpx;
+  margin-top: 12.58PX;
   overflow: hidden;
   background: var(--campus-surface, #fff);
   border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
@@ -332,7 +334,7 @@ page {
 
   &__head {
     display: flex;
-    padding: 24rpx 20rpx 12rpx;
+    padding: 12.58PX 20rpx 6.29PX;
     align-items: center;
     justify-content: space-between;
   }
@@ -343,7 +345,7 @@ page {
     align-items: center;
 
     &--standalone {
-      padding: 24rpx 20rpx 12rpx;
+      padding: 12.58PX 20rpx 6.29PX;
     }
   }
 
@@ -366,9 +368,9 @@ page {
     padding: 0;
     overflow: hidden;
     color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
-    font-size: var(--campus-font-size-card-title, 32rpx);
+    font-size: var(--campus-font-size-card-title, 16.77PX);
     font-weight: var(--campus-font-weight-medium, 500);
-    line-height: var(--campus-line-height-card-title, 48rpx);
+    line-height: var(--campus-line-height-card-title, 25.15PX);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -382,7 +384,7 @@ page {
     max-width: 48%;
     overflow: hidden;
     color: var(--campus-text-muted, var(--ousea-ink-300, #a6b2c2));
-    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-size: var(--ousea-font-size-caption, 12.58PX);
     text-align: right;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -392,7 +394,7 @@ page {
 .profile-menu {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 0 20rpx 20rpx;
+  padding: 0 20rpx 10.48PX;
   background: transparent;
 
   &__item {
@@ -404,10 +406,10 @@ page {
     justify-content: center;
     > text {
       max-width: 100%;
-      margin-top: 10rpx;
+      margin-top: 5.24PX;
       overflow: hidden;
       color: var(--campus-text-body, var(--ousea-ink-700, #3a4759));
-      font-size: var(--ousea-font-size-label, 27rpx);
+      font-size: var(--ousea-font-size-label, 14.15PX);
       font-weight: var(--ousea-font-weight-medium, 500);
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -447,9 +449,9 @@ page {
     flex: none;
     margin-left: var(--ousea-space-1, 16rpx);
     color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
-    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-size: var(--ousea-font-size-caption, 12.58PX);
     font-weight: var(--ousea-font-weight-medium, 500);
-    line-height: 1.4;
+    line-height: 17.61PX;
     white-space: nowrap;
   }
 }
@@ -495,14 +497,14 @@ page {
 
     text:first-child {
       color: var(--campus-text-body, var(--ousea-ink-700, #3a4759));
-      font-size: var(--ousea-font-size-label, 27rpx);
+      font-size: var(--ousea-font-size-label, 14.15PX);
       font-weight: var(--ousea-font-weight-medium, 500);
     }
 
     text:last-child {
-      margin-top: 4rpx;
+      margin-top: 2.1PX;
       color: var(--campus-text-muted, var(--ousea-ink-300, #a6b2c2));
-      font-size: var(--ousea-font-size-caption, 24rpx);
+      font-size: var(--ousea-font-size-caption, 12.58PX);
     }
   }
 
@@ -524,7 +526,7 @@ page {
 }
 
 .profile-username-editor {
-  padding: 16rpx 0 24rpx 84rpx;
+  padding: 8.38PX 0 12.58PX 84rpx;
   border-bottom: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
 
   &__field {
@@ -540,30 +542,31 @@ page {
       min-width: 0;
       flex: 1;
       color: var(--campus-text-body, var(--ousea-ink-700, #3a4759));
-      font-size: var(--ousea-font-size-label, 27rpx);
+      font-size: var(--ousea-font-size-label, 14.15PX);
     }
 
     > text {
       flex: none;
       margin-left: 12rpx;
       color: var(--campus-text-muted, var(--ousea-ink-300, #a6b2c2));
-      font-size: var(--ousea-font-size-badge, 20rpx);
+      font-size: var(--ousea-font-size-badge, 10.48PX);
     }
   }
 
   &__hint {
     display: block;
-    margin-top: 12rpx;
+    margin-top: 6.29PX;
     color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
-    font-size: var(--ousea-font-size-caption, 24rpx);
-    line-height: var(--ousea-line-height-comment, 1.65);
+    font-size: var(--ousea-font-size-caption, 12.58PX);
+    line-height: var(--ousea-line-height-comment, 25.94PX);
   }
 
   &__actions {
     display: flex;
-    margin-top: 18rpx;
+    margin-top: 9.43PX;
     justify-content: flex-end;
-    gap: 12rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
   }
 
   &__cancel,
@@ -575,7 +578,7 @@ page {
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    font-size: var(--ousea-font-size-label, 27rpx);
+    font-size: var(--ousea-font-size-label, 14.15PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
     border-radius: var(--ousea-radius-card-sm, 24rpx);
   }

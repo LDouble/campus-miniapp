@@ -1,7 +1,7 @@
 .course-reference {
   display: block;
-  margin-top: 16rpx;
-  padding: 16rpx 18rpx;
+  margin-top: 8.38PX;
+  padding: 8.38PX 18rpx;
   color: var(--ousea-ink-700, #3a4759);
   background: var(--campus-surface, #fff);
   border: 1rpx solid var(--ousea-bg-line, #e8edf4);
@@ -23,34 +23,35 @@
       display: flex;
       min-width: 0;
       flex-direction: column;
-      gap: 2rpx;
+      row-gap: 1.05PX;
+      column-gap: 2rpx;
     }
   }
 
   &__title {
     color: var(--ousea-ink-900, #1a2333);
-    font-size: var(--ousea-font-size-label, 27rpx);
+    font-size: var(--ousea-font-size-label, 14.15PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
   }
 
   &__hint {
     color: var(--ousea-ink-500, #6b7a90);
-    font-size: var(--ousea-font-size-badge, 20rpx);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
   }
 
   &__arrow {
     flex: none;
     color: var(--ousea-ocean-500, #2b7aef);
-    font-size: 36rpx;
-    line-height: 1;
+    font-size: 18.86PX;
+    line-height: 18.86PX;
   }
 
   &__metrics {
     display: grid;
-    padding-top: 12rpx;
-    margin-top: 12rpx;
+    padding-top: 6.29PX;
+    margin-top: 6.29PX;
     border-top: 1rpx solid var(--ousea-bg-line, #e8edf4);
     grid-template-columns: repeat(3, minmax(0, 1fr));
 
@@ -58,7 +59,8 @@
       display: flex;
       min-width: 0;
       flex-direction: column;
-      gap: 2rpx;
+      row-gap: 1.05PX;
+      column-gap: 2rpx;
       border-right: 1rpx solid var(--ousea-bg-line, #e8edf4);
       text-align: center;
 
@@ -66,15 +68,15 @@
 
       > text:first-child {
         color: var(--ousea-ocean-600, #1d5fd6);
-        font-size: 30rpx;
+        font-size: 15.72PX;
         font-weight: var(--ousea-font-weight-semibold, 600);
-        line-height: 1.35;
+        line-height: 21.22PX;
       }
 
       > text:last-child {
         color: var(--ousea-ink-500, #6b7a90);
-        font-size: var(--ousea-font-size-badge, 20rpx);
-        line-height: var(--ousea-line-height-ui, 1.4);
+        font-size: var(--ousea-font-size-badge, 10.48PX);
+        line-height: var(--ousea-line-height-ui, 19.91PX);
       }
     }
   }

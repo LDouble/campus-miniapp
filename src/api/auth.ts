@@ -11,7 +11,7 @@ const miniProgramEnvVersion = () => {
   try {
     return Taro.getAccountInfoSync().miniProgram.envVersion
   } catch {
-    // H5 and incomplete development runtimes fail closed to the review API.
+    // H5 和不完整的开发运行时也统一使用产品 API。
     return 'develop'
   }
 }

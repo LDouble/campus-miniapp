@@ -60,12 +60,12 @@ $color-route-destination: var(--campus-route-destination, #ff637e);
 
 // Typography
 $font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-$font-size-auxiliary: var(--campus-font-size-auxiliary, 24rpx);
-$font-size-body: var(--campus-font-size-body, 28rpx);
-$font-size-important-body: var(--campus-font-size-important-body, 30rpx);
-$font-size-card-title: var(--campus-font-size-card-title, 32rpx);
-$font-size-page-title: var(--campus-font-size-page-title, 36rpx);
-$font-size-large-title: var(--campus-font-size-large-title, 40rpx);
+$font-size-auxiliary: var(--campus-font-size-auxiliary, 12.58PX);
+$font-size-body: var(--campus-font-size-body, 14.67PX);
+$font-size-important-body: var(--campus-font-size-important-body, 15.72PX);
+$font-size-card-title: var(--campus-font-size-card-title, 16.77PX);
+$font-size-page-title: var(--campus-font-size-page-title, 18.86PX);
+$font-size-large-title: var(--campus-font-size-large-title, 20.96PX);
 $font-weight-regular: var(--campus-font-weight-regular, 400);
 $font-weight-medium: var(--campus-font-weight-medium, 500);
 $font-weight-semibold: var(--campus-font-weight-semibold, 600);
@@ -74,23 +74,27 @@ $ousea-font-weight-medium: var(--ousea-font-weight-medium, 500);
 $ousea-font-weight-semibold: var(--ousea-font-weight-semibold, 600);
 $font-weight-bold: var(--ousea-font-weight-bold, 700);
 $ousea-font-weight-bold: var(--ousea-font-weight-bold, 700);
-$line-height-auxiliary: var(--campus-line-height-auxiliary, 36rpx);
-$line-height-body: var(--campus-line-height-body, 44rpx);
-$line-height-important-body: var(--campus-line-height-important-body, 46rpx);
-$line-height-card-title: var(--campus-line-height-card-title, 48rpx);
-$line-height-page-title: var(--campus-line-height-page-title, 54rpx);
-$line-height-large-title: var(--campus-line-height-large-title, 60rpx);
+$line-height-auxiliary: var(--campus-line-height-auxiliary, 18.86PX);
+$line-height-body: var(--campus-line-height-body, 23.06PX);
+$line-height-important-body: var(--campus-line-height-important-body, 24.1PX);
+$line-height-card-title: var(--campus-line-height-card-title, 25.15PX);
+$line-height-page-title: var(--campus-line-height-page-title, 28.3PX);
+$line-height-large-title: var(--campus-line-height-large-title, 31.44PX);
 
-// Ousea typography primitives (375px canvas, 1px = 2rpx)
-$ousea-font-size-badge: var(--ousea-font-size-badge, 20rpx);
-$ousea-font-size-caption: var(--ousea-font-size-caption, 24rpx);
-$ousea-font-size-label: var(--ousea-font-size-label, 27rpx);
-$ousea-font-size-comment: var(--ousea-font-size-comment, 30rpx);
-$ousea-font-size-body: var(--ousea-font-size-body, 32rpx);
-$ousea-font-size-title: var(--ousea-font-size-title, 33rpx);
-$ousea-line-height-post: var(--ousea-line-height-post, 1.85);
-$ousea-line-height-comment: var(--ousea-line-height-comment, 1.65);
-$ousea-line-height-ui: var(--ousea-line-height-ui, 1.4);
+// Ousea typography primitives (393PX Xiaomi 14 Ultra reference, 1rpx ≈ 0.524PX)
+$ousea-font-size-badge: var(--ousea-font-size-badge, 10.48PX);
+$ousea-font-size-caption: var(--ousea-font-size-caption, 12.58PX);
+$ousea-font-size-label: var(--ousea-font-size-label, 14.15PX);
+$ousea-font-size-comment: var(--ousea-font-size-comment, 15.72PX);
+$ousea-font-size-body: var(--ousea-font-size-body, 16.77PX);
+$ousea-font-size-title: var(--ousea-font-size-title, 17.29PX);
+$ousea-line-height-badge: var(--ousea-line-height-badge, 14.67PX);
+$ousea-line-height-caption: var(--ousea-line-height-caption, 17.61PX);
+$ousea-line-height-label: var(--ousea-line-height-label, 19.81PX);
+$ousea-line-height-post: var(--ousea-line-height-post, 31.02PX);
+$ousea-line-height-comment: var(--ousea-line-height-comment, 25.94PX);
+$ousea-line-height-title: var(--ousea-line-height-title, 24.21PX);
+$ousea-line-height-ui: var(--ousea-line-height-ui, 19.91PX);
 
 // Ousea spacing primitives
 $ousea-space-1: var(--ousea-space-1, 16rpx);
@@ -98,6 +102,11 @@ $ousea-space-2: var(--ousea-space-2, 24rpx);
 $ousea-space-3: var(--ousea-space-3, 32rpx);
 $ousea-space-4: var(--ousea-space-4, 40rpx);
 $ousea-space-5: var(--ousea-space-5, 64rpx);
+$ousea-space-block-1: var(--ousea-space-block-1, 8.38PX);
+$ousea-space-block-2: var(--ousea-space-block-2, 12.58PX);
+$ousea-space-block-3: var(--ousea-space-block-3, 16.77PX);
+$ousea-space-block-4: var(--ousea-space-block-4, 20.96PX);
+$ousea-space-block-5: var(--ousea-space-block-5, 33.54PX);
 
 // Ousea radius primitives
 $ousea-radius-pill: var(--ousea-radius-pill, 999rpx);
@@ -106,13 +115,19 @@ $ousea-radius-card: var(--ousea-radius-card, 32rpx);
 $ousea-radius-card-lg: var(--ousea-radius-card-lg, 36rpx);
 $ousea-radius-sheet: var(--ousea-radius-sheet, 44rpx);
 
-// 8rpx spacing grid
+// 8rpx spacing grid；纵向 block Token 按 393PX 参考宽度换算
 $space-1: 8rpx;
 $space-2: 16rpx;
 $space-3: 24rpx;
 $space-4: 32rpx;
 $space-5: 40rpx;
 $space-6: 48rpx;
+$space-block-1: 4.19PX;
+$space-block-2: 8.38PX;
+$space-block-3: 12.58PX;
+$space-block-4: 16.77PX;
+$space-block-5: 20.96PX;
+$space-block-6: 25.15PX;
 
 // Radius
 $radius-sm: 16rpx;

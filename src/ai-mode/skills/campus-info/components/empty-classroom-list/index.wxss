@@ -10,14 +10,14 @@
   flex-direction: column;
   box-sizing: border-box;
   width: 100%;
-  padding: 3.2vw;
+  padding: 12.58PX 3.2vw;
   overflow: hidden;
   background-color: #f4fafc;
   background-image: linear-gradient(135deg, #e2f3ee 0%, #fff8ee 100%);
-  border-top-width: 1px;
-  border-right-width: 1px;
-  border-bottom-width: 1px;
-  border-left-width: 1px;
+  border-top-width: 1PX;
+  border-right-width: 1PX;
+  border-bottom-width: 1PX;
+  border-left-width: 1PX;
   border-top-style: solid;
   border-right-style: solid;
   border-bottom-style: solid;
@@ -38,7 +38,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 2.13vw;
+  padding-bottom: 8.37PX;
 }
 
 .classroom-card__query {
@@ -59,8 +59,8 @@
 .classroom-card__notice,
 .classroom-card__source,
 .classroom-card__handoff {
-  font-size: 3.2vw;
-  line-height: 4.27vw;
+  font-size: 12.58PX;
+  line-height: 16.78PX;
 }
 
 .classroom-card__eyebrow {
@@ -70,8 +70,8 @@
 
 .classroom-card__campus,
 .classroom-card__empty-title {
-  font-size: 4.53vw;
-  line-height: 5.87vw;
+  font-size: 17.81PX;
+  line-height: 23.07PX;
   font-weight: 600;
   overflow: hidden;
   white-space: nowrap;
@@ -96,8 +96,8 @@
 }
 
 .classroom-card__total-number {
-  font-size: 4.53vw;
-  line-height: 5.87vw;
+  font-size: 17.81PX;
+  line-height: 23.07PX;
   font-weight: 600;
   color: #3095b6;
 }
@@ -112,9 +112,9 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding-top: 2.13vw;
-  padding-bottom: 2.13vw;
-  border-top-width: 1px;
+  padding-top: 8.37PX;
+  padding-bottom: 8.37PX;
+  border-top-width: 1PX;
   border-top-style: solid;
   border-top-color: #d9e9e8;
   overflow: hidden;
@@ -131,8 +131,8 @@
 .classroom-card__room-name {
   flex-grow: 1;
   min-width: 0;
-  font-size: 4vw;
-  line-height: 5.33vw;
+  font-size: 15.72PX;
+  line-height: 20.95PX;
   font-weight: 500;
   overflow: hidden;
   white-space: nowrap;
@@ -160,16 +160,16 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-top: 8vw;
-  padding-bottom: 8vw;
+  padding-top: 31.44PX;
+  padding-bottom: 31.44PX;
   text-align: center;
 }
 
 .classroom-card__footer {
   display: flex;
   flex-direction: column;
-  padding-top: 2.13vw;
-  border-top-width: 1px;
+  padding-top: 8.37PX;
+  border-top-width: 1PX;
   border-top-style: solid;
   border-top-color: #d9e9e8;
 }

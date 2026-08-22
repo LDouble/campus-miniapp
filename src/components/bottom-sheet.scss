@@ -30,7 +30,7 @@
   width: 72rpx;
   height: 8rpx;
   flex: none;
-  margin: token.$space-2 auto 4rpx;
+  margin: token.$space-block-2 auto 2.1PX;
   background: token.$color-border-strong;
   border-radius: 4rpx;
 }
@@ -47,7 +47,7 @@
 
 .bottom-sheet__header > text {
   color: token.$color-text-heading;
-  font-size: 31rpx;
+  font-size: 16.24PX;
   font-weight: 760;
 }
 
@@ -58,7 +58,7 @@
   align-items: center;
   justify-content: flex-end;
   color: token.$color-text-secondary;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .bottom-sheet__close--pressed {

@@ -16,7 +16,8 @@
   left: 100%;
   display: flex;
   width: max-content;
-  gap: 12rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
   align-items: center;
   pointer-events: none;
   animation: fresh-barrage-cross 9200ms linear both;
@@ -32,7 +33,7 @@
   max-width: 610rpx;
   min-height: 64rpx;
   box-sizing: border-box;
-  padding: 8rpx 22rpx 8rpx 10rpx;
+  padding: 4.19PX 22rpx 4.19PX 10rpx;
   align-items: center;
   overflow: hidden;
   color: var(--campus-text-body, #314158);
@@ -57,7 +58,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  font-size: 22rpx;
+  font-size: 11.53PX;
   font-weight: 700;
   border: 0;
   border-radius: 50%;
@@ -76,9 +77,9 @@
   max-width: 510rpx;
   max-height: 66rpx;
   overflow: hidden;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 16.98PX;
   text-overflow: ellipsis;
   white-space: normal;
   word-break: break-all;

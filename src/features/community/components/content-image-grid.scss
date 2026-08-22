@@ -3,10 +3,11 @@
   width: 472rpx;
   max-width: 100%;
   height: auto;
-  margin-top: 12rpx;
+  margin-top: 6.29PX;
   overflow: visible;
   grid-template-columns: repeat(3, 152rpx);
-  gap: 8rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
   background: transparent;
 }
 
@@ -53,7 +54,7 @@
   box-sizing: border-box;
   background: var(--campus-surface-subtle, #f5f8fc);
   color: var(--campus-text-muted, #6b7a90);
-  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-size: var(--ousea-font-size-caption, 12.58PX);
   font-weight: var(--ousea-font-weight-medium, 500);
   text-align: center;
 }
@@ -68,7 +69,7 @@
   box-sizing: border-box;
   background: var(--campus-surface-subtle, #f5f8fc);
   color: var(--campus-text-muted, #6b7a90);
-  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-size: var(--ousea-font-size-caption, 12.58PX);
 }
 
 .content-image-grid__reviewing--overlay {

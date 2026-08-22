@@ -15,15 +15,16 @@ page {
   }
 
   &__content {
-    padding: 22rpx 28rpx calc(54rpx + env(safe-area-inset-bottom));
+    padding: 11.53PX 28rpx calc(54rpx + env(safe-area-inset-bottom));
   }
 }
 
 .materials-view-tabs {
   display: flex;
-  gap: 8rpx;
-  padding: 7rpx;
-  margin-bottom: 18rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
+  padding: 3.67PX 7rpx;
+  margin-bottom: 9.43PX;
   background: #eaf0f8;
   border: 2rpx solid #e0e8f4;
   border-radius: 22rpx;
@@ -37,7 +38,7 @@ page {
     justify-content: center;
     height: 66rpx;
     color: var(--campus-text-body, #45556c);
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
     border-radius: 17rpx;
 
@@ -49,7 +50,7 @@ page {
       height: 30rpx;
       margin-left: 8rpx;
       color: #fff;
-      font-size: 20rpx;
+      font-size: 10.48PX;
       background: var(--campus-primary, #2b7fff);
       border-radius: 15rpx;
     }
@@ -71,7 +72,7 @@ page {
   align-items: center;
   height: 84rpx;
   padding: 0 18rpx;
-  margin-bottom: 18rpx;
+  margin-bottom: 9.43PX;
   background: var(--campus-surface, #fff);
   border: 2rpx solid var(--campus-border, #dce6f3);
   border-radius: 22rpx;
@@ -89,7 +90,7 @@ page {
     flex: 1;
     height: 80rpx;
     color: var(--campus-text-heading, #1d293d);
-    font-size: 25rpx;
+    font-size: 13.1PX;
   }
 
   > text {
@@ -99,7 +100,7 @@ page {
     align-items: center;
     justify-content: center;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 34rpx;
+    font-size: 17.82PX;
   }
 
   &__placeholder {
@@ -110,8 +111,8 @@ page {
 .materials-hero {
   display: flex;
   min-height: 196rpx;
-  padding: 28rpx 28rpx 28rpx 30rpx;
-  margin-bottom: 22rpx;
+  padding: 14.67PX 28rpx 14.67PX 30rpx;
+  margin-bottom: 11.53PX;
   overflow: hidden;
   align-items: center;
   justify-content: space-between;
@@ -131,17 +132,17 @@ page {
 
   &__eyebrow {
     color: #52729e;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 
   &__title {
     display: -webkit-box;
     overflow: hidden;
-    padding: 8rpx 0;
+    padding: 4.19PX 0;
     color: #1d4e96;
-    font-size: 32rpx;
+    font-size: 16.77PX;
     font-weight: 780;
-    line-height: 1.38;
+    line-height: 23.14PX;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -150,8 +151,8 @@ page {
     display: -webkit-box;
     overflow: hidden;
     color: #52627a;
-    font-size: 22rpx;
-    line-height: 1.6;
+    font-size: 11.53PX;
+    line-height: 18.44PX;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -159,7 +160,7 @@ page {
   image {
     width: 76rpx;
     height: 76rpx;
-    padding: 17rpx;
+    padding: 8.91PX 17rpx;
     margin-left: 20rpx;
     flex: none;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
@@ -169,9 +170,10 @@ page {
 
 .materials-source-context {
   display: flex;
-  gap: 16rpx;
-  padding: 17rpx 16rpx 17rpx 20rpx;
-  margin: -6rpx 0 20rpx;
+  row-gap: 8.38PX;
+  column-gap: 16rpx;
+  padding: 8.91PX 16rpx 8.91PX 20rpx;
+  margin: -3.14PX 0 10.48PX;
   align-items: center;
   justify-content: space-between;
   background: var(--campus-surface, #fff);
@@ -189,7 +191,7 @@ page {
     text:first-child {
       overflow: hidden;
       color: var(--campus-text-body, #45556c);
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 720;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -198,10 +200,10 @@ page {
     text:last-child {
       display: -webkit-box;
       overflow: hidden;
-      padding-top: 4rpx;
+      padding-top: 2.1PX;
       color: var(--campus-text-muted, #90a1b9);
-      font-size: 20rpx;
-      line-height: 1.45;
+      font-size: 10.48PX;
+      line-height: 15.2PX;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
     }
@@ -215,7 +217,7 @@ page {
     align-items: center;
     justify-content: center;
     color: var(--campus-primary, #2b7fff);
-    font-size: 21rpx;
+    font-size: 11PX;
     font-weight: 700;
     background: var(--campus-surface-primary, #edf4ff);
     border-radius: 16rpx;
@@ -224,8 +226,9 @@ page {
 
 .materials-actions {
   display: flex;
-  gap: 12rpx;
-  margin-bottom: 28rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
+  margin-bottom: 14.67PX;
   align-items: center;
 }
 
@@ -237,13 +240,14 @@ page {
   flex: none;
   align-items: center;
   justify-content: center;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 700;
   border-radius: 20rpx;
 }
 
 .materials-filter-button {
-  gap: 8rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
   color: var(--campus-text-body, #45556c);
   background: var(--campus-surface, #fff);
   border: 2rpx solid var(--campus-border, #dce6f3);
@@ -286,7 +290,8 @@ page {
 .materials-course-list,
 .materials-inline-options {
   display: inline-flex;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
 }
 
 .materials-course-chip,
@@ -299,7 +304,7 @@ page {
   align-items: center;
   justify-content: center;
   color: var(--campus-text-body, #45556c);
-  font-size: 23rpx;
+  font-size: 12.05PX;
   background: var(--campus-surface, #fff);
   border: 2rpx solid var(--campus-border, #dce6f3);
   border-radius: 18rpx;
@@ -330,8 +335,9 @@ page {
 
 .materials-heading {
   display: flex;
-  gap: 16rpx;
-  padding: 0 6rpx 14rpx;
+  row-gap: 8.38PX;
+  column-gap: 16rpx;
+  padding: 0 6rpx 7.34PX;
   align-items: flex-end;
   justify-content: space-between;
 
@@ -345,25 +351,25 @@ page {
 
     text:first-child {
       color: var(--campus-text-heading, #1d293d);
-      font-size: 28rpx;
+      font-size: 14.67PX;
       font-weight: 760;
     }
 
     text:last-child {
       overflow: hidden;
-      padding-top: 5rpx;
+      padding-top: 2.62PX;
       color: var(--campus-text-muted, #90a1b9);
-      font-size: 22rpx;
+      font-size: 11.53PX;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
   }
 
   > text {
-    padding-bottom: 2rpx;
+    padding-bottom: 1.05PX;
     flex: none;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 }
 
@@ -373,9 +379,10 @@ page {
 
 .material-card {
   display: flex;
-  gap: 17rpx;
-  padding: 22rpx 18rpx;
-  margin-bottom: 14rpx;
+  row-gap: 8.91PX;
+  column-gap: 17rpx;
+  padding: 11.53PX 18rpx;
+  margin-bottom: 7.34PX;
   align-items: center;
   background: var(--campus-surface, #fff);
   border: 2rpx solid var(--campus-border, #e4ebf5);
@@ -396,9 +403,9 @@ page {
     align-items: center;
     justify-content: center;
     color: #277065;
-    font-size: 20rpx;
+    font-size: 10.48PX;
     font-weight: 800;
-    line-height: 1.25;
+    line-height: 13.1PX;
     text-align: center;
     background: #e4f4ee;
     border-radius: 18rpx;
@@ -423,19 +430,19 @@ page {
   &__title {
     overflow: hidden;
     color: var(--campus-text-heading, #1d293d);
-    font-size: 26rpx;
+    font-size: 13.62PX;
     font-weight: 740;
-    line-height: 1.42;
+    line-height: 19.35PX;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__course {
     overflow: hidden;
-    padding: 7rpx 0;
+    padding: 3.67PX 0;
     color: var(--campus-text-body, #45556c);
-    font-size: 22rpx;
-    line-height: 1.38;
+    font-size: 11.53PX;
+    line-height: 15.91PX;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -443,8 +450,8 @@ page {
   &__status {
     overflow: hidden;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 21rpx;
-    line-height: 1.38;
+    font-size: 11PX;
+    line-height: 15.19PX;
     text-overflow: ellipsis;
     white-space: nowrap;
 
@@ -453,41 +460,41 @@ page {
   }
 
   &__arrow {
-    padding: 12rpx 4rpx 12rpx 10rpx;
+    padding: 6.29PX 4rpx 6.29PX 10rpx;
     flex: none;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 35rpx;
+    font-size: 18.34PX;
   }
 }
 
 .materials-empty {
   display: flex;
-  padding: 88rpx 20rpx;
+  padding: 46.11PX 20rpx;
   flex-direction: column;
   align-items: center;
   color: var(--campus-text-body, #45556c);
-  font-size: 25rpx;
+  font-size: 13.1PX;
   text-align: center;
 
   view {
     width: 62rpx;
     height: 62rpx;
-    margin-bottom: 18rpx;
+    margin-bottom: 9.43PX;
     background: #dceaff;
     border-radius: 50%;
   }
 
   text:last-child {
     max-width: 520rpx;
-    padding-top: 9rpx;
+    padding-top: 4.72PX;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 22rpx;
-    line-height: 1.6;
+    font-size: 11.53PX;
+    line-height: 18.44PX;
   }
 
   &--action text:last-child {
     min-height: 54rpx;
-    padding: 14rpx 18rpx 0;
+    padding: 7.34PX 18rpx 0;
     color: var(--campus-primary, #2b7fff);
     font-weight: 700;
   }
@@ -495,9 +502,9 @@ page {
 
 .materials-loading-more {
   display: block;
-  padding: 20rpx;
+  padding: 10.48PX 20rpx;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 22rpx;
+  font-size: 11.53PX;
   text-align: center;
 }
 
@@ -522,7 +529,7 @@ page {
   &__handle {
     width: 62rpx;
     height: 8rpx;
-    margin: 16rpx auto 0;
+    margin: 8.38PX auto 0;
     background: #cbd7e7;
     border-radius: 999rpx;
   }
@@ -538,13 +545,13 @@ page {
     align-items: center;
     justify-content: center;
     color: var(--campus-text-body, #45556c);
-    font-size: 34rpx;
+    font-size: 17.82PX;
     background: #f1f5fa;
     border-radius: 50%;
   }
 
   &__body {
-    padding: 28rpx 28rpx calc(38rpx + env(safe-area-inset-bottom));
+    padding: 14.67PX 28rpx calc(38rpx + env(safe-area-inset-bottom));
   }
 
   &__title,
@@ -558,9 +565,9 @@ page {
     overflow: hidden;
     padding-right: 70rpx;
     color: var(--campus-text-heading, #1d293d);
-    font-size: 32rpx;
+    font-size: 16.77PX;
     font-weight: 780;
-    line-height: 1.38;
+    line-height: 23.14PX;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
@@ -568,18 +575,18 @@ page {
   &__subtitle {
     display: -webkit-box;
     overflow: hidden;
-    padding: 8rpx 56rpx 22rpx 0;
+    padding: 4.19PX 56rpx 11.53PX 0;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 23rpx;
-    line-height: 1.55;
+    font-size: 12.05PX;
+    line-height: 18.69PX;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
 
   &__label {
-    padding: 23rpx 0 12rpx;
+    padding: 12.05PX 0 6.29PX;
     color: var(--campus-text-body, #45556c);
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
   }
 }
@@ -587,7 +594,8 @@ page {
 .materials-option-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
 
   view {
     max-width: 100%;
@@ -604,11 +612,11 @@ page {
   display: flex;
   min-height: 84rpx;
   padding: 0 22rpx;
-  margin-top: 26rpx;
+  margin-top: 13.62PX;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 750;
   text-align: center;
   background: linear-gradient(135deg, #3b8cff, var(--campus-primary, #2b7fff));
@@ -629,9 +637,9 @@ page {
 
 .materials-secondary {
   min-height: 64rpx;
-  margin-top: 10rpx;
+  margin-top: 5.24PX;
   color: var(--campus-text-body, #45556c);
-  font-size: 24rpx;
+  font-size: 12.58PX;
   background: transparent;
   box-shadow: none;
 
@@ -645,7 +653,7 @@ page {
   box-sizing: border-box;
   width: 100%;
   color: var(--campus-text-heading, #1d293d);
-  font-size: 25rpx;
+  font-size: 13.1PX;
   background: var(--campus-surface-subtle, #f8faff);
   border: 2rpx solid var(--campus-border, #dce6f3);
   border-radius: 18rpx;
@@ -662,21 +670,22 @@ page {
 
 .materials-textarea {
   min-height: 158rpx;
-  padding: 18rpx 20rpx;
-  line-height: 1.6;
+  padding: 9.43PX 20rpx;
+  line-height: 26.83PX;
 }
 
 .materials-sheet__field-heading {
   display: flex;
-  gap: 12rpx;
-  padding: 23rpx 0 12rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
+  padding: 12.05PX 0 6.29PX;
   align-items: center;
   justify-content: space-between;
 
   > text:first-child {
     min-width: 0;
     color: var(--campus-text-body, #45556c);
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
   }
 }
@@ -688,7 +697,7 @@ page {
   flex: none;
   align-items: center;
   color: var(--campus-primary, #2b7fff);
-  font-size: 20rpx;
+  font-size: 10.48PX;
   font-weight: 680;
   background: var(--campus-surface-primary, #edf4ff);
   border-radius: 12rpx;
@@ -700,7 +709,7 @@ page {
 }
 
 .materials-course-picker {
-  padding: 13rpx;
+  padding: 6.81PX 13rpx;
   background: #f5f8fc;
   border: 2rpx solid var(--campus-border, #e4ebf5);
   border-radius: 22rpx;
@@ -731,23 +740,24 @@ page {
     align-items: center;
     justify-content: center;
     color: var(--campus-text-body, #45556c);
-    font-size: 30rpx;
+    font-size: 15.72PX;
     background: var(--campus-border, #edf1f6);
     border-radius: 16rpx;
   }
 
   &__caption {
     display: block;
-    padding: 15rpx 5rpx 10rpx;
+    padding: 7.86PX 5rpx 5.24PX;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 21rpx;
+    font-size: 11PX;
     font-weight: 680;
   }
 
   &__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10rpx;
+    row-gap: 5.24PX;
+    column-gap: 10rpx;
   }
 
   &__option {
@@ -755,7 +765,7 @@ page {
     display: flex;
     min-width: 0;
     min-height: 94rpx;
-    padding: 13rpx 14rpx;
+    padding: 6.81PX 14rpx;
     overflow: hidden;
     align-items: center;
     background: var(--campus-surface, #fff);
@@ -773,18 +783,18 @@ page {
         display: -webkit-box;
         overflow: hidden;
         color: var(--campus-text-body, #45556c);
-        font-size: 23rpx;
+        font-size: 12.05PX;
         font-weight: 700;
-        line-height: 1.35;
+        line-height: 16.28PX;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
       }
 
       text:last-child {
         overflow: hidden;
-        padding-top: 5rpx;
+        padding-top: 2.62PX;
         color: var(--campus-text-muted, #90a1b9);
-        font-size: 19rpx;
+        font-size: 9.96PX;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
@@ -797,9 +807,9 @@ page {
       min-height: 31rpx;
       padding: 0 8rpx;
       color: #fff;
-      font-size: 18rpx;
+      font-size: 9.43PX;
       font-weight: 700;
-      line-height: 31rpx;
+      line-height: 16.24PX;
       background: var(--campus-primary, #2b7fff);
       border-radius: 10rpx;
     }
@@ -821,10 +831,10 @@ page {
 
   &__empty {
     display: block;
-    padding: 22rpx 8rpx 10rpx;
+    padding: 11.53PX 8rpx 5.24PX;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 22rpx;
-    line-height: 1.55;
+    font-size: 11.53PX;
+    line-height: 17.87PX;
     text-align: center;
   }
 
@@ -832,17 +842,17 @@ page {
     display: flex;
     min-height: 64rpx;
     padding: 0 8rpx;
-    margin-top: 10rpx;
+    margin-top: 5.24PX;
     align-items: center;
     justify-content: space-between;
     color: var(--campus-primary, #2b7fff);
-    font-size: 22rpx;
+    font-size: 11.53PX;
     font-weight: 700;
     border-top: 2rpx solid var(--campus-border, #e4ebf5);
 
     text:last-child {
       color: var(--campus-text-muted, #90a1b9);
-      font-size: 20rpx;
+      font-size: 10.48PX;
       font-weight: 600;
     }
   }
@@ -892,11 +902,11 @@ page {
 }
 
 .materials-upload-sheet__body {
-  padding-bottom: 28rpx;
+  padding-bottom: 14.67PX;
 }
 
 .materials-upload-sheet__footer {
-  padding: 18rpx 28rpx calc(22rpx + env(safe-area-inset-bottom));
+  padding: 9.43PX 28rpx calc(22rpx + env(safe-area-inset-bottom));
   flex: none;
   background: var(--campus-surface, #fff);
   border-top: 2rpx solid #edf2f8;
@@ -922,18 +932,18 @@ page {
     display: flex;
     min-height: 52rpx;
     padding: 0 14rpx 0 4rpx;
-    margin: -7rpx 0 12rpx;
+    margin: -3.67PX 0 6.29PX;
     align-items: center;
     align-self: flex-start;
     color: var(--campus-primary, #2b7fff);
-    font-size: 22rpx;
+    font-size: 11.53PX;
     font-weight: 700;
     background: var(--campus-surface-primary, #edf4ff);
     border-radius: 16rpx;
 
     text:first-child {
-      padding: 0 8rpx 2rpx 2rpx;
-      font-size: 32rpx;
+      padding: 0 8rpx 1.05PX 2rpx;
+      font-size: 16.77PX;
       font-weight: 500;
     }
   }
@@ -961,7 +971,7 @@ page {
       height: 78rpx;
       flex: 1;
       color: var(--campus-text-heading, #1d293d);
-      font-size: 25rpx;
+      font-size: 13.1PX;
     }
 
     > view {
@@ -972,7 +982,7 @@ page {
       align-items: center;
       justify-content: center;
       color: var(--campus-text-body, #45556c);
-      font-size: 30rpx;
+      font-size: 15.72PX;
       background: var(--campus-border, #edf1f6);
       border-radius: 16rpx;
     }
@@ -980,20 +990,20 @@ page {
 
   &__summary {
     display: flex;
-    padding: 18rpx 4rpx 12rpx;
+    padding: 9.43PX 4rpx 6.29PX;
     flex: none;
     align-items: center;
     justify-content: space-between;
 
     text:first-child {
       color: var(--campus-text-body, #45556c);
-      font-size: 23rpx;
+      font-size: 12.05PX;
       font-weight: 700;
     }
 
     text:last-child {
       color: var(--campus-text-muted, #90a1b9);
-      font-size: 21rpx;
+      font-size: 11PX;
     }
   }
 
@@ -1005,10 +1015,11 @@ page {
 
   &__option {
     display: flex;
-    gap: 16rpx;
+    row-gap: 8.38PX;
+    column-gap: 16rpx;
     min-height: 88rpx;
-    padding: 12rpx 14rpx 12rpx 18rpx;
-    margin-bottom: 10rpx;
+    padding: 6.29PX 14rpx 6.29PX 18rpx;
+    margin-bottom: 5.24PX;
     align-items: center;
     justify-content: space-between;
     background: var(--campus-surface, #fff);
@@ -1026,7 +1037,7 @@ page {
       text:first-child {
         overflow: hidden;
         color: var(--campus-text-body, #45556c);
-        font-size: 25rpx;
+        font-size: 13.1PX;
         font-weight: 700;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1034,9 +1045,9 @@ page {
 
       text:last-child {
         overflow: hidden;
-        padding-top: 6rpx;
+        padding-top: 3.14PX;
         color: var(--campus-text-muted, #90a1b9);
-        font-size: 20rpx;
+        font-size: 10.48PX;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
@@ -1051,7 +1062,7 @@ page {
       align-items: center;
       justify-content: center;
       color: var(--campus-primary, #2b7fff);
-      font-size: 20rpx;
+      font-size: 10.48PX;
       font-weight: 700;
       background: var(--campus-surface-primary, #edf4ff);
       border-radius: 15rpx;
@@ -1078,7 +1089,7 @@ page {
 
   &__empty {
     display: flex;
-    padding: 78rpx 20rpx;
+    padding: 40.87PX 20rpx;
     flex-direction: column;
     align-items: center;
 
@@ -1088,14 +1099,14 @@ page {
 
     text:first-child {
       color: var(--campus-text-body, #45556c);
-      font-size: 25rpx;
+      font-size: 13.1PX;
       font-weight: 700;
     }
 
     text:last-child {
-      padding-top: 9rpx;
+      padding-top: 4.72PX;
       color: var(--campus-text-muted, #90a1b9);
-      font-size: 22rpx;
+      font-size: 11.53PX;
     }
   }
 }
@@ -1103,12 +1114,12 @@ page {
 .materials-file-empty {
   display: flex;
   min-height: 220rpx;
-  margin-top: 16rpx;
+  margin-top: 8.38PX;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: var(--campus-primary, #2b7fff);
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 750;
   text-align: center;
   background: #f3f7ff;
@@ -1116,22 +1127,23 @@ page {
   border-radius: 24rpx;
 
   text:last-child {
-    padding: 12rpx 24rpx 0;
+    padding: 6.29PX 24rpx 0;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 22rpx;
+    font-size: 11.53PX;
     font-weight: 400;
   }
 }
 
 .materials-batch {
-  padding: 2rpx 18rpx 22rpx;
-  margin-bottom: 18rpx;
+  padding: 1.05PX 18rpx 11.53PX;
+  margin-bottom: 9.43PX;
   background: #f5f8fc;
   border-radius: 24rpx;
 
   &__row {
     display: flex;
-    gap: 12rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
 
     .materials-input {
       flex: 1;
@@ -1144,27 +1156,28 @@ page {
       align-items: center;
       justify-content: center;
       color: #fff;
-      font-size: 23rpx;
+      font-size: 12.05PX;
       background: var(--campus-primary, #2b7fff);
       border-radius: 18rpx;
     }
   }
 
   .materials-inline-options {
-    padding-bottom: 4rpx;
+    padding-bottom: 2.1PX;
   }
 }
 
 .materials-draft {
-  padding: 19rpx;
-  margin-bottom: 14rpx;
+  padding: 9.96PX 19rpx;
+  margin-bottom: 7.34PX;
   background: var(--campus-surface, #fff);
   border: 2rpx solid var(--campus-border, #e4ebf5);
   border-radius: 22rpx;
 
   &__heading {
     display: flex;
-    gap: 16rpx;
+    row-gap: 8.38PX;
+    column-gap: 16rpx;
     align-items: flex-start;
     justify-content: space-between;
 
@@ -1172,9 +1185,9 @@ page {
       overflow: hidden;
       flex: 1;
       color: var(--campus-text-body, #45556c);
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 700;
-      line-height: 1.45;
+      line-height: 18.24PX;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -1183,31 +1196,31 @@ page {
       min-width: 58rpx;
       flex: none;
       color: #c65b63;
-      font-size: 22rpx;
+      font-size: 11.53PX;
       text-align: right;
     }
   }
 
   &__meta {
     display: block;
-    padding-top: 6rpx;
+    padding-top: 3.14PX;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 21rpx;
+    font-size: 11PX;
   }
 
   &__error {
     display: block;
-    padding-top: 12rpx;
+    padding-top: 6.29PX;
     color: #c65b63;
-    font-size: 22rpx;
-    line-height: 1.45;
+    font-size: 11.53PX;
+    line-height: 16.72PX;
     word-break: break-all;
   }
 }
 
 .materials-progress {
   height: 10rpx;
-  margin-top: 18rpx;
+  margin-top: 9.43PX;
   overflow: hidden;
   background: #e6edf7;
   border-radius: 99rpx;
@@ -1225,17 +1238,17 @@ page {
   align-items: center;
   justify-content: center;
   color: var(--campus-primary, #2b7fff);
-  font-size: 24rpx;
+  font-size: 12.58PX;
   border: 2rpx dashed #9fc5ff;
   border-radius: 20rpx;
 }
 
 .materials-upload-notice {
   display: block;
-  padding: 16rpx 18rpx 0;
+  padding: 8.38PX 18rpx 0;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 20rpx;
-  line-height: 1.5;
+  font-size: 10.48PX;
+  line-height: 15.72PX;
   text-align: center;
 }
 
@@ -1243,18 +1256,18 @@ page {
   display: flex;
   width: 92rpx;
   height: 102rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 10.48PX;
   align-items: center;
   justify-content: center;
   color: #277065;
-  font-size: 21rpx;
+  font-size: 11PX;
   font-weight: 800;
   background: #e4f4ee;
   border-radius: 20rpx;
 }
 
 .materials-detail-list {
-  margin-top: 6rpx;
+  margin-top: 3.14PX;
   overflow: hidden;
   background: var(--campus-surface-subtle, #f7f9fc);
   border: 2rpx solid var(--campus-border, #e4ebf5);
@@ -1262,8 +1275,9 @@ page {
 
   > view {
     display: flex;
-    gap: 18rpx;
-    padding: 19rpx 18rpx;
+    row-gap: 9.43PX;
+    column-gap: 18rpx;
+    padding: 9.96PX 18rpx;
     align-items: flex-start;
     justify-content: space-between;
     border-bottom: 2rpx solid var(--campus-border, #e4ebf5);
@@ -1271,13 +1285,13 @@ page {
     text:first-child {
       flex: none;
       color: var(--campus-text-muted, #90a1b9);
-      font-size: 23rpx;
+      font-size: 12.05PX;
     }
 
     text:last-child {
       color: var(--campus-text-body, #45556c);
-      font-size: 23rpx;
-      line-height: 1.45;
+      font-size: 12.05PX;
+      line-height: 17.48PX;
       text-align: right;
       word-break: break-all;
     }
@@ -1290,10 +1304,10 @@ page {
 
 .materials-detail-description {
   display: block;
-  padding: 0 0 20rpx;
+  padding: 0 0 10.48PX;
   color: var(--campus-text-body, #45556c);
-  font-size: 24rpx;
-  line-height: 1.7;
+  font-size: 12.58PX;
+  line-height: 21.38PX;
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -1319,14 +1333,14 @@ page {
     }
 
     text:last-child {
-      padding-top: 6rpx;
+      padding-top: 3.14PX;
       color: var(--campus-text-muted, #90a1b9) !important;
-      font-size: 21rpx !important;
+      font-size: 11PX !important;
     }
   }
 
   > text {
-    padding: 12rpx 15rpx;
+    padding: 6.29PX 15rpx;
     flex: none;
     color: var(--campus-primary, #2b7fff) !important;
     font-weight: 700;
@@ -1337,16 +1351,17 @@ page {
 
 .materials-feedback-files {
   display: flex;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
   flex-direction: column;
 
   view {
     max-width: 100%;
-    padding: 18rpx 20rpx;
+    padding: 9.43PX 20rpx;
     box-sizing: border-box;
     overflow: hidden;
     color: var(--campus-text-body, #45556c);
-    font-size: 23rpx;
+    font-size: 12.05PX;
     text-overflow: ellipsis;
     white-space: nowrap;
     background: var(--campus-surface-subtle, #f8faff);
@@ -1356,8 +1371,8 @@ page {
 }
 
 .materials-note {
-  padding: 19rpx 20rpx;
-  margin-top: 16rpx;
+  padding: 9.96PX 20rpx;
+  margin-top: 8.38PX;
   background: #fff5e8;
   border: 2rpx solid #f5dfbf;
   border-radius: 20rpx;
@@ -1368,20 +1383,20 @@ page {
 
   text:first-child {
     color: #9b6828;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     font-weight: 750;
   }
 
   text:last-child {
-    padding-top: 8rpx;
+    padding-top: 4.19PX;
     color: #7e674a;
-    font-size: 22rpx;
-    line-height: 1.6;
+    font-size: 11.53PX;
+    line-height: 18.44PX;
     word-break: break-all;
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 360PX) {
   .materials-page__content,
   .materials-sheet__body {
     padding-right: 20rpx;
@@ -1389,39 +1404,43 @@ page {
   }
 
   .materials-view-tabs {
-    gap: 4rpx;
-    padding: 5rpx;
+    row-gap: 2.1PX;
+    column-gap: 4rpx;
+    padding: 2.62PX 5rpx;
 
     > view {
       height: 62rpx;
-      font-size: 22rpx;
+      font-size: 11.53PX;
 
       text {
         min-width: 26rpx;
         height: 26rpx;
         margin-left: 4rpx;
-        font-size: 18rpx;
+        font-size: 9.43PX;
       }
     }
   }
 
   .materials-hero {
     min-height: 174rpx;
-    padding: 24rpx;
+    padding: 12.58PX 24rpx;
 
-    &__title { font-size: 29rpx; }
-    image { width: 64rpx; height: 64rpx; padding: 14rpx; margin-left: 14rpx; }
+    &__title { font-size: 15.2PX; }
+    image { width: 64rpx; height: 64rpx; padding: 7.34PX 14rpx; margin-left: 14rpx; }
   }
 
   .materials-filter-button,
-  .materials-upload-button { padding: 0 13rpx; font-size: 22rpx; }
-  .materials-course-chip { max-width: 180rpx; padding: 0 13rpx; font-size: 22rpx; }
-  .material-card { gap: 13rpx; padding: 18rpx 15rpx; }
-  .material-card__file { width: 66rpx; height: 76rpx; font-size: 19rpx; }
-  .material-card__title { font-size: 24rpx; }
-  .material-card__arrow { padding-left: 3rpx; font-size: 31rpx; }
+  .materials-upload-button { padding: 0 13rpx; font-size: 11.53PX; }
+  .materials-course-chip { max-width: 180rpx; padding: 0 13rpx; font-size: 11.53PX; }
+  .material-card { row-gap: 6.81PX;
+ column-gap: 13rpx; padding: 9.43PX 15rpx; }
+  .material-card__file { width: 66rpx; height: 76rpx; font-size: 9.96PX; }
+  .material-card__title { font-size: 12.58PX; }
+  .material-card__arrow { padding-left: 3rpx; font-size: 16.24PX; }
   .materials-course-picker__grid { grid-template-columns: minmax(0, 1fr); }
-  .materials-course-browser__option { gap: 10rpx; padding-left: 14rpx; }
+  .materials-course-browser__option { row-gap: 5.24PX;
+ column-gap: 10rpx; padding-left: 14rpx; }
   .materials-course-browser__option > text { min-width: 62rpx; padding: 0 8rpx; }
-  .materials-detail-list > view { gap: 12rpx; padding-right: 14rpx; padding-left: 14rpx; }
+  .materials-detail-list > view { row-gap: 6.29PX;
+ column-gap: 12rpx; padding-right: 14rpx; padding-left: 14rpx; }
 }

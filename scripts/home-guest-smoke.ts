@@ -264,8 +264,8 @@ assert.ok(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__more\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u,
-  '首页混排 Feed 双点入口必须提供稳定点击热区',
+  /\.community-post__more\s*\{[\s\S]*?width:\s*56rpx;[\s\S]*?height:\s*56rpx;/u,
+  '首页混排 Feed 双点入口不得用额外透明热区撑高卡片',
 )
 assert.ok(
   homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中'")
@@ -366,8 +366,8 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__more\s*\{[^}]*width:\s*88rpx;[^}]*height:\s*88rpx;/u,
-  '帖子卡片三个点必须提供足够大的触控热区',
+  /\.community-post__more\s*\{[^}]*width:\s*56rpx;[^}]*height:\s*56rpx;/u,
+  '帖子卡片三个点必须贴合可见操作尺寸',
 )
 assert.match(
   communityPostStyleSource,
@@ -376,8 +376,8 @@ assert.match(
 )
 assert.match(
   communityPostStyleSource,
-  /\.community-post__meta\s*\{[^}]*padding:\s*12rpx 0 8rpx;/u,
-  '帖子卡片操作行必须保留首页垂直间距',
+  /\.community-post__meta\s*\{[^}]*padding:\s*6\.29PX 0 4\.19PX;/u,
+  '帖子卡片操作行必须保留适当垂直间距',
 )
 assert.match(
   communityPostStyleSource,

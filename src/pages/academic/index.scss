@@ -52,14 +52,14 @@ page {
   right: 0;
   left: 0;
   z-index: 24;
-  padding: 16rpx 24rpx;
+  padding: 8.38PX 24rpx;
   background: rgba(255, 251, 246, 0.95);
   border-bottom: 2rpx solid rgba(157, 111, 85, 0.07);
   box-shadow: 0 12rpx 28rpx rgba(93, 71, 58, 0.05);
   backdrop-filter: blur(24rpx);
 
   &--schedule {
-    padding: 8rpx 18rpx 10rpx;
+    padding: 4.19PX 18rpx 5.24PX;
     background: rgba(255, 251, 246, 0.98);
     box-shadow: 0 8rpx 20rpx rgba(93, 71, 58, 0.055);
   }
@@ -72,7 +72,8 @@ page {
 .academic-toolbar {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
   min-height: 82rpx;
 
   &__period,
@@ -93,14 +94,14 @@ page {
     flex-direction: column;
     align-items: flex-start;
     min-width: 0;
-    padding: 9rpx 18rpx;
+    padding: 4.72PX 18rpx;
 
     > view {
       display: flex;
       align-items: center;
       max-width: 100%;
       color: #315762;
-      font-size: 26rpx;
+      font-size: 13.62PX;
       font-weight: 680;
 
       > text:first-child {
@@ -112,24 +113,25 @@ page {
   }
 
   &__label {
-    margin-bottom: 3rpx;
+    margin-bottom: 1.57PX;
     color: #8a9da2;
-    font-size: 21rpx;
+    font-size: 11PX;
   }
 
   &__chevron {
     flex: none;
     margin-left: 8rpx;
     color: #789197;
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 
   &__week {
     flex: none;
-    gap: 4rpx;
+    row-gap: 2.1PX;
+    column-gap: 4rpx;
     width: 128rpx;
     color: #476b74;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 650;
   }
 
@@ -138,7 +140,7 @@ page {
     min-width: 150rpx;
     padding: 0 20rpx;
     color: #4b8d99;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 650;
   }
 
@@ -148,7 +150,7 @@ page {
     min-height: 72rpx;
     overflow: hidden;
     color: #a56f58;
-    font-size: 22rpx;
+    font-size: 11.53PX;
     font-weight: 680;
     background: rgba(255, 247, 240, 0.9);
     border: 2rpx solid rgba(198, 132, 96, 0.14);
@@ -170,11 +172,12 @@ page {
 
   &__hint {
     flex: none;
-    gap: 9rpx;
+    row-gap: 4.72PX;
+    column-gap: 9rpx;
     min-width: 150rpx;
     padding: 0 18rpx;
     color: #638087;
-    font-size: 24rpx;
+    font-size: 12.58PX;
 
     view {
       width: 12rpx;
@@ -194,7 +197,8 @@ page {
 .academic-toolbar--schedule {
   width: 100%;
   justify-content: center;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
   min-height: 64rpx;
   transform: translateX(-10rpx);
 
@@ -207,7 +211,7 @@ page {
     min-height: 56rpx;
     padding: 0;
     color: #a26358;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     font-weight: 700;
     background: rgba(255, 247, 239, 0.92);
     border: 2rpx solid rgba(202, 133, 100, 0.13);
@@ -267,7 +271,7 @@ page {
     flex: none;
     min-width: 96rpx;
     color: #3e6068;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 750;
     text-align: center;
     white-space: nowrap;
@@ -280,9 +284,10 @@ page {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3rpx;
+  row-gap: 1.57PX;
+  column-gap: 3rpx;
   color: #8c827c;
-  font-size: 19rpx;
+  font-size: 9.96PX;
   font-weight: 700;
   background: rgba(245, 235, 220, 0.9);
   border: 2rpx solid rgba(194, 135, 99, 0.1);
@@ -321,7 +326,7 @@ page {
 .academic-content {
   position: relative;
   z-index: 2;
-  padding: 26rpx 24rpx 0;
+  padding: 13.62PX 24rpx 0;
 
   &--schedule {
     height: calc(100vh - 168rpx);
@@ -330,7 +335,7 @@ page {
   }
 
   &--schedule-day {
-    padding: 18rpx 22rpx 0;
+    padding: 9.43PX 22rpx 0;
     overflow-y: auto;
   }
 }
@@ -344,9 +349,10 @@ page {
   height: 58rpx;
   padding: 0 20rpx 0 13rpx;
   align-items: center;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
   color: #3f6f76;
-  font-size: 23rpx;
+  font-size: 12.05PX;
   font-weight: 720;
   white-space: nowrap;
   pointer-events: none;
@@ -372,7 +378,7 @@ page {
   &__arrow {
     width: 10rpx;
     height: 10rpx;
-    margin-top: -5rpx;
+    margin-top: -2.62PX;
     border-right: 3rpx solid #4f9697;
     border-bottom: 3rpx solid #4f9697;
     transform: rotate(45deg);
@@ -401,27 +407,27 @@ page {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 2rpx 12rpx 20rpx;
+  padding: 1.05PX 12rpx 10.48PX;
 
   text {
     display: block;
   }
 
   &__eyebrow {
-    margin-bottom: 5rpx;
+    margin-bottom: 2.62PX;
     color: #779198;
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 
   &__title {
     color: #264b56;
-    font-size: 30rpx;
+    font-size: 15.72PX;
     font-weight: 750;
   }
 
   &__date {
     color: #83979c;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 }
 
@@ -448,23 +454,24 @@ page {
 
   &__corner {
     color: #9aabad;
-    font-size: 21rpx;
+    font-size: 11PX;
   }
 
   &__date {
     position: relative;
     flex-direction: column;
-    gap: 4rpx;
+    row-gap: 2.1PX;
+    column-gap: 4rpx;
     min-width: 0;
     color: #6c858b;
 
     text:first-child {
-      font-size: 23rpx;
+      font-size: 12.05PX;
       font-weight: 680;
     }
 
     text:last-child {
-      font-size: 20rpx;
+      font-size: 10.48PX;
     }
 
     &--selected {
@@ -513,14 +520,14 @@ page {
     border-bottom: 2rpx solid rgba(167, 118, 91, 0.07);
 
     text:first-child {
-      margin-bottom: 3rpx;
+      margin-bottom: 1.57PX;
       color: #55747b;
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 700;
     }
 
     text:last-child {
-      font-size: 18rpx;
+      font-size: 9.43PX;
     }
   }
 
@@ -553,8 +560,8 @@ page {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 9rpx 7rpx;
-  margin: 3rpx;
+  padding: 4.72PX 7rpx;
+  margin: 1.57PX 3rpx;
   overflow: hidden;
   color: #315c66;
   background: #dceff0;
@@ -592,7 +599,7 @@ page {
 
   &--conflict {
     z-index: 5;
-    margin: 3rpx;
+    margin: 1.57PX 3rpx;
     border-color: rgba(221, 117, 93, 0.45);
     box-shadow: 0 7rpx 16rpx rgba(198, 103, 82, 0.12);
   }
@@ -613,7 +620,7 @@ page {
     min-height: 26rpx;
     align-items: center;
     justify-content: flex-start;
-    margin-bottom: 5rpx;
+    margin-bottom: 2.62PX;
   }
 
   &__related-count {
@@ -626,9 +633,9 @@ page {
     justify-content: center;
     margin-left: auto;
     color: #fff;
-    font-size: 18rpx;
+    font-size: 9.43PX;
     font-weight: 760;
-    line-height: 1;
+    line-height: 9.43PX;
     background: #78979b;
     border-radius: 999rpx;
   }
@@ -637,12 +644,13 @@ page {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 4rpx;
-    margin-bottom: 6rpx;
+    row-gap: 2.1PX;
+    column-gap: 4rpx;
+    margin-bottom: 3.14PX;
     color: #b85043;
-    font-size: 18rpx;
+    font-size: 9.43PX;
     font-weight: 760;
-    line-height: 1;
+    line-height: 9.43PX;
   }
 
   &__conflict-count {
@@ -654,7 +662,7 @@ page {
     height: 24rpx;
     padding: 0 5rpx;
     color: #fff;
-    font-size: 18rpx;
+    font-size: 9.43PX;
     background: #dd6d5b;
     border-radius: 999rpx;
 
@@ -677,9 +685,9 @@ page {
     min-width: 0;
     margin-bottom: 0;
     color: #647a7d;
-    font-size: 18rpx;
+    font-size: 9.43PX;
     font-weight: 720;
-    line-height: 1;
+    line-height: 9.43PX;
     background: rgba(112, 140, 143, 0.13);
     border-radius: 999rpx;
     overflow: hidden;
@@ -692,16 +700,16 @@ page {
   }
 
   &__name {
-    font-size: 22rpx;
+    font-size: 11.53PX;
     font-weight: 750;
-    line-height: 1.3;
+    line-height: 14.99PX;
     -webkit-line-clamp: 3;
   }
 
   &__location {
-    margin-top: 6rpx;
-    font-size: 18rpx;
-    line-height: 1.25;
+    margin-top: 3.14PX;
+    font-size: 9.43PX;
+    line-height: 11.79PX;
     opacity: 0.7;
     -webkit-line-clamp: 2;
   }
@@ -713,13 +721,14 @@ page {
 
 .day-strip {
   width: 100%;
-  margin-bottom: 22rpx;
+  margin-bottom: 11.53PX;
   white-space: nowrap;
 
   &__inner {
     display: inline-flex;
-    gap: 12rpx;
-    padding: 2rpx 8rpx 8rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
+    padding: 1.05PX 8rpx 4.19PX;
   }
 
   &__item {
@@ -736,12 +745,12 @@ page {
     border-radius: 25rpx;
 
     text:first-child {
-      margin-bottom: 7rpx;
-      font-size: 22rpx;
+      margin-bottom: 3.67PX;
+      font-size: 11.53PX;
     }
 
     text:nth-child(2) {
-      font-size: 27rpx;
+      font-size: 14.15PX;
       font-weight: 740;
     }
 
@@ -773,8 +782,8 @@ page {
   display: flex;
   align-items: center;
   min-height: 122rpx;
-  padding: 20rpx 21rpx 20rpx 16rpx;
-  margin-bottom: 16rpx;
+  padding: 10.48PX 21rpx 10.48PX 16rpx;
+  margin-bottom: 8.38PX;
   overflow: hidden;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
@@ -823,15 +832,15 @@ page {
     width: 128rpx;
 
     text:first-child {
-      margin-bottom: 7rpx;
+      margin-bottom: 3.67PX;
       color: #315864;
-      font-size: 26rpx;
+      font-size: 13.62PX;
       font-weight: 750;
     }
 
     text:last-child {
       color: #8a9da2;
-      font-size: 22rpx;
+      font-size: 11.53PX;
     }
   }
 
@@ -846,7 +855,7 @@ page {
     display: flex;
     align-items: center;
     min-width: 0;
-    margin-bottom: 8rpx;
+    margin-bottom: 4.19PX;
   }
 
   &__name,
@@ -861,7 +870,7 @@ page {
     flex: 1;
     min-width: 0;
     color: #294c57;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 720;
   }
 
@@ -871,7 +880,7 @@ page {
     align-items: center;
     margin-left: 12rpx;
     color: #879294;
-    font-size: 21rpx;
+    font-size: 11PX;
 
     &::before {
       width: 7rpx;
@@ -885,7 +894,7 @@ page {
 
   &__meta {
     color: #81969c;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 
   &--pressed {
@@ -896,7 +905,7 @@ page {
 .academic-chevron {
   margin-left: 12rpx;
   color: #91a5aa;
-  font-size: 34rpx;
+  font-size: 17.82PX;
 }
 
 .academic-fab {
@@ -911,7 +920,7 @@ page {
   height: 88rpx;
   padding: 0 25rpx;
   color: #fff;
-  font-size: 26rpx;
+  font-size: 13.62PX;
   font-weight: 680;
   background: linear-gradient(135deg, #6ebbc1, #489ba9);
   border: 4rpx solid rgba(255, 255, 255, 0.78);
@@ -920,7 +929,7 @@ page {
 
   &__plus {
     margin-right: 9rpx;
-    font-size: 33rpx;
+    font-size: 17.29PX;
     font-weight: 400;
   }
 
@@ -941,15 +950,15 @@ page {
   box-shadow: 0 10rpx 24rpx rgba(61, 142, 154, 0.2);
 
   text:last-child { display: none; }
-  .academic-fab__plus { margin: 0; font-size: 39rpx; }
+  .academic-fab__plus { margin: 0; font-size: 20.44PX; }
 }
 
 .grade-summary {
   position: relative;
   display: flex;
   min-height: 240rpx;
-  padding: 31rpx;
-  margin-bottom: 24rpx;
+  padding: 16.24PX 31rpx;
+  margin-bottom: 12.58PX;
   overflow: hidden;
   color: #fff;
   background:
@@ -992,19 +1001,19 @@ page {
   }
 
   &__eyebrow {
-    font-size: 23rpx;
+    font-size: 12.05PX;
     opacity: 0.78;
   }
 
   &__score {
-    margin: 10rpx 0 2rpx;
-    font-size: 62rpx;
+    margin: 5.24PX 0 1.05PX;
+    font-size: 32.49PX;
     font-weight: 760;
     letter-spacing: -2rpx;
   }
 
   &__caption {
-    font-size: 24rpx;
+    font-size: 12.58PX;
     opacity: 0.84;
   }
 
@@ -1023,16 +1032,16 @@ page {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      margin: 7rpx 0;
+      margin: 3.67PX 0;
     }
 
     text:first-child {
-      font-size: 27rpx;
+      font-size: 14.15PX;
       font-weight: 730;
     }
 
     text:last-child {
-      font-size: 21rpx;
+      font-size: 11PX;
       opacity: 0.74;
     }
   }
@@ -1043,9 +1052,9 @@ page {
   align-items: center;
   justify-content: space-between;
   min-height: 70rpx;
-  padding: 0 7rpx 12rpx;
+  padding: 0 7rpx 6.29PX;
   color: #86999e;
-  font-size: 23rpx;
+  font-size: 12.05PX;
 
   &--original {
     color: #84999d;
@@ -1056,9 +1065,9 @@ page {
     }
 
     text:last-child {
-      padding: 8rpx 13rpx;
+      padding: 4.19PX 13rpx;
       color: #a27055;
-      font-size: 20rpx;
+      font-size: 10.48PX;
       background: #fff2e8;
       border-radius: 999rpx;
     }
@@ -1070,17 +1079,17 @@ page {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    padding: 12rpx 8rpx 14rpx;
+    padding: 6.29PX 8rpx 7.34PX;
 
     text:first-child {
       color: #3f6871;
-      font-size: 25rpx;
+      font-size: 13.1PX;
       font-weight: 720;
     }
 
     text:last-child {
       color: #91a2a6;
-      font-size: 21rpx;
+      font-size: 11PX;
     }
   }
 }
@@ -1088,22 +1097,23 @@ page {
 .grade-simulation-tip {
   display: flex;
   align-items: center;
-  gap: 11rpx;
+  row-gap: 5.76PX;
+  column-gap: 11rpx;
   min-height: 66rpx;
-  padding: 11rpx 16rpx;
-  margin-bottom: 10rpx;
+  padding: 5.76PX 16rpx;
+  margin-bottom: 5.24PX;
   color: #9a654f;
-  font-size: 21rpx;
-  line-height: 1.4;
+  font-size: 11PX;
+  line-height: 15.41PX;
   background: #fff4eb;
   border: 2rpx solid rgba(207, 138, 96, 0.16);
   border-radius: 20rpx;
 
   text:first-child {
     flex: none;
-    padding: 4rpx 9rpx;
+    padding: 2.1PX 9rpx;
     color: #fff;
-    font-size: 19rpx;
+    font-size: 9.96PX;
     font-weight: 700;
     background: #c98162;
     border-radius: 999rpx;
@@ -1116,7 +1126,7 @@ page {
   min-height: 64rpx;
   padding-right: 14rpx;
   color: #617d84;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 650;
 
   &__box {
@@ -1128,7 +1138,7 @@ page {
     height: 42rpx;
     margin-right: 13rpx;
     color: #fff;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     background: var(--campus-surface, #fff);
     border: 3rpx solid #c5d5d8;
     border-radius: 14rpx;
@@ -1149,8 +1159,8 @@ page {
   display: flex;
   align-items: center;
   min-height: 132rpx;
-  padding: 22rpx;
-  margin-bottom: 16rpx;
+  padding: 11.53PX 22rpx;
+  margin-bottom: 8.38PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
   border-radius: 28rpx;
@@ -1181,14 +1191,14 @@ page {
   &__title-line {
     display: flex;
     align-items: center;
-    margin-bottom: 8rpx;
+    margin-bottom: 4.19PX;
   }
 
   &__name {
     max-width: 270rpx;
     overflow: hidden;
     color: #294b56;
-    font-size: 28rpx;
+    font-size: 14.67PX;
     font-weight: 720;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1196,10 +1206,10 @@ page {
 
   &__changed {
     flex: none;
-    padding: 5rpx 10rpx;
+    padding: 2.62PX 10rpx;
     margin-left: 9rpx;
     color: #a6714f;
-    font-size: 20rpx;
+    font-size: 10.48PX;
     background: #fff3e8;
     border-radius: 999rpx;
   }
@@ -1208,7 +1218,7 @@ page {
   &__original,
   &__converted {
     display: block;
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 
   &__meta {
@@ -1216,12 +1226,12 @@ page {
   }
 
   &__original {
-    margin-top: 5rpx;
+    margin-top: 2.62PX;
     color: #a0adaf;
   }
 
   &__converted {
-    margin-top: 5rpx;
+    margin-top: 2.62PX;
     color: #a67657;
   }
 
@@ -1234,14 +1244,14 @@ page {
 
     text:first-child {
       color: #3b8290;
-      font-size: 35rpx;
+      font-size: 18.34PX;
       font-weight: 760;
     }
 
     text:last-child {
-      margin-top: 3rpx;
+      margin-top: 1.57PX;
       color: #83979c;
-      font-size: 21rpx;
+      font-size: 11PX;
     }
   }
 
@@ -1253,8 +1263,9 @@ page {
 .grade-level-options {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 9rpx;
-  margin-top: 12rpx;
+  row-gap: 4.72PX;
+  column-gap: 9rpx;
+  margin-top: 6.29PX;
 
   > view {
     display: flex;
@@ -1262,7 +1273,7 @@ page {
     justify-content: center;
     min-height: 64rpx;
     color: #687f84;
-    font-size: 21rpx;
+    font-size: 11PX;
     font-weight: 680;
     background: var(--campus-surface, #fff);
     border: 2rpx solid #e6eeee;
@@ -1282,8 +1293,8 @@ page {
   align-items: center;
   justify-content: space-between;
   min-height: 164rpx;
-  padding: 27rpx 30rpx;
-  margin-bottom: 22rpx;
+  padding: 14.15PX 30rpx;
+  margin-bottom: 11.53PX;
   background:
     radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.76), transparent 34%),
     linear-gradient(135deg, #e1f2ef, #d9edf1);
@@ -1296,14 +1307,14 @@ page {
   }
 
   &__eyebrow {
-    margin-bottom: 8rpx;
+    margin-bottom: 4.19PX;
     color: #719097;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 
   &__title {
     color: #2b5661;
-    font-size: 30rpx;
+    font-size: 15.72PX;
     font-weight: 750;
   }
 
@@ -1315,14 +1326,14 @@ page {
     width: 86rpx;
     height: 86rpx;
     color: #4c877a;
-    font-size: 22rpx;
+    font-size: 11.53PX;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 28rpx;
 
     view {
       width: 29rpx;
       height: 18rpx;
-      margin-bottom: 7rpx;
+      margin-bottom: 3.67PX;
       border-bottom: 5rpx solid #65a795;
       border-left: 5rpx solid #65a795;
       transform: rotate(-45deg);
@@ -1331,31 +1342,31 @@ page {
 }
 
 .exam-group {
-  margin-bottom: 30rpx;
+  margin-bottom: 15.72PX;
 
   &__heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 8rpx 14rpx;
+    padding: 0 8rpx 7.34PX;
 
     text:first-child {
       color: #2f5661;
-      font-size: 26rpx;
+      font-size: 13.62PX;
       font-weight: 730;
     }
 
     text:last-child {
       color: #8a9da2;
-      font-size: 23rpx;
+      font-size: 12.05PX;
     }
   }
 }
 
 .exam-card {
   position: relative;
-  padding: 27rpx 25rpx 21rpx;
-  margin-bottom: 16rpx;
+  padding: 14.15PX 25rpx 11PX;
+  margin-bottom: 8.38PX;
   overflow: hidden;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
@@ -1385,9 +1396,10 @@ page {
     right: 24rpx;
     display: flex;
     align-items: center;
-    gap: 8rpx;
+    row-gap: 4.19PX;
+    column-gap: 8rpx;
     color: #518a94;
-    font-size: 23rpx;
+    font-size: 12.05PX;
 
     view {
       width: 10rpx;
@@ -1400,10 +1412,10 @@ page {
   &__name {
     display: block;
     max-width: 420rpx;
-    margin-bottom: 20rpx;
+    margin-bottom: 10.48PX;
     overflow: hidden;
     color: #294b56;
-    font-size: 28rpx;
+    font-size: 14.67PX;
     font-weight: 740;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1411,9 +1423,9 @@ page {
 
   &__line {
     display: flex;
-    margin: 9rpx 0;
+    margin: 4.72PX 0;
     color: #5d747a;
-    font-size: 25rpx;
+    font-size: 13.1PX;
   }
 
   &__label {
@@ -1426,10 +1438,10 @@ page {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 17rpx;
-    margin-top: 17rpx;
+    padding-top: 8.91PX;
+    margin-top: 8.91PX;
     color: #7f9398;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     border-top: 2rpx solid #edf2f2;
 
     text:last-child {
@@ -1450,7 +1462,7 @@ page {
   align-items: center;
   justify-content: center;
   min-height: 420rpx;
-  padding: 48rpx 30rpx;
+  padding: 25.15PX 30rpx;
   text-align: center;
 }
 
@@ -1458,11 +1470,12 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
   min-height: 52rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 8.38PX;
   color: #748d92;
-  font-size: 23rpx;
+  font-size: 12.05PX;
 
   view {
     width: 10rpx;
@@ -1488,9 +1501,10 @@ page {
   display: flex;
   min-height: 72rpx;
   align-items: center;
-  gap: var(--ousea-space-1, 16rpx);
-  padding: 16rpx var(--ousea-space-2, 24rpx);
-  margin: 0 0 var(--ousea-space-2, 24rpx);
+  row-gap: var(--ousea-space-block-1, 8.38PX);
+  column-gap: var(--ousea-space-1, 16rpx);
+  padding: 8.38PX var(--ousea-space-2, 24rpx);
+  margin: 0 0 var(--ousea-space-block-2, 12.58PX);
   color: var(--ousea-ink-700, #3a4759);
   background: var(--ousea-ocean-50, #f2f7fe);
   border: 1rpx solid var(--ousea-ocean-100, #e3effe);
@@ -1503,9 +1517,9 @@ page {
     flex: none;
     align-items: center;
     color: #fff;
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
     background: var(--ousea-ocean-500, #2b7aef);
     border-radius: var(--ousea-radius-pill, 999rpx);
   }
@@ -1535,8 +1549,8 @@ page {
     width: max-content;
     flex: none;
     color: inherit;
-    font-size: var(--ousea-font-size-caption, 24rpx);
-    line-height: 36rpx;
+    font-size: var(--ousea-font-size-caption, 12.58PX);
+    line-height: 18.86PX;
     white-space: nowrap;
   }
 
@@ -1563,12 +1577,12 @@ page {
 
 .academic-state {
   color: #7b9298;
-  font-size: 25rpx;
+  font-size: 13.1PX;
 
   &__loader {
     width: 52rpx;
     height: 52rpx;
-    margin-bottom: 23rpx;
+    margin-bottom: 12.05PX;
     border: 5rpx solid #dcebec;
     border-top-color: #62aeba;
     border-radius: 50%;
@@ -1581,22 +1595,22 @@ page {
     justify-content: center;
     width: 74rpx;
     height: 74rpx;
-    margin-bottom: 18rpx;
+    margin-bottom: 9.43PX;
     color: #b77b69;
-    font-size: 34rpx;
+    font-size: 17.82PX;
     background: #f8ece8;
     border-radius: 26rpx;
   }
 
   &__title {
-    margin-bottom: 8rpx;
+    margin-bottom: 4.19PX;
     color: #3a5d65;
-    font-size: 27rpx;
+    font-size: 14.15PX;
     font-weight: 720;
   }
 
   &__copy {
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 
   &__action {
@@ -1605,9 +1619,9 @@ page {
     justify-content: center;
     min-width: 180rpx;
     height: 72rpx;
-    margin-top: 24rpx;
+    margin-top: 12.58PX;
     color: #fff;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     background: #5aa8b3;
     border-radius: 999rpx;
   }
@@ -1618,7 +1632,7 @@ page {
     position: relative;
     width: 140rpx;
     height: 90rpx;
-    margin-bottom: 20rpx;
+    margin-bottom: 10.48PX;
 
     view:first-child {
       position: absolute;
@@ -1643,14 +1657,14 @@ page {
 
   &__title {
     color: #3a5d65;
-    font-size: 27rpx;
+    font-size: 14.15PX;
     font-weight: 720;
   }
 
   &__copy {
-    margin-top: 9rpx;
+    margin-top: 4.72PX;
     color: #879a9f;
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 }
 
@@ -1684,7 +1698,7 @@ page {
   width: 100%;
   max-width: 690rpx;
   max-height: 78vh;
-  padding: 16rpx 16rpx 18rpx;
+  padding: 8.38PX 16rpx 9.43PX;
   overflow: hidden;
   flex-direction: column;
   background: rgba(249, 252, 252, 0.98);
@@ -1697,7 +1711,7 @@ page {
     width: 68rpx;
     height: 7rpx;
     flex: none;
-    margin: 0 auto 12rpx;
+    margin: 0 auto 6.29PX;
     background: #d5e1e2;
     border-radius: 999rpx;
   }
@@ -1707,8 +1721,9 @@ page {
     flex: none;
     align-items: center;
     justify-content: space-between;
-    gap: 18rpx;
-    padding: 0 8rpx 14rpx;
+    row-gap: 9.43PX;
+    column-gap: 18rpx;
+    padding: 0 8rpx 7.34PX;
 
     > view:first-child {
       min-width: 0;
@@ -1729,8 +1744,8 @@ page {
     align-items: center;
     justify-content: center;
     color: #7f8e8e;
-    font-size: 38rpx;
-    line-height: 1;
+    font-size: 19.91PX;
+    line-height: 19.91PX;
     background: #edf4f4;
     border-radius: 22rpx;
   }
@@ -1743,24 +1758,24 @@ page {
   }
 
   &__eyebrow {
-    margin-bottom: 10rpx;
+    margin-bottom: 5.24PX;
     color: #dc7c67;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
   }
 
   &__title {
     color: #314e55;
-    font-size: 28rpx;
+    font-size: 14.67PX;
     font-weight: 760;
-    line-height: 1.35;
+    line-height: 19.81PX;
   }
 
   &__copy {
-    margin-top: 5rpx;
+    margin-top: 2.62PX;
     color: #879798;
-    font-size: 22rpx;
-    line-height: 1.45;
+    font-size: 11.53PX;
+    line-height: 16.72PX;
   }
 
   &__scroll {
@@ -1774,19 +1789,20 @@ page {
 .course-conflict-list {
   display: flex;
   flex-direction: column;
-  padding: 2rpx;
+  padding: 1.05PX 2rpx;
 }
 
 .course-switcher {
   width: 100%;
   flex: none;
-  margin-bottom: 14rpx;
+  margin-bottom: 7.34PX;
 
   &__inner {
     display: inline-flex;
     min-width: 100%;
-    gap: 10rpx;
-    padding: 0 3rpx 2rpx;
+    row-gap: 5.24PX;
+    column-gap: 10rpx;
+    padding: 0 3rpx 1.05PX;
     white-space: nowrap;
   }
 
@@ -1794,7 +1810,7 @@ page {
     display: flex;
     min-width: 210rpx;
     min-height: 88rpx;
-    padding: 12rpx 17rpx;
+    padding: 6.29PX 17rpx;
     flex-direction: column;
     justify-content: center;
     color: #597176;
@@ -1812,14 +1828,14 @@ page {
     }
 
     text:first-child {
-      font-size: 25rpx;
+      font-size: 13.1PX;
       font-weight: 720;
     }
 
     text:last-child {
-      margin-top: 5rpx;
+      margin-top: 2.62PX;
       color: #86989b;
-      font-size: 20rpx;
+      font-size: 10.48PX;
     }
 
     &--active {
@@ -1839,7 +1855,7 @@ page {
   align-items: center;
   justify-content: space-between;
   min-height: 184rpx;
-  padding: 22rpx 19rpx 22rpx 24rpx;
+  padding: 11.53PX 19rpx 11.53PX 24rpx;
   background: #dceff0;
   border: 2rpx solid rgba(80, 145, 154, 0.18);
   border-radius: 27rpx;
@@ -1872,7 +1888,8 @@ page {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16rpx;
+    row-gap: 8.38PX;
+    column-gap: 16rpx;
   }
 
   &__name,
@@ -1883,7 +1900,7 @@ page {
   &__name {
     min-width: 0;
     color: #3c5a60;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 750;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1892,9 +1909,9 @@ page {
 
   &__tag {
     flex: none;
-    padding: 5rpx 10rpx;
+    padding: 2.62PX 10rpx;
     color: rgba(52, 85, 91, 0.78);
-    font-size: 21rpx;
+    font-size: 11PX;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 999rpx;
 
@@ -1906,15 +1923,16 @@ page {
 
   &__details {
     display: grid;
-    gap: 7rpx;
-    margin-top: 15rpx;
+    row-gap: 3.67PX;
+    column-gap: 7rpx;
+    margin-top: 7.86PX;
 
     > view {
       display: flex;
       align-items: center;
       min-width: 0;
-      font-size: 22rpx;
-      line-height: 1.3;
+      font-size: 11.53PX;
+      line-height: 14.99PX;
     }
 
     text:first-child {
@@ -1934,10 +1952,11 @@ page {
 
   &__note {
     display: flex;
-    padding: var(--ousea-space-2, 24rpx);
-    margin-top: var(--ousea-space-2, 24rpx);
+    padding: var(--ousea-space-block-2, 12.58PX) var(--ousea-space-2, 24rpx);
+    margin-top: var(--ousea-space-block-2, 12.58PX);
     flex-direction: column;
-    gap: 8rpx;
+    row-gap: 4.19PX;
+    column-gap: 8rpx;
     background: var(--ousea-ocean-50, #f2f7fe);
     border: 1rpx solid var(--ousea-ocean-100, #e3effe);
     border-radius: var(--ousea-radius-card-sm, 24rpx);
@@ -1945,22 +1964,23 @@ page {
 
   &__note-label {
     color: var(--ousea-ocean-600, #1d5fd6);
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
   }
 
   &__note-copy {
     color: var(--ousea-ink-700, #3a4759);
-    font-size: var(--ousea-font-size-caption, 24rpx);
-    line-height: var(--ousea-line-height-comment, 1.65);
+    font-size: var(--ousea-font-size-caption, 12.58PX);
+    line-height: var(--ousea-line-height-comment, 25.94PX);
     overflow-wrap: anywhere;
   }
 
   &__actions {
     display: flex;
-    gap: 12rpx;
-    margin-top: 17rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
+    margin-top: 8.91PX;
 
     > view {
       display: flex;
@@ -1970,7 +1990,7 @@ page {
       height: 52rpx;
       padding: 0 15rpx;
       color: rgba(54, 85, 91, 0.84);
-      font-size: 23rpx;
+      font-size: 12.05PX;
       font-weight: 680;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
       border: 2rpx solid rgba(255, 255, 255, 0.62);
@@ -1983,40 +2003,41 @@ page {
   }
 
   .course-reference {
-    padding: 18rpx;
-    margin-top: 17rpx;
+    padding: 9.43PX 18rpx;
+    margin-top: 8.91PX;
     border-radius: 22rpx;
 
     &__title {
-      font-size: 24rpx;
+      font-size: 12.58PX;
     }
 
     &__hint {
-      font-size: 20rpx;
+      font-size: 10.48PX;
     }
 
     &__arrow {
-      font-size: 34rpx;
+      font-size: 17.82PX;
     }
 
     &__metrics {
-      margin-top: 15rpx;
+      margin-top: 7.86PX;
 
       > view {
-        gap: 3rpx;
+        row-gap: 1.57PX;
+        column-gap: 3rpx;
 
         > text:first-child {
-          font-size: 27rpx;
+          font-size: 14.15PX;
         }
 
         > text:last-child {
-          font-size: 19rpx;
+          font-size: 9.96PX;
         }
       }
     }
 
     &__skeleton {
-      margin-top: 15rpx;
+      margin-top: 7.86PX;
 
       > view {
         height: 44rpx;
@@ -2024,8 +2045,8 @@ page {
     }
 
     &__empty {
-      margin-top: 14rpx;
-      font-size: 22rpx;
+      margin-top: 7.34PX;
+      font-size: 11.53PX;
     }
   }
 
@@ -2044,7 +2065,7 @@ page {
   position: relative;
   width: 100%;
   max-height: 88vh;
-  padding: 18rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));
+  padding: 9.43PX 28rpx calc(28rpx + env(safe-area-inset-bottom));
   overflow: hidden;
   background: #f9fcfc;
   border-radius: 42rpx 42rpx 0 0;
@@ -2058,7 +2079,7 @@ page {
   &__handle {
     width: 72rpx;
     height: 8rpx;
-    margin: 0 auto 20rpx;
+    margin: 0 auto 10.48PX;
     background: #d5e1e2;
     border-radius: 8rpx;
   }
@@ -2074,7 +2095,7 @@ page {
     width: 64rpx;
     height: 64rpx;
     color: #789096;
-    font-size: 38rpx;
+    font-size: 19.91PX;
     background: #edf4f4;
     border-radius: 22rpx;
   }
@@ -2097,33 +2118,34 @@ page {
 
   &__title {
     color: #294c56;
-    font-size: 31rpx;
+    font-size: 16.24PX;
     font-weight: 750;
   }
 
   &__subtitle {
-    margin-top: 7rpx;
+    margin-top: 3.67PX;
     color: #84999e;
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 
   &__actions {
     display: flex;
-    gap: 14rpx;
-    margin-top: 24rpx;
+    row-gap: 7.34PX;
+    column-gap: 14rpx;
+    margin-top: 12.58PX;
   }
 }
 
 .period-options {
-  padding-top: 24rpx;
+  padding-top: 12.58PX;
 
   &__item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     min-height: 110rpx;
-    padding: 17rpx 20rpx;
-    margin-bottom: 12rpx;
+    padding: 8.91PX 20rpx;
+    margin-bottom: 6.29PX;
     background: var(--campus-surface, #fff);
     border: 2rpx solid #edf2f2;
     border-radius: 25rpx;
@@ -2133,15 +2155,15 @@ page {
     }
 
     text:first-child {
-      margin-bottom: 5rpx;
+      margin-bottom: 2.62PX;
       color: #3b5b63;
-      font-size: 27rpx;
+      font-size: 14.15PX;
       font-weight: 680;
     }
 
     text:last-child {
       color: #91a1a4;
-      font-size: 22rpx;
+      font-size: 11.53PX;
     }
 
     &--active {
@@ -2157,7 +2179,7 @@ page {
     width: 48rpx;
     height: 48rpx;
     color: #fff;
-    font-size: 27rpx;
+    font-size: 14.15PX;
     background: #5ba9b4;
     border-radius: 50%;
   }
@@ -2166,8 +2188,9 @@ page {
 .week-options {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 13rpx;
-  padding-top: 26rpx;
+  row-gap: 6.81PX;
+  column-gap: 13rpx;
+  padding-top: 13.62PX;
 
   &__item {
     display: flex;
@@ -2180,13 +2203,13 @@ page {
     border-radius: 23rpx;
 
     text:first-child {
-      font-size: 27rpx;
+      font-size: 14.15PX;
       font-weight: 720;
     }
 
     text:last-child {
       margin-left: 3rpx;
-      font-size: 20rpx;
+      font-size: 10.48PX;
     }
 
     &--active {
@@ -2202,7 +2225,7 @@ page {
   &__heading {
     display: flex;
     align-items: center;
-    margin-bottom: 26rpx;
+    margin-bottom: 13.62PX;
   }
 
   &__tone {
@@ -2227,7 +2250,7 @@ page {
 }
 
 .detail-list {
-  margin-top: 25rpx;
+  margin-top: 13.1PX;
   overflow: hidden;
   background: var(--campus-surface, #fff);
   border: 2rpx solid #edf2f2;
@@ -2238,7 +2261,7 @@ page {
     align-items: flex-start;
     justify-content: space-between;
     min-height: 84rpx;
-    padding: 22rpx;
+    padding: 11.53PX 22rpx;
     border-bottom: 2rpx solid #edf2f2;
 
     &:last-child {
@@ -2250,13 +2273,13 @@ page {
     flex: none;
     width: 140rpx;
     color: #8a9da1;
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 
   text:last-child {
     color: #3b5961;
-    font-size: 24rpx;
-    line-height: 1.45;
+    font-size: 12.58PX;
+    line-height: 18.24PX;
     text-align: right;
   }
 }
@@ -2268,7 +2291,7 @@ page {
   justify-content: center;
   height: 84rpx;
   color: #fff;
-  font-size: 27rpx;
+  font-size: 14.15PX;
   font-weight: 680;
   background: #58a7b3;
   border-radius: 25rpx;
@@ -2281,27 +2304,27 @@ page {
   &--full {
     flex: none;
     width: 100%;
-    margin-top: 22rpx;
+    margin-top: 11.53PX;
   }
 }
 
 .course-form-scroll {
   flex: 1;
   height: 0;
-  padding-top: 24rpx;
+  padding-top: 12.58PX;
 }
 
 .academic-field {
   flex: 1;
   min-width: 0;
-  margin-bottom: 20rpx;
+  margin-bottom: 10.48PX;
 
   input {
     width: 100%;
     height: 82rpx;
     padding: 0 20rpx;
     color: #31535c;
-    font-size: 26rpx;
+    font-size: 13.62PX;
     background: var(--campus-surface, #fff);
     border: 2rpx solid #e7eeee;
     border-radius: 22rpx;
@@ -2309,9 +2332,9 @@ page {
 
   &__label {
     display: block;
-    margin-bottom: 10rpx;
+    margin-bottom: 5.24PX;
     color: #5e797f;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 650;
   }
 
@@ -2322,30 +2345,32 @@ page {
 
     text:last-child {
       color: #8b9da1;
-      font-size: 22rpx;
+      font-size: 11.53PX;
     }
   }
 }
 
 .academic-field-row {
   display: flex;
-  gap: 14rpx;
+  row-gap: 7.34PX;
+  column-gap: 14rpx;
 
   &--sections {
-    margin-top: 20rpx;
+    margin-top: 10.48PX;
   }
 }
 
 .form-chip-scroll {
   width: 100%;
-  margin-bottom: 22rpx;
+  margin-bottom: 11.53PX;
   white-space: nowrap;
 }
 
 .form-chip-row {
   display: inline-flex;
-  gap: 10rpx;
-  padding: 2rpx 3rpx 8rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
+  padding: 1.05PX 3rpx 4.19PX;
 }
 
 .form-chip {
@@ -2356,7 +2381,7 @@ page {
   height: 68rpx;
   padding: 0 17rpx;
   color: #6f858a;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   background: var(--campus-surface, #fff);
   border: 2rpx solid #e6eeee;
   border-radius: 22rpx;
@@ -2385,14 +2410,14 @@ page {
     width: 62rpx;
     height: 62rpx;
     color: #528c96;
-    font-size: 29rpx;
+    font-size: 15.2PX;
     background: #edf6f6;
     border-radius: 18rpx;
   }
 
   text {
     color: #345760;
-    font-size: 26rpx;
+    font-size: 13.62PX;
     font-weight: 720;
   }
 }
@@ -2400,8 +2425,9 @@ page {
 .form-weeks {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 8rpx;
-  margin-bottom: 22rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
+  margin-bottom: 11.53PX;
 
   view {
     display: flex;
@@ -2409,7 +2435,7 @@ page {
     justify-content: center;
     height: 54rpx;
     color: #82969a;
-    font-size: 22rpx;
+    font-size: 11.53PX;
     background: var(--campus-surface, #fff);
     border: 2rpx solid #e8eeee;
     border-radius: 15rpx;
@@ -2425,8 +2451,9 @@ page {
 .color-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
-  padding-bottom: 18rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
+  padding-bottom: 9.43PX;
 
   &__item {
     display: flex;
@@ -2435,7 +2462,7 @@ page {
     width: 68rpx;
     height: 68rpx;
     color: #456c75;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     background: #dff1f1;
     border: 4rpx solid transparent;
     border-radius: 22rpx;
@@ -2461,8 +2488,8 @@ page {
 .grade-original {
   display: flex;
   min-height: 120rpx;
-  padding: 17rpx 8rpx;
-  margin: 24rpx 0;
+  padding: 8.91PX 8rpx;
+  margin: 12.58PX 0;
   background: #edf7f7;
   border-radius: 25rpx;
 
@@ -2480,23 +2507,23 @@ page {
   }
 
   text:first-child {
-    margin-bottom: 8rpx;
+    margin-bottom: 4.19PX;
     color: #84999d;
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 
   text:last-child {
     color: #3c6872;
-    font-size: 27rpx;
+    font-size: 14.15PX;
     font-weight: 730;
   }
 }
 
 .academic-tip {
-  padding: 18rpx 20rpx;
+  padding: 9.43PX 20rpx;
   color: #7b8f93;
-  font-size: 23rpx;
-  line-height: 1.55;
+  font-size: 12.05PX;
+  line-height: 18.69PX;
   background: #f1f5f5;
   border-radius: 20rpx;
 }
@@ -2507,9 +2534,9 @@ page {
   justify-content: center;
   height: 48rpx;
   padding: 0 16rpx;
-  margin-bottom: 15rpx;
+  margin-bottom: 7.86PX;
   color: #478895;
-  font-size: 23rpx;
+  font-size: 12.05PX;
   font-weight: 650;
   background: #e7f4f5;
   border-radius: 999rpx;
@@ -2520,8 +2547,8 @@ page {
   align-items: center;
   justify-content: space-between;
   min-height: 210rpx;
-  padding: 30rpx 32rpx;
-  margin-bottom: 22rpx;
+  padding: 15.72PX 32rpx;
+  margin-bottom: 11.53PX;
   overflow: hidden;
   background: linear-gradient(135deg, #e3f4ed 0%, #f6f5e8 100%);
   border: 2rpx solid rgba(108, 167, 139, 0.14);
@@ -2529,21 +2556,26 @@ page {
   box-shadow: 0 15rpx 34rpx rgba(72, 126, 109, 0.09);
 
   text { display: block; }
-  &__eyebrow { color: #668a7b; font-size: 24rpx; }
-  &__number { margin: 8rpx 0 6rpx; color: #2f6255; font-size: 52rpx; font-weight: 780; line-height: 1; text { display: inline; margin-left: 6rpx; font-size: 24rpx; font-weight: 650; } }
-  &__copy { color: #6d887d; font-size: 23rpx; }
-  &__seal { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: center; width: 100rpx; height: 100rpx; color: #5d957e; font-size: 25rpx; font-weight: 760; letter-spacing: 3rpx; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 4rpx solid rgba(99, 155, 131, .26); border-radius: 50%; transform: rotate(10deg); }
+  &__eyebrow { color: #668a7b; font-size: 12.58PX; }
+  &__number { margin: 4.19PX 0 3.14PX; color: #2f6255; font-size: 27.25PX; font-weight: 780; line-height: 27.25PX; text { display: inline; margin-left: 6rpx; font-size: 12.58PX; font-weight: 650; } }
+  &__copy { color: #6d887d; font-size: 12.05PX; }
+  &__seal { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: center; width: 100rpx; height: 100rpx; color: #5d957e; font-size: 13.1PX; font-weight: 760; letter-spacing: 3rpx; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 4rpx solid rgba(99, 155, 131, .26); border-radius: 50%; transform: rotate(10deg); }
 }
 
-.selection-tip { display: flex; align-items: center; gap: 12rpx; padding: 18rpx 20rpx; margin-bottom: 26rpx; color: #97714d; font-size: 23rpx; background: #fff7e9; border-radius: 20rpx; view { flex: none; width: 10rpx; height: 10rpx; background: #e1a65d; border-radius: 50%; } }
-.selection-tabs { display: flex; gap: 8rpx; padding: 7rpx; margin-bottom: 20rpx; background: rgba(231, 241, 239, .76); border: 2rpx solid rgba(94, 147, 140, .08); border-radius: 22rpx; &__item { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 62rpx; gap: 8rpx; color: #718a8c; font-size: 25rpx; font-weight: 700; border-radius: 17rpx; transition: background-color 180ms ease, color 180ms ease; text { display: inline-flex; align-items: center; justify-content: center; min-width: 30rpx; height: 30rpx; padding: 0 7rpx; color: #a16e58; font-size: 20rpx; background: #f9e5dc; border-radius: 999rpx; } &--active { color: #33695d; background: var(--campus-surface, #fff); box-shadow: 0 7rpx 16rpx rgba(64, 109, 99, .1); } } }
-.selection-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 8rpx 15rpx; text:first-child { color: #2f5661; font-size: 28rpx; font-weight: 740; } text:last-child { color: #84989b; font-size: 23rpx; } }
-.selection-card { position: relative; padding: 27rpx 28rpx 23rpx; margin-bottom: 18rpx; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 2rpx solid rgba(92, 143, 148, .09); border-radius: 29rpx; box-shadow: 0 12rpx 26rpx rgba(62, 105, 109, .055); &--pressed { transform: scale(.985); opacity: .9; } text { display: block; } &__status { position: absolute; top: 24rpx; right: 24rpx; display: flex; align-items: center; gap: 7rpx; padding: 8rpx 12rpx; color: #4d8975; font-size: 21rpx; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; view { width: 8rpx; height: 8rpx; background: currentColor; border-radius: 50%; } &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } } &__name { max-width: 72%; color: #2b555c; font-size: 28rpx; font-weight: 740; } &__type { padding: 8rpx 0 20rpx; color: #769096; font-size: 23rpx; } &__result { padding: 11rpx 14rpx; margin: -6rpx 0 20rpx; color: #557b72; font-size: 23rpx; line-height: 1.45; background: #edf6f1; border-radius: 14rpx; } &__line, &__footer { display: flex; justify-content: space-between; gap: 18rpx; color: #607c82; font-size: 24rpx; } &__footer { padding-top: 17rpx; margin-top: 16rpx; color: #7c9296; border-top: 2rpx solid #edf2f1; text:last-child { color: #649b9c; } } }
-.selection-detail__badge { display: inline-flex; padding: 9rpx 15rpx; margin-bottom: 15rpx; color: #4d8975; font-size: 23rpx; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } }
+.selection-tip { display: flex; align-items: center; row-gap: 6.29PX;
+ column-gap: 12rpx; padding: 9.43PX 20rpx; margin-bottom: 13.62PX; color: #97714d; font-size: 12.05PX; background: #fff7e9; border-radius: 20rpx; view { flex: none; width: 10rpx; height: 10rpx; background: #e1a65d; border-radius: 50%; } }
+.selection-tabs { display: flex; row-gap: 4.19PX;
+ column-gap: 8rpx; padding: 3.67PX 7rpx; margin-bottom: 10.48PX; background: rgba(231, 241, 239, .76); border: 2rpx solid rgba(94, 147, 140, .08); border-radius: 22rpx; &__item { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 62rpx; row-gap: 4.19PX;
+ column-gap: 8rpx; color: #718a8c; font-size: 13.1PX; font-weight: 700; border-radius: 17rpx; transition: background-color 180ms ease, color 180ms ease; text { display: inline-flex; align-items: center; justify-content: center; min-width: 30rpx; height: 30rpx; padding: 0 7rpx; color: #a16e58; font-size: 10.48PX; background: #f9e5dc; border-radius: 999rpx; } &--active { color: #33695d; background: var(--campus-surface, #fff); box-shadow: 0 7rpx 16rpx rgba(64, 109, 99, .1); } } }
+.selection-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 8rpx 7.86PX; text:first-child { color: #2f5661; font-size: 14.67PX; font-weight: 740; } text:last-child { color: #84989b; font-size: 12.05PX; } }
+.selection-card { position: relative; padding: 14.15PX 28rpx 12.05PX; margin-bottom: 9.43PX; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); border: 2rpx solid rgba(92, 143, 148, .09); border-radius: 29rpx; box-shadow: 0 12rpx 26rpx rgba(62, 105, 109, .055); &--pressed { transform: scale(.985); opacity: .9; } text { display: block; } &__status { position: absolute; top: 24rpx; right: 24rpx; display: flex; align-items: center; row-gap: 3.67PX;
+ column-gap: 7rpx; padding: 4.19PX 12rpx; color: #4d8975; font-size: 11PX; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; view { width: 8rpx; height: 8rpx; background: currentColor; border-radius: 50%; } &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } } &__name { max-width: 72%; color: #2b555c; font-size: 14.67PX; font-weight: 740; } &__type { padding: 4.19PX 0 10.48PX; color: #769096; font-size: 12.05PX; } &__result { padding: 5.76PX 14rpx; margin: -3.14PX 0 10.48PX; color: #557b72; font-size: 12.05PX; line-height: 17.48PX; background: #edf6f1; border-radius: 14rpx; } &__line, &__footer { display: flex; justify-content: space-between; row-gap: 9.43PX;
+ column-gap: 18rpx; color: #607c82; font-size: 12.58PX; } &__footer { padding-top: 8.91PX; margin-top: 8.38PX; color: #7c9296; border-top: 2rpx solid #edf2f1; text:last-child { color: #649b9c; } } }
+.selection-detail__badge { display: inline-flex; padding: 4.72PX 15rpx; margin-bottom: 7.86PX; color: #4d8975; font-size: 12.05PX; font-weight: 700; background: #e9f5ee; border-radius: 999rpx; &--pending { color: #aa7a43; background: #fff3df; } &--failed { color: #ad6965; background: #fbe9e8; } }
 
 .course-market-actions {
-  padding: 21rpx;
-  margin-top: 18rpx;
+  padding: 11PX 21rpx;
+  margin-top: 9.43PX;
   background: #edf6f4;
   border: 2rpx solid rgba(76, 139, 130, 0.12);
   border-radius: 23rpx;
@@ -2555,33 +2587,33 @@ page {
 
     text:first-child {
       color: #356e68;
-      font-size: 25rpx;
+      font-size: 13.1PX;
       font-weight: 740;
     }
 
     text:last-child {
-      margin-top: 5rpx;
+      margin-top: 2.62PX;
       color: #78928e;
-      font-size: 22rpx;
+      font-size: 11.53PX;
     }
   }
 
   &--standalone {
-    margin-top: 28rpx;
+    margin-top: 14.67PX;
   }
 
   &--course-card {
-    padding: 16rpx;
-    margin-top: 17rpx;
+    padding: 8.38PX 16rpx;
+    margin-top: 8.91PX;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-color: rgba(255, 255, 255, 0.62);
 
     .course-market-actions__buttons {
-      margin-top: 13rpx;
+      margin-top: 6.81PX;
 
       view {
         min-height: 60rpx;
-        font-size: 23rpx;
+        font-size: 12.05PX;
       }
     }
   }
@@ -2589,8 +2621,9 @@ page {
   &__buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 12rpx;
-    margin-top: 17rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
+    margin-top: 8.91PX;
 
     view {
       display: flex;
@@ -2600,7 +2633,7 @@ page {
       align-items: center;
       justify-content: center;
       color: #356e68;
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 720;
       background: var(--campus-surface, #fff);
       border: 2rpx solid rgba(76, 139, 130, 0.13);
@@ -2616,10 +2649,10 @@ page {
 }
 
 .course-resource-actions {
-  margin-top: 18rpx;
+  margin-top: 9.43PX;
 
   &--standalone {
-    margin-top: 28rpx;
+    margin-top: 14.67PX;
   }
 
   &__primary {
@@ -2643,21 +2676,21 @@ page {
       }
 
       text:first-child {
-        font-size: 24rpx;
+        font-size: 12.58PX;
         font-weight: 740;
       }
 
       text:last-child {
-        margin-top: 4rpx;
+        margin-top: 2.1PX;
         color: rgba(255, 255, 255, 0.82);
-        font-size: 21rpx;
+        font-size: 11PX;
       }
     }
 
     > text {
       flex: none;
       margin-left: 18rpx;
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 700;
     }
   }
@@ -2665,8 +2698,9 @@ page {
   &__secondary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10rpx;
-    margin-top: 11rpx;
+    row-gap: 5.24PX;
+    column-gap: 10rpx;
+    margin-top: 5.76PX;
 
     > view {
       display: flex;
@@ -2674,7 +2708,7 @@ page {
       justify-content: center;
       min-height: 62rpx;
       color: #527c78;
-      font-size: 22rpx;
+      font-size: 11.53PX;
       font-weight: 680;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
       border: 2rpx solid rgba(76, 139, 130, 0.1);
@@ -2691,13 +2725,13 @@ page {
   }
 
   &--course-card {
-    margin-top: 17rpx;
+    margin-top: 8.91PX;
   }
 }
 
 .academic-notice {
-  padding: 21rpx;
-  margin-top: 18rpx;
+  padding: 11PX 21rpx;
+  margin-top: 9.43PX;
   background: #fff8ee;
   border: 2rpx solid rgba(218, 170, 113, 0.13);
   border-radius: 23rpx;
@@ -2707,16 +2741,16 @@ page {
   }
 
   text:first-child {
-    margin-bottom: 7rpx;
+    margin-bottom: 3.67PX;
     color: #a4714f;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 700;
   }
 
   text:last-child {
     color: #806d5f;
-    font-size: 23rpx;
-    line-height: 1.55;
+    font-size: 12.05PX;
+    line-height: 18.69PX;
   }
 }
 
@@ -2746,9 +2780,10 @@ page {
     animation: none;
   }
 }
-.course-material-actions { display:flex; gap:14rpx; margin-top:28rpx; > view { display:flex; flex:1; align-items:center; justify-content:center; height:78rpx; color:#4b8977; font-size: 25rpx; font-weight:750; background:#e9f4ef; border-radius:21rpx; } > view:last-child { color:#fff; background:#64a68f; } }
-.course-material-inline-action { display:flex; align-items:center; justify-content:center; height:66rpx; margin-top:16rpx; color:#3f846e; font-size: 24rpx; font-weight:750; background:#e6f3ed; border-radius:18rpx; }
-.grade-card__materials { display:inline-flex !important; align-items:center; width:max-content; min-height:48rpx; padding:0 13rpx; margin-top:11rpx; color:#4e907b !important; font-size: 21rpx !important; font-weight:700; background:#edf6f2; border-radius:14rpx; }
+.course-material-actions { display:flex; row-gap: 7.34PX;
+ column-gap: 14rpx; margin-top: 14.67PX; > view { display:flex; flex:1; align-items:center; justify-content:center; height:78rpx; color:#4b8977; font-size: 13.1PX; font-weight:750; background:#e9f4ef; border-radius:21rpx; } > view:last-child { color:#fff; background:#64a68f; } }
+.course-material-inline-action { display:flex; align-items:center; justify-content:center; height:66rpx; margin-top: 8.38PX; color:#3f846e; font-size: 12.58PX; font-weight:750; background:#e6f3ed; border-radius:18rpx; }
+.grade-card__materials { display:inline-flex !important; align-items:center; width:max-content; min-height:48rpx; padding:0 13rpx; margin-top: 5.76PX; color:#4e907b !important; font-size: 11PX !important; font-weight:700; background:#edf6f2; border-radius:14rpx; }
 
 // Current campus visual system overrides. Course-specific colors remain as data cues.
 page {
@@ -3159,7 +3194,7 @@ page {
     justify-content: center;
     height: 100%;
     color: var(--campus-primary-strong, #155dfc);
-    line-height: 1;
+    line-height: 16.77PX;
   }
 }
 
@@ -3215,9 +3250,10 @@ page {
 .week-options {
   &__item {
     align-items: center;
-    gap: 3rpx;
+    row-gap: 1.57PX;
+    column-gap: 3rpx;
     color: var(--campus-text-body, #45556c);
-    line-height: 1;
+    line-height: 16.77PX;
     border-color: var(--campus-border, #e1eaf6);
     background: var(--campus-surface, #fff);
 
@@ -3226,7 +3262,7 @@ page {
       display: flex;
       align-items: center;
       height: 100%;
-      line-height: 1;
+      line-height: 16.77PX;
     }
 
     text:last-child { margin-left: 0; }
@@ -3450,7 +3486,7 @@ page {
 }
 
 .course-resource-actions--course-card {
-  padding: 12rpx;
+  padding: 6.29PX 12rpx;
   background: var(--campus-surface-subtle, #f5f8fc);
   border: 1rpx solid var(--campus-border, #e8edf4);
   border-radius: var(--ousea-radius-card-sm, 24rpx);
@@ -3478,7 +3514,8 @@ page {
 /* 成绩、考试、选课结果共用的学期选择器：入口清晰，面板紧凑且不使用过度胶囊化。 */
 .academic-toolbar--simple {
   min-height: 68rpx;
-  gap: 8rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
 
   .academic-toolbar__period {
     min-height: 68rpx;
@@ -3487,7 +3524,8 @@ page {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    gap: 12rpx;
+    row-gap: 6.29PX;
+    column-gap: 12rpx;
     color: var(--ousea-ink-700, #3a4759);
     background: transparent;
     border: 0;
@@ -3505,9 +3543,9 @@ page {
       justify-content: flex-start;
       overflow: hidden;
       color: var(--ousea-ink-900, #1a2333);
-      font-size: var(--ousea-font-size-label, 27rpx);
+      font-size: var(--ousea-font-size-label, 14.15PX);
       font-weight: var(--ousea-font-weight-semibold, 600);
-      line-height: var(--ousea-line-height-ui, 1.4);
+      line-height: var(--ousea-line-height-ui, 19.91PX);
 
       > text:first-child {
         display: block;
@@ -3537,16 +3575,16 @@ page {
     min-height: 68rpx;
     height: 68rpx;
     box-sizing: border-box;
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
   }
 
   > .academic-toolbar__reset {
     justify-content: center;
     padding: 0 16rpx;
     color: var(--ousea-ink-700, #3a4759);
-    font-size: var(--ousea-font-size-label, 27rpx);
+    font-size: var(--ousea-font-size-label, 14.15PX);
     font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
+    line-height: var(--ousea-line-height-ui, 19.91PX);
 
     > text {
       display: block;
@@ -3561,13 +3599,13 @@ page {
   background: var(--campus-surface, #fff);
   border: 1rpx solid var(--ousea-bg-line, #e8edf4);
   border-radius: var(--ousea-radius-card, 32rpx) var(--ousea-radius-card, 32rpx) 0 0;
-  padding: 14rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  padding: 7.34PX 24rpx calc(20rpx + env(safe-area-inset-bottom));
   box-shadow: var(--campus-shadow-sheet, 0 -8rpx 32rpx rgba(0, 0, 0, .05));
 
   &__handle {
     width: 56rpx;
     height: 6rpx;
-    margin-bottom: 12rpx;
+    margin-bottom: 6.29PX;
     background: var(--ousea-bg-line, #e8edf4);
   }
 
@@ -3583,13 +3621,13 @@ page {
 
   &__title {
     color: var(--ousea-ink-900, #1a2333);
-    font-size: 30rpx;
+    font-size: 15.72PX;
   }
 
   &__subtitle {
-    margin-top: 3rpx;
+    margin-top: 1.57PX;
     color: var(--ousea-ink-500, #6b7a90);
-    font-size: 22rpx;
+    font-size: 11.53PX;
   }
 }
 
@@ -3607,12 +3645,12 @@ page {
   max-height: 76vh;
 }
 
-.period-options { padding-top: 14rpx; }
+.period-options { padding-top: 7.34PX; }
 
 .period-options__item {
   min-height: 88rpx;
-  padding: 12rpx 16rpx;
-  margin-bottom: 8rpx;
+  padding: 6.29PX 16rpx;
+  margin-bottom: 4.19PX;
   color: var(--ousea-ink-700, #3a4759);
   background: var(--campus-surface, #fff);
   border: 1rpx solid var(--ousea-bg-line, #e8edf4);
@@ -3621,14 +3659,14 @@ page {
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
 
   text:first-child {
-    margin-bottom: 2rpx;
+    margin-bottom: 1.05PX;
     color: var(--ousea-ink-900, #1a2333);
-    font-size: var(--ousea-font-size-label, 27rpx);
+    font-size: var(--ousea-font-size-label, 14.15PX);
   }
 
   text:last-child {
     color: var(--ousea-ink-500, #6b7a90);
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: var(--ousea-font-size-badge, 10.48PX);
   }
 
   &--active {

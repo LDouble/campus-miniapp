@@ -2,11 +2,12 @@
   display: flex;
   min-width: 0;
   min-height: 112rpx;
-  padding: var(--ousea-space-1, 16rpx) 0;
+  padding: var(--ousea-space-block-1, 8.38PX) 0;
   box-sizing: border-box;
   align-items: center;
   justify-content: space-between;
-  gap: var(--ousea-space-1, 16rpx);
+  row-gap: var(--ousea-space-block-1, 8.38PX);
+  column-gap: var(--ousea-space-1, 16rpx);
 }
 
 .detail-author-header__identity {
@@ -26,7 +27,7 @@
   border: 0;
   background: var(--ousea-ocean-50, #f2f7fe);
   color: var(--ousea-ocean-600, #1d5fd6);
-  font-size: var(--ousea-font-size-label, 27rpx);
+  font-size: var(--ousea-font-size-label, 14.15PX);
   font-weight: var(--ousea-font-weight-medium, 500);
   box-shadow: none;
 }
@@ -45,7 +46,8 @@
   margin-left: var(--ousea-space-1, 16rpx);
   flex: 1;
   flex-direction: column;
-  gap: 4rpx;
+  row-gap: 2.1PX;
+  column-gap: 4rpx;
 }
 
 .detail-author-header__name-row {
@@ -58,9 +60,9 @@
   min-width: 0;
   overflow: hidden;
   color: var(--ousea-ocean-600, #1d5fd6);
-  font-size: var(--ousea-font-size-comment, 30rpx);
+  font-size: var(--ousea-font-size-comment, 15.72PX);
   font-weight: var(--ousea-font-weight-medium, 500);
-  line-height: var(--ousea-line-height-ui, 1.4);
+  line-height: var(--ousea-line-height-ui, 19.91PX);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -75,12 +77,13 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 10rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
   overflow: hidden;
   color: var(--campus-text-muted, #a6b2c2);
-  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-size: var(--ousea-font-size-caption, 12.58PX);
   font-weight: var(--ousea-font-weight-regular, 400);
-  line-height: var(--ousea-line-height-ui, 1.4);
+  line-height: var(--ousea-line-height-ui, 19.91PX);
   white-space: nowrap;
 }
 
@@ -102,7 +105,8 @@
   min-width: 0;
   flex: none;
   align-items: center;
-  gap: var(--ousea-space-1, 16rpx);
+  row-gap: var(--ousea-space-block-1, 8.38PX);
+  column-gap: var(--ousea-space-1, 16rpx);
 }
 
 .campus-theme--dark {

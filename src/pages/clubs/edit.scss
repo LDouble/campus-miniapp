@@ -12,12 +12,12 @@ page {
 }
 
 .club-editor-form {
-  padding: 18rpx 28rpx;
+  padding: 9.43PX 28rpx;
 }
 
 .club-editor-progress {
-  padding: 25rpx 26rpx 20rpx;
-  margin-bottom: 20rpx;
+  padding: 13.1PX 26rpx 10.48PX;
+  margin-bottom: 10.48PX;
   background: linear-gradient(135deg, #dcefe8, #f4eadc);
   border: 2rpx solid rgba(255, 255, 255, 0.94);
   border-radius: 32rpx;
@@ -36,16 +36,16 @@ page {
 
       text:first-child {
         color: #2c5349;
-        font-size: 28rpx;
+        font-size: 14.67PX;
         font-weight: 800;
       }
 
       text:last-child {
-        margin-top: 6rpx;
+        margin-top: 3.14PX;
         overflow: hidden;
         color: #526b65;
-        font-size: 24rpx;
-        line-height: 1.45;
+        font-size: 12.58PX;
+        line-height: 18.24PX;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
@@ -55,14 +55,14 @@ page {
       flex: none;
       margin-left: 20rpx;
       color: #315f53;
-      font-size: 31rpx;
+      font-size: 16.24PX;
       font-weight: 850;
     }
   }
 
   &__track {
     height: 10rpx;
-    margin-top: 18rpx;
+    margin-top: 9.43PX;
     overflow: hidden;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border-radius: 99rpx;
@@ -78,8 +78,9 @@ page {
   &__nav {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10rpx;
-    margin-top: 14rpx;
+    row-gap: 5.24PX;
+    column-gap: 10rpx;
+    margin-top: 7.34PX;
 
     > view {
       display: flex;
@@ -87,7 +88,7 @@ page {
       justify-content: center;
       min-height: 72rpx;
       color: #3f685d;
-      font-size: 24rpx;
+      font-size: 12.58PX;
       font-weight: 700;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
       border-radius: 18rpx;
@@ -96,9 +97,9 @@ page {
 }
 
 .club-form-section {
-  padding: 26rpx;
-  margin-bottom: 20rpx;
-  scroll-margin-top: 24rpx;
+  padding: 13.62PX 26rpx;
+  margin-bottom: 10.48PX;
+  scroll-margin-top: 12.58PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
   border-radius: 32rpx;
@@ -108,47 +109,48 @@ page {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    padding-bottom: 17rpx;
+    padding-bottom: 8.91PX;
     border-bottom: 2rpx solid #edf1ed;
 
     text:first-child {
       color: #2c5349;
-      font-size: 29rpx;
+      font-size: 15.2PX;
       font-weight: 800;
     }
 
     text:last-child {
       margin-left: 18rpx;
       color: #60766f;
-      font-size: 23rpx;
+      font-size: 12.05PX;
       text-align: right;
     }
   }
 
   &__description {
     display: block;
-    margin: 16rpx 0;
+    margin: 8.38PX 0;
     color: #526b65;
-    font-size: 25rpx;
-    line-height: 1.6;
+    font-size: 13.1PX;
+    line-height: 20.96PX;
   }
 }
 
 .club-field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16rpx;
+  row-gap: 8.38PX;
+  column-gap: 16rpx;
 }
 
 .club-field {
   display: flex;
   flex-direction: column;
-  margin-top: 22rpx;
+  margin-top: 11.53PX;
 
   &__label {
-    margin-bottom: 10rpx;
+    margin-bottom: 5.24PX;
     color: #3d6057;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 750;
   }
 
@@ -159,7 +161,7 @@ page {
     height: 88rpx;
     padding: 0 21rpx;
     color: #2d5148;
-    font-size: 26rpx;
+    font-size: 13.62PX;
     background: #f4f7f3;
     border: 2rpx solid #dfe8e2;
     border-radius: 21rpx;
@@ -175,7 +177,7 @@ page {
     }
 
     text {
-      font-size: 36rpx;
+      font-size: 18.86PX;
     }
   }
 
@@ -183,10 +185,10 @@ page {
     box-sizing: border-box;
     width: 100%;
     min-height: 300rpx;
-    padding: 20rpx 22rpx;
+    padding: 10.48PX 22rpx;
     color: #2d5148;
-    font-size: 26rpx;
-    line-height: 1.65;
+    font-size: 13.62PX;
+    line-height: 22.48PX;
     background: #f4f7f3;
     border: 2rpx solid #dfe8e2;
     border-radius: 21rpx;
@@ -198,23 +200,24 @@ page {
 
   &__hint {
     align-self: flex-end;
-    margin-top: 8rpx;
+    margin-top: 4.19PX;
     color: #60766f;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 }
 
 .club-image-fields {
   display: grid;
   grid-template-columns: 210rpx minmax(0, 1fr);
-  gap: 18rpx;
+  row-gap: 9.43PX;
+  column-gap: 18rpx;
 }
 
 .club-image-field {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  margin-top: 20rpx;
+  margin-top: 10.48PX;
 
   &__single {
     position: relative;
@@ -237,12 +240,12 @@ page {
       justify-content: center;
       flex-direction: column;
       color: #526b65;
-      font-size: 24rpx;
+      font-size: 12.58PX;
 
       image {
         width: 44rpx;
         height: 44rpx;
-        margin-bottom: 9rpx;
+        margin-bottom: 4.72PX;
         opacity: 0.72;
       }
     }
@@ -277,21 +280,22 @@ page {
     align-items: center;
     min-height: 88rpx;
     color: #93483e;
-    font-size: 23rpx;
-    line-height: 1.45;
+    font-size: 12.05PX;
+    line-height: 17.48PX;
   }
 }
 
 .club-gallery-editor {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  row-gap: 8.38PX;
+  column-gap: 16rpx;
 }
 
 .club-gallery-draft {
   display: flex;
   min-height: 198rpx;
-  padding: 14rpx;
+  padding: 7.34PX 14rpx;
   background: #f4f7f3;
   border: 2rpx solid #e7eee9;
   border-radius: 24rpx;
@@ -321,7 +325,7 @@ page {
     width: 40rpx;
     height: 40rpx;
     color: #fff;
-    font-size: 22rpx;
+    font-size: 11.53PX;
     font-weight: 700;
     background: rgba(35, 69, 60, 0.78);
     border-radius: 50%;
@@ -354,7 +358,7 @@ page {
       height: 88rpx;
       padding: 0 16rpx;
       color: #35574f;
-      font-size: 25rpx;
+      font-size: 13.1PX;
       background: var(--campus-surface, #fff);
       border: 2rpx solid #e1e9e4;
       border-radius: 18rpx;
@@ -364,8 +368,9 @@ page {
   &__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 6rpx;
-    margin-top: 8rpx;
+    row-gap: 3.14PX;
+    column-gap: 6rpx;
+    margin-top: 4.19PX;
 
     > view {
       display: flex;
@@ -375,7 +380,7 @@ page {
       height: 88rpx;
       padding: 0 6rpx;
       color: #3f6e62;
-      font-size: 23rpx;
+      font-size: 12.05PX;
       border-radius: 17rpx;
     }
 
@@ -390,10 +395,10 @@ page {
   }
 
   &__error {
-    margin-top: 5rpx;
+    margin-top: 2.62PX;
     color: #93483e;
-    font-size: 23rpx;
-    line-height: 1.4;
+    font-size: 12.05PX;
+    line-height: 16.87PX;
   }
 }
 
@@ -411,50 +416,50 @@ page {
   image {
     width: 42rpx;
     height: 42rpx;
-    margin-bottom: 8rpx;
+    margin-bottom: 4.19PX;
     opacity: 0.72;
   }
 
   text:nth-of-type(1) {
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 750;
   }
 
   text:nth-of-type(2) {
-    margin-top: 5rpx;
+    margin-top: 2.62PX;
     color: #60766f;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 }
 
 .club-editor-rejection {
   display: flex;
   flex-direction: column;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
+  padding: 12.58PX 24rpx;
+  margin-bottom: 10.48PX;
   background: #fff0eb;
   border-radius: 28rpx;
 
   text:first-child {
     color: #934d42;
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 750;
   }
 
   text:last-child {
-    margin-top: 8rpx;
+    margin-top: 4.19PX;
     color: #744a43;
-    font-size: 24rpx;
-    line-height: 1.6;
+    font-size: 12.58PX;
+    line-height: 20.12PX;
   }
 }
 
 .club-editor-notice {
-  padding: 22rpx 24rpx;
-  margin-bottom: 22rpx;
+  padding: 11.53PX 24rpx;
+  margin-bottom: 11.53PX;
   color: #675d53;
-  font-size: 24rpx;
-  line-height: 1.65;
+  font-size: 12.58PX;
+  line-height: 20.75PX;
   background: #fff5e6;
   border-radius: 24rpx;
 }
@@ -465,16 +470,16 @@ page {
   bottom: 0;
   left: 0;
   z-index: 20;
-  padding: 13rpx 28rpx calc(18rpx + env(safe-area-inset-bottom));
+  padding: 6.81PX 28rpx calc(18rpx + env(safe-area-inset-bottom));
   background: rgba(255, 251, 247, 0.97);
   border-top: 2rpx solid rgba(86, 119, 109, 0.1);
   backdrop-filter: blur(20rpx);
 
   &__status {
     display: block;
-    margin-bottom: 9rpx;
+    margin-bottom: 4.72PX;
     color: #75685d;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     text-align: center;
 
     &--ready {
@@ -486,14 +491,15 @@ page {
   &__buttons {
     display: grid;
     grid-template-columns: 1fr 1.4fr;
-    gap: 14rpx;
+    row-gap: 7.34PX;
+    column-gap: 14rpx;
 
     > view {
       display: flex;
       align-items: center;
       justify-content: center;
       height: 88rpx;
-      font-size: 26rpx;
+      font-size: 13.62PX;
       font-weight: 750;
       border-radius: 26rpx;
     }
@@ -513,9 +519,9 @@ page {
 
 .club-editor-loading,
 .club-editor-state {
-  padding: 100rpx 44rpx;
+  padding: 52.4PX 44rpx;
   color: #526b65;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   text-align: center;
 }
 
@@ -526,13 +532,13 @@ page {
 
   &__title {
     color: #31564d;
-    font-size: 30rpx;
+    font-size: 15.72PX;
     font-weight: 750;
   }
 
   &__text {
-    margin-top: 13rpx;
-    line-height: 1.6;
+    margin-top: 6.81PX;
+    line-height: 26.83PX;
   }
 
   &__action {
@@ -541,9 +547,9 @@ page {
     justify-content: center;
     min-width: 200rpx;
     height: 88rpx;
-    margin-top: 28rpx;
+    margin-top: 14.67PX;
     color: #fff;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 700;
     background: #3f7668;
     border-radius: 26rpx;
@@ -564,10 +570,11 @@ page { background: var(--campus-page, #f4f7fb); }
 .club-editor-progress__head > view text:last-child { display: -webkit-box; overflow: hidden; color: rgba(255, 255, 255, 0.74); white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .club-editor-progress__track { background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); }
 .club-editor-progress__track > view { background: #fff; }
-.club-editor-progress__nav { overflow-x: auto; grid-template-columns: repeat(4, 132rpx); padding-bottom: 2rpx; }
+.club-editor-progress__nav { overflow-x: auto; grid-template-columns: repeat(4, 132rpx); padding-bottom: 1.05PX; }
 .club-editor-progress__nav > view { color: var(--campus-primary, #2f80ed); background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); }
 .club-form-section { background: var(--campus-surface, #fff); border-color: var(--campus-border, #dce5f0); box-shadow: 0 10rpx 28rpx rgba(29, 41, 61, 0.05); }
-.club-form-section__head { gap: 16rpx; border-color: var(--campus-border, #edf1f6); }
+.club-form-section__head { row-gap: 8.38PX;
+ column-gap: 16rpx; border-color: var(--campus-border, #edf1f6); }
 .club-form-section__head text:first-child { color: var(--campus-text-heading, #1d293d); }
 .club-form-section__head text:last-child { min-width: 0; overflow: hidden; color: var(--campus-text-muted, #90a1b9); text-overflow: ellipsis; white-space: nowrap; }
 .club-form-section__description { color: var(--campus-text-body, #45556c); }

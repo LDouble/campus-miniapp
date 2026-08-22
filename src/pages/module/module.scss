@@ -10,7 +10,7 @@ page {
   position: relative;
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 0 28rpx 174rpx;
+  padding: 0 28rpx 91.18PX;
   overflow: hidden;
   color: var(--campus-text-heading, #21465c);
   background:
@@ -19,7 +19,7 @@ page {
 
   > .custom-navbar {
     width: calc(100% + 56rpx);
-    margin: 0 -28rpx 18rpx;
+    margin: 0 -28rpx 9.43PX;
   }
 
   &--purple {
@@ -69,7 +69,7 @@ page {
   align-items: center;
   min-height: 208rpx;
   box-sizing: border-box;
-  padding: 34rpx;
+  padding: 17.82PX 34rpx;
   overflow: hidden;
   background: linear-gradient(130deg, var(--hero-one), var(--hero-two));
   border: 2rpx solid rgba(255, 255, 255, 0.34);
@@ -120,16 +120,16 @@ page {
   }
 
   &__title {
-    margin-bottom: 9rpx;
+    margin-bottom: 4.72PX;
     color: var(--campus-text-heading, #21465c);
-    font-size: 38rpx;
+    font-size: 19.91PX;
     font-weight: 750;
     letter-spacing: 1rpx;
   }
 
   &__slogan {
     color: #62818f;
-    font-size: 26rpx;
+    font-size: 13.62PX;
   }
 
   &__deco {
@@ -138,7 +138,8 @@ page {
     bottom: 22rpx;
     display: flex;
     align-items: flex-end;
-    gap: 8rpx;
+    row-gap: 4.19PX;
+    column-gap: 8rpx;
     opacity: 0.24;
 
     view {
@@ -160,7 +161,7 @@ page {
   align-items: center;
   min-height: 132rpx;
   padding: 0 12rpx;
-  margin: -12rpx 16rpx 28rpx;
+  margin: -6.29PX 16rpx 14.67PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 30rpx;
@@ -182,15 +183,15 @@ page {
   }
 
   &__value {
-    margin-bottom: 5rpx;
+    margin-bottom: 2.62PX;
     color: var(--accent);
-    font-size: 29rpx;
+    font-size: 15.2PX;
     font-weight: 750;
   }
 
   &__label {
     color: #82928f;
-    font-size: 23rpx;
+    font-size: 12.05PX;
   }
 
   &__divider {
@@ -210,7 +211,7 @@ page {
   align-items: center;
   height: 86rpx;
   padding: 0 27rpx;
-  margin-bottom: 24rpx;
+  margin-bottom: 12.58PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.96);
   border-radius: 29rpx;
@@ -227,7 +228,7 @@ page {
     flex: 1;
     height: 80rpx;
     color: #253b38;
-    font-size: 25rpx;
+    font-size: 13.1PX;
   }
 
   &__placeholder {
@@ -239,12 +240,13 @@ page {
   position: relative;
   z-index: 2;
   width: calc(100% + 28rpx);
-  margin-bottom: 34rpx;
+  margin-bottom: 17.82PX;
   white-space: nowrap;
 
   &__inner {
     display: inline-flex;
-    gap: 14rpx;
+    row-gap: 7.34PX;
+    column-gap: 14rpx;
     padding-right: 28rpx;
   }
 
@@ -256,7 +258,7 @@ page {
     height: 62rpx;
     padding: 0 20rpx;
     color: #70817e;
-    font-size: 26rpx;
+    font-size: 13.62PX;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border: 2rpx solid rgba(255, 255, 255, 0.95);
     border-radius: 23rpx;
@@ -277,7 +279,7 @@ page {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin: 0 4rpx 22rpx;
+  margin: 0 4rpx 11.53PX;
 
   &__title,
   &__sub {
@@ -285,16 +287,16 @@ page {
   }
 
   &__title {
-    margin-bottom: 5rpx;
+    margin-bottom: 2.62PX;
     color: #243936;
-    font-size: 31rpx;
+    font-size: 16.24PX;
     font-weight: 750;
   }
 
   &__sub,
   &__count {
     color: #899795;
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 }
 
@@ -304,8 +306,8 @@ page {
 }
 
 .module-card {
-  padding: 25rpx;
-  margin-bottom: 18rpx;
+  padding: 13.1PX 25rpx;
+  margin-bottom: 9.43PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(255, 255, 255, 0.98);
   border-radius: 32rpx;
@@ -325,7 +327,7 @@ page {
     height: 54rpx;
     margin-right: 17rpx;
     color: var(--accent);
-    font-size: 24rpx;
+    font-size: 12.58PX;
     font-weight: 750;
     background: var(--accent-light);
     border-radius: 18rpx;
@@ -343,29 +345,29 @@ page {
 
   &__title {
     padding-right: 8rpx;
-    margin-bottom: 9rpx;
+    margin-bottom: 4.72PX;
     color: #263b38;
-    font-size: 25rpx;
+    font-size: 13.1PX;
     font-weight: 700;
-    line-height: 1.4;
+    line-height: 18.34PX;
   }
 
   &__detail {
     display: -webkit-box;
     overflow: hidden;
     color: #7e8d8a;
-    font-size: 24rpx;
-    line-height: 1.55;
+    font-size: 12.58PX;
+    line-height: 19.49PX;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
 
   &__tag {
     flex: none;
-    padding: 8rpx 12rpx;
+    padding: 4.19PX 12rpx;
     margin-left: 8rpx;
     color: var(--accent);
-    font-size: 23rpx;
+    font-size: 12.05PX;
     font-weight: 600;
     background: var(--accent-light);
     border-radius: 13rpx;
@@ -374,8 +376,8 @@ page {
   &__bottom {
     display: flex;
     align-items: center;
-    padding-top: 18rpx;
-    margin: 18rpx 0 0 71rpx;
+    padding-top: 9.43PX;
+    margin: 9.43PX 0 0 71rpx;
     border-top: 2rpx solid #edf2f1;
   }
 
@@ -385,7 +387,7 @@ page {
     align-items: center;
     min-width: 0;
     color: #93a09e;
-    font-size: 23rpx;
+    font-size: 12.05PX;
 
     image {
       flex: none;
@@ -421,7 +423,7 @@ page {
   justify-content: center;
   height: 92rpx;
   color: #fff;
-  font-size: 27rpx;
+  font-size: 14.15PX;
   font-weight: 700;
   background: var(--accent);
   border: 2rpx solid rgba(255, 255, 255, 0.28);

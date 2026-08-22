@@ -15,8 +15,8 @@ export const resolveApiBaseUrl = (
   endpoints: RuntimeApiEndpoints,
 ) => {
   const normalized = normalizeMiniProgramEnvVersion(envVersion)
-  let value = endpoints.review
-  if (normalized === 'trial' || normalized === 'release') value = endpoints.production
+  // 当前开发、预览和正式版本统一使用产品 API；保留 normalized 仅用于空值错误提示。
+  const value = endpoints.production
 
   const result = String(value || '').trim().replace(/\/+$/, '')
   if (!result) throw new Error(`API base URL is empty for ${normalized}`)

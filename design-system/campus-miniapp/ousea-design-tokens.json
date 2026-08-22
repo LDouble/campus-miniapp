@@ -31,12 +31,12 @@
       }
     },
     "fontSize": {
-      "badge": { "value": "10", "type": "fontSize", "description": "徽章文字" },
-      "caption": { "value": "12", "type": "fontSize", "description": "时间与辅助信息" },
-      "label": { "value": "13.5", "type": "fontSize", "description": "昵称 / 操作按钮" },
-      "comment": { "value": "15", "type": "fontSize", "description": "评论内容" },
-      "body": { "value": "16", "type": "fontSize", "description": "帖子正文" },
-      "title": { "value": "16.5", "type": "fontSize", "description": "模块标题" }
+      "badge": { "value": "10.48PX", "type": "fontSize", "description": "固定像素：徽章文字" },
+      "caption": { "value": "12.58PX", "type": "fontSize", "description": "固定像素：时间与辅助信息" },
+      "label": { "value": "14.15PX", "type": "fontSize", "description": "固定像素：昵称 / 操作按钮" },
+      "comment": { "value": "15.72PX", "type": "fontSize", "description": "固定像素：评论内容" },
+      "body": { "value": "16.77PX", "type": "fontSize", "description": "固定像素：帖子正文" },
+      "title": { "value": "17.29PX", "type": "fontSize", "description": "固定像素：模块标题" }
     },
     "fontWeight": {
       "regular": { "value": "400", "type": "fontWeight" },
@@ -45,16 +45,25 @@
       "bold": { "value": "700", "type": "fontWeight" }
     },
     "lineHeight": {
-      "post": { "value": "1.85", "type": "lineHeight", "description": "帖子正文" },
-      "comment": { "value": "1.65", "type": "lineHeight", "description": "评论内容" },
-      "ui": { "value": "1.4", "type": "lineHeight", "description": "界面元素" }
+      "badge": { "value": "14.67PX", "type": "lineHeight", "description": "固定像素：徽章文字行高" },
+      "caption": { "value": "17.61PX", "type": "lineHeight", "description": "固定像素：时间与辅助信息行高" },
+      "label": { "value": "19.81PX", "type": "lineHeight", "description": "固定像素：昵称 / 操作按钮行高" },
+      "post": { "value": "31.02PX", "type": "lineHeight", "description": "固定像素：帖子正文" },
+      "comment": { "value": "25.94PX", "type": "lineHeight", "description": "固定像素：评论内容" },
+      "title": { "value": "24.21PX", "type": "lineHeight", "description": "固定像素：模块标题行高" },
+      "ui": { "value": "19.91PX", "type": "lineHeight", "description": "固定像素：界面元素基线" }
     },
     "spacing": {
-      "space-1": { "value": "8", "type": "spacing", "description": "图标与文字" },
-      "space-2": { "value": "12", "type": "spacing", "description": "卡片内边距" },
-      "space-3": { "value": "16", "type": "spacing", "description": "模块间距" },
-      "space-4": { "value": "20", "type": "spacing", "description": "页面左右边距" },
-      "space-5": { "value": "32", "type": "spacing", "description": "大区块分隔" }
+      "space-1": { "value": "16rpx", "type": "spacing", "description": "横向响应式：图标与文字" },
+      "space-2": { "value": "24rpx", "type": "spacing", "description": "横向响应式：卡片内边距" },
+      "space-3": { "value": "32rpx", "type": "spacing", "description": "横向响应式：模块间距" },
+      "space-4": { "value": "40rpx", "type": "spacing", "description": "横向响应式：页面左右边距" },
+      "space-5": { "value": "64rpx", "type": "spacing", "description": "横向响应式：大区块分隔" },
+      "block-1": { "value": "8.38PX", "type": "spacing", "description": "固定像素：紧凑纵向间距" },
+      "block-2": { "value": "12.58PX", "type": "spacing", "description": "固定像素：卡片内纵向间距" },
+      "block-3": { "value": "16.77PX", "type": "spacing", "description": "固定像素：模块纵向间距" },
+      "block-4": { "value": "20.96PX", "type": "spacing", "description": "固定像素：页面纵向间距" },
+      "block-5": { "value": "33.54PX", "type": "spacing", "description": "固定像素：大区块纵向分隔" }
     },
     "borderRadius": {
       "pill": { "value": "999", "type": "borderRadius", "description": "胶囊组件" },

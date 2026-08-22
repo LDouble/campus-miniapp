@@ -13,26 +13,29 @@ page { background: var(--campus-page, #f4f7fb); }
 }
 
 .official-notice-detail {
-  padding: 34rpx 30rpx;
-  margin-top: 18rpx;
+  padding: 17.82PX 30rpx;
+  margin-top: 9.43PX;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   border: 2rpx solid rgba(62, 103, 93, 0.08);
   border-radius: 32rpx;
   box-shadow: 0 15rpx 38rpx rgba(47, 82, 74, 0.06);
 
-  &__eyebrow { display: flex; align-items: center; gap: 10rpx; }
+  &__eyebrow { display: flex; align-items: center; row-gap: 5.24PX;
+ column-gap: 10rpx; }
   &__eyebrow text {
-    padding: 7rpx 13rpx;
+    padding: 3.67PX 13rpx;
     color: #4b8175;
-    font-size: 21rpx;
+    font-size: 11PX;
     background: #e7f2ee;
     border-radius: 999rpx;
   }
   &__eyebrow .is-important { color: #9b5f2c; background: #faead9; }
-  &__title { display: block; padding: 23rpx 0 17rpx; color: #254743; font-size: 38rpx; font-weight: 780; line-height: 1.38; }
-  &__meta { display: flex; gap: 18rpx; color: #899995; font-size: 23rpx; }
-  &__summary { padding: 22rpx; margin: 28rpx 0; color: #57706a; font-size: 24rpx; line-height: 1.65; background: #f4f7f3; border-left: 6rpx solid #77a796; border-radius: 8rpx 18rpx 18rpx 8rpx; }
-  &__actions { display: flex; gap: 16rpx; padding-top: 32rpx; }
+  &__title { display: block; padding: 12.05PX 0 8.91PX; color: #254743; font-size: 19.91PX; font-weight: 780; line-height: 27.48PX; }
+  &__meta { display: flex; row-gap: 9.43PX;
+ column-gap: 18rpx; color: #899995; font-size: 12.05PX; }
+  &__summary { padding: 11.53PX 22rpx; margin: 14.67PX 0; color: #57706a; font-size: 12.58PX; line-height: 20.75PX; background: #f4f7f3; border-left: 6rpx solid #77a796; border-radius: 8rpx 18rpx 18rpx 8rpx; }
+  &__actions { display: flex; row-gap: 8.38PX;
+ column-gap: 16rpx; padding-top: 16.77PX; }
   &__actions > view,
   &__actions > button {
     display: flex;
@@ -42,15 +45,15 @@ page { background: var(--campus-page, #f4f7fb); }
     align-items: center;
     justify-content: center;
     color: #4c8275;
-    font-size: 25rpx;
-    line-height: 78rpx;
+    font-size: 13.1PX;
+    line-height: 40.87PX;
     background: #e8f2ee;
     border: 0;
     border-radius: 22rpx;
   }
   &__actions > button { color: #fff; background: #4e907f; }
   &__actions > button::after { border: 0; }
-  &__disclaimer { display: block; padding-top: 25rpx; text-align: center; color: #9aa5a2; font-size: 21rpx; }
+  &__disclaimer { display: block; padding-top: 13.1PX; text-align: center; color: #9aa5a2; font-size: 11PX; }
 }
 
 .official-notice-markdown {
@@ -59,27 +62,28 @@ page { background: var(--campus-page, #f4f7fb); }
   text { display: block; }
   &__paragraph,
   &__list,
-  &__ordered-list { padding-bottom: 18rpx; font-size: 26rpx; line-height: 1.82; }
+  &__ordered-list { padding-bottom: 9.43PX; font-size: 13.62PX; line-height: 24.8PX; }
   &__list,
-  &__ordered-list { padding-bottom: 10rpx; padding-left: 16rpx; }
-  &__heading { padding: 24rpx 0 15rpx; color: #294c46; font-size: 31rpx; font-weight: 750; line-height: 1.45; }
-  &__heading.is-level-2 { font-size: 29rpx; }
-  &__heading.is-level-3 { font-size: 27rpx; }
-  &__quote { padding: 15rpx 19rpx; margin-bottom: 16rpx; color: #62766f; font-size: 24rpx; line-height: 1.65; background: #f2f5f2; border-radius: 14rpx; }
-  &__separator { height: 2rpx; margin: 20rpx 0 30rpx; background: #edf0ed; }
+  &__ordered-list { padding-bottom: 5.24PX; padding-left: 16rpx; }
+  &__heading { padding: 12.58PX 0 7.86PX; color: #294c46; font-size: 16.24PX; font-weight: 750; line-height: 23.56PX; }
+  &__heading.is-level-2 { font-size: 15.2PX; }
+  &__heading.is-level-3 { font-size: 14.15PX; }
+  &__quote { padding: 7.86PX 19rpx; margin-bottom: 8.38PX; color: #62766f; font-size: 12.58PX; line-height: 20.75PX; background: #f2f5f2; border-radius: 14rpx; }
+  &__separator { height: 2rpx; margin: 10.48PX 0 15.72PX; background: #edf0ed; }
 }
 
 .official-notice-attachments {
-  padding-top: 25rpx;
-  margin-top: 24rpx;
+  padding-top: 13.1PX;
+  margin-top: 12.58PX;
   border-top: 2rpx solid #edf1ee;
 
-  &__title { display: block; padding-bottom: 15rpx; color: #31564f; font-size: 28rpx; font-weight: 740; }
-  > view { display: flex; align-items: center; gap: 15rpx; padding: 17rpx; margin-bottom: 10rpx; background: #f4f7f4; border-radius: 18rpx; }
-  > view > view { display: flex; width: 45rpx; height: 45rpx; align-items: center; justify-content: center; color: #fff; font-size: 21rpx; background: #6a9b8e; border-radius: 13rpx; }
-  > view > text:nth-child(2) { flex: 1; color: #4c645e; font-size: 25rpx; }
-  > view > text:last-child { color: #5d8e81; font-size: 23rpx; }
-  &__hint { display: block; padding-top: 5rpx; color: #9aa5a1; font-size: 21rpx; }
+  &__title { display: block; padding-bottom: 7.86PX; color: #31564f; font-size: 14.67PX; font-weight: 740; }
+  > view { display: flex; align-items: center; row-gap: 7.86PX;
+ column-gap: 15rpx; padding: 8.91PX 17rpx; margin-bottom: 5.24PX; background: #f4f7f4; border-radius: 18rpx; }
+  > view > view { display: flex; width: 45rpx; height: 45rpx; align-items: center; justify-content: center; color: #fff; font-size: 11PX; background: #6a9b8e; border-radius: 13rpx; }
+  > view > text:nth-child(2) { flex: 1; color: #4c645e; font-size: 13.1PX; }
+  > view > text:last-child { color: #5d8e81; font-size: 12.05PX; }
+  &__hint { display: block; padding-top: 2.62PX; color: #9aa5a1; font-size: 11PX; }
 }
 
 .official-notice-detail-state {
@@ -89,9 +93,9 @@ page { background: var(--campus-page, #f4f7fb); }
   align-items: center;
   justify-content: center;
   color: #82928e;
-  font-size: 24rpx;
+  font-size: 12.58PX;
 
-  > view { padding: 18rpx 30rpx; margin-top: 22rpx; color: #4b8174; background: #e4f0eb; border-radius: 20rpx; }
+  > view { padding: 9.43PX 30rpx; margin-top: 11.53PX; color: #4b8174; background: #e4f0eb; border-radius: 20rpx; }
 }
 
 /* 通知详情：让长正文、长附件名和操作区都能安全落在蓝灰白卡片中。 */
@@ -103,7 +107,7 @@ page { background: var(--campus-page, #f4f7fb); }
 }
 
 .official-notice-detail {
-  margin-top: 20rpx;
+  margin-top: 10.48PX;
   border-color: var(--campus-border, #e1eaf6);
   border-radius: 28rpx;
   box-shadow: 0 15rpx 38rpx rgba(30, 64, 110, .06);
@@ -116,12 +120,12 @@ page { background: var(--campus-page, #f4f7fb); }
   &__meta text:first-child { min-width: 0; overflow: hidden; color: var(--campus-text-body, #45556c); text-overflow: ellipsis; white-space: nowrap; }
   &__meta text:last-child { flex: none; color: var(--campus-text-muted, #90a1b9); white-space: nowrap; }
   &__summary { color: var(--campus-text-body, #45556c); background: var(--campus-surface-subtle, #f1f6fe); border-left-color: var(--campus-primary, #2b7fff); overflow-wrap: anywhere; }
-  &__actions { padding-top: 34rpx; }
+  &__actions { padding-top: 17.82PX; }
   &__actions > view,
   &__actions > button { color: var(--campus-primary, #2b7fff); background: var(--campus-surface-primary, #e8f1ff); }
   &__actions > button { color: #fff; background: var(--campus-primary, #2b7fff); }
   &__action--pressed { opacity: .7; transform: scale(.985); }
-  &__disclaimer { padding-bottom: 8rpx; color: var(--campus-text-muted, #90a1b9); }
+  &__disclaimer { padding-bottom: 4.19PX; color: var(--campus-text-muted, #90a1b9); }
 }
 
 .official-notice-markdown {

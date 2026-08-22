@@ -18,7 +18,7 @@ page {
   &__intro {
     display: flex;
     height: 100rpx;
-    padding: 10rpx 32rpx;
+    padding: 5.24PX 32rpx;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
@@ -41,9 +41,9 @@ page {
 
   &__eyebrow {
     color: #1a2333;
-    font-size: 48rpx;
+    font-size: 25.15PX;
     font-weight: 800;
-    line-height: 64rpx;
+    line-height: 33.54PX;
     letter-spacing: -1.2rpx;
   }
 
@@ -77,9 +77,9 @@ page {
       min-width: 0;
       overflow: hidden;
       color: #6b7a90;
-      font-size: 26rpx;
+      font-size: 13.62PX;
       font-weight: 400;
-      line-height: 40rpx;
+      line-height: 20.96PX;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -92,7 +92,7 @@ page {
 
 .community-content-anchor {
   min-height: 45vh;
-  padding-top: 24rpx;
+  padding-top: 12.58PX;
 }
 
 .community-page--community .community-content-anchor {
@@ -120,7 +120,8 @@ page {
     padding: 0 44rpx;
     align-items: center;
     box-sizing: border-box;
-    gap: 48rpx;
+    row-gap: 25.15PX;
+    column-gap: 48rpx;
   }
 
   &__item {
@@ -137,9 +138,9 @@ page {
     border-radius: 0;
     background: transparent;
     color: #6b7a90;
-    font-size: 32rpx;
+    font-size: 16.77PX;
     font-weight: 400;
-    line-height: 48rpx;
+    line-height: 25.15PX;
     box-shadow: none;
     transition: opacity 160ms ease, color 160ms ease;
 
@@ -158,7 +159,7 @@ page {
     &--active {
       background: transparent;
       color: #1a2333;
-      font-size: 36rpx;
+      font-size: 18.86PX;
       font-weight: 800;
       box-shadow: none;
     }
@@ -192,7 +193,8 @@ page {
   padding: 0 36rpx;
   align-items: center;
   box-sizing: border-box;
-  gap: 16rpx;
+  row-gap: 8.38PX;
+  column-gap: 16rpx;
 }
 
 .community-root-tabs__item {
@@ -205,9 +207,9 @@ page {
   border-radius: 999rpx;
   background: #f5f6f8;
   color: #6b7a90;
-  font-size: 26rpx;
+  font-size: 13.62PX;
   font-weight: 400;
-  line-height: 40rpx;
+  line-height: 20.96PX;
   transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
 
   image {
@@ -232,9 +234,10 @@ page {
 .community-subtabs__inner {
   display: inline-flex;
   min-width: 100%;
-  padding: 2rpx 28rpx 6rpx;
+  padding: 1.05PX 28rpx 3.14PX;
   box-sizing: border-box;
-  gap: 30rpx;
+  row-gap: 15.72PX;
+  column-gap: 30rpx;
 }
 
 .community-subtabs__item {
@@ -244,7 +247,7 @@ page {
   align-items: center;
   justify-content: center;
   color: #747688;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 600;
 }
 
@@ -281,18 +284,19 @@ page {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  gap: 7rpx;
+  row-gap: 3.67PX;
+  column-gap: 7rpx;
   border: 2rpx solid rgba(255, 255, 255, 0.86);
   border-radius: 999rpx;
   color: #fff;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 750;
   box-shadow: 0 16rpx 34rpx rgba(23, 33, 43, 0.2);
   transition: opacity 150ms ease, transform 150ms ease;
 
   text:first-child {
-    margin-top: -2rpx;
-    font-size: 34rpx;
+    margin-top: -1.05PX;
+    font-size: 17.82PX;
     font-weight: 480;
   }
 
@@ -311,8 +315,8 @@ page {
     gap: 0;
 
     text:first-child {
-      margin-top: -3rpx;
-      font-size: 42rpx;
+      margin-top: -1.57PX;
+      font-size: 22.01PX;
     }
 
     text:last-child {
@@ -331,8 +335,8 @@ page {
 
 .community-module-state {
   display: flex;
-  margin: 28rpx;
-  padding: 72rpx 40rpx;
+  margin: 14.67PX 28rpx;
+  padding: 37.73PX 40rpx;
   align-items: center;
   flex-direction: column;
   border: 1rpx solid rgba(35, 42, 55, 0.06);
@@ -350,22 +354,22 @@ page {
   border-radius: 50%;
   background: rgba(57, 124, 116, 0.1);
   color: #397c74;
-  font-size: 28rpx;
+  font-size: 14.67PX;
   letter-spacing: 3rpx;
 }
 
 .community-module-state__title {
-  margin-top: 24rpx;
+  margin-top: 12.58PX;
   color: #272536;
-  font-size: 30rpx;
+  font-size: 15.72PX;
   font-weight: 750;
 }
 
 .community-module-state__message {
-  margin-top: 12rpx;
+  margin-top: 6.29PX;
   color: #7a7b87;
-  font-size: 25rpx;
-  line-height: 1.6;
+  font-size: 13.1PX;
+  line-height: 20.96PX;
   text-align: center;
 }
 

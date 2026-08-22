@@ -3,11 +3,11 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 3.2vw;
+  padding: 12.58PX 3.2vw;
   overflow: hidden;
   color: rgba(41, 70, 83, 0.9);
   background-color: #ffffff;
-  border: 1px solid rgba(79, 103, 110, 0.12);
+  border: 1PX solid rgba(79, 103, 110, 0.12);
   border-radius: 1.07vw;
 }
 
@@ -15,21 +15,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2.13vw;
+  margin-bottom: 8.37PX;
 }
 
 .shuttle-card__title {
   color: rgba(41, 70, 83, 0.9);
-  font-size: 4.53vw;
+  font-size: 17.81PX;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 24.04PX;
 }
 
 .shuttle-card__count {
   max-width: 32vw;
   color: rgba(41, 70, 83, 0.45);
-  font-size: 3.2vw;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
 }
 
 .shuttle-card__list {
@@ -40,8 +40,8 @@
 .shuttle-card__item {
   display: flex;
   flex-direction: column;
-  padding: 1.6vw 0;
-  border-bottom: 1px solid rgba(79, 103, 110, 0.1);
+  padding: 6.29PX 0;
+  border-bottom: 1PX solid rgba(79, 103, 110, 0.1);
 }
 
 .shuttle-card__item-head {
@@ -54,9 +54,9 @@
   flex-grow: 1;
   min-width: 0;
   color: rgba(41, 70, 83, 0.9);
-  font-size: 4vw;
+  font-size: 15.72PX;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 22.01PX;
 }
 
 .shuttle-card__type {
@@ -64,24 +64,24 @@
   max-width: 22vw;
   margin-left: 2.13vw;
   color: #21465c;
-  font-size: 3.2vw;
+  font-size: 12.58PX;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 17.61PX;
   text-align: right;
 }
 
 .shuttle-card__direction {
-  margin-top: 0.53vw;
+  margin-top: 2.09PX;
   color: rgba(41, 70, 83, 0.45);
-  font-size: 3.2vw;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
 }
 
 .shuttle-card__schedule {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 0.8vw;
+  margin-top: 3.14PX;
 }
 
 .shuttle-card__status,
@@ -91,8 +91,8 @@
   flex-grow: 1;
   min-width: 0;
   color: rgba(41, 70, 83, 0.9);
-  font-size: 3.2vw;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
 }
 
 .shuttle-card__status {
@@ -109,52 +109,52 @@
   max-width: 27vw;
   margin-left: 2.13vw;
   color: rgba(41, 70, 83, 0.3);
-  font-size: 3.2vw;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
   text-align: right;
 }
 
 .shuttle-card__note {
-  margin-top: 0.53vw;
+  margin-top: 2.09PX;
   color: rgba(41, 70, 83, 0.3);
-  font-size: 3.2vw;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
 }
 
 .shuttle-card__empty {
   display: flex;
   flex-direction: column;
-  padding: 8vw 0;
+  padding: 31.44PX 0;
   text-align: center;
 }
 
 .shuttle-card__empty-title {
   color: rgba(41, 70, 83, 0.9);
-  font-size: 4vw;
+  font-size: 15.72PX;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 22.01PX;
 }
 
 .shuttle-card__empty-description {
-  margin-top: 1.6vw;
+  margin-top: 6.29PX;
   color: rgba(41, 70, 83, 0.45);
-  font-size: 3.2vw;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
 }
 
 .shuttle-card__more {
-  margin-top: 2.13vw;
+  margin-top: 8.37PX;
   color: rgba(41, 70, 83, 0.3);
-  font-size: 3.2vw;
-  line-height: 1.35;
+  font-size: 12.58PX;
+  line-height: 16.98PX;
 }
 
 .shuttle-card__handoff {
-  margin-top: 2.13vw;
+  margin-top: 8.37PX;
   color: #21465c;
-  font-size: 3.2vw;
+  font-size: 12.58PX;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 16.98PX;
   text-align: center;
 }
 

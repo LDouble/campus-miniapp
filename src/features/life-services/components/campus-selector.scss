@@ -19,7 +19,8 @@
   min-height: 64rpx;
   padding: 0 20rpx;
   justify-content: center;
-  gap: 8rpx;
+  row-gap: 4.19PX;
+  column-gap: 8rpx;
   border: 0;
   border-radius: 16rpx;
   background: #f5f5f5;
@@ -29,9 +30,9 @@
   max-width: 128rpx;
   overflow: hidden;
   color: #333;
-  font-size: 26rpx;
+  font-size: 13.62PX;
   font-weight: 400;
-  line-height: 40rpx;
+  line-height: 20.96PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -57,7 +58,7 @@
 
 .campus-selector__trigger-label {
   color: token.$color-text-body;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 650;
 }
 
@@ -67,7 +68,7 @@
   margin-left: token.$space-2;
   align-items: center;
   color: token.$color-primary-strong;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 700;
 }
 
@@ -93,7 +94,7 @@
 }
 
 .campus-selector__options {
-  padding: 4rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+  padding: 2.1PX 28rpx calc(24rpx + env(safe-area-inset-bottom));
 }
 
 .campus-selector__option {
@@ -102,7 +103,7 @@
   align-items: center;
   justify-content: space-between;
   color: token.$color-text-body;
-  font-size: 27rpx;
+  font-size: 14.15PX;
   font-weight: 600;
   border-bottom: 2rpx solid token.$color-border;
   transition: opacity token.$motion-press ease, color token.$motion-state ease;
@@ -120,7 +121,7 @@
 .campus-selector__option-state {
   min-width: 88rpx;
   color: token.$color-primary;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 650;
   text-align: right;
 }

@@ -21,24 +21,34 @@ page {
   --ousea-danger-500: #e5484d;
   --ousea-danger-50: #fdecec;
   --ousea-like-500: #f04e6b;
-  --ousea-font-size-badge: 20rpx;
-  --ousea-font-size-caption: 24rpx;
-  --ousea-font-size-label: 27rpx;
-  --ousea-font-size-comment: 30rpx;
-  --ousea-font-size-body: 32rpx;
-  --ousea-font-size-title: 33rpx;
+  /* Typography is fixed at the 393PX logical-width / Xiaomi 14 Ultra reference scale. */
+  --ousea-font-size-badge: 10.48PX;
+  --ousea-font-size-caption: 12.58PX;
+  --ousea-font-size-label: 14.15PX;
+  --ousea-font-size-comment: 15.72PX;
+  --ousea-font-size-body: 16.77PX;
+  --ousea-font-size-title: 17.29PX;
   --ousea-font-weight-regular: 400;
   --ousea-font-weight-medium: 500;
   --ousea-font-weight-semibold: 600;
   --ousea-font-weight-bold: 700;
-  --ousea-line-height-post: 1.85;
-  --ousea-line-height-comment: 1.65;
-  --ousea-line-height-ui: 1.4;
+  --ousea-line-height-badge: 14.67PX;
+  --ousea-line-height-caption: 17.61PX;
+  --ousea-line-height-label: 19.81PX;
+  --ousea-line-height-post: 31.02PX;
+  --ousea-line-height-comment: 25.94PX;
+  --ousea-line-height-title: 24.21PX;
+  --ousea-line-height-ui: 19.91PX;
   --ousea-space-1: 16rpx;
   --ousea-space-2: 24rpx;
   --ousea-space-3: 32rpx;
   --ousea-space-4: 40rpx;
   --ousea-space-5: 64rpx;
+  --ousea-space-block-1: 8.38PX;
+  --ousea-space-block-2: 12.58PX;
+  --ousea-space-block-3: 16.77PX;
+  --ousea-space-block-4: 20.96PX;
+  --ousea-space-block-5: 33.54PX;
   --ousea-radius-pill: 999rpx;
   --ousea-radius-card-sm: 24rpx;
   --ousea-radius-card: 32rpx;
@@ -86,21 +96,21 @@ page {
   --campus-route-destination: #ff637e;
   --campus-shadow-card: 0 8rpx 24rpx rgba(29, 95, 214, 0.08);
   --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.05);
-  --campus-font-size-auxiliary: 24rpx;
-  --campus-font-size-body: 28rpx;
-  --campus-font-size-important-body: 30rpx;
-  --campus-font-size-card-title: 32rpx;
-  --campus-font-size-page-title: 36rpx;
-  --campus-font-size-large-title: 40rpx;
+  --campus-font-size-auxiliary: 12.58PX;
+  --campus-font-size-body: 14.67PX;
+  --campus-font-size-important-body: 15.72PX;
+  --campus-font-size-card-title: 16.77PX;
+  --campus-font-size-page-title: 18.86PX;
+  --campus-font-size-large-title: 20.96PX;
   --campus-font-weight-regular: 400;
   --campus-font-weight-medium: 500;
   --campus-font-weight-semibold: 600;
-  --campus-line-height-auxiliary: 36rpx;
-  --campus-line-height-body: 44rpx;
-  --campus-line-height-important-body: 46rpx;
-  --campus-line-height-card-title: 48rpx;
-  --campus-line-height-page-title: 54rpx;
-  --campus-line-height-large-title: 60rpx;
+  --campus-line-height-auxiliary: 18.86PX;
+  --campus-line-height-body: 23.06PX;
+  --campus-line-height-important-body: 24.1PX;
+  --campus-line-height-card-title: 25.15PX;
+  --campus-line-height-page-title: 28.3PX;
+  --campus-line-height-large-title: 31.44PX;
 
   min-height: 100%;
   color: token.$color-text-primary;
@@ -118,6 +128,12 @@ input,
 textarea,
 button {
   box-sizing: border-box;
+}
+
+// 不让原生 button 的默认 min-block-size 参与页面布局；垂直留白由组件自身控制。
+page button {
+  min-block-size: 0;
+  min-height: 0;
 }
 
 .campus-theme {

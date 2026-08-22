@@ -11,7 +11,7 @@ page {
 
   &__content {
     width: 100%;
-    padding: 22rpx 24rpx calc(64rpx + env(safe-area-inset-bottom));
+    padding: 11.53PX 24rpx calc(64rpx + env(safe-area-inset-bottom));
     box-sizing: border-box;
   }
 
@@ -24,11 +24,11 @@ page {
 }
 
 .daily-checkin-state {
-  padding: 120rpx 30rpx;
+  padding: 62.88PX 30rpx;
   overflow-wrap: anywhere;
   color: var(--campus-text-secondary, #62748e);
-  font-size: 24rpx;
-  line-height: 1.6;
+  font-size: 12.58PX;
+  line-height: 20.12PX;
   text-align: center;
 
   text {
@@ -36,7 +36,7 @@ page {
   }
 
   text + text {
-    margin-top: 12rpx;
+    margin-top: 6.29PX;
     color: var(--campus-primary, #2b7fff);
     font-weight: 650;
   }
@@ -48,7 +48,7 @@ page {
 
 .daily-checkin-hero {
   position: relative;
-  padding: 34rpx 28rpx 28rpx;
+  padding: 17.82PX 28rpx 14.67PX;
   overflow: hidden;
   border: 1rpx solid rgba(255, 255, 255, 0.68);
   border-radius: 30rpx;
@@ -80,7 +80,7 @@ page {
 
   &__date {
     overflow: hidden;
-    font-size: 36rpx;
+    font-size: 18.86PX;
     font-weight: 800;
     letter-spacing: 1rpx;
     text-overflow: ellipsis;
@@ -88,11 +88,11 @@ page {
   }
 
   &__hint {
-    margin-top: 18rpx;
+    margin-top: 9.43PX;
     overflow-wrap: anywhere;
     color: rgba(255, 255, 255, 0.78);
-    font-size: 22rpx;
-    line-height: 1.55;
+    font-size: 11.53PX;
+    line-height: 17.87PX;
   }
 
   &__summary {
@@ -100,7 +100,7 @@ page {
     z-index: 1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 30rpx 0 28rpx;
+    margin: 15.72PX 0 14.67PX;
 
     view {
       min-width: 0;
@@ -119,17 +119,17 @@ page {
 
     text:first-child {
       overflow: hidden;
-      font-size: 36rpx;
+      font-size: 18.86PX;
       font-weight: 800;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     text:last-child {
-      margin-top: 7rpx;
+      margin-top: 3.67PX;
       color: rgba(255, 255, 255, 0.72);
-      font-size: 20rpx;
-      line-height: 1.4;
+      font-size: 10.48PX;
+      line-height: 14.67PX;
     }
   }
 }
@@ -144,9 +144,9 @@ page {
   border-radius: 22rpx;
   background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
   color: var(--campus-primary-strong, #155dfc);
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 750;
-  line-height: 82rpx;
+  line-height: 42.97PX;
   text-overflow: ellipsis;
   white-space: nowrap;
   box-shadow: 0 10rpx 22rpx rgba(15, 23, 42, 0.11);
@@ -168,8 +168,8 @@ page {
 
 .daily-checkin-calendar {
   width: 100%;
-  padding: 26rpx 22rpx 22rpx;
-  margin-top: 20rpx;
+  padding: 13.62PX 22rpx 11.53PX;
+  margin-top: 10.48PX;
   box-sizing: border-box;
   border: 1rpx solid var(--campus-border, #edf2f7);
   border-radius: 28rpx;
@@ -192,7 +192,7 @@ page {
       border-radius: 17rpx;
       background: var(--campus-surface-primary, #eff6ff);
       color: var(--campus-primary, #2b7fff);
-      font-size: 40rpx;
+      font-size: 20.96PX;
     }
 
     > view:last-child {
@@ -216,14 +216,14 @@ page {
 
       text:first-child {
         color: var(--campus-text-heading, #1d293d);
-        font-size: 28rpx;
+        font-size: 14.67PX;
         font-weight: 750;
       }
 
       text:last-child {
-        margin-top: 5rpx;
+        margin-top: 2.62PX;
         color: var(--campus-text-muted, #90a1b9);
-        font-size: 21rpx;
+        font-size: 11PX;
       }
     }
   }
@@ -235,15 +235,15 @@ page {
   }
 
   &__weekdays {
-    margin-top: 26rpx;
+    margin-top: 13.62PX;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 21rpx;
+    font-size: 11PX;
     text-align: center;
   }
 
   &__grid {
-    margin-top: 14rpx;
-    row-gap: 8rpx;
+    margin-top: 7.34PX;
+    row-gap: 4.19PX;
   }
 
   &__day {
@@ -259,13 +259,13 @@ page {
     color: var(--campus-text-body, #45556c);
 
     text:first-child {
-      font-size: 24rpx;
+      font-size: 12.58PX;
     }
 
     text:last-child {
-      margin-top: 1rpx;
+      margin-top: 0.52PX;
       color: #059669;
-      font-size: 18rpx;
+      font-size: 9.43PX;
       font-weight: 700;
     }
 
@@ -294,10 +294,10 @@ page {
     justify-content: center;
     flex-direction: column;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 23rpx;
+    font-size: 12.05PX;
 
     text + text {
-      margin-top: 10rpx;
+      margin-top: 5.24PX;
       color: var(--campus-primary, #2b7fff);
       font-weight: 650;
     }
@@ -305,11 +305,11 @@ page {
 
   &__footnote {
     display: block;
-    margin-top: 20rpx;
+    margin-top: 10.48PX;
     overflow-wrap: anywhere;
     color: var(--campus-text-muted, #90a1b9);
-    font-size: 20rpx;
-    line-height: 1.5;
+    font-size: 10.48PX;
+    line-height: 15.72PX;
     text-align: center;
   }
 }

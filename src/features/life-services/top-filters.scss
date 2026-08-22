@@ -4,9 +4,10 @@
   display: flex;
   width: 100%;
   height: 96rpx;
-  padding: 14rpx 32rpx 18rpx;
+  padding: 7.34PX 32rpx 9.43PX;
   align-items: center;
-  gap: 12rpx;
+  row-gap: 6.29PX;
+  column-gap: 12rpx;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -21,7 +22,8 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  gap: 7rpx;
+  row-gap: 3.67PX;
+  column-gap: 7rpx;
   border: 0;
   border-radius: 16rpx;
   background: #f5f5f5;
@@ -31,9 +33,9 @@
   min-width: 0;
   overflow: hidden;
   color: #333;
-  font-size: 26rpx;
+  font-size: 13.62PX;
   font-weight: 400;
-  line-height: 40rpx;
+  line-height: 20.96PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -105,9 +107,9 @@
   border-radius: 999rpx;
   background: #2b7aef;
   color: #fff;
-  font-size: 18rpx;
+  font-size: 9.43PX;
   font-weight: 700;
-  line-height: 1;
+  line-height: 9.43PX;
 }
 
 .life-service-filter-control--pressed {
@@ -124,7 +126,7 @@
 }
 
 .market-type-dropdown {
-  padding: 10rpx 40rpx 28rpx;
+  padding: 5.24PX 40rpx 14.67PX;
   overflow: hidden;
   border-radius: 0 0 32rpx 32rpx;
   background: var(--campus-surface, #fff);
@@ -137,9 +139,9 @@
   align-items: center;
   justify-content: space-between;
   color: #333;
-  font-size: 28rpx;
+  font-size: 14.67PX;
   font-weight: 400;
-  line-height: 44rpx;
+  line-height: 23.06PX;
 }
 
 .market-type-dropdown__item > image {
@@ -155,13 +157,14 @@
   opacity: 0.55;
 }
 
-@media (max-width: 360px) {
+@media (max-width: 360PX) {
   .life-service-filter-toolbar,
   .life-service-filter-toolbar.market-filter-toolbar,
   .life-service-filter-toolbar.carpool-filter-toolbar {
     padding-right: 24rpx;
     padding-left: 24rpx;
-    gap: 8rpx;
+    row-gap: 4.19PX;
+    column-gap: 8rpx;
   }
 
   .life-service-filter-chip,
@@ -172,7 +175,7 @@
 
   .life-service-filter-chip > text,
   .campus-selector__topbar-value {
-    font-size: 24rpx;
+    font-size: 12.58PX;
   }
 }
 

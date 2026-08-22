@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 72rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 37.73PX 28rpx calc(48rpx + env(safe-area-inset-bottom));
 }
 
 .app-login__mark {
@@ -20,7 +20,7 @@
   width: 112rpx;
   height: 112rpx;
   color: #fff;
-  font-size: 46rpx;
+  font-size: 24.1PX;
   font-weight: 800;
   background: linear-gradient(145deg, #4b92ff, var(--campus-primary, #2b7fff));
   border: 6rpx solid rgba(255, 255, 255, 0.92);
@@ -29,22 +29,22 @@
 }
 
 .app-login__title {
-  margin-top: 38rpx;
+  margin-top: 19.91PX;
   color: var(--campus-text-heading, #1d293d);
-  font-size: 40rpx;
+  font-size: 20.96PX;
   font-weight: 800;
 }
 
 .app-login__subtitle {
-  margin-top: 10rpx;
+  margin-top: 5.24PX;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 25rpx;
+  font-size: 13.1PX;
 }
 
 .app-login__panel {
   width: 100%;
-  margin-top: 46rpx;
-  padding: 8rpx 26rpx;
+  margin-top: 24.1PX;
+  padding: 4.19PX 26rpx;
   background: var(--campus-surface, #fff);
   border: 2rpx solid var(--campus-border, #e4ebf5);
   border-radius: 28rpx;
@@ -66,14 +66,14 @@
 
 .app-login__row > view text:first-child {
   color: var(--campus-text-heading, #1d293d);
-  font-size: 28rpx;
+  font-size: 14.67PX;
   font-weight: 700;
 }
 
 .app-login__row > view text:last-child {
-  margin-top: 5rpx;
+  margin-top: 2.62PX;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 24rpx;
+  font-size: 12.58PX;
 }
 
 .app-login__number {
@@ -83,7 +83,7 @@
   width: 54rpx;
   height: 54rpx;
   color: #fff;
-  font-size: 24rpx;
+  font-size: 12.58PX;
   font-weight: 700;
   background: var(--campus-primary, #2b7fff);
   border-radius: 16rpx;
@@ -101,9 +101,9 @@
   align-self: stretch;
   justify-content: center;
   min-height: 80rpx;
-  margin-top: 28rpx;
+  margin-top: 14.67PX;
   color: var(--campus-text-body, #45556c);
-  font-size: 25rpx;
+  font-size: 13.1PX;
 }
 
 .app-login__message > view {
@@ -128,9 +128,9 @@
   justify-content: center;
   width: 100%;
   height: 104rpx;
-  margin-top: 8rpx;
+  margin-top: 4.19PX;
   color: #fff;
-  font-size: 29rpx;
+  font-size: 15.2PX;
   font-weight: 700;
   background: linear-gradient(135deg, #3b8cff, var(--campus-primary, #2b7fff));
   border-radius: 24rpx;
@@ -160,9 +160,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 24rpx;
+  margin-top: 12.58PX;
   color: var(--campus-text-muted, #90a1b9);
-  font-size: 22rpx;
+  font-size: 11.53PX;
   text-align: center;
 }
 
@@ -171,9 +171,9 @@
   color: var(--campus-primary, #2b7fff);
 }
 
-@media (max-width: 360px) {
+@media (max-width: 360PX) {
   .app-login__content { padding-right: 22rpx; padding-left: 22rpx; }
-  .app-login__title { font-size: 36rpx; }
+  .app-login__title { font-size: 18.86PX; }
   .app-login__row > view { margin-left: 18rpx; }
 }
 

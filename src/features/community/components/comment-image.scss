@@ -2,7 +2,7 @@
   display: flex;
   width: 320rpx;
   height: 240rpx;
-  margin-top: var(--ousea-space-1, 16rpx);
+  margin-top: var(--ousea-space-block-1, 8.38PX);
   overflow: hidden;
   align-items: center;
   justify-content: center;
@@ -11,8 +11,8 @@
   border-radius: var(--ousea-radius-card-sm, 24rpx);
   background: var(--campus-surface-subtle, #f5f8fc);
   color: var(--campus-text-muted, #6b7a90);
-  font-size: var(--ousea-font-size-caption, 24rpx);
-  line-height: var(--ousea-line-height-ui, 1.4);
+  font-size: var(--ousea-font-size-caption, 12.58PX);
+  line-height: var(--ousea-line-height-ui, 19.91PX);
   transition: opacity 160ms ease, transform 160ms ease;
 }
 
@@ -26,13 +26,13 @@
   display: inline-flex;
   width: 88rpx;
   height: 88rpx;
-  padding: 20rpx;
+  padding: 10.48PX 20rpx;
   box-sizing: border-box;
   margin-top: 0;
   margin-left: var(--ousea-space-1, 16rpx);
   vertical-align: middle;
   border-radius: var(--ousea-radius-card-sm, 24rpx);
-  font-size: 18rpx;
+  font-size: 9.43PX;
 }
 
 .community-comment-image--pressed {

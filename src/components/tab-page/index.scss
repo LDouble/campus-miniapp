@@ -4,14 +4,14 @@ page {
 
 .tab-page {
   min-height: 100vh;
-  padding-bottom: 158rpx;
+  padding-bottom: 82.79PX;
   color: var(--campus-text-heading, #294653);
   background:
     radial-gradient(circle at 92% 16%, rgba(246, 188, 120, 0.16), transparent 27%),
     linear-gradient(180deg, #fffdf9 0%, #f8f4ee 100%);
 
   &__body {
-    padding: 20rpx 28rpx 60rpx;
+    padding: 10.48PX 28rpx 31.44PX;
   }
 
   &__hero {
@@ -19,7 +19,7 @@ page {
     display: flex;
     align-items: center;
     min-height: 210rpx;
-    padding: 34rpx;
+    padding: 17.82PX 34rpx;
     overflow: hidden;
     color: var(--campus-text-heading, #294653);
     background: linear-gradient(135deg, #dff3f0, #cae8e3 54%, #f5c992);
@@ -53,14 +53,14 @@ page {
   }
 
   &__hero-title {
-    margin-bottom: 9rpx;
-    font-size: 31rpx;
+    margin-bottom: 4.72PX;
+    font-size: 16.24PX;
     font-weight: 750;
   }
 
   &__hero-subtitle {
     color: #62818f;
-    font-size: 25rpx;
+    font-size: 13.1PX;
   }
 
   &__wave {
@@ -83,8 +83,9 @@ page {
 
   &__quick {
     display: flex;
-    gap: 15rpx;
-    margin: 26rpx 0 40rpx;
+    row-gap: 7.86PX;
+    column-gap: 15rpx;
+    margin: 13.62PX 0 20.96PX;
 
     view {
       display: flex;
@@ -93,7 +94,7 @@ page {
       justify-content: center;
       min-height: 88rpx;
       color: #1e597e;
-      font-size: 26rpx;
+      font-size: 13.62PX;
       font-weight: 600;
       background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
       border: 2rpx solid rgba(255, 255, 255, 0.98);
@@ -106,16 +107,16 @@ page {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    margin: 0 5rpx 20rpx;
+    margin: 0 5rpx 10.48PX;
 
     text:first-child {
-      font-size: 31rpx;
+      font-size: 16.24PX;
       font-weight: 750;
     }
 
     text:last-child {
       color: #7892a4;
-      font-size: 24rpx;
+      font-size: 12.58PX;
     }
   }
 
@@ -124,9 +125,9 @@ page {
     align-items: center;
     min-height: 112rpx;
     padding: 0 23rpx;
-    margin-bottom: 16rpx;
+    margin-bottom: 8.38PX;
     color: #213e55;
-    font-size: 27rpx;
+    font-size: 14.15PX;
     font-weight: 600;
     background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
     border: 2rpx solid rgba(255, 255, 255, 0.98);
@@ -152,7 +153,7 @@ page {
     height: 54rpx;
     margin-right: 17rpx;
     color: #398fab;
-    font-size: 23rpx;
+    font-size: 12.05PX;
     background: #e5f5f7;
     border-radius: 17rpx;
   }
@@ -162,9 +163,9 @@ page {
     align-items: center;
     justify-content: center;
     height: 88rpx;
-    margin-top: 30rpx;
+    margin-top: 15.72PX;
     color: #fff;
-    font-size: 26rpx;
+    font-size: 13.62PX;
     font-weight: 700;
     background: linear-gradient(135deg, #55b7bd, #4b9daf 58%, #e98b70);
     border-radius: 29rpx;

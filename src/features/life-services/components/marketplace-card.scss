@@ -63,7 +63,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 70rpx 24rpx 22rpx;
+  padding: 36.68PX 24rpx 11.53PX;
   background: #f7f5f2;
 }
 
@@ -89,9 +89,9 @@
   left: 20rpx;
   color: #c9a59d;
   font-family: Georgia, serif;
-  font-size: 74rpx;
+  font-size: 38.78PX;
   font-weight: 700;
-  line-height: 1;
+  line-height: 38.78PX;
   opacity: 0.68;
 }
 
@@ -103,9 +103,9 @@
   display: -webkit-box;
   overflow: hidden;
   color: #34312f;
-  font-size: 29rpx;
+  font-size: 15.2PX;
   font-weight: 720;
-  line-height: 1.45;
+  line-height: 22.04PX;
   overflow-wrap: break-word;
   white-space: normal;
   word-break: break-all;
@@ -117,7 +117,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 52rpx 20rpx 18rpx;
+  padding: 27.25PX 20rpx 9.43PX;
 }
 
 .marketplace-card--compact .marketplace-card__placeholder-quote {
@@ -130,14 +130,14 @@
   left: 20rpx;
   display: block;
   color: rgba(64, 103, 94, 0.58);
-  font-size: 19rpx;
+  font-size: 9.96PX;
   font-weight: 760;
   letter-spacing: 2rpx;
 }
 
 .marketplace-card--compact .marketplace-card__placeholder-headline {
-  font-size: 25rpx;
-  line-height: 1.42;
+  font-size: 13.1PX;
+  line-height: 18.6PX;
   -webkit-line-clamp: 2;
 }
 
@@ -153,7 +153,7 @@
   border-radius: 999rpx;
   background: rgba(217, 109, 88, 0.92);
   color: #fff;
-  font-size: 21rpx;
+  font-size: 11PX;
   font-weight: 700;
   backdrop-filter: blur(8rpx);
 }
@@ -171,16 +171,16 @@
   z-index: 1;
   right: 12rpx;
   bottom: 12rpx;
-  padding: 8rpx 14rpx;
+  padding: 4.19PX 14rpx;
   border-radius: 999rpx;
   background: rgba(26, 38, 45, 0.72);
   color: #fff;
-  font-size: 22rpx;
+  font-size: 11.53PX;
   font-weight: 650;
 }
 
 .marketplace-card__body {
-  padding: 18rpx;
+  padding: 9.43PX 18rpx;
 }
 
 .marketplace-card--compact .marketplace-card__body {
@@ -188,11 +188,11 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  padding: 15rpx 16rpx 12rpx;
+  padding: 7.86PX 16rpx 6.29PX;
 }
 
 .marketplace-card--no-image .marketplace-card__body {
-  padding-top: 15rpx;
+  padding-top: 7.86PX;
 }
 
 .marketplace-card__description {
@@ -200,9 +200,9 @@
   min-height: 72rpx;
   overflow: hidden;
   color: #2f3742;
-  font-size: 25rpx;
+  font-size: 13.1PX;
   font-weight: 680;
-  line-height: 1.45;
+  line-height: 19PX;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -216,8 +216,8 @@
   display: block;
   min-height: 0;
   overflow: hidden;
-  font-size: 24rpx;
-  line-height: 1.45;
+  font-size: 12.58PX;
+  line-height: 18.24PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -225,7 +225,7 @@
 .marketplace-card__price {
   display: block;
   color: #d94f3b;
-  font-size: 30rpx;
+  font-size: 15.72PX;
   font-weight: 820;
 }
 
@@ -233,19 +233,20 @@
   display: flex;
   min-height: 54rpx;
   align-items: center;
-  gap: 10rpx;
-  margin-top: 12rpx;
+  row-gap: 5.24PX;
+  column-gap: 10rpx;
+  margin-top: 6.29PX;
 }
 
 .marketplace-card--compact .marketplace-card__price-line {
   min-height: 50rpx;
-  margin-top: 6rpx;
+  margin-top: 3.14PX;
 }
 
 .marketplace-card--compact .marketplace-card__price {
   min-width: 0;
   overflow: hidden;
-  font-size: 32rpx;
+  font-size: 16.77PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -257,9 +258,9 @@
 .marketplace-card__course {
   display: block;
   overflow: hidden;
-  margin: 2rpx 0 8rpx;
+  margin: 1.05PX 0 4.19PX;
   color: #7d8f8a;
-  font-size: 21rpx;
+  font-size: 11PX;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -270,7 +271,7 @@
   align-items: flex-end;
   justify-content: space-between;
   color: #8a929d;
-  font-size: 21rpx;
+  font-size: 11PX;
 }
 
 .marketplace-card__author {
@@ -291,7 +292,7 @@
   overflow: hidden;
   border: 0;
   border-radius: 50%;
-  font-size: 19rpx;
+  font-size: 9.96PX;
   font-weight: 700;
   box-shadow: none;
 }
@@ -315,7 +316,7 @@
   align-items: center;
   margin-top: auto;
   color: #687d77;
-  font-size: 21rpx;
+  font-size: 11PX;
 }
 
 .marketplace-card--compact .marketplace-card__footer > text {
@@ -359,17 +360,17 @@
   padding: 0 14rpx;
   border: 0;
   background: rgba(0, 0, 0, 0.5);
-  font-size: 19rpx;
+  font-size: 9.96PX;
   backdrop-filter: blur(8rpx);
 }
 
 .marketplace-card--wanted .marketplace-card__intent { background: rgba(0, 0, 0, 0.45); }
 
-.marketplace-card__body { padding: 24rpx 24rpx 16rpx; }
-.marketplace-card__description { min-height: 72rpx; color: var(--campus-text-heading, #1d293d); font-size: 26rpx; font-weight: 700; }
-.marketplace-card__price-line { min-height: 56rpx; margin-top: 4rpx; }
+.marketplace-card__body { padding: 12.58PX 24rpx 8.38PX; }
+.marketplace-card__description { min-height: 72rpx; color: var(--campus-text-heading, #1d293d); font-size: 13.62PX; font-weight: 700; }
+.marketplace-card__price-line { min-height: 56rpx; margin-top: 2.1PX; }
 .marketplace-card__price,
-.marketplace-card--wanted .marketplace-card__price { color: var(--campus-danger, #ff2056); font-size: 35rpx; }
+.marketplace-card--wanted .marketplace-card__price { color: var(--campus-danger, #ff2056); font-size: 18.34PX; }
 .marketplace-card__course { color: var(--campus-text-secondary, #62748e); }
-.marketplace-card__footer { padding-top: 12rpx; border-top: 1rpx solid var(--campus-surface-subtle, #f8fafc); color: var(--campus-text-muted, #90a1b9); }
+.marketplace-card__footer { padding-top: 6.29PX; border-top: 1rpx solid var(--campus-surface-subtle, #f8fafc); color: var(--campus-text-muted, #90a1b9); }
 .marketplace-card__footer > text:last-child { color: var(--campus-text-muted, #90a1b9); }
