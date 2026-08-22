@@ -1031,7 +1031,17 @@ const contentBottomPadding = stickerPickerOpen
               : !canSend ? '发送消息，当前不可用' : '发送消息'}
             onClick={sendFromButton}
           >
-            {sending ? '发送中' : '发送'}
+            <View className='direct-chat-composer__send-surface'>
+              {sending ? (
+                <View className='direct-chat-composer__send-spinner' />
+              ) : (
+                <Image
+                  className='direct-chat-composer__send-icon'
+                  src={require('../../../assets/community/send.svg')}
+                  mode='aspectFit'
+                />
+              )}
+            </View>
           </View>
         </View>
         <StickerPicker
