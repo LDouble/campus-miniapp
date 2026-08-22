@@ -144,6 +144,7 @@ const credentialErrorMessage = (error: unknown) => {
   if (error.code === 'academic_password_expired') return '请访问信息门户修改已过期密码'
   if (error.code === 'academic_account_restricted') return '请访问信息门户处理账号状态和密码'
   if (error.code === 'academic_credentials_limited') return '尝试次数过多，请稍后再试'
+  if (error.code === 'academic_retryable') return '教务暂时繁忙，请重启小程序重试绑定。'
   if (error.code === 'academic_provider_unavailable') return '信息门户认证服务暂不可用'
   if (error.code === 'invalid_education_level') return '请选择本科生或研究生'
   if (error.code === 'academic_identity_type_mismatch') return '所选身份与信息门户要求不匹配，请确认后重试'
