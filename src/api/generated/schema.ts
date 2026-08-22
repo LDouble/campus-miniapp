@@ -7919,6 +7919,16 @@ export interface components {
             /** Format: int64 */
             width: number;
         };
+        PrivateMessageImageState: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            media_id: number;
+            /** @enum {string} */
+            state: "pending" | "available" | "rejected" | "expired";
+            /** Format: int64 */
+            width: number;
+        };
         PrivateMessagePage: {
             has_more: boolean;
             items: components["schemas"]["PrivateMessageView"][];
@@ -7957,6 +7967,7 @@ export interface components {
             /** Format: uint64 */
             id: number;
             image?: components["schemas"]["PrivateMessageImage"];
+            image_state?: components["schemas"]["PrivateMessageImageState"];
             /** Format: uint64 */
             sender_id: number;
         };

@@ -9,9 +9,14 @@ export type PrivateMessageMediaReviewResult = {
   media: MediaView | null
 }
 
+type PrivateMessageMediaReviewInput = MediaView | MediaView['moderation_status']
+
 export const privateMessageMediaReviewState = (
-  moderationStatus: MediaView['moderation_status'],
+  input: PrivateMessageMediaReviewInput,
 ) => {
+  const moderationStatus = typeof input === 'string' ? input : input.moderation_status
+  const mediaStatus = typeof input === 'string' ? '' : input.status
+  if (mediaStatus === 'deleting' || mediaStatus === 'expired') return 'rejected'
   if (moderationStatus === 'passed' || moderationStatus === 'manual_approved') return 'passed'
   if (moderationStatus === 'rejected' || moderationStatus === 'error' || moderationStatus === 'manual_rejected') {
     return 'rejected'
@@ -20,14 +25,17 @@ export const privateMessageMediaReviewState = (
 }
 
 export const privateMessageMediaRetryAction = (
-  moderationStatus: MediaView['moderation_status'],
+  input: PrivateMessageMediaReviewInput,
 ) => (
-  moderationStatus === 'rejected' || moderationStatus === 'manual_rejected'
+  (typeof input !== 'string' && (input.status === 'deleting' || input.status === 'expired'))
+    || (typeof input === 'string' && (input === 'rejected' || input === 'manual_rejected'))
+    || (typeof input !== 'string' && (input.moderation_status === 'rejected' || input.moderation_status === 'manual_rejected'))
     ? 'replace-image'
     : 'retry-review'
 )
 
 export const privateMessageMediaReviewMessage = (media: MediaView) => {
+  if (media.status === 'deleting' || media.status === 'expired') return '图片已失效'
   if (media.moderation_status === 'manual_review') return '图片正在人工审核，请稍候'
   if (media.moderation_status === 'checking') return '图片审核中，请稍候'
   if (media.moderation_status === 'pending') return '图片正在提交审核'
@@ -91,7 +99,7 @@ export const pollPrivateMessageMediaReview = async (input: {
     consecutiveLoadFailures = 0
     latestMedia = media
     input.onMedia(media)
-    const state = privateMessageMediaReviewState(media.moderation_status)
+    const state = privateMessageMediaReviewState(media)
     if (state === 'passed') return { kind: 'passed', media }
     if (state === 'rejected') return { kind: 'rejected', media }
     if (attempt + 1 < PRIVATE_MESSAGE_MEDIA_REVIEW_MAX_ATTEMPTS) {

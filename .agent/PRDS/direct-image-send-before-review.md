@@ -1,0 +1,156 @@
+# OUSea 小程序：私信图片先发送后审核
+
+**Priority:** High
+**Status:** In Progress
+**Type:** Enhancement
+**Created:** 2026-08-22
+**Last Updated:** 2026-08-22
+
+## Overview
+
+调整私信图片发送链路：图片完成上传后立即作为一条图片消息发送，不再等待内容安全审核完成。发送成功后在后台提交并轮询审核结果；审核拒绝、媒体失效或图片不可用时，将消息中的图片替换为克制的“图片已失效”占位状态。
+
+## User Story
+
+**As a** 私信用户
+**I want** 选择图片后尽快看到图片消息发出
+**So that** 不需要等待审核过程才能继续聊天，同时能明确知道失效图片无法查看。
+
+## Description
+
+当前图片选择后会先提交审核并等待通过，审核期间停留在输入栏，发送动作被延迟。该流程等待时间长，也与文字消息的即时发送体验不一致。
+
+本次新增一个向后兼容的可选 `image_state` 响应字段，不改变现有图片上传、私信发送和审核接口路径，也不删除旧版 `image` 字段。新服务端允许 ready 但尚未通过审核的私信图片先绑定消息，并在消息创建事务中排队审核；客户端仍使用已有 `media_id` 查询审核状态。旧版服务端若拒绝待审图片，客户端自动回退到原有“提交审核后发送”链路。
+
+## Context
+
+- 当前私信图片消息使用 `media_id` 发送，客户端在发送前等待审核轮询完成。
+- 当前私信图片响应包含 `media_id`、图片地址、宽高；新服务端额外返回可选的 `image_state`，审核状态仍通过媒体详情接口获取。
+- 发送失败和上传失败仍需要保留重试能力；审核拒绝不是发送失败，不能重复创建消息。
+- 视觉上沿用 Ousea / Global：图片失效占位使用中性表面和弱提示色，不使用大面积危险红色，不影响聊天气泡的阅读节奏。
+
+## Implementation Overview
+
+1. 图片选择后继续上传并完成媒体处理。
+2. 媒体完成后直接调用私信发送接口，沿用现有幂等键，成功后清除输入栏图片草稿并把服务端消息合并到聊天流。
+3. 新服务端在图片消息创建事务中排队审核，客户端使用已有媒体轮询能力跟踪结果；对仍拒绝待审媒体的旧服务端，客户端才调用私信图片审核提交接口并在通过后重发。审核过程不阻塞用户继续输入。
+4. 审核拒绝、人工拒绝、媒体错误或媒体过期时，按消息 ID 标记为失效，在原图片位置展示“图片已失效”；审核通过时保持正常缩略图和预览行为。
+5. 网络瞬时失败或审核仍在处理中不直接显示为失效；后台回到前台或消息重新加载时继续可恢复的状态查询。
+
+## Features / Requirements
+
+1. **选择图片后自动发送**
+   - 图片上传完成即发送，不再要求用户点击“发送”。
+   - 上传期间输入栏显示上传进度；发送期间显示发送中状态。
+   - 文字与图片不能混发的现有限制保持不变。
+
+2. **审核异步化**
+   - 审核提交发生在私信消息创建成功之后。
+   - 审核轮询不得阻塞聊天输入、滚动或新消息轮询。
+   - 审核失败不能再次创建同一图片消息，重试只允许重试审核查询/提交。
+
+3. **失效图片状态**
+   - 审核拒绝、人工拒绝、媒体错误、媒体过期和图片地址不可用时展示“图片已失效”。
+   - 失效占位保持原消息的左右布局和气泡圆角，不可点击预览，不展示“重新加载”造成误导。
+   - 失效状态不改变时间分隔条、头像和消息排序。
+
+4. **可靠性与兼容性**
+   - 发送仍使用现有 `Idempotency-Key`，发送失败可重试且不会重复消息。
+   - 页面隐藏时停止审核轮询，重新回到前台后继续未完成的审核状态查询。
+   - 历史文字消息、已通过图片、图片缩略图和大图预览保持兼容。
+
+## Files to Create
+
+- `.agent/TASKS/direct-image-send-before-review.md` - 任务记录。
+- `.agent/PRDS/direct-image-send-before-review.md` - 本需求说明。
+
+## Files to Modify
+
+- `src/packages/social/direct-messages/chat.tsx` - 图片自动发送、后台审核跟踪和失效占位。
+- `src/packages/social/direct-messages/chat.scss` - 上传中/失效图片的轻量状态样式。
+- `src/features/direct-messages/media-review.ts` - 统一媒体拒绝、错误和过期状态判断。
+- `scripts/direct-messages-smoke.ts` - 补充自动发送、后台审核和失效状态断言。
+- `design-system/campus-miniapp/pages/messages.md` - 沉淀私信图片发送与失效状态规范。
+- `../campus_backend/schemas/private_message.yaml` - 增加向后兼容的图片状态响应字段。
+- `../campus_backend/internal/modules/private_message/infrastructure/store.go` - 允许待审核图片先绑定私信并排队媒体审核。
+- `../campus_backend/internal/api/httpapi/private_message_handler.go` - 投影审核状态并保留旧版图片字段。
+
+## API Endpoints
+
+**Existing endpoints to use:**
+
+- `POST /api/v1/media/upload-target` - 创建图片上传目标。
+- `POST /api/v1/media/{id}/complete` - 完成媒体上传。
+- `POST /api/v1/private-messages/conversations/{id}/messages` - 发送带 `media_id` 的图片消息。
+- `POST /api/v1/media/{id}/submit-review` - 发送成功后提交图片审核。
+- `GET /api/v1/media/{id}` - 查询审核和媒体状态。
+
+本次不新增 HTTP 接口；服务端在现有 `PrivateMessageView` 中增加可选 `image_state` 字段，并同步 OpenAPI 生成类型。现有 `image` 字段保持不变，旧版客户端可忽略新字段；新版客户端在没有 `image_state` 的线上响应中继续按旧字段行为渲染。
+
+## Database Changes
+
+无。
+
+## Libraries/Dependencies
+
+沿用现有 Taro、React、TypeScript、微信小程序媒体选择和项目内媒体轮询实现，不新增依赖。
+
+## Technical Implementation
+
+### Architecture Approach
+
+- 将“待发送图片审核状态”和“已发送图片审核状态”分离：输入栏只负责上传/发送错误，聊天流按消息 ID 负责审核结果。
+- 使用媒体 ID 到消息 ID 的内存映射去重审核轮询；发送成功后立即释放本地图片草稿，避免输入栏被审核状态长期占用。
+- 失效状态只替换消息图片渲染，不从消息数组删除消息，保持时间线、未读水位和幂等重试一致。
+- 审核查询继续遵循前台可见性和退避规则；审核未完成或瞬时失败不误报为失效。
+
+### Technical Considerations
+
+- 发送接口若在媒体尚未提交审核时拒绝 `media_id`，客户端必须回退到现有审核接口并在通过后用新幂等键重发，不能静默丢图。
+- 审核提交失败不能被当作审核拒绝；应保留待处理状态并在回到前台时重试。
+- 图片加载失败可能由网络瞬断造成；实现需要区分可恢复的加载错误和媒体已被服务端标记失效的终态，至少在终态文案上统一为“图片已失效”。
+- 审核轮询需要防止同一 media_id 并发请求，并在切换会话时取消或忽略旧会话结果。
+
+### Design/UX Considerations
+
+- 采用 Ousea / Global 的中性 surface-subtle、text-secondary 和 text-muted；不把审核中的图片染成红色。
+- 图片消息成功发送后直接进入聊天流，聊天输入栏恢复正常，不保留大块图片草稿卡。
+- “图片已失效”占位与原图片保持接近的尺寸，减少审核结果到达时的布局跳动。
+- 失效占位不提供预览点击，文字和无障碍标签均明确说明图片不可用。
+- 遵循窄屏、安全区、暗黑模式和减少动态效果规则。
+
+## Testing Requirements
+
+### Unit Tests
+
+- 测试媒体 `rejected`、`manual_rejected`、`error`、`expired` 被识别为失效。
+- 测试审核 `pending`、`checking`、`manual_review` 不会被误判为失效。
+- 测试同一媒体 ID 不会重复启动审核轮询。
+
+### Integration Tests
+
+- 测试图片上传完成后先创建私信消息，再提交审核。
+- 测试发送失败保留可重试状态，且重试复用幂等键。
+- 测试审核拒绝后只替换图片占位，不删除消息。
+
+### E2E Tests
+
+- 选择图片 → 上传完成 → 自动出现在聊天流 → 输入栏恢复可输入。
+- 审核通过后点击缩略图可以预览大图。
+- 审核拒绝后原位置显示“图片已失效”，点击不会打开预览。
+- 切后台再回前台，未完成审核继续查询。
+
+### Manual Testing Checklist
+
+- 上传成功、发送成功和审核提交顺序符合预期。
+- 上传失败、发送失败均有明确重试入口。
+- 审核中可以继续发送文字消息。
+- 审核拒绝、人工拒绝、媒体过期均显示“图片已失效”。
+- 暗黑模式下失效占位对比度和层级正常。
+- 键盘、底部输入栏和最后一条消息不发生遮挡或异常跳动。
+
+---
+
+**Implementation Notes:**
+
+用户已确认“选择图片后自动发送、后台审核、失败显示图片已失效”的交互方案，开始进入实现阶段。

@@ -538,6 +538,80 @@ page {
   color: token.$color-on-accent;
 }
 
+.direct-chat-message__image-frame--pending {
+  position: relative;
+  background: token.$color-surface-subtle;
+}
+
+.direct-chat-message__image-progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  padding: 16rpx 18rpx 14rpx;
+  flex-direction: column;
+  align-items: stretch;
+  background: linear-gradient(transparent, rgba(10, 20, 36, 0.72));
+  color: token.$color-on-accent;
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.direct-chat-message__image-progress-track,
+.direct-chat-composer__image-progress-track {
+  overflow: hidden;
+  width: 100%;
+  height: 6rpx;
+  margin-top: 8rpx;
+  border-radius: token.$radius-pill;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.direct-chat-message__image-progress-indicator,
+.direct-chat-composer__image-progress-indicator {
+  width: 34%;
+  height: 100%;
+  border-radius: inherit;
+  background: token.$color-on-accent;
+  animation: direct-chat-image-progress 1.4s ease-in-out infinite;
+}
+
+.direct-chat-message__image-progress-indicator--determinate,
+.direct-chat-composer__image-progress-indicator {
+  animation: none;
+}
+
+.direct-chat-message__image-fallback--pending {
+  background: token.$color-surface-subtle;
+  color: token.$color-text-secondary;
+}
+
+.direct-chat-message__image-fallback--invalid,
+.direct-chat-message--own .direct-chat-message__image-fallback--invalid {
+  background: token.$color-surface-subtle;
+  color: token.$color-text-secondary;
+}
+
+.direct-chat-composer__image-draft {
+  position: relative;
+}
+
+.direct-chat-composer__image-draft > .direct-chat-composer__image-progress-track {
+  position: absolute;
+  right: 120rpx;
+  bottom: 6rpx;
+  left: 126rpx;
+  width: auto;
+  margin-top: 0;
+  background: token.$color-border;
+}
+
+@keyframes direct-chat-image-progress {
+  0% { transform: translateX(-180%); }
+  100% { transform: translateX(320%); }
+}
+
 .direct-chat-message__time { display: none; }
 
 .direct-chat-composer {
@@ -593,8 +667,21 @@ page {
     color: token.$color-on-accent;
   }
 
+  .direct-chat-message__image-fallback--pending,
+  .direct-chat-message--own .direct-chat-message__image-fallback--invalid {
+    background: token.$color-surface-subtle;
+    color: token.$color-text-secondary;
+  }
+
   .direct-chat-composer__field,
   .direct-chat-composer__image-draft {
     background: token.$color-surface-subtle;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direct-chat-message__image-progress-indicator {
+    animation: none;
+    width: 100%;
   }
 }
