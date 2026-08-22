@@ -10,6 +10,7 @@ import { consumeBusinessDetailSnapshot } from '../../../features/life-services/b
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
 import { openAcademicVerification } from '../../../features/academic-verification/guard'
 import { openContentReport } from '../../../features/content-report'
+import FavoriteToggle from '../../../features/favorites/favorite-toggle'
 import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
 import { useCampusShare } from '../../../features/share'
 import {
@@ -283,6 +284,11 @@ export default function ErrandDetailPage() {
                       举报
                     </View>
                   )}
+                  <FavoriteToggle
+                    resourceId={item.id}
+                    resourceType='errand'
+                    compact
+                  />
                   <DetailOverflowActions actions={overflowActions} />
                 </View>
               )}

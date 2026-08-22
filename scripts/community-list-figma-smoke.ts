@@ -49,13 +49,13 @@ assert.match(
   cardSource,
   /!onToggleLike[\s\S]*?community-post__action-menu--single[\s\S]*?post\.liked \? 'community-post__action-menu--liked'/u,
 )
-assert.match(cardSource, /actionsOpen:\s*boolean/u)
+assert.match(cardSource, /actionsOpen\?:\s*boolean/u)
 assert.match(cardSource, /onToggleActions\(post\.id\)/u)
 assert.match(cardSource, /<Button[\s\S]*?id=\{`community-post-more-\$\{cardId\}`\}/u)
 assert.match(cardSource, /hoverClass='none'/u)
 assert.doesNotMatch(cardSource, /hoverClass=(?!'none')|hoverStartTime=|hoverStayTime=|hoverStopPropagation/u)
 assert.match(cardSource, /onTouchStart=\{\(event\) => event\.stopPropagation\(\)\}/u)
-assert.match(cardSource, /onCloseActions\(\)/u)
+assert.match(cardSource, /onCloseActions\?\.\(\)/u)
 assert.match(cardSource, /community-post__social-like/u)
 assert.match(cardSource, /community-post__comments-summary/u)
 assert.match(cardSource, /<Text>评论<\/Text>/u)

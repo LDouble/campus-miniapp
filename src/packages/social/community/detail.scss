@@ -60,6 +60,12 @@ page {
   border-radius: 50%;
 }
 
+.community-detail__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
 .community-detail__more image {
   width: 38rpx;
   height: 38rpx;

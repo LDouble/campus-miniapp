@@ -58,6 +58,7 @@ const icons = {
   accepted: require('../../assets/icons/errands.svg'),
   orders: require('../../assets/icons/market.svg'),
   carpool: require('../../assets/icons/shuttle.svg'),
+  favorites: require('../../assets/community/bookmark.svg'),
   identity: require('../../assets/icons/academic.svg'),
   privacy: require('../../assets/icons/study.svg'),
   account: require('../../assets/icons/profile.svg'),
@@ -115,6 +116,12 @@ const menus = [
     name: '同行',
     icon: icons.carpool,
     route: '/packages/social/my-services/index?section=carpool&relation=all',
+  },
+  {
+    key: 'favorites',
+    name: '收藏',
+    icon: icons.favorites,
+    route: '/pages/favorites/index',
   },
 ] as const
 

@@ -16,6 +16,7 @@ import {
 import { consumeCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
 import CommunityLevelBadge from '../../../features/community/level-badge'
 import { openContentReport } from '../../../features/content-report'
+import FavoriteToggle from '../../../features/favorites/favorite-toggle'
 import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
 import DetailComments from '../../../features/life-services/components/detail-comments'
 import ContentImageGrid from '../../../features/community/components/content-image-grid'
@@ -232,17 +233,26 @@ export default function CommunityDetailPage() {
                     )}
                   </>
                 )}
-                action={postMenuItems.length > 0 ? (
-                  <View
-                    id='community-detail-more'
-                    className='community-detail__more'
-                    ariaRole='button'
-                    ariaLabel='更多帖子操作'
-                    onClick={() => void openPostMenu()}
-                  >
-                    <Image src={communityDetailIcons.more} mode='aspectFit' />
+                action={(
+                  <View className='community-detail__toolbar-actions'>
+                    <FavoriteToggle
+                      resourceId={post.id}
+                      resourceType='campus_circle_post'
+                      compact
+                    />
+                    {postMenuItems.length > 0 && (
+                      <View
+                        id='community-detail-more'
+                        className='community-detail__more'
+                        ariaRole='button'
+                        ariaLabel='更多帖子操作'
+                        onClick={() => void openPostMenu()}
+                      >
+                        <Image src={communityDetailIcons.more} mode='aspectFit' />
+                      </View>
+                    )}
                   </View>
-                ) : undefined}
+                )}
               />
 
               {post.topic?.name && (

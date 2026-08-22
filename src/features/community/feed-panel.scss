@@ -404,6 +404,15 @@
   justify-content: flex-end;
 }
 
+.community-post__trailing-action {
+  display: flex;
+  width: 88rpx;
+  min-width: 88rpx;
+  height: 88rpx;
+  align-items: center;
+  justify-content: center;
+}
+
 .community-post__meta-copy {
   display: flex;
   flex: 1;

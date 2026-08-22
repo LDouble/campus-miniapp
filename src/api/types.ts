@@ -49,6 +49,13 @@ export type CampusCircleTopicPage = components['schemas']['CampusCircleTopicPage
 export type HomeFeedItemView = components['schemas']['HomeFeedItemView']
 export type HomeFeedPage = components['schemas']['HomeFeedPage']
 export type HomeFeedSourceType = components['schemas']['HomeFeedSourceType']
+export type FavoriteAvailability = components['schemas']['FavoriteAvailability']
+export type FavoriteResourceType = components['schemas']['FavoriteResourceType']
+export type FavoritePreviewImage = components['schemas']['FavoritePreviewImage']
+export type FavoriteResourcePreview = components['schemas']['FavoriteResourcePreview']
+export type FavoriteItem = components['schemas']['FavoriteItem']
+export type FavoritePage = components['schemas']['FavoritePage']
+export type FavoriteState = components['schemas']['FavoriteState']
 export type PublicCommentImagePreview = components['schemas']['PublicCommentImagePreview']
 export type PublicCommentPreview = components['schemas']['PublicCommentPreview']
 
