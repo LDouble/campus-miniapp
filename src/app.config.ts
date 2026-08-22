@@ -92,6 +92,7 @@ const packageDefinitions = [
   { root: 'pages/user-level', sourceRoot: 'pages/user-level', pages: ['index'] },
   { root: 'pages/daily-checkin', sourceRoot: 'pages/daily-checkin', pages: ['index'] },
   { root: 'pages/account-cancellation', sourceRoot: 'pages/account-cancellation', pages: ['index'] },
+  { root: 'pages/favorites', sourceRoot: 'pages/favorites', pages: ['index'] },
   { root: 'pages/webview', sourceRoot: 'pages/webview', pages: ['index'] },
   { root: 'pages/feature-unavailable', sourceRoot: 'pages/feature-unavailable', pages: ['index'] },
   {

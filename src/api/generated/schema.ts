@@ -7473,9 +7473,13 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        /** @enum {string} */
+        FavoriteAvailability: "available" | "unavailable";
         FavoriteItem: {
+            availability: components["schemas"]["FavoriteAvailability"];
             /** Format: date-time */
             favorited_at: string;
+            preview?: components["schemas"]["FavoriteResourcePreview"];
             /** Format: uint64 */
             resource_id: number;
             resource_type: components["schemas"]["FavoriteResourceType"];
@@ -7490,6 +7494,50 @@ export interface components {
         FavoritePageResponseBody: {
             data: components["schemas"]["FavoritePage"];
             request_id: string;
+        };
+        FavoritePreviewImage: {
+            /** Format: uint64 */
+            media_id?: number | null;
+            url: string;
+        };
+        FavoriteResourcePreview: {
+            author_avatar_url: string | null;
+            /** Format: uint64 */
+            author_id: number;
+            author_nickname: string;
+            campus?: string | null;
+            category?: string | null;
+            cover_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            currency?: string | null;
+            /** Format: date-time */
+            deadline?: string | null;
+            /** Format: date-time */
+            departure_at?: string | null;
+            destination?: string | null;
+            dropoff_location?: string | null;
+            images: components["schemas"]["FavoritePreviewImage"][];
+            intent?: string | null;
+            /** Format: int64 */
+            occupied_seats?: number | null;
+            origin?: string | null;
+            pickup_location?: string | null;
+            /** Format: int64 */
+            price_cents?: number | null;
+            /** Format: date-time */
+            published_at?: string | null;
+            /** Format: uint64 */
+            resource_id: number;
+            resource_type: components["schemas"]["FavoriteResourceType"];
+            review_status?: string | null;
+            /** Format: int64 */
+            reward_cents?: number | null;
+            status: string;
+            summary: string | null;
+            title?: string | null;
+            /** Format: int64 */
+            total_seats?: number | null;
         };
         /** @enum {string} */
         FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool";
