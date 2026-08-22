@@ -230,7 +230,6 @@ export default function DirectMessageChatPage() {
     if (!isCurrentImage()) return
     requestWechatSubscriptionForModule('private_message')
     const pending = resolveImagePendingSend(activeConversationId, mediaId)
-    setSending(true)
     setImageRecoveryAction('send-image')
     updateSelectedImage((current) => current && current.key === image.key
       ? { ...current, mediaId, status: 'uploading', progress: 100, error: '图片发送中，请稍候' }
@@ -250,7 +249,6 @@ export default function DirectMessageChatPage() {
       mediaOperationVersionRef.current += 1
       updateSelectedImage(() => null)
       updatePendingOutgoingImage(() => null)
-      setSending(false)
       setMessages((current) => {
         const merged = mergeDirectMessages(current, [message])
         setNewestMessageId(merged)
@@ -268,8 +266,6 @@ export default function DirectMessageChatPage() {
       updatePendingOutgoingImage((current) => current && current.key === image.key
         ? { ...current, mediaId, status: 'failed', progress: 100, error: message }
         : current)
-    } finally {
-      if (isCurrentImage()) setSending(false)
     }
   }
 
@@ -587,7 +583,7 @@ export default function DirectMessageChatPage() {
   const imageInFlight = Boolean(selectedImage && selectedImage.status !== 'failed')
 
   const sendFromButton = () => {
-    if (!draft.trim() || imageInFlight || sending || !conversationId) return
+    if (!draft.trim() || sending || !conversationId) return
     requestWechatSubscriptionForModule('private_message')
     void send()
   }
@@ -643,7 +639,7 @@ export default function DirectMessageChatPage() {
 
   const retrySelectedImage = () => {
     const image = selectedImageRef.current
-    if (!image || !image.localPath || sending) return
+    if (!image || !image.localPath) return
     resetPendingSend()
     if (imageRecoveryAction === 'send-image' && image.mediaId) {
       const operationVersion = mediaOperationVersionRef.current + 1
@@ -662,7 +658,6 @@ export default function DirectMessageChatPage() {
 
   const removeSelectedImage = () => {
     mediaOperationVersionRef.current += 1
-    setSending(false)
     resetPendingSend()
     resetImageRecoveryAction()
     updateSelectedImage(() => null)
@@ -684,7 +679,7 @@ export default function DirectMessageChatPage() {
     ? '已注销用户'
     : conversation?.peer.nickname || '私信'
 
-  const canSend = Boolean(conversationId) && !sending && !imageInFlight && Boolean(draft.trim())
+  const canSend = Boolean(conversationId) && !sending && Boolean(draft.trim())
   const pageClassName = [
     'direct-chat-page',
     stickerPickerOpen ? 'direct-chat-page--sticker-open' : '',
@@ -952,54 +947,50 @@ const contentBottomPadding = stickerPickerOpen
       >
         <View className='direct-chat-composer__main'>
           <View className='direct-chat-composer__field'>
-            {imageInFlight ? (
-              <Text className='direct-chat-composer__image-hint'>图片将单独发送</Text>
-            ) : (
-              <KeyboardSafeInput
-                value={draft}
-                focus={inputFocused}
-                maxlength={2000}
-                placeholder='输入消息'
-                placeholderClass='direct-chat-composer__placeholder'
-                confirmType='send'
-                keepVisibleOnKeyboard={false}
-                onFocus={() => {
-                  setInputFocused(true)
-                  setStickerPickerOpen(false)
-                }}
-                onBlur={() => setInputFocused(false)}
-                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                onInput={(event) => {
-                  const detail = event.detail as typeof event.detail & {
-                    cursor?: number
-                    selectionEnd?: number
-                    selectionStart?: number
-                  }
-                  const cursor = Number.isFinite(detail.cursor) ? Number(detail.cursor) : detail.value.length
-                  const selectionStart = Number.isFinite(detail.selectionStart)
-                    ? Number(detail.selectionStart)
-                    : cursor
-                  const selectionEnd = Number.isFinite(detail.selectionEnd)
-                    ? Number(detail.selectionEnd)
-                    : cursor
-                  draftSelectionStartRef.current = Math.max(0, selectionStart)
-                  draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
-                  updateDraft(detail.value)
-                }}
-                onSelectionChange={(event) => {
-                  const detail = event.detail as {
-                    selectionEnd?: number
-                    selectionStart?: number
-                  }
-                  const selectionStart = Number(detail.selectionStart)
-                  const selectionEnd = Number(detail.selectionEnd)
-                  if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
-                  draftSelectionStartRef.current = Math.max(0, selectionStart)
-                  draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
-                }}
-                onConfirm={() => void send()}
-              />
-            )}
+            <KeyboardSafeInput
+              value={draft}
+              focus={inputFocused}
+              maxlength={2000}
+              placeholder='输入消息'
+              placeholderClass='direct-chat-composer__placeholder'
+              confirmType='send'
+              keepVisibleOnKeyboard={false}
+              onFocus={() => {
+                setInputFocused(true)
+                setStickerPickerOpen(false)
+              }}
+              onBlur={() => setInputFocused(false)}
+              onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+              onInput={(event) => {
+                const detail = event.detail as typeof event.detail & {
+                  cursor?: number
+                  selectionEnd?: number
+                  selectionStart?: number
+                }
+                const cursor = Number.isFinite(detail.cursor) ? Number(detail.cursor) : detail.value.length
+                const selectionStart = Number.isFinite(detail.selectionStart)
+                  ? Number(detail.selectionStart)
+                  : cursor
+                const selectionEnd = Number.isFinite(detail.selectionEnd)
+                  ? Number(detail.selectionEnd)
+                  : cursor
+                draftSelectionStartRef.current = Math.max(0, selectionStart)
+                draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
+                updateDraft(detail.value)
+              }}
+              onSelectionChange={(event) => {
+                const detail = event.detail as {
+                  selectionEnd?: number
+                  selectionStart?: number
+                }
+                const selectionStart = Number(detail.selectionStart)
+                const selectionEnd = Number(detail.selectionEnd)
+                if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
+                draftSelectionStartRef.current = Math.max(0, selectionStart)
+                draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
+              }}
+              onConfirm={() => void send()}
+            />
           </View>
           <View
             className={stickerPickerOpen
@@ -1035,14 +1026,12 @@ const contentBottomPadding = stickerPickerOpen
               !canSend ? 'direct-chat-composer__send--disabled' : '',
             ].filter(Boolean).join(' ')}
             ariaRole='button'
-            ariaLabel={imageInFlight
-              ? '图片正在自动发送'
-              : sending
+            ariaLabel={sending
               ? '正在发送消息'
               : !canSend ? '发送消息，当前不可用' : '发送消息'}
             onClick={sendFromButton}
           >
-            {imageInFlight ? (sending ? '发送中' : '自动发送') : sending ? '发送中' : '发送'}
+            {sending ? '发送中' : '发送'}
           </View>
         </View>
         <StickerPicker
