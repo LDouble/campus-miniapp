@@ -102,9 +102,12 @@ export default function FavoritesPage() {
       <CustomNavbar title='我的收藏' showBack />
       <View className='favorites-page__content'>
         <View className='favorites-page__intro'>
-          <View>
-            <Text className='favorites-page__eyebrow'>CAMPUS COLLECTION</Text>
-            <Text className='favorites-page__title'>把重要的校园内容留在这里</Text>
+          <View className='favorites-page__intro-main'>
+            <View className='favorites-page__section-marker' />
+            <View className='favorites-page__intro-copy'>
+              <Text className='favorites-page__title'>收藏内容</Text>
+              <Text className='favorites-page__description'>把重要的校园内容留在这里</Text>
+            </View>
           </View>
           <Text className='favorites-page__count'>{total} 条</Text>
         </View>
@@ -133,12 +136,13 @@ export default function FavoritesPage() {
           </View>
         )}
         {hasItems && (
-          <View className='favorites-page__list'>
-            {items.map((item) => (
+          <View className='favorites-page__list community-post-list'>
+            {items.map((item, index) => (
               <FavoriteCard
                 key={`${item.resource_type}:${item.resource_id}`}
                 item={item}
                 onRemoved={removeItem}
+                motionDelay={index < 4 ? index + 1 : undefined}
               />
             ))}
           </View>

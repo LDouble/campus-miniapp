@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useState, type ReactNode } from 'react'
 import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, PublicCommentPreview } from '../../api/types'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
@@ -56,19 +56,21 @@ const formatCommunityPostTime = (value?: string | null, now = Date.now()) => {
 type Props = {
   post: CampusCirclePostView
   sectionName: string
+  ariaLabel?: string
   motionDelay?: number
   timeFormatter?: (value?: string | null) => string
   onToggleLike?: (post: CampusCirclePostView) => void | Promise<void>
   onOpen: (post: CampusCirclePostView) => void
-  onOpenComments: (post: CampusCirclePostView) => void
-  actionsOpen: boolean
-  onToggleActions: (postId: number) => void
-  onCloseActions: () => void
+  onOpenComments?: (post: CampusCirclePostView) => void
+  actionsOpen?: boolean
+  onToggleActions?: (postId: number) => void
+  onCloseActions?: () => void
   onOpenAuthor?: (post: CampusCirclePostView) => void
   onSelectSection?: (sectionId: number) => void
   variant?: 'community' | 'marketplace' | 'errand' | 'carpool'
   instanceKey?: string
   businessPreview?: { title: string; meta: string }
+  trailingAction?: ReactNode
   onReplyComment?: (post: CampusCirclePostView, comment: CommunityPostCommentPreview) => void
 }
 
@@ -88,12 +90,13 @@ export type CommunityPostCommentPreview = {
 function CommunityPostCard({
   post,
   sectionName,
+  ariaLabel,
   motionDelay = 0,
   timeFormatter,
   onToggleLike,
   onOpen,
   onOpenComments,
-  actionsOpen,
+  actionsOpen = false,
   onToggleActions,
   onCloseActions,
   onOpenAuthor,
@@ -101,6 +104,7 @@ function CommunityPostCard({
   variant = 'community',
   instanceKey,
   businessPreview,
+  trailingAction,
   onReplyComment,
 }: Props) {
   const [likePending, setLikePending] = useState(false)
@@ -139,6 +143,7 @@ function CommunityPostCard({
     && !businessPreview
     && operationBadges.length === 0
     && (onlyStickers || readableContent.trim().length <= 20)
+  const canShowActionMenu = actionsOpen && Boolean(onCloseActions) && Boolean(onToggleLike || onOpenComments)
   const openAuthorOrPost = () => (
     !post.author_deleted && onOpenAuthor ? onOpenAuthor(post) : onOpen(post)
   )
@@ -178,7 +183,7 @@ function CommunityPostCard({
         motionDelay > 0 ? `motion-enter--delay-${Math.min(motionDelay, 4)}` : '',
       ].filter(Boolean).join(' ')}
       ariaRole='button'
-      ariaLabel={`查看动态：${readableContent || '校园图片动态'}`}
+      ariaLabel={ariaLabel || `查看动态：${readableContent || '校园图片动态'}`}
       onClick={() => onOpen(post)}
     >
       <View
@@ -287,20 +292,27 @@ function CommunityPostCard({
             ))}
           </View>
           <View className='community-post__meta-actions'>
-            <Button
-              id={`community-post-more-${cardId}`}
-              className='community-post__more'
-              hoverClass='none'
-              ariaLabel={actionsOpen ? '收起动态操作' : '展开动态操作'}
-              onTouchStart={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation()
-                onToggleActions(post.id)
-              }}
-            >
-              <Image src={communityIcons.more} mode='aspectFit' />
-            </Button>
-            {actionsOpen && (
+            {trailingAction && (
+              <View className='community-post__trailing-action'>
+                {trailingAction}
+              </View>
+            )}
+            {onToggleActions && (
+              <Button
+                id={`community-post-more-${cardId}`}
+                className='community-post__more'
+                hoverClass='none'
+                ariaLabel={actionsOpen ? '收起动态操作' : '展开动态操作'}
+                onTouchStart={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onToggleActions(post.id)
+                }}
+              >
+                <Image src={communityIcons.more} mode='aspectFit' />
+              </Button>
+            )}
+            {canShowActionMenu && (
               <View
                 className={[
                   'community-post__social',
@@ -325,7 +337,7 @@ function CommunityPostCard({
                         event.stopPropagation()
                         if (likePending) return
                         setLikePending(true)
-                        onCloseActions()
+                        onCloseActions?.()
                         void Promise.resolve(onToggleLike(post))
                           .catch(() => undefined)
                           .finally(() => setLikePending(false))
@@ -337,19 +349,21 @@ function CommunityPostCard({
                     <View className='community-post__social-divider' />
                   </>
                 )}
-                <View
-                  className='community-post__comments-summary'
-                  ariaRole='button'
-                  ariaLabel='打开评论输入'
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onCloseActions()
-                    onOpenComments(post)
-                  }}
-                >
-                  <Image src={communityIcons.comment} mode='aspectFit' />
-                  <Text>评论</Text>
-                </View>
+                {onOpenComments && (
+                  <View
+                    className='community-post__comments-summary'
+                    ariaRole='button'
+                    ariaLabel='打开评论输入'
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onCloseActions?.()
+                      onOpenComments(post)
+                    }}
+                  >
+                    <Image src={communityIcons.comment} mode='aspectFit' />
+                    <Text>评论</Text>
+                  </View>
+                )}
               </View>
             )}
           </View>

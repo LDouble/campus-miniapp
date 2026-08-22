@@ -1,3 +1,5 @@
+@use '../../features/community/feed-panel.scss';
+
 page {
   background: var(--campus-page, var(--ousea-bg-page, #f5f8fc));
 }
@@ -15,41 +17,70 @@ page {
 
   &__intro {
     display: flex;
-    min-height: 136rpx;
-    padding: 24rpx 0 20rpx;
-    align-items: flex-end;
+    min-height: 144rpx;
+    padding: 28rpx 0 24rpx;
+    align-items: center;
     justify-content: space-between;
     gap: 20rpx;
   }
 
-  &__eyebrow,
+  &__intro-main,
+  &__intro-copy,
   &__title,
+  &__description,
   &__count {
     display: block;
   }
 
-  &__eyebrow {
-    color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
-    font-size: var(--ousea-font-size-badge, 20rpx);
-    font-weight: var(--ousea-font-weight-bold, 700);
-    letter-spacing: 2rpx;
-    line-height: 1.4;
+  &__intro-main {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 16rpx;
+  }
+
+  &__section-marker {
+    width: 8rpx;
+    height: 48rpx;
+    flex: none;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: linear-gradient(180deg, var(--ousea-ocean-500, #2b7aef), var(--ousea-wave-400, #38bdf8));
+  }
+
+  &__intro-copy {
+    min-width: 0;
   }
 
   &__title {
-    max-width: 560rpx;
-    margin-top: 8rpx;
+    overflow: hidden;
     color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
     font-size: var(--ousea-font-size-title, 33rpx);
     font-weight: var(--ousea-font-weight-semibold, 600);
     line-height: var(--ousea-line-height-ui, 1.4);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__description {
+    max-width: 520rpx;
+    margin-top: 6rpx;
+    overflow: hidden;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: var(--ousea-line-height-ui, 1.4);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__count {
     flex: none;
-    padding-bottom: 4rpx;
-    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
-    font-size: var(--ousea-font-size-caption, 24rpx);
+    padding: 10rpx 18rpx;
+    border: 1rpx solid var(--ousea-ocean-100, #e3effe);
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: var(--ousea-ocean-100, #e3effe);
+    color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
   }
 
   &__refreshing,
@@ -164,9 +195,9 @@ page {
   }
 
   &__list {
-    display: flex;
-    flex-direction: column;
-    gap: 16rpx;
+    margin-right: calc(var(--ousea-space-3, 32rpx) * -1);
+    margin-left: calc(var(--ousea-space-3, 32rpx) * -1);
+    background: var(--campus-surface, var(--ousea-bg-surface, #fff));
   }
 }
 

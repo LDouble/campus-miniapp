@@ -15,7 +15,9 @@ export const favoriteResourceLabels: Record<FavoriteResourceType, string> = {
   carpool: '找同行',
 }
 
-export const favoriteResourceClassNames: Record<FavoriteResourceType, string> = {
+export type FavoriteFeedVariant = 'community' | 'marketplace' | 'errand' | 'carpool'
+
+export const favoriteResourceClassNames: Record<FavoriteResourceType, FavoriteFeedVariant> = {
   campus_circle_post: 'community',
   marketplace: 'marketplace',
   errand: 'errand',
