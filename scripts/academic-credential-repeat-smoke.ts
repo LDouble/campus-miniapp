@@ -83,6 +83,11 @@ assert.ok(!pageSource.includes("confirmText: restricted ? '已解锁'"), '账号
 assert.ok(pageSource.includes("confirmText: '我知道了'"), '认证业务错误只能确认提示')
 assert.ok(pageSource.includes("submitError.code === 'academic_challenge_required'"), '验证码必须启动冷却')
 assert.ok(pageSource.includes('请等待 30 分钟'), '验证码提示必须明确等待 30 分钟')
+assert.ok(
+  pageSource.includes("error.code === 'academic_retryable'")
+    && pageSource.includes('教务暂时繁忙，请重启小程序重试绑定。'),
+  '教务认证快速失败必须提示用户重启小程序后重试绑定',
+)
 assert.ok(!pageSource.includes('setStorage'), '被拒绝的密码和验证码冷却不得写入小程序存储')
 assert.ok(
   pageSource.includes("initialSubmitError.code === 'invalid_academic_credentials'"),

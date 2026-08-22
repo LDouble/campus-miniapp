@@ -92,6 +92,8 @@ export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState
       }
     case 'academic_provider_busy':
       return retryState('当前查询人数较多，请稍后再试。')
+    case 'academic_retryable':
+      return retryState('教务暂时繁忙，请下拉重试刷新。')
     default:
       return retryState(error.message || undefined)
   }

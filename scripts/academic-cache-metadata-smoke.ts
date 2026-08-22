@@ -129,6 +129,11 @@ const cacheNoticeComponent = readFileSync(
   'utf8',
 )
 assert.ok(
+  cacheNoticeComponent.includes("case 'academic_retryable'")
+    && cacheNoticeComponent.includes('教务暂时繁忙，请下拉重试刷新。'),
+  '教务快速失败必须提示用户下拉重试刷新',
+)
+assert.ok(
   cacheNoticeComponent.includes('const UPDATED_NOTICE_DURATION = 5000')
     && cacheNoticeComponent.includes('updatedAt: visibleUpdatedAt')
     && cacheNoticeComponent.includes('setVisibleUpdatedAt(updatedAt)')
