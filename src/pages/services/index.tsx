@@ -29,6 +29,7 @@ const icons = {
   academic: require('../../assets/icons/academic.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
   bikeFaults: require('../../assets/icons/location.svg'),
+  studyRooms: require('../../assets/icons/study.svg'),
 }
 
 type ServiceItem = {
@@ -65,6 +66,7 @@ const migratedServiceKeys = new Set([
   'market',
   'errands',
   'clubs',
+  'study-rooms',
 ])
 
 const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> = [
@@ -99,6 +101,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
       { key: 'clubs', name: '社团广场', icon: icons.clubs, route: '/pages/clubs/index' },
       { key: 'bike-faults', name: '小蓝故障', icon: icons.bikeFaults, route: '/pages/blue-bike-faults/index' },
+      { key: 'study-rooms', name: '一起自习', icon: icons.studyRooms, route: '/pages/study-rooms/index' },
     ],
   },
 ]

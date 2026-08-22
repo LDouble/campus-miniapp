@@ -57,6 +57,12 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     && ['1', 'true'].includes(
       String(process.env.TARO_APP_WECHAT_AI_ENABLED || '').trim().toLowerCase(),
     )
+  const studyRoomsPreviewEnabled = ['1', 'true'].includes(
+    String(process.env.TARO_APP_STUDY_ROOMS_PREVIEW || '').trim().toLowerCase(),
+  )
+  if (studyRoomsPreviewEnabled && process.env.NODE_ENV !== 'development') {
+    throw new Error('TARO_APP_STUDY_ROOMS_PREVIEW 仅允许用于 development 构建。')
+  }
   const wechatAiModeCopyPatterns = wechatAiEnabled
     ? [
         {
@@ -98,6 +104,7 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       ),
       __CAMPUS_APP_EDITION__: JSON.stringify(appEdition),
       __CAMPUS_WECHAT_AI_ENABLED__: JSON.stringify(wechatAiEnabled),
+      __CAMPUS_STUDY_ROOMS_PREVIEW__: JSON.stringify(studyRoomsPreviewEnabled),
       __CAMPUS_TARGET_WECHAT_APP_ID__: JSON.stringify(targetWechatAppId),
       __CAMPUS_TARGET_DEFAULT_PATH__: JSON.stringify(targetDefaultPath),
       __CAMPUS_TARGET_MINIAPP_ENV_VERSION__: JSON.stringify(targetMiniappEnvVersion),

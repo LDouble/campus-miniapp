@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import Taro, { usePullDownRefresh } from '@tarojs/taro'
-import { Input, Map, Text, Textarea, View } from '@tarojs/components'
+import { Map, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import {
+  KeyboardSafeInput,
+  KeyboardSafeTextarea,
+} from '../../components/keyboard-safe-input'
 import { isApiError } from '../../api/client'
 import {
   campusCrowdRepository,
@@ -152,7 +156,7 @@ export default function BlueBikeFaultsPage() {
         <View className='bike-sheet' onClick={() => !submitting && setFormOpen(false)}>
           <View className='bike-sheet__panel' onClick={(event) => event.stopPropagation()}>
             <Text className='bike-sheet__title'>上报故障</Text>
-            <Input
+            <KeyboardSafeInput
               className='bike-sheet__input'
               value={bikeNumber}
               maxlength={30}
@@ -171,7 +175,7 @@ export default function BlueBikeFaultsPage() {
                 >{label}</View>
               ))}
             </View>
-            <Textarea value={description} maxlength={200} placeholder='补充描述（选填）' autoHeight onInput={(event) => setDescription(event.detail.value)} />
+            <KeyboardSafeTextarea value={description} maxlength={200} placeholder='补充描述（选填）' autoHeight onInput={(event) => setDescription(event.detail.value)} />
             <View className='bike-sheet__locate' role='button' ariaLabel='获取当前位置' onClick={() => void locate()}>
               {locating ? '定位中' : location ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : '获取当前位置'}
             </View>

@@ -30,6 +30,8 @@ const SAFE_PAGES = new Set([
     '/pages/clubs/detail',
     '/pages/clubs/edit',
     '/pages/clubs/mine',
+    '/pages/study-rooms/index',
+    '/pages/study-rooms/room',
   ] : []),
   '/pages/academic/schedule/index',
   '/pages/academic/grades/index',

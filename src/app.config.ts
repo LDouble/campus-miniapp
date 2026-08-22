@@ -33,6 +33,8 @@ const fullPages = [
   'pages/shuttle/detail',
   'pages/services/index',
   'pages/blue-bike-faults/index',
+  'pages/study-rooms/index',
+  'pages/study-rooms/room',
   'pages/content-report/index',
   'pages/webview/index',
   'pages/feature-unavailable/index',
@@ -57,7 +59,9 @@ const qualificationExcludedPages = new Set([
   'pages/clubs/index',
   'pages/clubs/detail',
   'pages/clubs/edit',
-  'pages/clubs/mine'
+  'pages/clubs/mine',
+  'pages/study-rooms/index',
+  'pages/study-rooms/room'
 ])
 
 const mainPagePaths = new Set([
@@ -85,6 +89,7 @@ const packageDefinitions = [
   { root: 'pages/calendar', sourceRoot: 'pages/calendar', pages: ['index'] },
   { root: 'pages/services', sourceRoot: 'pages/services', pages: ['index'] },
   { root: 'pages/blue-bike-faults', sourceRoot: 'pages/blue-bike-faults', pages: ['index'] },
+  { root: 'pages/study-rooms', sourceRoot: 'pages/study-rooms', pages: ['index', 'room'] },
   { root: 'pages/public-profile', sourceRoot: 'pages/public-profile', pages: ['index'] },
   { root: 'pages/user-level', sourceRoot: 'pages/user-level', pages: ['index'] },
   { root: 'pages/daily-checkin', sourceRoot: 'pages/daily-checkin', pages: ['index'] },

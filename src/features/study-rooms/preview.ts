@@ -1,0 +1,1 @@
+export const studyRoomsPreviewEnabled = __CAMPUS_STUDY_ROOMS_PREVIEW__
