@@ -209,69 +209,6 @@ page {
   align-items: center;
 }
 
-.direct-chat-composer__image-draft {
-  display: flex;
-  min-height: 122rpx;
-  padding: 12rpx;
-  margin-bottom: 12rpx;
-  align-items: center;
-  box-sizing: border-box;
-  border: 2rpx solid token.$color-border;
-  border-radius: token.$radius-md;
-  background: token.$color-surface-subtle;
-}
-
-.direct-chat-composer__image-preview {
-  width: 98rpx;
-  height: 98rpx;
-  flex: none;
-  border-radius: 16rpx;
-  background: token.$color-surface-primary;
-}
-
-.direct-chat-composer__image-meta {
-  display: flex;
-  min-width: 0;
-  margin: 0 16rpx;
-  flex: 1;
-  align-items: center;
-  color: token.$color-text-secondary;
-  font-size: 24rpx;
-  line-height: 1.45;
-}
-
-.direct-chat-composer__image-meta > text {
-  min-width: 0;
-  flex: 1;
-}
-
-.direct-chat-composer__image-action,
-.direct-chat-composer__image-remove {
-  display: flex;
-  width: 88rpx;
-  min-width: 88rpx;
-  height: 88rpx;
-  min-height: 88rpx;
-  padding: 0;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16rpx;
-  color: token.$color-primary-strong;
-  font-size: 22rpx;
-  font-weight: 680;
-}
-
-.direct-chat-composer__image-remove {
-  color: token.$color-text-secondary;
-}
-
-.direct-chat-composer__image-action--pressed,
-.direct-chat-composer__image-remove--pressed {
-  background: token.$color-surface-primary;
-  opacity: 0.74;
-}
-
 .direct-chat-composer__field {
   display: flex;
   min-width: 0;
@@ -558,8 +495,7 @@ page {
   line-height: 1.4;
 }
 
-.direct-chat-message__image-progress-track,
-.direct-chat-composer__image-progress-track {
+.direct-chat-message__image-progress-track {
   overflow: hidden;
   width: 100%;
   height: 6rpx;
@@ -568,8 +504,7 @@ page {
   background: rgba(255, 255, 255, 0.34);
 }
 
-.direct-chat-message__image-progress-indicator,
-.direct-chat-composer__image-progress-indicator {
+.direct-chat-message__image-progress-indicator {
   width: 34%;
   height: 100%;
   border-radius: inherit;
@@ -577,9 +512,36 @@ page {
   animation: direct-chat-image-progress 1.4s ease-in-out infinite;
 }
 
-.direct-chat-message__image-progress-indicator--determinate,
-.direct-chat-composer__image-progress-indicator {
+.direct-chat-message__image-progress-indicator--determinate {
   animation: none;
+}
+
+.direct-chat-message__image-progress-actions {
+  display: flex;
+  margin-top: 12rpx;
+  gap: 10rpx;
+  justify-content: flex-end;
+}
+
+.direct-chat-message__image-progress-action {
+  display: flex;
+  min-width: 72rpx;
+  height: 52rpx;
+  padding: 0 16rpx;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1rpx solid rgba(255, 255, 255, 0.46);
+  border-radius: token.$radius-md;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 22rpx;
+  font-weight: 640;
+}
+
+.direct-chat-message__image-progress-action--primary {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.2);
+  color: token.$color-on-accent;
 }
 
 .direct-chat-message__image-fallback--pending {
@@ -591,20 +553,6 @@ page {
 .direct-chat-message--own .direct-chat-message__image-fallback--invalid {
   background: token.$color-surface-subtle;
   color: token.$color-text-secondary;
-}
-
-.direct-chat-composer__image-draft {
-  position: relative;
-}
-
-.direct-chat-composer__image-draft > .direct-chat-composer__image-progress-track {
-  position: absolute;
-  right: 120rpx;
-  bottom: 6rpx;
-  left: 126rpx;
-  width: auto;
-  margin-top: 0;
-  background: token.$color-border;
 }
 
 @keyframes direct-chat-image-progress {
@@ -647,12 +595,6 @@ page {
   font-size: var(--ousea-font-size-caption, 24rpx);
 }
 
-.direct-chat-composer__image-draft {
-  border: 0;
-  border-radius: token.$radius-md;
-  background: token.$color-surface-subtle;
-}
-
 .campus-theme--dark {
   .direct-chat-page__scroll,
   .direct-chat-message__content,
@@ -673,8 +615,7 @@ page {
     color: token.$color-text-secondary;
   }
 
-  .direct-chat-composer__field,
-  .direct-chat-composer__image-draft {
+  .direct-chat-composer__field {
     background: token.$color-surface-subtle;
   }
 }

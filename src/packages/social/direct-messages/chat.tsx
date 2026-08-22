@@ -54,22 +54,11 @@ const avatarFallback = (value: string, fallback = '海') => {
   return normalized ? normalized.slice(0, 1).toUpperCase() : fallback
 }
 
-const imageDraftStatus = (image: MediaImageDraft) => {
-  if (image.status === 'uploading' && image.error) return image.error
-  if (image.status === 'uploading' && image.progress < 100) {
-    return `图片上传中 ${Math.max(1, Math.round(image.progress))}%`
-  }
-  if (image.status === 'uploading') return '图片发送中，请稍候'
-  if (image.status === 'uploaded') return '图片已上传，正在发送'
-  if (image.status === 'failed') return image.error || '图片处理失败，请重试'
-  return '准备上传图片'
-}
-
 const imageErrorMessage = (error: unknown, fallback: string) => (
   isApiError(error) ? error.message : error instanceof Error ? error.message : fallback
 )
 
-type ImageRecoveryAction = 'replace-image' | 'reupload' | 'send-image' | null
+type ImageRecoveryAction = 'reupload' | 'send-image' | null
 
 type PendingOutgoingImage = {
   key: string
@@ -292,6 +281,9 @@ export default function DirectMessageChatPage() {
       && selectedImageRef.current?.key === image.key
     )
     updateSelectedImage((current) => current && current.key === image.key
+      ? { ...current, mediaId: undefined, status: 'uploading', progress: 0, error: '' }
+      : current)
+    updatePendingOutgoingImage((current) => current && current.key === image.key
       ? { ...current, mediaId: undefined, status: 'uploading', progress: 0, error: '' }
       : current)
     setImageRecoveryAction('reupload')
@@ -650,10 +642,6 @@ export default function DirectMessageChatPage() {
   const retrySelectedImage = () => {
     const image = selectedImageRef.current
     if (!image || !image.localPath || sending) return
-    if (imageRecoveryAction === 'replace-image') {
-      Taro.showToast({ title: '图片未通过审核，请删除后更换图片', icon: 'none' })
-      return
-    }
     resetPendingSend()
     if (imageRecoveryAction === 'send-image' && image.mediaId) {
       const operationVersion = mediaOperationVersionRef.current + 1
@@ -920,6 +908,26 @@ const contentBottomPadding = stickerPickerOpen
                               />
                             </View>
                           )}
+                          {pendingOutgoingImage.status === 'failed' && (
+                            <View className='direct-chat-message__image-progress-actions'>
+                              <View
+                                className='direct-chat-message__image-progress-action direct-chat-message__image-progress-action--primary'
+                                ariaRole='button'
+                                ariaLabel='重试发送图片'
+                                onClick={retrySelectedImage}
+                              >
+                                重试
+                              </View>
+                              <View
+                                className='direct-chat-message__image-progress-action'
+                                ariaRole='button'
+                                ariaLabel='删除失败图片'
+                                onClick={removeSelectedImage}
+                              >
+                                删除
+                              </View>
+                            </View>
+                          )}
                         </View>
                       </View>
                     </View>
@@ -943,44 +951,6 @@ const contentBottomPadding = stickerPickerOpen
         className='direct-chat-composer'
         style={{ bottom: `${keyboardHeight}px` }}
       >
-        {selectedImage && (
-          <View className='direct-chat-composer__image-draft'>
-            <Image
-              className='direct-chat-composer__image-preview'
-              src={selectedImage.previewUrl}
-              mode='aspectFill'
-            />
-            <View className='direct-chat-composer__image-meta'>
-              <Text>{imageDraftStatus(selectedImage)}</Text>
-              {selectedImage.status === 'failed' && imageRecoveryAction !== 'replace-image' ? (
-                <View
-                  className='direct-chat-composer__image-action'
-                  ariaRole='button'
-                  ariaLabel='重试上传图片'
-                  onClick={retrySelectedImage}
-                >
-                重试
-              </View>
-              ) : null}
-            </View>
-            {selectedImage.status === 'uploading' && selectedImage.progress < 100 && (
-              <View className='direct-chat-composer__image-progress-track'>
-                <View
-                  className='direct-chat-composer__image-progress-indicator'
-                  style={{ width: `${Math.max(4, Math.min(100, selectedImage.progress))}%` }}
-                />
-              </View>
-            )}
-            <View
-              className='direct-chat-composer__image-remove'
-              ariaRole='button'
-              ariaLabel='删除待发送图片'
-              onClick={removeSelectedImage}
-            >
-              删除
-            </View>
-          </View>
-        )}
         <View className='direct-chat-composer__main'>
           <View className='direct-chat-composer__field'>
             {selectedImage ? (

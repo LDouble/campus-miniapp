@@ -332,16 +332,13 @@ assert.ok(chatPage.includes('Taro.previewImage'), '聊天图片必须支持点�
 assert.ok(chatPage.includes("ariaLabel='预览图片消息'"), '聊天图片缩略图必须提供可访问预览名称')
 assert.ok(chatPage.includes('retryMessageImage(message.id)'), '聊天图片加载失败后必须支持刷新重试')
 assert.ok(chatPage.includes('void loadInitial(conversationIdRef.current)'), '图片刷新重试必须请求新的消息图片地址')
-assert.ok(chatPage.includes("imageRecoveryAction === 'replace-image'"), '审核驳回后必须要求更换图片')
 assert.ok(chatPage.includes("state === 'rejected' || state === 'expired'"), '服务端直接返回失效态时不得展示图片预览')
 assert.ok(chatPage.includes("selectedImage ? 'direct-chat-page--image-selected'"), '图片待发送时必须为输入栏预留空间')
+assert.ok(!chatPage.includes('direct-chat-composer__image-draft'), '图片发送状态不得悬挂在输入区')
+assert.ok(chatPage.includes('direct-chat-message__image-progress-actions'), '图片发送失败状态必须留在消息流中')
 assert.ok(chatStyle.includes('.direct-chat-message__image-frame'), '聊天图片必须保持稳定比例容器')
 assert.ok(chatStyle.includes('.direct-chat-message__image-fallback'), '聊天图片加载失败必须有占位')
-assert.match(
-  chatStyle,
-  /\.direct-chat-composer__image-action,[\s\S]*?width: 88rpx;[\s\S]*?height: 88rpx;/u,
-  '图片草稿重试与删除按钮必须提供至少 88rpx 的点击热区',
-)
+assert.ok(chatStyle.includes('.direct-chat-message__image-progress-action'), '图片发送失败操作必须提供明确的消息流操作样式')
 assert.ok(mediaApi.includes('getMedia'), '媒体 API 必须封装私信审核查询')
 assert.ok(!mediaApi.includes('submitPrivateMessageMediaReview'), '媒体 API 不应暴露私信旧版审核提交接口')
 assert.ok(!mediaReview.includes('pollPrivateMessageMediaReview'), '审核状态工具不应提供前台轮询')
