@@ -3,11 +3,7 @@ import Taro, { useDidHide, useDidShow, useLoad, usePullDownRefresh } from '@taro
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { createIdempotencyKey, isApiError } from '../../../api/client'
 import { getCurrentIdentity, getCurrentUser } from '../../../api/account'
-import {
-  getMedia,
-  submitPrivateMessageMediaReview,
-  uploadMediaImage,
-} from '../../../api/media'
+import { uploadMediaImage } from '../../../api/media'
 import CustomNavbar, { getNavbarMetrics } from '../../../components/custom-navbar'
 import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
@@ -32,10 +28,7 @@ import {
   type PendingDirectMessageSend,
 } from '../../../features/direct-messages/composer'
 import {
-  pollPrivateMessageMediaReview,
   privateMessageImageFrameSize,
-  privateMessageMediaReviewMessage,
-  privateMessageMediaRetryAction,
 } from '../../../features/direct-messages/media-review'
 import { insertStickerToken } from '../../../features/stickers/content'
 import { privateMessagesRepository } from '../../../features/direct-messages/repository'
@@ -61,22 +54,29 @@ const avatarFallback = (value: string, fallback = '海') => {
   return normalized ? normalized.slice(0, 1).toUpperCase() : fallback
 }
 
-const imageDraftStatus = (image: MediaImageDraft) => {
-  if (image.status === 'uploading' && image.error) return image.error
-  if (image.status === 'uploading' && image.progress < 100) {
-    return `图片上传中 ${Math.max(1, Math.round(image.progress))}%`
-  }
-  if (image.status === 'uploading') return '图片审核中，请稍候'
-  if (image.status === 'uploaded') return '审核通过，可以发送'
-  if (image.status === 'failed') return image.error || '图片处理失败，请重试'
-  return '准备上传图片'
-}
-
 const imageErrorMessage = (error: unknown, fallback: string) => (
   isApiError(error) ? error.message : error instanceof Error ? error.message : fallback
 )
 
-type ImageRecoveryAction = 'retry-review' | 'replace-image' | 'reupload' | null
+type ImageRecoveryAction = 'reupload' | 'send-image' | null
+
+type PendingOutgoingImage = {
+  key: string
+  mediaId?: number
+  previewUrl: string
+  width: number
+  height: number
+  progress: number
+  status: 'uploading' | 'sending' | 'failed'
+  error: string
+}
+
+type SentImagePreview = {
+  mediaId: number
+  previewUrl: string
+  width: number
+  height: number
+}
 
 export default function DirectMessageChatPage() {
   const [conversationId, setConversationId] = useState(0)
@@ -96,6 +96,9 @@ export default function DirectMessageChatPage() {
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
   const [selectedImage, setSelectedImage] = useState<MediaImageDraft | null>(null)
   const [failedImageMessageIds, setFailedImageMessageIds] = useState<number[]>([])
+  const [pendingOutgoingImage, setPendingOutgoingImage] = useState<PendingOutgoingImage | null>(null)
+  const [sentImagePreviews, setSentImagePreviews] = useState<Record<number, SentImagePreview>>({})
+  const [imageStateOverrides, setImageStateOverrides] = useState<Record<number, 'rejected' | 'expired'>>({})
   const [imageRecoveryAction, setImageRecoveryAction] = useState<ImageRecoveryAction>(null)
   const { keyboardHeight, onKeyboardVisibilityChange } = useKeyboardInset()
   const conversationIdRef = useRef(0)
@@ -115,8 +118,9 @@ export default function DirectMessageChatPage() {
   const draftSelectionStartRef = useRef(0)
   const draftSelectionEndRef = useRef(0)
   const selectedImageRef = useRef<MediaImageDraft | null>(null)
+  const pendingOutgoingImageRef = useRef<PendingOutgoingImage | null>(null)
+  const sentImagePreviewsRef = useRef<Record<number, SentImagePreview>>({})
   const mediaOperationVersionRef = useRef(0)
-  const mediaReviewInFlightRef = useRef(0)
 
   useEffect(() => {
     if (keyboardHeight > 0) setStickerPickerOpen(false)
@@ -128,6 +132,13 @@ export default function DirectMessageChatPage() {
     setScrollTarget('')
     Taro.nextTick(() => setScrollTarget(target))
   }, [keyboardHeight])
+
+  useEffect(() => {
+    if (!pendingOutgoingImage?.key) return
+    const target = `direct-chat-pending-image-${pendingOutgoingImage.key}`
+    setScrollTarget('')
+    Taro.nextTick(() => setScrollTarget(target))
+  }, [pendingOutgoingImage?.key])
 
   const setNewestMessageId = (items: DirectMessage[]) => {
     const newest = items.length ? items[items.length - 1].id : 0
@@ -143,6 +154,26 @@ export default function DirectMessageChatPage() {
     })
   }, [])
 
+  const updatePendingOutgoingImage = useCallback((
+    updater: (current: PendingOutgoingImage | null) => PendingOutgoingImage | null,
+  ) => {
+    setPendingOutgoingImage((current) => {
+      const next = updater(current)
+      pendingOutgoingImageRef.current = next
+      return next
+    })
+  }, [])
+
+  const updateSentImagePreviews = useCallback((
+    updater: (current: Record<number, SentImagePreview>) => Record<number, SentImagePreview>,
+  ) => {
+    setSentImagePreviews((current) => {
+      const next = updater(current)
+      sentImagePreviewsRef.current = next
+      return next
+    })
+  }, [])
+
   const resetPendingSend = () => {
     pendingSendRef.current = null
     pendingSendFingerprintRef.current = ''
@@ -150,79 +181,91 @@ export default function DirectMessageChatPage() {
 
   const resetImageRecoveryAction = () => setImageRecoveryAction(null)
 
-  const waitForSelectedImageReview = async (
+  const handleSentImageMessage = (message: DirectMessage, image: MediaImageDraft) => {
+    const mediaId = message.image_state?.media_id || message.image?.media_id || image.mediaId
+    const state = message.image_state?.state || (message.image ? 'available' : 'pending')
+    if (!mediaId || state === 'available') return
+    if (state === 'rejected' || state === 'expired') {
+      setImageStateOverrides((current) => ({ ...current, [message.id]: state }))
+      return
+    }
+    updateSentImagePreviews((current) => ({
+      ...current,
+      [message.id]: {
+        mediaId,
+        previewUrl: image.previewUrl,
+        width: image.width,
+        height: image.height,
+      },
+    }))
+  }
+
+  const resolveImagePendingSend = (activeConversationId: number, mediaId: number) => {
+    const fingerprint = `image:${mediaId}`
+    if (pendingSendRef.current?.payload.kind === 'image'
+      && pendingSendFingerprintRef.current === fingerprint) {
+      return pendingSendRef.current
+    }
+    const pending: PendingDirectMessageSend = {
+      payload: { kind: 'image', mediaId },
+      fingerprint,
+      idempotencyKey: createIdempotencyKey(`private-message:${activeConversationId}:image`),
+    }
+    pendingSendRef.current = pending
+    pendingSendFingerprintRef.current = fingerprint
+    return pending
+  }
+
+  const sendUploadedImage = async (
     image: MediaImageDraft,
+    mediaId: number,
     operationVersion: number,
   ) => {
-    if (!image.mediaId || mediaReviewInFlightRef.current === operationVersion) return
-    mediaReviewInFlightRef.current = operationVersion
+    const activeConversationId = conversationIdRef.current
     const isCurrentImage = () => (
       mediaOperationVersionRef.current === operationVersion
       && selectedImageRef.current?.key === image.key
+      && activeConversationId === conversationIdRef.current
     )
+    if (!isCurrentImage()) return
+    requestWechatSubscriptionForModule('private_message')
+    const pending = resolveImagePendingSend(activeConversationId, mediaId)
+    setImageRecoveryAction('send-image')
+    updateSelectedImage((current) => current && current.key === image.key
+      ? { ...current, mediaId, status: 'uploading', progress: 100, error: '图片发送中，请稍候' }
+      : current)
+    updatePendingOutgoingImage((current) => current && current.key === image.key
+      ? { ...current, status: 'sending', progress: 100, error: '' }
+      : current)
     try {
-      const result = await pollPrivateMessageMediaReview({
-        loadMedia: () => getMedia(image.mediaId as number),
-        isForeground: () => visibleRef.current && isCurrentImage(),
-        onTransientLoadError: () => {
-          updateSelectedImage((current) => (
-            isCurrentImage() && current
-              ? {
-                ...current,
-                status: 'uploading',
-                progress: 100,
-                error: '网络波动，正在继续审核',
-              }
-              : current
-          ))
-        },
-        onMedia: (media) => {
-          updateSelectedImage((current) => (
-            isCurrentImage() && current
-              ? {
-                ...current,
-                mediaId: media.id,
-                status: 'uploading',
-                progress: 100,
-                error: privateMessageMediaReviewMessage(media),
-              }
-              : current
-          ))
-        },
-      })
-      if (!isCurrentImage() || result.kind === 'cancelled') return
-      if (result.kind === 'passed') {
-        resetImageRecoveryAction()
-        updateSelectedImage((current) => current && current.key === image.key
-          ? { ...current, status: 'uploaded', progress: 100, error: '' }
-          : current)
-        return
-      }
-      const reviewErrorMessage = result.kind === 'timeout'
-        ? '图片审核超时，请重试'
-        : result.media
-          ? privateMessageMediaReviewMessage(result.media)
-          : '图片审核未通过，请更换后重试'
-      setImageRecoveryAction(result.media
-        ? privateMessageMediaRetryAction(result.media.moderation_status)
-        : 'retry-review')
-      updateSelectedImage((current) => current && current.key === image.key
-        ? { ...current, status: 'failed', error: reviewErrorMessage || '图片未通过审核，请更换后重试' }
-        : current)
-    } catch (reviewError) {
+      const message = await privateMessagesRepository.sendMessage(
+        activeConversationId,
+        pending.payload,
+        pending.idempotencyKey,
+      )
       if (!isCurrentImage()) return
-      setImageRecoveryAction('retry-review')
+      resetPendingSend()
+      resetImageRecoveryAction()
+      mediaOperationVersionRef.current += 1
+      updateSelectedImage(() => null)
+      updatePendingOutgoingImage(() => null)
+      setMessages((current) => {
+        const merged = mergeDirectMessages(current, [message])
+        setNewestMessageId(merged)
+        return merged
+      })
+      handleSentImageMessage(message, { ...image, mediaId })
+      return
+    } catch (sendError) {
+      if (!isCurrentImage()) return
+      const message = imageErrorMessage(sendError, '图片发送失败，请重试')
+      setImageRecoveryAction('send-image')
       updateSelectedImage((current) => current && current.key === image.key
-        ? {
-          ...current,
-          status: 'failed',
-          error: imageErrorMessage(reviewError, '图片审核状态查询失败，请重试'),
-        }
+        ? { ...current, mediaId, status: 'failed', progress: 100, error: message }
         : current)
-    } finally {
-      if (mediaReviewInFlightRef.current === operationVersion) {
-        mediaReviewInFlightRef.current = 0
-      }
+      updatePendingOutgoingImage((current) => current && current.key === image.key
+        ? { ...current, mediaId, status: 'failed', progress: 100, error: message }
+        : current)
     }
   }
 
@@ -234,6 +277,9 @@ export default function DirectMessageChatPage() {
       && selectedImageRef.current?.key === image.key
     )
     updateSelectedImage((current) => current && current.key === image.key
+      ? { ...current, mediaId: undefined, status: 'uploading', progress: 0, error: '' }
+      : current)
+    updatePendingOutgoingImage((current) => current && current.key === image.key
       ? { ...current, mediaId: undefined, status: 'uploading', progress: 0, error: '' }
       : current)
     setImageRecoveryAction('reupload')
@@ -249,6 +295,9 @@ export default function DirectMessageChatPage() {
           updateSelectedImage((current) => current && current.key === image.key
             ? { ...current, status: 'uploading', progress, error: '' }
             : current)
+          updatePendingOutgoingImage((current) => current && current.key === image.key
+            ? { ...current, status: 'uploading', progress, error: '' }
+            : current)
         },
       })
       if (!isCurrentImage()) return
@@ -256,58 +305,24 @@ export default function DirectMessageChatPage() {
       updateSelectedImage((current) => current && current.key === image.key
         ? { ...current, mediaId: media.id, status: 'uploading', progress: 100, error: '' }
         : current)
-      await submitPrivateMessageMediaReview(media.id)
-      if (!isCurrentImage()) return
-      await waitForSelectedImageReview({
-        ...image,
-        mediaId: media.id,
-        status: 'uploading',
-        progress: 100,
-      }, operationVersion)
+      updatePendingOutgoingImage((current) => current && current.key === image.key
+        ? { ...current, mediaId: media.id, status: 'sending', progress: 100, error: '' }
+        : current)
+      await sendUploadedImage({ ...image, mediaId: media.id }, media.id, operationVersion)
     } catch (uploadError) {
       if (!isCurrentImage()) return
-      const canRetryReview = uploadedMediaId > 0
-      setImageRecoveryAction(canRetryReview ? 'retry-review' : 'reupload')
+      const message = imageErrorMessage(uploadError, '图片上传失败，请重试')
+      setImageRecoveryAction(uploadedMediaId > 0 ? 'send-image' : 'reupload')
       updateSelectedImage((current) => current && current.key === image.key
         ? {
           ...current,
-          mediaId: canRetryReview ? uploadedMediaId : undefined,
+          mediaId: uploadedMediaId || undefined,
           status: 'failed',
-          error: imageErrorMessage(uploadError, '图片上传失败，请重试'),
+          error: message,
         }
         : current)
-    }
-  }
-
-  const retrySelectedImageReview = async (image: MediaImageDraft) => {
-    if (!image.mediaId) return
-    const operationVersion = mediaOperationVersionRef.current + 1
-    mediaOperationVersionRef.current = operationVersion
-    const isCurrentImage = () => (
-      mediaOperationVersionRef.current === operationVersion
-      && selectedImageRef.current?.key === image.key
-    )
-    updateSelectedImage((current) => current && current.key === image.key
-      ? { ...current, status: 'uploading', progress: 100, error: '' }
-      : current)
-    try {
-      await submitPrivateMessageMediaReview(image.mediaId)
-      if (!isCurrentImage()) return
-      await waitForSelectedImageReview({
-        ...image,
-        status: 'uploading',
-        progress: 100,
-        error: '',
-      }, operationVersion)
-    } catch (reviewError) {
-      if (!isCurrentImage()) return
-      setImageRecoveryAction('retry-review')
-      updateSelectedImage((current) => current && current.key === image.key
-        ? {
-          ...current,
-          status: 'failed',
-          error: imageErrorMessage(reviewError, '图片审核提交失败，请重试'),
-        }
+      updatePendingOutgoingImage((current) => current && current.key === image.key
+        ? { ...current, status: 'failed', progress: uploadedMediaId > 0 ? 100 : current.progress, error: message }
         : current)
     }
   }
@@ -341,6 +356,7 @@ export default function DirectMessageChatPage() {
       return
     }
     const version = initialRequestVersion.current + 1
+    const conversationChanged = conversationIdRef.current !== id
     initialRequestVersion.current = version
     initialLoadingRef.current = true
     conversationIdRef.current = id
@@ -348,6 +364,15 @@ export default function DirectMessageChatPage() {
     setLoading(true)
     setError('')
     setMessages([])
+    if (conversationChanged) {
+      updateSentImagePreviews(() => ({}))
+      setImageStateOverrides({})
+      mediaOperationVersionRef.current += 1
+      resetPendingSend()
+      resetImageRecoveryAction()
+      updateSelectedImage(() => null)
+      updatePendingOutgoingImage(() => null)
+    }
     newestMessageIdRef.current = 0
     nextCursorRef.current = null
     hasMoreRef.current = true
@@ -477,10 +502,6 @@ export default function DirectMessageChatPage() {
   useDidShow(() => {
     visibleRef.current = true
     void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
-    const image = selectedImageRef.current
-    if (image && image.mediaId && image.status === 'uploading') {
-      void waitForSelectedImageReview(image, mediaOperationVersionRef.current)
-    }
     schedulePolling()
   })
 
@@ -559,15 +580,16 @@ export default function DirectMessageChatPage() {
     }
   }
 
+  const imageInFlight = Boolean(selectedImage && selectedImage.status !== 'failed')
+
   const sendFromButton = () => {
-    const imageReady = selectedImage?.status === 'uploaded' && Boolean(selectedImage.mediaId)
-    if ((!imageReady && !draft.trim()) || sending || !conversationId) return
+    if (!draft.trim() || sending || !conversationId) return
     requestWechatSubscriptionForModule('private_message')
     void send()
   }
 
   const changeStickerPickerOpen = (open: boolean) => {
-    if (open && selectedImageRef.current) {
+    if (open && selectedImageRef.current && selectedImageRef.current.status !== 'failed') {
       Taro.showToast({ title: '图片消息不能与表情混发', icon: 'none' })
       return
     }
@@ -583,7 +605,7 @@ export default function DirectMessageChatPage() {
   }
 
   const chooseImage = async () => {
-    if (selectedImageRef.current) return
+    if (selectedImageRef.current && selectedImageRef.current.status !== 'failed') return
     if (draft.trim()) {
       Taro.showToast({ title: '图片消息不能与文字混发，请先发送或清空文字', icon: 'none' })
       return
@@ -597,6 +619,15 @@ export default function DirectMessageChatPage() {
       resetPendingSend()
       resetImageRecoveryAction()
       updateSelectedImage(() => image)
+      updatePendingOutgoingImage(() => ({
+        key: image.key,
+        previewUrl: image.previewUrl,
+        width: image.width,
+        height: image.height,
+        progress: 0,
+        status: 'uploading',
+        error: '',
+      }))
       void uploadSelectedImage(image)
     } catch (chooseError) {
       Taro.showToast({
@@ -608,14 +639,12 @@ export default function DirectMessageChatPage() {
 
   const retrySelectedImage = () => {
     const image = selectedImageRef.current
-    if (!image || !image.localPath || sending) return
-    if (imageRecoveryAction === 'replace-image') {
-      Taro.showToast({ title: '图片未通过审核，请删除后更换图片', icon: 'none' })
-      return
-    }
+    if (!image || !image.localPath) return
     resetPendingSend()
-    if (imageRecoveryAction === 'retry-review' && image.mediaId) {
-      void retrySelectedImageReview(image)
+    if (imageRecoveryAction === 'send-image' && image.mediaId) {
+      const operationVersion = mediaOperationVersionRef.current + 1
+      mediaOperationVersionRef.current = operationVersion
+      void sendUploadedImage(image, image.mediaId, operationVersion)
       return
     }
     void uploadSelectedImage({
@@ -632,6 +661,7 @@ export default function DirectMessageChatPage() {
     resetPendingSend()
     resetImageRecoveryAction()
     updateSelectedImage(() => null)
+    updatePendingOutgoingImage(() => null)
   }
 
   const markMessageImageFailed = (messageId: number) => {
@@ -649,18 +679,14 @@ export default function DirectMessageChatPage() {
     ? '已注销用户'
     : conversation?.peer.nickname || '私信'
 
-  const imageReady = selectedImage?.status === 'uploaded' && Boolean(selectedImage.mediaId)
-  const canSend = Boolean(conversationId) && !sending && (imageReady || (!selectedImage && Boolean(draft.trim())))
+  const canSend = Boolean(conversationId) && !sending && Boolean(draft.trim())
   const pageClassName = [
     'direct-chat-page',
     stickerPickerOpen ? 'direct-chat-page--sticker-open' : '',
-    selectedImage ? 'direct-chat-page--image-selected' : '',
   ].filter(Boolean).join(' ')
 const contentBottomPadding = stickerPickerOpen
   ? '676rpx'
-  : selectedImage
-    ? '366rpx'
-    : '112rpx'
+  : '112rpx'
   const contentStyle = {
     paddingBottom: '0',
   }
@@ -710,7 +736,7 @@ const contentBottomPadding = stickerPickerOpen
                 </View>
               )}
               {!hasMore && messages.length > 0 && <View className='direct-chat-history'>已经是最早的消息</View>}
-              {messages.length === 0 && (
+              {messages.length === 0 && !pendingOutgoingImage && (
                 <View className='direct-chat-empty'>
                   <Text>还没有消息</Text>
                   <Text>发一句问候，开始聊天吧</Text>
@@ -719,7 +745,13 @@ const contentBottomPadding = stickerPickerOpen
               {messages.map((message, index) => {
                 const isOwn = message.sender_id === currentUserId
                 const image = message.image
-                const imageFailed = image && failedImageMessageIds.includes(message.id)
+                const imageState = (imageStateOverrides[message.id]
+                  || message.image_state?.state
+                  || (image ? 'available' : '')) as 'pending' | 'available' | 'rejected' | 'expired' | ''
+                const imageFailed = Boolean(image) && imageState === 'available' && failedImageMessageIds.includes(message.id)
+                const imagePending = imageState === 'pending'
+                const imageUnavailable = imageState === 'rejected' || imageState === 'expired'
+                const localPreview = sentImagePreviews[message.id]
                 const previousMessage = messages[index - 1]
                 const avatarName = isOwn
                   ? avatarFallback(currentUserName)
@@ -751,7 +783,7 @@ const contentBottomPadding = stickerPickerOpen
                         />
                       )}
                       <View className='direct-chat-message__body'>
-                        {image && !imageFailed && (
+                        {image && !imageFailed && !imagePending && !imageUnavailable && (
                           <View
                             className='direct-chat-message__image-frame'
                             style={privateMessageImageFrameSize(image.width, image.height)}
@@ -771,6 +803,36 @@ const contentBottomPadding = stickerPickerOpen
                             />
                           </View>
                         )}
+                        {imagePending && localPreview && (
+                          <View
+                            className='direct-chat-message__image-frame direct-chat-message__image-frame--pending'
+                            style={privateMessageImageFrameSize(localPreview.width, localPreview.height)}
+                            ariaLabel='图片消息'
+                          >
+                            <Image
+                              className='direct-chat-message__image'
+                              src={localPreview.previewUrl}
+                              mode='aspectFill'
+                              lazyLoad
+                            />
+                          </View>
+                        )}
+                        {imagePending && !localPreview && (
+                          <View
+                            className='direct-chat-message__image-fallback direct-chat-message__image-fallback--pending'
+                            ariaLabel='图片消息'
+                          >
+                            <Text>图片</Text>
+                          </View>
+                        )}
+                        {imageUnavailable && (
+                          <View
+                            className='direct-chat-message__image-fallback direct-chat-message__image-fallback--invalid'
+                            ariaLabel='图片已失效'
+                          >
+                            <Text>图片已失效</Text>
+                          </View>
+                        )}
                         {image && imageFailed && (
                           <View
                             className='direct-chat-message__image-fallback'
@@ -782,7 +844,7 @@ const contentBottomPadding = stickerPickerOpen
                             <Text>点击重新加载</Text>
                           </View>
                         )}
-                        {!image && (
+                        {!image && !imageState && (
                           <StickerContent
                             content={message.content}
                             className='direct-chat-message__content'
@@ -803,6 +865,76 @@ const contentBottomPadding = stickerPickerOpen
                   </View>
                 )
               })}
+              {pendingOutgoingImage && (
+                <View
+                  id={`direct-chat-pending-image-${pendingOutgoingImage.key}`}
+                  className='direct-chat-message-group direct-chat-message-group--pending'
+                >
+                  <View className='direct-chat-message direct-chat-message--own'>
+                    <View className='direct-chat-message__body'>
+                      <View
+                        className='direct-chat-message__image-frame direct-chat-message__image-frame--pending'
+                        style={privateMessageImageFrameSize(pendingOutgoingImage.width, pendingOutgoingImage.height)}
+                        ariaLabel='图片正在发送'
+                      >
+                        <Image
+                          className='direct-chat-message__image'
+                          src={pendingOutgoingImage.previewUrl}
+                          mode='aspectFill'
+                        />
+                        <View className='direct-chat-message__image-progress'>
+                          <Text>
+                            {pendingOutgoingImage.status === 'uploading'
+                              ? `上传中 ${Math.max(1, Math.round(pendingOutgoingImage.progress))}%`
+                              : pendingOutgoingImage.status === 'sending'
+                                ? '发送中'
+                                : pendingOutgoingImage.error || '图片发送失败'}
+                          </Text>
+                          {pendingOutgoingImage.status !== 'failed' && (
+                            <View className='direct-chat-message__image-progress-track'>
+                              <View
+                                className={pendingOutgoingImage.status === 'uploading'
+                                  ? 'direct-chat-message__image-progress-indicator direct-chat-message__image-progress-indicator--determinate'
+                                  : 'direct-chat-message__image-progress-indicator'}
+                                style={pendingOutgoingImage.status === 'uploading'
+                                  ? { width: `${Math.max(4, Math.min(100, pendingOutgoingImage.progress))}%` }
+                                  : undefined}
+                              />
+                            </View>
+                          )}
+                          {pendingOutgoingImage.status === 'failed' && (
+                            <View className='direct-chat-message__image-progress-actions'>
+                              <View
+                                className='direct-chat-message__image-progress-action direct-chat-message__image-progress-action--primary'
+                                ariaRole='button'
+                                ariaLabel='重试发送图片'
+                                onClick={retrySelectedImage}
+                              >
+                                重试
+                              </View>
+                              <View
+                                className='direct-chat-message__image-progress-action'
+                                ariaRole='button'
+                                ariaLabel='删除失败图片'
+                                onClick={removeSelectedImage}
+                              >
+                                删除
+                              </View>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                    <UserAvatar
+                      src={currentUserAvatarUrl}
+                      className='direct-chat-message__avatar'
+                      fallback={avatarFallback(currentUserName)}
+                      shape='rounded'
+                      userId={currentUserId}
+                    />
+                  </View>
+                </View>
+              )}
               <View className='direct-chat-bottom-spacer' style={bottomSpacerStyle} />
               <View id={bottomAnchorId} className='direct-chat-bottom-anchor' />
             </>
@@ -813,86 +945,52 @@ const contentBottomPadding = stickerPickerOpen
         className='direct-chat-composer'
         style={{ bottom: `${keyboardHeight}px` }}
       >
-        {selectedImage && (
-          <View className='direct-chat-composer__image-draft'>
-            <Image
-              className='direct-chat-composer__image-preview'
-              src={selectedImage.previewUrl}
-              mode='aspectFill'
-            />
-            <View className='direct-chat-composer__image-meta'>
-              <Text>{imageDraftStatus(selectedImage)}</Text>
-              {selectedImage.status === 'failed' && imageRecoveryAction !== 'replace-image' ? (
-                <View
-                  className='direct-chat-composer__image-action'
-                  ariaRole='button'
-                  ariaLabel='重试上传图片'
-                  onClick={retrySelectedImage}
-                >
-                  重试
-                </View>
-              ) : null}
-            </View>
-            <View
-              className='direct-chat-composer__image-remove'
-              ariaRole='button'
-              ariaLabel='删除待发送图片'
-              onClick={removeSelectedImage}
-            >
-              删除
-            </View>
-          </View>
-        )}
         <View className='direct-chat-composer__main'>
           <View className='direct-chat-composer__field'>
-            {selectedImage ? (
-              <Text className='direct-chat-composer__image-hint'>图片将单独发送</Text>
-            ) : (
-              <KeyboardSafeInput
-                value={draft}
-                focus={inputFocused}
-                maxlength={2000}
-                placeholder='输入消息'
-                placeholderClass='direct-chat-composer__placeholder'
-                confirmType='send'
-                keepVisibleOnKeyboard={false}
-                onFocus={() => {
-                  setInputFocused(true)
-                  setStickerPickerOpen(false)
-                }}
-                onBlur={() => setInputFocused(false)}
-                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                onInput={(event) => {
-                  const detail = event.detail as typeof event.detail & {
-                    cursor?: number
-                    selectionEnd?: number
-                    selectionStart?: number
-                  }
-                  const cursor = Number.isFinite(detail.cursor) ? Number(detail.cursor) : detail.value.length
-                  const selectionStart = Number.isFinite(detail.selectionStart)
-                    ? Number(detail.selectionStart)
-                    : cursor
-                  const selectionEnd = Number.isFinite(detail.selectionEnd)
-                    ? Number(detail.selectionEnd)
-                    : cursor
-                  draftSelectionStartRef.current = Math.max(0, selectionStart)
-                  draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
-                  updateDraft(detail.value)
-                }}
-                onSelectionChange={(event) => {
-                  const detail = event.detail as {
-                    selectionEnd?: number
-                    selectionStart?: number
-                  }
-                  const selectionStart = Number(detail.selectionStart)
-                  const selectionEnd = Number(detail.selectionEnd)
-                  if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
-                  draftSelectionStartRef.current = Math.max(0, selectionStart)
-                  draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
-                }}
-                onConfirm={() => void send()}
-              />
-            )}
+            <KeyboardSafeInput
+              value={draft}
+              focus={inputFocused}
+              maxlength={2000}
+              placeholder='输入消息'
+              placeholderClass='direct-chat-composer__placeholder'
+              confirmType='send'
+              keepVisibleOnKeyboard={false}
+              onFocus={() => {
+                setInputFocused(true)
+                setStickerPickerOpen(false)
+              }}
+              onBlur={() => setInputFocused(false)}
+              onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+              onInput={(event) => {
+                const detail = event.detail as typeof event.detail & {
+                  cursor?: number
+                  selectionEnd?: number
+                  selectionStart?: number
+                }
+                const cursor = Number.isFinite(detail.cursor) ? Number(detail.cursor) : detail.value.length
+                const selectionStart = Number.isFinite(detail.selectionStart)
+                  ? Number(detail.selectionStart)
+                  : cursor
+                const selectionEnd = Number.isFinite(detail.selectionEnd)
+                  ? Number(detail.selectionEnd)
+                  : cursor
+                draftSelectionStartRef.current = Math.max(0, selectionStart)
+                draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
+                updateDraft(detail.value)
+              }}
+              onSelectionChange={(event) => {
+                const detail = event.detail as {
+                  selectionEnd?: number
+                  selectionStart?: number
+                }
+                const selectionStart = Number(detail.selectionStart)
+                const selectionEnd = Number(detail.selectionEnd)
+                if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
+                draftSelectionStartRef.current = Math.max(0, selectionStart)
+                draftSelectionEndRef.current = Math.max(draftSelectionStartRef.current, selectionEnd)
+              }}
+              onConfirm={() => void send()}
+            />
           </View>
           <View
             className={stickerPickerOpen
@@ -909,11 +1007,11 @@ const contentBottomPadding = stickerPickerOpen
             />
           </View>
           <View
-            className={selectedImage
+            className={imageInFlight
               ? 'direct-chat-composer__image-trigger direct-chat-composer__image-trigger--disabled'
               : 'direct-chat-composer__image-trigger'}
             ariaRole='button'
-            ariaLabel={selectedImage ? '已选择图片，请先发送或删除' : '选择图片'}
+            ariaLabel={imageInFlight ? '图片正在自动发送，请稍候' : '选择图片'}
             onClick={() => void chooseImage()}
           >
             <Image
@@ -933,7 +1031,17 @@ const contentBottomPadding = stickerPickerOpen
               : !canSend ? '发送消息，当前不可用' : '发送消息'}
             onClick={sendFromButton}
           >
-            {sending ? '发送中' : '发送'}
+            <View className='direct-chat-composer__send-surface'>
+              {sending ? (
+                <View className='direct-chat-composer__send-spinner' />
+              ) : (
+                <Image
+                  className='direct-chat-composer__send-icon'
+                  src={require('../../../assets/community/send.svg')}
+                  mode='aspectFit'
+                />
+              )}
+            </View>
           </View>
         </View>
         <StickerPicker

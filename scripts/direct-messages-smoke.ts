@@ -19,14 +19,11 @@ import {
 } from '../src/features/direct-messages/pagination'
 import { resolvePendingDirectMessageSend } from '../src/features/direct-messages/composer'
 import { canRearmForegroundPrivateMessagePolling } from '../src/features/direct-messages/polling'
+import type { MediaView } from '../src/api/media'
 import {
-  pollPrivateMessageMediaReview,
   privateMessageImageFrameSize,
-  privateMessageMediaReviewBackoff,
-  privateMessageMediaRetryAction,
+  privateMessageMediaReviewMessage,
   privateMessageMediaReviewState,
-  PRIVATE_MESSAGE_MEDIA_REVIEW_MAX_ATTEMPTS,
-  PRIVATE_MESSAGE_MEDIA_REVIEW_MAX_BACKOFF_MS,
 } from '../src/features/direct-messages/media-review'
 
 const root = resolve(__dirname, '..')
@@ -168,10 +165,13 @@ assert.deepEqual(
   '选择另一张图片后必须生成新的幂等键',
 )
 
-const mediaForReview = (moderationStatus: 'checking' | 'passed' | 'manual_approved' | 'rejected' | 'error') => ({
+const mediaForReview = (
+  moderationStatus: MediaView['moderation_status'],
+  status: MediaView['status'] = 'ready',
+) => ({
   id: 44,
   purpose: 'private_message' as const,
-  status: 'ready' as const,
+  status,
   moderation_status: moderationStatus,
   version: 1,
   width: 1200,
@@ -179,14 +179,73 @@ const mediaForReview = (moderationStatus: 'checking' | 'passed' | 'manual_approv
 })
 assert.equal(privateMessageMediaReviewState('manual_approved'), 'passed')
 assert.equal(privateMessageMediaReviewState('manual_rejected'), 'rejected')
-assert.equal(privateMessageMediaRetryAction('error'), 'retry-review')
-assert.equal(privateMessageMediaRetryAction('rejected'), 'replace-image')
-assert.equal(privateMessageMediaReviewBackoff(0), 1_500)
-assert.equal(privateMessageMediaReviewBackoff(1), 3_000)
-assert.equal(privateMessageMediaReviewBackoff(20), PRIVATE_MESSAGE_MEDIA_REVIEW_MAX_BACKOFF_MS)
+const reviewStateCases: Array<{
+  name: string
+  moderationStatus: MediaView['moderation_status']
+  state: 'pending' | 'passed' | 'rejected'
+  message: string
+}> = [
+  {
+    name: 'pending',
+    moderationStatus: 'pending',
+    state: 'pending',
+    message: '图片正在提交审核',
+  },
+  {
+    name: 'checking',
+    moderationStatus: 'checking',
+    state: 'pending',
+    message: '图片审核中，请稍候',
+  },
+  {
+    name: 'manual review',
+    moderationStatus: 'manual_review',
+    state: 'pending',
+    message: '图片正在人工审核，请稍候',
+  },
+  {
+    name: 'error',
+    moderationStatus: 'error',
+    state: 'rejected',
+    message: '图片审核暂时失败，请重试',
+  },
+  {
+    name: 'rejected',
+    moderationStatus: 'rejected',
+    state: 'rejected',
+    message: '图片未通过审核，请更换后重试',
+  },
+  {
+    name: 'manual rejected',
+    moderationStatus: 'manual_rejected',
+    state: 'rejected',
+    message: '图片未通过审核，请更换后重试',
+  },
+  {
+    name: 'passed',
+    moderationStatus: 'passed',
+    state: 'passed',
+    message: '',
+  },
+  {
+    name: 'manual approved',
+    moderationStatus: 'manual_approved',
+    state: 'passed',
+    message: '',
+  },
+]
+reviewStateCases.forEach((test) => {
+  const media = mediaForReview(test.moderationStatus)
+  assert.equal(privateMessageMediaReviewState(media), test.state, `${test.name} state`)
+  assert.equal(privateMessageMediaReviewMessage(media), test.message, `${test.name} message`)
+})
+const expiredMedia = mediaForReview('passed', 'expired')
+assert.equal(privateMessageMediaReviewState(expiredMedia), 'rejected', '媒体过期后不得继续当作审核通过')
+assert.equal(privateMessageMediaReviewMessage(expiredMedia), '图片已失效')
 assert.deepEqual(privateMessageImageFrameSize(1200, 800), { width: '260rpx', height: '173rpx' })
 assert.deepEqual(privateMessageImageFrameSize(600, 1200), { width: '144rpx', height: '260rpx' })
 assert.deepEqual(privateMessageImageFrameSize(800, 800), { width: '260rpx', height: '260rpx' })
+assert.deepEqual(privateMessageImageFrameSize(0, 0), { width: '260rpx', height: '260rpx' }, '缺少尺寸时必须使用稳定方形占位')
 
 assert.equal(canRearmForegroundPrivateMessagePolling(true, 3, 3), true)
 assert.equal(canRearmForegroundPrivateMessagePolling(false, 3, 3), false)
@@ -231,8 +290,9 @@ assert.ok(repository.includes('idempotencyKey'), '发送消息必须带幂等键
 assert.ok(repository.includes('media_id: payload.mediaId'), '图片消息必须仅提交 media_id')
 assert.ok(generated.includes('GetPrivateMessageUnreadCount'), '生成类型缺少私信未读总数操作')
 assert.ok(generated.includes('ListPrivateMessages'), '生成类型缺少消息游标操作')
-assert.ok(generated.includes('SubmitPrivateMessageMediaReview'), '生成类型缺少私信图片审核操作')
 assert.ok(generated.includes('PrivateMessageImage'), '生成类型缺少私信图片结构')
+assert.ok(generated.includes('PrivateMessageImageState'), '生成类型缺少私信图片审核状态结构')
+assert.ok(generated.includes('image_state'), '生成类型缺少私信图片审核状态字段')
 assert.ok(generated.includes('private_message'), '生成类型缺少私信图片用途')
 assert.ok(appConfig.includes("'direct-messages/index'"), '完整版本必须注册私信会话页')
 assert.ok(appConfig.includes("'pages/direct-messages/index'"), '资格版排除清单必须包含私信会话页')
@@ -272,27 +332,32 @@ assert.ok(chatPage.includes("require('../../../assets/icons/smile.svg')"), '聊�
 assert.ok(chatPage.includes("require('../../../assets/icons/image.svg')"), '聊天图片入口必须使用既有 image 图标')
 assert.ok(chatPage.includes('chooseMediaImages({ count: 1 })'), '聊天图片入口必须限制为单图选择')
 assert.ok(chatPage.includes("purpose: 'private_message'"), '聊天图片必须使用私信媒体用途')
-assert.ok(chatPage.includes('submitPrivateMessageMediaReview(media.id)'), '上传完成后必须提交图片审核')
-assert.ok(chatPage.includes('pollPrivateMessageMediaReview'), '前台必须有限时轮询图片审核状态')
-assert.ok(chatPage.includes('onTransientLoadError'), '审核状态瞬时失败必须保留待审核状态并重试')
+assert.ok(chatPage.includes('await sendUploadedImage'), '图片上传完成后必须自动发送消息')
+assert.ok(chatPage.includes('pendingOutgoingImage'), '图片选择后必须先在消息流展示本地预览')
+assert.ok(chatPage.includes('image_state?.state'), '聊天页必须消费服务端图片审核状态')
+assert.ok(chatPage.includes('图片已失效'), '审核拒绝或媒体失效必须显示失效文案')
+assert.ok(!chatPage.includes('getMedia'), '聊天页不应自行查询媒体详情兼容旧服务端')
+assert.ok(!chatPage.includes('submitPrivateMessageMediaReview'), '聊天页不应调用旧版审核提交接口')
+assert.ok(!chatPage.includes('pollPrivateMessageMediaReview'), '聊天页不应主动轮询图片审核状态')
+assert.ok(!chatPage.includes('onTransientLoadError'), '聊天页不应为审核状态维护后台轮询')
+assert.ok(!chatPage.includes('审核中'), '发送成功后不应额外悬挂审核中卡片')
 assert.ok(chatPage.includes('Taro.previewImage'), '聊天图片必须支持点击预览')
 assert.ok(chatPage.includes("ariaLabel='预览图片消息'"), '聊天图片缩略图必须提供可访问预览名称')
 assert.ok(chatPage.includes('retryMessageImage(message.id)'), '聊天图片加载失败后必须支持刷新重试')
 assert.ok(chatPage.includes('void loadInitial(conversationIdRef.current)'), '图片刷新重试必须请求新的消息图片地址')
-assert.ok(chatPage.includes("imageRecoveryAction === 'retry-review' && image.mediaId"), '审核超时或临时错误必须复用已有 media_id 重试审核')
-assert.ok(chatPage.includes("imageRecoveryAction === 'replace-image'"), '审核驳回后必须要求更换图片')
-assert.ok(chatPage.includes("selectedImage ? 'direct-chat-page--image-selected'"), '图片待发送时必须为输入栏预留空间')
+assert.ok(chatPage.includes("state === 'rejected' || state === 'expired'"), '服务端直接返回失效态时不得展示图片预览')
+assert.ok(chatPage.includes('imageInFlight'), '图片发送中必须独立维护图片入口状态')
+assert.ok(chatPage.includes('!draft.trim() || sending || !conversationId'), '图片发送期间文字发送不得被阻塞')
+assert.ok(!chatPage.includes('图片将单独发送'), '图片发送期间不得替换文字输入提示')
+assert.ok(!chatPage.includes('direct-chat-composer__image-hint'), '图片发送期间不得隐藏文字输入框')
+assert.ok(!chatPage.includes('direct-chat-composer__image-draft'), '图片发送状态不得悬挂在输入区')
+assert.ok(chatPage.includes('direct-chat-message__image-progress-actions'), '图片发送失败状态必须留在消息流中')
 assert.ok(chatStyle.includes('.direct-chat-message__image-frame'), '聊天图片必须保持稳定比例容器')
 assert.ok(chatStyle.includes('.direct-chat-message__image-fallback'), '聊天图片加载失败必须有占位')
-assert.match(
-  chatStyle,
-  /\.direct-chat-composer__image-action,[\s\S]*?width: 88rpx;[\s\S]*?height: 88rpx;/u,
-  '图片草稿重试与删除按钮必须提供至少 88rpx 的点击热区',
-)
-assert.ok(mediaApi.includes('submitPrivateMessageMediaReview'), '媒体 API 必须封装私信审核提交')
+assert.ok(chatStyle.includes('.direct-chat-message__image-progress-action'), '图片发送失败操作必须提供明确的消息流操作样式')
 assert.ok(mediaApi.includes('getMedia'), '媒体 API 必须封装私信审核查询')
-assert.ok(mediaReview.includes('PRIVATE_MESSAGE_MEDIA_REVIEW_MAX_ATTEMPTS'), '图片审核轮询必须有次数上限')
-assert.ok(mediaReview.includes('PRIVATE_MESSAGE_MEDIA_REVIEW_MAX_BACKOFF_MS'), '图片审核轮询必须有退避上限')
+assert.ok(!mediaApi.includes('submitPrivateMessageMediaReview'), '媒体 API 不应暴露私信旧版审核提交接口')
+assert.ok(!mediaReview.includes('pollPrivateMessageMediaReview'), '审核状态工具不应提供前台轮询')
 assert.equal(
   (chatPage.match(/const version = initialRequestVersion\.current \+ 1/g) || []).length,
   1,
@@ -318,66 +383,4 @@ assert.ok(appSource.includes('privateMessageUnreadVisibleRef.current'), '未读�
 assert.ok(appSource.includes('privateMessageUnreadPollingGeneration.current'), '未读轮询必须使用可见性代际防止隐藏后重启')
 assert.ok(unreadSource.includes("resolveMiniappModule(getMiniappRuntimeConfig(), 'private_message').state !== 'enabled'"), '未启用私信模块不得请求未读接口')
 
-const verifyMediaReviewPolling = async () => {
-  const statuses = [
-    mediaForReview('checking'),
-    mediaForReview('manual_approved'),
-  ]
-  const observed: string[] = []
-  const result = await pollPrivateMessageMediaReview({
-    loadMedia: async () => statuses.shift() || mediaForReview('manual_approved'),
-    onMedia: (media) => observed.push(media.moderation_status),
-    isForeground: () => true,
-    wait: async () => undefined,
-  })
-  assert.equal(result.kind, 'passed')
-  assert.deepEqual(observed, ['checking', 'manual_approved'])
-
-  let transientAttempts = 0
-  const transientWaits: number[] = []
-  const transientErrors: number[] = []
-  const afterTransientFailure = await pollPrivateMessageMediaReview({
-    loadMedia: async () => {
-      transientAttempts += 1
-      if (transientAttempts === 1) throw new Error('temporary network error')
-      return mediaForReview('passed')
-    },
-    onMedia: () => undefined,
-    onTransientLoadError: (_error, attempt) => transientErrors.push(attempt),
-    isForeground: () => true,
-    wait: async (milliseconds) => { transientWaits.push(milliseconds) },
-  })
-  assert.equal(afterTransientFailure.kind, 'passed', '瞬时查询失败后应继续等待审核通过')
-  assert.equal(transientAttempts, 2)
-  assert.deepEqual(transientErrors, [1])
-  assert.deepEqual(transientWaits, [privateMessageMediaReviewBackoff(1)])
-
-  let exhaustedAttempts = 0
-  const exhausted = await pollPrivateMessageMediaReview({
-    loadMedia: async () => {
-      exhaustedAttempts += 1
-      throw new Error('temporary network error')
-    },
-    onMedia: () => undefined,
-    isForeground: () => true,
-    wait: async () => undefined,
-  })
-  assert.equal(exhausted.kind, 'timeout', '仅在查询次数耗尽后才将审核视为超时')
-  assert.equal(exhaustedAttempts, PRIVATE_MESSAGE_MEDIA_REVIEW_MAX_ATTEMPTS)
-
-  let loadedWhenBackground = false
-  const cancelled = await pollPrivateMessageMediaReview({
-    loadMedia: async () => {
-      loadedWhenBackground = true
-      return mediaForReview('passed')
-    },
-    onMedia: () => undefined,
-    isForeground: () => false,
-    wait: async () => undefined,
-  })
-  assert.equal(cancelled.kind, 'cancelled')
-  assert.equal(loadedWhenBackground, false, '离开前台后不得继续请求审核状态')
-  console.log('direct messages smoke: ok')
-}
-
-void verifyMediaReviewPolling()
+console.log('direct messages smoke: ok')
