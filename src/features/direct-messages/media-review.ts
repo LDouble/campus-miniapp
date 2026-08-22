@@ -15,16 +15,6 @@ export const privateMessageMediaReviewState = (
   return 'pending'
 }
 
-export const privateMessageMediaRetryAction = (
-  input: PrivateMessageMediaReviewInput,
-) => (
-  (typeof input !== 'string' && (input.status === 'deleting' || input.status === 'expired'))
-    || (typeof input === 'string' && (input === 'rejected' || input === 'manual_rejected'))
-    || (typeof input !== 'string' && (input.moderation_status === 'rejected' || input.moderation_status === 'manual_rejected'))
-    ? 'replace-image'
-    : 'retry-review'
-)
-
 export const privateMessageMediaReviewMessage = (media: MediaView) => {
   if (media.status === 'deleting' || media.status === 'expired') return '图片已失效'
   if (media.moderation_status === 'manual_review') return '图片正在人工审核，请稍候'

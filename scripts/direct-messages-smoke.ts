@@ -23,7 +23,6 @@ import type { MediaView } from '../src/api/media'
 import {
   privateMessageImageFrameSize,
   privateMessageMediaReviewMessage,
-  privateMessageMediaRetryAction,
   privateMessageMediaReviewState,
 } from '../src/features/direct-messages/media-review'
 
@@ -180,81 +179,68 @@ const mediaForReview = (
 })
 assert.equal(privateMessageMediaReviewState('manual_approved'), 'passed')
 assert.equal(privateMessageMediaReviewState('manual_rejected'), 'rejected')
-assert.equal(privateMessageMediaRetryAction('error'), 'retry-review')
-assert.equal(privateMessageMediaRetryAction('rejected'), 'replace-image')
 const reviewStateCases: Array<{
   name: string
   moderationStatus: MediaView['moderation_status']
   state: 'pending' | 'passed' | 'rejected'
-  action: 'retry-review' | 'replace-image'
   message: string
 }> = [
   {
     name: 'pending',
     moderationStatus: 'pending',
     state: 'pending',
-    action: 'retry-review',
     message: '图片正在提交审核',
   },
   {
     name: 'checking',
     moderationStatus: 'checking',
     state: 'pending',
-    action: 'retry-review',
     message: '图片审核中，请稍候',
   },
   {
     name: 'manual review',
     moderationStatus: 'manual_review',
     state: 'pending',
-    action: 'retry-review',
     message: '图片正在人工审核，请稍候',
   },
   {
     name: 'error',
     moderationStatus: 'error',
     state: 'rejected',
-    action: 'retry-review',
     message: '图片审核暂时失败，请重试',
   },
   {
     name: 'rejected',
     moderationStatus: 'rejected',
     state: 'rejected',
-    action: 'replace-image',
     message: '图片未通过审核，请更换后重试',
   },
   {
     name: 'manual rejected',
     moderationStatus: 'manual_rejected',
     state: 'rejected',
-    action: 'replace-image',
     message: '图片未通过审核，请更换后重试',
   },
   {
     name: 'passed',
     moderationStatus: 'passed',
     state: 'passed',
-    action: 'retry-review',
     message: '',
   },
   {
     name: 'manual approved',
     moderationStatus: 'manual_approved',
     state: 'passed',
-    action: 'retry-review',
     message: '',
   },
 ]
 reviewStateCases.forEach((test) => {
   const media = mediaForReview(test.moderationStatus)
   assert.equal(privateMessageMediaReviewState(media), test.state, `${test.name} state`)
-  assert.equal(privateMessageMediaRetryAction(media), test.action, `${test.name} action`)
   assert.equal(privateMessageMediaReviewMessage(media), test.message, `${test.name} message`)
 })
 const expiredMedia = mediaForReview('passed', 'expired')
 assert.equal(privateMessageMediaReviewState(expiredMedia), 'rejected', '媒体过期后不得继续当作审核通过')
-assert.equal(privateMessageMediaRetryAction(expiredMedia), 'replace-image', '媒体过期后必须更换图片')
 assert.equal(privateMessageMediaReviewMessage(expiredMedia), '图片已失效')
 assert.deepEqual(privateMessageImageFrameSize(1200, 800), { width: '260rpx', height: '173rpx' })
 assert.deepEqual(privateMessageImageFrameSize(600, 1200), { width: '144rpx', height: '260rpx' })
@@ -304,7 +290,6 @@ assert.ok(repository.includes('idempotencyKey'), '发送消息必须带幂等键
 assert.ok(repository.includes('media_id: payload.mediaId'), '图片消息必须仅提交 media_id')
 assert.ok(generated.includes('GetPrivateMessageUnreadCount'), '生成类型缺少私信未读总数操作')
 assert.ok(generated.includes('ListPrivateMessages'), '生成类型缺少消息游标操作')
-assert.ok(generated.includes('SubmitPrivateMessageMediaReview'), '生成类型缺少私信图片审核操作')
 assert.ok(generated.includes('PrivateMessageImage'), '生成类型缺少私信图片结构')
 assert.ok(generated.includes('PrivateMessageImageState'), '生成类型缺少私信图片审核状态结构')
 assert.ok(generated.includes('image_state'), '生成类型缺少私信图片审核状态字段')
@@ -338,16 +323,15 @@ assert.ok(chatPage.includes('await sendUploadedImage'), '图片上传完成后�
 assert.ok(chatPage.includes('pendingOutgoingImage'), '图片选择后必须先在消息流展示本地预览')
 assert.ok(chatPage.includes('image_state?.state'), '聊天页必须消费服务端图片审核状态')
 assert.ok(chatPage.includes('图片已失效'), '审核拒绝或媒体失效必须显示失效文案')
-assert.ok(chatPage.includes('submitPrivateMessageMediaReview(mediaId)'), '旧服务端拒绝待审图片时必须兼容原审核接口')
+assert.ok(!chatPage.includes('getMedia'), '聊天页不应自行查询媒体详情兼容旧服务端')
+assert.ok(!chatPage.includes('submitPrivateMessageMediaReview'), '聊天页不应调用旧版审核提交接口')
 assert.ok(!chatPage.includes('pollPrivateMessageMediaReview'), '聊天页不应主动轮询图片审核状态')
 assert.ok(!chatPage.includes('onTransientLoadError'), '聊天页不应为审核状态维护后台轮询')
 assert.ok(!chatPage.includes('审核中'), '发送成功后不应额外悬挂审核中卡片')
-assert.ok(chatPage.includes('图片已提交审核，请稍后手动重试'), '旧服务端待审图片必须改为手动重试')
 assert.ok(chatPage.includes('Taro.previewImage'), '聊天图片必须支持点击预览')
 assert.ok(chatPage.includes("ariaLabel='预览图片消息'"), '聊天图片缩略图必须提供可访问预览名称')
 assert.ok(chatPage.includes('retryMessageImage(message.id)'), '聊天图片加载失败后必须支持刷新重试')
 assert.ok(chatPage.includes('void loadInitial(conversationIdRef.current)'), '图片刷新重试必须请求新的消息图片地址')
-assert.ok(chatPage.includes("imageRecoveryAction === 'retry-review' && image.mediaId"), '审核超时或临时错误必须复用已有 media_id 重试审核')
 assert.ok(chatPage.includes("imageRecoveryAction === 'replace-image'"), '审核驳回后必须要求更换图片')
 assert.ok(chatPage.includes("state === 'rejected' || state === 'expired'"), '服务端直接返回失效态时不得展示图片预览')
 assert.ok(chatPage.includes("selectedImage ? 'direct-chat-page--image-selected'"), '图片待发送时必须为输入栏预留空间')
@@ -358,8 +342,8 @@ assert.match(
   /\.direct-chat-composer__image-action,[\s\S]*?width: 88rpx;[\s\S]*?height: 88rpx;/u,
   '图片草稿重试与删除按钮必须提供至少 88rpx 的点击热区',
 )
-assert.ok(mediaApi.includes('submitPrivateMessageMediaReview'), '媒体 API 必须封装私信审核提交')
 assert.ok(mediaApi.includes('getMedia'), '媒体 API 必须封装私信审核查询')
+assert.ok(!mediaApi.includes('submitPrivateMessageMediaReview'), '媒体 API 不应暴露私信旧版审核提交接口')
 assert.ok(!mediaReview.includes('pollPrivateMessageMediaReview'), '审核状态工具不应提供前台轮询')
 assert.equal(
   (chatPage.match(/const version = initialRequestVersion\.current \+ 1/g) || []).length,
