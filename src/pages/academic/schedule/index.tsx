@@ -10,6 +10,7 @@ import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
 import {
   getMiniappRuntimeConfig,
+  getSectionEndTime,
   getSectionStartTime,
   getSelectedCampus,
   loadMiniappRuntimeConfig,
@@ -43,6 +44,7 @@ import {
 } from '../types'
 import {
   courseColors,
+  formatCourseTimeRange,
   formatCourseWeeks,
   formatPeriodStartDate,
   formatMonthDay,
@@ -137,6 +139,7 @@ const emptyDraft = (periodId: string): CustomCourseDraft => ({
 interface CourseDetailCardProps {
   course: Course
   currentWeek: number
+  timeRange: string
   onEdit?: () => void
   onDelete?: () => void
   onWanted: () => void
@@ -148,6 +151,7 @@ const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(w
 function CourseDetailCard({
   course,
   currentWeek,
+  timeRange,
   onEdit,
   onDelete,
   onWanted,
@@ -174,6 +178,7 @@ function CourseDetailCard({
           </Text>
         </View>
         <View className='course-conflict-card__details'>
+          <View><Text>时间</Text><Text>{timeRange || `第 ${course.startSection}-${course.endSection} 节`}</Text></View>
           <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
@@ -270,9 +275,22 @@ export default function SchedulePage() {
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
-  const sectionTimes = Array.from({ length: 12 }, (_, index) => (
-    getSectionStartTime(runtimeConfig, campusName, index + 1)
-  ))
+  const sectionTimes = Array.from({ length: 12 }, (_, index) => ({
+    start: getSectionStartTime(runtimeConfig, campusName, index + 1),
+    end: getSectionEndTime(runtimeConfig, campusName, index + 1),
+  }))
+  const getCourseTimeRange = (course: Course) => formatCourseTimeRange(
+    getSectionStartTime(
+      runtimeConfig,
+      course.campus || campusName,
+      course.startSection,
+    ),
+    getSectionEndTime(
+      runtimeConfig,
+      course.campus || campusName,
+      course.endSection,
+    ),
+  )
   const weekDates = getWeekDates(schedulePeriod, preferences.week)
   const officialCourses = getCoursesForPeriod(
     officialCoursesByPeriod,
@@ -810,12 +828,14 @@ export default function SchedulePage() {
       <View className='timetable__body'>
         {sectionTimes.map((time, index) => (
           <View
-            key={time}
+            key={`section-time-${index + 1}`}
             className='timetable__time'
             style={{ gridColumn: '1', gridRow: String(index + 1) }}
+            ariaLabel={`${time.start || ''} 第${index + 1}节 ${time.end || ''}`}
           >
-            <Text>{index + 1}</Text>
-            <Text>{time}</Text>
+            <Text className='timetable__time-start'>{time.start}</Text>
+            <Text className='timetable__time-section'>{index + 1}</Text>
+            <Text className='timetable__time-end'>{time.end}</Text>
           </View>
         ))}
         {Array.from({ length: 84 }, (_, index) => {
@@ -953,14 +973,7 @@ export default function SchedulePage() {
                 onClick={() => openCourse(course)}
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
-                <View className='day-course__time'>
-                  <Text>
-                    {getSectionStartTime(
-                      runtimeConfig,
-                      course.campus || campusName,
-                      course.startSection,
-                    )}
-                  </Text>
+                <View className='day-course__sections'>
                   <Text>第 {course.startSection}-{course.endSection} 节</Text>
                 </View>
                 <View className='day-course__main'>
@@ -1063,6 +1076,7 @@ export default function SchedulePage() {
                   key={getCourseScheduleKey(activeCourse)}
                   course={activeCourse}
                   currentWeek={preferences.week}
+                  timeRange={getCourseTimeRange(activeCourse)}
                   onDelete={() => deleteCourse(activeCourse)}
                   onEdit={() => openCourseForm(activeCourse)}
                   onWanted={() => openCourseTrade(activeCourse)}
@@ -1237,7 +1251,14 @@ export default function SchedulePage() {
       <AcademicHeader title='课程表' toolbar={toolbar} variant='schedule' />
       <View
         key={preferences.schedulePeriodId}
-        className={`academic-content academic-content--schedule academic-content--schedule-${preferences.scheduleView}`}
+        className={[
+          'academic-content',
+          'academic-content--schedule',
+          `academic-content--schedule-${preferences.scheduleView}`,
+          showRefreshGuide && !loading && !sheet
+            ? 'academic-content--schedule-guide-visible'
+            : '',
+        ].filter(Boolean).join(' ')}
       >
         {showRefreshGuide && !loading && !sheet && (
           <View

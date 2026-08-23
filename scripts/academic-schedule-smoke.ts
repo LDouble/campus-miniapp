@@ -10,7 +10,12 @@ import {
   setCoursesForPeriod,
 } from '../src/pages/academic/schedule-courses'
 import { Course } from '../src/pages/academic/types'
-import { formatCourseWeeks, resolveHorizontalSwipeWeek } from '../src/pages/academic/utils'
+import {
+  courseColorForClass,
+  formatCourseTimeRange,
+  formatCourseWeeks,
+  resolveHorizontalSwipeWeek,
+} from '../src/pages/academic/utils'
 
 const course = (id: string, periodId: string): Course => ({
   id,
@@ -46,6 +51,10 @@ const academicStyleSource = readFileSync(
   resolve(__dirname, '../src/pages/academic/index.scss'),
   'utf8',
 )
+const runtimeConfigSource = readFileSync(
+  resolve(__dirname, '../src/features/runtime-config/index.ts'),
+  'utf8',
+)
 
 assert.match(
   academicSchemaSource,
@@ -58,6 +67,12 @@ assert.match(
   '教务课表接口必须声明全局课表备注字段',
 )
 assert.match(academicRepositorySource, /note:\s*course\.note/u, '课程映射必须保留课程备注')
+assert.match(academicRepositorySource, /class_num/u, '课程颜色映射必须优先读取 class_num')
+assert.doesNotMatch(
+  academicRepositorySource,
+  /stableColor\(course\.id\)/u,
+  '课程颜色不得再根据课程 id 计算',
+)
 assert.match(
   academicRepositorySource,
   /scheduleNote:\s*result\.scheduleNote/u,
@@ -77,6 +92,32 @@ assert.match(
   schedulePageSource,
   /className='course-conflict-card__note'/u,
   '课程详情浮层必须展示课程备注',
+)
+assert.match(schedulePageSource, /getSectionEndTime/u, '课程表必须读取结束时间')
+assert.doesNotMatch(schedulePageSource, /timetable-course__time/u, '周课表课程卡片不应展示上课时间')
+assert.match(schedulePageSource, /className='timetable__time-start'/u, '左侧节次栏必须展示开始时间')
+assert.match(schedulePageSource, /className='timetable__time-section'/u, '左侧节次栏必须展示节次')
+assert.match(schedulePageSource, /className='timetable__time-end'/u, '左侧节次栏必须展示结束时间')
+assert.doesNotMatch(schedulePageSource, /className='timetable__time-range'/u, '左侧节次栏不应展示箭头时间区间')
+assert.match(runtimeConfigSource, /export const getSectionEndTime/u, '运行时配置必须提供节次结束时间')
+assert.equal(
+  formatCourseTimeRange('08:00', '09:40'),
+  '08:00 -> 09:40',
+  '课程时间应展示开始到结束的区间',
+)
+assert.equal(
+  formatCourseTimeRange('', '09:40'),
+  '',
+  '缺少任一端时间时应安全回退',
+)
+const primaryClassColor = courseColorForClass('class-101')
+const differentClassNumber = ['class-102', 'class-103', 'class-104']
+  .find((classNumber) => courseColorForClass(classNumber) !== primaryClassColor)
+assert.ok(differentClassNumber, '不同 class_num 至少应能产生可区分的课程颜色')
+assert.equal(
+  courseColorForClass('class-101'),
+  primaryClassColor,
+  '同一 class_num 必须保持稳定课程颜色',
 )
 assert.match(
   academicStyleSource,

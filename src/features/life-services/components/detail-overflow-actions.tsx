@@ -63,6 +63,7 @@ export default function DetailOverflowActions({
           {actions.map((action) => (
             <View
               key={action.key}
+              id={`detail-action-${action.key}`}
               className={[
                 'detail-overflow-actions__item',
                 `detail-overflow-actions__item--${action.emphasis || 'secondary'}`,

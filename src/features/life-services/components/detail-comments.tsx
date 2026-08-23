@@ -1714,6 +1714,7 @@ export default function DetailComments({
                 {actions.map((action) => (
                   <View
                     key={action.key}
+                    id={`detail-action-${action.key}`}
                     className={[
                       'business-detail-composer__action',
                       `business-detail-composer__action--${action.emphasis || 'secondary'}`,

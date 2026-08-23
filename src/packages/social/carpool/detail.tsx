@@ -239,7 +239,7 @@ export default function CarpoolDetailPage() {
   }) : []
   const { inlineActions, overflowActions } = splitDetailActions(
     footerActions,
-    ['edit', 'cancel'],
+    ['cancel'],
   )
 
   return (

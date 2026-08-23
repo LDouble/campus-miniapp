@@ -12,6 +12,14 @@ export const courseColors = [
   'rose', 'peach', 'lemon', 'sage', 'indigo', 'coral',
 ]
 
+export const courseColorForClass = (classNum: string | number) => {
+  const normalized = String(classNum).trim()
+  const hash = [...normalized].reduce((value, character) => (
+    ((value * 31) + character.charCodeAt(0)) >>> 0
+  ), 0)
+  return courseColors[hash % courseColors.length]
+}
+
 export const pad = (value: number) => String(value).padStart(2, '0')
 
 export const parseDate = (value: string) => new Date(value.replace(/-/g, '/'))
@@ -65,6 +73,12 @@ export const formatExamDate = (value: string) => {
 export const formatExamTime = (startAt: string, endAt: string) => (
   `${startAt.slice(-5)} - ${endAt.slice(-5)}`
 )
+
+export const formatCourseTimeRange = (startTime: string, endTime: string) => {
+  const start = startTime.trim()
+  const end = endTime.trim()
+  return start && end ? `${start} -> ${end}` : ''
+}
 
 export const getPeriodLabel = (periods: AcademicPeriod[], id: string) => (
   periods.find((period) => period.id === id)?.label || '选择学期'

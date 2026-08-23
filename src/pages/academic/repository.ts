@@ -21,13 +21,21 @@ import {
   ExamRecord,
   GradeRecord,
 } from './types'
-import { courseColors, pad } from './utils'
+import { courseColorForClass, pad } from './utils'
 
-const stableColor = (id: string) => {
-  const hash = [...id].reduce((value, character) => (
-    ((value * 31) + character.charCodeAt(0)) >>> 0
-  ), 0)
-  return courseColors[hash % courseColors.length]
+type AcademicCourseWithClassNumber = AcademicCourse & {
+  class_num?: string | number | null
+  classNum?: string | number | null
+}
+
+const getCourseClassNumber = (
+  course: AcademicCourse,
+  index: number,
+) => {
+  const raw = course as AcademicCourseWithClassNumber
+  const candidate = [raw.class_num, raw.classNum, course.course_code, course.name]
+    .find((value) => value !== null && value !== undefined && String(value).trim())
+  return String(candidate ?? `course-${index + 1}`).trim()
 }
 
 const formatDateTime = (value?: string | null) => {
@@ -46,22 +54,26 @@ const mapPeriod = (period: AcademicPeriodDTO): AcademicPeriod => ({
   isCurrent: period.is_current,
 })
 
-const mapCourse = (course: AcademicCourse): Course => ({
-  id: course.id,
-  periodId: course.period_id,
-  courseCode: course.course_code,
-  name: course.name,
-  note: course.note,
-  teacher: course.teacher,
-  location: course.location,
-  campus: course.campus,
-  weekday: course.weekday,
-  startSection: course.start_section,
-  endSection: course.end_section,
-  weeks: [...course.weeks],
-  color: stableColor(course.id),
-  source: 'official',
-})
+const mapCourse = (course: AcademicCourse, index = 0): Course => {
+  const classNum = getCourseClassNumber(course, index)
+  return {
+    id: course.id,
+    periodId: course.period_id,
+    courseCode: course.course_code,
+    classNum,
+    name: course.name,
+    note: course.note,
+    teacher: course.teacher,
+    location: course.location,
+    campus: course.campus,
+    weekday: course.weekday,
+    startSection: course.start_section,
+    endSection: course.end_section,
+    weeks: [...course.weeks],
+    color: courseColorForClass(classNum),
+    source: 'official',
+  }
+}
 
 const mapGrade = (grade: AcademicGrade): GradeRecord => ({
   id: grade.id,
