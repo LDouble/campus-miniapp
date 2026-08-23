@@ -192,11 +192,13 @@ page {
 }
 
 .academic-toolbar--schedule {
+  box-sizing: border-box;
   width: 100%;
   justify-content: center;
+  align-items: center;
   gap: 10rpx;
   min-height: 64rpx;
-  transform: translateX(-10rpx);
+  padding: 0 4rpx;
 
   .academic-toolbar__period {
     display: flex;
@@ -223,10 +225,23 @@ page {
   }
 
   .academic-view-toggle {
+    box-sizing: border-box;
+    flex-direction: row;
+    gap: 4rpx;
     width: 58rpx;
     height: 56rpx;
     padding: 0;
     border-radius: 16rpx;
+
+    &__icon {
+      flex: none;
+    }
+
+    text {
+      display: flex;
+      align-items: center;
+      line-height: 1;
+    }
   }
 }
 
@@ -324,14 +339,28 @@ page {
   padding: 26rpx 24rpx 0;
 
   &--schedule {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     height: calc(100vh - 168rpx);
-    padding: 0;
+    padding: var(--ousea-space-2, 24rpx) 0 0;
     overflow: hidden;
   }
 
   &--schedule-day {
-    padding: 18rpx 22rpx 0;
+    padding: var(--ousea-space-2, 24rpx) 22rpx 0;
     overflow-y: auto;
+  }
+
+  &--schedule-guide-visible {
+    padding-top: 80rpx;
+  }
+
+  &--schedule > .timetable,
+  &--schedule > .day-schedule {
+    height: auto;
+    min-height: 0;
+    flex: 1;
   }
 }
 
@@ -507,20 +536,29 @@ page {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2rpx;
     color: #869b9f;
     background: rgba(255, 250, 244, 0.94);
     border-right: 2rpx solid rgba(167, 118, 91, 0.08);
     border-bottom: 2rpx solid rgba(167, 118, 91, 0.07);
 
-    text:first-child {
-      margin-bottom: 3rpx;
-      color: #55747b;
-      font-size: 24rpx;
-      font-weight: 700;
+    > text {
+      display: block;
+      max-width: 100%;
+      line-height: 1.05;
+      white-space: nowrap;
     }
 
-    text:last-child {
-      font-size: 18rpx;
+    &-start,
+    &-end {
+      color: var(--ousea-ink-500, #6b7a90);
+      font-size: var(--ousea-font-size-badge, 20rpx);
+    }
+
+    &-section {
+      color: #55747b;
+      font-size: var(--ousea-font-size-caption, 24rpx);
+      font-weight: 700;
     }
   }
 
@@ -583,11 +621,21 @@ page {
   }
 
   &__name,
-  &__location {
+  &__location,
+  &__time {
     display: -webkit-box;
     overflow: hidden;
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
+  }
+
+  &__time {
+    flex: none;
+    margin-bottom: 3rpx;
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &--conflict {
@@ -3012,7 +3060,9 @@ page {
   &__date--selected { color: var(--campus-primary-strong, #155dfc); background: var(--campus-surface-primary, #eff6ff); }
   &__date--selected::after { background: var(--campus-primary, #2b7fff); }
   &__time { color: var(--campus-text-muted, #90a1b9); background: #fbfdff; border-color: var(--campus-border, #e8eef6); }
-  &__time text:first-child { color: var(--campus-text-body, #45556c); }
+  &__time-start,
+  &__time-end { color: var(--campus-text-muted, #90a1b9); }
+  &__time-section { color: var(--campus-text-body, #45556c); font-weight: 700; }
   &__cell { border-color: var(--campus-border, #edf2f7); }
   &__cell--conflict { background: #fff5f5; }
 }
@@ -3022,6 +3072,7 @@ page {
   box-shadow: 0 5rpx 12rpx rgba(30, 64, 110, .06);
 
   &__name { -webkit-line-clamp: 3; }
+  &__time { color: var(--ousea-ink-500, #6b7a90); }
   &__location { -webkit-line-clamp: 2; }
   &__related-count { background: var(--campus-primary, #2b7fff); }
   &--inactive { color: var(--campus-text-secondary, #62748e); background: var(--campus-border, #f1f5f9); border-color: #e2e8f0; }
@@ -3040,8 +3091,12 @@ page {
   border-color: var(--campus-border, #edf2f7);
   box-shadow: 0 11rpx 28rpx rgba(15, 23, 42, .045);
 
-  &__time text:first-child,
+  &__time > text:first-child,
   &__name { color: var(--campus-text-heading, #1d293d); }
+  &__time text:first-child {
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    white-space: nowrap;
+  }
   &__time text:last-child,
   &__meta,
   &__status { color: var(--campus-text-muted, #90a1b9); }

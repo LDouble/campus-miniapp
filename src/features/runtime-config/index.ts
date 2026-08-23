@@ -531,6 +531,15 @@ export const getSectionStartTime = (
   return item ? item.start : ''
 }
 
+export const getSectionEndTime = (
+  config: MiniappRuntimeConfig,
+  campusName: string,
+  section: number,
+) => {
+  const item = getCampusSections(config, campusName)[String(section)]
+  return item ? item.end : ''
+}
+
 export const activeBanners = (
   config: MiniappRuntimeConfig,
   campusName: string,

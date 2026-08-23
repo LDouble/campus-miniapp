@@ -134,14 +134,23 @@ export function AcademicCacheNotice({
   localFallback = false,
 }: AcademicCacheNoticeProps) {
   const [now, setNow] = useState(Date.now)
-  const [visibleUpdatedAt, setVisibleUpdatedAt] = useState(updatedAt)
   const notice = resolveAcademicCacheNotice({
     cache,
-    updatedAt: visibleUpdatedAt,
+    updatedAt,
     localUpdatedAt,
     localFallback,
     now,
   })
+  const hasNotice = Boolean(notice)
+  const noticeSourceKey = [
+    cache?.state || '',
+    cache?.cached_at || '',
+    cache?.fresh_until || '',
+    updatedAt,
+    localUpdatedAt,
+    localFallback ? 'fallback' : '',
+  ].join('|')
+  const [isNoticeVisible, setIsNoticeVisible] = useState(hasNotice)
   const refreshAt = notice?.kind === 'fresh' ? notice.refreshAt : undefined
 
   useEffect(() => {
@@ -151,15 +160,18 @@ export function AcademicCacheNotice({
   }, [refreshAt])
 
   useEffect(() => {
-    setVisibleUpdatedAt(updatedAt)
-    if (!updatedAt) return undefined
+    if (!hasNotice) {
+      setIsNoticeVisible(false)
+      return undefined
+    }
+    setIsNoticeVisible(true)
     const timer = setTimeout(() => {
-      setVisibleUpdatedAt((current) => current === updatedAt ? 0 : current)
+      setIsNoticeVisible(false)
     }, UPDATED_NOTICE_DURATION)
     return () => clearTimeout(timer)
-  }, [updatedAt])
+  }, [hasNotice, noticeSourceKey])
 
-  if (!notice) return null
+  if (!notice || !isNoticeVisible) return null
   return (
     <View className={`academic-cache-notice academic-cache-notice--${notice.kind}`}>
       <View />

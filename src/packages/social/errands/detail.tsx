@@ -249,7 +249,7 @@ export default function ErrandDetailPage() {
   }) : []
   const { inlineActions, overflowActions } = splitDetailActions(
     footerActions,
-    ['edit', 'cancel'],
+    ['cancel'],
   )
 
   return (

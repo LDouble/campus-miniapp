@@ -18,6 +18,7 @@ export interface Course {
   id: string
   periodId: string
   courseCode?: string
+  classNum?: string
   name: string
   note?: string
   teacher: string

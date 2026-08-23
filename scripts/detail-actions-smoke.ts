@@ -47,16 +47,28 @@ const overflowSource = fs.readFileSync(
   path.join(root, 'src/features/life-services/components/detail-overflow-actions.tsx'),
   'utf8',
 )
+const commentsSource = fs.readFileSync(
+  path.join(root, 'src/features/life-services/components/detail-comments.tsx'),
+  'utf8',
+)
 
 assert.match(overflowSource, /actions\.map\(\(action\) =>/)
+assert.ok(
+  overflowSource.includes('id={`detail-action-${action.key}`}'),
+  '详情溢出菜单必须为每个操作提供稳定的点击标识',
+)
+assert.ok(
+  commentsSource.includes('id={`detail-action-${action.key}`}'),
+  '详情底部操作必须为每个操作提供稳定的点击标识',
+)
 assert.doesNotMatch(overflowSource, /actions\.slice\(/)
 assert.match(overflowSource, /useDismissCommunityOverlaysOnScroll/)
 assert.match(overflowSource, /if \(action\.busy\) return/)
 
 for (const [detailPath, overflowKeys] of [
-  ['src/packages/social/errands/detail.tsx', "['edit', 'cancel']"],
-  ['src/packages/social/carpool/detail.tsx', "['edit', 'cancel']"],
-  ['src/packages/social/marketplace/detail.tsx', "['edit', 'withdraw']"],
+  ['src/packages/social/errands/detail.tsx', "['cancel']"],
+  ['src/packages/social/carpool/detail.tsx', "['cancel']"],
+  ['src/packages/social/marketplace/detail.tsx', "['withdraw']"],
 ] as const) {
   const source = fs.readFileSync(path.join(root, detailPath), 'utf8')
   assert.match(source, /<DetailOverflowActions actions=\{overflowActions\} \/>/)
@@ -65,6 +77,13 @@ for (const [detailPath, overflowKeys] of [
   assert.match(source, /actions=\{inlineActions\}/)
   assert.match(source, /className='detail-overview__report'/)
   assert.doesNotMatch(source, /key: 'report'/)
+  if (detailPath.includes('marketplace')) {
+    assert.match(
+      source,
+      /mode=edit&id=\$\{item\.id\}/u,
+      '闲置详情必须将编辑操作带到编辑发布页',
+    )
+  }
 }
 
 console.log('detail action resolver smoke passed')
