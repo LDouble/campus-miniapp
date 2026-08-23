@@ -68,7 +68,7 @@ assert.match(overflowSource, /if \(action\.busy\) return/)
 for (const [detailPath, overflowKeys] of [
   ['src/packages/social/errands/detail.tsx', "['cancel']"],
   ['src/packages/social/carpool/detail.tsx', "['cancel']"],
-  ['src/packages/social/marketplace/detail.tsx', "['withdraw']"],
+  ['src/packages/social/marketplace/detail.tsx', "['edit', 'withdraw']"],
 ] as const) {
   const source = fs.readFileSync(path.join(root, detailPath), 'utf8')
   assert.match(source, /<DetailOverflowActions actions=\{overflowActions\} \/>/)

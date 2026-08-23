@@ -256,7 +256,7 @@ export default function MarketplaceDetailPage() {
   }) : []
   const { inlineActions, overflowActions } = splitDetailActions(
     footerActions,
-    ['withdraw'],
+    ['edit', 'withdraw'],
   )
 
   return (
