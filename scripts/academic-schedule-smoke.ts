@@ -94,7 +94,7 @@ assert.match(
   '课程详情浮层必须展示课程备注',
 )
 assert.match(schedulePageSource, /getSectionEndTime/u, '课程表必须读取结束时间')
-assert.match(schedulePageSource, /timetable-course__time/u, '周课表课程块必须展示时间区间')
+assert.doesNotMatch(schedulePageSource, /timetable-course__time/u, '周课表课程卡片不应展示上课时间')
 assert.match(schedulePageSource, /className='timetable__time-start'/u, '左侧节次栏必须展示开始时间')
 assert.match(schedulePageSource, /className='timetable__time-section'/u, '左侧节次栏必须展示节次')
 assert.match(schedulePageSource, /className='timetable__time-end'/u, '左侧节次栏必须展示结束时间')

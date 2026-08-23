@@ -889,7 +889,6 @@ export default function SchedulePage() {
             ...course.weeks.filter((week) => week > preferences.week),
             Number.POSITIVE_INFINITY,
           )
-          const timeRange = getCourseTimeRange(course)
           return (
             <View
               key={getCourseScheduleKey(course)}
@@ -920,7 +919,6 @@ export default function SchedulePage() {
                     <Text className='timetable-course__conflict-count'>{currentCourseCount} 门</Text>
                   </View>
                   <Text className='timetable-course__name'>{course.name} 等</Text>
-                  <Text className='timetable-course__time'>{timeRange}</Text>
                   <Text className='timetable-course__location'>点按查看详情</Text>
                 </>
               ) : (
@@ -936,7 +934,6 @@ export default function SchedulePage() {
                     ) : null}
                   </View>
                   <Text className='timetable-course__name'>{course.name}</Text>
-                  <Text className='timetable-course__time'>{timeRange}</Text>
                   <Text className='timetable-course__location'>
                     {isCurrentWeek ? course.location : formatCourseWeeks(course.weeks)}
                   </Text>
@@ -969,7 +966,6 @@ export default function SchedulePage() {
       {dayCourses.length ? (
         <View className='day-course-list'>
           {dayCourses.map((course) => {
-            const timeRange = getCourseTimeRange(course)
             return (
               <View
                 key={getCourseScheduleKey(course)}
@@ -977,12 +973,7 @@ export default function SchedulePage() {
                 onClick={() => openCourse(course)}
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
-                <View className='day-course__time'>
-                  <Text>{timeRange || getSectionStartTime(
-                    runtimeConfig,
-                    course.campus || campusName,
-                    course.startSection,
-                  )}</Text>
+                <View className='day-course__sections'>
                   <Text>第 {course.startSection}-{course.endSection} 节</Text>
                 </View>
                 <View className='day-course__main'>
@@ -1071,7 +1062,6 @@ export default function SchedulePage() {
                             ? '本周'
                             : formatCourseWeeks(course.weeks)}
                           {' · '}第 {course.startSection}-{course.endSection} 节
-                          {getCourseTimeRange(course) ? ` · ${getCourseTimeRange(course)}` : ''}
                           {course.location ? ` · ${course.location}` : ''}
                         </Text>
                       </View>
