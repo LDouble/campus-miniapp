@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import Taro from '@tarojs/taro'
-import { Image, Text, View } from '@tarojs/components'
+import { CoverView, Image, Text, View } from '@tarojs/components'
 import { uploadMediaImage } from '../../../api/media'
 import type { CommentView } from '../../../api/types'
 import { getCurrentUser } from '../../../api/account'
@@ -35,6 +35,7 @@ import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dis
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
+import { getSystemState } from '../../../state/system'
 import {
   COMMENT_IMAGE_MAX_DIMENSION,
   DEFAULT_MEDIA_IMAGE_QUALITY,
@@ -50,6 +51,8 @@ const icons = {
   heartActive: require('../../../assets/community/heart-active.svg'),
   reply: require('../../../assets/community/detail-comment-reply.svg'),
   send: require('../../../assets/community/send.svg'),
+  expand: require('../../../assets/icons/expand.svg'),
+  collapse: require('../../../assets/icons/collapse.svg'),
 }
 
 export type DetailCommentTarget = 'campus_circle_post' | 'marketplace' | 'errand' | 'carpool'
@@ -103,6 +106,18 @@ const REPLY_TARGET_SCROLL_GAP = 12
 const REPLY_TARGET_SCROLL_DELAY = 80
 const REPLY_TARGET_DISMISS_SUPPRESSION = 800
 const REPLY_OPEN_DISMISS_SUPPRESSION = 1600
+const COMPOSER_TOP_GAP = 8
+
+const expandedComposerTopInset = () => {
+  const { windowInfo, menuButtonRect } = getSystemState()
+  const statusBarHeight = Math.max(0, windowInfo.statusBarHeight || 20)
+  const hasValidMenuButton = menuButtonRect.top >= statusBarHeight
+    && menuButtonRect.height > 0
+  const navigationBottom = hasValidMenuButton
+    ? menuButtonRect.top + menuButtonRect.height
+    : statusBarHeight + 44
+  return navigationBottom + COMPOSER_TOP_GAP
+}
 
 const commentImageErrorMessage = (error: unknown) => (
   isApiError(error)
@@ -583,6 +598,8 @@ export default function DetailComments({
     COMPOSER_CLOSE_DURATION,
   )
   const [composerOpen, setComposerOpen] = useState(false)
+  const [composerExpanded, setComposerExpanded] = useState(false)
+  const [composerLineCount, setComposerLineCount] = useState(1)
   const [composerClosing, setComposerClosing] = useState(false)
   const [inputFocused, setInputFocused] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
@@ -591,6 +608,7 @@ export default function DetailComments({
   const [removingCommentId, setRemovingCommentId] = useState(0)
   const [likingIds, setLikingIds] = useState<ReadonlySet<number>>(() => new Set())
   const [composerAvatar, setComposerAvatar] = useState({ src: '', fallback: '同', userId: 0 })
+  const composerTopInset = useRef(expandedComposerTopInset()).current
   const mountedRef = useRef(true)
   const requestScopeRef = useRef(0)
   const listRequestSequenceRef = useRef(0)
@@ -994,6 +1012,7 @@ export default function DetailComments({
     composerActionPendingRef.current = false
     stickerPickerOpenRef.current = false
     setComposerOpen(false)
+    setComposerExpanded(false)
     setComposerClosing(false)
     setInputFocused(false)
     setStickerPickerOpen(false)
@@ -1276,6 +1295,8 @@ export default function DetailComments({
         }
       }, 320)
       setContent('')
+      setComposerLineCount(1)
+      setComposerExpanded(false)
       setCommentImage(null)
       contentSelectionStartRef.current = 0
       contentSelectionEndRef.current = 0
@@ -1487,8 +1508,13 @@ export default function DetailComments({
             onTouchStart={handleComposerBackdropTouchStart}
           />
           <View
-            className='business-detail-composer'
+            className={composerExpanded
+              ? 'business-detail-composer business-detail-composer--expanded'
+              : 'business-detail-composer'}
             style={{
+              height: composerExpanded
+                ? `calc(100vh - ${keyboardHeight + composerTopInset}px)`
+                : undefined,
               transform: `translate3d(0, -${keyboardHeight}px, 0)`,
               transitionDuration: `${keyboardTransitionDuration}ms`,
             }}
@@ -1555,18 +1581,23 @@ export default function DetailComments({
                     <Text>上传失败 · 重试</Text>
                   </View>
                 )}
-                <View
+                <CoverView
                   className='business-detail-composer__image-remove'
                   ariaRole='button'
                   ariaLabel='删除待发布图片'
-                  hoverClass='business-detail-composer__image-remove--pressed'
+                  catchMove
+                  onTouchStart={(event) => {
+                    event.stopPropagation()
+                    composerActionPendingRef.current = true
+                  }}
                   onClick={(event) => {
                     event.stopPropagation()
+                    composerActionPendingRef.current = false
                     if (!submitting) setCommentImage(null)
                   }}
                 >
-                  <Text>×</Text>
-                </View>
+                  ×
+                </CoverView>
               </View>
               {commentImage.status === 'failed' && (
                 <Text className='business-detail-composer__image-error'>
@@ -1585,64 +1616,93 @@ export default function DetailComments({
               lazyLoad
             />
             {enabled ? (
-              <KeyboardSafeTextarea
-                id={`business-comment-${targetType}-${targetId}`}
-                value={content}
-                focus={composerOpen && inputFocused}
-                disabled={submitting}
-                maxlength={300}
-                autoHeight
-                fixed
-                disableDefaultPadding
-                confirmType='send'
-                confirmHold
-                showConfirmBar={false}
-                keepVisibleOnKeyboard={false}
-                placeholder={replyTarget ? '写下回复...' : placeholder}
-                placeholderClass='business-detail-composer__placeholder'
-                onFocus={() => {
-                  composerActionPendingRef.current = false
-                  openComposer()
-                }}
-                onBlur={handleComposerBlur}
-                onInput={(event) => {
-                  const detail = event.detail as typeof event.detail & {
-                    cursor?: number
-                    selectionEnd?: number
-                    selectionStart?: number
-                  }
-                  const cursor = Number.isFinite(detail.cursor) ? Number(detail.cursor) : detail.value.length
-                  const selectionStart = Number.isFinite(detail.selectionStart)
-                    ? Number(detail.selectionStart)
-                    : cursor
-                  const selectionEnd = Number.isFinite(detail.selectionEnd)
-                    ? Number(detail.selectionEnd)
-                    : cursor
+              <View className={(composerLineCount > 2 || composerExpanded)
+                ? 'business-detail-composer__input-shell business-detail-composer__input-shell--expandable'
+                : 'business-detail-composer__input-shell'}
+              >
+                <KeyboardSafeTextarea
+                  id={`business-comment-${targetType}-${targetId}`}
+                  value={content}
+                  focus={composerOpen && inputFocused}
+                  disabled={submitting}
+                  maxlength={300}
+                  autoHeight={!composerExpanded}
+                  fixed
+                  disableDefaultPadding
+                  confirmType='send'
+                  confirmHold
+                  showConfirmBar={false}
+                  keepVisibleOnKeyboard={false}
+                  placeholder={replyTarget ? '写下回复...' : placeholder}
+                  placeholderClass='business-detail-composer__placeholder'
+                  onFocus={() => {
+                    composerActionPendingRef.current = false
+                    openComposer()
+                  }}
+                  onBlur={handleComposerBlur}
+                  onInput={(event) => {
+                    const detail = event.detail as typeof event.detail & {
+                      cursor?: number
+                      selectionEnd?: number
+                      selectionStart?: number
+                    }
+                    const cursor = Number.isFinite(detail.cursor) ? Number(detail.cursor) : detail.value.length
+                    const selectionStart = Number.isFinite(detail.selectionStart)
+                      ? Number(detail.selectionStart)
+                      : cursor
+                    const selectionEnd = Number.isFinite(detail.selectionEnd)
+                      ? Number(detail.selectionEnd)
+                      : cursor
 
-                  contentSelectionStartRef.current = Math.max(0, selectionStart)
-                  contentSelectionEndRef.current = Math.max(
-                    contentSelectionStartRef.current,
-                    selectionEnd,
-                  )
-                  setContent(detail.value)
-                }}
-                onSelectionChange={(event) => {
-                  const detail = event.detail as {
-                    selectionEnd?: number
-                    selectionStart?: number
-                  }
-                  const selectionStart = Number(detail.selectionStart)
-                  const selectionEnd = Number(detail.selectionEnd)
-                  if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
-                  contentSelectionStartRef.current = Math.max(0, selectionStart)
-                  contentSelectionEndRef.current = Math.max(
-                    contentSelectionStartRef.current,
-                    selectionEnd,
-                  )
-                }}
-                onConfirm={() => void submit()}
-                onKeyboardHeightChange={handleKeyboardHeightChange}
-              />
+                    contentSelectionStartRef.current = Math.max(0, selectionStart)
+                    contentSelectionEndRef.current = Math.max(
+                      contentSelectionStartRef.current,
+                      selectionEnd,
+                    )
+                    setContent(detail.value)
+                  }}
+                  onLineChange={(event) => {
+                    setComposerLineCount(Math.max(1, Number(event.detail.lineCount) || 1))
+                  }}
+                  onSelectionChange={(event) => {
+                    const detail = event.detail as {
+                      selectionEnd?: number
+                      selectionStart?: number
+                    }
+                    const selectionStart = Number(detail.selectionStart)
+                    const selectionEnd = Number(detail.selectionEnd)
+                    if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
+                    contentSelectionStartRef.current = Math.max(0, selectionStart)
+                    contentSelectionEndRef.current = Math.max(
+                      contentSelectionStartRef.current,
+                      selectionEnd,
+                    )
+                  }}
+                  onConfirm={() => void submit()}
+                  onKeyboardHeightChange={handleKeyboardHeightChange}
+                />
+                {(composerLineCount > 2 || composerExpanded) && (
+                  <View
+                    className='business-detail-composer__expand'
+                    ariaRole='button'
+                    ariaLabel={composerExpanded ? '收起评论输入框' : '展开评论输入框到半屏'}
+                    onTouchStart={() => {
+                      composerActionPendingRef.current = true
+                    }}
+                    onClick={() => {
+                      composerActionPendingRef.current = false
+                      setStickerPickerVisible(false)
+                      setComposerExpanded((current) => !current)
+                      setInputFocused(true)
+                    }}
+                  >
+                    <Image
+                      src={composerExpanded ? icons.collapse : icons.expand}
+                      mode='aspectFit'
+                    />
+                  </View>
+                )}
+              </View>
             ) : (
               <View className='business-detail-composer__disabled'>评论暂未开放</View>
             )}

@@ -1,6 +1,8 @@
 .community-comment-sheet {
   position: fixed;
-  z-index: 30;
+  // 列表评论需要整体高于吸顶筛选、导航、TabBar 和通用 BottomSheet；
+  // 子级 composer 的 z-index 无法越过此处创建的层叠上下文。
+  z-index: 1100;
   inset: 0;
   pointer-events: none;
 }
