@@ -4,7 +4,7 @@
 
 | `envVersion` | API 环境 |
 | --- | --- |
-| `develop` 或未知值 | review |
+| `develop` 或未知值 | production |
 | `trial` | production |
 | `release` | production |
 
@@ -12,10 +12,10 @@
 
 当前默认域名为：
 
-- review：`https://review.weouc.com`
+- review（仅保留为隔离配置）：`https://review.weouc.com`
 - production：`https://product.weouc.com`
 
-生产构建默认使用上述两个域名，也可以通过环境变量覆盖：
+开发、预览和生产构建的运行时请求统一使用 `https://product.weouc.com`；review 地址仅保留为隔离配置，不会被小程序运行时选用。生产构建仍可以通过环境变量覆盖：
 
 ```bash
 TARO_APP_REVIEW_API_BASE_URL=https://review.weouc.com \

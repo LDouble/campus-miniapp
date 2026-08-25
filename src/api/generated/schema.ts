@@ -6157,6 +6157,8 @@ export interface components {
             comment_previews: components["schemas"]["PublicCommentPreview"][];
             contact: string;
             contact_type: string;
+            /** Format: uint64 */
+            contact_user_id: number | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -7296,6 +7298,8 @@ export interface components {
             cancelled_at: string | null;
             /** Format: date-time */
             completed_at: string | null;
+            /** Format: uint64 */
+            contact_user_id: number;
             /** Format: date-time */
             created_at: string;
             currency: string;
