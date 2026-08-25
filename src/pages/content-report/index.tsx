@@ -1,12 +1,12 @@
 import { Text, View } from '@tarojs/components'
 import Taro, { useLoad } from '@tarojs/taro'
 import { useMemo, useState } from 'react'
-import type { components } from '../../../api/generated/schema'
-import { isApiError } from '../../../api/client'
-import CustomNavbar from '../../../components/custom-navbar'
-import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
-import type { ReportableResourceType } from '../../../features/content-report'
-import { lifeServicesRepository } from '../../../features/life-services/repository'
+import type { components } from '../../api/generated/schema'
+import { isApiError } from '../../api/client'
+import CustomNavbar from '../../components/custom-navbar'
+import { KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
+import type { ReportableResourceType } from '../../features/content-report'
+import { lifeServicesRepository } from '../../features/life-services/repository'
 import './index.scss'
 
 type Category = components['schemas']['ContentReportCategory']

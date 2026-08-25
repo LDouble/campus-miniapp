@@ -14,7 +14,7 @@ for (const center of ['6', '12', '18']) {
 
 const consumers = [
   '../src/features/community/post-card.tsx',
-  '../src/packages/social/community/detail.tsx',
+  '../src/pages/community/detail.tsx',
   '../src/features/life-services/components/errand-card.tsx',
   '../src/features/life-services/components/carpool-card.tsx',
   '../src/features/life-services/components/detail-overflow-actions.tsx',

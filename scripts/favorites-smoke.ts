@@ -103,22 +103,22 @@ assert.match(postCard, /onToggleActions\?:/u, '公共 feed 卡允许收藏页隐
 
 assert.equal(
   favoriteDetailURL(item('campus_circle_post', 31)),
-  '/packages/social/community/detail?id=31&mode=post',
+  '/pages/community/detail?id=31&mode=post',
   '校园动态详情路由映射错误',
 )
 assert.equal(
   favoriteDetailURL(item('marketplace', 32)),
-  '/packages/social/marketplace/detail?id=32',
+  '/pages/marketplace/detail?id=32',
   '二手详情路由映射错误',
 )
 assert.equal(
   favoriteDetailURL(item('errand', 33)),
-  '/packages/social/errands/detail?id=33',
+  '/pages/errands/detail?id=33',
   '跑腿详情路由映射错误',
 )
 assert.equal(
   favoriteDetailURL(item('carpool', 34)),
-  '/packages/social/carpool/detail?id=34',
+  '/pages/carpool/detail?id=34',
   '找同行详情路由映射错误',
 )
 
@@ -141,10 +141,10 @@ assert.match(appConfig, /sourceRoot: 'pages\/favorites'/u, '收藏分包 sourceR
 assert.match(page, /community-post-list/u, '收藏列表沿用首页 feed 列表容器')
 
 const details = [
-  ['community', '../src/packages/social/community/detail.tsx', 'campus_circle_post'],
-  ['marketplace', '../src/packages/social/marketplace/detail.tsx', 'marketplace'],
-  ['errand', '../src/packages/social/errands/detail.tsx', 'errand'],
-  ['carpool', '../src/packages/social/carpool/detail.tsx', 'carpool'],
+  ['community', '../src/pages/community/detail.tsx', 'campus_circle_post'],
+  ['marketplace', '../src/pages/marketplace/detail.tsx', 'marketplace'],
+  ['errand', '../src/pages/errands/detail.tsx', 'errand'],
+  ['carpool', '../src/pages/carpool/detail.tsx', 'carpool'],
 ] as const
 for (const [name, path, resourceType] of details) {
   const detail = source(path)

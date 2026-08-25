@@ -12,28 +12,28 @@ import type {
   ErrandView,
   MarketplaceListingView,
   TradeOrderView,
-} from '../../../api/types'
-import { isApiError } from '../../../api/client'
+} from '../../api/types'
+import { isApiError } from '../../api/client'
 import {
   requestWechatSubscriptionAndStopPropagation,
   requestWechatSubscriptionForModule,
   requestWechatSubscriptionForPublishSection,
-} from '../../../features/wechat-subscription'
-import CustomNavbar from '../../../components/custom-navbar'
-import StickerContent from '../../../components/sticker-content'
-import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
+} from '../../features/wechat-subscription'
+import CustomNavbar from '../../components/custom-navbar'
+import StickerContent from '../../components/sticker-content'
+import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import {
   formatDateTime,
   formatMoney,
   formatOrderStatus,
   formatStatus,
   remainingSeats,
-} from '../../../features/life-services/format'
-import { lifeServicesRepository } from '../../../features/life-services/repository'
-import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
-import { saveCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
-import { saveBusinessDetailSnapshot } from '../../../features/life-services/business-detail-snapshot'
-import { plainStickerContent } from '../../../features/stickers/content'
+} from '../../features/life-services/format'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import { saveBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
+import { plainStickerContent } from '../../features/stickers/content'
 import './index.scss'
 
 type Section = 'published' | 'errands' | 'orders' | 'carpool'
@@ -200,27 +200,27 @@ const openBusinessRecord = (item: RecordItem) => {
   if ('order_no' in item) {
     if (item.resource_type === 'marketplace_listing') {
       module = 'marketplace'
-      url = `/packages/social/marketplace/detail?id=${item.resource_id}`
+      url = `/pages/marketplace/detail?id=${item.resource_id}`
     } else {
       module = 'errand'
-      url = `/packages/social/errands/detail?id=${item.resource_id}`
+      url = `/pages/errands/detail?id=${item.resource_id}`
     }
   } else if ('pickup_location' in item) {
     module = 'errand'
     saveBusinessDetailSnapshot('errand', item)
-    url = `/packages/social/errands/detail?id=${item.id}&snapshot=1`
+    url = `/pages/errands/detail?id=${item.id}&snapshot=1`
   } else if ('price_cents' in item) {
     module = 'marketplace'
     saveBusinessDetailSnapshot('marketplace', item)
-    url = `/packages/social/marketplace/detail?id=${item.id}&snapshot=1`
+    url = `/pages/marketplace/detail?id=${item.id}&snapshot=1`
   } else if ('departure_at' in item) {
     module = 'carpool'
     saveBusinessDetailSnapshot('carpool', item)
-    url = `/packages/social/carpool/detail?id=${item.id}&snapshot=1`
+    url = `/pages/carpool/detail?id=${item.id}&snapshot=1`
   } else {
     module = 'community'
     saveCommunityDetailSnapshot(item as CampusCirclePostView)
-    url = `/packages/social/community/detail?id=${item.id}&mode=post&snapshot=1`
+    url = `/pages/community/detail?id=${item.id}&mode=post&snapshot=1`
   }
   requestWechatSubscriptionForModule(module)
   Taro.navigateTo({ url })
@@ -378,7 +378,7 @@ export default function MyServicesPage() {
           ? 'carpool'
           : 'market'
     requestWechatSubscriptionForPublishSection(section)
-    Taro.navigateTo({ url: `/packages/social/publish/index?section=${section}` })
+    Taro.navigateTo({ url: `/pages/publish/index?section=${section}` })
   }
 
   const emptyAction = () => {

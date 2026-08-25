@@ -8,6 +8,7 @@ import {
   normalizeMigrationGuideCopy,
   type MigrationGuideCopy,
 } from '../app-edition/migration-copy'
+import { navigateToWithGuard } from '../../utils/navigation'
 
 export type CampusSection = {
   start: string
@@ -476,18 +477,18 @@ export const openMiniappModule = async (
     return false
   }
   if (module.state === 'maintenance') {
-    await Taro.navigateTo({
-      url: `/pages/feature-unavailable/index?module=${key}&message=${encodeURIComponent(
+    await navigateToWithGuard(
+      `/pages/feature-unavailable/index?module=${key}&message=${encodeURIComponent(
         module.message || '功能维护中，请稍后再试',
       )}`,
-    })
+    )
     return false
   }
   if (!options.subscriptionAlreadyRequested) {
     requestWechatSubscription(config.subscription_templates[key])
   }
   if (options.tab) await Taro.switchTab({ url })
-  else await Taro.navigateTo({ url })
+  else if (!await navigateToWithGuard(url)) return false
   return true
 }
 

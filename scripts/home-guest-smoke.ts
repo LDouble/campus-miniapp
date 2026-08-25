@@ -286,10 +286,10 @@ assert.ok(
   '校园动态标题区必须使用 Ousea 标记，并保留明确的社区入口',
 )
 assert.ok(
-  homeSource.includes('campus_circle_post: `/packages/social/community/detail?id=${item.source_id}`')
-    && homeSource.includes('marketplace_listing: `/packages/social/marketplace/detail?id=${item.source_id}`')
-    && homeSource.includes('errand: `/packages/social/errands/detail?id=${item.source_id}`')
-    && homeSource.includes('carpool: `/packages/social/carpool/detail?id=${item.source_id}`'),
+  homeSource.includes('campus_circle_post: `/pages/community/detail?id=${item.source_id}`')
+    && homeSource.includes('marketplace_listing: `/pages/marketplace/detail?id=${item.source_id}`')
+    && homeSource.includes('errand: `/pages/errands/detail?id=${item.source_id}`')
+    && homeSource.includes('carpool: `/pages/carpool/detail?id=${item.source_id}`'),
   '混排 Feed 必须保留四类内容各自的详情路由',
 )
 assert.match(

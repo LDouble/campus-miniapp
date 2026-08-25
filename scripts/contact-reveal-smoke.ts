@@ -34,7 +34,7 @@ const persistentContactCases = [
 
 for (const item of persistentContactCases) {
   const source = readFileSync(
-    resolve(__dirname, `../src/packages/social/${item.page}/detail.tsx`),
+    resolve(__dirname, `../src/pages/${item.page}/detail.tsx`),
     'utf8',
   )
   assert.match(
