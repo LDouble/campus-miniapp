@@ -18,6 +18,7 @@ import CommunityCommentSheet from './comment-sheet'
 import { mergePublicCommentPreview } from './comments'
 import { saveCommunityDetailSnapshot } from './detail-snapshot'
 import CommunityPostCard, { type CommunityPostCommentPreview } from './post-card'
+import { navigateToWithGuard } from '../../utils/navigation'
 import './feed-panel.scss'
 
 type Props = {
@@ -243,7 +244,7 @@ export default function CommunityFeedPanel({
     setOpenActionPostId(null)
     requestWechatSubscriptionForModule('community')
     saveCommunityDetailSnapshot(post)
-    Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+    void navigateToWithGuard(`/pages/community/detail?id=${post.id}&mode=post&snapshot=1`)
   }, [])
 
   const openComments = useCallback((post: CampusCirclePostView) => {

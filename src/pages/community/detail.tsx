@@ -4,38 +4,38 @@ import Taro, {
   usePullDownRefresh,
 } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
-import type { CampusCirclePostView } from '../../../api/types'
-import { isApiError } from '../../../api/client'
-import CustomNavbar from '../../../components/custom-navbar'
-import StickerContent from '../../../components/sticker-content'
+import type { CampusCirclePostView } from '../../api/types'
+import { isApiError } from '../../api/client'
+import CustomNavbar from '../../components/custom-navbar'
+import StickerContent from '../../components/sticker-content'
 import {
   communityAuthorAvatarUrl,
   communityAuthorInitial,
   communityAuthorName,
-} from '../../../features/community/author'
-import { consumeCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
-import CommunityLevelBadge from '../../../features/community/level-badge'
-import { openContentReport } from '../../../features/content-report'
-import FavoriteToggle from '../../../features/favorites/favorite-toggle'
-import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
-import DetailComments from '../../../features/life-services/components/detail-comments'
-import ContentImageGrid from '../../../features/community/components/content-image-grid'
-import { buildDetailFooterActions } from '../../../features/life-services/detail-actions'
-import { formatDateTime, formatStatus } from '../../../features/life-services/format'
-import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
-import { lifeServicesRepository } from '../../../features/life-services/repository'
-import { useCampusShare } from '../../../features/share'
-import { plainStickerContent } from '../../../features/stickers/content'
-import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
-import { showActionSheetSelection } from '../../../utils/action-sheet'
+} from '../../features/community/author'
+import { consumeCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import CommunityLevelBadge from '../../features/community/level-badge'
+import { openContentReport } from '../../features/content-report'
+import FavoriteToggle from '../../features/favorites/favorite-toggle'
+import DetailAuthorHeader from '../../features/life-services/components/detail-author-header'
+import DetailComments from '../../features/life-services/components/detail-comments'
+import ContentImageGrid from '../../features/community/components/content-image-grid'
+import { buildDetailFooterActions } from '../../features/life-services/detail-actions'
+import { formatDateTime, formatStatus } from '../../features/life-services/format'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import { useCampusShare } from '../../features/share'
+import { plainStickerContent } from '../../features/stickers/content'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import { showActionSheetSelection } from '../../utils/action-sheet'
 import './detail.scss'
 
 const communityDetailIcons = {
-  comment: require('../../../assets/community/comment.svg'),
-  heart: require('../../../assets/community/feed-heart.svg'),
-  heartActive: require('../../../assets/community/heart-active.svg'),
-  more: require('../../../assets/icons/more-horizontal.svg'),
-  share: require('../../../assets/community/detail-share.svg'),
+  comment: require('../../assets/community/comment.svg'),
+  heart: require('../../assets/community/feed-heart.svg'),
+  heartActive: require('../../assets/community/heart-active.svg'),
+  more: require('../../assets/icons/more-horizontal.svg'),
+  share: require('../../assets/community/detail-share.svg'),
 }
 
 const actionLabels: Record<string, string> = {
@@ -99,7 +99,7 @@ export default function CommunityDetailPage() {
 
   useCampusShare(() => ({
     title: plainStickerContent(post?.content || '').trim().slice(0, 28) || 'OUSea动态',
-    path: '/packages/social/community/detail',
+    path: '/pages/community/detail',
     query: { id: postId, mode: 'post' },
     imageUrl: post?.images[0]?.url,
   }))
@@ -125,7 +125,7 @@ export default function CommunityDetailPage() {
     if (!post) return
     requestWechatSubscriptionForModule('community')
     void Taro.navigateTo({
-      url: `/packages/social/publish/index?section=community&mode=edit&id=${post.id}`,
+      url: `/pages/publish/index?section=community&mode=edit&id=${post.id}`,
     })
   }
 

@@ -1,46 +1,46 @@
 import { useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import CustomNavbar from '../../../components/custom-navbar'
-import type { ErrandView } from '../../../api/types'
-import { isApiError } from '../../../api/client'
-import { getCurrentIdentity } from '../../../api/account'
-import { lifeServicesRepository } from '../../../features/life-services/repository'
-import { consumeBusinessDetailSnapshot } from '../../../features/life-services/business-detail-snapshot'
-import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
-import { openAcademicVerification } from '../../../features/academic-verification/guard'
-import { openContentReport } from '../../../features/content-report'
-import FavoriteToggle from '../../../features/favorites/favorite-toggle'
-import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
-import { useCampusShare } from '../../../features/share'
+import CustomNavbar from '../../components/custom-navbar'
+import type { ErrandView } from '../../api/types'
+import { isApiError } from '../../api/client'
+import { getCurrentIdentity } from '../../api/account'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import { consumeBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import { openAcademicVerification } from '../../features/academic-verification/guard'
+import { openContentReport } from '../../features/content-report'
+import FavoriteToggle from '../../features/favorites/favorite-toggle'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import { useCampusShare } from '../../features/share'
 import {
   formatDateTime,
   formatMoney,
   formatStatus,
-} from '../../../features/life-services/format'
-import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
-import DetailBusinessIntro from '../../../features/life-services/components/detail-business-intro'
+} from '../../features/life-services/format'
+import DetailAuthorHeader from '../../features/life-services/components/detail-author-header'
+import DetailBusinessIntro from '../../features/life-services/components/detail-business-intro'
 import DetailComments, {
   createBusinessContactComment,
-} from '../../../features/life-services/components/detail-comments'
-import DetailOverflowActions from '../../../features/life-services/components/detail-overflow-actions'
-import BusinessRoute from '../../../features/life-services/components/business-route'
+} from '../../features/life-services/components/detail-comments'
+import DetailOverflowActions from '../../features/life-services/components/detail-overflow-actions'
+import BusinessRoute from '../../features/life-services/components/business-route'
 import {
   buildDetailFooterActions,
   splitDetailActions,
-} from '../../../features/life-services/detail-actions'
-import { campusLabel } from '../../../features/life-services/campus'
+} from '../../features/life-services/detail-actions'
+import { campusLabel } from '../../features/life-services/campus'
 import {
   contactTypeLabel,
   showParticipationContact,
-} from '../../../features/life-services/contact-reveal'
+} from '../../features/life-services/contact-reveal'
 import {
   hasParticipationContactAccess,
   type ParticipationContact,
   restoreParticipationContact,
   visibleParticipationContact,
-} from '../../../features/life-services/participation-contact-storage'
-import '../../../features/life-services/detail.scss'
+} from '../../features/life-services/participation-contact-storage'
+import '../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
   edit: '编辑',
@@ -123,7 +123,7 @@ export default function ErrandDetailPage() {
     title: item
       ? `${item.pickup_location} → ${item.dropoff_location}｜校园跑腿`
       : '校园跑腿｜OUSea',
-    path: id ? '/packages/social/errands/detail' : '/pages/community/index',
+    path: id ? '/pages/errands/detail' : '/pages/community/index',
     query: id ? { id } : { section: 'errands' },
   }))
 
@@ -138,7 +138,7 @@ export default function ErrandDetailPage() {
     }
     if (action === 'edit') {
       requestWechatSubscriptionForModule('errand')
-      Taro.navigateTo({ url: `/packages/social/publish/index?section=errands&mode=edit&id=${item.id}` })
+      Taro.navigateTo({ url: `/pages/publish/index?section=errands&mode=edit&id=${item.id}` })
       return
     }
     const result = await Taro.showModal({

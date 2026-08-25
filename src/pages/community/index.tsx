@@ -326,7 +326,7 @@ export default function CommunityPage() {
       : ''
     const result = {
       title: shareTitle,
-      path: postId > 0 ? '/packages/social/community/detail' : '/pages/community/index',
+      path: postId > 0 ? '/pages/community/detail' : '/pages/community/index',
       query: postId > 0
         ? { id: postId, mode: 'post' }
         : { section: displayedSection },

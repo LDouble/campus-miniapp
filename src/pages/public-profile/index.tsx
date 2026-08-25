@@ -127,7 +127,7 @@ export default function PublicProfilePage() {
         : ''
       const result = {
         title: shareTitle,
-        path: '/packages/social/community/detail',
+        path: '/pages/community/detail',
         query: { id: postId, mode: 'post' },
       }
       return shareImage ? { ...result, imageUrl: shareImage } : result
@@ -233,7 +233,7 @@ export default function PublicProfilePage() {
   const openCommunityPost = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
     saveCommunityDetailSnapshot(post)
-    void Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+    void Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
   }, [])
 
   const openPrivateConversation = async (subscriptionAlreadyRequested = false) => {

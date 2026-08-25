@@ -8,13 +8,13 @@ export const favoriteDetailURL = (item: Pick<FavoriteItem, 'resource_id' | 'reso
   const id = item.resource_id
   switch (item.resource_type) {
     case 'campus_circle_post':
-      return `/packages/social/community/detail?id=${id}&mode=post`
+      return `/pages/community/detail?id=${id}&mode=post`
     case 'marketplace':
-      return `/packages/social/marketplace/detail?id=${id}`
+      return `/pages/marketplace/detail?id=${id}`
     case 'errand':
-      return `/packages/social/errands/detail?id=${id}`
+      return `/pages/errands/detail?id=${id}`
     case 'carpool':
-      return `/packages/social/carpool/detail?id=${id}`
+      return `/pages/carpool/detail?id=${id}`
     default:
       return ''
   }

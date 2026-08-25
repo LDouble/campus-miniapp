@@ -21,17 +21,17 @@ type DetailCase = {
 const detailCases: DetailCase[] = [
   {
     kind: 'marketplace',
-    sourcePath: '../src/packages/social/marketplace/detail.tsx',
+    sourcePath: '../src/pages/marketplace/detail.tsx',
     getter: 'getMarketplaceListing',
   },
   {
     kind: 'errand',
-    sourcePath: '../src/packages/social/errands/detail.tsx',
+    sourcePath: '../src/pages/errands/detail.tsx',
     getter: 'getErrand',
   },
   {
     kind: 'carpool',
-    sourcePath: '../src/packages/social/carpool/detail.tsx',
+    sourcePath: '../src/pages/carpool/detail.tsx',
     getter: 'getCarpoolTrip',
   },
 ]
@@ -102,8 +102,8 @@ for (const entry of [
   assert.match(source, /snapshot=1/u, `${entry.kind}: card navigation opts into snapshot consumption`)
 }
 
-const myServicesSource = readFileSync(resolve(__dirname, '../src/packages/social/my-services/index.tsx'), 'utf8')
-const marketplaceDetailSource = readFileSync(resolve(__dirname, '../src/packages/social/marketplace/detail.tsx'), 'utf8')
+const myServicesSource = readFileSync(resolve(__dirname, '../src/pages/my-services/index.tsx'), 'utf8')
+const marketplaceDetailSource = readFileSync(resolve(__dirname, '../src/pages/marketplace/detail.tsx'), 'utf8')
 assert.match(
   marketplaceDetailSource,
   /\{item\.image_urls\.length > 0 && \([\s\S]*?<ContentImageGrid[\s\S]*?images=\{item\.image_urls\.map/u,

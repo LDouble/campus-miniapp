@@ -10,13 +10,13 @@ const avatarSource = readSource('../src/components/user-avatar/index.tsx')
 const avatarStyle = readSource('../src/components/user-avatar/index.scss')
 const introSource = readSource('../src/features/life-services/components/detail-business-intro.tsx')
 const lifeDetailStyle = readSource('../src/features/life-services/detail.scss')
-const marketStyle = readSource('../src/packages/social/marketplace/detail.scss')
+const marketStyle = readSource('../src/pages/marketplace/detail.scss')
 
 const detailSources = {
-  community: readSource('../src/packages/social/community/detail.tsx'),
-  errands: readSource('../src/packages/social/errands/detail.tsx'),
-  marketplace: readSource('../src/packages/social/marketplace/detail.tsx'),
-  carpool: readSource('../src/packages/social/carpool/detail.tsx'),
+  community: readSource('../src/pages/community/detail.tsx'),
+  errands: readSource('../src/pages/errands/detail.tsx'),
+  marketplace: readSource('../src/pages/marketplace/detail.tsx'),
+  carpool: readSource('../src/pages/carpool/detail.tsx'),
 }
 
 assert.match(authorSource, /<UserAvatar[\s\S]*?shape='rounded'/u)

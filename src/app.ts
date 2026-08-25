@@ -30,6 +30,7 @@ import { refreshPrivateMessageUnreadCount } from './features/direct-messages/unr
 import { canRearmForegroundPrivateMessagePolling } from './features/direct-messages/polling'
 import { setCustomTabBarUnreadCount } from './utils/tabbar'
 import { installWechatRuntimeCompat } from './features/wechat-runtime-compat'
+import { logForegroundNavigationState } from './utils/navigation'
 // 全局样式
 import './app.scss'
 
@@ -92,6 +93,7 @@ function App(props) {
 
   // 对应 onShow
   useDidShow(() => {
+    logForegroundNavigationState()
     privateMessageUnreadVisibleRef.current = true
     privateMessageUnreadPollingGeneration.current += 1
     const generation = privateMessageUnreadPollingGeneration.current

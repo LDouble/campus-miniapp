@@ -1,24 +1,24 @@
 import { useCallback, useRef, useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
-import type { CampusCirclePostView, CampusCircleTopicView } from '../../../../api/types'
-import { isApiError } from '../../../../api/client'
-import CustomNavbar from '../../../../components/custom-navbar'
+import type { CampusCirclePostView, CampusCircleTopicView } from '../../../api/types'
+import { isApiError } from '../../../api/client'
+import CustomNavbar from '../../../components/custom-navbar'
 import {
   communityTopicPublisherUrl,
   parsePositiveId,
   topicPeriodLabel,
-} from '../../../../features/community/topic'
-import { lifeServicesRepository } from '../../../../features/life-services/repository'
-import { markLifeHubSectionDirty } from '../../../../features/life-services/refresh-policy'
-import CommunityCommentSheet from '../../../../features/community/comment-sheet'
-import CommunityPostCard, { type CommunityPostCommentPreview } from '../../../../features/community/post-card'
-import { mergePublicCommentPreview } from '../../../../features/community/comments'
-import { saveCommunityDetailSnapshot } from '../../../../features/community/detail-snapshot'
-import { useDismissCommunityOverlaysOnScroll } from '../../../../features/community/use-overlay-dismissal'
-import { useCampusShare } from '../../../../features/share'
+} from '../../../features/community/topic'
+import { lifeServicesRepository } from '../../../features/life-services/repository'
+import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
+import CommunityCommentSheet from '../../../features/community/comment-sheet'
+import CommunityPostCard, { type CommunityPostCommentPreview } from '../../../features/community/post-card'
+import { mergePublicCommentPreview } from '../../../features/community/comments'
+import { saveCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
+import { useDismissCommunityOverlaysOnScroll } from '../../../features/community/use-overlay-dismissal'
+import { useCampusShare } from '../../../features/share'
 import './index.scss'
-import { openPublicProfile } from '../../../../features/profile/public-profile'
+import { openPublicProfile } from '../../../features/profile/public-profile'
 
 const TOPIC_POSTS_PAGE_SIZE = 20
 
@@ -131,14 +131,14 @@ export default function CommunityTopicPage() {
         : ''
       const result = {
         title: shareTitle,
-        path: '/packages/social/community/detail',
+        path: '/pages/community/detail',
         query: { id: postId, mode: 'post' },
       }
       return shareImage ? { ...result, imageUrl: shareImage } : result
     }
     return {
       title: topic ? `#${topic.name}｜OUSea话题` : 'OUSea话题',
-      path: topicId ? '/packages/social/community/topic/index' : '/pages/community/index',
+      path: topicId ? '/pages/community/topic/index' : '/pages/community/index',
       query: topicId ? { id: topicId } : undefined,
       imageUrl: topic?.cover_url || undefined,
     }
@@ -154,7 +154,7 @@ export default function CommunityTopicPage() {
   const openPost = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
     saveCommunityDetailSnapshot(post)
-    return Taro.navigateTo({ url: `/packages/social/community/detail?id=${post.id}&mode=post&snapshot=1` })
+    return Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
   }, [])
   const openComments = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)

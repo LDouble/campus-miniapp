@@ -46,7 +46,7 @@ export const openCourseMarketplacePublisher = (
   requestWechatSubscriptionForModule('marketplace')
   saveMarketplacePublishPrefill(prefill)
   return Taro.navigateTo({
-    url: `/packages/social/publish/index?section=market&intent=${prefill.intent}&course_prefill=1`,
+    url: `/pages/publish/index?section=market&intent=${prefill.intent}&course_prefill=1`,
   })
 }
 

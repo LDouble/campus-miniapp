@@ -1,4 +1,3 @@
-import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { CarpoolTripView } from '../../../api/types'
 import UserAvatar from '../../../components/user-avatar'
@@ -7,6 +6,7 @@ import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
 import { campusLabel } from '../campus'
 import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
+import { navigateToWithGuard } from '../../../utils/navigation'
 import {
   formatDateTime,
   formatStatus,
@@ -18,7 +18,7 @@ const moreIcon = require('../../../assets/icons/more-horizontal.svg')
 const openDetail = (item: CarpoolTripView) => {
   requestWechatSubscriptionForModule('carpool')
   saveBusinessDetailSnapshot('carpool', item)
-  Taro.navigateTo({ url: `/packages/social/carpool/detail?id=${item.id}&snapshot=1` })
+  void navigateToWithGuard(`/pages/carpool/detail?id=${item.id}&snapshot=1`)
 }
 
 const timeParts = (value: string) => {

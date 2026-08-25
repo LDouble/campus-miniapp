@@ -1,4 +1,3 @@
-import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { MarketplaceListingView } from '../../../api/types'
 import UserAvatar from '../../../components/user-avatar'
@@ -8,12 +7,13 @@ import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { formatMoney } from '../format'
 import { campusLabel } from '../campus'
 import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
+import { navigateToWithGuard } from '../../../utils/navigation'
 import './marketplace-card.scss'
 
 const openDetail = (item: MarketplaceListingView) => {
   requestWechatSubscriptionForModule('marketplace')
   saveBusinessDetailSnapshot('marketplace', item)
-  Taro.navigateTo({ url: `/packages/social/marketplace/detail?id=${item.id}&snapshot=1` })
+  void navigateToWithGuard(`/pages/marketplace/detail?id=${item.id}&snapshot=1`)
 }
 
 type Props = {

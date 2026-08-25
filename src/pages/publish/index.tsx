@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
 import { Image, Picker, Text, View } from '@tarojs/components'
-import CustomNavbar from '../../../components/custom-navbar'
-import MediaImageEditor from '../../../components/media-image-editor'
+import CustomNavbar from '../../components/custom-navbar'
+import MediaImageEditor from '../../components/media-image-editor'
 import {
   KeyboardSafeInput,
   KeyboardSafeTextarea,
   useKeyboardInset,
-} from '../../../components/keyboard-safe-input'
-import StickerPicker from '../../../components/sticker-picker'
-import { isApiError } from '../../../api/client'
-import { uploadMediaImage } from '../../../api/media'
-import { getCurrentIdentity } from '../../../api/account'
+} from '../../components/keyboard-safe-input'
+import StickerPicker from '../../components/sticker-picker'
+import { isApiError } from '../../api/client'
+import { uploadMediaImage } from '../../api/media'
+import { getCurrentIdentity } from '../../api/account'
 import type {
   CarpoolTripView,
   CampusCircleSectionView,
@@ -19,51 +19,51 @@ import type {
   ErrandView,
   MentionCandidate,
   MarketplaceListingView,
-} from '../../../api/types'
+} from '../../api/types'
 import {
   consumeMarketplacePublishPrefill,
   type MarketplaceIntent,
   type MarketplaceSource,
-} from '../../../features/life-services/marketplace-prefill'
-import { lifeServicesRepository } from '../../../features/life-services/repository'
-import MentionPicker from '../../../features/mentions/mention-picker'
-import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
+} from '../../features/life-services/marketplace-prefill'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import MentionPicker from '../../features/mentions/mention-picker'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import {
   publisherContactStorage,
   withRememberedPublisherContact,
   type PublisherContact,
-} from '../../../features/life-services/publisher-contact-storage'
-import CampusSelector from '../../../features/life-services/components/campus-selector'
+} from '../../features/life-services/publisher-contact-storage'
+import CampusSelector from '../../features/life-services/components/campus-selector'
 import {
   isCampusName,
   preferredCampus,
   type CampusName,
-} from '../../../features/life-services/campus'
+} from '../../features/life-services/campus'
 import {
   getRecentRouteValues,
   rememberRoutePair,
   ROUTE_SHORTCUTS,
   type RouteHistoryKind,
-} from '../../../features/life-services/route-history'
+} from '../../features/life-services/route-history'
 import {
   MAX_PUBLISH_IMAGES,
   mediaImageValidationError,
   moveMediaImage,
   serverMediaImageDraft,
-} from '../../../features/media/images'
-import type { MediaImageDraft } from '../../../features/media/images'
-import { chooseMediaImages } from '../../../features/media/selection'
-import { requestWechatSubscriptionForPublishSection } from '../../../features/wechat-subscription'
+} from '../../features/media/images'
+import type { MediaImageDraft } from '../../features/media/images'
+import { chooseMediaImages } from '../../features/media/selection'
+import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
 import {
   editableStickerContent,
   insertStickerToken,
   serializeStickerTokens,
   stickerTokenForId,
-} from '../../../features/stickers/content'
+} from '../../features/stickers/content'
 import {
   apiDateTimeCampusParts,
   campusDateTimeToISOString,
-} from '../../../utils/date-time'
+} from '../../utils/date-time'
 import './index.scss'
 
 type PublishSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -853,13 +853,13 @@ export default function PublishPage() {
     Taro.showToast({ title: '已提交审核', icon: 'success' })
     await new Promise((resolve) => setTimeout(resolve, 450))
     if (section === 'errands') {
-      await Taro.redirectTo({ url: `/packages/social/errands/detail?id=${id}` })
+      await Taro.redirectTo({ url: `/pages/errands/detail?id=${id}` })
     } else if (section === 'market') {
-      await Taro.redirectTo({ url: `/packages/social/marketplace/detail?id=${id}` })
+      await Taro.redirectTo({ url: `/pages/marketplace/detail?id=${id}` })
     } else if (section === 'carpool') {
-      await Taro.redirectTo({ url: `/packages/social/carpool/detail?id=${id}` })
+      await Taro.redirectTo({ url: `/pages/carpool/detail?id=${id}` })
     } else {
-      await Taro.redirectTo({ url: `/packages/social/community/detail?id=${id}&mode=post` })
+      await Taro.redirectTo({ url: `/pages/community/detail?id=${id}&mode=post` })
     }
   }
 
@@ -1155,7 +1155,7 @@ export default function PublishPage() {
                       >
                         <Image
                           className='publisher-composer-tool__icon'
-                          src={require('../../../assets/icons/smile.svg')}
+                          src={require('../../assets/icons/smile.svg')}
                           mode='aspectFit'
                         />
                       </View>
@@ -1174,7 +1174,7 @@ export default function PublishPage() {
                         >
                           <Image
                             className='publisher-composer-tool__icon'
-                            src={require('../../../assets/icons/image.svg')}
+                            src={require('../../assets/icons/image.svg')}
                             mode='aspectFit'
                           />
                         </View>

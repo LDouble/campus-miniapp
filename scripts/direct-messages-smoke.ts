@@ -29,23 +29,23 @@ import {
 const root = resolve(__dirname, '..')
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8')
 
-assert.equal(directMessagesListUrl, '/packages/social/direct-messages/index')
-assert.equal(directMessageChatUrl(42), '/packages/social/direct-messages/chat?id=42')
+assert.equal(directMessagesListUrl, '/pages/direct-messages/index')
+assert.equal(directMessageChatUrl(42), '/pages/direct-messages/chat?id=42')
 assert.equal(directMessageChatUrl(0), directMessagesListUrl)
 assert.equal(parseDirectMessageConversationId('42'), 42)
 assert.equal(parseDirectMessageConversationId('invalid'), 0)
 assert.equal(
-  noticeActionRoute('/packages/social/direct-messages/chat?id=42'),
+  noticeActionRoute('/pages/direct-messages/chat?id=42'),
   directMessageChatUrl(42),
   '私信通知必须接受规范会话深链',
 )
 assert.equal(
-  noticeActionRoute('/packages/social/direct-messages/chat?id=42', { allowPrivateMessages: false }),
+  noticeActionRoute('/pages/direct-messages/chat?id=42', { allowPrivateMessages: false }),
   '',
   '资格版不得暴露私信通知跳转',
 )
 assert.equal(
-  noticeActionRoute('/packages/social/direct-messages/chat?id=42&next=/pages/index/index'),
+  noticeActionRoute('/pages/direct-messages/chat?id=42&next=/pages/index/index'),
   '',
   '私信通知不得接受附加跳转参数',
 )
@@ -54,8 +54,8 @@ assert.equal(
   '/pages/notices/detail?notice_id=42&source=push',
   '既有 pages 通知跳转必须保持兼容',
 )
-assert.equal(isPrivateMessageNoticeAction('/packages/social/direct-messages/chat?id=42'), true)
-assert.equal(isPrivateMessageNoticeAction('/packages/social/direct-messages/chat?id=0'), false)
+assert.equal(isPrivateMessageNoticeAction('/pages/direct-messages/chat?id=42'), true)
+assert.equal(isPrivateMessageNoticeAction('/pages/direct-messages/chat?id=0'), false)
 
 const messages = [
   { id: 4, conversation_id: 9, sender_id: 7, content: '较早消息', created_at: '2026-08-18T08:00:00+08:00' },
@@ -263,11 +263,11 @@ const repository = read('src/features/direct-messages/repository.ts')
 const generated = read('src/api/generated/schema.ts')
 const appConfig = read('src/app.config.ts')
 const messagesPage = read('src/pages/messages/index.tsx')
-const conversationPage = read('src/packages/social/direct-messages/index.tsx')
-const conversationStyle = read('src/packages/social/direct-messages/index.scss')
+const conversationPage = read('src/pages/direct-messages/index.tsx')
+const conversationStyle = read('src/pages/direct-messages/index.scss')
 const publicProfile = read('src/pages/public-profile/index.tsx')
-const chatPage = read('src/packages/social/direct-messages/chat.tsx')
-const chatStyle = read('src/packages/social/direct-messages/chat.scss')
+const chatPage = read('src/pages/direct-messages/chat.tsx')
+const chatStyle = read('src/pages/direct-messages/chat.scss')
 const runtimeConfig = read('src/features/runtime-config/index.ts')
 const subscriptionModule = read('src/features/wechat-subscription/module.ts')
 const tabBar = read('src/custom-tab-bar/index.wxml')
@@ -294,7 +294,7 @@ assert.ok(generated.includes('PrivateMessageImage'), '生成类型缺少私信�
 assert.ok(generated.includes('PrivateMessageImageState'), '生成类型缺少私信图片审核状态结构')
 assert.ok(generated.includes('image_state'), '生成类型缺少私信图片审核状态字段')
 assert.ok(generated.includes('private_message'), '生成类型缺少私信图片用途')
-assert.ok(appConfig.includes("'direct-messages/index'"), '完整版本必须注册私信会话页')
+assert.ok(appConfig.includes("'pages/direct-messages/index'"), '完整版本必须注册私信会话页')
 assert.ok(appConfig.includes("'pages/direct-messages/index'"), '资格版排除清单必须包含私信会话页')
 assert.ok(appConfig.includes("'pages/direct-messages/chat'"), '资格版排除清单必须包含私信详情页')
 assert.ok(messagesPage.includes('!isQualificationEdition'), '资格版不得显示私信入口')
@@ -328,8 +328,8 @@ assert.ok(chatPage.includes('StickerContent'), '聊天消息必须渲染已知�
 assert.ok(chatPage.includes('StickerPicker'), '聊天输入栏必须提供表情选择面板')
 assert.ok(chatPage.includes('insertStickerToken'), '聊天表情选择必须插入可读表情标记')
 assert.ok(chatPage.includes('if (keyboardHeight > 0) setStickerPickerOpen(false)'), '键盘和表情面板必须互斥')
-assert.ok(chatPage.includes("require('../../../assets/icons/smile.svg')"), '聊天表情入口必须使用既有 smile 图标')
-assert.ok(chatPage.includes("require('../../../assets/icons/image.svg')"), '聊天图片入口必须使用既有 image 图标')
+assert.ok(chatPage.includes("require('../../assets/icons/smile.svg')"), '聊天表情入口必须使用既有 smile 图标')
+assert.ok(chatPage.includes("require('../../assets/icons/image.svg')"), '聊天图片入口必须使用既有 image 图标')
 assert.ok(chatPage.includes('chooseMediaImages({ count: 1 })'), '聊天图片入口必须限制为单图选择')
 assert.ok(chatPage.includes("purpose: 'private_message'"), '聊天图片必须使用私信媒体用途')
 assert.ok(chatPage.includes('await sendUploadedImage'), '图片上传完成后必须自动发送消息')
@@ -378,7 +378,7 @@ assert.ok(runtimeConfig.includes("private_message: { state: 'hidden' }"), '未�
 assert.ok(runtimeConfig.includes('isModuleConfig(value[key]) ? value[key] : conservativeModules[key]'), '缺失模块配置必须回退到保守默认值')
 assert.ok(runtimeConfig.includes('subscriptionAlreadyRequested'), '模块导航必须跳过已在点击链路内发起的订阅')
 assert.ok(tabBar.includes('unreadCount > 0'), '消息 Tab 必须展示合并后的消息未读徽标')
-assert.ok(qualificationSmoke.includes("'packages/social/direct-messages/chat'"), '资格版构建检查必须排除私信详情页')
+assert.ok(qualificationSmoke.includes("'pages/direct-messages/chat'"), '资格版构建检查必须排除私信详情页')
 assert.ok(appSource.includes('privateMessageUnreadVisibleRef.current'), '未读轮询必须在页面隐藏时暂停')
 assert.ok(appSource.includes('privateMessageUnreadPollingGeneration.current'), '未读轮询必须使用可见性代际防止隐藏后重启')
 assert.ok(unreadSource.includes("resolveMiniappModule(getMiniappRuntimeConfig(), 'private_message').state !== 'enabled'"), '未启用私信模块不得请求未读接口')

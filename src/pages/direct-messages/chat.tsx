@@ -1,48 +1,48 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidHide, useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
-import { createIdempotencyKey, isApiError } from '../../../api/client'
-import { getCurrentIdentity, getCurrentUser } from '../../../api/account'
-import { uploadMediaImage } from '../../../api/media'
-import CustomNavbar, { getNavbarMetrics } from '../../../components/custom-navbar'
-import UserAvatar from '../../../components/user-avatar'
-import StickerContent from '../../../components/sticker-content'
-import StickerPicker from '../../../components/sticker-picker'
+import { createIdempotencyKey, isApiError } from '../../api/client'
+import { getCurrentIdentity, getCurrentUser } from '../../api/account'
+import { uploadMediaImage } from '../../api/media'
+import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
+import UserAvatar from '../../components/user-avatar'
+import StickerContent from '../../components/sticker-content'
+import StickerPicker from '../../components/sticker-picker'
 import {
   KeyboardSafeInput,
   useKeyboardInset,
-} from '../../../components/keyboard-safe-input'
+} from '../../components/keyboard-safe-input'
 import {
   formatMessageTimelineTime,
   shouldShowMessageTimelineTime,
-} from '../../../features/messages/time'
-import { parseDirectMessageConversationId } from '../../../features/direct-messages/navigation'
+} from '../../features/messages/time'
+import { parseDirectMessageConversationId } from '../../features/direct-messages/navigation'
 import {
   canLoadDirectMessagePage,
   displayedLastReceivedMessageId,
   historyPaginationFromDirectMessagePoll,
   mergeDirectMessages,
-} from '../../../features/direct-messages/pagination'
+} from '../../features/direct-messages/pagination'
 import {
   resolvePendingDirectMessageSend,
   type PendingDirectMessageSend,
-} from '../../../features/direct-messages/composer'
+} from '../../features/direct-messages/composer'
 import {
   privateMessageImageFrameSize,
-} from '../../../features/direct-messages/media-review'
-import { insertStickerToken } from '../../../features/stickers/content'
-import { privateMessagesRepository } from '../../../features/direct-messages/repository'
+} from '../../features/direct-messages/media-review'
+import { insertStickerToken } from '../../features/stickers/content'
+import { privateMessagesRepository } from '../../features/direct-messages/repository'
 import {
   decrementPrivateMessageUnreadCount,
   refreshPrivateMessageUnreadCount,
-} from '../../../features/direct-messages/unread'
-import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
-import { chooseMediaImages } from '../../../features/media/selection'
-import type { MediaImageDraft } from '../../../features/media/images'
+} from '../../features/direct-messages/unread'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import { chooseMediaImages } from '../../features/media/selection'
+import type { MediaImageDraft } from '../../features/media/images'
 import type {
   DirectMessage,
   DirectMessageConversation,
-} from '../../../features/direct-messages/types'
+} from '../../features/direct-messages/types'
 import './chat.scss'
 
 const HISTORY_PAGE_SIZE = 50
@@ -1002,7 +1002,7 @@ const contentBottomPadding = stickerPickerOpen
           >
             <Image
               className='direct-chat-composer__sticker-icon'
-              src={require('../../../assets/icons/smile.svg')}
+              src={require('../../assets/icons/smile.svg')}
               mode='aspectFit'
             />
           </View>
@@ -1016,7 +1016,7 @@ const contentBottomPadding = stickerPickerOpen
           >
             <Image
               className='direct-chat-composer__image-trigger-icon'
-              src={require('../../../assets/icons/image.svg')}
+              src={require('../../assets/icons/image.svg')}
               mode='aspectFit'
             />
           </View>
@@ -1037,7 +1037,7 @@ const contentBottomPadding = stickerPickerOpen
               ) : (
                 <Image
                   className='direct-chat-composer__send-icon'
-                  src={require('../../../assets/community/send.svg')}
+                  src={require('../../assets/community/send.svg')}
                   mode='aspectFit'
                 />
               )}

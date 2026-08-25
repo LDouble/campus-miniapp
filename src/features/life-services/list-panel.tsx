@@ -107,9 +107,9 @@ const emptyCopy: Record<LifeServiceSection, { title: string; subtitle: string }>
 }
 
 const myServicesRoutes: Record<LifeServiceSection, string> = {
-  errands: '/packages/social/my-services/index?section=errands&relation=all',
-  market: '/packages/social/my-services/index?section=market',
-  carpool: '/packages/social/my-services/index?section=carpool&relation=all',
+  errands: '/pages/my-services/index?section=errands&relation=all',
+  market: '/pages/my-services/index?section=market',
+  carpool: '/pages/my-services/index?section=carpool&relation=all',
 }
 
 const myServicesLabels: Record<LifeServiceSection, string> = {

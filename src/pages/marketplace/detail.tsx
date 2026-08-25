@@ -1,43 +1,43 @@
 import { useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import CustomNavbar from '../../../components/custom-navbar'
-import StickerContent from '../../../components/sticker-content'
-import type { MarketplaceListingView } from '../../../api/types'
-import { isApiError } from '../../../api/client'
-import { getCurrentIdentity } from '../../../api/account'
-import { lifeServicesRepository } from '../../../features/life-services/repository'
-import { consumeBusinessDetailSnapshot } from '../../../features/life-services/business-detail-snapshot'
-import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
-import { openAcademicVerification } from '../../../features/academic-verification/guard'
-import { openContentReport } from '../../../features/content-report'
-import FavoriteToggle from '../../../features/favorites/favorite-toggle'
-import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
-import { useCampusShare } from '../../../features/share'
-import { formatDateTime, formatMoney, formatStatus } from '../../../features/life-services/format'
+import CustomNavbar from '../../components/custom-navbar'
+import StickerContent from '../../components/sticker-content'
+import type { MarketplaceListingView } from '../../api/types'
+import { isApiError } from '../../api/client'
+import { getCurrentIdentity } from '../../api/account'
+import { lifeServicesRepository } from '../../features/life-services/repository'
+import { consumeBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
+import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import { openAcademicVerification } from '../../features/academic-verification/guard'
+import { openContentReport } from '../../features/content-report'
+import FavoriteToggle from '../../features/favorites/favorite-toggle'
+import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
+import { useCampusShare } from '../../features/share'
+import { formatDateTime, formatMoney, formatStatus } from '../../features/life-services/format'
 import {
   contactTypeLabel,
   showParticipationContact,
-} from '../../../features/life-services/contact-reveal'
+} from '../../features/life-services/contact-reveal'
 import {
   hasParticipationContactAccess,
   type ParticipationContact,
   restoreParticipationContact,
   visibleParticipationContact,
-} from '../../../features/life-services/participation-contact-storage'
-import DetailAuthorHeader from '../../../features/life-services/components/detail-author-header'
+} from '../../features/life-services/participation-contact-storage'
+import DetailAuthorHeader from '../../features/life-services/components/detail-author-header'
 import DetailComments, {
   createBusinessContactComment,
-} from '../../../features/life-services/components/detail-comments'
-import DetailOverflowActions from '../../../features/life-services/components/detail-overflow-actions'
+} from '../../features/life-services/components/detail-comments'
+import DetailOverflowActions from '../../features/life-services/components/detail-overflow-actions'
 import {
   buildDetailFooterActions,
   splitDetailActions,
-} from '../../../features/life-services/detail-actions'
-import { campusLabel } from '../../../features/life-services/campus'
-import { plainStickerContent } from '../../../features/stickers/content'
-import ContentImageGrid from '../../../features/community/components/content-image-grid'
-import '../../../features/life-services/detail.scss'
+} from '../../features/life-services/detail-actions'
+import { campusLabel } from '../../features/life-services/campus'
+import { plainStickerContent } from '../../features/stickers/content'
+import ContentImageGrid from '../../features/community/components/content-image-grid'
+import '../../features/life-services/detail.scss'
 import './detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -119,7 +119,7 @@ export default function MarketplaceDetailPage() {
     title: item
       ? `${item.intent === 'wanted' ? '求购' : '闲置'}｜${plainStickerContent(item.description)}`
       : '校园二手｜OUSea',
-    path: id ? '/packages/social/marketplace/detail' : '/pages/community/index',
+    path: id ? '/pages/marketplace/detail' : '/pages/community/index',
     query: id ? { id } : { section: 'market' },
     imageUrl: item?.status === 'published' ? item.image_urls[0] : undefined,
   }))
@@ -135,7 +135,7 @@ export default function MarketplaceDetailPage() {
     }
     if (action === 'edit') {
       requestWechatSubscriptionForModule('marketplace')
-      Taro.navigateTo({ url: `/packages/social/publish/index?section=market&mode=edit&id=${item.id}` })
+      Taro.navigateTo({ url: `/pages/publish/index?section=market&mode=edit&id=${item.id}` })
       return
     }
     const confirm = await Taro.showModal({

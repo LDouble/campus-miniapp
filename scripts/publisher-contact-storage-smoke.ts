@@ -60,7 +60,7 @@ publisherContactStorage.clear(storage, 7)
 assert.equal(publisherContactStorage.read(storage, 7), null)
 
 const publisherSource = readFileSync(
-  resolve(process.cwd(), 'src/packages/social/publish/index.tsx'),
+  resolve(process.cwd(), 'src/pages/publish/index.tsx'),
   'utf8',
 )
 assert.match(publisherSource, /loadRememberedContact\(\)\.then/, '新建发布页应恢复已保存联系方式')

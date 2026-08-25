@@ -2,11 +2,11 @@ const validConversationId = (conversationId: number) => (
   Number.isInteger(conversationId) && conversationId > 0
 )
 
-export const directMessagesListUrl = '/packages/social/direct-messages/index'
+export const directMessagesListUrl = '/pages/direct-messages/index'
 
 export const directMessageChatUrl = (conversationId: number) => (
   validConversationId(conversationId)
-    ? `/packages/social/direct-messages/chat?id=${conversationId}`
+    ? `/pages/direct-messages/chat?id=${conversationId}`
     : directMessagesListUrl
 )
 
