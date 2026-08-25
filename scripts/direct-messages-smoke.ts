@@ -285,8 +285,8 @@ assert.match(
 )
 assert.match(
   authSource,
-  /isDevelopmentEnvironment = \(\) => getMiniProgramEnvVersion\(\) !== 'release'/u,
-  '非生产环境展示不得根据 API 域名字符串判断',
+  /isDevelopmentEnvironment = \(\) => getMiniProgramEnvVersion\(\) === 'develop'/u,
+  '开发环境展示不得根据 API 域名字符串判断',
 )
 
 for (const path of [

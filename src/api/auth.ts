@@ -22,10 +22,10 @@ export const API_BASE_URL = resolveApiBaseUrl(getMiniProgramEnvVersion(), {
 })
 
 // Keep presentation decisions aligned with the same runtime source used for
-// review/production API selection. Treat develop and trial as non-production
-// builds so the experience version can be reviewed with the notice-only UI.
+// review/production API selection. Only the develop build uses the
+// notice-only UI; trial and release keep the normal private-message shape.
 // Do not infer the environment from a URL.
-export const isDevelopmentEnvironment = () => getMiniProgramEnvVersion() !== 'release'
+export const isDevelopmentEnvironment = () => getMiniProgramEnvVersion() === 'develop'
 
 export const apiUrl = (path: string) => {
   const baseEndsWithSlash = API_BASE_URL.endsWith('/')
