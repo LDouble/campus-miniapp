@@ -14,6 +14,7 @@ import { uploadMediaImage } from '../../api/media'
 import { getCurrentIdentity } from '../../api/account'
 import type {
   CarpoolTripView,
+  CampusCirclePostView,
   CampusCircleSectionView,
   CampusCircleTopicView,
   ErrandView,
@@ -27,6 +28,7 @@ import {
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import MentionPicker from '../../features/mentions/mention-picker'
+import { insertMentionToken } from '../../features/mentions/content'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import {
   publisherContactStorage,
@@ -164,6 +166,19 @@ const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionV
 const restoreStickerContent = (content?: string | null) => (
   editableStickerContent(content || '')
 )
+
+const mentionCandidatesFromSegments = (
+  segments?: CampusCirclePostView['content_segments'],
+): MentionCandidate[] => {
+  if (!segments) return []
+  const seen = new Set<number>()
+  return segments.flatMap((segment) => {
+    if (segment.type !== 'mention' || !segment.user_id || !segment.nickname) return []
+    if (seen.has(segment.user_id)) return []
+    seen.add(segment.user_id)
+    return [{ id: segment.user_id, nickname: segment.nickname, avatar_url: null }]
+  })
+}
 
 type StoredPublisherForm = Partial<PublisherForm> & { stickerIds?: unknown }
 type LegacyPublisherForm = Omit<PublisherForm, 'images'> & {
@@ -480,7 +495,7 @@ export default function PublishPage() {
       campus: isCampusName(item.campus) ? item.campus : '',
       content: restoreStickerContent(item.description),
       marketIntent: item.intent,
-      marketCategory: item.category === 'course_material' ? 'course_material' : 'general',
+      marketCategory: item.category,
       courseName: item.course_name || '',
       courseCode: item.course_code || '',
       academicPeriodId: item.academic_period_id || '',
@@ -525,6 +540,7 @@ export default function PublishPage() {
         setForm({
           ...emptyForm(),
           content: restoreStickerContent(post.content),
+          mentionCandidates: mentionCandidatesFromSegments(post.content_segments),
           images: post.images.map((image) => serverMediaImageDraft({
             url: image.url,
             mediaId: image.media_id || undefined,
@@ -1203,15 +1219,26 @@ export default function PublishPage() {
                     </View>
                     <Text>{form.content.length}/{contentMaxLength}</Text>
                   </View>
-                  {section === 'community' && (
-                    <MentionPicker
-                      open={mentionPickerOpen}
-                      selected={form.mentionCandidates}
-                      onChange={(mentionCandidates) => update('mentionCandidates', mentionCandidates)}
-                      onOpenChange={setMentionPickerOpen}
-                    />
-                  )}
                 </View>
+                {section === 'community' && (
+                  <MentionPicker
+                    open={mentionPickerOpen}
+                    selected={form.mentionCandidates}
+                    onChange={(mentionCandidates) => update('mentionCandidates', mentionCandidates)}
+                    onSelect={(candidate) => {
+                      const inserted = insertMentionToken(
+                        form.content,
+                        candidate.nickname,
+                        contentSelectionStartRef.current,
+                        contentSelectionEndRef.current,
+                      )
+                      contentSelectionStartRef.current = inserted.cursor
+                      contentSelectionEndRef.current = inserted.cursor
+                      update('content', inserted.text)
+                    }}
+                    onOpenChange={setMentionPickerOpen}
+                  />
+                )}
                 <StickerPicker
                   open={stickerPickerOpen}
                   onOpenChange={changeStickerPickerOpen}

@@ -3,6 +3,7 @@ import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { Notice } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { isDevelopmentEnvironment } from '../../api/auth'
 import {
   requestWechatSubscriptionAndStopPropagation,
 } from '../../features/wechat-subscription'
@@ -52,10 +53,13 @@ const privatePeerName = (conversation: DirectMessageConversation) => (
   conversation.peer.deleted ? '已注销用户' : conversation.peer.nickname
 )
 
-const privateMessagePreview = (conversation: DirectMessageConversation) => (
+const privateMessagePreview = (
+  conversation: DirectMessageConversation,
+  developmentPresentation = false,
+) => (
   conversation.last_message
     ? plainStickerContent(conversation.last_message.content)
-    : '还没有消息，打个招呼吧'
+    : developmentPresentation ? '暂无新的通知内容' : '还没有消息，打个招呼吧'
 )
 
 const categoryType = (category: string): MessageType => {
@@ -93,6 +97,7 @@ const migratedModuleForAction = (path: string): MigratedFeatureModule | null => 
 }
 
 export default function MessagesPage() {
+  const developmentPresentation = isDevelopmentEnvironment()
   const [view, setView] = useState<MessageView>('inbox')
   const [messages, setMessages] = useState<Notice[]>([])
   const [tab, setTab] = useState<Tab>('全部')
@@ -296,7 +301,12 @@ export default function MessagesPage() {
   }
 
   return (
-    <View className={`messages-page ${active ? 'messages-page--locked' : ''}`}>
+    <View className={[
+      'messages-page',
+      developmentPresentation ? 'messages-page--notice' : '',
+      active ? 'messages-page--locked' : '',
+    ].filter(Boolean).join(' ')}
+    >
       <CustomNavbar
         title={view === 'notifications' ? '校园通知' : '消息'}
         subtitle={view === 'notifications' && unreadCount > 0 ? `${unreadCount} 条未读` : undefined}
@@ -331,20 +341,32 @@ export default function MessagesPage() {
               && resolveMiniappModule(runtimeConfig, 'private_message').state === 'enabled'
               && (
               <>
-                {!privateReady && <View className='messages-private-state'>正在准备私信</View>}
+                {!privateReady && (
+                  <View className='messages-private-state'>
+                    {developmentPresentation ? '正在准备通知' : '正在准备私信'}
+                  </View>
+                )}
                 {privateReady && privateLoading && (
-                  <View className='messages-private-state'>正在加载私信</View>
+                  <View className='messages-private-state'>
+                    {developmentPresentation ? '正在加载通知' : '正在加载私信'}
+                  </View>
                 )}
                 {privateReady && !privateLoading && privateError && conversations.length === 0 && (
                   <View className='messages-private-state messages-private-state--error'>
                     <Text>{privateError}</Text>
-                    <View ariaRole='button' ariaLabel='重新加载私信' onClick={() => void loadPrivatePreview()}>重试</View>
+                    <View
+                      ariaRole='button'
+                      ariaLabel={developmentPresentation ? '重新加载通知' : '重新加载私信'}
+                      onClick={() => void loadPrivatePreview()}
+                    >重试</View>
                   </View>
                 )}
                 {privateReady && !privateLoading && !privateError && conversations.length === 0 && (
                   <View className='messages-private-state messages-private-state--empty'>
-                    <Text>还没有私信</Text>
-                    <Text>去同学主页发起聊天，最近会话会显示在这里</Text>
+                    <Text>{developmentPresentation ? '暂无新的通知' : '还没有私信'}</Text>
+                    <Text>{developmentPresentation
+                      ? '新的校园内容会显示在这里'
+                      : '去同学主页发起聊天，最近会话会显示在这里'}</Text>
                   </View>
                 )}
                 {privateReady && !privateLoading && conversations.length > 0 && (
@@ -360,7 +382,7 @@ export default function MessagesPage() {
                             conversation.unread_count > 0 ? 'messages-conversation-card--unread' : '',
                           ].filter(Boolean).join(' ')}
                           ariaRole='button'
-                          ariaLabel={`打开与${privatePeerName(conversation)}的私信${conversation.unread_count > 0 ? `，${conversation.unread_count} 条未读` : ''}`}
+                          ariaLabel={`${developmentPresentation ? '打开通知' : `打开与${privatePeerName(conversation)}的私信`}${conversation.unread_count > 0 ? `，${conversation.unread_count} 条未读` : ''}`}
                           onClick={() => openConversation(conversation)}
                         >
                           <UserAvatar
@@ -376,7 +398,7 @@ export default function MessagesPage() {
                               <Text>{privatePeerName(conversation)}</Text>
                               <Text>{formatMessageListTime(conversation.last_activity_at)}</Text>
                             </View>
-                            <Text>{privateMessagePreview(conversation)}</Text>
+                            <Text>{privateMessagePreview(conversation, developmentPresentation)}</Text>
                           </View>
                           {conversation.unread_count > 0 && (
                             <View className='messages-conversation-card__unread'>
@@ -390,10 +412,10 @@ export default function MessagesPage() {
                       <View
                         className='messages-private-more motion-press'
                         ariaRole='button'
-                        ariaLabel='查看全部私信'
+                        ariaLabel={developmentPresentation ? '查看全部通知' : '查看全部私信'}
                         onClick={openPrivateMessages}
                       >
-                        <Text>查看全部私信</Text>
+                        <Text>{developmentPresentation ? '查看全部通知' : '查看全部私信'}</Text>
                         <Text>›</Text>
                       </View>
                     )}

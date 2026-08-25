@@ -8,7 +8,7 @@ import {
   communityAuthorName,
 } from './author'
 import UserAvatar from '../../components/user-avatar'
-import StickerContent from '../../components/sticker-content'
+import MentionContent from '../../components/mention-content'
 import { parseStickerContent, plainStickerContent } from '../stickers/content'
 import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
@@ -80,6 +80,7 @@ export type CommunityPostCommentPreview = {
   authorDeleted: boolean
   authorNickname: string
   content: string
+  contentSegments?: PublicCommentPreview['content_segments']
   rootId: number
   parentId: number | null
   replyToCommentId: number | null
@@ -157,6 +158,7 @@ function CommunityPostCard({
     authorDeleted: false,
     authorNickname: comment.author_nickname,
     content: comment.content,
+    contentSegments: comment.content_segments,
     rootId: comment.root_id,
     parentId: comment.parent_id,
     replyToCommentId: comment.reply_to_comment_id,
@@ -240,8 +242,9 @@ function CommunityPostCard({
               ? 'community-post__content-wrap community-post__content-wrap--clamped'
               : 'community-post__content-wrap'}
             >
-              <StickerContent
+              <MentionContent
                 content={post.content}
+                segments={post.content_segments}
                 className='community-post__content'
                 stickerClassName='community-post__content-sticker'
               />
@@ -407,8 +410,9 @@ function CommunityPostCard({
                       </>
                     )}
                     <Text>：</Text>
-                    <StickerContent
+                    <MentionContent
                       content={comment.content}
+                      segments={comment.contentSegments}
                       className='community-post__comment-preview-content'
                       stickerClassName='community-post__comment-preview-sticker'
                     />

@@ -64,6 +64,7 @@ const homeFeedItemToPost = (
   comment_count: item.comment_count,
   comment_previews: item.comment_previews,
   content: item.content || null,
+  content_segments: item.content_segments,
   created_at: item.feed_time,
   id: item.source_id,
   images: item.images.map((image, index) => ({

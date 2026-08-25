@@ -33,10 +33,17 @@ type MentionPickerProps = {
   open: boolean
   selected: MentionCandidate[]
   onChange: (selected: MentionCandidate[]) => void
+  onSelect?: (candidate: MentionCandidate) => void
   onOpenChange: (open: boolean) => void
 }
 
-export default function MentionPicker({ open, selected, onChange, onOpenChange }: MentionPickerProps) {
+export default function MentionPicker({
+  open,
+  selected,
+  onChange,
+  onSelect,
+  onOpenChange,
+}: MentionPickerProps) {
   const safeAreaStyle = mentionPickerSafeAreaStyle()
   const [keyword, setKeyword] = useState('')
   const [candidates, setCandidates] = useState<MentionCandidate[]>([])
@@ -82,6 +89,7 @@ export default function MentionPicker({ open, selected, onChange, onOpenChange }
     }
     if (selected.length >= MAX_MENTIONS) return
     onChange([...selected, candidate])
+    onSelect?.(candidate)
   }
 
   const removeCandidate = (candidateId: number) => {

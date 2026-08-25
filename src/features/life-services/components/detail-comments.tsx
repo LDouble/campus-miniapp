@@ -15,7 +15,7 @@ import { getCurrentUser } from '../../../api/account'
 import { isApiError } from '../../../api/client'
 import UserAvatar from '../../../components/user-avatar'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
-import StickerContent from '../../../components/sticker-content'
+import MentionContent from '../../../components/mention-content'
 import StickerPicker from '../../../components/sticker-picker'
 import CommentImage from '../../community/components/comment-image'
 import { openContentReport } from '../../content-report'
@@ -35,6 +35,7 @@ import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dis
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
 import MentionPicker from '../../mentions/mention-picker'
+import { insertMentionToken } from '../../mentions/content'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import { getSystemState } from '../../../state/system'
 import {
@@ -372,8 +373,9 @@ const renderReplyTree = (
             id={`detail-comment-reply-${comment.id}`}
             className='business-detail-comment__reply-content'
           >
-            <StickerContent
+            <MentionContent
               content={comment.content}
+              segments={comment.content_segments}
               stickerClassName='business-detail-comment__sticker'
             />
             {comment.image && (
@@ -507,8 +509,9 @@ const DetailCommentThread = memo(function DetailCommentThread({
             onClick={() => onStartReply(comment)}
             onLongPress={() => onOpenActions(comment)}
           >
-            <StickerContent
+            <MentionContent
               content={comment.content}
+              segments={comment.content_segments}
               stickerClassName='business-detail-comment__sticker'
             />
             {comment.image && (
@@ -1634,6 +1637,17 @@ export default function DetailComments({
               open={mentionPickerOpen}
               selected={mentionCandidates}
               onChange={setMentionCandidates}
+              onSelect={(candidate) => {
+                const inserted = insertMentionToken(
+                  content,
+                  candidate.nickname,
+                  contentSelectionStartRef.current,
+                  contentSelectionEndRef.current,
+                )
+                contentSelectionStartRef.current = inserted.cursor
+                contentSelectionEndRef.current = inserted.cursor
+                setContent(inserted.text)
+              }}
               onOpenChange={setMentionPickerVisible}
             />
           )}

@@ -73,6 +73,12 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     process.env,
     process.env.NODE_ENV === 'production',
   )
+  const buildApiEndpoints = process.env.NODE_ENV === 'production'
+    ? apiEndpoints
+    : {
+        review: apiEndpoints.production,
+        production: apiEndpoints.production,
+      }
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'campus-miniapp',
     date: '2026-7-25',
@@ -90,8 +96,8 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       path.resolve(__dirname, 'plugins/weapp-compat.js'),
     ],
     defineConstants: {
-      __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(apiEndpoints.review),
-      __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(apiEndpoints.production),
+      __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(buildApiEndpoints.review),
+      __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(buildApiEndpoints.production),
       __CAMPUS_WECHAT_APP_ID__: JSON.stringify(currentWechatAppId),
       __CAMPUS_APP_RELEASE__: JSON.stringify(
         process.env.TARO_APP_RELEASE || process.env.npm_package_version || 'development',
