@@ -2,6 +2,8 @@ import type { components } from './generated/schema'
 
 export type TokenPair = components['schemas']['TokenPair']
 export type User = components['schemas']['User']
+export type MentionCandidate = components['schemas']['MentionCandidate']
+export type MentionCandidatePage = components['schemas']['MentionCandidatePage']
 export type CurrentUser = components['schemas']['CurrentUser']
 export type AccountCancellationPreflight = components['schemas']['AccountCancellationPreflight']
 export type AccountCancellationResult = components['schemas']['AccountCancellationResult']

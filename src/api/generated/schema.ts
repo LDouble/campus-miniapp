@@ -180,6 +180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/mention-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SearchMentionCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{id}": {
         parameters: {
             query?: never;
@@ -2892,6 +2908,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/deadlines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开 DDL */
+        get: operations["ListDeadlines"];
+        put?: never;
+        /** 创建 DDL */
+        post: operations["CreateDeadline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我创建的 DDL */
+        get: operations["ListMyDeadlines"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/subscriptions/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的 DDL 订阅 */
+        get: operations["ListMyDeadlineSubscriptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看 DDL 详情 */
+        get: operations["GetDeadline"];
+        put?: never;
+        post?: never;
+        /** 取消我的 DDL */
+        delete: operations["DeleteDeadline"];
+        options?: never;
+        head?: never;
+        /** 修改我的 DDL */
+        patch: operations["UpdateDeadline"];
+        trace?: never;
+    };
+    "/api/v1/deadlines/{id}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 订阅 DDL */
+        put: operations["SubscribeDeadline"];
+        post?: never;
+        /** 取消订阅 DDL */
+        delete: operations["UnsubscribeDeadline"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/classroom-occupancies": {
         parameters: {
             query?: never;
@@ -3491,7 +3596,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** 修改草稿或被驳回商品 */
+        /** 修改已发布、草稿或被驳回商品 */
         patch: operations["UpdateMarketplaceListing"];
         trace?: never;
     };
@@ -4575,6 +4680,16 @@ export interface components {
             is_self: boolean;
             counts: components["schemas"]["UserProfileCounts"];
         };
+        MentionCandidate: {
+            /** Format: uint64 */
+            id: number;
+            nickname: string;
+            /** Format: uri */
+            avatar_url: string | null;
+        };
+        MentionCandidatePage: {
+            items: components["schemas"]["MentionCandidate"][];
+        };
         RolePage: {
             items: components["schemas"]["Role"][];
             page: number;
@@ -4845,6 +4960,10 @@ export interface components {
             data: components["schemas"]["UserProfile"];
             request_id: string;
         };
+        MentionCandidatePageEnvelope: {
+            data: components["schemas"]["MentionCandidatePage"];
+            request_id: string;
+        };
         AuthIdentityEnvelope: {
             data: components["schemas"]["AuthIdentity"];
             request_id: string;
@@ -4927,6 +5046,10 @@ export interface components {
         };
         ErrorEnvelope: {
             error: {
+                /**
+                 * @description 稳定错误码。教务接口可能返回 academic_retryable（HTTP 503，客户端只允许用户主动点击重试）、
+                 *     academic_provider_busy（HTTP 429，客户端必须遵守 Retry-After），以及凭据、验证码和账号受限专用错误码。
+                 */
                 code: string;
                 message: string;
             };
@@ -5682,8 +5805,8 @@ export interface components {
             id: number;
             /** @enum {string} */
             method: "credentials" | "student_card";
-            /** @enum {string} */
-            provider: "ouc" | "mock" | "manual";
+            /** @description 身份来源 Provider ID；凭据认证由独立 Provider 服务返回，人工审核使用 manual */
+            provider: string;
             real_name: string;
             revoke_reason: string | null;
             /** Format: date-time */
@@ -6463,6 +6586,7 @@ export interface components {
             content: string;
             /** Format: uint64 */
             media_id?: number | null;
+            mention_user_ids?: number[];
             /** Format: uint64 */
             parent_id?: number | null;
             /** Format: uint64 */
@@ -6509,6 +6633,7 @@ export interface components {
             expected_version: number;
             /** Format: uint64 */
             media_id?: number;
+            mention_user_ids?: number[];
             /** @default false */
             remove_image: boolean;
         };
@@ -6982,6 +7107,97 @@ export interface components {
             /** Format: uri */
             upload_url: string;
         };
+        DeadlineInput: {
+            category?: string;
+            course_name?: string;
+            description?: string;
+            /** Format: date-time */
+            due_at: string;
+            link?: string;
+            title: string;
+        };
+        DeadlinePage: {
+            items: components["schemas"]["DeadlineView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        DeadlinePageResponseBody: {
+            data: components["schemas"]["DeadlinePage"];
+            request_id: string;
+        };
+        DeadlineResponseBody: {
+            data: components["schemas"]["DeadlineView"];
+            request_id: string;
+        };
+        DeadlineSubscriptionPage: {
+            items: components["schemas"]["DeadlineSubscriptionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        DeadlineSubscriptionPageResponseBody: {
+            data: components["schemas"]["DeadlineSubscriptionPage"];
+            request_id: string;
+        };
+        DeadlineSubscriptionResponseBody: {
+            data: components["schemas"]["DeadlineSubscriptionView"];
+            request_id: string;
+        };
+        DeadlineSubscriptionView: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            deadline_id: number;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            reminded_at?: string | null;
+            /** @enum {string} */
+            status: "active" | "cancelled";
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            user_id: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        DeadlineUpdateInput: components["schemas"]["DeadlineInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        DeadlineVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        DeadlineView: {
+            author_avatar_url: string | null;
+            author_nickname: string;
+            category?: string | null;
+            course_name?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            creator_id: number;
+            description?: string | null;
+            /** Format: date-time */
+            due_at: string;
+            /** Format: uint64 */
+            id: number;
+            link?: string | null;
+            /** @enum {string} */
+            status: "active" | "cancelled";
+            subscribed: boolean;
+            /** Format: int64 */
+            subscription_count: number;
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
         ClassroomAvailabilityItem: {
             available: boolean;
             classroom: components["schemas"]["ClassroomView"];
@@ -7331,6 +7547,7 @@ export interface components {
             campus: string | null;
             /** Format: date-time */
             cancelled_at: string | null;
+            category: string;
             /** Format: int64 */
             comment_count: number;
             comment_previews: components["schemas"]["PublicCommentPreview"][];
@@ -7661,8 +7878,7 @@ export interface components {
             author_nickname: string;
             available_actions: components["schemas"]["MarketplaceViewerAction"][];
             campus: string | null;
-            /** @enum {string} */
-            category: "general" | "course_material";
+            category: string;
             /** Format: int64 */
             comment_count: number;
             comment_previews: components["schemas"]["PublicCommentPreview"][];
@@ -7998,6 +8214,16 @@ export interface components {
             data: components["schemas"]["PrivateMessageView"];
             request_id: string;
         };
+        PrivateMessageSource: {
+            /** Format: uint64 */
+            content_version: number;
+            /** Format: uint64 */
+            resource_id: number;
+            /** @enum {string} */
+            resource_type: "campus_circle_post" | "comment";
+            /** @enum {string} */
+            type: "mention";
+        };
         PrivateMessageUnreadCount: {
             /** Format: uint64 */
             count: number;
@@ -8018,6 +8244,7 @@ export interface components {
             image_state?: components["schemas"]["PrivateMessageImageState"];
             /** Format: uint64 */
             sender_id: number;
+            source?: components["schemas"]["PrivateMessageSource"];
         };
         UpdatePrivateConversationReadInput: {
             /** Format: uint64 */
@@ -8481,6 +8708,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["UserProfileEnvelope"];
+            };
+        };
+        /** @description Bounded public @ mention candidates */
+        MentionCandidatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MentionCandidatePageEnvelope"];
             };
         };
         /** @description Direct user roles */
@@ -9286,6 +9522,42 @@ export interface components {
                 "application/json": components["schemas"]["MaterialUploadSessionResponseBody"];
             };
         };
+        /** @description DDL 分页列表 */
+        DeadlinePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlinePageResponseBody"];
+            };
+        };
+        /** @description DDL 详情 */
+        DeadlineResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlineResponseBody"];
+            };
+        };
+        /** @description 我的 DDL 订阅分页列表 */
+        DeadlineSubscriptionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlineSubscriptionPageResponseBody"];
+            };
+        };
+        /** @description DDL 订阅关系 */
+        DeadlineSubscriptionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlineSubscriptionResponseBody"];
+            };
+        };
         /** @description 教室占用分页 */
         ClassroomOccupancyPageResponse: {
             headers: {
@@ -9949,6 +10221,22 @@ export interface operations {
         requestBody: components["requestBodies"]["CreateUser"];
         responses: {
             201: components["responses"]["UserResponse"];
+        };
+    };
+    SearchMentionCandidates: {
+        parameters: {
+            query: {
+                keyword: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MentionCandidatePageResponse"];
+            400: components["responses"]["Error"];
         };
     };
     GetUser: {
@@ -12010,6 +12298,7 @@ export interface operations {
                     content?: string;
                     image_urls?: string[];
                     media_ids?: number[];
+                    mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
                 };
@@ -12073,6 +12362,7 @@ export interface operations {
                     content?: string;
                     image_urls?: string[];
                     media_ids?: number[];
+                    mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
                     /** Format: uint64 */
@@ -13881,6 +14171,166 @@ export interface operations {
             200: components["responses"]["MaterialCoursePageResponse"];
         };
     };
+    ListDeadlines: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                category?: string;
+                course_name?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlinePageResponse"];
+        };
+    };
+    CreateDeadline: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["DeadlineResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    ListMyDeadlines: {
+        parameters: {
+            query?: {
+                status?: "active" | "cancelled";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlinePageResponse"];
+        };
+    };
+    ListMyDeadlineSubscriptions: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineSubscriptionPageResponse"];
+        };
+    };
+    GetDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    DeleteDeadline: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["DeadlineResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateDeadline: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["DeadlineResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    SubscribeDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineSubscriptionResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UnsubscribeDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineSubscriptionResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     ListAdminClassroomOccupancies: {
         parameters: {
             query?: {
@@ -14103,6 +14553,7 @@ export interface operations {
     ListAdminErrands: {
         parameters: {
             query?: {
+                category?: string;
                 status?: string;
                 review_status?: string;
                 keyword?: string;
@@ -14176,6 +14627,7 @@ export interface operations {
             query?: {
                 keyword?: string;
                 campus?: string;
+                category?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -14200,6 +14652,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    category?: string;
                     description: string;
                     /** Format: int64 */
                     reward_cents: number;
@@ -14224,6 +14677,7 @@ export interface operations {
                 relation?: "all" | "published" | "accepted";
                 status?: "open" | "accepted" | "picked_up" | "delivered" | "completed" | "cancelled";
                 review_status?: "draft" | "pending_review" | "approved" | "rejected";
+                category?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -14265,6 +14719,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    category?: string;
                     description: string;
                     /** Format: int64 */
                     reward_cents: number;
@@ -14537,6 +14992,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["FavoritePageResponse"];
+            503: components["responses"]["Error"];
         };
     };
     GetFavoriteState: {
@@ -14611,7 +15067,7 @@ export interface operations {
         parameters: {
             query?: {
                 intent?: "sell" | "wanted";
-                category?: "general" | "course_material";
+                category?: string;
                 status?: string;
                 keyword?: string;
                 min_price_cents?: number;
@@ -14678,7 +15134,7 @@ export interface operations {
         parameters: {
             query?: {
                 intent?: "sell" | "wanted";
-                category?: "general" | "course_material";
+                category?: string;
                 campus?: string;
                 keyword?: string;
                 min_price_cents?: number;
@@ -14712,8 +15168,7 @@ export interface operations {
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
-                    /** @enum {string} */
-                    category: "general" | "course_material";
+                    category: string;
                     campus?: string;
                     course_name?: string;
                     course_code?: string;
@@ -14737,6 +15192,7 @@ export interface operations {
         parameters: {
             query?: {
                 intent?: "sell" | "wanted";
+                category?: string;
                 status?: string;
                 page?: number;
                 page_size?: number;
@@ -14786,8 +15242,7 @@ export interface operations {
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
-                    /** @enum {string} */
-                    category: "general" | "course_material";
+                    category: string;
                     campus?: string;
                     course_name?: string;
                     course_code?: string;

@@ -1,0 +1,17 @@
+.mention-picker { margin-top: 12rpx; }
+.mention-picker__selected { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.mention-picker__chip, .mention-picker__trigger { display: flex; min-height: 52rpx; padding: 0 16rpx; align-items: center; gap: 8rpx; border-radius: 999rpx; font-size: 22rpx; }
+.mention-picker__chip { background: var(--ousea-ocean-100, #e3effe); color: var(--ousea-ocean-600, #1d5fd6); }
+.mention-picker__chip text:last-child { min-width: 32rpx; text-align: center; font-size: 28rpx; }
+.mention-picker__trigger { border: 1rpx solid var(--ousea-bg-line, #e8edf4); color: var(--ousea-ocean-600, #1d5fd6); background: var(--campus-surface, #fff); }
+.mention-picker__panel { margin-top: 12rpx; padding: 16rpx; border: 1rpx solid var(--ousea-bg-line, #e8edf4); border-radius: 24rpx; background: var(--campus-surface, #fff); }
+.mention-picker__panel input { height: 68rpx; padding: 0 16rpx; border-radius: 16rpx; color: var(--campus-text-heading, #1a2333); background: var(--campus-surface-subtle, #f5f8fc); font-size: 24rpx; }
+.mention-picker__placeholder, .mention-picker__hint, .mention-picker__state { color: var(--campus-text-muted, #a6b2c2); font-size: 21rpx; }
+.mention-picker__hint, .mention-picker__state { display: block; margin-top: 12rpx; }
+.mention-picker__candidate { display: flex; min-height: 76rpx; align-items: center; gap: 14rpx; border-top: 1rpx solid var(--ousea-bg-line, #e8edf4); color: var(--campus-text-heading, #1a2333); font-size: 25rpx; }
+.mention-picker__candidate:first-of-type { margin-top: 12rpx; }
+.mention-picker__candidate image, .mention-picker__avatar { width: 48rpx; height: 48rpx; border-radius: 50%; }
+.mention-picker__avatar { display: flex; align-items: center; justify-content: center; background: var(--ousea-ocean-100, #e3effe); color: var(--ousea-ocean-600, #1d5fd6); font-size: 21rpx; }
+.mention-picker__candidate text:last-child { margin-left: auto; color: var(--ousea-ocean-600, #1d5fd6); font-size: 22rpx; }
+.mention-picker__candidate--selected { background: var(--ousea-ocean-50, #f2f7fe); }
+.mention-picker__candidate--disabled { opacity: 0.46; }

@@ -10,7 +10,7 @@ import {
 import Taro from '@tarojs/taro'
 import { CoverView, Image, Text, View } from '@tarojs/components'
 import { uploadMediaImage } from '../../../api/media'
-import type { CommentView } from '../../../api/types'
+import type { CommentView, MentionCandidate } from '../../../api/types'
 import { getCurrentUser } from '../../../api/account'
 import { isApiError } from '../../../api/client'
 import UserAvatar from '../../../components/user-avatar'
@@ -34,6 +34,7 @@ import {
 import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dismissal'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
+import MentionPicker from '../../mentions/mention-picker'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import { getSystemState } from '../../../state/system'
 import {
@@ -588,6 +589,7 @@ export default function DetailComments({
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
   const [content, setContent] = useState('')
+  const [mentionCandidates, setMentionCandidates] = useState<MentionCandidate[]>([])
   const [commentImage, setCommentImage] = useState<MediaImageDraft | null>(null)
   const [replyTarget, setReplyTarget] = useState<DetailReplyTarget | null>(null)
   const [replyAnchorSelector, setReplyAnchorSelector] = useState('')
@@ -1254,6 +1256,7 @@ export default function DetailComments({
         target_type: targetType,
         target_id: targetId,
         content: value,
+        mention_user_ids: mentionCandidates.map((candidate) => candidate.id),
         ...(activeReplyTarget ? { parent_id: activeReplyTarget.id } : {}),
         ...(commentImage?.mediaId ? { media_id: commentImage.mediaId } : {}),
       })
@@ -1295,6 +1298,7 @@ export default function DetailComments({
         }
       }, 320)
       setContent('')
+      setMentionCandidates([])
       setComposerLineCount(1)
       setComposerExpanded(false)
       setCommentImage(null)
@@ -1605,6 +1609,9 @@ export default function DetailComments({
                 </Text>
               )}
             </View>
+          )}
+          {enabled && composerOpen && targetType === 'campus_circle_post' && (
+            <MentionPicker selected={mentionCandidates} onChange={setMentionCandidates} />
           )}
           <View className='business-detail-composer__main'>
             <UserAvatar

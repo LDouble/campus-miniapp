@@ -17,6 +17,7 @@ import type {
   CampusCircleSectionView,
   CampusCircleTopicView,
   ErrandView,
+  MentionCandidate,
   MarketplaceListingView,
 } from '../../../api/types'
 import {
@@ -25,6 +26,7 @@ import {
   type MarketplaceSource,
 } from '../../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
+import MentionPicker from '../../../features/mentions/mention-picker'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
 import {
   publisherContactStorage,
@@ -93,6 +95,7 @@ type PublisherForm = {
   images: MediaImageDraft[]
   communitySectionId: number
   communityTopicId: number
+  mentionCandidates: MentionCandidate[]
   version: number
 }
 
@@ -150,6 +153,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   images: [],
   communitySectionId: 0,
   communityTopicId: 0,
+  mentionCandidates: [],
   version: 0,
 })
 
@@ -412,6 +416,7 @@ export default function PublishPage() {
       form.contact,
     ].some((value) => value.trim().length > 0)
       || form.images.length > 0
+      || form.mentionCandidates.length > 0
   ), [form])
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
@@ -474,7 +479,7 @@ export default function PublishPage() {
       campus: isCampusName(item.campus) ? item.campus : '',
       content: restoreStickerContent(item.description),
       marketIntent: item.intent,
-      marketCategory: item.category,
+      marketCategory: item.category === 'course_material' ? 'course_material' : 'general',
       courseName: item.course_name || '',
       courseCode: item.course_code || '',
       academicPeriodId: item.academic_period_id || '',
@@ -877,6 +882,7 @@ export default function PublishPage() {
           content: serializedContent || undefined,
           media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
           image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
+          mention_user_ids: form.mentionCandidates.map((candidate) => candidate.id),
           topic_id: form.communityTopicId || undefined,
         }
         if (mode === 'create') {
@@ -1176,6 +1182,12 @@ export default function PublishPage() {
                     </View>
                     <Text>{form.content.length}/{contentMaxLength}</Text>
                   </View>
+                  {section === 'community' && (
+                    <MentionPicker
+                      selected={form.mentionCandidates}
+                      onChange={(mentionCandidates) => update('mentionCandidates', mentionCandidates)}
+                    />
+                  )}
                 </View>
                 <StickerPicker
                   open={stickerPickerOpen}
