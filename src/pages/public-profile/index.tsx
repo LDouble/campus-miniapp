@@ -9,6 +9,7 @@ import type {
   PublicUserProfile,
 } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { isDevelopmentEnvironment } from '../../api/auth'
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
 import CommunityCommentSheet from '../../features/community/comment-sheet'
@@ -101,6 +102,7 @@ const requestTab = async (tab: ProfileTab, id: number, page: number) => {
 }
 
 export default function PublicProfilePage() {
+  const developmentPresentation = isDevelopmentEnvironment()
   const [userId, setUserId] = useState(0)
   const [profile, setProfile] = useState<PublicUserProfile | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
@@ -455,6 +457,7 @@ export default function PublicProfilePage() {
                     : '仅展示对你公开可见的校园内容'}
                 </Text>
                 {!isQualificationEdition
+                  && !developmentPresentation
                   && !profile.is_self
                   && resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden'
                   && (
