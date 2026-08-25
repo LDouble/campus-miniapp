@@ -10,12 +10,12 @@ import {
 import Taro from '@tarojs/taro'
 import { CoverView, Image, Text, View } from '@tarojs/components'
 import { uploadMediaImage } from '../../../api/media'
-import type { CommentView } from '../../../api/types'
+import type { CommentView, MentionCandidate } from '../../../api/types'
 import { getCurrentUser } from '../../../api/account'
 import { isApiError } from '../../../api/client'
 import UserAvatar from '../../../components/user-avatar'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
-import StickerContent from '../../../components/sticker-content'
+import MentionContent from '../../../components/mention-content'
 import StickerPicker from '../../../components/sticker-picker'
 import CommentImage from '../../community/components/comment-image'
 import { openContentReport } from '../../content-report'
@@ -34,6 +34,8 @@ import {
 import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dismissal'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
+import MentionPicker from '../../mentions/mention-picker'
+import { insertMentionToken } from '../../mentions/content'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import { getSystemState } from '../../../state/system'
 import {
@@ -53,6 +55,7 @@ const icons = {
   send: require('../../../assets/community/send.svg'),
   expand: require('../../../assets/icons/expand.svg'),
   collapse: require('../../../assets/icons/collapse.svg'),
+  mention: require('../../../assets/icons/mention.svg'),
 }
 
 export type DetailCommentTarget = 'campus_circle_post' | 'marketplace' | 'errand' | 'carpool'
@@ -370,8 +373,9 @@ const renderReplyTree = (
             id={`detail-comment-reply-${comment.id}`}
             className='business-detail-comment__reply-content'
           >
-            <StickerContent
+            <MentionContent
               content={comment.content}
+              segments={comment.content_segments}
               stickerClassName='business-detail-comment__sticker'
             />
             {comment.image && (
@@ -505,8 +509,9 @@ const DetailCommentThread = memo(function DetailCommentThread({
             onClick={() => onStartReply(comment)}
             onLongPress={() => onOpenActions(comment)}
           >
-            <StickerContent
+            <MentionContent
               content={comment.content}
+              segments={comment.content_segments}
               stickerClassName='business-detail-comment__sticker'
             />
             {comment.image && (
@@ -588,6 +593,7 @@ export default function DetailComments({
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
   const [content, setContent] = useState('')
+  const [mentionCandidates, setMentionCandidates] = useState<MentionCandidate[]>([])
   const [commentImage, setCommentImage] = useState<MediaImageDraft | null>(null)
   const [replyTarget, setReplyTarget] = useState<DetailReplyTarget | null>(null)
   const [replyAnchorSelector, setReplyAnchorSelector] = useState('')
@@ -603,6 +609,7 @@ export default function DetailComments({
   const [composerClosing, setComposerClosing] = useState(false)
   const [inputFocused, setInputFocused] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
@@ -951,6 +958,7 @@ export default function DetailComments({
     setComposerOpen(true)
     setInputFocused(true)
     setStickerPickerOpen(false)
+    setMentionPickerOpen(false)
   }, [])
 
   useEffect(() => {
@@ -1016,6 +1024,7 @@ export default function DetailComments({
     setComposerClosing(false)
     setInputFocused(false)
     setStickerPickerOpen(false)
+    setMentionPickerOpen(false)
     setReplyTarget(null)
     setReplyAnchorSelector('')
     setKeyboardHeight(0)
@@ -1113,6 +1122,21 @@ export default function DetailComments({
     setKeyboardHeight(0)
     void Taro.hideKeyboard()
   }, [])
+
+  const setMentionPickerVisible = useCallback((open: boolean) => {
+    composerActionPendingRef.current = open
+    setMentionPickerOpen(open)
+    if (!open) return
+
+    setStickerPickerVisible(false)
+    composerCloseSequenceRef.current += 1
+    composerClosingRef.current = false
+    setComposerClosing(false)
+    setComposerOpen(true)
+    setInputFocused(false)
+    setKeyboardHeight(0)
+    void Taro.hideKeyboard()
+  }, [setStickerPickerVisible])
 
   const restoreComposerFocus = useCallback(() => {
     if (!mountedRef.current) return
@@ -1254,6 +1278,7 @@ export default function DetailComments({
         target_type: targetType,
         target_id: targetId,
         content: value,
+        mention_user_ids: mentionCandidates.map((candidate) => candidate.id),
         ...(activeReplyTarget ? { parent_id: activeReplyTarget.id } : {}),
         ...(commentImage?.mediaId ? { media_id: commentImage.mediaId } : {}),
       })
@@ -1295,6 +1320,7 @@ export default function DetailComments({
         }
       }, 320)
       setContent('')
+      setMentionCandidates([])
       setComposerLineCount(1)
       setComposerExpanded(false)
       setCommentImage(null)
@@ -1606,6 +1632,25 @@ export default function DetailComments({
               )}
             </View>
           )}
+          {enabled && composerOpen && targetType === 'campus_circle_post' && (
+            <MentionPicker
+              open={mentionPickerOpen}
+              selected={mentionCandidates}
+              onChange={setMentionCandidates}
+              onSelect={(candidate) => {
+                const inserted = insertMentionToken(
+                  content,
+                  candidate.nickname,
+                  contentSelectionStartRef.current,
+                  contentSelectionEndRef.current,
+                )
+                contentSelectionStartRef.current = inserted.cursor
+                contentSelectionEndRef.current = inserted.cursor
+                setContent(inserted.text)
+              }}
+              onOpenChange={setMentionPickerVisible}
+            />
+          )}
           <View className='business-detail-composer__main'>
             <UserAvatar
               src={composerAvatar.src}
@@ -1708,6 +1753,21 @@ export default function DetailComments({
             )}
             {enabled && composerOpen ? (
               <View className='business-detail-composer__input-actions'>
+                {targetType === 'campus_circle_post' && (
+                  <View
+                    className={mentionPickerOpen
+                      ? 'business-detail-composer__mention-trigger business-detail-composer__mention-trigger--active'
+                      : 'business-detail-composer__mention-trigger'}
+                    ariaRole='button'
+                    ariaLabel='选择要提及的同学'
+                    onTouchStart={() => {
+                      composerActionPendingRef.current = true
+                    }}
+                    onClick={() => setMentionPickerVisible(true)}
+                  >
+                    <Image src={icons.mention} mode='aspectFit' />
+                  </View>
+                )}
                 <View
                   className={stickerPickerOpen
                     ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'

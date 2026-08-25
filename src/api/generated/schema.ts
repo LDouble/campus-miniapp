@@ -180,6 +180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/mention-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SearchMentionCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{id}": {
         parameters: {
             query?: never;
@@ -4575,6 +4591,16 @@ export interface components {
             is_self: boolean;
             counts: components["schemas"]["UserProfileCounts"];
         };
+        MentionCandidate: {
+            /** Format: uint64 */
+            id: number;
+            nickname: string;
+            /** Format: uri */
+            avatar_url: string | null;
+        };
+        MentionCandidatePage: {
+            items: components["schemas"]["MentionCandidate"][];
+        };
         RolePage: {
             items: components["schemas"]["Role"][];
             page: number;
@@ -4843,6 +4869,10 @@ export interface components {
         };
         UserProfileEnvelope: {
             data: components["schemas"]["UserProfile"];
+            request_id: string;
+        };
+        MentionCandidatePageEnvelope: {
+            data: components["schemas"]["MentionCandidatePage"];
             request_id: string;
         };
         AuthIdentityEnvelope: {
@@ -5990,6 +6020,7 @@ export interface components {
             comment_count: number;
             comment_previews: components["schemas"]["PublicCommentPreview"][];
             content: string | null;
+            content_segments?: components["schemas"]["ContentSegment"][] | null;
             /** Format: date-time */
             created_at: string;
             /** Format: uint64 */
@@ -6466,6 +6497,8 @@ export interface components {
             /** Format: uint64 */
             media_id?: number | null;
             /** Format: uint64 */
+            mention_user_ids?: number[];
+            /** Format: uint64 */
             parent_id?: number | null;
             /** Format: uint64 */
             target_id: number;
@@ -6511,6 +6544,8 @@ export interface components {
             expected_version: number;
             /** Format: uint64 */
             media_id?: number;
+            /** Format: uint64 */
+            mention_user_ids?: number[];
             /** @default false */
             remove_image: boolean;
         };
@@ -6523,6 +6558,7 @@ export interface components {
             author_nickname: string;
             available_actions: components["schemas"]["CommentViewerAction"][];
             content: string;
+            content_segments?: components["schemas"]["ContentSegment"][] | null;
             /** Format: date-time */
             created_at: string;
             /** Format: int64 */
@@ -6562,6 +6598,14 @@ export interface components {
         };
         /** @enum {string} */
         CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "like" | "unlike" | "pin_comment" | "unpin_comment" | "verify_academic";
+        ContentSegment: {
+            nickname?: string | null;
+            text: string;
+            /** @enum {string} */
+            type: "text" | "mention";
+            /** Format: uint64 */
+            user_id?: number | null;
+        };
         ContentReportCaseDetail: components["schemas"]["ContentReportCaseSummary"] & {
             reports: components["schemas"]["ContentReportView"][];
         };
@@ -7576,6 +7620,7 @@ export interface components {
             comment_count: number;
             comment_previews: components["schemas"]["PublicCommentPreview"][];
             content?: string | null;
+            content_segments?: components["schemas"]["ContentSegment"][] | null;
             currency?: string | null;
             /** Format: date-time */
             deadline?: string | null;
@@ -7630,6 +7675,7 @@ export interface components {
             author_id: number;
             author_nickname: string;
             content: string;
+            content_segments?: components["schemas"]["ContentSegment"][] | null;
             /** Format: date-time */
             created_at: string;
             /** Format: uint64 */
@@ -8485,6 +8531,14 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["UserProfileEnvelope"];
+            };
+        };
+        MentionCandidatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MentionCandidatePageEnvelope"];
             };
         };
         /** @description Direct user roles */
@@ -9939,6 +9993,21 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["UserPageResponse"];
+        };
+    };
+    SearchMentionCandidates: {
+        parameters: {
+            query: {
+                keyword: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MentionCandidatePageResponse"];
         };
     };
     CreateUser: {
@@ -12012,6 +12081,8 @@ export interface operations {
                     /** Format: uint64 */
                     section_id: number;
                     content?: string;
+                    /** Format: uint64 */
+                    mention_user_ids?: number[];
                     image_urls?: string[];
                     media_ids?: number[];
                     /** Format: uint64 */
@@ -12075,6 +12146,8 @@ export interface operations {
                     /** Format: uint64 */
                     section_id: number;
                     content?: string;
+                    /** Format: uint64 */
+                    mention_user_ids?: number[];
                     image_urls?: string[];
                     media_ids?: number[];
                     /** Format: uint64 */

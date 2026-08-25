@@ -7,7 +7,7 @@ import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
 import { isApiError } from '../../api/client'
 import CustomNavbar from '../../components/custom-navbar'
-import StickerContent from '../../components/sticker-content'
+import MentionContent from '../../components/mention-content'
 import {
   communityAuthorAvatarUrl,
   communityAuthorInitial,
@@ -260,8 +260,9 @@ export default function CommunityDetailPage() {
               )}
 
               {post.content && (
-                <StickerContent
+                <MentionContent
                   content={post.content}
+                  segments={post.content_segments}
                   className='community-detail__body community-detail-card__body'
                   stickerClassName='community-detail__body-sticker'
                 />

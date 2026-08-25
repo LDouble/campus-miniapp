@@ -14,9 +14,11 @@ import { uploadMediaImage } from '../../api/media'
 import { getCurrentIdentity } from '../../api/account'
 import type {
   CarpoolTripView,
+  CampusCirclePostView,
   CampusCircleSectionView,
   CampusCircleTopicView,
   ErrandView,
+  MentionCandidate,
   MarketplaceListingView,
 } from '../../api/types'
 import {
@@ -25,6 +27,8 @@ import {
   type MarketplaceSource,
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import MentionPicker from '../../features/mentions/mention-picker'
+import { insertMentionToken } from '../../features/mentions/content'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import {
   publisherContactStorage,
@@ -93,6 +97,7 @@ type PublisherForm = {
   images: MediaImageDraft[]
   communitySectionId: number
   communityTopicId: number
+  mentionCandidates: MentionCandidate[]
   version: number
 }
 
@@ -150,6 +155,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   images: [],
   communitySectionId: 0,
   communityTopicId: 0,
+  mentionCandidates: [],
   version: 0,
 })
 
@@ -160,6 +166,19 @@ const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionV
 const restoreStickerContent = (content?: string | null) => (
   editableStickerContent(content || '')
 )
+
+const mentionCandidatesFromSegments = (
+  segments?: CampusCirclePostView['content_segments'],
+): MentionCandidate[] => {
+  if (!segments) return []
+  const seen = new Set<number>()
+  return segments.flatMap((segment) => {
+    if (segment.type !== 'mention' || !segment.user_id || !segment.nickname) return []
+    if (seen.has(segment.user_id)) return []
+    seen.add(segment.user_id)
+    return [{ id: segment.user_id, nickname: segment.nickname, avatar_url: null }]
+  })
+}
 
 type StoredPublisherForm = Partial<PublisherForm> & { stickerIds?: unknown }
 type LegacyPublisherForm = Omit<PublisherForm, 'images'> & {
@@ -378,6 +397,7 @@ export default function PublishPage() {
   const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
   const [activeRouteField, setActiveRouteField] = useState<keyof Pick<
@@ -412,6 +432,7 @@ export default function PublishPage() {
       form.contact,
     ].some((value) => value.trim().length > 0)
       || form.images.length > 0
+      || form.mentionCandidates.length > 0
   ), [form])
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
@@ -519,6 +540,7 @@ export default function PublishPage() {
         setForm({
           ...emptyForm(),
           content: restoreStickerContent(post.content),
+          mentionCandidates: mentionCandidatesFromSegments(post.content_segments),
           images: post.images.map((image) => serverMediaImageDraft({
             url: image.url,
             mediaId: image.media_id || undefined,
@@ -877,6 +899,7 @@ export default function PublishPage() {
           content: serializedContent || undefined,
           media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
           image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
+          mention_user_ids: form.mentionCandidates.map((candidate) => candidate.id),
           topic_id: form.communityTopicId || undefined,
         }
         if (mode === 'create') {
@@ -1139,6 +1162,26 @@ export default function PublishPage() {
                   />
                   <View className='publisher-composer-toolbar'>
                     <View className='publisher-composer-toolbar__tools'>
+                      {section === 'community' && (
+                        <View
+                          className={mentionPickerOpen
+                            ? 'publisher-composer-tool publisher-composer-tool--active'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel='选择要提及的同学'
+                          onClick={() => {
+                            changeStickerPickerOpen(false)
+                            setMentionPickerOpen(true)
+                            void Taro.hideKeyboard()
+                          }}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon'
+                            src={require('../../assets/icons/mention.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
                       <View
                         className={stickerPickerOpen
                           ? 'publisher-composer-tool publisher-composer-tool--active'
@@ -1177,6 +1220,25 @@ export default function PublishPage() {
                     <Text>{form.content.length}/{contentMaxLength}</Text>
                   </View>
                 </View>
+                {section === 'community' && (
+                  <MentionPicker
+                    open={mentionPickerOpen}
+                    selected={form.mentionCandidates}
+                    onChange={(mentionCandidates) => update('mentionCandidates', mentionCandidates)}
+                    onSelect={(candidate) => {
+                      const inserted = insertMentionToken(
+                        form.content,
+                        candidate.nickname,
+                        contentSelectionStartRef.current,
+                        contentSelectionEndRef.current,
+                      )
+                      contentSelectionStartRef.current = inserted.cursor
+                      contentSelectionEndRef.current = inserted.cursor
+                      update('content', inserted.text)
+                    }}
+                    onOpenChange={setMentionPickerOpen}
+                  />
+                )}
                 <StickerPicker
                   open={stickerPickerOpen}
                   onOpenChange={changeStickerPickerOpen}

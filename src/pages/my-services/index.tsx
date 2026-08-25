@@ -21,6 +21,7 @@ import {
   requestWechatSubscriptionForPublishSection,
 } from '../../features/wechat-subscription'
 import CustomNavbar from '../../components/custom-navbar'
+import MentionContent from '../../components/mention-content'
 import StickerContent from '../../components/sticker-content'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import {
@@ -738,7 +739,7 @@ export default function MyServicesPage() {
               <View className='my-record-card__top'>
                 <Text className='my-record-card__kind'>我发布的动态</Text><Text className='my-record-card__status'>{formatStatus(post.status)}</Text>
               </View>
-              <StickerContent content={post.content || '图片动态'} className='my-record-card__body' stickerClassName='my-record-card__sticker' />
+              <MentionContent content={post.content || '图片动态'} segments={post.content_segments} className='my-record-card__body' stickerClassName='my-record-card__sticker' />
               <View className='my-record-card__footer'>
                 <Text>{formatDateTime(post.updated_at)}</Text>
                 <Text>{post.like_count} 赞 · {post.comment_count} 评论</Text>
