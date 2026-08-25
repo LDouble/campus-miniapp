@@ -244,6 +244,44 @@ page {
   padding: var(--ousea-space-1, 16rpx) 0 calc(48rpx + env(safe-area-inset-bottom));
 }
 
+// Review 环境将私信作为校园通知入口展示；正式环境继续沿用上面的私信行。
+.direct-messages-page--notice {
+  .direct-messages-page__content {
+    padding: var(--ousea-space-3, 32rpx) 28rpx calc(48rpx + env(safe-area-inset-bottom));
+  }
+
+  .direct-conversation-list {
+    gap: var(--ousea-space-2, 24rpx);
+    background: transparent;
+  }
+
+  .direct-conversation-card {
+    min-height: 136rpx;
+    padding: var(--ousea-space-2, 24rpx);
+    border: 1rpx solid token.$color-border;
+    border-radius: var(--ousea-radius-card, 32rpx);
+    background: token.$color-surface;
+    box-shadow: 0 8rpx 24rpx rgba(29, 95, 214, 0.06);
+
+    &--unread {
+      border-color: token.$color-border-strong;
+      background: token.$color-surface-primary;
+    }
+
+    &--pressed {
+      background: token.$color-surface-subtle;
+    }
+
+    &__avatar {
+      display: none;
+    }
+
+    &__body {
+      margin-left: 0;
+    }
+  }
+}
+
 .direct-conversation-list {
   gap: 0;
   background: token.$color-surface;

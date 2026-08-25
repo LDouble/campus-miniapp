@@ -637,6 +637,96 @@ page {
   pointer-events: none;
 }
 
+// Review 环境以通知详情/帖子信息流呈现，保留消息数据和回复能力。
+.direct-chat-page--notice {
+  .direct-chat-composer {
+    display: none;
+  }
+
+  .direct-chat-page__content {
+    padding-top: var(--ousea-space-3, 32rpx);
+  }
+
+  .direct-chat-message-group {
+    margin-bottom: var(--ousea-space-3, 32rpx);
+  }
+
+  .direct-chat-message {
+    margin-bottom: 0;
+    align-items: flex-start;
+  }
+
+  .direct-chat-message--own {
+    justify-content: flex-start;
+  }
+
+  .direct-chat-message__avatar {
+    display: none;
+  }
+
+  .direct-chat-message__body,
+  .direct-chat-message--own .direct-chat-message__body {
+    width: 100%;
+    max-width: none;
+    align-items: stretch;
+  }
+
+  .direct-chat-message__content,
+  .direct-chat-message--own .direct-chat-message__content {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--ousea-space-3, 32rpx);
+    border: 1rpx solid token.$color-border;
+    border-radius: var(--ousea-radius-card, 32rpx);
+    background: token.$color-surface;
+    color: token.$color-text-body;
+    font-size: var(--ousea-font-size-body, 32rpx);
+    line-height: var(--ousea-line-height-post, 1.85);
+    box-shadow: 0 8rpx 24rpx rgba(29, 95, 214, 0.06);
+  }
+
+  .direct-chat-message--own .direct-chat-message__content {
+    border-left: 6rpx solid token.$ousea-ocean-500;
+  }
+
+  .direct-chat-message__image-frame,
+  .direct-chat-message--own .direct-chat-message__image-frame,
+  .direct-chat-message__image-fallback,
+  .direct-chat-message--own .direct-chat-message__image-fallback {
+    border-radius: var(--ousea-radius-card, 32rpx);
+  }
+
+  .direct-chat-message__time {
+    display: block;
+    margin: 12rpx 8rpx 0;
+  }
+
+  .direct-chat-composer__sticker,
+  .direct-chat-composer__image-trigger {
+    display: none;
+  }
+
+  .direct-chat-composer__field {
+    min-height: 76rpx;
+    border: 1rpx solid token.$color-border;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: token.$color-surface;
+  }
+
+  .direct-chat-composer__send {
+    width: 72rpx;
+    min-width: 72rpx;
+    height: 72rpx;
+    min-height: 72rpx;
+    margin-left: var(--ousea-space-1, 16rpx);
+  }
+
+  .direct-chat-composer__send-surface {
+    width: 52rpx;
+    height: 52rpx;
+  }
+}
+
 .campus-theme--dark {
   .direct-chat-page__scroll,
   .direct-chat-message__content,

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { isApiError } from '../../api/client'
+import { isDevelopmentEnvironment } from '../../api/auth'
 import CustomNavbar from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
 import { plainStickerContent } from '../../features/stickers/content'
@@ -27,6 +28,7 @@ const preview = (conversation: DirectMessageConversation) => (
 )
 
 export default function DirectMessagesPage() {
+  const developmentPresentation = isDevelopmentEnvironment()
   const [conversations, setConversations] = useState<DirectMessageConversation[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
@@ -132,8 +134,12 @@ export default function DirectMessagesPage() {
   }
 
   return (
-    <View className='direct-messages-page'>
-      <CustomNavbar title='私信' showBack />
+    <View className={[
+      'direct-messages-page',
+      developmentPresentation ? 'direct-messages-page--notice' : '',
+    ].filter(Boolean).join(' ')}
+    >
+      <CustomNavbar title={developmentPresentation ? '通知' : '私信'} showBack />
       <View className='direct-messages-page__content'>
         {loading && (
           <View className='direct-messages-state'>正在加载会话</View>
@@ -146,8 +152,10 @@ export default function DirectMessagesPage() {
         )}
         {!loading && !error && conversations.length === 0 && (
           <View className='direct-messages-state direct-messages-state--empty'>
-            <Text>还没有私信</Text>
-            <Text>在同学的个人主页点“发私信”开始聊天</Text>
+            <Text>{developmentPresentation ? '还没有通知' : '还没有私信'}</Text>
+            <Text>{developmentPresentation
+              ? '暂无新的通知内容'
+              : '在同学的个人主页点“发私信”开始聊天'}</Text>
           </View>
         )}
         {!loading && error && conversations.length > 0 && (
@@ -163,7 +171,7 @@ export default function DirectMessagesPage() {
                 conversation.unread_count > 0 ? 'direct-conversation-card--unread' : '',
               ].filter(Boolean).join(' ')}
               ariaRole='button'
-              ariaLabel={`打开与${peerName(conversation)}的私信${conversation.unread_count > 0 ? `，${conversation.unread_count} 条未读` : ''}`}
+              ariaLabel={`${developmentPresentation ? '打开通知' : `打开与${peerName(conversation)}的私信`}${conversation.unread_count > 0 ? `，${conversation.unread_count} 条未读` : ''}`}
               onClick={() => openConversation(conversation)}
             >
               <UserAvatar
