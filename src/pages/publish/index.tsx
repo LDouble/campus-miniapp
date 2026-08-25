@@ -382,6 +382,7 @@ export default function PublishPage() {
   const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
   const [activeRouteField, setActiveRouteField] = useState<keyof Pick<
@@ -1145,6 +1146,26 @@ export default function PublishPage() {
                   />
                   <View className='publisher-composer-toolbar'>
                     <View className='publisher-composer-toolbar__tools'>
+                      {section === 'community' && (
+                        <View
+                          className={mentionPickerOpen
+                            ? 'publisher-composer-tool publisher-composer-tool--active'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel='选择要提及的同学'
+                          onClick={() => {
+                            changeStickerPickerOpen(false)
+                            setMentionPickerOpen(true)
+                            void Taro.hideKeyboard()
+                          }}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon'
+                            src={require('../../assets/icons/mention.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
                       <View
                         className={stickerPickerOpen
                           ? 'publisher-composer-tool publisher-composer-tool--active'
@@ -1184,8 +1205,10 @@ export default function PublishPage() {
                   </View>
                   {section === 'community' && (
                     <MentionPicker
+                      open={mentionPickerOpen}
                       selected={form.mentionCandidates}
                       onChange={(mentionCandidates) => update('mentionCandidates', mentionCandidates)}
+                      onOpenChange={setMentionPickerOpen}
                     />
                   )}
                 </View>

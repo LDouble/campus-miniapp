@@ -512,19 +512,22 @@
 }
 
 .business-detail-composer__sticker-trigger,
+.business-detail-composer__mention-trigger,
 .business-detail-composer__quick,
 .business-detail-composer__share {
   width: 88rpx;
   height: 88rpx;
 }
 
-.business-detail-composer__sticker-trigger {
+.business-detail-composer__sticker-trigger,
+.business-detail-composer__mention-trigger {
   position: relative;
   background: transparent;
   font-size: 32rpx;
 }
 
-.business-detail-composer__sticker-trigger::before {
+.business-detail-composer__sticker-trigger::before,
+.business-detail-composer__mention-trigger::before {
   position: absolute;
   width: 56rpx;
   height: 56rpx;
@@ -534,13 +537,15 @@
   transform: translateX(8rpx);
 }
 
-.business-detail-composer__sticker-trigger text {
+.business-detail-composer__sticker-trigger text,
+.business-detail-composer__mention-trigger text {
   position: relative;
   z-index: 1;
   transform: translateX(8rpx);
 }
 
-.business-detail-composer__sticker-trigger image {
+.business-detail-composer__sticker-trigger image,
+.business-detail-composer__mention-trigger image {
   position: relative;
   z-index: 1;
   width: 36rpx;
@@ -548,7 +553,8 @@
   transform: translateX(8rpx);
 }
 
-.business-detail-composer__sticker-trigger--active::before {
+.business-detail-composer__sticker-trigger--active::before,
+.business-detail-composer__mention-trigger--active::before {
   background: var(--campus-surface-primary, #eff6ff);
 }
 

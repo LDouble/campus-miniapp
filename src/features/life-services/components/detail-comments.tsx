@@ -54,6 +54,7 @@ const icons = {
   send: require('../../../assets/community/send.svg'),
   expand: require('../../../assets/icons/expand.svg'),
   collapse: require('../../../assets/icons/collapse.svg'),
+  mention: require('../../../assets/icons/mention.svg'),
 }
 
 export type DetailCommentTarget = 'campus_circle_post' | 'marketplace' | 'errand' | 'carpool'
@@ -605,6 +606,7 @@ export default function DetailComments({
   const [composerClosing, setComposerClosing] = useState(false)
   const [inputFocused, setInputFocused] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
@@ -953,6 +955,7 @@ export default function DetailComments({
     setComposerOpen(true)
     setInputFocused(true)
     setStickerPickerOpen(false)
+    setMentionPickerOpen(false)
   }, [])
 
   useEffect(() => {
@@ -1018,6 +1021,7 @@ export default function DetailComments({
     setComposerClosing(false)
     setInputFocused(false)
     setStickerPickerOpen(false)
+    setMentionPickerOpen(false)
     setReplyTarget(null)
     setReplyAnchorSelector('')
     setKeyboardHeight(0)
@@ -1115,6 +1119,21 @@ export default function DetailComments({
     setKeyboardHeight(0)
     void Taro.hideKeyboard()
   }, [])
+
+  const setMentionPickerVisible = useCallback((open: boolean) => {
+    composerActionPendingRef.current = open
+    setMentionPickerOpen(open)
+    if (!open) return
+
+    setStickerPickerVisible(false)
+    composerCloseSequenceRef.current += 1
+    composerClosingRef.current = false
+    setComposerClosing(false)
+    setComposerOpen(true)
+    setInputFocused(false)
+    setKeyboardHeight(0)
+    void Taro.hideKeyboard()
+  }, [setStickerPickerVisible])
 
   const restoreComposerFocus = useCallback(() => {
     if (!mountedRef.current) return
@@ -1611,7 +1630,12 @@ export default function DetailComments({
             </View>
           )}
           {enabled && composerOpen && targetType === 'campus_circle_post' && (
-            <MentionPicker selected={mentionCandidates} onChange={setMentionCandidates} />
+            <MentionPicker
+              open={mentionPickerOpen}
+              selected={mentionCandidates}
+              onChange={setMentionCandidates}
+              onOpenChange={setMentionPickerVisible}
+            />
           )}
           <View className='business-detail-composer__main'>
             <UserAvatar
@@ -1715,6 +1739,21 @@ export default function DetailComments({
             )}
             {enabled && composerOpen ? (
               <View className='business-detail-composer__input-actions'>
+                {targetType === 'campus_circle_post' && (
+                  <View
+                    className={mentionPickerOpen
+                      ? 'business-detail-composer__mention-trigger business-detail-composer__mention-trigger--active'
+                      : 'business-detail-composer__mention-trigger'}
+                    ariaRole='button'
+                    ariaLabel='选择要提及的同学'
+                    onTouchStart={() => {
+                      composerActionPendingRef.current = true
+                    }}
+                    onClick={() => setMentionPickerVisible(true)}
+                  >
+                    <Image src={icons.mention} mode='aspectFit' />
+                  </View>
+                )}
                 <View
                   className={stickerPickerOpen
                     ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'
