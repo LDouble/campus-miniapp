@@ -13,6 +13,7 @@ import type {
   MarketplaceListingView,
   TradeOrderView,
 } from '../../api/types'
+import { isDevelopmentEnvironment } from '../../api/auth'
 import { isApiError } from '../../api/client'
 import {
   requestWechatSubscriptionAndStopPropagation,
@@ -283,6 +284,7 @@ const fetchPage = async (view: ViewQuery, page: number): Promise<PageResult> => 
 }
 
 export default function MyServicesPage() {
+  const developmentPresentation = isDevelopmentEnvironment()
   const initialView: ViewQuery = {
     section: 'published',
     relation: 'all',
@@ -463,6 +465,10 @@ export default function MyServicesPage() {
     }
   }
 
+  const canContact = (item: RecordItem) => (
+    !developmentPresentation && contactUserIdFor(item) > 0
+  )
+
   const emptyCopy = view.section === 'errands'
     ? ['还没有接过跑腿任务', '去看看有哪些待接任务吧']
     : view.section === 'orders'
@@ -597,9 +603,9 @@ export default function MyServicesPage() {
                   <Text>{formatDateTime(order.updated_at)}</Text>
                   <Text>查看业务详情 ›</Text>
                 </View>
-                {(contactUserIdFor(order) > 0 || order.available_actions.includes('cancel') || order.available_actions.includes('complete')) && (
+                {(canContact(order) || order.available_actions.includes('cancel') || order.available_actions.includes('complete')) && (
                   <View className='my-record-actions'>
-                    {contactUserIdFor(order) > 0 && (
+                    {canContact(order) && (
                       <View
                         className='my-record-actions__contact'
                         ariaRole='button'
@@ -659,7 +665,7 @@ export default function MyServicesPage() {
                 <View className='my-record-card__footer'>
                   <Text>{formatDateTime(errand.deadline)}</Text><Text>查看进度 ›</Text>
                 </View>
-                {contactUserIdFor(errand) > 0 && (
+                {canContact(errand) && (
                   <View className='my-record-actions'>
                     <View
                       className='my-record-actions__contact'
@@ -708,7 +714,7 @@ export default function MyServicesPage() {
                   <Text>{formatDateTime(trip.departure_at)}</Text>
                   <Text>{remainingSeats(trip.total_seats, trip.occupied_seats)} 人可同行 ›</Text>
                 </View>
-                {contactUserIdFor(trip) > 0 && (
+                {canContact(trip) && (
                   <View className='my-record-actions'>
                     <View
                       className='my-record-actions__contact'
