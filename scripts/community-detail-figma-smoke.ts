@@ -4,8 +4,8 @@ import { resolve } from 'node:path'
 
 const readSource = (path: string) => readFileSync(resolve(__dirname, path), 'utf8')
 
-const detailSource = readSource('../src/packages/social/community/detail.tsx')
-const detailStyle = readSource('../src/packages/social/community/detail.scss')
+const detailSource = readSource('../src/pages/community/detail.tsx')
+const detailStyle = readSource('../src/pages/community/detail.scss')
 const imageGridSource = readSource('../src/features/community/components/content-image-grid.tsx')
 const imageGridStyle = readSource('../src/features/community/components/content-image-grid.scss')
 const commentsSource = readSource('../src/features/life-services/components/detail-comments.tsx')
@@ -15,10 +15,10 @@ const avatarSource = readSource('../src/components/user-avatar/index.tsx')
 const avatarStyle = readSource('../src/components/user-avatar/index.scss')
 
 // 社区详情只组装通用详情能力；评论的加载、回复、审核与键盘逻辑统一由共享组件承载。
-assert.match(detailSource, /import DetailComments from '\.\.\/\.\.\/\.\.\/features\/life-services\/components\/detail-comments'/u)
+assert.match(detailSource, /import DetailComments from '\.\.\/\.\.\/features\/life-services\/components\/detail-comments'/u)
 assert.ok(
-  detailSource.indexOf("import DetailComments from '../../../features/life-services/components/detail-comments'")
-    < detailSource.indexOf("import ContentImageGrid from '../../../features/community/components/content-image-grid'"),
+  detailSource.indexOf("import DetailComments from '../../features/life-services/components/detail-comments'")
+    < detailSource.indexOf("import ContentImageGrid from '../../features/community/components/content-image-grid'"),
   '共享评论样式必须先于图片网格进入帖子详情，避免 common chunk 的 CSS 顺序冲突',
 )
 assert.match(detailSource, /<DetailComments[\s\S]*?targetType='campus_circle_post'[\s\S]*?targetId=\{post\.id\}[\s\S]*?initialCommentId=\{focusedCommentId\}[\s\S]*?showHeading=\{false\}/u)

@@ -6,7 +6,7 @@ const readSource = (path: string) => readFileSync(resolve(__dirname, path), 'utf
 
 const cardSource = readSource('../src/features/community/post-card.tsx')
 const feedSource = readSource('../src/features/community/feed-panel.tsx')
-const topicSource = readSource('../src/packages/social/community/topic/index.tsx')
+const topicSource = readSource('../src/pages/community/topic/index.tsx')
 const profileSource = readSource('../src/pages/public-profile/index.tsx')
 const commentsSource = readSource('../src/features/life-services/components/detail-comments.tsx')
 

@@ -12,6 +12,6 @@ export type ReportableTarget = {
 
 export const openContentReport = (target: ReportableTarget) => (
   Taro.navigateTo({
-    url: `/packages/social/content-report/index?resource_type=${target.resourceType}&resource_id=${target.resourceId}&resource_version=${target.resourceVersion}`,
+    url: `/pages/content-report/index?resource_type=${target.resourceType}&resource_id=${target.resourceId}&resource_version=${target.resourceVersion}`,
   })
 )

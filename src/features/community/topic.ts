@@ -7,7 +7,7 @@ export const parsePositiveId = (value: unknown) => {
 }
 
 export const communityTopicPublisherUrl = (topicId: number) => (
-  `/packages/social/publish/index?section=community&community_topic_id=${parsePositiveId(topicId)}`
+  `/pages/publish/index?section=community&community_topic_id=${parsePositiveId(topicId)}`
 )
 
 const formatTopicDate = (value: string) => {

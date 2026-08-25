@@ -129,7 +129,7 @@ Component({
         ? this.data.publishSection
         : 'community'
       requestWechatSubscriptionForPublishSection(publishSection)
-      wx.navigateTo({ url: `/packages/social/publish/index?section=${publishSection}` })
+      wx.navigateTo({ url: `/pages/publish/index?section=${publishSection}` })
     }
   }
 })

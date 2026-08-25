@@ -73,6 +73,19 @@ const mainPagePaths = new Set([
 
 const mainPages = fullPages.filter((page) => mainPagePaths.has(page))
 
+const socialMainPages = [
+  'pages/community/detail',
+  'pages/community/topic/index',
+  'pages/publish/index',
+  'pages/my-services/index',
+  'pages/errands/detail',
+  'pages/marketplace/detail',
+  'pages/carpool/detail',
+  'pages/content-report/index',
+  'pages/direct-messages/index',
+  'pages/direct-messages/chat',
+]
+
 const packageDefinitions = [
   {
     root: 'pages/academic',
@@ -95,22 +108,6 @@ const packageDefinitions = [
   { root: 'pages/favorites', sourceRoot: 'pages/favorites', pages: ['index'] },
   { root: 'pages/webview', sourceRoot: 'pages/webview', pages: ['index'] },
   { root: 'pages/feature-unavailable', sourceRoot: 'pages/feature-unavailable', pages: ['index'] },
-  {
-    root: 'packages/social',
-    sourceRoot: 'pages',
-    pages: [
-      'community/detail',
-      'community/topic/index',
-      'publish/index',
-      'my-services/index',
-      'errands/detail',
-      'marketplace/detail',
-      'carpool/detail',
-      'content-report/index',
-      'direct-messages/index',
-      'direct-messages/chat',
-    ],
-  },
 ]
 
 const subPackages = packageDefinitions.flatMap(({ root, sourceRoot, pages }) => {
@@ -124,7 +121,7 @@ const pages = isQualificationEdition
       ...mainPages.filter((page) => !qualificationExcludedPages.has(page)),
       'pages/feature-migrated/index',
     ]
-  : mainPages
+  : [...mainPages, ...socialMainPages]
 
 const fullTabBarList = [
   {

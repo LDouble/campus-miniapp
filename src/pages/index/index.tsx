@@ -365,7 +365,7 @@ function Index() {
       : ''
     const result = {
       title: postId > 0 ? shareTitle : 'OUSea｜一站式校园生活',
-      path: postId > 0 ? '/packages/social/community/detail' : '/pages/index/index',
+      path: postId > 0 ? '/pages/community/detail' : '/pages/index/index',
       query: postId > 0 ? { id: postId, mode: 'post' } : undefined,
     }
     return shareImage ? { ...result, imageUrl: shareImage } : result
@@ -682,10 +682,10 @@ function Index() {
   const openHomeFeedItem = (item: HomeFeedItemView) => {
     setOpenHomeActionKey(null)
     const routes: Record<HomeFeedItemView['source_type'], string> = {
-      campus_circle_post: `/packages/social/community/detail?id=${item.source_id}`,
-      marketplace_listing: `/packages/social/marketplace/detail?id=${item.source_id}`,
-      errand: `/packages/social/errands/detail?id=${item.source_id}`,
-      carpool: `/packages/social/carpool/detail?id=${item.source_id}`,
+      campus_circle_post: `/pages/community/detail?id=${item.source_id}`,
+      marketplace_listing: `/pages/marketplace/detail?id=${item.source_id}`,
+      errand: `/pages/errands/detail?id=${item.source_id}`,
+      carpool: `/pages/carpool/detail?id=${item.source_id}`,
     }
     void Taro.navigateTo({ url: routes[item.source_type] })
   }

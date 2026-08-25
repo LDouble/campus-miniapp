@@ -460,12 +460,12 @@ fi
 
 wechat simulator_open_page \
   --project "$MINIAPP_DIR" \
-  --page packages/social/community/detail \
+  --page pages/community/detail \
   --query "id=$CHILD_POST_ID&mode=post" >/dev/null
 assert_present '#community-detail-more'
 wechat simulator_open_page \
   --project "$MINIAPP_DIR" \
-  --page packages/social/publish/index \
+  --page pages/publish/index \
   --query "section=community&mode=edit&id=$CHILD_POST_ID" >/dev/null
 assert_present '#publisher-content'
 assert_absent '#publisher-title'
@@ -576,7 +576,7 @@ fi
 
 wechat simulator_open_page \
   --project "$MINIAPP_DIR" \
-  --page packages/social/community/detail \
+  --page pages/community/detail \
   --query "id=$CHILD_POST_ID&mode=post" >/dev/null
 assert_present "#detail-comment-$COMMENT_ID.business-detail-comment--approved"
 if [[ "$(element_text '.business-detail-comments__heading')" != *"评论 1"* ]]; then

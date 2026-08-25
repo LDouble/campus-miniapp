@@ -136,7 +136,7 @@ assert.equal(tree[0].children[0].comment.id, pendingReply.id)
 
 assert.equal(
   noticeActionRoute('/api/v1/campus-circle/posts/12?comment_id=44'),
-  '/packages/social/community/detail?id=12&mode=post&comment_id=44',
+  '/pages/community/detail?id=12&mode=post&comment_id=44',
 )
 
 const detailCommentsSource = readFileSync(

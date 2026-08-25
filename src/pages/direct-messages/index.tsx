@@ -1,19 +1,19 @@
 import { useRef, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { isApiError } from '../../../api/client'
-import CustomNavbar from '../../../components/custom-navbar'
-import UserAvatar from '../../../components/user-avatar'
-import { plainStickerContent } from '../../../features/stickers/content'
-import { formatMessageListTime } from '../../../features/messages/time'
-import { directMessageChatUrl } from '../../../features/direct-messages/navigation'
+import { isApiError } from '../../api/client'
+import CustomNavbar from '../../components/custom-navbar'
+import UserAvatar from '../../components/user-avatar'
+import { plainStickerContent } from '../../features/stickers/content'
+import { formatMessageListTime } from '../../features/messages/time'
+import { directMessageChatUrl } from '../../features/direct-messages/navigation'
 import {
   canLoadDirectMessagePage,
   mergeDirectMessageConversations,
-} from '../../../features/direct-messages/pagination'
-import { privateMessagesRepository } from '../../../features/direct-messages/repository'
-import { refreshPrivateMessageUnreadCount } from '../../../features/direct-messages/unread'
-import type { DirectMessageConversation } from '../../../features/direct-messages/types'
+} from '../../features/direct-messages/pagination'
+import { privateMessagesRepository } from '../../features/direct-messages/repository'
+import { refreshPrivateMessageUnreadCount } from '../../features/direct-messages/unread'
+import type { DirectMessageConversation } from '../../features/direct-messages/types'
 import './index.scss'
 
 const PAGE_SIZE = 20

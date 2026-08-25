@@ -54,7 +54,7 @@ assert.match(feedStyleSource, /\.community-post__section-pill,[\s\S]*?\.communit
 const levelBadgeStyleSource = readFileSync(resolve(__dirname, '../src/features/community/level-badge.scss'), 'utf8')
 assert.match(levelBadgeStyleSource, /\.community-level-badge \{[^}]*flex: none;[^}]*white-space: nowrap;/u)
 
-const detailSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.tsx'), 'utf8')
+const detailSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.tsx'), 'utf8')
 assert.equal((detailSource.match(/communityAuthorAvatarUrl\(/g) || []).length, 1)
 assert.ok(detailSource.includes('<DetailAuthorHeader'))
 assert.ok(detailSource.includes('<ContentImageGrid'))
@@ -68,7 +68,7 @@ const detailCommentsSource = readFileSync(resolve(__dirname, '../src/features/li
 assert.ok(detailCommentsSource.includes("imageClassName='business-detail-comment__avatar-image'"))
 assert.match(detailCommentsSource, /src=\{comment\.author_deleted \? '' : comment\.author_avatar_url\}/u)
 
-const detailStyleSource = readFileSync(resolve(__dirname, '../src/packages/social/community/detail.scss'), 'utf8')
+const detailStyleSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.scss'), 'utf8')
 assert.ok(detailStyleSource.includes('.community-detail__review-status'))
 assert.doesNotMatch(detailStyleSource, /\.community-detail__(?:__author|__avatar|__author-name)/u)
 
@@ -79,8 +79,8 @@ const marketplaceCardStyleSource = readFileSync(resolve(__dirname, '../src/featu
 const publicProfileStyleSource = readFileSync(resolve(__dirname, '../src/pages/public-profile/index.scss'), 'utf8')
 const darkModeStyleSource = readFileSync(resolve(__dirname, '../src/styles/_dark-mode.scss'), 'utf8')
 
-const publishSource = readFileSync(resolve(__dirname, '../src/packages/social/publish/index.tsx'), 'utf8')
-assert.ok(publishSource.includes('`/packages/social/community/detail?id=${id}&mode=post`'))
+const publishSource = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
+assert.ok(publishSource.includes('`/pages/community/detail?id=${id}&mode=post`'))
 
 const marketplaceCardSource = readFileSync(resolve(__dirname, '../src/features/life-services/components/marketplace-card.tsx'), 'utf8')
 assert.ok(marketplaceCardSource.includes("item.viewer_relation === 'owner' && item.status === 'pending_review'"))
