@@ -31,7 +31,7 @@ export default function CommentImage({
       className={compact
         ? 'community-comment-image community-comment-image--compact'
         : 'community-comment-image'}
-      hoverClass='community-comment-image--pressed'
+      hoverClass='none'
       ariaRole='button'
       ariaLabel={`预览${label}`}
       onClick={(event) => {
