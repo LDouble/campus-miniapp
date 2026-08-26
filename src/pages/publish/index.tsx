@@ -28,7 +28,11 @@ import {
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import MentionPicker from '../../features/mentions/mention-picker'
-import { insertMentionToken } from '../../features/mentions/content'
+import {
+  expandMentionDeletion,
+  insertMentionToken,
+  removeMentionTokens,
+} from '../../features/mentions/content'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import {
   publisherContactStorage,
@@ -398,8 +402,10 @@ export default function PublishPage() {
   const [submitting, setSubmitting] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
   const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
+  const [contentInputFocused, setContentInputFocused] = useState(false)
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
+  const contentFocusRequestRef = useRef(0)
   const [activeRouteField, setActiveRouteField] = useState<keyof Pick<
     PublisherForm,
     'pickupLocation' | 'dropoffLocation' | 'origin' | 'destination'
@@ -437,6 +443,46 @@ export default function PublishPage() {
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
     setForm((draft) => ({ ...draft, [key]: value }))
+  }
+
+  const removeMentionFromContent = (candidate: MentionCandidate) => {
+    const removed = removeMentionTokens(
+      form.content,
+      candidate.nickname,
+      contentSelectionStartRef.current,
+    )
+    contentSelectionStartRef.current = removed.cursor
+    contentSelectionEndRef.current = removed.cursor
+    update('content', removed.text)
+  }
+
+  const clearMentionContent = (selected: MentionCandidate[]) => {
+    let nextContent = form.content
+    let cursor = contentSelectionStartRef.current
+    selected.forEach((candidate) => {
+      const removed = removeMentionTokens(nextContent, candidate.nickname, cursor)
+      nextContent = removed.text
+      cursor = removed.cursor
+    })
+    contentSelectionStartRef.current = cursor
+    contentSelectionEndRef.current = cursor
+    update('content', nextContent)
+  }
+
+  const changeMentionPickerOpen = (open: boolean) => {
+    contentFocusRequestRef.current += 1
+    setMentionPickerOpen(open)
+    if (open) {
+      setContentInputFocused(false)
+      return
+    }
+
+    const requestId = contentFocusRequestRef.current
+    setContentInputFocused(false)
+    setTimeout(() => {
+      if (contentFocusRequestRef.current !== requestId) return
+      setContentInputFocused(true)
+    }, 80)
   }
 
   const loadRememberedContact = async () => {
@@ -1113,6 +1159,7 @@ export default function PublishPage() {
                   <KeyboardSafeTextarea
                     id='publisher-content'
                     value={form.content}
+                    focus={contentInputFocused && !mentionPickerOpen}
                     maxlength={contentMaxLength}
                     placeholder={section === 'market'
                       ? form.marketIntent === 'wanted'
@@ -1121,7 +1168,11 @@ export default function PublishPage() {
                       : section === 'errands' ? '说明物品、时间要求和注意事项' : section === 'carpool' ? '补充集合、行李或返程信息（可选）' : '分享真实、友善的校园内容'}
                     placeholderClass='publisher-placeholder'
                     onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                    onFocus={() => setStickerPickerOpen(false)}
+                    onFocus={() => {
+                      setContentInputFocused(true)
+                      setStickerPickerOpen(false)
+                    }}
+                    onBlur={() => setContentInputFocused(false)}
                     onInput={(event) => {
                       const detail = event.detail as typeof event.detail & {
                         cursor?: number
@@ -1137,13 +1188,33 @@ export default function PublishPage() {
                       const selectionEnd = Number.isFinite(detail.selectionEnd)
                         ? Number(detail.selectionEnd)
                         : cursor
-
-                      contentSelectionStartRef.current = Math.max(0, selectionStart)
-                      contentSelectionEndRef.current = Math.max(
-                        contentSelectionStartRef.current,
-                        selectionEnd,
+                      const mentionDeletion = expandMentionDeletion(
+                        form.content,
+                        detail.value,
+                        form.mentionCandidates,
                       )
-                      update('content', detail.value)
+                      if (mentionDeletion.cursor !== null) {
+                        contentSelectionStartRef.current = mentionDeletion.cursor
+                        contentSelectionEndRef.current = mentionDeletion.cursor
+                      } else {
+                        contentSelectionStartRef.current = Math.max(0, selectionStart)
+                        contentSelectionEndRef.current = Math.max(
+                          contentSelectionStartRef.current,
+                          selectionEnd,
+                        )
+                      }
+                      if (mentionDeletion.removedCandidateIds.length > 0) {
+                        const removedIds = new Set(mentionDeletion.removedCandidateIds)
+                        setForm((currentForm) => ({
+                          ...currentForm,
+                          content: mentionDeletion.text,
+                          mentionCandidates: currentForm.mentionCandidates.filter(
+                            (candidate) => !removedIds.has(candidate.id),
+                          ),
+                        }))
+                      } else {
+                        update('content', mentionDeletion.text)
+                      }
                     }}
                     onSelectionChange={(event) => {
                       const detail = event.detail as {
@@ -1171,8 +1242,7 @@ export default function PublishPage() {
                           ariaLabel='选择要提及的同学'
                           onClick={() => {
                             changeStickerPickerOpen(false)
-                            setMentionPickerOpen(true)
-                            void Taro.hideKeyboard()
+                            changeMentionPickerOpen(true)
                           }}
                         >
                           <Image
@@ -1236,7 +1306,9 @@ export default function PublishPage() {
                       contentSelectionEndRef.current = inserted.cursor
                       update('content', inserted.text)
                     }}
-                    onOpenChange={setMentionPickerOpen}
+                    onRemove={removeMentionFromContent}
+                    onClear={clearMentionContent}
+                    onOpenChange={changeMentionPickerOpen}
                   />
                 )}
                 <StickerPicker

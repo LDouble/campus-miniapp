@@ -34,8 +34,15 @@ import {
 import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dismissal'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
-import MentionPicker from '../../mentions/mention-picker'
-import { insertMentionToken } from '../../mentions/content'
+import {
+  MentionPickerOverlay,
+  useMentionPicker,
+} from '../../mentions/mention-picker'
+import {
+  expandMentionDeletion,
+  insertMentionToken,
+  removeMentionTokens,
+} from '../../mentions/content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import { getSystemState } from '../../../state/system'
@@ -641,6 +648,47 @@ export default function DetailComments({
   const handleOpenCommentActions = useCallback((comment: CommentView) => {
     openCommentActionsRef.current(comment)
   }, [])
+  const handleMentionSelect = useCallback((candidate: MentionCandidate) => {
+    const inserted = insertMentionToken(
+      content,
+      candidate.nickname,
+      contentSelectionStartRef.current,
+      contentSelectionEndRef.current,
+    )
+    contentSelectionStartRef.current = inserted.cursor
+    contentSelectionEndRef.current = inserted.cursor
+    setContent(inserted.text)
+  }, [content])
+  const removeMentionFromContent = useCallback((candidate: MentionCandidate) => {
+    const removed = removeMentionTokens(
+      content,
+      candidate.nickname,
+      contentSelectionStartRef.current,
+    )
+    contentSelectionStartRef.current = removed.cursor
+    contentSelectionEndRef.current = removed.cursor
+    setContent(removed.text)
+  }, [content])
+  const clearMentionContent = useCallback((selected: MentionCandidate[]) => {
+    let nextContent = content
+    let cursor = contentSelectionStartRef.current
+    selected.forEach((candidate) => {
+      const removed = removeMentionTokens(nextContent, candidate.nickname, cursor)
+      nextContent = removed.text
+      cursor = removed.cursor
+    })
+    contentSelectionStartRef.current = cursor
+    contentSelectionEndRef.current = cursor
+    setContent(nextContent)
+  }, [content])
+  const mentionPicker = useMentionPicker({
+    open: mentionPickerOpen,
+    selected: mentionCandidates,
+    onChange: setMentionCandidates,
+    onSelect: handleMentionSelect,
+    onRemove: removeMentionFromContent,
+    onClear: clearMentionContent,
+  })
 
   useEffect(() => {
     let active = true
@@ -1129,7 +1177,20 @@ export default function DetailComments({
   const setMentionPickerVisible = useCallback((open: boolean) => {
     composerActionPendingRef.current = open
     setMentionPickerOpen(open)
-    if (!open) return
+    if (!open) {
+      if (!composerOpen || !enabled) return
+
+      const focusSequence = composerCloseSequenceRef.current + 1
+      composerCloseSequenceRef.current = focusSequence
+      setKeyboardHeight(0)
+      setInputFocused(false)
+      scheduleTimeout(() => {
+        if (!mountedRef.current || composerCloseSequenceRef.current !== focusSequence) return
+        setComposerOpen(true)
+        setInputFocused(true)
+      }, 80)
+      return
+    }
 
     setStickerPickerVisible(false)
     composerCloseSequenceRef.current += 1
@@ -1138,8 +1199,7 @@ export default function DetailComments({
     setComposerOpen(true)
     setInputFocused(false)
     setKeyboardHeight(0)
-    void Taro.hideKeyboard()
-  }, [setStickerPickerVisible])
+  }, [composerOpen, enabled, scheduleTimeout, setStickerPickerVisible])
 
   const handleMentionTriggerClick = useCallback((event: {
     stopPropagation: () => void
@@ -1463,6 +1523,20 @@ export default function DetailComments({
 
   return (
     <>
+      {enabled && composerOpen && targetType === 'campus_circle_post' && (
+        <MentionPickerOverlay
+          open={mentionPickerOpen}
+          selected={mentionCandidates}
+          keyword={mentionPicker.keyword}
+          candidates={mentionPicker.candidates}
+          loading={mentionPicker.loading}
+          onKeywordChange={mentionPicker.setKeyword}
+          onToggleCandidate={mentionPicker.toggleCandidate}
+          onRemoveCandidate={mentionPicker.removeCandidate}
+          onClear={mentionPicker.clearSelected}
+          onOpenChange={setMentionPickerVisible}
+        />
+      )}
       {!composerOnly && (
         <View className='business-detail-comments'>
         {showHeading && (
@@ -1647,25 +1721,6 @@ export default function DetailComments({
               )}
             </View>
           )}
-          {enabled && composerOpen && targetType === 'campus_circle_post' && (
-            <MentionPicker
-              open={mentionPickerOpen}
-              selected={mentionCandidates}
-              onChange={setMentionCandidates}
-              onSelect={(candidate) => {
-                const inserted = insertMentionToken(
-                  content,
-                  candidate.nickname,
-                  contentSelectionStartRef.current,
-                  contentSelectionEndRef.current,
-                )
-                contentSelectionStartRef.current = inserted.cursor
-                contentSelectionEndRef.current = inserted.cursor
-                setContent(inserted.text)
-              }}
-              onOpenChange={setMentionPickerVisible}
-            />
-          )}
           {enabled && composerOpen && (
             <View className='business-detail-composer__tool-row'>
               {targetType === 'campus_circle_post' && (
@@ -1738,7 +1793,7 @@ export default function DetailComments({
                 <KeyboardSafeTextarea
                   id={`business-comment-${targetType}-${targetId}`}
                   value={content}
-                  focus={composerOpen && inputFocused}
+                  focus={composerOpen && inputFocused && !mentionPickerOpen}
                   disabled={submitting}
                   maxlength={300}
                   autoHeight={!composerExpanded}
@@ -1768,13 +1823,28 @@ export default function DetailComments({
                     const selectionEnd = Number.isFinite(detail.selectionEnd)
                       ? Number(detail.selectionEnd)
                       : cursor
-
-                    contentSelectionStartRef.current = Math.max(0, selectionStart)
-                    contentSelectionEndRef.current = Math.max(
-                      contentSelectionStartRef.current,
-                      selectionEnd,
+                    const mentionDeletion = expandMentionDeletion(
+                      content,
+                      detail.value,
+                      mentionCandidates,
                     )
-                    setContent(detail.value)
+                    if (mentionDeletion.cursor !== null) {
+                      contentSelectionStartRef.current = mentionDeletion.cursor
+                      contentSelectionEndRef.current = mentionDeletion.cursor
+                    } else {
+                      contentSelectionStartRef.current = Math.max(0, selectionStart)
+                      contentSelectionEndRef.current = Math.max(
+                        contentSelectionStartRef.current,
+                        selectionEnd,
+                      )
+                    }
+                    if (mentionDeletion.removedCandidateIds.length > 0) {
+                      const removedIds = new Set(mentionDeletion.removedCandidateIds)
+                      setMentionCandidates((current) => current.filter(
+                        (candidate) => !removedIds.has(candidate.id),
+                      ))
+                    }
+                    setContent(mentionDeletion.text)
                   }}
                   onLineChange={(event) => {
                     setComposerLineCount(Math.max(1, Number(event.detail.lineCount) || 1))
