@@ -1,0 +1,24 @@
+.mention-content {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-all;
+
+  &__text {
+    white-space: pre-wrap;
+  }
+
+  &__mention {
+    display: inline;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-weight: 600;
+    white-space: pre-wrap;
+  }
+
+  &__sticker {
+    display: inline-block;
+    width: 40rpx;
+    height: 40rpx;
+    margin: 0 2rpx;
+    vertical-align: -7rpx;
+  }
+}

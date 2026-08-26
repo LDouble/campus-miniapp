@@ -17,6 +17,7 @@ import type {
   MarketplaceListingView,
   MarketplaceListingViewPage,
   MarketplaceTradeOrder,
+  MentionCandidatePage,
   PublicUserProfile,
   ReactionResourceType,
   ReactionState,
@@ -109,6 +110,13 @@ const versionAction = <T>(path: string, version: number, scope: string) => (
 )
 
 export const lifeServicesRepository = {
+  searchMentionCandidates(keyword: string) {
+    return apiRequest<MentionCandidatePage>({
+      path: '/api/v1/users/mention-candidates',
+      query: { keyword: keyword.trim(), limit: 10 },
+    })
+  },
+
   listHomeFeed(search: PagingQuery = {}) {
     return apiRequest<HomeFeedPage>({
       path: '/api/v1/home/feed',

@@ -103,6 +103,7 @@ export const commentToPublicPreview = (
   reply_to_comment_id: comment.parent_id ?? null,
   reply_to_nickname: comment.parent_id ? replyTarget?.authorNickname || null : null,
   content: comment.content,
+  content_segments: comment.content_segments,
   created_at: comment.created_at,
   ...(comment.image ? {
     image: {

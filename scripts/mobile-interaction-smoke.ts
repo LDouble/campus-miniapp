@@ -36,10 +36,14 @@ assert.match(cardSource, /onReplyComment\(post, comment\)/u)
 assert.match(detailCommentsSource, /onClick=\{\(\) => onStartReply\(comment\)\}/u)
 assert.match(detailCommentsSource, /assets\/community\/send\.svg/u)
 assert.doesNotMatch(detailCommentsSource, /detail-send\.svg|publish--comment/u)
-assert.match(detailCommentsSource, /className='business-detail-composer__input-actions'/u)
+assert.match(detailCommentsSource, /className='business-detail-composer__tool-row'/u)
+assert.match(detailCommentsSource, /business-detail-composer__mention-trigger/u)
 assert.match(detailCommentsStyles, /business-detail-composer__publish::before[\s\S]*?width: 56rpx;[\s\S]*?height: 56rpx;/u)
 assert.match(detailCommentsStyles, /business-detail-composer__action::before[^{]*\{[^}]*height: 64rpx;/u)
-assert.match(detailCommentsStyles, /business-detail-composer__input-actions[\s\S]*?margin-left: auto;[\s\S]*?justify-content: flex-end;/u)
+assert.match(
+  detailCommentsStyles,
+  /business-detail-composer__tool-row[\s\S]*?display: flex;[\s\S]*?align-items: center;/u,
+)
 assert.match(detailCommentsStyles, /business-detail-composer__sticker-trigger \{[\s\S]*?font-size: 32rpx;/u)
 assert.match(detailCommentsSource, /onClick=\{!liking \? \(event\) => \{[\s\S]*?event\.stopPropagation\(\)[\s\S]*?onToggleLike\(comment\)/u)
 assert.match(
