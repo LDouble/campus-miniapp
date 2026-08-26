@@ -4,22 +4,11 @@ import type { components } from './generated/schema'
 export type FoodListing = components['schemas']['FoodListingView']
 export type FoodListingRatingResult = components['schemas']['FoodListingRatingResult']
 export type FoodListingPage = components['schemas']['FoodListingPage']
+export type FoodListingReview = components['schemas']['FoodListingReviewView']
+export type FoodListingRatingInput = components['schemas']['FoodListingRatingInput']
 
 export type FoodSubmission = components['schemas']['FoodListingSubmissionInput']
-
-// Keep the detail-only review shape at this boundary until the backend's
-// image_media_ids contract is generated into this worktree. The generated
-// schema must remain untouched in the meantime.
-export type FoodListingReview = {
-  score: number
-  comment?: string | null
-  image_urls: string[]
-  created_at: string
-}
-
-export type FoodListingDetail = FoodListing & {
-  reviews: FoodListingReview[]
-}
+export type FoodListingDetail = FoodListing
 
 export const listFoodListings = (campus: string, page = 1) => apiRequest<FoodListingPage>({
   path: '/api/v1/what-to-eat/listings',
@@ -31,12 +20,9 @@ export const pickRandomFood = (campus: string) => apiRequest<FoodListing>({
   query: { campus },
 })
 
-export const getFoodListing = async (listingID: number): Promise<FoodListingDetail> => {
-  const listing = await apiRequest<FoodListing & { reviews?: FoodListingReview[] }>({
-    path: `/api/v1/what-to-eat/listings/${listingID}`,
-  })
-  return { ...listing, reviews: listing.reviews || [] }
-}
+export const getFoodListing = (listingID: number): Promise<FoodListingDetail> => apiRequest<FoodListing>({
+  path: `/api/v1/what-to-eat/listings/${listingID}`,
+})
 
 export const submitFoodListing = (input: FoodSubmission) => apiRequest<FoodListing>({
   path: '/api/v1/what-to-eat/listings',
@@ -45,9 +31,9 @@ export const submitFoodListing = (input: FoodSubmission) => apiRequest<FoodListi
   data: input,
 })
 
-export const rateFoodListing = (listingID: number, score: number) => apiRequest<FoodListingRatingResult>({
+export const rateFoodListing = (listingID: number, input: FoodListingRatingInput) => apiRequest<FoodListingRatingResult>({
   path: `/api/v1/what-to-eat/listings/${listingID}/rating`,
   method: 'PUT',
   idempotencyKey: createIdempotencyKey(`what-to-eat:rating:${listingID}`),
-  data: { score },
+  data: input,
 })

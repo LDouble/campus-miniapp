@@ -12,9 +12,11 @@ import {
   type FoodListingReview,
 } from '../../api/what-to-eat'
 import { isApiError } from '../../api/client'
+import { uploadMediaImage } from '../../api/media'
 import {
   DEFAULT_MEDIA_IMAGE_QUALITY,
   MAX_PUBLISH_IMAGES,
+  mediaImageValidationError,
   moveMediaImage,
 } from '../../features/media/images'
 import type { MediaImageDraft } from '../../features/media/images'
@@ -40,7 +42,9 @@ const previewImages = (urls: string[], current: string) => {
   void Taro.previewImage({ current, urls })
 }
 
-const reviewImageDraftError = () => undefined
+const imageErrorMessage = (error: unknown) => (
+  isApiError(error) ? error.message : error instanceof Error ? error.message : '图片上传失败，请重试'
+)
 
 export default function FoodDetailPage() {
   const { params } = useRouter()
@@ -67,6 +71,53 @@ export default function FoodDetailPage() {
     }).catch((nextError) => setError(errorMessage(nextError)))
   }, [campus, params.id])
 
+  const updateReviewImage = (
+    key: string,
+    updater: (image: MediaImageDraft) => MediaImageDraft,
+  ) => {
+    setReviewImages((current) => current.map((image) => image.key === key ? updater(image) : image))
+  }
+
+  const uploadReviewImage = async (image: MediaImageDraft) => {
+    if (!image.localPath) return
+    updateReviewImage(image.key, (current) => ({
+      ...current,
+      status: 'uploading',
+      progress: 0,
+      error: '',
+    }))
+    try {
+      const uploaded = await uploadMediaImage({
+        purpose: 'what_to_eat',
+        filePath: image.localPath,
+        mimeType: image.mimeType,
+        sizeBytes: image.sizeBytes,
+        onProgress: (progress) => updateReviewImage(image.key, (current) => ({
+          ...current,
+          status: 'uploading',
+          progress,
+        })),
+      })
+      updateReviewImage(image.key, (current) => ({
+        ...current,
+        mediaId: uploaded.id,
+        width: uploaded.width || current.width,
+        height: uploaded.height || current.height,
+        status: 'uploaded',
+        progress: 100,
+        error: '',
+      }))
+    } catch (uploadError) {
+      const message = imageErrorMessage(uploadError)
+      updateReviewImage(image.key, (current) => ({
+        ...current,
+        status: 'failed',
+        error: message,
+      }))
+      Taro.showToast({ title: message, icon: 'none' })
+    }
+  }
+
   const chooseReviewImages = async () => {
     const available = MAX_PUBLISH_IMAGES - reviewImages.length
     if (available <= 0) {
@@ -79,7 +130,9 @@ export default function FoodDetailPage() {
         maxDimension: REVIEW_IMAGE_MAX_DIMENSION,
         quality: DEFAULT_MEDIA_IMAGE_QUALITY,
       })
-      if (selected.length) setReviewImages((current) => [...current, ...selected].slice(0, MAX_PUBLISH_IMAGES))
+      if (!selected.length) return
+      setReviewImages((current) => [...current, ...selected].slice(0, MAX_PUBLISH_IMAGES))
+      selected.forEach((image) => { void uploadReviewImage(image) })
     } catch (nextError) {
       Taro.showToast({
         title: nextError instanceof Error ? nextError.message : '图片选择失败，请重试',
@@ -88,27 +141,42 @@ export default function FoodDetailPage() {
     }
   }
 
-  const richReviewPendingContract = Boolean(reviewComment.trim()) || reviewImages.length > 0
-
   const submitReview = async () => {
     if (!item || !ratingScore || ratingSubmitting) {
       if (!ratingScore) Taro.showToast({ title: '请先选择评分', icon: 'none' })
       return
     }
-    if (richReviewPendingContract) {
-      Taro.showToast({ title: '图文评价待图片契约同步后开放', icon: 'none' })
+    const imageError = mediaImageValidationError(reviewImages, MAX_PUBLISH_IMAGES)
+    if (imageError) {
+      Taro.showToast({ title: imageError, icon: 'none' })
       return
     }
     setRatingSubmitting(true)
     try {
-      const updated = await rateFoodListing(item.id, ratingScore)
+      const imageMediaIds = reviewImages.flatMap((image) => image.mediaId ? [image.mediaId] : [])
+      const updated = await rateFoodListing(item.id, {
+        score: ratingScore,
+        ...(reviewComment.trim() ? { comment: reviewComment.trim() } : {}),
+        ...(imageMediaIds.length ? { image_media_ids: imageMediaIds } : {}),
+      })
       setItem((current) => current ? {
         ...current,
         rating_average: updated.rating_average,
         rating_count: updated.rating_count,
         viewer_rating: updated.score,
       } : current)
-      Taro.showToast({ title: '评分已提交', icon: 'success' })
+      setReviewComment('')
+      setReviewImages([])
+      try {
+        const refreshed = await getFoodListing(item.id)
+        setItem(refreshed)
+        setReviews(refreshed.reviews)
+        setRatingScore(refreshed.viewer_rating || updated.score)
+      } catch {
+        // The rating has already been accepted; keep the aggregate response if
+        // the follow-up detail refresh is temporarily unavailable.
+      }
+      Taro.showToast({ title: '评价已提交', icon: 'success' })
     } catch (nextError) {
       Taro.showToast({ title: errorMessage(nextError), icon: 'none' })
     } finally {
@@ -189,7 +257,7 @@ export default function FoodDetailPage() {
             <View className='food-detail-section-head food-detail-section-head--composer'>
               <View>
                 <Text>写一条评价</Text>
-                <Text>评分可以先提交；图文评价等待图片契约同步</Text>
+                <Text>评分、评论和图片会一起提交</Text>
               </View>
             </View>
             <View className='food-detail-score-picker' ariaRole='radiogroup' ariaLabel='选择评分'>
@@ -211,7 +279,7 @@ export default function FoodDetailPage() {
               className='food-detail-review-composer__textarea'
               value={reviewComment}
               maxlength={1000}
-              placeholder='说说口味、分量或排队情况（图文评价待契约同步）'
+              placeholder='说说口味、分量或排队情况'
               autoHeight
               onInput={(event) => setReviewComment(event.detail.value)}
             />
@@ -219,24 +287,24 @@ export default function FoodDetailPage() {
               <View
                 className='food-detail-image-picker'
                 ariaRole='button'
-                ariaLabel='添加评价图片，仅本地预览'
+                ariaLabel='添加评价图片'
                 onClick={() => void chooseReviewImages()}
               >
                 <Image src={imageIcon} mode='aspectFit' ariaLabel='添加图片' />
                 <Text>添加图片</Text>
-                <Text>当前仅本地预览</Text>
+                <Text>支持相册或拍摄，最多 9 张</Text>
               </View>
             )}
             <MediaImageEditor
               images={reviewImages}
               maxCount={MAX_PUBLISH_IMAGES}
               title='评价图片'
-              hint='点击预览；上传将在新契约同步后开放'
+              hint='上传完成后提交评价，点击预览'
               showCover={false}
               onAdd={() => void chooseReviewImages()}
               onMove={(index, direction) => setReviewImages((current) => moveMediaImage(current, index, direction))}
               onRemove={(key) => setReviewImages((current) => current.filter((image) => image.key !== key))}
-              onRetry={reviewImageDraftError}
+              onRetry={(image) => void uploadReviewImage(image)}
             />
             <Button
               className='food-detail-review-composer__button'
@@ -244,7 +312,7 @@ export default function FoodDetailPage() {
               disabled={!ratingScore || ratingSubmitting}
               onClick={() => void submitReview()}
             >
-              {richReviewPendingContract ? '等待图片契约同步' : '提交评分'}
+              提交评价
             </Button>
           </View>
         </View>

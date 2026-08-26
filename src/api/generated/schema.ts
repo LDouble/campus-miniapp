@@ -2892,6 +2892,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/deadlines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开 DDL */
+        get: operations["ListDeadlines"];
+        put?: never;
+        /** 创建 DDL */
+        post: operations["CreateDeadline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我创建的 DDL */
+        get: operations["ListMyDeadlines"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/subscriptions/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的 DDL 订阅 */
+        get: operations["ListMyDeadlineSubscriptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看 DDL 详情 */
+        get: operations["GetDeadline"];
+        put?: never;
+        post?: never;
+        /** 取消我的 DDL */
+        delete: operations["DeleteDeadline"];
+        options?: never;
+        head?: never;
+        /** 修改我的 DDL */
+        patch: operations["UpdateDeadline"];
+        trace?: never;
+    };
+    "/api/v1/deadlines/{id}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 订阅 DDL */
+        put: operations["SubscribeDeadline"];
+        post?: never;
+        /** 取消订阅 DDL */
+        delete: operations["UnsubscribeDeadline"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/classroom-occupancies": {
         parameters: {
             query?: never;
@@ -3491,7 +3580,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** 修改草稿或被驳回商品 */
+        /** 修改已发布、草稿或被驳回商品 */
         patch: operations["UpdateMarketplaceListing"];
         trace?: never;
     };
@@ -4492,6 +4581,179 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/what-to-eat/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询餐饮项和投稿 */
+        get: operations["ListAdminWhatToEatListings"];
+        put?: never;
+        /** 管理端创建餐饮项草稿 */
+        post: operations["CreateAdminWhatToEatListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/what-to-eat/listings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看餐饮项 */
+        get: operations["GetAdminWhatToEatListing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端编辑餐饮项和推广设置 */
+        patch: operations["UpdateAdminWhatToEatListing"];
+        trace?: never;
+    };
+    "/api/v1/admin/what-to-eat/listings/{id}/offline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 下线餐饮项 */
+        post: operations["OfflineAdminWhatToEatListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/what-to-eat/listings/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布餐饮项 */
+        post: operations["PublishAdminWhatToEatListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/what-to-eat/listings/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 驳回用户投稿 */
+        post: operations["RejectAdminWhatToEatListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/what-to-eat/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询当前校区已发布餐饮项 */
+        get: operations["ListWhatToEatListings"];
+        put?: never;
+        /** 投稿餐饮项，默认待审核 */
+        post: operations["SubmitWhatToEatListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/what-to-eat/listings/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的餐饮项投稿 */
+        get: operations["ListMyWhatToEatSubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/what-to-eat/listings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看已发布餐饮项详情 */
+        get: operations["GetWhatToEatListing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/what-to-eat/listings/{id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 创建或更新本人对餐饮项的评分 */
+        put: operations["RateWhatToEatListing"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/what-to-eat/random": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 从当前校区非推广随机池随机选择餐饮项 */
+        get: operations["RandomWhatToEatListing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4927,6 +5189,10 @@ export interface components {
         };
         ErrorEnvelope: {
             error: {
+                /**
+                 * @description 稳定错误码。教务接口可能返回 academic_retryable（HTTP 503，客户端只允许用户主动点击重试）、
+                 *     academic_provider_busy（HTTP 429，客户端必须遵守 Retry-After），以及凭据、验证码和账号受限专用错误码。
+                 */
                 code: string;
                 message: string;
             };
@@ -5682,8 +5948,8 @@ export interface components {
             id: number;
             /** @enum {string} */
             method: "credentials" | "student_card";
-            /** @enum {string} */
-            provider: "ouc" | "mock" | "manual";
+            /** @description 身份来源 Provider ID；凭据认证由独立 Provider 服务返回，人工审核使用 manual */
+            provider: string;
             real_name: string;
             revoke_reason: string | null;
             /** Format: date-time */
@@ -6982,6 +7248,97 @@ export interface components {
             /** Format: uri */
             upload_url: string;
         };
+        DeadlineInput: {
+            category?: string;
+            course_name?: string;
+            description?: string;
+            /** Format: date-time */
+            due_at: string;
+            link?: string;
+            title: string;
+        };
+        DeadlinePage: {
+            items: components["schemas"]["DeadlineView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        DeadlinePageResponseBody: {
+            data: components["schemas"]["DeadlinePage"];
+            request_id: string;
+        };
+        DeadlineResponseBody: {
+            data: components["schemas"]["DeadlineView"];
+            request_id: string;
+        };
+        DeadlineSubscriptionPage: {
+            items: components["schemas"]["DeadlineSubscriptionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        DeadlineSubscriptionPageResponseBody: {
+            data: components["schemas"]["DeadlineSubscriptionPage"];
+            request_id: string;
+        };
+        DeadlineSubscriptionResponseBody: {
+            data: components["schemas"]["DeadlineSubscriptionView"];
+            request_id: string;
+        };
+        DeadlineSubscriptionView: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            deadline_id: number;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            reminded_at?: string | null;
+            /** @enum {string} */
+            status: "active" | "cancelled";
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            user_id: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        DeadlineUpdateInput: components["schemas"]["DeadlineInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        DeadlineVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        DeadlineView: {
+            author_avatar_url: string | null;
+            author_nickname: string;
+            category?: string | null;
+            course_name?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            creator_id: number;
+            description?: string | null;
+            /** Format: date-time */
+            due_at: string;
+            /** Format: uint64 */
+            id: number;
+            link?: string | null;
+            /** @enum {string} */
+            status: "active" | "cancelled";
+            subscribed: boolean;
+            /** Format: int64 */
+            subscription_count: number;
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
         ClassroomAvailabilityItem: {
             available: boolean;
             classroom: components["schemas"]["ClassroomView"];
@@ -7331,6 +7688,7 @@ export interface components {
             campus: string | null;
             /** Format: date-time */
             cancelled_at: string | null;
+            category: string;
             /** Format: int64 */
             comment_count: number;
             comment_previews: components["schemas"]["PublicCommentPreview"][];
@@ -7661,8 +8019,7 @@ export interface components {
             author_nickname: string;
             available_actions: components["schemas"]["MarketplaceViewerAction"][];
             campus: string | null;
-            /** @enum {string} */
-            category: "general" | "course_material";
+            category: string;
             /** Format: int64 */
             comment_count: number;
             comment_previews: components["schemas"]["PublicCommentPreview"][];
@@ -7764,7 +8121,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -8408,6 +8765,125 @@ export interface components {
         UserLevelTierView: components["schemas"]["UserLevelTierInput"] & {
             /** Format: uint64 */
             id: number;
+        };
+        FoodListingAdminInput: components["schemas"]["FoodListingInput"] & {
+            promoted?: boolean;
+            /** Format: date-time */
+            promotion_ends_at?: string | null;
+            /** Format: int64 */
+            promotion_rank?: number;
+            /** Format: date-time */
+            promotion_starts_at?: string | null;
+        };
+        FoodListingAdminUpdateInput: components["schemas"]["FoodListingAdminInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        FoodListingInput: {
+            campus: string;
+            category: string;
+            description: string;
+            image_urls?: string[];
+            location: string;
+            name: string;
+            price_note?: string;
+            random_enabled: boolean;
+            tags: string[];
+        };
+        FoodListingPage: {
+            items: components["schemas"]["FoodListingView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        FoodListingPageResponseBody: {
+            data: components["schemas"]["FoodListingPage"];
+            request_id: string;
+        };
+        FoodListingRatingInput: {
+            comment?: string;
+            image_media_ids?: number[];
+            image_urls?: string[];
+            score: number;
+        };
+        FoodListingRatingResponseBody: {
+            data: components["schemas"]["FoodListingRatingResult"];
+            request_id: string;
+        };
+        FoodListingRatingResult: {
+            comment?: string | null;
+            image_urls: string[];
+            /** Format: uint64 */
+            listing_id: number;
+            /** Format: double */
+            rating_average: number;
+            /** Format: int64 */
+            rating_count: number;
+            score: number;
+        };
+        FoodListingResponseBody: {
+            data: components["schemas"]["FoodListingView"];
+            request_id: string;
+        };
+        FoodListingReviewInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            rejection_reason?: string;
+        };
+        FoodListingReviewView: {
+            comment?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            image_urls: string[];
+            score: number;
+        };
+        /** @enum {string} */
+        FoodListingStatus: "pending" | "published" | "offline" | "rejected";
+        FoodListingSubmissionInput: components["schemas"]["FoodListingInput"] & {
+            image_media_ids?: number[];
+            /** @default true */
+            random_enabled: boolean;
+        };
+        FoodListingView: {
+            campus: string;
+            category: string;
+            /** Format: date-time */
+            created_at: string;
+            description: string;
+            /** Format: uint64 */
+            id: number;
+            image_urls: string[];
+            location: string;
+            name: string;
+            price_note?: string | null;
+            promoted: boolean;
+            /** Format: date-time */
+            promotion_ends_at?: string | null;
+            /** Format: int64 */
+            promotion_rank: number;
+            /** Format: date-time */
+            promotion_starts_at?: string | null;
+            random_enabled: boolean;
+            /** Format: double */
+            rating_average: number;
+            /** Format: int64 */
+            rating_count: number;
+            rejection_reason?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewed_by?: number | null;
+            reviews: components["schemas"]["FoodListingReviewView"][];
+            status: components["schemas"]["FoodListingStatus"];
+            /** Format: uint64 */
+            submitted_by?: number | null;
+            tags: string[];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+            viewer_rating?: number | null;
         };
     };
     responses: {
@@ -9286,6 +9762,42 @@ export interface components {
                 "application/json": components["schemas"]["MaterialUploadSessionResponseBody"];
             };
         };
+        /** @description DDL 分页列表 */
+        DeadlinePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlinePageResponseBody"];
+            };
+        };
+        /** @description DDL 详情 */
+        DeadlineResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlineResponseBody"];
+            };
+        };
+        /** @description 我的 DDL 订阅分页列表 */
+        DeadlineSubscriptionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlineSubscriptionPageResponseBody"];
+            };
+        };
+        /** @description DDL 订阅关系 */
+        DeadlineSubscriptionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeadlineSubscriptionResponseBody"];
+            };
+        };
         /** @description 教室占用分页 */
         ClassroomOccupancyPageResponse: {
             headers: {
@@ -9716,6 +10228,33 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["UserLevelTaskListResponseBody"];
+            };
+        };
+        /** @description 餐饮项分页 */
+        FoodListingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["FoodListingPageResponseBody"];
+            };
+        };
+        /** @description 餐饮项评分结果 */
+        FoodListingRatingResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["FoodListingRatingResponseBody"];
+            };
+        };
+        /** @description 餐饮项 */
+        FoodListingResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["FoodListingResponseBody"];
             };
         };
     };
@@ -13881,6 +14420,166 @@ export interface operations {
             200: components["responses"]["MaterialCoursePageResponse"];
         };
     };
+    ListDeadlines: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                category?: string;
+                course_name?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlinePageResponse"];
+        };
+    };
+    CreateDeadline: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["DeadlineResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    ListMyDeadlines: {
+        parameters: {
+            query?: {
+                status?: "active" | "cancelled";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlinePageResponse"];
+        };
+    };
+    ListMyDeadlineSubscriptions: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineSubscriptionPageResponse"];
+        };
+    };
+    GetDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    DeleteDeadline: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["DeadlineResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateDeadline: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["DeadlineResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    SubscribeDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineSubscriptionResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UnsubscribeDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeadlineSubscriptionResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     ListAdminClassroomOccupancies: {
         parameters: {
             query?: {
@@ -14103,6 +14802,7 @@ export interface operations {
     ListAdminErrands: {
         parameters: {
             query?: {
+                category?: string;
                 status?: string;
                 review_status?: string;
                 keyword?: string;
@@ -14176,6 +14876,7 @@ export interface operations {
             query?: {
                 keyword?: string;
                 campus?: string;
+                category?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -14200,6 +14901,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    category?: string;
                     description: string;
                     /** Format: int64 */
                     reward_cents: number;
@@ -14224,6 +14926,7 @@ export interface operations {
                 relation?: "all" | "published" | "accepted";
                 status?: "open" | "accepted" | "picked_up" | "delivered" | "completed" | "cancelled";
                 review_status?: "draft" | "pending_review" | "approved" | "rejected";
+                category?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -14265,6 +14968,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    category?: string;
                     description: string;
                     /** Format: int64 */
                     reward_cents: number;
@@ -14537,6 +15241,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["FavoritePageResponse"];
+            503: components["responses"]["Error"];
         };
     };
     GetFavoriteState: {
@@ -14611,7 +15316,7 @@ export interface operations {
         parameters: {
             query?: {
                 intent?: "sell" | "wanted";
-                category?: "general" | "course_material";
+                category?: string;
                 status?: string;
                 keyword?: string;
                 min_price_cents?: number;
@@ -14678,7 +15383,7 @@ export interface operations {
         parameters: {
             query?: {
                 intent?: "sell" | "wanted";
-                category?: "general" | "course_material";
+                category?: string;
                 campus?: string;
                 keyword?: string;
                 min_price_cents?: number;
@@ -14712,8 +15417,7 @@ export interface operations {
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
-                    /** @enum {string} */
-                    category: "general" | "course_material";
+                    category: string;
                     campus?: string;
                     course_name?: string;
                     course_code?: string;
@@ -14737,6 +15441,7 @@ export interface operations {
         parameters: {
             query?: {
                 intent?: "sell" | "wanted";
+                category?: string;
                 status?: string;
                 page?: number;
                 page_size?: number;
@@ -14786,8 +15491,7 @@ export interface operations {
                     description: string;
                     /** Format: int64 */
                     price_cents: number;
-                    /** @enum {string} */
-                    category: "general" | "course_material";
+                    category: string;
                     campus?: string;
                     course_name?: string;
                     course_code?: string;
@@ -16047,6 +16751,250 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["UserLevelResponse"];
+        };
+    };
+    ListAdminWhatToEatListings: {
+        parameters: {
+            query?: {
+                campus?: string;
+                status?: "pending" | "published" | "offline" | "rejected";
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FoodListingPageResponse"];
+        };
+    };
+    CreateAdminWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingAdminInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["FoodListingResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetAdminWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingAdminUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    OfflineAdminWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RejectAdminWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListWhatToEatListings: {
+        parameters: {
+            query: {
+                campus: string;
+                category?: string;
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FoodListingPageResponse"];
+        };
+    };
+    SubmitWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingSubmissionInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["FoodListingResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    ListMyWhatToEatSubmissions: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FoodListingPageResponse"];
+        };
+    };
+    GetWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RateWhatToEatListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingRatingInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["FoodListingRatingResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RandomWhatToEatListing: {
+        parameters: {
+            query: {
+                campus: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            404: components["responses"]["Error"];
         };
     };
 }

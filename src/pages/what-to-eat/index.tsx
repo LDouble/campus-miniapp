@@ -50,7 +50,7 @@ export default function WhatToEatPage() {
     const choice = await Taro.showActionSheet({ itemList: ['1 分', '2 分', '3 分', '4 分', '5 分'] }).catch(() => null)
     if (!choice) return
     try {
-      const updated = await rateFoodListing(item.id, choice.tapIndex + 1)
+      const updated = await rateFoodListing(item.id, { score: choice.tapIndex + 1 })
       const mergeRating = (entry: FoodListing) => entry.id === updated.listing_id
         ? { ...entry, rating_average: updated.rating_average, rating_count: updated.rating_count, viewer_rating: updated.score }
         : entry
