@@ -31,5 +31,8 @@ const commentSource = readFileSync(
 )
 assert.ok(postSource.includes('<MentionContent'))
 assert.ok(commentSource.includes('<MentionContent'))
+assert.ok(commentSource.includes('business-detail-composer__tool-row'))
+assert.ok(commentSource.includes("requestWechatSubscriptionForModule('private_message')"))
+assert.ok(!commentSource.includes('business-detail-composer__input-actions'))
 
 process.stdout.write('community mention content smoke: ok\n')

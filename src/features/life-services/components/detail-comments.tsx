@@ -36,6 +36,7 @@ import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
 import MentionPicker from '../../mentions/mention-picker'
 import { insertMentionToken } from '../../mentions/content'
+import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import { getSystemState } from '../../../state/system'
 import {
@@ -631,6 +632,7 @@ export default function DetailComments({
   const composerClosingRef = useRef(false)
   const stickerPickerOpenRef = useRef(false)
   const composerActionPendingRef = useRef(false)
+  const mentionSubscriptionRequestedRef = useRef(false)
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
   const focusedCommentClearRef = useRef<null | (() => void)>(null)
@@ -1019,6 +1021,7 @@ export default function DetailComments({
     composerClosingRef.current = false
     composerActionPendingRef.current = false
     stickerPickerOpenRef.current = false
+    mentionSubscriptionRequestedRef.current = false
     setComposerOpen(false)
     setComposerExpanded(false)
     setComposerClosing(false)
@@ -1137,6 +1140,18 @@ export default function DetailComments({
     setKeyboardHeight(0)
     void Taro.hideKeyboard()
   }, [setStickerPickerVisible])
+
+  const handleMentionTriggerClick = useCallback((event: {
+    stopPropagation: () => void
+  }) => {
+    event.stopPropagation()
+    composerActionPendingRef.current = true
+    if (!mentionSubscriptionRequestedRef.current) {
+      const requested = requestWechatSubscriptionForModule('private_message')
+      if (requested) mentionSubscriptionRequestedRef.current = true
+    }
+    setMentionPickerVisible(true)
+  }, [setMentionPickerVisible])
 
   const restoreComposerFocus = useCallback(() => {
     if (!mountedRef.current) return
@@ -1651,6 +1666,61 @@ export default function DetailComments({
               onOpenChange={setMentionPickerVisible}
             />
           )}
+          {enabled && composerOpen && (
+            <View className='business-detail-composer__tool-row'>
+              {targetType === 'campus_circle_post' && (
+                <View
+                  className={mentionPickerOpen
+                    ? 'business-detail-composer__mention-trigger business-detail-composer__mention-trigger--active'
+                    : 'business-detail-composer__mention-trigger'}
+                  ariaRole='button'
+                  ariaLabel='选择要提及的同学'
+                  onTouchStart={(event) => {
+                    event.stopPropagation()
+                    composerActionPendingRef.current = true
+                  }}
+                  onClick={handleMentionTriggerClick}
+                >
+                  <Image src={icons.mention} mode='aspectFit' />
+                </View>
+              )}
+              <View
+                className={stickerPickerOpen
+                  ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'
+                  : 'business-detail-composer__sticker-trigger'}
+                ariaRole='button'
+                ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
+                onTouchStart={(event) => {
+                  event.stopPropagation()
+                  composerActionPendingRef.current = true
+                }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  composerActionPendingRef.current = false
+                  setStickerPickerVisible(!stickerPickerOpen)
+                }}
+              >
+                <Image src={require('../../../assets/icons/smile.svg')} mode='aspectFit' />
+              </View>
+              <View
+                className={commentImage
+                  ? 'business-detail-composer__image-trigger business-detail-composer__image-trigger--disabled'
+                  : 'business-detail-composer__image-trigger'}
+                ariaRole='button'
+                ariaLabel={commentImage ? '已添加 1 张图片，请先删除后更换' : '添加图片'}
+                onTouchStart={(event) => {
+                  event.stopPropagation()
+                  composerActionPendingRef.current = true
+                }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  void chooseCommentImage()
+                }}
+              >
+                <Image src={require('../../../assets/icons/image.svg')} mode='aspectFit' />
+              </View>
+            </View>
+          )}
           <View className='business-detail-composer__main'>
             <UserAvatar
               src={composerAvatar.src}
@@ -1752,68 +1822,20 @@ export default function DetailComments({
               <View className='business-detail-composer__disabled'>评论暂未开放</View>
             )}
             {enabled && composerOpen ? (
-              <View className='business-detail-composer__input-actions'>
-                {targetType === 'campus_circle_post' && (
-                  <View
-                    className={mentionPickerOpen
-                      ? 'business-detail-composer__mention-trigger business-detail-composer__mention-trigger--active'
-                      : 'business-detail-composer__mention-trigger'}
-                    ariaRole='button'
-                    ariaLabel='选择要提及的同学'
-                    onTouchStart={() => {
-                      composerActionPendingRef.current = true
-                    }}
-                    onClick={() => setMentionPickerVisible(true)}
-                  >
-                    <Image src={icons.mention} mode='aspectFit' />
-                  </View>
-                )}
-                <View
-                  className={stickerPickerOpen
-                    ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'
-                    : 'business-detail-composer__sticker-trigger'}
-                  ariaRole='button'
-                  ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
-                  onTouchStart={() => {
-                    composerActionPendingRef.current = true
-                  }}
-                  onClick={() => {
-                    composerActionPendingRef.current = false
-                    setStickerPickerVisible(!stickerPickerOpen)
-                  }}
-                >
-                  <Image src={require('../../../assets/icons/smile.svg')} mode='aspectFit' />
-                </View>
-                <View
-                  className={commentImage
-                    ? 'business-detail-composer__image-trigger business-detail-composer__image-trigger--disabled'
-                    : 'business-detail-composer__image-trigger'}
-                  ariaRole='button'
-                  ariaLabel={commentImage ? '已添加 1 张图片，请先删除后更换' : '添加图片'}
-                  onTouchStart={() => {
-                    composerActionPendingRef.current = true
-                  }}
-                  onClick={() => {
-                    void chooseCommentImage()
-                  }}
-                >
-                  <Image src={require('../../../assets/icons/image.svg')} mode='aspectFit' />
-                </View>
-                <View
-                  id={`business-comment-submit-${targetType}-${targetId}`}
-                  className={[
-                    'business-detail-composer__publish',
-                    `business-detail-composer__publish--${tone}`,
-                    !hasComposerContent || submitting ? 'business-detail-composer__publish--disabled' : '',
-                  ].filter(Boolean).join(' ')}
-                  ariaRole='button'
-                  ariaLabel={submitting ? '评论发布中' : '发布评论'}
-                  onClick={() => {
-                    if (hasComposerContent && !submitting) void submit()
-                  }}
-                >
-                  <Image src={icons.send} mode='aspectFit' />
-                </View>
+              <View
+                id={`business-comment-submit-${targetType}-${targetId}`}
+                className={[
+                  'business-detail-composer__publish',
+                  `business-detail-composer__publish--${tone}`,
+                  !hasComposerContent || submitting ? 'business-detail-composer__publish--disabled' : '',
+                ].filter(Boolean).join(' ')}
+                ariaRole='button'
+                ariaLabel={submitting ? '评论发布中' : '发布评论'}
+                onClick={() => {
+                  if (hasComposerContent && !submitting) void submit()
+                }}
+              >
+                <Image src={icons.send} mode='aspectFit' />
               </View>
             ) : (
               <>

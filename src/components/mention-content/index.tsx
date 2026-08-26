@@ -61,20 +61,17 @@ export default function MentionContent({
           return renderText(segment.text, stickerClassName, `segment-${index}`)
         }
 
-        const nickname = segment.nickname || segment.text.replace(/^@/u, '')
         return (
-          <View
+          <Text
             key={`mention-${segment.user_id}-${index}`}
             className='mention-content__mention'
-            ariaRole='button'
-            ariaLabel={`查看${nickname}的个人主页`}
             onClick={(event) => {
               event.stopPropagation()
               void openPublicProfile(segment.user_id as number)
             }}
           >
-            <Text>{segment.text}</Text>
-          </View>
+            {segment.text}
+          </Text>
         )
       }) : renderText(content, stickerClassName, 'fallback')}
     </View>
