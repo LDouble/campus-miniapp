@@ -39,6 +39,7 @@ import {
   useMentionPicker,
 } from '../../mentions/mention-picker'
 import {
+  buildMentionContentSegments,
   expandMentionDeletion,
   insertMentionToken,
   removeMentionTokens,
@@ -1358,6 +1359,12 @@ export default function DetailComments({
         ...(commentImage?.mediaId ? { media_id: commentImage.mediaId } : {}),
       })
       if (!mountedRef.current) return
+      const displayComment = created.content_segments?.length
+        ? created
+        : {
+            ...created,
+            content_segments: buildMentionContentSegments(created.content, mentionCandidates),
+          }
       if (activeReplyTarget) {
         const rootId = commentRootId(activeReplyTarget)
         const rootComment = comments.find((comment) => comment.id === rootId)
@@ -1373,7 +1380,7 @@ export default function DetailComments({
           return {
             ...current,
             [rootId]: {
-              descendants: mergeLocalThreadReply(descendants, created),
+              descendants: mergeLocalThreadReply(descendants, displayComment),
               error: '',
               expanded: true,
               loaded: existing?.loaded || false,
@@ -1382,16 +1389,16 @@ export default function DetailComments({
           }
         })
       } else {
-        setComments((current) => current.some((comment) => comment.id === created.id)
+        setComments((current) => current.some((comment) => comment.id === displayComment.id)
           ? current
-          : [...current, created])
+          : [...current, displayComment])
         setTotal((current) => current + 1)
       }
-      focusCommentTemporarily(created.id)
-      setEnteringCommentId(created.id)
+      focusCommentTemporarily(displayComment.id)
+      setEnteringCommentId(displayComment.id)
       scheduleTimeout(() => {
         if (mountedRef.current) {
-          setEnteringCommentId((current) => current === created.id ? 0 : current)
+          setEnteringCommentId((current) => current === displayComment.id ? 0 : current)
         }
       }, 320)
       setContent('')
@@ -1403,7 +1410,7 @@ export default function DetailComments({
       contentSelectionEndRef.current = 0
       closeComposer()
       if (created.status === 'approved') onApprovedDelta?.(1)
-      onMutation?.({ comment: created, type: 'create' })
+      onMutation?.({ comment: displayComment, type: 'create' })
       Taro.showToast({
         title: created.status === 'approved'
           ? activeReplyTarget ? '回复已发布' : '评论已发布'

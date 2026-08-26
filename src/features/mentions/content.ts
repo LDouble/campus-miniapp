@@ -1,4 +1,4 @@
-import type { MentionCandidate } from '../../api/types'
+import type { ContentSegment, MentionCandidate } from '../../api/types'
 
 export type MentionContentDeletion = {
   text: string
@@ -89,6 +89,48 @@ const pureDeletionRange = (previous: string, next: string) => {
 const containsMentionToken = (content: string, nickname: string) => (
   mentionTokenRanges(content, nickname).length > 0
 )
+
+const appendTextSegment = (segments: ContentSegment[], text: string) => {
+  if (!text) return
+  const previous = segments[segments.length - 1]
+  if (previous?.type === 'text') {
+    previous.text += text
+    return
+  }
+  segments.push({ type: 'text', text })
+}
+
+/** Build display segments for a just-created comment before the API can echo them. */
+export const buildMentionContentSegments = (
+  content: string,
+  candidates: ReadonlyArray<MentionCandidate>,
+): ContentSegment[] | null => {
+  const source = typeof content === 'string' ? content : ''
+  const matches = candidates.flatMap((candidate) => (
+    mentionTokenRanges(source, candidate.nickname).map((range) => ({
+      ...range,
+      candidate,
+    }))
+  )).sort((left, right) => left.start - right.start || left.end - right.end)
+  if (matches.length === 0) return null
+
+  const segments: ContentSegment[] = []
+  let position = 0
+  matches.forEach(({ start, end, candidate }) => {
+    if (start < position) return
+    appendTextSegment(segments, source.slice(position, start))
+    const mentionEnd = source[end - 1] === ' ' ? end - 1 : end
+    segments.push({
+      type: 'mention',
+      text: source.slice(start, mentionEnd),
+      user_id: candidate.id,
+      nickname: candidate.nickname,
+    })
+    position = mentionEnd
+  })
+  appendTextSegment(segments, source.slice(position))
+  return segments
+}
 
 export const insertMentionToken = (
   content: string,

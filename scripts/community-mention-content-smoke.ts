@@ -2,6 +2,7 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  buildMentionContentSegments,
   expandMentionDeletion,
   insertMentionToken,
   removeMentionTokens,
@@ -33,6 +34,14 @@ assert.deepEqual(
 assert.deepEqual(
   removeMentionTokens('前 @海风同学 后', '海风同学', 9),
   { text: '前 后', cursor: 3 },
+)
+assert.deepEqual(
+  buildMentionContentSegments('前 @海风同学 后', [mentionCandidate]),
+  [
+    { type: 'text', text: '前 ' },
+    { type: 'mention', text: '@海风同学', user_id: 7, nickname: '海风同学' },
+    { type: 'text', text: ' 后' },
+  ],
 )
 
 const componentSource = readFileSync(
