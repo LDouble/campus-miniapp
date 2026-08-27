@@ -257,6 +257,12 @@
   padding: 24rpx;
 }
 
+.food-detail-review-composer__section {
+  margin-top: 28rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid rgba(129, 201, 194, 0.14);
+}
+
 .food-detail-section-head--composer {
   margin: 0 0 18rpx;
 }
@@ -392,5 +398,9 @@
 .campus-theme--dark .food-detail-image-picker {
   color: var(--campus-text-body);
   background: var(--campus-surface-subtle);
+  border-color: var(--campus-border);
+}
+
+.campus-theme--dark .food-detail-review-composer__section {
   border-color: var(--campus-border);
 }

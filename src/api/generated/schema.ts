@@ -4720,6 +4720,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/what-to-eat/listings/{id}/comment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 创建或编辑本人对餐饮项的留言，独立于评分 */
+        put: operations["UpsertWhatToEatComment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/what-to-eat/listings/{id}/rating": {
         parameters: {
             query?: never;
@@ -8779,6 +8796,10 @@ export interface components {
             /** Format: uint64 */
             expected_version: number;
         };
+        FoodListingCommentInput: {
+            comment: string;
+            image_media_ids?: number[];
+        };
         FoodListingInput: {
             campus: string;
             category: string;
@@ -8802,9 +8823,6 @@ export interface components {
             request_id: string;
         };
         FoodListingRatingInput: {
-            comment?: string;
-            image_media_ids?: number[];
-            image_urls?: string[];
             score: number;
         };
         FoodListingRatingResponseBody: {
@@ -8812,8 +8830,6 @@ export interface components {
             request_id: string;
         };
         FoodListingRatingResult: {
-            comment?: string | null;
-            image_urls: string[];
             /** Format: uint64 */
             listing_id: number;
             /** Format: double */
@@ -8832,11 +8848,10 @@ export interface components {
             rejection_reason?: string;
         };
         FoodListingReviewView: {
-            comment?: string | null;
+            comment: string;
             /** Format: date-time */
             created_at: string;
             image_urls: string[];
-            score: number;
         };
         /** @enum {string} */
         FoodListingStatus: "pending" | "published" | "offline" | "rejected";
@@ -16959,6 +16974,26 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["FoodListingResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpsertWhatToEatComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodListingCommentInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["FoodListingResponse"];
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };
     };

@@ -6,6 +6,7 @@ export type FoodListingRatingResult = components['schemas']['FoodListingRatingRe
 export type FoodListingPage = components['schemas']['FoodListingPage']
 export type FoodListingReview = components['schemas']['FoodListingReviewView']
 export type FoodListingRatingInput = components['schemas']['FoodListingRatingInput']
+export type FoodListingCommentInput = components['schemas']['FoodListingCommentInput']
 
 export type FoodSubmission = components['schemas']['FoodListingSubmissionInput']
 export type FoodListingDetail = FoodListing
@@ -35,5 +36,12 @@ export const rateFoodListing = (listingID: number, input: FoodListingRatingInput
   path: `/api/v1/what-to-eat/listings/${listingID}/rating`,
   method: 'PUT',
   idempotencyKey: createIdempotencyKey(`what-to-eat:rating:${listingID}`),
+  data: input,
+})
+
+export const upsertFoodListingComment = (listingID: number, input: FoodListingCommentInput) => apiRequest<FoodListing>({
+  path: `/api/v1/what-to-eat/listings/${listingID}/comment`,
+  method: 'PUT',
+  idempotencyKey: createIdempotencyKey(`what-to-eat:comment:${listingID}`),
   data: input,
 })
