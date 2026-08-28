@@ -124,6 +124,7 @@ const icons = {
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
+  whatToEat: require('../../assets/icons/what-to-eat.svg'),
   campaign: require('../../assets/icons/campaign.svg'),
   arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
@@ -168,6 +169,7 @@ const quickServices = [
   { key: 'carpool', name: '找同行', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
   { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
   { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
+  { key: 'what-to-eat', name: '今天吃什么', icon: icons.whatToEat, tone: 'blue', route: '/pages/what-to-eat/index' },
 ]
 
 const migratedHomeServiceKeys = new Set([
@@ -193,6 +195,7 @@ const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
   carpool: 'carpool',
   classroom: 'empty_classroom',
   clubs: 'club',
+  'what-to-eat': 'what_to_eat',
 }
 const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   community: 'community',

@@ -62,6 +62,7 @@ export const MINIAPP_MODULE_KEYS = [
   'shuttle',
   'club',
   'private_message',
+  'what_to_eat',
 ] as const
 
 export type MiniappModuleKey = typeof MINIAPP_MODULE_KEYS[number]
