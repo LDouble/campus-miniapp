@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Taro, { useRouter } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
+import BottomSheet from '../../components/bottom-sheet'
 import CustomNavbar from '../../components/custom-navbar'
 import MediaImageEditor from '../../components/media-image-editor'
 import { KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
@@ -22,11 +23,22 @@ import {
 } from '../../features/media/images'
 import type { MediaImageDraft } from '../../features/media/images'
 import { chooseMediaImages } from '../../features/media/selection'
+import { useCampusShare } from '../../features/share'
+import StarRating from './star-rating'
 import './detail.scss'
 
 const imageIcon = require('../../assets/icons/image.svg')
+const recommendIcon = require('../../assets/icons/recommend.svg')
 
 const REVIEW_IMAGE_MAX_DIMENSION = 1280
+
+const RATING_OPTIONS = [
+  { label: '不满意', description: '这次体验还有待改进' },
+  { label: '一般', description: '中规中矩，可以更好' },
+  { label: '还不错', description: '味道和体验都还可以' },
+  { label: '满意', description: '值得推荐给同学' },
+  { label: '超赞', description: '下次还会再来' },
+] as const
 
 const errorMessage = (error: unknown) => (
   isApiError(error) ? error.message : '加载失败，请稍后再试'
@@ -47,6 +59,8 @@ const imageErrorMessage = (error: unknown) => (
   isApiError(error) ? error.message : error instanceof Error ? error.message : '图片上传失败，请重试'
 )
 
+const formatRatingValue = (value: number) => value > 0 ? value.toFixed(1) : '—'
+
 export default function FoodDetailPage() {
   const { params } = useRouter()
   const campus = getSelectedCampus(getMiniappRuntimeConfig())
@@ -56,8 +70,18 @@ export default function FoodDetailPage() {
   const [ratingScore, setRatingScore] = useState(0)
   const [reviewComment, setReviewComment] = useState('')
   const [reviewImages, setReviewImages] = useState<MediaImageDraft[]>([])
-  const [ratingSubmitting, setRatingSubmitting] = useState(false)
-  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [reviewSheetVisible, setReviewSheetVisible] = useState(false)
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const listingId = Number(params.id)
+  const listingImageUrls = item?.image_urls || []
+  const selectedRatingOption = ratingScore > 0 ? RATING_OPTIONS[ratingScore - 1] : undefined
+
+  useCampusShare(() => ({
+    title: item ? `${item.name}｜${item.campus}` : '校园餐饮详情',
+    path: '/pages/what-to-eat/detail',
+    query: { id: Number.isFinite(listingId) && listingId > 0 ? listingId : undefined },
+    imageUrl: listingImageUrls[0],
+  }))
 
   useEffect(() => {
     setError('')
@@ -66,12 +90,17 @@ export default function FoodDetailPage() {
     setRatingScore(0)
     setReviewComment('')
     setReviewImages([])
+    setReviewSheetVisible(false)
     void getFoodListing(Number(params.id)).then((nextItem) => {
       setItem(nextItem)
       setReviews(nextItem.reviews)
       setRatingScore(nextItem.viewer_rating || 0)
     }).catch((nextError) => setError(errorMessage(nextError)))
   }, [campus, params.id])
+
+  useEffect(() => {
+    if (item && params.review === '1') setReviewSheetVisible(true)
+  }, [item, params.review])
 
   const updateReviewImage = (
     key: string,
@@ -143,209 +172,262 @@ export default function FoodDetailPage() {
     }
   }
 
-  const submitRating = async () => {
-    if (!item || !ratingScore || ratingSubmitting) {
-      if (!ratingScore) Taro.showToast({ title: '请先选择评分', icon: 'none' })
-      return
-    }
-    setRatingSubmitting(true)
-    try {
-      const updated = await rateFoodListing(item.id, { score: ratingScore })
-      setItem((current) => current ? {
-        ...current,
-        rating_average: updated.rating_average,
-        rating_count: updated.rating_count,
-        viewer_rating: updated.score,
-      } : current)
-      setRatingScore(updated.score)
-      Taro.showToast({ title: '评分已更新', icon: 'success' })
-    } catch (nextError) {
-      Taro.showToast({ title: errorMessage(nextError), icon: 'none' })
-    } finally {
-      setRatingSubmitting(false)
-    }
+  const openReviewSheet = (nextRating?: number) => {
+    if (nextRating) setRatingScore(nextRating)
+    setReviewSheetVisible(true)
   }
 
-  const submitComment = async () => {
-    if (!item || commentSubmitting) return
+  const closeReviewSheet = () => {
+    if (reviewSubmitting) return
+    setReviewSheetVisible(false)
+  }
+
+  const submitReview = async () => {
+    if (!item || reviewSubmitting) return
     const comment = reviewComment.trim()
-    if (!comment) {
-      Taro.showToast({ title: '请输入留言内容', icon: 'none' })
+    if (!ratingScore && !comment) {
+      Taro.showToast({ title: '请先评分或输入留言', icon: 'none' })
       return
     }
-    const imageError = mediaImageValidationError(reviewImages, MAX_PUBLISH_IMAGES)
-    if (imageError) {
-      Taro.showToast({ title: imageError, icon: 'none' })
+    if (reviewImages.length > 0 && !comment) {
+      Taro.showToast({ title: '请先输入评价内容再上传图片', icon: 'none' })
       return
     }
-    setCommentSubmitting(true)
+    if (comment) {
+      const imageError = mediaImageValidationError(reviewImages, MAX_PUBLISH_IMAGES)
+      if (imageError) {
+        Taro.showToast({ title: imageError, icon: 'none' })
+        return
+      }
+    }
+    setReviewSubmitting(true)
     try {
-      const imageMediaIds = reviewImages.flatMap((image) => image.mediaId ? [image.mediaId] : [])
-      const updated = await upsertFoodListingComment(item.id, {
-        comment,
-        ...(imageMediaIds.length ? { image_media_ids: imageMediaIds } : {}),
-      })
-      setItem(updated)
-      setReviews(updated.reviews)
-      setRatingScore((current) => updated.viewer_rating ?? current)
+      let updatedItem = item
+      if (ratingScore) {
+        const updatedRating = await rateFoodListing(item.id, { score: ratingScore })
+        updatedItem = {
+          ...updatedItem,
+          rating_average: updatedRating.rating_average,
+          rating_count: updatedRating.rating_count,
+          viewer_rating: updatedRating.score,
+        }
+        setItem(updatedItem)
+        setRatingScore(updatedRating.score)
+      }
+      if (comment) {
+        const imageMediaIds = reviewImages.flatMap((image) => image.mediaId ? [image.mediaId] : [])
+        updatedItem = await upsertFoodListingComment(item.id, {
+          comment,
+          ...(imageMediaIds.length ? { image_media_ids: imageMediaIds } : {}),
+        })
+      }
+      setItem(updatedItem)
+      setReviews(updatedItem.reviews)
+      setRatingScore((current) => updatedItem.viewer_rating ?? current)
       setReviewComment('')
       setReviewImages([])
-      Taro.showToast({ title: '留言已保存', icon: 'success' })
+      setReviewSheetVisible(false)
+      Taro.showToast({
+        title: ratingScore && comment ? '评价已提交' : ratingScore ? '评分已更新' : '留言已保存',
+        icon: 'success',
+      })
     } catch (nextError) {
       Taro.showToast({ title: errorMessage(nextError), icon: 'none' })
     } finally {
-      setCommentSubmitting(false)
+      setReviewSubmitting(false)
     }
   }
-
-  const listingImageUrls = item?.image_urls || []
 
   return (
     <View className='food-detail-page'>
-      <CustomNavbar title='餐饮详情' subtitle={campus} showBack />
+      <CustomNavbar
+        title='餐饮详情'
+        showBack
+      />
       {error ? (
         <View className='food-detail-state'>{error}</View>
       ) : item ? (
-        <View className='food-detail-content'>
-          <View className='food-detail-hero'>
-            <View className='food-detail-hero__heading'>
-              <View className='food-detail-hero__title-row'>
-                <Text className='food-detail-hero__name'>{item.name}</Text>
-                {item.promoted && <Text className='food-detail-hero__ad'>推广</Text>}
+        <>
+          {listingImageUrls[0] && (
+            <View className='food-detail-cover' ariaLabel={`${item.name}封面图片`}>
+              <Image
+                className='food-detail-cover__image'
+                src={listingImageUrls[0]}
+                mode='aspectFill'
+                ariaLabel={`查看${item.name}封面图片`}
+                onClick={() => previewImages(listingImageUrls, listingImageUrls[0])}
+              />
+              <View className='food-detail-cover__shade' />
+              <View className='food-detail-cover__tags'>
+                {item.promoted && <Text className='food-detail-cover__tag food-detail-cover__tag--promoted'>推广</Text>}
+                {item.tags.slice(0, 2).map((tag) => <Text key={tag} className='food-detail-cover__tag'>{tag}</Text>)}
               </View>
-              <Text className='food-detail-hero__merchant'>{item.category} · {item.location}</Text>
-            </View>
-            <Text className='food-detail-hero__campus'>{item.campus}</Text>
-          </View>
-
-          {listingImageUrls.length > 0 && (
-            <View className='food-detail-gallery'>
-              {listingImageUrls.map((imageUrl, index) => (
-                <Image
-                  key={`${imageUrl}-${index}`}
-                  className='food-detail-gallery__image'
-                  src={imageUrl}
-                  mode='aspectFill'
-                  ariaLabel={`${item.name}第 ${index + 1} 张图片`}
-                  onClick={() => previewImages(listingImageUrls, imageUrl)}
-                />
-              ))}
+              <View className='food-detail-cover__count'>
+                <Image src={imageIcon} mode='aspectFit' ariaLabel='图片数量' />
+                <Text>{listingImageUrls.length} 张图片</Text>
+              </View>
             </View>
           )}
-
-          <View className='food-detail-card'>
-            <Text className='food-detail-card__label'>推荐理由</Text>
-            <Text className='food-detail-card__body'>{item.description}</Text>
-            <Text className='food-detail-card__label'>标签</Text>
-            {item.tags.length > 0 ? (
-              <View className='food-detail-tags'>
-                {item.tags.map((tag) => <Text key={tag} className='food-detail-tag'>{tag}</Text>)}
+          <View className={`food-detail-content ${listingImageUrls[0] ? '' : 'food-detail-content--without-cover'}`}>
+            <View className='food-detail-info'>
+              <View className='food-detail-info__heading'>
+                <Text className='food-detail-info__name'>{item.name}</Text>
+                {item.category && <Text className='food-detail-info__category'>{item.category}</Text>}
               </View>
-            ) : null}
-            <View className='food-detail-rating-summary'>
-              <View>
-                <Text className='food-detail-card__label'>综合评分</Text>
-                <Text className='food-detail-rating'>{item.rating_average.toFixed(1)} 分</Text>
-              </View>
-              <Text className='food-detail-rating-summary__count'>{item.rating_count} 人评</Text>
-            </View>
-          </View>
-
-          <View className='food-detail-section-head'>
-            <View>
-              <Text>大家怎么说</Text>
-              <Text>{reviews.length ? `${reviews.length} 条匿名留言` : '还没有留言'}</Text>
-            </View>
-          </View>
-          {reviews.length > 0 ? (
-            <View className='food-detail-reviews'>
-              {reviews.map((review, index) => (
-                <ReviewCard key={`${review.created_at}-${index}`} review={review} />
-              ))}
-            </View>
-          ) : (
-            <View className='food-detail-empty-review'>暂时没有留言，来留下第一条吧。</View>
-          )}
-
-          <View className='food-detail-review-composer'>
-            <View className='food-detail-section-head food-detail-section-head--composer'>
-              <View>
-                <Text>评分</Text>
-                <Text>评分独立保存，不会修改留言或图片</Text>
-              </View>
-            </View>
-            <View className='food-detail-score-picker' ariaRole='radiogroup' ariaLabel='选择评分'>
-              {[1, 2, 3, 4, 5].map((score) => (
-                <View
-                  key={score}
-                  className={ratingScore === score
-                    ? 'food-detail-score-picker__item food-detail-score-picker__item--active'
-                    : 'food-detail-score-picker__item'}
-                  ariaRole='radio'
-                  ariaLabel={`${score} 分`}
-                  onClick={() => setRatingScore(score)}
-                >
-                  <Text>{score} 分</Text>
-                </View>
-              ))}
-            </View>
-            <Button
-              className='food-detail-review-composer__button'
-              loading={ratingSubmitting}
-              disabled={!ratingScore || ratingSubmitting}
-              onClick={() => void submitRating()}
-            >
-              {item.viewer_rating ? '更新评分' : '提交评分'}
-            </Button>
-            <View className='food-detail-review-composer__section'>
-              <View className='food-detail-section-head food-detail-section-head--composer'>
-                <View>
-                  <Text>留言和图片</Text>
-                  <Text>留言独立保存，填写内容后再提交</Text>
-                </View>
-              </View>
-              <KeyboardSafeTextarea
-                className='food-detail-review-composer__textarea'
-                value={reviewComment}
-                maxlength={1000}
-                placeholder='说说口味、分量或排队情况'
-                autoHeight
-                onInput={(event) => setReviewComment(event.detail.value)}
-              />
-              {reviewImages.length === 0 && (
-                <View
-                  className='food-detail-image-picker'
-                  ariaRole='button'
-                  ariaLabel='添加留言图片'
-                  onClick={() => void chooseReviewImages()}
-                >
-                  <Image src={imageIcon} mode='aspectFit' ariaLabel='添加图片' />
-                  <Text>添加图片</Text>
-                  <Text>支持相册或拍摄，最多 9 张</Text>
-                </View>
-              )}
-              <MediaImageEditor
-                images={reviewImages}
-                maxCount={MAX_PUBLISH_IMAGES}
-                title='留言图片'
-                hint='上传完成后保存留言，点击预览'
-                showCover={false}
-                onAdd={() => void chooseReviewImages()}
-                onMove={(index, direction) => setReviewImages((current) => moveMediaImage(current, index, direction))}
-                onRemove={(key) => setReviewImages((current) => current.filter((image) => image.key !== key))}
-                onRetry={(image) => void uploadReviewImage(image)}
-              />
-              <Button
-                className='food-detail-review-composer__button'
-                loading={commentSubmitting}
-                disabled={!reviewComment.trim() || commentSubmitting}
-                onClick={() => void submitComment()}
+              <View
+                className='food-detail-info__rating-row'
+                ariaRole='button'
+                ariaLabel={`点击星星评分，当前${formatRatingValue(item.rating_average)}分`}
+                hoverClass='food-detail-info__rating-row--pressed'
+                onClick={() => openReviewSheet()}
               >
-                保存留言
-              </Button>
+                <Text className='food-detail-info__rating'>{formatRatingValue(item.rating_average)}</Text>
+                <StarRating value={item.rating_average} size='sm' label='综合评分' />
+                <Text className='food-detail-info__rating-count'>({item.rating_count || 0}条评价)</Text>
+              </View>
+            </View>
+
+            {(item.tags.length > 0 || item.description) && (
+              <View className='food-detail-card food-detail-card--recommendation'>
+                <View className='food-detail-card__heading'>
+                  <Image className='food-detail-card__heading-icon' src={recommendIcon} mode='aspectFit' ariaLabel='推荐理由' />
+                  <Text>推荐理由</Text>
+                </View>
+                {item.tags.length > 0 && (
+                  <View className='food-detail-tags'>
+                    {item.tags.map((tag) => <Text key={tag} className='food-detail-tag'>{tag}</Text>)}
+                  </View>
+                )}
+                {item.description && (
+                  <View className='food-detail-reasons'>
+                    <View className='food-detail-reason'>
+                      <View className='food-detail-reason__dot' />
+                      <Text className='food-detail-card__body'>{item.description}</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+
+            <View className='food-detail-review-section'>
+              <View className='food-detail-section-head'>
+                <View>
+                  <Text>用户评价</Text>
+                </View>
+                <Text className='food-detail-section-head__more'>
+                  {reviews.length > 0 ? `${reviews.length} 条留言` : '等待第一条'}
+                </Text>
+              </View>
+              {reviews.length > 0 ? (
+                <View className='food-detail-reviews'>
+                  {reviews.map((review, index) => (
+                    <ReviewCard key={`${review.created_at}-${index}`} review={review} />
+                  ))}
+                </View>
+              ) : (
+                <View className='food-detail-empty-review'>暂时没有评价，来留下第一条吧。</View>
+              )}
             </View>
           </View>
-        </View>
+          <View className='food-detail-comment-bar'>
+            <View
+              className='food-detail-comment-bar__trigger'
+              ariaRole='button'
+              ariaLabel='打开评价输入'
+              hoverClass='food-detail-comment-bar__trigger--pressed'
+              onClick={() => openReviewSheet()}
+            >
+              <Text>{reviewComment.trim() ? '继续编辑你的评价' : '写下你的真实体验'}</Text>
+            </View>
+          </View>
+          <BottomSheet
+            visible={reviewSheetVisible}
+            title='写评价'
+            expanded
+            closeLabel='取消'
+            onClose={closeReviewSheet}
+            footer={(
+              <View className='food-detail-review-sheet__footer'>
+                <Button
+                  className='food-detail-review-sheet__submit'
+                  hoverClass='food-detail-review-sheet__submit--pressed'
+                  loading={reviewSubmitting}
+                  disabled={(!ratingScore && !reviewComment.trim()) || reviewSubmitting}
+                  onClick={() => void submitReview()}
+                >
+                  提交评价
+                </Button>
+              </View>
+            )}
+          >
+            <View className='food-detail-review-sheet__content'>
+              <View className='food-detail-review-sheet__listing'>
+                <Text className='food-detail-review-sheet__listing-label'>正在评价</Text>
+                <Text className='food-detail-review-sheet__listing-name'>{item.name}</Text>
+              </View>
+              <View className='food-detail-review-sheet__rating' ariaLabel='选择本次餐饮评分'>
+                <Text className='food-detail-review-sheet__rating-eyebrow'>这次体验怎么样？</Text>
+                <View className='food-detail-review-sheet__rating-picker'>
+                  <StarRating
+                    value={ratingScore}
+                    size='lg'
+                    interactive
+                    disabled={reviewSubmitting}
+                    label='选择评分'
+                    onChange={setRatingScore}
+                  />
+                </View>
+                <Text className={`food-detail-review-sheet__rating-result ${selectedRatingOption ? 'food-detail-review-sheet__rating-result--active' : ''}`}>
+                  {selectedRatingOption ? `${selectedRatingOption.label} · ${selectedRatingOption.description}` : '点击星星完成评分'}
+                </Text>
+              </View>
+              <View className='food-detail-review-sheet__comment'>
+                <View className='food-detail-review-sheet__field-head'>
+                  <Text>说说你的体验</Text>
+                  <Text>选填</Text>
+                </View>
+                <KeyboardSafeTextarea
+                  id='food-detail-review-sheet-textarea'
+                  className='food-detail-review-sheet__textarea'
+                  value={reviewComment}
+                  maxlength={1000}
+                  placeholder='味道、分量、价格……都可以聊聊'
+                  autoHeight
+                  focus={false}
+                  nativeAdjustPosition
+                  keepVisibleOnKeyboard={false}
+                  onInput={(event) => setReviewComment(event.detail.value)}
+                />
+                <View className='food-detail-review-sheet__toolbar'>
+                  <View
+                    className='food-detail-review-sheet__add-image'
+                    ariaRole='button'
+                    ariaLabel='添加评价图片'
+                    hoverClass='food-detail-review-sheet__add-image--pressed'
+                    onClick={() => void chooseReviewImages()}
+                  >
+                    <Image src={imageIcon} mode='aspectFit' ariaLabel='添加图片' />
+                    <Text>添加图片</Text>
+                  </View>
+                  <Text className='food-detail-review-sheet__counter'>{reviewComment.length}/1000</Text>
+                </View>
+              </View>
+              {reviewImages.length > 0 && (
+                <MediaImageEditor
+                  images={reviewImages}
+                  maxCount={MAX_PUBLISH_IMAGES}
+                  title='评价图片'
+                  hint='上传完成后随评价提交'
+                  showCover={false}
+                  onAdd={() => void chooseReviewImages()}
+                  onMove={(index, direction) => setReviewImages((current) => moveMediaImage(current, index, direction))}
+                  onRemove={(key) => setReviewImages((current) => current.filter((image) => image.key !== key))}
+                  onRetry={(image) => void uploadReviewImage(image)}
+                />
+              )}
+            </View>
+          </BottomSheet>
+        </>
       ) : (
         <View className='food-detail-state'>加载中…</View>
       )}
@@ -357,8 +439,15 @@ function ReviewCard({ review }: { review: FoodListingReview }) {
   return (
     <View className='food-detail-review-card'>
       <View className='food-detail-review-card__head'>
-        <Text className='food-detail-review-card__author'>匿名留言</Text>
-        <Text className='food-detail-review-card__date'>{formatReviewDate(review.created_at)}</Text>
+        <View className='food-detail-review-card__author-info'>
+          <View className='food-detail-review-card__avatar' ariaLabel='匿名用户头像'>
+            <Text>匿</Text>
+          </View>
+          <View className='food-detail-review-card__author-copy'>
+            <Text className='food-detail-review-card__author'>匿名同学</Text>
+            <Text className='food-detail-review-card__date'>{formatReviewDate(review.created_at)}</Text>
+          </View>
+        </View>
       </View>
       <Text className='food-detail-review-card__comment'>{review.comment}</Text>
       {review.image_urls.length > 0 && (

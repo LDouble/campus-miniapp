@@ -1,8 +1,568 @@
-.what-to-eat-page { min-height: 100vh; color: var(--ousea-ink-900, #1A2333); background: var(--ousea-page, #F5F8FC); }
-.what-to-eat-page__content { padding: 28rpx 32rpx calc(48rpx + env(safe-area-inset-bottom)); }
-.what-to-eat-hero { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; padding: 32rpx; border: 2rpx solid var(--ousea-ocean-100, #E3EFFE); border-radius: 36rpx; background: linear-gradient(135deg, #F2F7FE, #FFF); }
-.what-to-eat-hero view { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 8rpx; }.what-to-eat-hero image { width: 88rpx; height: 88rpx; }.what-to-eat-hero__eyebrow { color: var(--ousea-ocean-600, #1D5FD6); font-size: 22rpx; }.what-to-eat-hero__title { font-size: 40rpx; font-weight: 600; }.what-to-eat-hero__copy { color: var(--ousea-ink-500, #6B7A90); font-size: 24rpx; line-height: 1.55; }
-.what-to-eat-pick { height: 88rpx; margin: 24rpx 0; border: 0; border-radius: 999rpx; color: #FFF; background: var(--ousea-ocean-500, #2B7AEF); font-size: 30rpx; line-height: 88rpx; }.what-to-eat-pick::after { border: 0; }
-.what-to-eat-result { display: flex; flex-direction: column; gap: 8rpx; margin-bottom: 32rpx; padding: 28rpx 32rpx; border-radius: 32rpx; color: var(--ousea-ink-700, #3A4759); background: #FFF; box-shadow: 0 8rpx 24rpx rgba(29,95,214,.08); }.what-to-eat-result__label { color: var(--ousea-ocean-600, #1D5FD6); font-size: 24rpx; }.what-to-eat-result__name { color: var(--ousea-ink-900, #1A2333); font-size: 38rpx; font-weight: 600; }.what-to-eat-result__actions { display: flex; gap: 28rpx; margin-top: 12rpx; color: var(--ousea-ocean-500, #2B7AEF); font-size: 26rpx; }
-.what-to-eat-section-head { display: flex; align-items: center; justify-content: space-between; margin: 12rpx 0 18rpx; }.what-to-eat-section-head view { display: flex; flex-direction: column; gap: 4rpx; }.what-to-eat-section-head view text:first-child { font-size: 32rpx; font-weight: 600; }.what-to-eat-section-head view text:last-child { color: var(--ousea-ink-500, #6B7A90); font-size: 22rpx; }.what-to-eat-section-head > text { color: var(--ousea-ocean-500, #2B7AEF); font-size: 26rpx; }
-.what-to-eat-card { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; margin-bottom: 16rpx; padding: 24rpx; border: 2rpx solid var(--ousea-line, #E8EDF4); border-radius: 32rpx; background: #FFF; }.what-to-eat-card__main { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 10rpx; }.what-to-eat-card__title-row { display: flex; align-items: center; gap: 12rpx; }.what-to-eat-card__title-row > text:first-child { overflow: hidden; font-size: 30rpx; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }.what-to-eat-card__main > text { overflow: hidden; color: var(--ousea-ink-500, #6B7A90); font-size: 24rpx; text-overflow: ellipsis; white-space: nowrap; }.what-to-eat-card__tag { display: inline-block; margin-right: 10rpx; padding: 4rpx 12rpx; border-radius: 999rpx; color: var(--ousea-ocean-600, #1D5FD6); background: var(--ousea-ocean-50, #F2F7FE); font-size: 20rpx; }.what-to-eat-card__ad { flex: none; padding: 4rpx 10rpx; border-radius: 999rpx; color: #9A5A00; background: #FFF5D6; font-size: 20rpx; }.what-to-eat-card__rating { display: flex; min-width: 92rpx; flex-direction: column; align-items: flex-end; gap: 4rpx; color: var(--ousea-ocean-600, #1D5FD6); font-size: 25rpx; }.what-to-eat-card__rating text:last-child { color: var(--ousea-ink-500, #6B7A90); font-size: 20rpx; }.what-to-eat-state { display: flex; justify-content: space-between; padding: 32rpx 12rpx; color: var(--ousea-ink-500, #6B7A90); font-size: 26rpx; text-align: center; }.what-to-eat-state text:last-child { color: var(--ousea-ocean-500, #2B7AEF); }
+.what-to-eat-page {
+  min-height: 100vh;
+  color: var(--campus-text-primary, var(--ousea-ink-900));
+  background: var(--campus-page, var(--ousea-bg-page));
+}
+
+.what-to-eat-page__content {
+  padding: 28rpx 32rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.what-to-eat-hero {
+  position: relative;
+  display: flex;
+  min-height: 248rpx;
+  padding: 32rpx;
+  overflow: hidden;
+  border-radius: var(--ousea-radius-card-lg, 36rpx);
+  color: var(--campus-text-body, var(--ousea-ink-700));
+  border: 2rpx solid var(--campus-border-strong, var(--ousea-ocean-100));
+  background: var(--campus-surface, #fff);
+}
+
+.what-to-eat-hero::after {
+  position: absolute;
+  right: -54rpx;
+  bottom: -68rpx;
+  width: 232rpx;
+  height: 232rpx;
+  border: 26rpx solid var(--campus-surface-primary, var(--ousea-ocean-50));
+  border-radius: 50%;
+  content: '';
+}
+
+.what-to-eat-hero__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.what-to-eat-hero__campus-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ousea-space-2, 24rpx);
+}
+
+.what-to-eat-hero__campus-badge,
+.what-to-eat-hero__campus-action {
+  display: flex;
+  min-width: 0;
+  min-height: 64rpx;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--campus-border-strong, var(--ousea-ocean-100));
+  border-radius: var(--ousea-radius-pill, 999rpx);
+  background: var(--campus-surface-primary, var(--ousea-ocean-50));
+}
+
+.what-to-eat-hero__campus-badge {
+  max-width: 260rpx;
+  padding: 0 18rpx;
+}
+
+.what-to-eat-hero__campus {
+  overflow: hidden;
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.what-to-eat-hero__campus-action {
+  flex: none;
+  width: 120rpx;
+  color: var(--campus-primary, var(--ousea-ocean-500));
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-weight: var(--ousea-font-weight-medium, 500);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  transition: opacity 160ms ease, background-color 160ms ease;
+}
+
+.what-to-eat-hero__campus-action--pressed {
+  opacity: .7;
+  background: var(--campus-border-strong, var(--ousea-ocean-100));
+}
+
+.what-to-eat-hero__eyebrow {
+  margin-top: 34rpx;
+  color: var(--campus-text-secondary, var(--ousea-ink-500));
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+}
+
+.what-to-eat-hero__title {
+  margin-top: 4rpx;
+  color: var(--campus-text-heading, var(--ousea-ink-900));
+  font-size: 48rpx;
+  font-weight: var(--ousea-font-weight-bold, 700);
+  letter-spacing: 1rpx;
+  line-height: 1.28;
+}
+
+.what-to-eat-hero__copy {
+  max-width: 440rpx;
+  margin-top: 10rpx;
+  color: var(--campus-text-secondary, var(--ousea-ink-500));
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  line-height: 1.55;
+}
+
+.what-to-eat-hero__icon {
+  position: absolute;
+  z-index: 1;
+  right: 34rpx;
+  bottom: 30rpx;
+  display: flex;
+  width: 88rpx;
+  height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--campus-border-strong, var(--ousea-ocean-100));
+  border-radius: var(--ousea-radius-card, 32rpx);
+  background: var(--campus-surface-primary, var(--ousea-ocean-50));
+}
+
+.what-to-eat-hero__icon image {
+  width: 50rpx;
+  height: 50rpx;
+}
+
+.what-to-eat-pick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96rpx;
+  margin: 20rpx 0 40rpx;
+  border: 0;
+  border-radius: var(--ousea-radius-pill, 999rpx);
+  color: #fff;
+  background: var(--campus-primary, var(--ousea-ocean-500));
+  box-shadow: 0 8rpx 24rpx rgba(29, 95, 214, .14);
+  font-size: 32rpx;
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: 96rpx;
+  transition: opacity 160ms ease, transform 160ms ease, background-color 160ms ease;
+}
+
+.what-to-eat-pick::after {
+  border: 0;
+}
+
+.what-to-eat-pick--pressed {
+  opacity: .9;
+  background: var(--campus-primary-strong, var(--ousea-ocean-600));
+  transform: scale(.99);
+}
+
+.what-to-eat-result {
+  overflow: hidden;
+  margin: -16rpx 0 40rpx;
+  padding: 24rpx;
+  border: 2rpx solid var(--campus-border-strong, var(--ousea-ocean-100));
+  border-radius: var(--ousea-radius-card-lg, 36rpx);
+  background: var(--campus-surface, #fff);
+  box-shadow: 0 8rpx 24rpx rgba(29, 95, 214, .08);
+}
+
+.what-to-eat-result__topline,
+.what-to-eat-result__actions,
+.what-to-eat-card__title-row,
+.what-to-eat-section-head__title-line {
+  display: flex;
+  align-items: center;
+}
+
+.what-to-eat-result__topline {
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.what-to-eat-result__label {
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: var(--ousea-line-height-ui, 1.4);
+}
+
+.what-to-eat-result__hint {
+  color: var(--campus-text-muted, var(--ousea-ink-300));
+  font-size: var(--ousea-font-size-badge, 20rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+}
+
+.what-to-eat-result__content {
+  display: flex;
+  gap: 20rpx;
+  min-width: 0;
+  margin-top: 18rpx;
+}
+
+.what-to-eat-result__image,
+.what-to-eat-result__placeholder {
+  flex: 0 0 120rpx;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+}
+
+.what-to-eat-result__image {
+  background: var(--campus-surface-subtle, var(--ousea-ocean-50));
+}
+
+.what-to-eat-result__placeholder,
+.what-to-eat-card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--campus-surface-primary, var(--ousea-ocean-50));
+}
+
+.what-to-eat-result__placeholder image {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+.what-to-eat-result__info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.what-to-eat-result__name {
+  overflow: hidden;
+  color: var(--campus-text-heading, var(--ousea-ink-900));
+  font-size: 36rpx;
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.what-to-eat-result__meta,
+.what-to-eat-card__meta {
+  overflow: hidden;
+  color: var(--campus-text-secondary, var(--ousea-ink-500));
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.what-to-eat-result__tags,
+.what-to-eat-card__tags {
+  display: flex;
+  gap: 8rpx;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.what-to-eat-result__tag,
+.what-to-eat-card__tag,
+.what-to-eat-card__ad {
+  flex: none;
+  max-width: 148rpx;
+  overflow: hidden;
+  padding: 4rpx 12rpx;
+  border-radius: var(--ousea-radius-pill, 999rpx);
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  background: var(--campus-surface-primary, var(--ousea-ocean-50));
+  font-size: var(--ousea-font-size-badge, 20rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.what-to-eat-result__actions {
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.what-to-eat-text-action {
+  display: flex;
+  height: 80rpx;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2rpx solid var(--campus-border-strong, var(--ousea-ocean-100));
+  border-radius: var(--ousea-radius-pill, 999rpx);
+  color: var(--campus-primary, var(--ousea-ocean-500));
+  font-size: var(--ousea-font-size-label, 27rpx);
+  font-weight: var(--ousea-font-weight-medium, 500);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  transition: opacity 160ms ease, background-color 160ms ease;
+}
+
+.what-to-eat-text-action:first-child {
+  flex: 0 0 180rpx;
+}
+
+.what-to-eat-text-action:last-child {
+  flex: 1;
+  color: #fff;
+  border-color: var(--campus-primary, var(--ousea-ocean-500));
+  background: var(--campus-primary, var(--ousea-ocean-500));
+}
+
+.what-to-eat-text-action--pressed,
+.what-to-eat-section-head__action--pressed,
+.what-to-eat-state__action--pressed,
+.what-to-eat-card__rating--pressed {
+  opacity: .65;
+}
+
+.what-to-eat-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ousea-space-2, 24rpx);
+  margin: 0 0 16rpx;
+}
+
+.what-to-eat-section-head__title-group {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.what-to-eat-section-head__title-line {
+  gap: 12rpx;
+}
+
+.what-to-eat-section-head__marker {
+  width: 8rpx;
+  height: 32rpx;
+  flex: none;
+  border-radius: var(--ousea-radius-pill, 999rpx);
+  background: var(--campus-primary, var(--ousea-ocean-500));
+}
+
+.what-to-eat-section-head__title {
+  color: var(--campus-text-heading, var(--ousea-ink-900));
+  font-size: var(--ousea-font-size-title, 33rpx);
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: var(--ousea-line-height-ui, 1.4);
+}
+
+.what-to-eat-section-head__count {
+  color: var(--campus-text-secondary, var(--ousea-ink-500));
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+}
+
+.what-to-eat-section-head__action,
+.what-to-eat-state__action {
+  display: flex;
+  min-width: 128rpx;
+  min-height: 88rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--campus-primary, var(--ousea-ocean-500));
+  font-size: var(--ousea-font-size-label, 27rpx);
+  font-weight: var(--ousea-font-weight-medium, 500);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  transition: opacity 160ms ease;
+}
+
+.what-to-eat-card {
+  display: flex;
+  gap: 20rpx;
+  min-height: 168rpx;
+  margin-bottom: 16rpx;
+  padding: 20rpx;
+  border: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+  border-radius: var(--ousea-radius-card, 32rpx);
+  background: var(--campus-surface, #fff);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.what-to-eat-card--pressed {
+  opacity: .8;
+  transform: scale(.99);
+}
+
+.what-to-eat-card__image,
+.what-to-eat-card__placeholder {
+  width: 128rpx;
+  height: 128rpx;
+  flex: 0 0 128rpx;
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+}
+
+.what-to-eat-card__image {
+  background: var(--campus-surface-subtle, var(--ousea-ocean-50));
+}
+
+.what-to-eat-card__placeholder image {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+.what-to-eat-card__body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10rpx;
+}
+
+.what-to-eat-card__main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.what-to-eat-card__title-row {
+  gap: 10rpx;
+  min-width: 0;
+}
+
+.what-to-eat-card__title {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--campus-text-heading, var(--ousea-ink-900));
+  font-size: 30rpx;
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.what-to-eat-card__ad {
+  color: var(--campus-text-secondary, var(--ousea-ink-500));
+  background: var(--campus-surface-subtle, var(--ousea-ocean-50));
+}
+
+.what-to-eat-card__rating {
+  display: flex;
+  min-height: 52rpx;
+  align-items: center;
+  gap: 8rpx;
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  transition: opacity 160ms ease;
+}
+
+.what-to-eat-card__score {
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  font-size: var(--ousea-font-size-label, 27rpx);
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: var(--ousea-line-height-ui, 1.4);
+}
+
+.what-to-eat-card__rating-count {
+  color: var(--campus-text-muted, var(--ousea-ink-300));
+  font-size: var(--ousea-font-size-badge, 20rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+}
+
+.what-to-eat-state {
+  display: flex;
+  min-height: 176rpx;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 24rpx;
+  border: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+  border-radius: var(--ousea-radius-card, 32rpx);
+  color: var(--campus-text-secondary, var(--ousea-ink-500));
+  background: var(--campus-surface, #fff);
+  font-size: var(--ousea-font-size-label, 27rpx);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  text-align: center;
+}
+
+.what-to-eat-state--error {
+  justify-content: space-between;
+  color: var(--campus-text-body, var(--ousea-ink-700));
+}
+
+.what-to-eat-state--error > text,
+.what-to-eat-state--empty > text {
+  min-width: 0;
+  flex: 1;
+}
+
+.what-to-eat-state--empty {
+  flex-direction: column;
+  gap: 0;
+}
+
+@media (max-width: 340px) {
+  .what-to-eat-page__content {
+    padding-right: 28rpx;
+    padding-left: 28rpx;
+  }
+
+  .what-to-eat-hero {
+    min-height: 260rpx;
+    padding: 28rpx;
+  }
+
+  .what-to-eat-hero__title {
+    font-size: 44rpx;
+  }
+
+  .what-to-eat-result,
+  .what-to-eat-card {
+    padding: 18rpx;
+  }
+
+  .what-to-eat-text-action:first-child {
+    flex-basis: 160rpx;
+  }
+
+  .what-to-eat-card {
+    gap: 16rpx;
+  }
+
+  .what-to-eat-card__image,
+  .what-to-eat-card__placeholder {
+    width: 112rpx;
+    height: 112rpx;
+    flex-basis: 112rpx;
+  }
+
+  .what-to-eat-card__rating {
+    gap: 6rpx;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .what-to-eat-hero {
+    background: var(--campus-surface);
+  }
+
+  .what-to-eat-result__placeholder,
+  .what-to-eat-card__placeholder {
+    background: #172554;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .what-to-eat-hero__campus-action,
+  .what-to-eat-pick,
+  .what-to-eat-text-action,
+  .what-to-eat-section-head__action,
+  .what-to-eat-state__action,
+  .what-to-eat-card,
+  .what-to-eat-card__rating {
+    transition: none;
+  }
+
+  .what-to-eat-card--pressed,
+  .what-to-eat-pick--pressed {
+    transform: none;
+  }
+}
