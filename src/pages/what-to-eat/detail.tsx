@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro, { useRouter } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
 import BottomSheet from '../../components/bottom-sheet'
@@ -72,6 +72,7 @@ export default function FoodDetailPage() {
   const [reviewImages, setReviewImages] = useState<MediaImageDraft[]>([])
   const [reviewSheetVisible, setReviewSheetVisible] = useState(false)
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const reviewQueryHandledRef = useRef('')
   const listingId = Number(params.id)
   const listingImageUrls = item?.image_urls || []
   const selectedRatingOption = ratingScore > 0 ? RATING_OPTIONS[ratingScore - 1] : undefined
@@ -99,8 +100,11 @@ export default function FoodDetailPage() {
   }, [campus, params.id])
 
   useEffect(() => {
-    if (item && params.review === '1') setReviewSheetVisible(true)
-  }, [item, params.review])
+    const reviewQueryKey = `${params.id || ''}:${params.review || ''}`
+    if (!item || params.review !== '1' || reviewQueryHandledRef.current === reviewQueryKey) return
+    reviewQueryHandledRef.current = reviewQueryKey
+    setReviewSheetVisible(true)
+  }, [item, params.id, params.review])
 
   const updateReviewImage = (
     key: string,
