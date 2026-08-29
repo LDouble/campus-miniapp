@@ -99,6 +99,7 @@ export default function CommunityFeedPanel({
   const requestSequence = useRef(0)
   const loadingMoreRef = useRef(false)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
+  const loadedQueryKeyRef = useRef<string | null>(null)
   const lastOverlayDismissSignalRef = useRef(overlayDismissSignal)
 
   useEffect(() => {
@@ -164,6 +165,7 @@ export default function CommunityFeedPanel({
         : result.items
       const refreshedAt = Date.now()
       const revision = getLifeHubRefreshRevision('community')
+      loadedQueryKeyRef.current = queryKey
       setPosts((current) => {
         const nextPosts = append
           ? mergeUniquePosts(current, incoming)
@@ -207,6 +209,7 @@ export default function CommunityFeedPanel({
       )
     ) {
       const pinned = pendingPinnedPost.current
+      loadedQueryKeyRef.current = queryKey
       setPosts(pinned
         ? [pinned, ...cached.posts.filter((item) => item.id !== pinned.id)]
         : cached.posts)
@@ -348,6 +351,12 @@ export default function CommunityFeedPanel({
     hideSearchKeyboard()
   }
 
+  const isCurrentQueryLoaded = loadedQueryKeyRef.current === queryKey
+  const hasCurrentPosts = isCurrentQueryLoaded && posts.length > 0
+  // 已有内容刷新时采用 stale-while-revalidate，避免返回详情页后先闪出骨架屏。
+  const shouldRenderPostList = isCurrentQueryLoaded
+    && (posts.length > 0 || (!loading && !error))
+
   return (
     <View className='api-community'>
       <View
@@ -415,7 +424,7 @@ export default function CommunityFeedPanel({
           <Text>请联系管理员在服务端配置板块</Text>
         </View>
       )}
-      {sectionsReady && !sectionsError && activeSection && loading && (
+      {sectionsReady && !sectionsError && activeSection && loading && !hasCurrentPosts && (
         <View className='community-feed-skeleton'>
           {[0, 1].map((index) => (
             <View key={index} className='community-feed-skeleton__item'>
@@ -437,7 +446,7 @@ export default function CommunityFeedPanel({
         </View>
       )}
 
-      {sectionsReady && !sectionsError && activeSection && !loading && !error && (
+      {sectionsReady && !sectionsError && activeSection && shouldRenderPostList && (
         <View className='community-post-list'>
           {posts.map((post, index) => (
             <CommunityPostCard

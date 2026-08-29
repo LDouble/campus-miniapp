@@ -140,12 +140,14 @@ export default function OfficialNoticeDetailPage() {
             <Text>{officialNoticeCategoryLabels[notice.category]}</Text>
             {notice.priority === 'important' && <Text className='is-important'>重要</Text>}
           </View>
-          <Text className='official-notice-detail__title'>{notice.title}</Text>
+          <Text selectable className='official-notice-detail__title'>{notice.title}</Text>
           <View className='official-notice-detail__meta'>
             <Text>{notice.publisher}</Text>
             <Text>{formatOfficialNoticeDate(notice.source_published_at)}</Text>
           </View>
-          <View className='official-notice-detail__summary'>{notice.summary}</View>
+          <View className='official-notice-detail__summary'>
+            <Text selectable>{notice.summary}</Text>
+          </View>
           <View className='official-notice-markdown'>
             {blocks.map((block) => block.kind === 'separator'
               ? <View key={block.id} className='official-notice-markdown__separator' />
@@ -153,6 +155,7 @@ export default function OfficialNoticeDetailPage() {
                 <Text
                   key={block.id}
                   className={`official-notice-markdown__${block.kind} ${block.level ? `is-level-${block.level}` : ''}`}
+                  selectable
                 >
                   {block.kind === 'list' ? '• ' : block.kind === 'ordered-list' ? '◦ ' : ''}{block.text}
                 </Text>

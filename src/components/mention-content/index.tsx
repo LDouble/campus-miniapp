@@ -18,7 +18,7 @@ const renderText = (content: string, stickerClassName: string, keyPrefix: string
   parseStickerContent(content).map((part, index) => {
     if (part.type === 'text') {
       return (
-        <Text key={`${keyPrefix}-text-${index}`} className='mention-content__text'>
+        <Text key={`${keyPrefix}-text-${index}`} className='mention-content__text' selectable>
           {part.text}
         </Text>
       )
@@ -27,7 +27,7 @@ const renderText = (content: string, stickerClassName: string, keyPrefix: string
     const sticker = stickerById.get(part.sticker.id)
     if (!sticker) {
       return (
-        <Text key={`${keyPrefix}-fallback-${index}`} className='mention-content__text'>
+        <Text key={`${keyPrefix}-fallback-${index}`} className='mention-content__text' selectable>
           [{part.sticker.label}]
         </Text>
       )
@@ -65,6 +65,7 @@ export default function MentionContent({
           <Text
             key={`mention-${segment.user_id}-${index}`}
             className='mention-content__mention'
+            selectable
             onClick={(event) => {
               event.stopPropagation()
               void openPublicProfile(segment.user_id as number)

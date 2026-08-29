@@ -598,6 +598,7 @@
 
 .verification-password-control {
   display: flex;
+  position: relative;
   min-height: 88rpx;
   align-items: center;
   overflow: hidden;
@@ -618,6 +619,8 @@
 
   &__toggle {
     display: flex;
+    position: relative;
+    z-index: 1;
     width: 72rpx;
     height: 72rpx;
     align-items: center;

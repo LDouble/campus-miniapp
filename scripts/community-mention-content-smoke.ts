@@ -48,9 +48,15 @@ const componentSource = readFileSync(
   resolve(__dirname, '../src/components/mention-content/index.tsx'),
   'utf8',
 )
+const stickerComponentSource = readFileSync(
+  resolve(__dirname, '../src/components/sticker-content/index.tsx'),
+  'utf8',
+)
 assert.ok(componentSource.includes('content_segments') || componentSource.includes('segments'))
 assert.ok(componentSource.includes('openPublicProfile'))
 assert.ok(componentSource.includes('event.stopPropagation()'))
+assert.ok(componentSource.includes('selectable'), '正文和提及内容必须支持长按选择')
+assert.ok(stickerComponentSource.includes('selectable'), '贴纸文本内容必须支持长按选择')
 
 const postSource = readFileSync(
   resolve(__dirname, '../src/features/community/post-card.tsx'),

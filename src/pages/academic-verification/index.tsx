@@ -707,6 +707,7 @@ export default function AcademicVerificationPage() {
                             password={!passwordVisible}
                             value={password}
                             holdKeyboard
+                            alwaysEmbed
                             cursorColor='#2b7fff'
                             ariaLabel='信息门户密码'
                             maxlength={256}

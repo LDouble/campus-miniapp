@@ -68,6 +68,7 @@ assert.ok(
   '密码输入框必须默认隐藏密码',
 )
 assert.ok(pageSource.includes('password={!passwordVisible}'), '密码输入框必须使用原生 password 属性')
+assert.ok(pageSource.includes('alwaysEmbed'), '密码输入框必须保持同层，避免键盘弹出时遮挡显隐按钮')
 assert.ok(pageSource.includes("ariaLabel={passwordVisible ? '隐藏密码' : '显示密码'}"), '密码显隐按钮必须提供可访问标签')
 assert.ok(pageSource.includes('verification-password-control__toggle'), '密码输入框必须提供显隐按钮')
 assert.ok(pageSource.includes('verification-password-coach-mark'), '密码错误后必须提供指向密码说明的 Coach Mark')

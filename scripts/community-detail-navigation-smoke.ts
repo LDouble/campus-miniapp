@@ -19,6 +19,7 @@ assert.equal(consumeCommunityDetailSnapshot(12, 2_000 + communityDetailSnapshotT
 
 const detailSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.tsx'), 'utf8')
 const detailStyle = readFileSync(resolve(__dirname, '../src/pages/community/detail.scss'), 'utf8')
+const feedSource = readFileSync(resolve(__dirname, '../src/features/community/feed-panel.tsx'), 'utf8')
 assert.match(detailSource, /options\.snapshot === '1'\s*\? consumeCommunityDetailSnapshot\(id\)/u)
 assert.match(detailSource, /if \(snapshot\) \{[\s\S]*?setPost\(snapshot\)[\s\S]*?setLoading\(false\)[\s\S]*?return/u)
 assert.match(detailSource, /if \(snapshot\)[\s\S]*?return\s*\}\s*void load\(id, normalizedCommentId\)/u)
@@ -45,6 +46,15 @@ assert.doesNotMatch(detailSource, /<Text>分享<\/Text>/u)
 assert.match(detailStyle, /community-detail-heart-pop/u)
 assert.doesNotMatch(detailStyle, /\.community-detail \.business-detail-comments/u)
 assert.doesNotMatch(detailStyle, /\.community-detail \.business-detail-comment/u)
+
+// 详情互动返回列表时，已有帖子必须保持可见，刷新请求不能重新切到首屏骨架。
+assert.match(feedSource, /const loadedQueryKeyRef = useRef<string \| null>\(null\)/u)
+assert.match(feedSource, /loadedQueryKeyRef\.current = queryKey/u)
+assert.match(feedSource, /const isCurrentQueryLoaded = loadedQueryKeyRef\.current === queryKey/u)
+assert.match(feedSource, /const hasCurrentPosts = isCurrentQueryLoaded && posts\.length > 0/u)
+assert.match(feedSource, /loading && !hasCurrentPosts/u)
+assert.match(feedSource, /const shouldRenderPostList = isCurrentQueryLoaded[\s\S]*?posts\.length > 0 \|\| \(!loading && !error\)/u)
+assert.match(feedSource, /activeSection && shouldRenderPostList/u)
 
 for (const sourcePath of [
   '../src/features/community/feed-panel.tsx',
