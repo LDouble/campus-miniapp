@@ -21,11 +21,11 @@ export default function StickerContent({
     <View className={['sticker-content', className].filter(Boolean).join(' ')}>
       {parts.map((part, index) => {
         if (part.type === 'text') {
-          return <Text key={`text-${index}`} className='sticker-content__text'>{part.text}</Text>
+          return <Text key={`text-${index}`} className='sticker-content__text' selectable>{part.text}</Text>
         }
 
         const sticker = stickerById.get(part.sticker.id)
-        if (!sticker) return <Text key={`fallback-${index}`} className='sticker-content__text'>[{part.sticker.label}]</Text>
+        if (!sticker) return <Text key={`fallback-${index}`} className='sticker-content__text' selectable>[{part.sticker.label}]</Text>
 
         return (
           <Image

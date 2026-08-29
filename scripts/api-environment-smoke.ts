@@ -1,4 +1,6 @@
 import * as assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   defaultProductionApiBaseUrl,
   defaultReviewApiBaseUrl,
@@ -42,5 +44,12 @@ assert.throws(() => loadApiEndpoints({
   TARO_APP_REVIEW_API_BASE_URL: 'https://REVIEW-api.example.invalid',
   TARO_APP_PRODUCTION_API_BASE_URL: endpoints.review,
 }, true), /must be distinct/)
+
+const buildConfigSource = readFileSync(resolve(__dirname, '../config/index.ts'), 'utf8')
+assert.match(
+  buildConfigSource,
+  /const buildApiEndpoints = \{\s*review: apiEndpoints\.production,\s*production: apiEndpoints\.production,?\s*\}/u,
+  '小程序各构建环境必须统一注入 product 域名',
+)
 
 console.log('api environment smoke checks passed')

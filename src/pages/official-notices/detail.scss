@@ -32,6 +32,7 @@ page { background: var(--campus-page, #f4f7fb); }
   &__title { display: block; padding: 23rpx 0 17rpx; color: #254743; font-size: 38rpx; font-weight: 780; line-height: 1.38; }
   &__meta { display: flex; gap: 18rpx; color: #899995; font-size: 23rpx; }
   &__summary { padding: 22rpx; margin: 28rpx 0; color: #57706a; font-size: 24rpx; line-height: 1.65; background: #f4f7f3; border-left: 6rpx solid #77a796; border-radius: 8rpx 18rpx 18rpx 8rpx; }
+  &__summary text { display: block; }
   &__actions { display: flex; gap: 16rpx; padding-top: 32rpx; }
   &__actions > view,
   &__actions > button {

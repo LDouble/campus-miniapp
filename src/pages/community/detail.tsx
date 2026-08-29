@@ -256,7 +256,9 @@ export default function CommunityDetailPage() {
               />
 
               {post.topic?.name && (
-                <View className='community-detail__topic'>#{post.topic.name}</View>
+                <View className='community-detail__topic'>
+                  <Text selectable>#{post.topic.name}</Text>
+                </View>
               )}
 
               {post.content && (
@@ -318,8 +320,8 @@ export default function CommunityDetailPage() {
 
               {post.review_reason && (
                 <View className='community-detail__review community-detail-card__review'>
-                  <Text>审核说明</Text>
-                  <Text>{post.review_reason}</Text>
+                  <Text selectable>审核说明</Text>
+                  <Text selectable>{post.review_reason}</Text>
                 </View>
               )}
             </View>

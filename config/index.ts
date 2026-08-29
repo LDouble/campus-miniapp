@@ -73,12 +73,12 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     process.env,
     process.env.NODE_ENV === 'production',
   )
-  const buildApiEndpoints = process.env.NODE_ENV === 'production'
-    ? apiEndpoints
-    : {
-        review: apiEndpoints.production,
-        production: apiEndpoints.production,
-      }
+  // 当前小程序开发工具、体验版和正式版统一走 product，避免本地 develop
+  // 环境按运行时版本切回 review 域名。
+  const buildApiEndpoints = {
+    review: apiEndpoints.production,
+    production: apiEndpoints.production,
+  }
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'campus-miniapp',
     date: '2026-7-25',

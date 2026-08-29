@@ -257,8 +257,8 @@ function CommunityPostCard({
                 <Image src={communityIcons[variant]} mode='aspectFit' />
               </View>
               <View className='community-post__business-copy'>
-                <Text className='community-post__business-title'>{businessPreview.title}</Text>
-                <Text className='community-post__business-meta'>{businessPreview.meta}</Text>
+                <Text selectable className='community-post__business-title'>{businessPreview.title}</Text>
+                <Text selectable className='community-post__business-meta'>{businessPreview.meta}</Text>
               </View>
             </View>
           )}
