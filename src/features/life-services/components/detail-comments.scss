@@ -454,25 +454,17 @@
   background: transparent;
 }
 
-.business-detail-composer--expanded .business-detail-composer__input-actions {
+.business-detail-composer--expanded .business-detail-composer__tool-row {
   width: 100%;
-  min-height: 88rpx;
-  margin-left: 0;
+  min-height: 64rpx;
+  margin: 0 0 12rpx;
   flex: none;
   justify-content: flex-start;
 }
 
-.business-detail-composer--expanded .business-detail-composer__image-trigger {
-  order: 1;
-}
-
-.business-detail-composer--expanded .business-detail-composer__sticker-trigger {
-  order: 2;
-}
-
 .business-detail-composer--expanded .business-detail-composer__publish {
   margin-left: auto;
-  order: 3;
+  align-self: flex-end;
 }
 
 .business-detail-composer--expanded .business-detail-composer__image-attachment {
@@ -502,53 +494,72 @@
   color: var(--campus-text-muted, #a6b2c2);
 }
 
-.business-detail-composer__input-actions {
+.business-detail-composer__tool-row {
   display: flex;
-  margin-left: auto;
+  width: 100%;
+  min-height: 64rpx;
+  margin: 0 0 8rpx;
   flex: none;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0;
+  justify-content: flex-start;
+  gap: 8rpx;
 }
 
-.business-detail-composer__sticker-trigger,
-.business-detail-composer__quick,
-.business-detail-composer__share {
-  width: 88rpx;
-  height: 88rpx;
+.business-detail-composer__tool-row .business-detail-composer__sticker-trigger,
+.business-detail-composer__tool-row .business-detail-composer__mention-trigger,
+.business-detail-composer__tool-row .business-detail-composer__image-trigger {
+  display: flex;
+  width: 64rpx;
+  height: 64rpx;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 50%;
 }
 
-.business-detail-composer__sticker-trigger {
+.business-detail-composer__tool-row .business-detail-composer__sticker-trigger,
+.business-detail-composer__tool-row .business-detail-composer__mention-trigger {
   position: relative;
   background: transparent;
   font-size: 32rpx;
 }
 
-.business-detail-composer__sticker-trigger::before {
+.business-detail-composer__tool-row .business-detail-composer__sticker-trigger::before,
+.business-detail-composer__tool-row .business-detail-composer__mention-trigger::before {
   position: absolute;
+  top: 50%;
+  left: 50%;
   width: 56rpx;
   height: 56rpx;
+  margin: -28rpx 0 0 -28rpx;
   border-radius: 50%;
   background: transparent;
   content: '';
-  transform: translateX(8rpx);
+  transform: none;
 }
 
-.business-detail-composer__sticker-trigger text {
+.business-detail-composer__tool-row .business-detail-composer__sticker-trigger text,
+.business-detail-composer__tool-row .business-detail-composer__mention-trigger text {
   position: relative;
   z-index: 1;
-  transform: translateX(8rpx);
+  transform: none;
 }
 
-.business-detail-composer__sticker-trigger image {
+.business-detail-composer__tool-row .business-detail-composer__sticker-trigger image,
+.business-detail-composer__tool-row .business-detail-composer__mention-trigger image,
+.business-detail-composer__tool-row .business-detail-composer__image-trigger image {
   position: relative;
   z-index: 1;
-  width: 36rpx;
-  height: 36rpx;
-  transform: translateX(8rpx);
+  width: 34rpx;
+  height: 34rpx;
+  transform: none;
 }
 
-.business-detail-composer__sticker-trigger--active::before {
+.business-detail-composer__tool-row .business-detail-composer__sticker-trigger--active::before,
+.business-detail-composer__tool-row .business-detail-composer__mention-trigger--active::before {
   background: var(--campus-surface-primary, #eff6ff);
 }
 
@@ -565,12 +576,15 @@
 
 .business-detail-composer__publish::before {
   position: absolute;
+  top: 50%;
+  left: 50%;
   width: 56rpx;
   height: 56rpx;
+  margin: -28rpx 0 0 -28rpx;
   border-radius: 50%;
   background: linear-gradient(90deg, var(--ousea-ocean-500, #2b7aef), var(--ousea-wave-400, #38bdf8));
   content: '';
-  transform: translateX(-8rpx);
+  transform: none;
 }
 
 .business-detail-composer__publish--marketplace::before {
@@ -590,7 +604,12 @@
   z-index: 1;
   width: 32rpx;
   height: 32rpx;
-  transform: translateX(-8rpx);
+  transform: none;
+}
+
+.business-detail-composer__publish {
+  width: 64rpx;
+  height: 64rpx;
 }
 
 .business-detail-composer__publish--pressed { opacity: 0.62; }

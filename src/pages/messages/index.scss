@@ -300,6 +300,25 @@
   }
 }
 
+.messages-page--notice {
+  .messages-conversation-card__avatar {
+    display: none;
+  }
+
+  .messages-conversation-card__body {
+    margin-left: 0;
+  }
+
+  .messages-conversation-card {
+    border-radius: 30rpx;
+    box-shadow: 0 8rpx 24rpx rgba(29, 95, 214, 0.06);
+  }
+
+  .messages-private-state--empty {
+    border-radius: 30rpx;
+  }
+}
+
 .messages-conversation-list {
   display: flex;
   flex-direction: column;

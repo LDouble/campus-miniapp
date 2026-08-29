@@ -7,7 +7,7 @@ const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
 const TOKEN_EXPIRES_AT_KEY = 'campus.auth.expiresAt.v1'
 const ACCOUNT_CANCELLED_KEY = 'campus.auth.accountCancelled.v1'
-const miniProgramEnvVersion = () => {
+export const getMiniProgramEnvVersion = () => {
   try {
     return Taro.getAccountInfoSync().miniProgram.envVersion
   } catch {
@@ -16,10 +16,16 @@ const miniProgramEnvVersion = () => {
   }
 }
 
-export const API_BASE_URL = resolveApiBaseUrl(miniProgramEnvVersion(), {
+export const API_BASE_URL = resolveApiBaseUrl(getMiniProgramEnvVersion(), {
   review: __CAMPUS_REVIEW_API_BASE_URL__,
   production: __CAMPUS_PRODUCTION_API_BASE_URL__,
 })
+
+// Keep presentation decisions aligned with the same runtime source used for
+// review/production API selection. Only the develop build uses the
+// notice-only UI; trial and release keep the normal private-message shape.
+// Do not infer the environment from a URL.
+export const isDevelopmentEnvironment = () => getMiniProgramEnvVersion() === 'develop'
 
 export const apiUrl = (path: string) => {
   const baseEndsWithSlash = API_BASE_URL.endsWith('/')

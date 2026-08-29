@@ -13,6 +13,7 @@ import type {
   MarketplaceListingView,
   TradeOrderView,
 } from '../../api/types'
+import { isDevelopmentEnvironment } from '../../api/auth'
 import { isApiError } from '../../api/client'
 import {
   requestWechatSubscriptionAndStopPropagation,
@@ -20,6 +21,7 @@ import {
   requestWechatSubscriptionForPublishSection,
 } from '../../features/wechat-subscription'
 import CustomNavbar from '../../components/custom-navbar'
+import MentionContent from '../../components/mention-content'
 import StickerContent from '../../components/sticker-content'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import {
@@ -34,6 +36,8 @@ import { markLifeHubSectionDirty } from '../../features/life-services/refresh-po
 import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
 import { saveBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
 import { plainStickerContent } from '../../features/stickers/content'
+import { directMessageChatUrl } from '../../features/direct-messages/navigation'
+import { privateMessagesRepository } from '../../features/direct-messages/repository'
 import './index.scss'
 
 type Section = 'published' | 'errands' | 'orders' | 'carpool'
@@ -226,6 +230,17 @@ const openBusinessRecord = (item: RecordItem) => {
   Taro.navigateTo({ url })
 }
 
+const positiveUserId = (value: unknown) => (
+  typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : 0
+)
+
+const contactUserIdFor = (item: RecordItem) => {
+  if ('order_no' in item || 'pickup_location' in item || 'departure_at' in item) {
+    return positiveUserId((item as RecordItem & { contact_user_id?: number | null }).contact_user_id)
+  }
+  return 0
+}
+
 const mergePage = (current: RecordItem[], incoming: RecordItem[]) => {
   const seen = new Set(current.map((item) => `${'order_no' in item ? 'order' : 'record'}:${item.id}`))
   return current.concat(incoming.filter((item) => {
@@ -270,6 +285,7 @@ const fetchPage = async (view: ViewQuery, page: number): Promise<PageResult> => 
 }
 
 export default function MyServicesPage() {
+  const developmentPresentation = isDevelopmentEnvironment()
   const initialView: ViewQuery = {
     section: 'published',
     relation: 'all',
@@ -288,6 +304,7 @@ export default function MyServicesPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [actionOrderId, setActionOrderId] = useState(0)
+  const [contactUserId, setContactUserId] = useState(0)
   const requestVersion = useRef(0)
   const firstDidShow = useRef(true)
 
@@ -429,6 +446,30 @@ export default function MyServicesPage() {
     }
   }
 
+  const openContact = async (item: RecordItem) => {
+    const peerId = contactUserIdFor(item)
+    if (!peerId) {
+      Taro.showToast({ title: '暂时没有可联系的对方', icon: 'none' })
+      return
+    }
+    setContactUserId(peerId)
+    try {
+      const conversation = await privateMessagesRepository.createConversation(peerId)
+      await Taro.navigateTo({ url: directMessageChatUrl(conversation.id) })
+    } catch (openError) {
+      Taro.showToast({
+        title: isApiError(openError) ? openError.message : '暂时无法打开私信，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setContactUserId(0)
+    }
+  }
+
+  const canContact = (item: RecordItem) => (
+    !developmentPresentation && contactUserIdFor(item) > 0
+  )
+
   const emptyCopy = view.section === 'errands'
     ? ['还没有接过跑腿任务', '去看看有哪些待接任务吧']
     : view.section === 'orders'
@@ -563,8 +604,21 @@ export default function MyServicesPage() {
                   <Text>{formatDateTime(order.updated_at)}</Text>
                   <Text>查看业务详情 ›</Text>
                 </View>
-                {(order.available_actions.includes('cancel') || order.available_actions.includes('complete')) && (
+                {(canContact(order) || order.available_actions.includes('cancel') || order.available_actions.includes('complete')) && (
                   <View className='my-record-actions'>
+                    {canContact(order) && (
+                      <View
+                        className='my-record-actions__contact'
+                        ariaRole='button'
+                        ariaLabel='联系对方'
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void openContact(order)
+                        }}
+                      >
+                        {contactUserId === contactUserIdFor(order) ? '正在打开' : '联系对方'}
+                      </View>
+                    )}
                     {order.available_actions.includes('cancel') && (
                       <View
                         className='my-record-actions__secondary'
@@ -612,6 +666,21 @@ export default function MyServicesPage() {
                 <View className='my-record-card__footer'>
                   <Text>{formatDateTime(errand.deadline)}</Text><Text>查看进度 ›</Text>
                 </View>
+                {canContact(errand) && (
+                  <View className='my-record-actions'>
+                    <View
+                      className='my-record-actions__contact'
+                      ariaRole='button'
+                      ariaLabel='联系对方'
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        void openContact(errand)
+                      }}
+                    >
+                      {contactUserId === contactUserIdFor(errand) ? '正在打开' : '联系对方'}
+                    </View>
+                  </View>
+                )}
               </View>
             )
           }
@@ -646,6 +715,21 @@ export default function MyServicesPage() {
                   <Text>{formatDateTime(trip.departure_at)}</Text>
                   <Text>{remainingSeats(trip.total_seats, trip.occupied_seats)} 人可同行 ›</Text>
                 </View>
+                {canContact(trip) && (
+                  <View className='my-record-actions'>
+                    <View
+                      className='my-record-actions__contact'
+                      ariaRole='button'
+                      ariaLabel='联系对方'
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        void openContact(trip)
+                      }}
+                    >
+                      {contactUserId === contactUserIdFor(trip) ? '正在打开' : '联系对方'}
+                    </View>
+                  </View>
+                )}
               </View>
             )
           }
@@ -655,7 +739,7 @@ export default function MyServicesPage() {
               <View className='my-record-card__top'>
                 <Text className='my-record-card__kind'>我发布的动态</Text><Text className='my-record-card__status'>{formatStatus(post.status)}</Text>
               </View>
-              <StickerContent content={post.content || '图片动态'} className='my-record-card__body' stickerClassName='my-record-card__sticker' />
+              <MentionContent content={post.content || '图片动态'} segments={post.content_segments} className='my-record-card__body' stickerClassName='my-record-card__sticker' />
               <View className='my-record-card__footer'>
                 <Text>{formatDateTime(post.updated_at)}</Text>
                 <Text>{post.like_count} 赞 · {post.comment_count} 评论</Text>

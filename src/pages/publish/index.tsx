@@ -14,9 +14,11 @@ import { uploadMediaImage } from '../../api/media'
 import { getCurrentIdentity } from '../../api/account'
 import type {
   CarpoolTripView,
+  CampusCirclePostView,
   CampusCircleSectionView,
   CampusCircleTopicView,
   ErrandView,
+  MentionCandidate,
   MarketplaceListingView,
 } from '../../api/types'
 import {
@@ -25,6 +27,12 @@ import {
   type MarketplaceSource,
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import MentionPicker from '../../features/mentions/mention-picker'
+import {
+  expandMentionDeletion,
+  insertMentionToken,
+  removeMentionTokens,
+} from '../../features/mentions/content'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import {
   publisherContactStorage,
@@ -93,6 +101,7 @@ type PublisherForm = {
   images: MediaImageDraft[]
   communitySectionId: number
   communityTopicId: number
+  mentionCandidates: MentionCandidate[]
   version: number
 }
 
@@ -150,6 +159,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   images: [],
   communitySectionId: 0,
   communityTopicId: 0,
+  mentionCandidates: [],
   version: 0,
 })
 
@@ -160,6 +170,19 @@ const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionV
 const restoreStickerContent = (content?: string | null) => (
   editableStickerContent(content || '')
 )
+
+const mentionCandidatesFromSegments = (
+  segments?: CampusCirclePostView['content_segments'],
+): MentionCandidate[] => {
+  if (!segments) return []
+  const seen = new Set<number>()
+  return segments.flatMap((segment) => {
+    if (segment.type !== 'mention' || !segment.user_id || !segment.nickname) return []
+    if (seen.has(segment.user_id)) return []
+    seen.add(segment.user_id)
+    return [{ id: segment.user_id, nickname: segment.nickname, avatar_url: null }]
+  })
+}
 
 type StoredPublisherForm = Partial<PublisherForm> & { stickerIds?: unknown }
 type LegacyPublisherForm = Omit<PublisherForm, 'images'> & {
@@ -378,8 +401,11 @@ export default function PublishPage() {
   const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
+  const [contentInputFocused, setContentInputFocused] = useState(false)
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
+  const contentFocusRequestRef = useRef(0)
   const [activeRouteField, setActiveRouteField] = useState<keyof Pick<
     PublisherForm,
     'pickupLocation' | 'dropoffLocation' | 'origin' | 'destination'
@@ -412,10 +438,51 @@ export default function PublishPage() {
       form.contact,
     ].some((value) => value.trim().length > 0)
       || form.images.length > 0
+      || form.mentionCandidates.length > 0
   ), [form])
 
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
     setForm((draft) => ({ ...draft, [key]: value }))
+  }
+
+  const removeMentionFromContent = (candidate: MentionCandidate) => {
+    const removed = removeMentionTokens(
+      form.content,
+      candidate.nickname,
+      contentSelectionStartRef.current,
+    )
+    contentSelectionStartRef.current = removed.cursor
+    contentSelectionEndRef.current = removed.cursor
+    update('content', removed.text)
+  }
+
+  const clearMentionContent = (selected: MentionCandidate[]) => {
+    let nextContent = form.content
+    let cursor = contentSelectionStartRef.current
+    selected.forEach((candidate) => {
+      const removed = removeMentionTokens(nextContent, candidate.nickname, cursor)
+      nextContent = removed.text
+      cursor = removed.cursor
+    })
+    contentSelectionStartRef.current = cursor
+    contentSelectionEndRef.current = cursor
+    update('content', nextContent)
+  }
+
+  const changeMentionPickerOpen = (open: boolean) => {
+    contentFocusRequestRef.current += 1
+    setMentionPickerOpen(open)
+    if (open) {
+      setContentInputFocused(false)
+      return
+    }
+
+    const requestId = contentFocusRequestRef.current
+    setContentInputFocused(false)
+    setTimeout(() => {
+      if (contentFocusRequestRef.current !== requestId) return
+      setContentInputFocused(true)
+    }, 80)
   }
 
   const loadRememberedContact = async () => {
@@ -519,6 +586,7 @@ export default function PublishPage() {
         setForm({
           ...emptyForm(),
           content: restoreStickerContent(post.content),
+          mentionCandidates: mentionCandidatesFromSegments(post.content_segments),
           images: post.images.map((image) => serverMediaImageDraft({
             url: image.url,
             mediaId: image.media_id || undefined,
@@ -877,6 +945,7 @@ export default function PublishPage() {
           content: serializedContent || undefined,
           media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
           image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
+          mention_user_ids: form.mentionCandidates.map((candidate) => candidate.id),
           topic_id: form.communityTopicId || undefined,
         }
         if (mode === 'create') {
@@ -1090,6 +1159,7 @@ export default function PublishPage() {
                   <KeyboardSafeTextarea
                     id='publisher-content'
                     value={form.content}
+                    focus={contentInputFocused && !mentionPickerOpen}
                     maxlength={contentMaxLength}
                     placeholder={section === 'market'
                       ? form.marketIntent === 'wanted'
@@ -1098,7 +1168,11 @@ export default function PublishPage() {
                       : section === 'errands' ? '说明物品、时间要求和注意事项' : section === 'carpool' ? '补充集合、行李或返程信息（可选）' : '分享真实、友善的校园内容'}
                     placeholderClass='publisher-placeholder'
                     onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                    onFocus={() => setStickerPickerOpen(false)}
+                    onFocus={() => {
+                      setContentInputFocused(true)
+                      setStickerPickerOpen(false)
+                    }}
+                    onBlur={() => setContentInputFocused(false)}
                     onInput={(event) => {
                       const detail = event.detail as typeof event.detail & {
                         cursor?: number
@@ -1114,13 +1188,33 @@ export default function PublishPage() {
                       const selectionEnd = Number.isFinite(detail.selectionEnd)
                         ? Number(detail.selectionEnd)
                         : cursor
-
-                      contentSelectionStartRef.current = Math.max(0, selectionStart)
-                      contentSelectionEndRef.current = Math.max(
-                        contentSelectionStartRef.current,
-                        selectionEnd,
+                      const mentionDeletion = expandMentionDeletion(
+                        form.content,
+                        detail.value,
+                        form.mentionCandidates,
                       )
-                      update('content', detail.value)
+                      if (mentionDeletion.cursor !== null) {
+                        contentSelectionStartRef.current = mentionDeletion.cursor
+                        contentSelectionEndRef.current = mentionDeletion.cursor
+                      } else {
+                        contentSelectionStartRef.current = Math.max(0, selectionStart)
+                        contentSelectionEndRef.current = Math.max(
+                          contentSelectionStartRef.current,
+                          selectionEnd,
+                        )
+                      }
+                      if (mentionDeletion.removedCandidateIds.length > 0) {
+                        const removedIds = new Set(mentionDeletion.removedCandidateIds)
+                        setForm((currentForm) => ({
+                          ...currentForm,
+                          content: mentionDeletion.text,
+                          mentionCandidates: currentForm.mentionCandidates.filter(
+                            (candidate) => !removedIds.has(candidate.id),
+                          ),
+                        }))
+                      } else {
+                        update('content', mentionDeletion.text)
+                      }
                     }}
                     onSelectionChange={(event) => {
                       const detail = event.detail as {
@@ -1139,6 +1233,25 @@ export default function PublishPage() {
                   />
                   <View className='publisher-composer-toolbar'>
                     <View className='publisher-composer-toolbar__tools'>
+                      {section === 'community' && (
+                        <View
+                          className={mentionPickerOpen
+                            ? 'publisher-composer-tool publisher-composer-tool--active'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel='选择要提及的同学'
+                          onClick={() => {
+                            changeStickerPickerOpen(false)
+                            changeMentionPickerOpen(true)
+                          }}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon'
+                            src={require('../../assets/icons/mention.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
                       <View
                         className={stickerPickerOpen
                           ? 'publisher-composer-tool publisher-composer-tool--active'
@@ -1177,6 +1290,27 @@ export default function PublishPage() {
                     <Text>{form.content.length}/{contentMaxLength}</Text>
                   </View>
                 </View>
+                {section === 'community' && (
+                  <MentionPicker
+                    open={mentionPickerOpen}
+                    selected={form.mentionCandidates}
+                    onChange={(mentionCandidates) => update('mentionCandidates', mentionCandidates)}
+                    onSelect={(candidate) => {
+                      const inserted = insertMentionToken(
+                        form.content,
+                        candidate.nickname,
+                        contentSelectionStartRef.current,
+                        contentSelectionEndRef.current,
+                      )
+                      contentSelectionStartRef.current = inserted.cursor
+                      contentSelectionEndRef.current = inserted.cursor
+                      update('content', inserted.text)
+                    }}
+                    onRemove={removeMentionFromContent}
+                    onClear={clearMentionContent}
+                    onOpenChange={changeMentionPickerOpen}
+                  />
+                )}
                 <StickerPicker
                   open={stickerPickerOpen}
                   onOpenChange={changeStickerPickerOpen}

@@ -511,6 +511,12 @@ page {
     color: var(--campus-text-secondary, #62748e);
   }
 
+  &__contact {
+    border: 1rpx solid var(--campus-primary, #2b7fff);
+    background: var(--campus-surface-primary, #eff6ff);
+    color: var(--campus-primary-strong, #155dfc);
+  }
+
   &__primary {
     background: var(--campus-primary, #2b7fff);
     color: #fff;

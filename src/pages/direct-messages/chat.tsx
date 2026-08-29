@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidHide, useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { createIdempotencyKey, isApiError } from '../../api/client'
+import { isDevelopmentEnvironment } from '../../api/auth'
 import { getCurrentIdentity, getCurrentUser } from '../../api/account'
 import { uploadMediaImage } from '../../api/media'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
@@ -79,6 +80,7 @@ type SentImagePreview = {
 }
 
 export default function DirectMessageChatPage() {
+  const developmentPresentation = isDevelopmentEnvironment()
   const [conversationId, setConversationId] = useState(0)
   const [conversation, setConversation] = useState<DirectMessageConversation | null>(null)
   const [messages, setMessages] = useState<DirectMessage[]>([])
@@ -520,6 +522,7 @@ export default function DirectMessageChatPage() {
   usePullDownRefresh(() => void loadInitial(conversationIdRef.current))
 
   const send = async () => {
+    if (developmentPresentation) return
     const id = conversationIdRef.current
     if (!id || sending) return
     const pending = resolvePendingDirectMessageSend(
@@ -583,6 +586,7 @@ export default function DirectMessageChatPage() {
   const imageInFlight = Boolean(selectedImage && selectedImage.status !== 'failed')
 
   const sendFromButton = () => {
+    if (developmentPresentation) return
     if (!draft.trim() || sending || !conversationId) return
     requestWechatSubscriptionForModule('private_message')
     void send()
@@ -605,6 +609,7 @@ export default function DirectMessageChatPage() {
   }
 
   const chooseImage = async () => {
+    if (developmentPresentation) return
     if (selectedImageRef.current && selectedImageRef.current.status !== 'failed') return
     if (draft.trim()) {
       Taro.showToast({ title: '图片消息不能与文字混发，请先发送或清空文字', icon: 'none' })
@@ -680,13 +685,17 @@ export default function DirectMessageChatPage() {
     : conversation?.peer.nickname || '私信'
 
   const canSend = Boolean(conversationId) && !sending && Boolean(draft.trim())
+  const displayedMessages = developmentPresentation
+    ? messages.filter((message) => message.sender_id !== currentUserId)
+    : messages
   const pageClassName = [
     'direct-chat-page',
+    developmentPresentation ? 'direct-chat-page--notice' : '',
     stickerPickerOpen ? 'direct-chat-page--sticker-open' : '',
   ].filter(Boolean).join(' ')
-const contentBottomPadding = stickerPickerOpen
-  ? '676rpx'
-  : '112rpx'
+  const contentBottomPadding = developmentPresentation
+    ? '24rpx'
+    : stickerPickerOpen ? '676rpx' : '112rpx'
   const contentStyle = {
     paddingBottom: '0',
   }
@@ -702,7 +711,7 @@ const contentBottomPadding = stickerPickerOpen
 
   return (
     <View className={pageClassName}>
-      <CustomNavbar title={peerName} showBack />
+      <CustomNavbar title={developmentPresentation ? '通知详情' : peerName} showBack />
       <ScrollView
         className='direct-chat-page__scroll'
         style={scrollStyle}
@@ -736,13 +745,13 @@ const contentBottomPadding = stickerPickerOpen
                 </View>
               )}
               {!hasMore && messages.length > 0 && <View className='direct-chat-history'>已经是最早的消息</View>}
-              {messages.length === 0 && !pendingOutgoingImage && (
+              {displayedMessages.length === 0 && !pendingOutgoingImage && (
                 <View className='direct-chat-empty'>
-                  <Text>还没有消息</Text>
-                  <Text>发一句问候，开始聊天吧</Text>
+                  <Text>{developmentPresentation ? '暂无新的通知' : '还没有消息'}</Text>
+                  <Text>{developmentPresentation ? '新的内容会显示在这里' : '发一句问候，开始聊天吧'}</Text>
                 </View>
               )}
-              {messages.map((message, index) => {
+              {displayedMessages.map((message, index) => {
                 const isOwn = message.sender_id === currentUserId
                 const image = message.image
                 const imageState = (imageStateOverrides[message.id]
@@ -752,7 +761,7 @@ const contentBottomPadding = stickerPickerOpen
                 const imagePending = imageState === 'pending'
                 const imageUnavailable = imageState === 'rejected' || imageState === 'expired'
                 const localPreview = sentImagePreviews[message.id]
-                const previousMessage = messages[index - 1]
+                const previousMessage = displayedMessages[index - 1]
                 const avatarName = isOwn
                   ? avatarFallback(currentUserName)
                   : conversation?.peer.deleted
@@ -865,7 +874,7 @@ const contentBottomPadding = stickerPickerOpen
                   </View>
                 )
               })}
-              {pendingOutgoingImage && (
+              {!developmentPresentation && pendingOutgoingImage && (
                 <View
                   id={`direct-chat-pending-image-${pendingOutgoingImage.key}`}
                   className='direct-chat-message-group direct-chat-message-group--pending'
@@ -951,7 +960,7 @@ const contentBottomPadding = stickerPickerOpen
               value={draft}
               focus={inputFocused}
               maxlength={2000}
-              placeholder='输入消息'
+              placeholder={developmentPresentation ? '写下你的评论' : '输入消息'}
               placeholderClass='direct-chat-composer__placeholder'
               confirmType='send'
               keepVisibleOnKeyboard={false}

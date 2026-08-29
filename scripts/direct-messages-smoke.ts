@@ -273,9 +273,21 @@ const subscriptionModule = read('src/features/wechat-subscription/module.ts')
 const tabBar = read('src/custom-tab-bar/index.wxml')
 const qualificationSmoke = read('scripts/qualification-build-smoke.ts')
 const appSource = read('src/app.ts')
+const authSource = read('src/api/auth.ts')
 const unreadSource = read('src/features/direct-messages/unread.ts')
 const mediaApi = read('src/api/media.ts')
 const mediaReview = read('src/features/direct-messages/media-review.ts')
+
+assert.match(
+  authSource,
+  /getMiniProgramEnvVersion[\s\S]*Taro\.getAccountInfoSync[\s\S]*miniProgram\.envVersion/u,
+  '开发环境展示必须复用运行时小程序 envVersion 判断',
+)
+assert.match(
+  authSource,
+  /isDevelopmentEnvironment = \(\) => getMiniProgramEnvVersion\(\) === 'develop'/u,
+  '开发环境展示不得根据 API 域名字符串判断',
+)
 
 for (const path of [
   '/api/v1/private-messages/conversations',
@@ -298,6 +310,8 @@ assert.ok(appConfig.includes("'pages/direct-messages/index'"), '完整版本必�
 assert.ok(appConfig.includes("'pages/direct-messages/index'"), '资格版排除清单必须包含私信会话页')
 assert.ok(appConfig.includes("'pages/direct-messages/chat'"), '资格版排除清单必须包含私信详情页')
 assert.ok(messagesPage.includes('!isQualificationEdition'), '资格版不得显示私信入口')
+assert.ok(messagesPage.includes('isDevelopmentEnvironment'), '消息中心必须根据运行时环境切换展示')
+assert.ok(messagesPage.includes('暂无新的通知内容'), '开发环境消息列表不得展示私聊空态文案')
 assert.ok(messagesPage.includes("openMiniappModule('private_message'"), '消息中心私信入口必须经过模块守卫')
 assert.ok(messagesPage.includes("resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden'"), '隐藏模块不得展示消息中心私信入口')
 assert.ok(messagesPage.includes('canOpenNoticeAction'), '隐藏模块不得显示私信通知 CTA')
@@ -318,11 +332,15 @@ assert.ok(
 )
 assert.ok(!conversationStyle.includes('radial-gradient'), '私信会话页不得保留旧的径向渐变背景')
 assert.ok(publicProfile.includes('!profile.is_self'), '个人主页不得展示给自己的私信入口')
+assert.ok(publicProfile.includes('!developmentPresentation'), '开发环境个人主页不得展示私信入口')
 assert.ok(publicProfile.includes('isQualificationEdition'), '资格版不得显示个人主页私信入口')
 assert.ok(publicProfile.includes("openMiniappModule(\n        'private_message'"), '个人主页私信入口必须经过模块守卫')
 assert.ok(publicProfile.includes("requestWechatSubscriptionForModule(\n      'private_message'"), '个人主页必须在建会话前预请求私信订阅')
 assert.ok(publicProfile.includes('subscriptionAlreadyRequested'), '个人主页预请求后不得重复订阅')
 assert.ok(chatPage.includes('KeyboardSafeInput'), '聊天输入必须使用 KeyboardSafeInput')
+assert.ok(chatPage.includes('if (developmentPresentation) return'), '开发环境聊天必须禁止发送')
+assert.ok(chatPage.includes('displayedMessages'), '开发环境聊天只展示对方消息')
+assert.ok(chatStyle.includes('.direct-chat-composer {\n    display: none;'), '开发环境聊天必须隐藏回复输入框')
 assert.ok(chatPage.includes('useKeyboardInset'), '聊天输入栏必须仅随键盘移动')
 assert.ok(chatPage.includes('StickerContent'), '聊天消息必须渲染已知表情图片')
 assert.ok(chatPage.includes('StickerPicker'), '聊天输入栏必须提供表情选择面板')

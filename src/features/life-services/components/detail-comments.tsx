@@ -10,12 +10,12 @@ import {
 import Taro from '@tarojs/taro'
 import { CoverView, Image, Text, View } from '@tarojs/components'
 import { uploadMediaImage } from '../../../api/media'
-import type { CommentView } from '../../../api/types'
+import type { CommentView, MentionCandidate } from '../../../api/types'
 import { getCurrentUser } from '../../../api/account'
 import { isApiError } from '../../../api/client'
 import UserAvatar from '../../../components/user-avatar'
 import { KeyboardSafeTextarea } from '../../../components/keyboard-safe-input'
-import StickerContent from '../../../components/sticker-content'
+import MentionContent from '../../../components/mention-content'
 import StickerPicker from '../../../components/sticker-picker'
 import CommentImage from '../../community/components/comment-image'
 import { openContentReport } from '../../content-report'
@@ -34,6 +34,17 @@ import {
 import { suppressCommunityOverlayDismiss } from '../../community/use-overlay-dismissal'
 import { formatDateTime, formatStatus } from '../format'
 import { lifeServicesRepository } from '../repository'
+import {
+  MentionPickerOverlay,
+  useMentionPicker,
+} from '../../mentions/mention-picker'
+import {
+  buildMentionContentSegments,
+  expandMentionDeletion,
+  insertMentionToken,
+  removeMentionTokens,
+} from '../../mentions/content'
+import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import { showActionSheetSelection } from '../../../utils/action-sheet'
 import { getSystemState } from '../../../state/system'
 import {
@@ -53,6 +64,7 @@ const icons = {
   send: require('../../../assets/community/send.svg'),
   expand: require('../../../assets/icons/expand.svg'),
   collapse: require('../../../assets/icons/collapse.svg'),
+  mention: require('../../../assets/icons/mention.svg'),
 }
 
 export type DetailCommentTarget = 'campus_circle_post' | 'marketplace' | 'errand' | 'carpool'
@@ -370,8 +382,9 @@ const renderReplyTree = (
             id={`detail-comment-reply-${comment.id}`}
             className='business-detail-comment__reply-content'
           >
-            <StickerContent
+            <MentionContent
               content={comment.content}
+              segments={comment.content_segments}
               stickerClassName='business-detail-comment__sticker'
             />
             {comment.image && (
@@ -505,8 +518,9 @@ const DetailCommentThread = memo(function DetailCommentThread({
             onClick={() => onStartReply(comment)}
             onLongPress={() => onOpenActions(comment)}
           >
-            <StickerContent
+            <MentionContent
               content={comment.content}
+              segments={comment.content_segments}
               stickerClassName='business-detail-comment__sticker'
             />
             {comment.image && (
@@ -588,6 +602,7 @@ export default function DetailComments({
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
   const [content, setContent] = useState('')
+  const [mentionCandidates, setMentionCandidates] = useState<MentionCandidate[]>([])
   const [commentImage, setCommentImage] = useState<MediaImageDraft | null>(null)
   const [replyTarget, setReplyTarget] = useState<DetailReplyTarget | null>(null)
   const [replyAnchorSelector, setReplyAnchorSelector] = useState('')
@@ -603,6 +618,7 @@ export default function DetailComments({
   const [composerClosing, setComposerClosing] = useState(false)
   const [inputFocused, setInputFocused] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [enteringCommentId, setEnteringCommentId] = useState(0)
   const [removingCommentId, setRemovingCommentId] = useState(0)
@@ -624,6 +640,7 @@ export default function DetailComments({
   const composerClosingRef = useRef(false)
   const stickerPickerOpenRef = useRef(false)
   const composerActionPendingRef = useRef(false)
+  const mentionSubscriptionRequestedRef = useRef(false)
   const contentSelectionStartRef = useRef(0)
   const contentSelectionEndRef = useRef(0)
   const focusedCommentClearRef = useRef<null | (() => void)>(null)
@@ -632,6 +649,47 @@ export default function DetailComments({
   const handleOpenCommentActions = useCallback((comment: CommentView) => {
     openCommentActionsRef.current(comment)
   }, [])
+  const handleMentionSelect = useCallback((candidate: MentionCandidate) => {
+    const inserted = insertMentionToken(
+      content,
+      candidate.nickname,
+      contentSelectionStartRef.current,
+      contentSelectionEndRef.current,
+    )
+    contentSelectionStartRef.current = inserted.cursor
+    contentSelectionEndRef.current = inserted.cursor
+    setContent(inserted.text)
+  }, [content])
+  const removeMentionFromContent = useCallback((candidate: MentionCandidate) => {
+    const removed = removeMentionTokens(
+      content,
+      candidate.nickname,
+      contentSelectionStartRef.current,
+    )
+    contentSelectionStartRef.current = removed.cursor
+    contentSelectionEndRef.current = removed.cursor
+    setContent(removed.text)
+  }, [content])
+  const clearMentionContent = useCallback((selected: MentionCandidate[]) => {
+    let nextContent = content
+    let cursor = contentSelectionStartRef.current
+    selected.forEach((candidate) => {
+      const removed = removeMentionTokens(nextContent, candidate.nickname, cursor)
+      nextContent = removed.text
+      cursor = removed.cursor
+    })
+    contentSelectionStartRef.current = cursor
+    contentSelectionEndRef.current = cursor
+    setContent(nextContent)
+  }, [content])
+  const mentionPicker = useMentionPicker({
+    open: mentionPickerOpen,
+    selected: mentionCandidates,
+    onChange: setMentionCandidates,
+    onSelect: handleMentionSelect,
+    onRemove: removeMentionFromContent,
+    onClear: clearMentionContent,
+  })
 
   useEffect(() => {
     let active = true
@@ -951,6 +1009,7 @@ export default function DetailComments({
     setComposerOpen(true)
     setInputFocused(true)
     setStickerPickerOpen(false)
+    setMentionPickerOpen(false)
   }, [])
 
   useEffect(() => {
@@ -1011,11 +1070,13 @@ export default function DetailComments({
     composerClosingRef.current = false
     composerActionPendingRef.current = false
     stickerPickerOpenRef.current = false
+    mentionSubscriptionRequestedRef.current = false
     setComposerOpen(false)
     setComposerExpanded(false)
     setComposerClosing(false)
     setInputFocused(false)
     setStickerPickerOpen(false)
+    setMentionPickerOpen(false)
     setReplyTarget(null)
     setReplyAnchorSelector('')
     setKeyboardHeight(0)
@@ -1113,6 +1174,45 @@ export default function DetailComments({
     setKeyboardHeight(0)
     void Taro.hideKeyboard()
   }, [])
+
+  const setMentionPickerVisible = useCallback((open: boolean) => {
+    composerActionPendingRef.current = open
+    setMentionPickerOpen(open)
+    if (!open) {
+      if (!composerOpen || !enabled) return
+
+      const focusSequence = composerCloseSequenceRef.current + 1
+      composerCloseSequenceRef.current = focusSequence
+      setKeyboardHeight(0)
+      setInputFocused(false)
+      scheduleTimeout(() => {
+        if (!mountedRef.current || composerCloseSequenceRef.current !== focusSequence) return
+        setComposerOpen(true)
+        setInputFocused(true)
+      }, 80)
+      return
+    }
+
+    setStickerPickerVisible(false)
+    composerCloseSequenceRef.current += 1
+    composerClosingRef.current = false
+    setComposerClosing(false)
+    setComposerOpen(true)
+    setInputFocused(false)
+    setKeyboardHeight(0)
+  }, [composerOpen, enabled, scheduleTimeout, setStickerPickerVisible])
+
+  const handleMentionTriggerClick = useCallback((event: {
+    stopPropagation: () => void
+  }) => {
+    event.stopPropagation()
+    composerActionPendingRef.current = true
+    if (!mentionSubscriptionRequestedRef.current) {
+      const requested = requestWechatSubscriptionForModule('private_message')
+      if (requested) mentionSubscriptionRequestedRef.current = true
+    }
+    setMentionPickerVisible(true)
+  }, [setMentionPickerVisible])
 
   const restoreComposerFocus = useCallback(() => {
     if (!mountedRef.current) return
@@ -1254,10 +1354,17 @@ export default function DetailComments({
         target_type: targetType,
         target_id: targetId,
         content: value,
+        mention_user_ids: mentionCandidates.map((candidate) => candidate.id),
         ...(activeReplyTarget ? { parent_id: activeReplyTarget.id } : {}),
         ...(commentImage?.mediaId ? { media_id: commentImage.mediaId } : {}),
       })
       if (!mountedRef.current) return
+      const displayComment = created.content_segments?.length
+        ? created
+        : {
+            ...created,
+            content_segments: buildMentionContentSegments(created.content, mentionCandidates),
+          }
       if (activeReplyTarget) {
         const rootId = commentRootId(activeReplyTarget)
         const rootComment = comments.find((comment) => comment.id === rootId)
@@ -1273,7 +1380,7 @@ export default function DetailComments({
           return {
             ...current,
             [rootId]: {
-              descendants: mergeLocalThreadReply(descendants, created),
+              descendants: mergeLocalThreadReply(descendants, displayComment),
               error: '',
               expanded: true,
               loaded: existing?.loaded || false,
@@ -1282,19 +1389,20 @@ export default function DetailComments({
           }
         })
       } else {
-        setComments((current) => current.some((comment) => comment.id === created.id)
+        setComments((current) => current.some((comment) => comment.id === displayComment.id)
           ? current
-          : [...current, created])
+          : [...current, displayComment])
         setTotal((current) => current + 1)
       }
-      focusCommentTemporarily(created.id)
-      setEnteringCommentId(created.id)
+      focusCommentTemporarily(displayComment.id)
+      setEnteringCommentId(displayComment.id)
       scheduleTimeout(() => {
         if (mountedRef.current) {
-          setEnteringCommentId((current) => current === created.id ? 0 : current)
+          setEnteringCommentId((current) => current === displayComment.id ? 0 : current)
         }
       }, 320)
       setContent('')
+      setMentionCandidates([])
       setComposerLineCount(1)
       setComposerExpanded(false)
       setCommentImage(null)
@@ -1302,7 +1410,7 @@ export default function DetailComments({
       contentSelectionEndRef.current = 0
       closeComposer()
       if (created.status === 'approved') onApprovedDelta?.(1)
-      onMutation?.({ comment: created, type: 'create' })
+      onMutation?.({ comment: displayComment, type: 'create' })
       Taro.showToast({
         title: created.status === 'approved'
           ? activeReplyTarget ? '回复已发布' : '评论已发布'
@@ -1422,6 +1530,20 @@ export default function DetailComments({
 
   return (
     <>
+      {enabled && composerOpen && targetType === 'campus_circle_post' && (
+        <MentionPickerOverlay
+          open={mentionPickerOpen}
+          selected={mentionCandidates}
+          keyword={mentionPicker.keyword}
+          candidates={mentionPicker.candidates}
+          loading={mentionPicker.loading}
+          onKeywordChange={mentionPicker.setKeyword}
+          onToggleCandidate={mentionPicker.toggleCandidate}
+          onRemoveCandidate={mentionPicker.removeCandidate}
+          onClear={mentionPicker.clearSelected}
+          onOpenChange={setMentionPickerVisible}
+        />
+      )}
       {!composerOnly && (
         <View className='business-detail-comments'>
         {showHeading && (
@@ -1606,6 +1728,61 @@ export default function DetailComments({
               )}
             </View>
           )}
+          {enabled && composerOpen && (
+            <View className='business-detail-composer__tool-row'>
+              {targetType === 'campus_circle_post' && (
+                <View
+                  className={mentionPickerOpen
+                    ? 'business-detail-composer__mention-trigger business-detail-composer__mention-trigger--active'
+                    : 'business-detail-composer__mention-trigger'}
+                  ariaRole='button'
+                  ariaLabel='选择要提及的同学'
+                  onTouchStart={(event) => {
+                    event.stopPropagation()
+                    composerActionPendingRef.current = true
+                  }}
+                  onClick={handleMentionTriggerClick}
+                >
+                  <Image src={icons.mention} mode='aspectFit' />
+                </View>
+              )}
+              <View
+                className={stickerPickerOpen
+                  ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'
+                  : 'business-detail-composer__sticker-trigger'}
+                ariaRole='button'
+                ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
+                onTouchStart={(event) => {
+                  event.stopPropagation()
+                  composerActionPendingRef.current = true
+                }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  composerActionPendingRef.current = false
+                  setStickerPickerVisible(!stickerPickerOpen)
+                }}
+              >
+                <Image src={require('../../../assets/icons/smile.svg')} mode='aspectFit' />
+              </View>
+              <View
+                className={commentImage
+                  ? 'business-detail-composer__image-trigger business-detail-composer__image-trigger--disabled'
+                  : 'business-detail-composer__image-trigger'}
+                ariaRole='button'
+                ariaLabel={commentImage ? '已添加 1 张图片，请先删除后更换' : '添加图片'}
+                onTouchStart={(event) => {
+                  event.stopPropagation()
+                  composerActionPendingRef.current = true
+                }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  void chooseCommentImage()
+                }}
+              >
+                <Image src={require('../../../assets/icons/image.svg')} mode='aspectFit' />
+              </View>
+            </View>
+          )}
           <View className='business-detail-composer__main'>
             <UserAvatar
               src={composerAvatar.src}
@@ -1623,7 +1800,7 @@ export default function DetailComments({
                 <KeyboardSafeTextarea
                   id={`business-comment-${targetType}-${targetId}`}
                   value={content}
-                  focus={composerOpen && inputFocused}
+                  focus={composerOpen && inputFocused && !mentionPickerOpen}
                   disabled={submitting}
                   maxlength={300}
                   autoHeight={!composerExpanded}
@@ -1653,13 +1830,28 @@ export default function DetailComments({
                     const selectionEnd = Number.isFinite(detail.selectionEnd)
                       ? Number(detail.selectionEnd)
                       : cursor
-
-                    contentSelectionStartRef.current = Math.max(0, selectionStart)
-                    contentSelectionEndRef.current = Math.max(
-                      contentSelectionStartRef.current,
-                      selectionEnd,
+                    const mentionDeletion = expandMentionDeletion(
+                      content,
+                      detail.value,
+                      mentionCandidates,
                     )
-                    setContent(detail.value)
+                    if (mentionDeletion.cursor !== null) {
+                      contentSelectionStartRef.current = mentionDeletion.cursor
+                      contentSelectionEndRef.current = mentionDeletion.cursor
+                    } else {
+                      contentSelectionStartRef.current = Math.max(0, selectionStart)
+                      contentSelectionEndRef.current = Math.max(
+                        contentSelectionStartRef.current,
+                        selectionEnd,
+                      )
+                    }
+                    if (mentionDeletion.removedCandidateIds.length > 0) {
+                      const removedIds = new Set(mentionDeletion.removedCandidateIds)
+                      setMentionCandidates((current) => current.filter(
+                        (candidate) => !removedIds.has(candidate.id),
+                      ))
+                    }
+                    setContent(mentionDeletion.text)
                   }}
                   onLineChange={(event) => {
                     setComposerLineCount(Math.max(1, Number(event.detail.lineCount) || 1))
@@ -1707,53 +1899,20 @@ export default function DetailComments({
               <View className='business-detail-composer__disabled'>评论暂未开放</View>
             )}
             {enabled && composerOpen ? (
-              <View className='business-detail-composer__input-actions'>
-                <View
-                  className={stickerPickerOpen
-                    ? 'business-detail-composer__sticker-trigger business-detail-composer__sticker-trigger--active'
-                    : 'business-detail-composer__sticker-trigger'}
-                  ariaRole='button'
-                  ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
-                  onTouchStart={() => {
-                    composerActionPendingRef.current = true
-                  }}
-                  onClick={() => {
-                    composerActionPendingRef.current = false
-                    setStickerPickerVisible(!stickerPickerOpen)
-                  }}
-                >
-                  <Image src={require('../../../assets/icons/smile.svg')} mode='aspectFit' />
-                </View>
-                <View
-                  className={commentImage
-                    ? 'business-detail-composer__image-trigger business-detail-composer__image-trigger--disabled'
-                    : 'business-detail-composer__image-trigger'}
-                  ariaRole='button'
-                  ariaLabel={commentImage ? '已添加 1 张图片，请先删除后更换' : '添加图片'}
-                  onTouchStart={() => {
-                    composerActionPendingRef.current = true
-                  }}
-                  onClick={() => {
-                    void chooseCommentImage()
-                  }}
-                >
-                  <Image src={require('../../../assets/icons/image.svg')} mode='aspectFit' />
-                </View>
-                <View
-                  id={`business-comment-submit-${targetType}-${targetId}`}
-                  className={[
-                    'business-detail-composer__publish',
-                    `business-detail-composer__publish--${tone}`,
-                    !hasComposerContent || submitting ? 'business-detail-composer__publish--disabled' : '',
-                  ].filter(Boolean).join(' ')}
-                  ariaRole='button'
-                  ariaLabel={submitting ? '评论发布中' : '发布评论'}
-                  onClick={() => {
-                    if (hasComposerContent && !submitting) void submit()
-                  }}
-                >
-                  <Image src={icons.send} mode='aspectFit' />
-                </View>
+              <View
+                id={`business-comment-submit-${targetType}-${targetId}`}
+                className={[
+                  'business-detail-composer__publish',
+                  `business-detail-composer__publish--${tone}`,
+                  !hasComposerContent || submitting ? 'business-detail-composer__publish--disabled' : '',
+                ].filter(Boolean).join(' ')}
+                ariaRole='button'
+                ariaLabel={submitting ? '评论发布中' : '发布评论'}
+                onClick={() => {
+                  if (hasComposerContent && !submitting) void submit()
+                }}
+              >
+                <Image src={icons.send} mode='aspectFit' />
               </View>
             ) : (
               <>
