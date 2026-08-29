@@ -28,6 +28,7 @@ const icons = {
   errands: require('../../assets/icons/errands.svg'),
   academic: require('../../assets/icons/academic.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
+  whatToEat: require('../../assets/icons/what-to-eat.svg'),
 }
 
 type ServiceItem = {
@@ -55,6 +56,7 @@ const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
   market: 'marketplace',
   errands: 'errand',
   clubs: 'club',
+  'what-to-eat': 'what_to_eat',
 }
 
 const migratedServiceKeys = new Set([
@@ -97,6 +99,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
       { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
       { key: 'clubs', name: '社团广场', icon: icons.clubs, route: '/pages/clubs/index' },
+      { key: 'what-to-eat', name: '今天吃什么', icon: icons.whatToEat, route: '/pages/what-to-eat/index' },
     ],
   },
 ]

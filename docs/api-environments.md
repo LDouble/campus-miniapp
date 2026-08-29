@@ -23,6 +23,41 @@ TARO_APP_PRODUCTION_API_BASE_URL=https://product.weouc.com \
 yarn build:weapp
 ```
 
+## 本地部署分支联调
+
+本地部署分支的 API 默认监听 `http://127.0.0.1:8080`。`dev:weapp` 已固定使用
+development 构建模式，启动小程序 watch 时通过 `TARO_APP_API_BASE_URL` 注入本地业务 API 基地址：
+
+```bash
+TARO_APP_API_BASE_URL=http://127.0.0.1:8080 yarn dev:weapp
+```
+
+启动前可使用以下地址确认后端已经就绪：
+
+```bash
+curl http://127.0.0.1:8080/health/ready
+```
+
+`/health/ready` 仅是健康检查地址，不要把它写进
+`TARO_APP_API_BASE_URL`；小程序会在基地址后拼接 `/api/v1/...` 业务路径。
+该环境变量在构建时注入，修改后需要重启 watch，并在微信开发者工具中刷新
+`dist/full` 项目。
+
+微信开发者工具默认开启合法域名校验，本地 HTTP 请求会被拦截。首次本地联调时，
+请在 `dist/full/project.private.config.json` 写入以下开发期配置，或在开发者工具
+项目设置中关闭“合法域名校验”；该文件属于本机配置，不要提交到仓库：
+
+```json
+{
+  "setting": {
+    "urlCheck": false
+  }
+}
+```
+
+验证时应在网络面板看到 `http://127.0.0.1:8080/api/v1/...`。微信自身的
+`report-online.sh.wxgateway.com` 埋点请求不属于 Campus 业务 API，可以忽略。
+
 ## 微信订阅消息
 
 订阅模板 ID 由公开运行时配置 `miniapp/bootstrap` 的

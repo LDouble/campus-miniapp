@@ -6,6 +6,9 @@ import './index.scss'
 export type MediaImageEditorProps = {
   images: MediaImageDraft[]
   maxCount: number
+  title?: string
+  hint?: string
+  showCover?: boolean
   onAdd: () => void
   onMove: (index: number, direction: -1 | 1) => void
   onRemove: (key: string) => void
@@ -15,6 +18,9 @@ export type MediaImageEditorProps = {
 export default function MediaImageEditor({
   images,
   maxCount,
+  title = '图片',
+  hint = '首图作为封面，点击预览',
+  showCover = true,
   onAdd,
   onMove,
   onRemove,
@@ -27,8 +33,8 @@ export default function MediaImageEditor({
     <View className='media-image-editor'>
       <View className='media-image-editor__head'>
         <View>
-          <Text>图片</Text>
-          <Text>首图作为封面，点击预览</Text>
+          <Text>{title}</Text>
+          <Text>{hint}</Text>
         </View>
         <Text>{images.length}/{maxCount}</Text>
       </View>
@@ -42,7 +48,7 @@ export default function MediaImageEditor({
               onClick={() => Taro.previewImage({ current: image.previewUrl, urls: previewUrls })}
             >
               <Image src={image.previewUrl} mode='aspectFill' />
-              {index === 0 && <Text className='media-image-editor__cover'>封面</Text>}
+              {showCover && index === 0 && <Text className='media-image-editor__cover'>封面</Text>}
               <View
                 className='media-image-editor__remove'
                 ariaRole='button'

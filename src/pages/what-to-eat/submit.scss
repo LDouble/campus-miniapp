@@ -1,0 +1,367 @@
+.food-submit-page {
+  min-height: 100vh;
+  color: var(--campus-text-body);
+  background: var(--campus-page);
+}
+
+.food-submit-page__content {
+  padding: 28rpx 32rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.food-submit-page__intro {
+  display: block;
+  margin-bottom: 24rpx;
+  padding: 28rpx;
+  border: 2rpx solid var(--campus-border-strong);
+  border-radius: var(--ousea-radius-card-lg, 36rpx);
+  background: var(--campus-surface-primary);
+}
+
+.food-submit-page__campus {
+  display: inline-flex;
+  min-height: 88rpx;
+  align-items: center;
+  gap: 16rpx;
+  margin: 0 0 16rpx;
+  padding: 0 20rpx;
+  border: 2rpx solid var(--campus-border-strong);
+  border-radius: 999rpx;
+  color: var(--campus-primary-strong);
+  background: var(--campus-surface);
+  font-size: 24rpx;
+  line-height: 1.4;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.food-submit-page__campus > text:last-child {
+  color: var(--campus-primary);
+  font-weight: 600;
+}
+
+.food-submit-page__campus--pressed {
+  opacity: 0.82;
+  transform: scale(0.98);
+}
+
+.food-submit-page__intro-title {
+  display: block;
+  color: var(--campus-text-heading);
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.food-submit-page__intro-copy {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: 24rpx;
+  line-height: 1.65;
+}
+
+.food-submit-form,
+.food-submit-images {
+  padding: 28rpx;
+  border: 2rpx solid var(--campus-border);
+  border-radius: var(--ousea-radius-card-lg, 36rpx);
+  background: var(--campus-surface);
+}
+
+.food-submit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.food-submit-form--optional,
+.food-submit-images {
+  margin-top: 20rpx;
+}
+
+.food-submit-form__head {
+  display: flex;
+  align-items: center;
+  min-height: 40rpx;
+}
+
+.food-submit-form__head > view {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.food-submit-form__title {
+  color: var(--campus-text-heading);
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.food-submit-form__hint,
+.food-submit-field__tip {
+  color: var(--campus-text-secondary);
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.food-submit-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.food-submit-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  padding: 16rpx 0 0;
+  border-top: 2rpx solid var(--campus-border);
+}
+
+.food-submit-shortcuts__label {
+  color: var(--campus-text-secondary);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.food-submit-shortcuts__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.food-submit-shortcuts__item {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 22rpx;
+  border: 2rpx solid var(--campus-border);
+  border-radius: 16rpx;
+  color: var(--campus-text-body);
+  background: var(--campus-surface);
+  font-size: 24rpx;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: opacity 120ms ease, transform 120ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.food-submit-shortcuts__item--recent {
+  border-color: var(--campus-border-strong);
+  color: var(--campus-primary-strong);
+}
+
+.food-submit-shortcuts__item--selected {
+  border-color: var(--campus-primary);
+  color: var(--campus-primary-strong);
+  background: var(--campus-surface-primary);
+}
+
+.food-submit-shortcuts__item--pressed {
+  opacity: 0.82;
+  transform: scale(0.98);
+}
+
+.food-submit-field__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  min-height: 32rpx;
+}
+
+.food-submit-field__label > text:first-child {
+  min-width: 0;
+  color: var(--campus-text-heading);
+  font-size: 27rpx;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.food-submit-field__label > text:last-child {
+  flex: none;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  color: var(--campus-primary-strong);
+  background: var(--campus-surface-primary);
+  font-size: 20rpx;
+  line-height: 1.4;
+}
+
+.food-submit-form--optional .food-submit-field__label > text:last-child {
+  color: var(--campus-text-secondary);
+  background: var(--campus-surface-subtle);
+}
+
+.food-submit-form input,
+.food-submit-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 88rpx;
+  padding: 22rpx 24rpx;
+  color: var(--campus-text-body);
+  background: var(--campus-surface-subtle);
+  border: 2rpx solid var(--campus-border);
+  border-radius: 24rpx;
+  font-size: 27rpx;
+  line-height: 1.4;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.food-submit-form input:focus,
+.food-submit-form textarea:focus {
+  border-color: var(--ousea-ocean-400);
+  background: var(--campus-surface);
+}
+
+.food-submit-form textarea {
+  min-height: 176rpx;
+  line-height: 1.65;
+}
+
+.food-submit-images__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+
+.food-submit-images__head > view {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.food-submit-images__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  min-height: 40rpx;
+}
+
+.food-submit-images__title-row > text:first-child {
+  color: var(--campus-text-heading);
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.food-submit-images__title-row > text:last-child {
+  flex: none;
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  color: var(--campus-text-secondary);
+  background: var(--campus-surface-subtle);
+  font-size: 20rpx;
+  line-height: 1.4;
+}
+
+.food-submit-images__head > view > text:last-child,
+.food-submit-images__head > text {
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.food-submit-images__head > text {
+  flex: none;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: var(--campus-surface-primary);
+}
+
+.food-submit-images__picker {
+  display: flex;
+  min-height: 176rpx;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: var(--campus-primary);
+  background: var(--campus-surface-subtle);
+  border: 2rpx dashed var(--campus-border-strong);
+  border-radius: 24rpx;
+  transition: opacity 120ms ease, transform 120ms ease, background-color 160ms ease;
+}
+
+.food-submit-images__picker-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-bottom: 8rpx;
+}
+
+.food-submit-images__picker > text:not(.food-submit-images__picker-icon) {
+  font-size: 26rpx;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.food-submit-images__picker > text:last-child {
+  margin-top: 4rpx;
+  color: var(--campus-text-secondary);
+  font-size: 22rpx;
+}
+
+.food-submit-images__notice {
+  display: block;
+  margin: 16rpx 4rpx 0;
+  color: var(--campus-text-secondary);
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.food-submit-page__action {
+  margin-top: 24rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.food-submit-page__button {
+  width: 100%;
+  min-height: 88rpx;
+  color: #fff;
+  background: var(--campus-primary);
+  border: 0;
+  border-radius: var(--ousea-radius-card, 32rpx);
+  font-size: 30rpx;
+  line-height: 88rpx;
+  transition: opacity 120ms ease, transform 120ms ease, background-color 160ms ease;
+}
+
+.food-submit-page__button::after {
+  border: 0;
+}
+
+.food-submit-images__picker:active,
+.food-submit-page__button:active {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+.food-submit-images__picker--pressed,
+.food-submit-page__button--pressed {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+.food-submit-page__button[disabled] {
+  opacity: 0.72;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .food-submit-form input,
+  .food-submit-form textarea,
+  .food-submit-images__picker,
+  .food-submit-page__button,
+  .food-submit-page__campus,
+  .food-submit-page__campus--pressed,
+  .food-submit-shortcuts__item,
+  .food-submit-shortcuts__item--pressed,
+  .food-submit-images__picker--pressed,
+  .food-submit-page__button--pressed {
+    transition: none;
+  }
+}
