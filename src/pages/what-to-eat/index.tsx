@@ -94,7 +94,6 @@ export default function WhatToEatPage() {
               className='what-to-eat-hero__campus-action'
               role='button'
               ariaLabel={`切换校区，当前${campus}`}
-              hoverClass='what-to-eat-hero__campus-action--pressed'
               onClick={() => void chooseCampus()}
             >
               切换校区
@@ -111,7 +110,7 @@ export default function WhatToEatPage() {
 
       <Button
         className='what-to-eat-pick'
-        hoverClass='what-to-eat-pick--pressed'
+        hoverClass='none'
         loading={picking}
         disabled={loading || picking}
         onClick={() => void chooseRandom()}
@@ -140,8 +139,6 @@ export default function WhatToEatPage() {
           <View
             className='what-to-eat-text-action'
             role='button'
-            hoverClass='what-to-eat-text-action--pressed'
-            hoverStopPropagation
             onClick={(event) => {
               event.stopPropagation()
               void chooseRandom()
@@ -152,8 +149,6 @@ export default function WhatToEatPage() {
           <View
             className='what-to-eat-text-action'
             role='button'
-            hoverClass='what-to-eat-text-action--pressed'
-            hoverStopPropagation
             onClick={(event) => {
               event.stopPropagation()
               openDetail(randomResult)
@@ -175,7 +170,6 @@ export default function WhatToEatPage() {
         <View
           className='what-to-eat-section-head__action'
           role='button'
-          hoverClass='what-to-eat-section-head__action--pressed'
           onClick={() => void Taro.navigateTo({ url: '/pages/what-to-eat/submit' })}
         >
           补充餐饮
@@ -187,7 +181,7 @@ export default function WhatToEatPage() {
         <View
           className='what-to-eat-state__action'
           role='button'
-          hoverClass='what-to-eat-state__action--pressed'
+          hoverClass='none'
           onClick={() => void refresh()}
         >
           重新加载
@@ -198,7 +192,6 @@ export default function WhatToEatPage() {
         key={item.id}
         className='what-to-eat-card'
         role='button'
-        hoverClass='what-to-eat-card--pressed'
         onClick={() => openDetail(item)}
       >
         {item.image_urls[0]
@@ -219,8 +212,6 @@ export default function WhatToEatPage() {
             className='what-to-eat-card__rating'
             role='button'
             ariaLabel={`${item.name}评分 ${item.rating_average.toFixed(1)} 分，共 ${item.rating_count} 人评`}
-            hoverClass='what-to-eat-card__rating--pressed'
-            hoverStopPropagation
             onClick={(event) => {
               event.stopPropagation()
               openDetail(item, true)
@@ -242,7 +233,7 @@ export default function WhatToEatPage() {
         <View
           className='what-to-eat-state__action'
           role='button'
-          hoverClass='what-to-eat-state__action--pressed'
+          hoverClass='none'
           onClick={() => void Taro.navigateTo({ url: '/pages/what-to-eat/submit' })}
         >
           去补充

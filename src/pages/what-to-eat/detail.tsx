@@ -278,7 +278,6 @@ export default function FoodDetailPage() {
                 className='food-detail-info__rating-row'
                 ariaRole='button'
                 ariaLabel={`点击星星评分，当前${formatRatingValue(item.rating_average)}分`}
-                hoverClass='food-detail-info__rating-row--pressed'
                 onClick={() => openReviewSheet()}
               >
                 <Text className='food-detail-info__rating'>{formatRatingValue(item.rating_average)}</Text>
@@ -334,7 +333,6 @@ export default function FoodDetailPage() {
               className='food-detail-comment-bar__trigger'
               ariaRole='button'
               ariaLabel='打开评价输入'
-              hoverClass='food-detail-comment-bar__trigger--pressed'
               onClick={() => openReviewSheet()}
             >
               <Text>{reviewComment.trim() ? '继续编辑你的评价' : '写下你的真实体验'}</Text>
@@ -350,7 +348,7 @@ export default function FoodDetailPage() {
               <View className='food-detail-review-sheet__footer'>
                 <Button
                   className='food-detail-review-sheet__submit'
-                  hoverClass='food-detail-review-sheet__submit--pressed'
+                  hoverClass='none'
                   loading={reviewSubmitting}
                   disabled={(!ratingScore && !reviewComment.trim()) || reviewSubmitting}
                   onClick={() => void submitReview()}
@@ -403,7 +401,6 @@ export default function FoodDetailPage() {
                     className='food-detail-review-sheet__add-image'
                     ariaRole='button'
                     ariaLabel='添加评价图片'
-                    hoverClass='food-detail-review-sheet__add-image--pressed'
                     onClick={() => void chooseReviewImages()}
                   >
                     <Image src={imageIcon} mode='aspectFit' ariaLabel='添加图片' />

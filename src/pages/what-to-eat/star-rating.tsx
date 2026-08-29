@@ -62,7 +62,6 @@ export default function StarRating({
               className={itemClassName}
               ariaRole={interactive ? 'radio' : undefined}
               ariaLabel={interactive ? `${score} 分${score === displayScore ? '，当前选择' : ''}` : undefined}
-              hoverClass={canChange ? 'star-rating__item--pressed' : 'none'}
               onClick={canChange && onChange ? () => onChange(score) : undefined}
             >
               <Image className='star-rating__icon' src={mutedStarIcon} mode='aspectFit' />

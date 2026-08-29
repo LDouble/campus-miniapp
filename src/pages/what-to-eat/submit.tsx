@@ -249,7 +249,6 @@ export default function SubmitFoodListingPage() {
             className='food-submit-page__campus'
             ariaRole='button'
             ariaLabel={`切换当前校区，当前为${campus}`}
-            hoverClass='food-submit-page__campus--pressed'
             onClick={() => void chooseCampus()}
           >
             <Text>当前校区：{campus}</Text>
@@ -283,7 +282,7 @@ export default function SubmitFoodListingPage() {
               <View className='food-submit-shortcuts__items'>
                 {DEFAULT_FOOD_CATEGORIES.map((item) => {
                   const selected = parseCategories(category).includes(item)
-                  return <View key={item} className={`food-submit-shortcuts__item ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}类别${item}`} hoverClass='food-submit-shortcuts__item--pressed' onClick={() => toggleCategory(item)}>{item}</View>
+                  return <View key={item} className={`food-submit-shortcuts__item ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}类别${item}`} onClick={() => toggleCategory(item)}>{item}</View>
                 })}
               </View>
               {recentCategories.length > 0 && <>
@@ -291,7 +290,7 @@ export default function SubmitFoodListingPage() {
                 <View className='food-submit-shortcuts__items'>
                   {recentCategories.map((item) => {
                     const selected = parseCategories(category).includes(item)
-                    return <View key={item} className={`food-submit-shortcuts__item food-submit-shortcuts__item--recent ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}最近使用类别${item}`} hoverClass='food-submit-shortcuts__item--pressed' onClick={() => toggleCategory(item)}>{item}</View>
+                    return <View key={item} className={`food-submit-shortcuts__item food-submit-shortcuts__item--recent ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}最近使用类别${item}`} onClick={() => toggleCategory(item)}>{item}</View>
                   })}
                 </View>
               </>}
@@ -308,14 +307,14 @@ export default function SubmitFoodListingPage() {
               <Text className='food-submit-shortcuts__label'>常用</Text>
               <View className='food-submit-shortcuts__items'>
                 {defaultLocations.map((item) => (
-                  <View key={item} className='food-submit-shortcuts__item' ariaRole='button' ariaLabel={`选择位置${item}`} hoverClass='food-submit-shortcuts__item--pressed' onClick={() => { setLocation(item); rememberInput({ locations: [item] }) }}>{item}</View>
+                  <View key={item} className='food-submit-shortcuts__item' ariaRole='button' ariaLabel={`选择位置${item}`} onClick={() => { setLocation(item); rememberInput({ locations: [item] }) }}>{item}</View>
                 ))}
               </View>
               {recentLocations.length > 0 && <>
                 <Text className='food-submit-shortcuts__label'>最近使用</Text>
                 <View className='food-submit-shortcuts__items'>
                   {recentLocations.map((item) => (
-                    <View key={item} className='food-submit-shortcuts__item food-submit-shortcuts__item--recent' ariaRole='button' ariaLabel={`选择最近使用的位置${item}`} hoverClass='food-submit-shortcuts__item--pressed' onClick={() => { setLocation(item); rememberInput({ locations: [item] }) }}>{item}</View>
+                    <View key={item} className='food-submit-shortcuts__item food-submit-shortcuts__item--recent' ariaRole='button' ariaLabel={`选择最近使用的位置${item}`} onClick={() => { setLocation(item); rememberInput({ locations: [item] }) }}>{item}</View>
                   ))}
                 </View>
               </>}
@@ -347,7 +346,7 @@ export default function SubmitFoodListingPage() {
               <View className='food-submit-shortcuts__items'>
                 {DEFAULT_FOOD_TAGS.map((item) => {
                   const selected = parseTags(tags).includes(item)
-                  return <View key={item} className={`food-submit-shortcuts__item ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}标签${item}`} hoverClass='food-submit-shortcuts__item--pressed' onClick={() => toggleTag(item)}>{item}</View>
+                  return <View key={item} className={`food-submit-shortcuts__item ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}标签${item}`} onClick={() => toggleTag(item)}>{item}</View>
                 })}
               </View>
               {recentTags.length > 0 && <>
@@ -355,7 +354,7 @@ export default function SubmitFoodListingPage() {
                 <View className='food-submit-shortcuts__items'>
                   {recentTags.map((item) => {
                     const selected = parseTags(tags).includes(item)
-                    return <View key={item} className={`food-submit-shortcuts__item food-submit-shortcuts__item--recent ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}最近使用标签${item}`} hoverClass='food-submit-shortcuts__item--pressed' onClick={() => toggleTag(item)}>{item}</View>
+                    return <View key={item} className={`food-submit-shortcuts__item food-submit-shortcuts__item--recent ${selected ? 'food-submit-shortcuts__item--selected' : ''}`} ariaRole='button' ariaLabel={`${selected ? '取消' : '添加'}最近使用标签${item}`} onClick={() => toggleTag(item)}>{item}</View>
                   })}
                 </View>
               </>}
@@ -379,7 +378,6 @@ export default function SubmitFoodListingPage() {
               className='food-submit-images__picker'
               ariaRole='button'
               ariaLabel='添加餐饮图片'
-              hoverClass='food-submit-images__picker--pressed'
               onClick={() => void chooseImages()}
             >
               <Image className='food-submit-images__picker-icon' src={imageIcon} mode='aspectFit' ariaLabel='添加图片' />
@@ -403,7 +401,7 @@ export default function SubmitFoodListingPage() {
         <View className='food-submit-page__action'>
           <Button
             className='food-submit-page__button'
-            hoverClass='food-submit-page__button--pressed'
+            hoverClass='none'
             loading={saving}
             disabled={saving}
             onClick={save}
