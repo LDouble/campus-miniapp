@@ -57,7 +57,7 @@
       "space-5": { "value": "32", "type": "spacing", "description": "大区块分隔" }
     },
     "borderRadius": {
-      "pill": { "value": "999", "type": "borderRadius", "description": "胶囊组件" },
+      "pill": { "value": "999", "type": "borderRadius", "description": "仅用于短标签、状态徽章、计数和少量单一快捷操作，不用于普通按钮、表单或分段控件" },
       "card-sm": { "value": "12", "type": "borderRadius", "description": "小卡片 / 缩略图" },
       "card": { "value": "16", "type": "borderRadius", "description": "信息流卡片" },
       "card-lg": { "value": "18", "type": "borderRadius", "description": "页面级卡片" },
