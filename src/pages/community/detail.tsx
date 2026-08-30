@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
   useLoad,
   usePullDownRefresh,
@@ -14,6 +14,10 @@ import {
   communityAuthorName,
 } from '../../features/community/author'
 import { consumeCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import {
+  formatCommunityViewCount,
+  reportCommunityPostView,
+} from '../../features/community/post-view'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import { openContentReport } from '../../features/content-report'
 import FavoriteToggle from '../../features/favorites/favorite-toggle'
@@ -54,12 +58,38 @@ export default function CommunityDetailPage() {
   const [loading, setLoading] = useState(true)
   const [deletingPost, setDeletingPost] = useState(false)
   const [error, setError] = useState('')
+  const viewReportAttemptedPostIdsRef = useRef(new Set<number>())
+
+  const mergePost = useCallback((nextPost: CampusCirclePostView) => {
+    setPost((current) => {
+      if (!current || current.id !== nextPost.id) return nextPost
+      return {
+        ...nextPost,
+        view_count: Math.max(current.view_count, nextPost.view_count),
+      }
+    })
+  }, [])
+
+  const reportView = useCallback((id: number) => {
+    if (viewReportAttemptedPostIdsRef.current.has(id)) return
+    viewReportAttemptedPostIdsRef.current.add(id)
+    void reportCommunityPostView(id).then((result) => {
+      if (!result) return
+      setPost((current) => {
+        if (!current || current.id !== id) return current
+        return {
+          ...current,
+          view_count: Math.max(current.view_count, result.view_count),
+        }
+      })
+    })
+  }, [])
 
   const load = async (id: number, commentId = 0) => {
     setLoading(true)
     setError('')
     try {
-      setPost(await lifeServicesRepository.getCampusCirclePost(id))
+      mergePost(await lifeServicesRepository.getCampusCirclePost(id))
       setFocusedCommentId(commentId)
     } catch (loadError) {
       setError(isApiError(loadError) ? loadError.message : '动态加载失败，请稍后重试')
@@ -68,6 +98,11 @@ export default function CommunityDetailPage() {
       Taro.stopPullDownRefresh()
     }
   }
+
+  useEffect(() => {
+    if (!post || post.id !== postId || post.status !== 'approved') return
+    reportView(post.id)
+  }, [post, postId, reportView])
 
   useLoad((options) => {
     const id = Number(options.id)
@@ -83,7 +118,7 @@ export default function CommunityDetailPage() {
       ? consumeCommunityDetailSnapshot(id)
       : null
     if (snapshot) {
-      setPost(snapshot)
+      mergePost(snapshot)
       setFocusedCommentId(normalizedCommentId)
       setError('')
       setLoading(false)
@@ -110,7 +145,7 @@ export default function CommunityDetailPage() {
       const result = post.liked
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
         : await lifeServicesRepository.likeCampusCirclePost(post.id)
-      setPost(result)
+      mergePost(result)
       markLifeHubSectionDirty('community')
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
@@ -226,6 +261,7 @@ export default function CommunityDetailPage() {
                 meta={(
                   <>
                     <Text>{formatDetailDateTime(post.published_at || post.created_at)}</Text>
+                    <Text className='community-detail__view-count'>· {formatCommunityViewCount(post.view_count)} 浏览</Text>
                     {post.status !== 'approved' && (
                       <Text className={`community-detail__review-status community-detail__review-status--${post.status}`}>
                         {formatStatus(post.status)}

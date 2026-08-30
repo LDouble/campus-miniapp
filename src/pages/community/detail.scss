@@ -126,6 +126,12 @@ page {
   background: var(--ousea-danger-50, #fdecec);
 }
 
+.detail-author-header__meta > .community-detail__view-count {
+  padding-left: 0;
+  border-left: 0;
+  color: var(--campus-text-muted, #a6b2c2);
+}
+
 .community-detail__actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

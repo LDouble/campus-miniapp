@@ -1625,6 +1625,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campus-circle/posts/{id}/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 上报一次校园圈帖子详情阅读并按读者和帖子去重 */
+        post: operations["RecordCampusCirclePostView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campus-circle/posts/{id}/withdraw": {
         parameters: {
             query?: never;
@@ -6341,7 +6358,21 @@ export interface components {
             updated_at: string;
             /** Format: uint64 */
             version: number;
+            /**
+             * Format: int64
+             * @description 去重后的帖子详情阅读次数
+             */
+            view_count: number;
             viewer_relation: components["schemas"]["CampusCircleViewerRelation"];
+        };
+        CampusCirclePostViewRecord: {
+            counted: boolean;
+            /** Format: int64 */
+            view_count: number;
+        };
+        CampusCirclePostViewRecordResponseBody: {
+            data: components["schemas"]["CampusCirclePostViewRecord"];
+            request_id: string;
         };
         CampusCircleSectionResponseBody: {
             data: components["schemas"]["CampusCircleSectionView"];
@@ -6471,7 +6502,10 @@ export interface components {
             comment_previews: components["schemas"]["PublicCommentPreview"][];
             contact: string;
             contact_type: string;
-            /** Format: uint64 */
+            /**
+             * Format: uint64
+             * @description 当前用户已加入且行程未结束时可私信的发起人 ID；其他场景为 null
+             */
             contact_user_id: number | null;
             /** Format: date-time */
             created_at: string;
@@ -6779,7 +6813,6 @@ export interface components {
             content: string;
             /** Format: uint64 */
             media_id?: number | null;
-            /** Format: uint64 */
             mention_user_ids?: number[];
             /** Format: uint64 */
             parent_id?: number | null;
@@ -6827,7 +6860,6 @@ export interface components {
             expected_version: number;
             /** Format: uint64 */
             media_id?: number;
-            /** Format: uint64 */
             mention_user_ids?: number[];
             /** @default false */
             remove_image: boolean;
@@ -7012,7 +7044,7 @@ export interface components {
             trace_id: string;
         };
         /** @enum {string} */
-        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback";
+        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
         ContentSecurityReviewPage: {
             items: components["schemas"]["ContentSecurityReviewView"][];
             page: number;
@@ -7716,8 +7748,6 @@ export interface components {
             cancelled_at: string | null;
             /** Format: date-time */
             completed_at: string | null;
-            /** Format: uint64 */
-            contact_user_id: number;
             /** Format: date-time */
             created_at: string;
             currency: string;
@@ -8422,6 +8452,16 @@ export interface components {
             data: components["schemas"]["PrivateMessageView"];
             request_id: string;
         };
+        PrivateMessageSource: {
+            /** Format: uint64 */
+            content_version: number;
+            /** Format: uint64 */
+            resource_id: number;
+            /** @enum {string} */
+            resource_type: "campus_circle_post" | "comment";
+            /** @enum {string} */
+            type: "mention";
+        };
         PrivateMessageUnreadCount: {
             /** Format: uint64 */
             count: number;
@@ -8442,6 +8482,7 @@ export interface components {
             image_state?: components["schemas"]["PrivateMessageImageState"];
             /** Format: uint64 */
             sender_id: number;
+            source?: components["schemas"]["PrivateMessageSource"];
         };
         UpdatePrivateConversationReadInput: {
             /** Format: uint64 */
@@ -8600,6 +8641,11 @@ export interface components {
             cancelled_at: string | null;
             /** Format: date-time */
             completed_at: string | null;
+            /**
+             * Format: uint64
+             * @description 当前订单另一方用户 ID，可用于创建私信会话
+             */
+            contact_user_id: number;
             /** Format: date-time */
             created_at: string;
             currency: string;
@@ -8873,6 +8919,7 @@ export interface components {
             request_id: string;
         };
         FoodListingRatingInput: {
+            image_media_ids?: number[];
             score: number;
         };
         FoodListingRatingResponseBody: {
@@ -9024,6 +9071,7 @@ export interface components {
                 "application/json": components["schemas"]["UserProfileEnvelope"];
             };
         };
+        /** @description Bounded public @ mention candidates */
         MentionCandidatePageResponse: {
             headers: {
                 [name: string]: unknown;
@@ -9518,6 +9566,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CampusCirclePostResponseBody"];
+            };
+        };
+        /** @description 校园圈帖子阅读量上报结果 */
+        CampusCirclePostViewRecordResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCirclePostViewRecordResponseBody"];
             };
         };
         /** @description 校园圈子模块 */
@@ -10549,6 +10606,20 @@ export interface operations {
             200: components["responses"]["UserPageResponse"];
         };
     };
+    CreateUser: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["CreateUser"];
+        responses: {
+            201: components["responses"]["UserResponse"];
+        };
+    };
     SearchMentionCandidates: {
         parameters: {
             query: {
@@ -10562,20 +10633,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["MentionCandidatePageResponse"];
-        };
-    };
-    CreateUser: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: components["requestBodies"]["CreateUser"];
-        responses: {
-            201: components["responses"]["UserResponse"];
+            400: components["responses"]["Error"];
         };
     };
     GetUser: {
@@ -12635,10 +12693,9 @@ export interface operations {
                     /** Format: uint64 */
                     section_id: number;
                     content?: string;
-                    /** Format: uint64 */
-                    mention_user_ids?: number[];
                     image_urls?: string[];
                     media_ids?: number[];
+                    mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
                 };
@@ -12700,10 +12757,9 @@ export interface operations {
                     /** Format: uint64 */
                     section_id: number;
                     content?: string;
-                    /** Format: uint64 */
-                    mention_user_ids?: number[];
                     image_urls?: string[];
                     media_ids?: number[];
+                    mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
                     /** Format: uint64 */
@@ -12769,6 +12825,29 @@ export interface operations {
         responses: {
             200: components["responses"]["CampusCirclePostResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    RecordCampusCirclePostView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reader_token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostViewRecordResponse"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     WithdrawCampusCirclePost: {
@@ -13947,7 +14026,7 @@ export interface operations {
     ListAdminContentSecurityReviews: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback";
+                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
                 suggestion?: "pass" | "review" | "risky";
                 status?: "auto_approved" | "pending_manual" | "manual_approved" | "manual_rejected";
                 page?: number;
