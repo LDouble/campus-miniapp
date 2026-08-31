@@ -40,6 +40,7 @@ declare const wx: WechatThemeRuntime | undefined
 let storedPreference: CampusThemePreference | undefined
 let systemTheme: CampusTheme | undefined
 let themeListenerInstalled = false
+let webviewPreloadStarted = false
 const listeners = new Set<ThemeListener>()
 
 const isCampusTheme = (value: unknown): value is CampusTheme => (
@@ -170,6 +171,15 @@ export const initializeCampusTheme = () => {
     themeListenerInstalled = true
   }
   return theme
+}
+
+export const preloadCampusWebview = () => {
+  if (webviewPreloadStarted || typeof Taro.preloadWebview !== 'function') return
+  webviewPreloadStarted = true
+  void Taro.preloadWebview({}).catch(() => {
+    // 低版本或当前环境不支持时允许后续启动阶段重试，不阻塞主题初始化。
+    webviewPreloadStarted = false
+  })
 }
 
 const persistCampusThemePreference = (preference: CampusThemePreference) => {

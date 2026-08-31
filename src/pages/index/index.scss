@@ -3240,18 +3240,14 @@ page {
   &__grid-icon,
   &__grid-item--blue &__grid-icon,
   &__grid-item--sand &__grid-icon,
-  &__grid-item--purple &__grid-icon,
-  &__grid-item--orange &__grid-icon,
   &__grid-item--cyan &__grid-icon,
-  &__grid-item--mint &__grid-icon,
-  &__grid-item--green &__grid-icon,
   &__grid-item--pink &__grid-icon {
     width: 76rpx;
     height: 76rpx;
     margin-bottom: 8rpx;
-    background: var(--ousea-ocean-50, #f2f7fe);
-    border: 2rpx solid var(--ousea-ocean-100, #e3effe);
-    border-radius: 24rpx;
+    background: #f1f5f8;
+    border: 0;
+    border-radius: 20rpx;
     box-shadow: none;
 
     image {
@@ -3260,14 +3256,16 @@ page {
     }
   }
 
+  // 微信式语义色只用于低饱和承载面；图标形状和文字仍承担主识别，避免彩虹式按钮墙。
+  &__grid-item--blue &__grid-icon { background: var(--campus-icon-surface-blue, #edf4fb); }
+  &__grid-item--cyan &__grid-icon { background: var(--campus-icon-surface-cyan, #edf7f5); }
+  &__grid-item--sand &__grid-icon { background: var(--campus-icon-surface-orange, #fcf5ea); }
+  &__grid-item--pink &__grid-icon { background: var(--campus-icon-surface-pink, #fcefed); }
+
   &__grid-name {
     color: var(--campus-text-body, #45556c);
     font-size: 22rpx;
     font-weight: 500;
-  }
-
-  &__grid-icon image {
-    filter: brightness(0) saturate(100%) invert(43%) sepia(94%) saturate(2378%) hue-rotate(204deg) brightness(97%) contrast(93%);
   }
 
   &__item--pressed {

@@ -103,6 +103,11 @@ import {
 } from '../../features/calendar/repository'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import { useCampusShare } from '../../features/share'
+import {
+  getCampusTheme,
+  subscribeCampusTheme,
+  type CampusTheme,
+} from '../../features/theme-preference'
 import './index.scss'
 
 const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
@@ -129,6 +134,45 @@ const icons = {
   arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
 
+// 首页服务入口使用预着色的 SDR SVG，避免微信 iOS 为 CSS filter 创建原生图像合成层。
+const homeServiceIcons = {
+  light: {
+    academic: require('../../assets/icons/home-service-academic.svg'),
+    calendar: require('../../assets/icons/home-service-calendar.svg'),
+    schedule: require('../../assets/icons/home-service-schedule.svg'),
+    grade: require('../../assets/icons/home-service-grade.svg'),
+    exam: require('../../assets/icons/home-service-exam.svg'),
+    result: require('../../assets/icons/home-service-result.svg'),
+    passRate: require('../../assets/icons/home-service-pass-rate.svg'),
+    materials: require('../../assets/icons/home-service-materials.svg'),
+    shuttle: require('../../assets/icons/home-service-shuttle.svg'),
+    carpool: require('../../assets/icons/home-service-carpool.svg'),
+    community: require('../../assets/icons/home-service-community.svg'),
+    market: require('../../assets/icons/home-service-market.svg'),
+    errands: require('../../assets/icons/home-service-errands.svg'),
+    clubs: require('../../assets/icons/home-service-clubs.svg'),
+    whatToEat: require('../../assets/icons/home-service-what-to-eat.svg'),
+  },
+  dark: {
+    academic: require('../../assets/icons/home-service-academic-dark.svg'),
+    calendar: require('../../assets/icons/home-service-calendar-dark.svg'),
+    schedule: require('../../assets/icons/home-service-schedule-dark.svg'),
+    grade: require('../../assets/icons/home-service-grade-dark.svg'),
+    exam: require('../../assets/icons/home-service-exam-dark.svg'),
+    result: require('../../assets/icons/home-service-result-dark.svg'),
+    passRate: require('../../assets/icons/home-service-pass-rate-dark.svg'),
+    materials: require('../../assets/icons/home-service-materials-dark.svg'),
+    shuttle: require('../../assets/icons/home-service-shuttle-dark.svg'),
+    carpool: require('../../assets/icons/home-service-carpool-dark.svg'),
+    community: require('../../assets/icons/home-service-community-dark.svg'),
+    market: require('../../assets/icons/home-service-market-dark.svg'),
+    errands: require('../../assets/icons/home-service-errands-dark.svg'),
+    clubs: require('../../assets/icons/home-service-clubs-dark.svg'),
+    whatToEat: require('../../assets/icons/home-service-what-to-eat-dark.svg'),
+  },
+}
+type HomeServiceIconKey = keyof typeof homeServiceIcons.light
+
 const homeFeatureFlags = {
   todayTask: false,
 } as const
@@ -140,36 +184,36 @@ const quickServices = [
   {
     key: 'schedule',
     name: '课程表',
-    icon: icons.calendar,
-    tone: 'mint',
+    iconKey: 'schedule' as HomeServiceIconKey,
+    tone: 'blue',
     route: '/pages/academic/schedule/index',
   },
   {
     key: 'grades',
     name: '成绩',
-    icon: icons.grade,
+    iconKey: 'grade' as HomeServiceIconKey,
     tone: 'blue',
     route: '/pages/academic/grades/index',
   },
   {
     key: 'exams',
     name: '考试',
-    icon: icons.exam,
+    iconKey: 'exam' as HomeServiceIconKey,
     tone: 'sand',
     route: '/pages/academic/exams/index',
   },
-  { key: 'result', name: '选课结果', icon: icons.result, tone: 'orange', route: '/pages/academic/selection/index' },
-  { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/academic/statistics/courses' },
-  { key: 'materials', name: '资料', icon: icons.materials, tone: 'green', route: '/pages/materials/index' },
-  { key: 'calendar', name: '校历', icon: icons.calendar, tone: 'pink', route: '/pages/calendar/index' },
-  { key: 'shuttle', name: '校车', icon: icons.shuttle, tone: 'blue', route: '/pages/shuttle/index' },
-  { key: 'community', name: '社区', icon: icons.community, tone: 'purple', tab: '/pages/community/index' },
-  { key: 'market', name: '二手', icon: icons.market, tone: 'orange', module: 'market' },
-  { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
-  { key: 'carpool', name: '找同行', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
-  { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
-  { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
-  { key: 'what-to-eat', name: '今天吃什么', icon: icons.whatToEat, tone: 'blue', route: '/pages/what-to-eat/index' },
+  { key: 'result', name: '选课结果', iconKey: 'result' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/selection/index' },
+  { key: 'pass-rate', name: '通过率', iconKey: 'passRate' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/statistics/courses' },
+  { key: 'materials', name: '资料', iconKey: 'materials' as HomeServiceIconKey, tone: 'cyan', route: '/pages/materials/index' },
+  { key: 'calendar', name: '校历', iconKey: 'calendar' as HomeServiceIconKey, tone: 'pink', route: '/pages/calendar/index' },
+  { key: 'shuttle', name: '校车', iconKey: 'shuttle' as HomeServiceIconKey, tone: 'blue', route: '/pages/shuttle/index' },
+  { key: 'community', name: '社区', iconKey: 'community' as HomeServiceIconKey, tone: 'cyan', tab: '/pages/community/index' },
+  { key: 'market', name: '二手', iconKey: 'market' as HomeServiceIconKey, tone: 'pink', module: 'market' },
+  { key: 'errands', name: '跑腿', iconKey: 'errands' as HomeServiceIconKey, tone: 'sand', module: 'errands' },
+  { key: 'carpool', name: '找同行', iconKey: 'carpool' as HomeServiceIconKey, tone: 'cyan', module: 'carpool' },
+  { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
+  { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
+  { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },
 ]
 
 const migratedHomeServiceKeys = new Set([
@@ -375,6 +419,7 @@ function Index() {
   })
 
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
+  const [campusTheme, setCampusTheme] = useState<CampusTheme>(getCampusTheme)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
@@ -393,6 +438,8 @@ function Index() {
   const [homeCommentReplyTarget, setHomeCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
   const [homeCommentSubmitting, setHomeCommentSubmitting] = useState(false)
   const [openHomeActionKey, setOpenHomeActionKey] = useState<string | null>(null)
+
+  useEffect(() => subscribeCampusTheme((theme) => setCampusTheme(theme)), [])
   const [homeReactions, setHomeReactions] = useState<Record<string, {
     liked: boolean
     likeCount: number
@@ -1129,7 +1176,7 @@ function Index() {
               onClick={() => openQuickService(item)}
             >
               <View className='service-panel__grid-icon'>
-                <Image src={item.icon} mode='aspectFit' />
+                <Image src={homeServiceIcons[campusTheme][item.iconKey]} mode='aspectFit' />
               </View>
               <Text className='service-panel__grid-name'>{item.name}</Text>
             </View>
