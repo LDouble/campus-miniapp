@@ -14,6 +14,7 @@ import {
   courseColorForClass,
   formatCourseTimeRange,
   formatCourseWeeks,
+  resolveHorizontalSwipeDay,
   resolveHorizontalSwipeWeek,
 } from '../src/pages/academic/utils'
 
@@ -243,10 +244,45 @@ assert.equal(
   20,
   '最后一周左滑不应越界',
 )
+assert.deepEqual(
+  resolveHorizontalSwipeDay(3, 4, 20, { x: 240, y: 120 }, { x: 160, y: 124 }),
+  { week: 3, weekday: 5 },
+  '日视图左滑应切换到下一天',
+)
+assert.deepEqual(
+  resolveHorizontalSwipeDay(3, 1, 20, { x: 160, y: 120 }, { x: 240, y: 124 }),
+  { week: 2, weekday: 7 },
+  '周一右滑应切换到上一周周日',
+)
+assert.deepEqual(
+  resolveHorizontalSwipeDay(3, 7, 20, { x: 240, y: 120 }, { x: 160, y: 124 }),
+  { week: 4, weekday: 1 },
+  '周日左滑应切换到下一周周一',
+)
+assert.deepEqual(
+  resolveHorizontalSwipeDay(1, 1, 20, { x: 160, y: 120 }, { x: 240, y: 124 }),
+  { week: 1, weekday: 1 },
+  '首日右滑不应越界',
+)
+assert.deepEqual(
+  resolveHorizontalSwipeDay(20, 7, 20, { x: 240, y: 120 }, { x: 160, y: 124 }),
+  { week: 20, weekday: 7 },
+  '末日左滑不应越界',
+)
+assert.deepEqual(
+  resolveHorizontalSwipeDay(3, 4, 20, { x: 240, y: 120 }, { x: 200, y: 180 }),
+  { week: 3, weekday: 4 },
+  '日视图纵向滑动不应切换日期',
+)
 assert.match(
   schedulePageSource,
   /onTouchStart=\{handleWeekTouchStart\}[\s\S]*?onTouchEnd=\{handleWeekTouchEnd\}/u,
   '周课表网格必须接入左右滑动手势',
+)
+assert.match(
+  schedulePageSource,
+  /className='day-schedule'[\s\S]*?onTouchStart=\{handleDayTouchStart\}[\s\S]*?onTouchEnd=\{handleDayTouchEnd\}/u,
+  '日视图整块内容区必须接入左右滑动手势',
 )
 
 process.stdout.write('academic schedule isolation smoke: ok\n')

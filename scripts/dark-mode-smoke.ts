@@ -18,6 +18,8 @@ const themePreference = read('src/features/theme-preference.ts')
 const weappCompatPlugin = read('config/plugins/weapp-compat.js')
 const profileSource = read('src/pages/profile/index.tsx')
 const shuttleDetailStyle = read('src/pages/shuttle/detail.scss')
+const academicStyle = read('src/pages/academic/index.scss')
+const homeSource = read('src/pages/index/index.tsx')
 const tokens = read('src/styles/_tokens.scss')
 const tabBarSource = read('src/custom-tab-bar/index.js')
 const tabBarTemplate = read('src/custom-tab-bar/index.wxml')
@@ -63,7 +65,17 @@ assert.match(appStyle, /--campus-icon-surface-orange:\s*#3a291a/u)
 assert.match(tokens, /\$color-on-accent:\s*#fff/u)
 assert.doesNotMatch(tokens, /\$color-on-accent:\s*var\(--campus-surface/u)
 assert.doesNotMatch(appStyle, /@media \(prefers-color-scheme: dark\)/u)
-assert.match(appSource, /initializeCampusTheme\(\)/u)
+assert.match(appSource, /const initialCampusTheme = initializeCampusTheme\(\)/u)
+assert.match(appSource, /preloadCampusWebview\(\)/u)
+assert.match(appSource, /useState<CampusTheme>\(initialCampusTheme\)/u)
+assert.ok(
+  appSource.indexOf('const initialCampusTheme = initializeCampusTheme()') < appSource.indexOf('function App('),
+  '主题初始化必须早于 App 生命周期和页面创建',
+)
+assert.ok(
+  appSource.indexOf('useLaunch(() => {') < appSource.indexOf('preloadCampusWebview()'),
+  'WebView 预热必须在 App onLaunch 注册后执行',
+)
 assert.match(appSource, /campus-app-root campus-theme campus-theme--\$\{campusTheme\}/u)
 assert.match(appSource, /useState<CampusTheme>/u)
 assert.match(themePreference, /CAMPUS_THEME_STORAGE_KEY/u)
@@ -72,6 +84,16 @@ assert.match(themePreference, /Taro\.getCurrentPages\(\)/u)
 assert.match(themePreference, /page\.setData\?\.\(\{ __campusTheme: theme \}\)/u)
 assert.doesNotMatch(themePreference, /document\.body/u)
 assert.match(weappCompatPlugin, /injectCampusThemeIntoPageRoots/u)
+assert.match(weappCompatPlugin, /resolveThemeBackgroundColors/u)
+assert.match(weappCompatPlugin, /assets\['theme\.json'\]/u)
+assert.match(weappCompatPlugin, /createThemePageMeta/u)
+assert.match(weappCompatPlugin, /<page-meta/u)
+assert.match(weappCompatPlugin, /page-style/u)
+assert.match(weappCompatPlugin, /background-color-top/u)
+assert.match(weappCompatPlugin, /background-color-bottom/u)
+assert.match(weappCompatPlugin, /root-background-color/u)
+assert.match(weappCompatPlugin, /background-text-style/u)
+assert.match(weappCompatPlugin, /nextSource\.startsWith\('<page-meta'\)/u)
 assert.match(weappCompatPlugin, /campus-theme campus-theme--/u)
 assert.match(weappCompatPlugin, /root:root,t:__campusTheme/u)
 assert.match(weappCompatPlugin, /componentConfig\.component === true/u)
@@ -85,9 +107,19 @@ assert.match(themePreference, /Taro\.onThemeChange/u)
 assert.match(themePreference, /setNavigationBarColor/u)
 assert.match(themePreference, /setBackgroundColor/u)
 assert.match(themePreference, /setTabBarStyle/u)
+assert.match(themePreference, /Taro\.preloadWebview\(\{\}\)/u)
+assert.match(themePreference, /webviewPreloadStarted/u)
 assert.match(profileSource, /<Text>深色模式<\/Text>/u)
 assert.match(profileSource, /\{ label: '跟随系统', value: 'system' \}/u)
 assert.match(profileSource, /\{ label: '打开', value: 'dark' \}/u)
+assert.match(profileSource, /const profileMenuIcons = \{/u)
+assert.match(profileSource, /home-service-schedule-dark\.svg/u)
+assert.match(profileSource, /profileMenuIcons\[campusTheme\]\[item\.iconKey\]/u)
+assert.doesNotMatch(
+  read('src/pages/profile/index.scss'),
+  /profile-menu__icon[\s\S]{0,360}filter:/u,
+  '我的服务入口不得依赖 CSS 图像滤镜完成重着色',
+)
 assert.match(profileSource, /\{ label: '关闭', value: 'light' \}/u)
 assert.match(profileSource, /showActionSheetSelection/u)
 assert.match(profileSource, /restartWithCampusThemePreference\(nextPreference\)/u)
@@ -119,15 +151,6 @@ assert.match(darkModeStyle, /& \.official-notices-home,/u)
 assert.match(darkModeStyle, /& \.community-panel,/u)
 assert.match(darkModeStyle, /& \.market-panel/u)
 assert.match(darkModeStyle, /& \.service-panel \{/u)
-assert.match(darkModeStyle, /& \.service-panel__grid-icon image/u)
-assert.match(
-  darkModeStyle,
-  /&\.campus\.campus \.service-panel__grid-item--blue \.service-panel__grid-icon image/u,
-)
-assert.match(
-  darkModeStyle,
-  /&\.campus\.campus \.service-panel__grid-item--sand \.service-panel__grid-icon image/u,
-)
 assert.doesNotMatch(
   darkModeStyle,
   /&\.campus\.campus \.service-panel__grid-item--key-[\w-]+ \.service-panel__grid-icon/u,
@@ -290,5 +313,38 @@ assert.ok(contrast('#ffffff', '#0f766e') >= 4.5, '暗色找同行主操作文字
 assert.ok(contrast('#fde68a', '#38331a') >= 4.5, '暗色社区等级徽章对比度不足')
 assert.ok(contrast('#ffffff', '#1d4ed8') >= 4.5, '暗色学业与校车头图文字对比度不足')
 assert.ok(contrast('#93c5fd', '#172554') >= 4.5, '暗色浮层选项文字对比度不足')
+assert.match(
+  academicStyle,
+  /\.campus-theme--dark\s*\{[\s\S]*\.academic-toolbar--schedule \.academic-toolbar__period image\s*\{[\s\S]*filter:/u,
+  '课表学期图标缺少页面最终样式层的暗色适配',
+)
+assert.match(
+  academicStyle,
+  /\.campus-theme--dark\s*\{[\s\S]*\.course-float-card\s*\{[\s\S]*background:\s*var\(--campus-surface,\s*#111827\)/u,
+  '课程详情浮层缺少页面最终样式层的暗色表面',
+)
+assert.match(
+  academicStyle,
+  /\.campus-theme--dark\s*\{[\s\S]*\.course-conflict-card\s*\{[\s\S]*&__name\s*\{\s*color:\s*var\(--campus-text-heading,\s*#f8fafc\)/u,
+  '课程详情卡片缺少页面最终样式层的暗色文字',
+)
+assert.doesNotMatch(
+  darkModeStyle,
+  /service-panel__grid-icon image\s*\{[\s\S]{0,240}filter:/u,
+  '首页服务入口不得在暗色模式下使用 CSS 图像滤镜',
+)
+assert.doesNotMatch(
+  read('src/pages/index/index.scss'),
+  /&__grid-icon image\s*\{[\s\S]{0,240}filter:/u,
+  '首页服务入口不得在浅色模式下使用 CSS 图像滤镜',
+)
+assert.match(homeSource, /const homeServiceIcons = \{/u)
+assert.match(homeSource, /home-service-schedule\.svg/u)
+assert.match(homeSource, /home-service-calendar-dark\.svg/u)
+assert.match(homeSource, /homeServiceIcons\[campusTheme\]\[item\.iconKey\]/u)
+assert.match(read('src/pages/index/index.scss'), /--campus-icon-surface-blue/u)
+assert.match(read('src/pages/index/index.scss'), /--campus-icon-surface-cyan/u)
+assert.match(read('src/pages/index/index.scss'), /--campus-icon-surface-orange/u)
+assert.match(read('src/pages/index/index.scss'), /--campus-icon-surface-pink/u)
 
 console.log('dark mode smoke: ok')

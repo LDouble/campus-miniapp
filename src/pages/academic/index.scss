@@ -3697,3 +3697,100 @@ page {
   .academic-toolbar--simple .academic-toolbar__period,
   .period-options__item { transition: none; }
 }
+
+/*
+ * 本页的 Ousea 浅色视觉规则位于全局 dark-mode 之后加载。
+ * 暗色例外必须在页面最终样式层收口，避免同优先级的浅色回退值覆盖主题语义令牌。
+ */
+.campus-theme--dark {
+  .academic-toolbar--schedule .academic-toolbar__period image {
+    filter: brightness(0) saturate(100%) invert(72%) sepia(31%) saturate(1127%) hue-rotate(182deg) brightness(101%) contrast(98%);
+  }
+
+  .course-float-card {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+    box-shadow: var(--campus-shadow-sheet, 0 -8rpx 32rpx rgba(0, 0, 0, .32));
+
+    &__handle { background: var(--campus-border-strong, #2f4c73); }
+
+    &__close {
+      color: var(--campus-primary-strong, #93c5fd);
+      background: var(--campus-surface-primary, #172554);
+      border-color: var(--campus-border-strong, #2f4c73);
+    }
+
+    &__title { color: var(--campus-text-heading, #f8fafc); }
+    &__copy { color: var(--campus-text-muted, #8494aa); }
+  }
+
+  .course-switcher__item {
+    color: var(--campus-text-secondary, #aab8ca);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+
+    text:last-child { color: var(--campus-text-muted, #8494aa); }
+
+    &--active {
+      color: var(--campus-primary-strong, #93c5fd);
+      background: var(--campus-surface-primary, #172554);
+      border-color: var(--campus-border-strong, #2f4c73);
+
+      text:last-child { color: var(--campus-text-secondary, #aab8ca); }
+    }
+  }
+
+  .course-conflict-card {
+    color: var(--campus-text-body, #d7e0ec);
+    background: var(--campus-surface-subtle, #172033);
+    border-color: var(--campus-border, #243244);
+    box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(0, 0, 0, .24));
+
+    &__name { color: var(--campus-text-heading, #f8fafc); }
+
+    &__tag {
+      color: var(--campus-primary-strong, #93c5fd);
+      background: var(--campus-surface-primary, #172554);
+      border-color: var(--campus-border-strong, #2f4c73);
+    }
+
+    &__details text:first-child { color: var(--campus-text-secondary, #aab8ca); }
+    &__details text:last-child { color: var(--campus-text-body, #d7e0ec); }
+
+    &__note {
+      color: var(--campus-text-body, #d7e0ec);
+      background: var(--campus-surface, #111827);
+      border-color: var(--campus-border-strong, #2f4c73);
+    }
+
+    &__note-label {
+      color: var(--campus-primary-strong, #93c5fd);
+      background: var(--campus-surface-primary, #172554);
+    }
+
+    &__note-copy { color: var(--campus-text-body, #d7e0ec); }
+
+    &__actions > view {
+      color: var(--campus-primary-strong, #93c5fd);
+      background: var(--campus-surface, #111827);
+      border-color: var(--campus-border, #243244);
+    }
+
+    &__actions > view:first-child {
+      color: var(--campus-danger, #fb7185);
+      background: var(--campus-surface-danger, #3f1725);
+      border-color: var(--campus-surface-danger, #3f1725);
+    }
+  }
+
+  .course-resource-actions--course-card {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+
+    .course-resource-actions__secondary > view {
+      color: var(--campus-primary-strong, #93c5fd);
+      background: var(--campus-surface-subtle, #172033);
+      border-color: var(--campus-border, #243244);
+    }
+  }
+}

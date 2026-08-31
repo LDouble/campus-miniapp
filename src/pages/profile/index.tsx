@@ -43,27 +43,45 @@ import { syncCustomTabBar } from '../../utils/tabbar'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { openPublicProfile } from '../../features/profile/public-profile'
 import {
+  getCampusTheme,
   getCampusThemePreference,
   restartWithCampusThemePreference,
   subscribeCampusTheme,
+  type CampusTheme,
   type CampusThemePreference,
 } from '../../features/theme-preference'
 import './index.scss'
 
 const icons = {
   arrow: require('../../assets/icons/arrow.svg'),
-  schedule: require('../../assets/icons/calendar.svg'),
-  materials: require('../../assets/icons/materials.svg'),
-  published: require('../../assets/icons/community.svg'),
-  accepted: require('../../assets/icons/errands.svg'),
-  orders: require('../../assets/icons/market.svg'),
-  carpool: require('../../assets/icons/shuttle.svg'),
-  favorites: require('../../assets/community/bookmark.svg'),
   identity: require('../../assets/icons/academic.svg'),
   privacy: require('../../assets/icons/study.svg'),
   account: require('../../assets/icons/profile.svg'),
   theme: require('../../assets/icons/theme.svg'),
 }
+
+// 我的服务与首页共享预着色的 SDR 图标，暗色下不再把浅色 SVG 滤成灰白。
+const profileMenuIcons = {
+  light: {
+    schedule: require('../../assets/icons/home-service-schedule.svg'),
+    materials: require('../../assets/icons/home-service-materials.svg'),
+    published: require('../../assets/icons/home-service-community.svg'),
+    accepted: require('../../assets/icons/home-service-errands.svg'),
+    orders: require('../../assets/icons/home-service-market.svg'),
+    carpool: require('../../assets/icons/home-service-carpool.svg'),
+    favorites: require('../../assets/icons/profile-service-favorites.svg'),
+  },
+  dark: {
+    schedule: require('../../assets/icons/home-service-schedule-dark.svg'),
+    materials: require('../../assets/icons/home-service-materials-dark.svg'),
+    published: require('../../assets/icons/home-service-community-dark.svg'),
+    accepted: require('../../assets/icons/home-service-errands-dark.svg'),
+    orders: require('../../assets/icons/home-service-market-dark.svg'),
+    carpool: require('../../assets/icons/home-service-carpool-dark.svg'),
+    favorites: require('../../assets/icons/profile-service-favorites-dark.svg'),
+  },
+}
+type ProfileMenuIconKey = keyof typeof profileMenuIcons.light
 
 const themePreferenceOptions: Array<{
   label: string
@@ -84,43 +102,50 @@ const menus = [
   {
     key: 'schedule',
     name: '课表',
-    icon: icons.schedule,
+    iconKey: 'schedule' as ProfileMenuIconKey,
+    tone: 'blue',
     route: '/pages/academic/schedule/index',
   },
   {
     key: 'materials',
     name: '资料',
-    icon: icons.materials,
+    iconKey: 'materials' as ProfileMenuIconKey,
+    tone: 'cyan',
     route: '/pages/materials/index?view=mine',
   },
   {
     key: 'published',
     name: '发布',
-    icon: icons.published,
+    iconKey: 'published' as ProfileMenuIconKey,
+    tone: 'cyan',
     route: '/pages/my-services/index?section=published',
   },
   {
     key: 'accepted',
     name: '接单',
-    icon: icons.accepted,
+    iconKey: 'accepted' as ProfileMenuIconKey,
+    tone: 'sand',
     route: '/pages/my-services/index?section=errands&relation=accepted',
   },
   {
     key: 'orders',
     name: '订单',
-    icon: icons.orders,
+    iconKey: 'orders' as ProfileMenuIconKey,
+    tone: 'pink',
     route: '/pages/my-services/index?section=orders&relation=all',
   },
   {
     key: 'carpool',
     name: '同行',
-    icon: icons.carpool,
+    iconKey: 'carpool' as ProfileMenuIconKey,
+    tone: 'cyan',
     route: '/pages/my-services/index?section=carpool&relation=all',
   },
   {
     key: 'favorites',
     name: '收藏',
-    icon: icons.favorites,
+    iconKey: 'favorites' as ProfileMenuIconKey,
+    tone: 'blue',
     route: '/pages/favorites/index',
   },
 ] as const
@@ -161,6 +186,7 @@ const avatarModerationNoticeCopy: Record<AvatarModerationNotice, string> = {
 }
 
 export default function ProfilePage() {
+  const [campusTheme, setCampusTheme] = useState<CampusTheme>(getCampusTheme)
   const [themePreference, setThemePreferenceState] = useState<CampusThemePreference>(
     getCampusThemePreference,
   )
@@ -198,7 +224,8 @@ export default function ProfilePage() {
   const isAvatarOperationCurrent = useCallback((operation: AvatarModerationOperation) => (
     profileVisibleRef.current && isAvatarOperationLatest(operation)
   ), [isAvatarOperationLatest])
-  useEffect(() => subscribeCampusTheme((_theme, preference) => {
+  useEffect(() => subscribeCampusTheme((theme, preference) => {
+    setCampusTheme(theme)
     setThemePreferenceState(preference)
   }), [])
   const loadCurrentUser = useCallback(async (
@@ -736,13 +763,13 @@ export default function ProfilePage() {
             {visibleMenus.map((item) => (
               <View
                 key={item.key}
-                className={`profile-menu__item profile-menu__item--${item.key}`}
+                className={`profile-menu__item profile-menu__item--${item.tone}`}
                 ariaRole='button'
                 ariaLabel={item.name}
                 onClick={() => openMenu(item)}
               >
                 <View className='profile-menu__icon'>
-                  <Image src={item.icon} mode='aspectFit' />
+                  <Image src={profileMenuIcons[campusTheme][item.iconKey]} mode='aspectFit' />
                 </View>
                 <Text>{item.name}</Text>
               </View>
