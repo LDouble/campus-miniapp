@@ -34,6 +34,7 @@
     "test:academic-cache-metadata": "ts-node --transpile-only scripts/academic-cache-metadata-smoke.ts",
     "test:academic-statistics": "ts-node --transpile-only scripts/academic-statistics-smoke.ts",
     "test:home-guest": "ts-node --transpile-only scripts/home-guest-smoke.ts",
+    "test:home-notification-checkin": "ts-node --transpile-only scripts/home-notification-checkin-smoke.ts",
     "test:life-hub-refresh": "ts-node --transpile-only scripts/life-hub-refresh-smoke.ts",
     "test:contact-reveal": "ts-node --transpile-only scripts/contact-reveal-smoke.ts",
     "test:publisher-contact-storage": "ts-node --transpile-only scripts/publisher-contact-storage-smoke.ts",
