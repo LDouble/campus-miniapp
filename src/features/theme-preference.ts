@@ -40,7 +40,21 @@ declare const wx: WechatThemeRuntime | undefined
 let storedPreference: CampusThemePreference | undefined
 let systemTheme: CampusTheme | undefined
 let themeListenerInstalled = false
+let webviewPreloadStarted = false
 const listeners = new Set<ThemeListener>()
+
+// 部分真机基础库仍使用回调式 API，调用结果可能是 undefined。
+// 统一吞掉异步/同步失败，避免在任何点击事件中直接读取 undefined.catch。
+const runNativeTask = (task: () => unknown, onFailure?: () => void) => {
+  try {
+    const result = task()
+    if (result && typeof (result as Promise<unknown>).then === 'function') {
+      void Promise.resolve(result).catch(() => onFailure?.())
+    }
+  } catch {
+    onFailure?.()
+  }
+}
 
 const isCampusTheme = (value: unknown): value is CampusTheme => (
   value === 'light' || value === 'dark'
@@ -115,30 +129,30 @@ export const applyCampusThemeToNativeChrome = (theme = getCampusTheme()) => {
   const colors = themeColors[theme]
 
   if (typeof Taro.setNavigationBarColor === 'function') {
-    void Taro.setNavigationBarColor({
+    runNativeTask(() => Taro.setNavigationBarColor({
       frontColor: colors.text,
       backgroundColor: colors.navigation,
-    }).catch(() => undefined)
+    }))
   }
   if (typeof Taro.setBackgroundColor === 'function') {
-    void Taro.setBackgroundColor({
+    runNativeTask(() => Taro.setBackgroundColor({
       backgroundColor: colors.page,
       backgroundColorTop: colors.page,
       backgroundColorBottom: colors.page,
-    }).catch(() => undefined)
+    }))
   }
   if (typeof Taro.setBackgroundTextStyle === 'function') {
-    void Taro.setBackgroundTextStyle({
+    runNativeTask(() => Taro.setBackgroundTextStyle({
       textStyle: colors.backgroundTextStyle,
-    }).catch(() => undefined)
+    }))
   }
   if (typeof Taro.setTabBarStyle === 'function') {
-    void Taro.setTabBarStyle({
+    runNativeTask(() => Taro.setTabBarStyle({
       color: colors.tabText,
       selectedColor: colors.tabSelected,
       backgroundColor: colors.navigation,
       borderStyle: colors.tabBorder,
-    }).catch(() => undefined)
+    }))
   }
 }
 
@@ -170,6 +184,15 @@ export const initializeCampusTheme = () => {
     themeListenerInstalled = true
   }
   return theme
+}
+
+export const preloadCampusWebview = () => {
+  if (webviewPreloadStarted || typeof Taro.preloadWebview !== 'function') return
+  webviewPreloadStarted = true
+  runNativeTask(() => Taro.preloadWebview({}), () => {
+    // 低版本或当前环境不支持时允许后续启动阶段重试，不阻塞主题初始化。
+    webviewPreloadStarted = false
+  })
 }
 
 const persistCampusThemePreference = (preference: CampusThemePreference) => {

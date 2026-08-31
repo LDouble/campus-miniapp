@@ -14,9 +14,41 @@ const removeUnsupportedScrollViewPadding = (assets) => {
   assets['base.wxml'] = new sources.RawSource(nextSource)
 }
 
+const resolveThemeBackgroundColors = (assets) => {
+  const fallback = { light: '#f4f7fb', dark: '#0b1220' }
+  const themeAsset = assets['theme.json']
+  if (!themeAsset) return fallback
+
+  try {
+    const theme = JSON.parse(String(themeAsset.source()))
+    const light = theme.light?.backgroundColor
+    const dark = theme.dark?.backgroundColor
+    if (typeof light !== 'string' || typeof dark !== 'string') return fallback
+    return { light, dark }
+  } catch {
+    return fallback
+  }
+}
+
+const createThemePageMeta = ({ light, dark }) => {
+  const background = `{{__campusTheme==='dark'?'${dark}':'${light}'}}`
+  const backgroundTextStyle = "{{__campusTheme==='dark'?'light':'dark'}}"
+  return [
+    '<page-meta',
+    ` page-style="background-color:${background};"`,
+    ` background-color="${background}"`,
+    ` background-color-top="${background}"`,
+    ` background-color-bottom="${background}"`,
+    ` root-background-color="${background}"`,
+    ` background-text-style="${backgroundTextStyle}"`,
+    ' />',
+  ].join('')
+}
+
 const injectCampusThemeIntoPageRoots = (assets) => {
   const baseTemplate = assets['base.wxml']
   if (!baseTemplate) return
+  const themeBackgroundColors = resolveThemeBackgroundColors(assets)
 
   const baseSource = String(baseTemplate.source())
   const themedClass = "{{c===1&&t?'campus-theme campus-theme--'+t+' ':''}}{{i.cl}}"
@@ -56,10 +88,13 @@ const injectCampusThemeIntoPageRoots = (assets) => {
     }
 
     const source = String(asset.source())
-    const nextSource = source.replace(
+    let nextSource = source.replace(
       'data="{{root:root}}"',
       'data="{{root:root,t:__campusTheme}}"',
     )
+    if (!nextSource.startsWith('<page-meta')) {
+      nextSource = `${createThemePageMeta(themeBackgroundColors)}${nextSource}`
+    }
     if (nextSource === source) continue
 
     assets[assetPath] = new sources.RawSource(nextSource)

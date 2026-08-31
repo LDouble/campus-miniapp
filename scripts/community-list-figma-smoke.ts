@@ -187,7 +187,8 @@ assert.doesNotMatch(
   feedStyles,
   /\.community-post__comment-preview--reply\s*\{[\s\S]*?(?:padding-left|margin-left):/u,
 )
-assert.match(feedStyles, /\.community-post__comment-preview-content\.sticker-content \{[\s\S]*?display:\s*inline;/u)
+assert.match(feedStyles, /\.community-post__comment-preview \.community-post__comment-preview-content \{[\s\S]*?display:\s*inline;/u)
+assert.match(feedStyles, /\.community-post__comment-preview \.community-post__comment-preview-content \.mention-content__text \{[\s\S]*?display:\s*inline;/u)
 assert.doesNotMatch(feedStyles, /\.community-post__comment-preview-content(?:\.sticker-content)? \{[\s\S]*?-webkit-line-clamp:/u)
 assert.match(feedStyles, /\.community-post-list \{[\s\S]*?gap:\s*0;/u)
 assert.match(feedStyles, /\.community-post\s*\{[\s\S]*?border-bottom:\s*0;/u)

@@ -690,13 +690,15 @@
   color: var(--campus-text-secondary, #62748e);
 }
 
-.community-post__comment-preview-content.sticker-content {
+.community-post__comment-preview .community-post__comment-preview-content {
   display: inline;
   overflow-wrap: anywhere;
+  white-space: normal;
 }
 
-.community-post__comment-preview-content .sticker-content__text {
+.community-post__comment-preview .community-post__comment-preview-content .mention-content__text {
   display: inline;
+  white-space: normal;
 }
 
 .community-post__comment-preview-sticker {

@@ -1932,6 +1932,109 @@ page { background: var(--campus-page, #f4f7fb); }
   }
 }
 
+/* 首页轻量引导：只在用户具备对应任务时出现，不重复 TabBar 的未读提示。 */
+.home-notification-guide {
+  position: fixed;
+  z-index: 260;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(4, 12, 24, 0.68);
+
+  &__sheet {
+    width: 100%;
+    padding: 18rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+    box-sizing: border-box;
+    background: var(--campus-surface, #fff);
+    border-radius: var(--ousea-radius-sheet, 44rpx) var(--ousea-radius-sheet, 44rpx) 0 0;
+    box-shadow: var(--campus-shadow-sheet, 0 -8rpx 32rpx rgba(0, 0, 0, 0.05));
+  }
+
+  &__handle {
+    width: 64rpx;
+    height: 8rpx;
+    margin: 0 auto 32rpx;
+    background: var(--campus-border, #e8edf4);
+    border-radius: 8rpx;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88rpx;
+    height: 88rpx;
+    margin-bottom: 22rpx;
+    background: var(--campus-surface-primary, #f2f7fe);
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+
+    image {
+      width: 56rpx;
+      height: 56rpx;
+    }
+  }
+
+  &__title,
+  &__description {
+    display: block;
+  }
+
+  &__title {
+    color: var(--campus-text-heading, #1a2333);
+    font-size: 36rpx;
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__description {
+    margin-top: 12rpx;
+    color: var(--campus-text-secondary, #6b7a90);
+    font-size: var(--ousea-font-size-label, 27rpx);
+    line-height: 1.6;
+  }
+
+  &__actions {
+    display: grid;
+    grid-template-columns: 1fr 1.45fr;
+    gap: var(--ousea-space-2, 24rpx);
+    margin-top: 40rpx;
+  }
+
+  &__secondary,
+  &__primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 88rpx;
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    border-radius: 24rpx;
+  }
+
+  &__secondary {
+    color: var(--campus-text-secondary, #6b7a90);
+    background: var(--campus-surface-subtle, #f5f8fc);
+    border: 1rpx solid var(--campus-border, #e8edf4);
+  }
+
+  &__primary {
+    color: #fff;
+    background: var(--campus-primary, #2b7aef);
+    box-shadow: 0 10rpx 22rpx rgba(43, 122, 239, 0.2);
+  }
+
+  &__secondary:active,
+  &__primary:active {
+    opacity: 0.78;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-notification-guide__sheet {
+    transition: none;
+  }
+}
+
 /* Figma 14:726 · Ousea 全校通知卡。此最终覆盖层收敛旧首页样式。 */
 .official-notices-home {
   padding: 0 32rpx 16rpx;
@@ -3023,7 +3126,9 @@ page {
   }
 
   &__header {
+    padding-right: 176rpx;
     margin: 12rpx 0 24rpx;
+    box-sizing: border-box;
   }
 
   &__avatar {
@@ -3044,6 +3149,61 @@ page {
     color: var(--campus-text-secondary, #62748e);
     font-size: 24rpx;
     font-weight: 500;
+  }
+
+  &__week-row {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    min-height: 48rpx;
+  }
+
+  &__week-row &__eyebrow {
+    flex: none;
+    margin-bottom: 0;
+  }
+
+  &__checkin {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 64rpx;
+    padding: 0 6rpx;
+    box-sizing: border-box;
+    color: var(--campus-success, #00bba7);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+
+    image {
+      width: 22rpx;
+      height: 22rpx;
+      margin-right: 5rpx;
+    }
+
+    &:active,
+    &--loading {
+      opacity: 0.68;
+    }
+
+    &--completed {
+      min-height: 48rpx;
+      color: var(--campus-success, #00bba7);
+      font-weight: var(--ousea-font-weight-medium, 500);
+      background: transparent;
+      border-color: transparent;
+      border-radius: 0;
+
+      image {
+        width: 22rpx;
+        height: 22rpx;
+        margin-right: 5rpx;
+      }
+    }
   }
 
   &__school {
@@ -3240,18 +3400,14 @@ page {
   &__grid-icon,
   &__grid-item--blue &__grid-icon,
   &__grid-item--sand &__grid-icon,
-  &__grid-item--purple &__grid-icon,
-  &__grid-item--orange &__grid-icon,
   &__grid-item--cyan &__grid-icon,
-  &__grid-item--mint &__grid-icon,
-  &__grid-item--green &__grid-icon,
   &__grid-item--pink &__grid-icon {
     width: 76rpx;
     height: 76rpx;
     margin-bottom: 8rpx;
-    background: var(--ousea-ocean-50, #f2f7fe);
-    border: 2rpx solid var(--ousea-ocean-100, #e3effe);
-    border-radius: 24rpx;
+    background: #f1f5f8;
+    border: 0;
+    border-radius: 20rpx;
     box-shadow: none;
 
     image {
@@ -3260,14 +3416,16 @@ page {
     }
   }
 
+  // 微信式语义色只用于低饱和承载面；图标形状和文字仍承担主识别，避免彩虹式按钮墙。
+  &__grid-item--blue &__grid-icon { background: var(--campus-icon-surface-blue, #edf4fb); }
+  &__grid-item--cyan &__grid-icon { background: var(--campus-icon-surface-cyan, #edf7f5); }
+  &__grid-item--sand &__grid-icon { background: var(--campus-icon-surface-orange, #fcf5ea); }
+  &__grid-item--pink &__grid-icon { background: var(--campus-icon-surface-pink, #fcefed); }
+
   &__grid-name {
     color: var(--campus-text-body, #45556c);
     font-size: 22rpx;
     font-weight: 500;
-  }
-
-  &__grid-icon image {
-    filter: brightness(0) saturate(100%) invert(43%) sepia(94%) saturate(2378%) hue-rotate(204deg) brightness(97%) contrast(93%);
   }
 
   &__item--pressed {

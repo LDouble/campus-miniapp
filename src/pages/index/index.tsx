@@ -15,7 +15,8 @@ import {
 } from '@tarojs/components'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
-import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
+import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
+import { isApiError } from '../../api/client'
 import { listMyUserLevelTasks } from '../../api/user-levels'
 import {
   deleteMyCalendarReminder,
@@ -55,6 +56,18 @@ import {
 } from '../../features/home/feed-post-adapter'
 import { formatHomeMomentsTime } from '../../features/home/moments'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
+import { noticesRepository } from '../../features/notices/repository'
+import { refreshPrivateMessageUnreadCount } from '../../features/direct-messages/unread'
+import {
+  readHomeNotificationGuideRecord,
+  resolveHomeNotificationTemplateIds,
+  saveHomeNotificationGuideRecord,
+  shouldShowHomeNotificationGuide,
+} from '../../features/home/notification-guide'
+import {
+  getWechatSubscriptionSettings,
+  openWechatSubscriptionSettings,
+} from '../../features/wechat-subscription/request'
 import {
   formatOfficialNoticeCompactDate,
   officialNoticeSourceLabels,
@@ -101,8 +114,13 @@ import {
   getCalendarEducationLevel,
   loadAcademicCalendar,
 } from '../../features/calendar/repository'
-import { syncCustomTabBar } from '../../utils/tabbar'
+import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import { useCampusShare } from '../../features/share'
+import {
+  getCampusTheme,
+  subscribeCampusTheme,
+  type CampusTheme,
+} from '../../features/theme-preference'
 import './index.scss'
 
 const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
@@ -123,11 +141,51 @@ const icons = {
   shuttle: require('../../assets/icons/shuttle.svg'),
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
+  check: require('../../assets/icons/check-circle.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
   whatToEat: require('../../assets/icons/what-to-eat.svg'),
   campaign: require('../../assets/icons/campaign.svg'),
   arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
+
+// 首页服务入口使用预着色的 SDR SVG，避免微信 iOS 为 CSS filter 创建原生图像合成层。
+const homeServiceIcons = {
+  light: {
+    academic: require('../../assets/icons/home-service-academic.svg'),
+    calendar: require('../../assets/icons/home-service-calendar.svg'),
+    schedule: require('../../assets/icons/home-service-schedule.svg'),
+    grade: require('../../assets/icons/home-service-grade.svg'),
+    exam: require('../../assets/icons/home-service-exam.svg'),
+    result: require('../../assets/icons/home-service-result.svg'),
+    passRate: require('../../assets/icons/home-service-pass-rate.svg'),
+    materials: require('../../assets/icons/home-service-materials.svg'),
+    shuttle: require('../../assets/icons/home-service-shuttle.svg'),
+    carpool: require('../../assets/icons/home-service-carpool.svg'),
+    community: require('../../assets/icons/home-service-community.svg'),
+    market: require('../../assets/icons/home-service-market.svg'),
+    errands: require('../../assets/icons/home-service-errands.svg'),
+    clubs: require('../../assets/icons/home-service-clubs.svg'),
+    whatToEat: require('../../assets/icons/home-service-what-to-eat.svg'),
+  },
+  dark: {
+    academic: require('../../assets/icons/home-service-academic-dark.svg'),
+    calendar: require('../../assets/icons/home-service-calendar-dark.svg'),
+    schedule: require('../../assets/icons/home-service-schedule-dark.svg'),
+    grade: require('../../assets/icons/home-service-grade-dark.svg'),
+    exam: require('../../assets/icons/home-service-exam-dark.svg'),
+    result: require('../../assets/icons/home-service-result-dark.svg'),
+    passRate: require('../../assets/icons/home-service-pass-rate-dark.svg'),
+    materials: require('../../assets/icons/home-service-materials-dark.svg'),
+    shuttle: require('../../assets/icons/home-service-shuttle-dark.svg'),
+    carpool: require('../../assets/icons/home-service-carpool-dark.svg'),
+    community: require('../../assets/icons/home-service-community-dark.svg'),
+    market: require('../../assets/icons/home-service-market-dark.svg'),
+    errands: require('../../assets/icons/home-service-errands-dark.svg'),
+    clubs: require('../../assets/icons/home-service-clubs-dark.svg'),
+    whatToEat: require('../../assets/icons/home-service-what-to-eat-dark.svg'),
+  },
+}
+type HomeServiceIconKey = keyof typeof homeServiceIcons.light
 
 const homeFeatureFlags = {
   todayTask: false,
@@ -140,36 +198,36 @@ const quickServices = [
   {
     key: 'schedule',
     name: '课程表',
-    icon: icons.calendar,
-    tone: 'mint',
+    iconKey: 'schedule' as HomeServiceIconKey,
+    tone: 'blue',
     route: '/pages/academic/schedule/index',
   },
   {
     key: 'grades',
     name: '成绩',
-    icon: icons.grade,
+    iconKey: 'grade' as HomeServiceIconKey,
     tone: 'blue',
     route: '/pages/academic/grades/index',
   },
   {
     key: 'exams',
     name: '考试',
-    icon: icons.exam,
+    iconKey: 'exam' as HomeServiceIconKey,
     tone: 'sand',
     route: '/pages/academic/exams/index',
   },
-  { key: 'result', name: '选课结果', icon: icons.result, tone: 'orange', route: '/pages/academic/selection/index' },
-  { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/academic/statistics/courses' },
-  { key: 'materials', name: '资料', icon: icons.materials, tone: 'green', route: '/pages/materials/index' },
-  { key: 'calendar', name: '校历', icon: icons.calendar, tone: 'pink', route: '/pages/calendar/index' },
-  { key: 'shuttle', name: '校车', icon: icons.shuttle, tone: 'blue', route: '/pages/shuttle/index' },
-  { key: 'community', name: '社区', icon: icons.community, tone: 'purple', tab: '/pages/community/index' },
-  { key: 'market', name: '二手', icon: icons.market, tone: 'orange', module: 'market' },
-  { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
-  { key: 'carpool', name: '找同行', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
-  { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
-  { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
-  { key: 'what-to-eat', name: '今天吃什么', icon: icons.whatToEat, tone: 'blue', route: '/pages/what-to-eat/index' },
+  { key: 'result', name: '选课结果', iconKey: 'result' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/selection/index' },
+  { key: 'pass-rate', name: '通过率', iconKey: 'passRate' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/statistics/courses' },
+  { key: 'materials', name: '资料', iconKey: 'materials' as HomeServiceIconKey, tone: 'cyan', route: '/pages/materials/index' },
+  { key: 'calendar', name: '校历', iconKey: 'calendar' as HomeServiceIconKey, tone: 'pink', route: '/pages/calendar/index' },
+  { key: 'shuttle', name: '校车', iconKey: 'shuttle' as HomeServiceIconKey, tone: 'blue', route: '/pages/shuttle/index' },
+  { key: 'community', name: '社区', iconKey: 'community' as HomeServiceIconKey, tone: 'cyan', tab: '/pages/community/index' },
+  { key: 'market', name: '二手', iconKey: 'market' as HomeServiceIconKey, tone: 'pink', module: 'market' },
+  { key: 'errands', name: '跑腿', iconKey: 'errands' as HomeServiceIconKey, tone: 'sand', module: 'errands' },
+  { key: 'carpool', name: '找同行', iconKey: 'carpool' as HomeServiceIconKey, tone: 'cyan', module: 'carpool' },
+  { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
+  { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
+  { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },
 ]
 
 const migratedHomeServiceKeys = new Set([
@@ -375,6 +433,7 @@ function Index() {
   })
 
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
+  const [campusTheme, setCampusTheme] = useState<CampusTheme>(getCampusTheme)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
@@ -393,6 +452,8 @@ function Index() {
   const [homeCommentReplyTarget, setHomeCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
   const [homeCommentSubmitting, setHomeCommentSubmitting] = useState(false)
   const [openHomeActionKey, setOpenHomeActionKey] = useState<string | null>(null)
+
+  useEffect(() => subscribeCampusTheme((theme) => setCampusTheme(theme)), [])
   const [homeReactions, setHomeReactions] = useState<Record<string, {
     liked: boolean
     likeCount: number
@@ -403,6 +464,9 @@ function Index() {
   const [calendar, setCalendar] = useState<Awaited<ReturnType<typeof loadAcademicCalendar>>['calendar']>(null)
   const [calendarReminders, setCalendarReminders] = useState<CalendarReminderView[]>([])
   const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinStatus | null>(null)
+  const [homeCheckinSubmitting, setHomeCheckinSubmitting] = useState(false)
+  const [showNotificationGuide, setShowNotificationGuide] = useState(false)
+  const [notificationGuideUserId, setNotificationGuideUserId] = useState(0)
   const [userLevelTasks, setUserLevelTasks] = useState<UserLevelTask[]>([])
   const [homeFeedLoading, setHomeFeedLoading] = useState(true)
   const [homeFeedError, setHomeFeedError] = useState(false)
@@ -441,6 +505,9 @@ function Index() {
     setHomeFeedLoadMoreError(false)
     setHomeFeedRefreshing(true)
     const latestRuntimeConfig = await loadMiniappRuntimeConfig()
+    const notificationTemplateIds = resolveHomeNotificationTemplateIds(
+      latestRuntimeConfig.subscription_templates,
+    )
     const moduleEnabled = (key: MiniappModuleKey) => (
       resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
     )
@@ -464,11 +531,24 @@ function Index() {
     const calendarPromise = moduleEnabled('calendar')
       ? loadAcademicCalendar(getCalendarEducationLevel(), { force })
       : Promise.resolve({ calendar: null, source: 'unavailable' as const, updatedAt: 0 })
-    const checkinPromise = homeFeatureFlags.todayTask
-      ? accountPromise.then((account) => (
-        account.ok ? settle(getMyDailyCheckinStatus()) : { ok: false } as Settled<never>
-      ))
-      : Promise.resolve({ ok: false } as Settled<never>)
+    const checkinPromise = accountPromise.then((account) => (
+      account.ok ? settle(getMyDailyCheckinStatus()) : { ok: false } as Settled<never>
+    ))
+    const unreadPromise = accountPromise.then(async (account) => {
+      if (!account.ok) return { notice: 0, private: 0, userId: 0 }
+      const [notice, privateMessage] = await Promise.all([
+        settle(noticesRepository.unreadCount()),
+        settle(refreshPrivateMessageUnreadCount(true)),
+      ])
+      return {
+        notice: notice.ok ? Number(notice.value.count) || 0 : 0,
+        private: privateMessage.ok ? Number(privateMessage.value) || 0 : 0,
+        userId: account.value.user.id,
+      }
+    })
+    const subscriptionSettingsPromise = accountPromise.then((account) => (
+      account.ok ? getWechatSubscriptionSettings(notificationTemplateIds) : { enabled: false, mainSwitchOff: false }
+    ))
     const tasksPromise = homeFeatureFlags.todayTask
       ? accountPromise.then((account) => (
         account.ok ? settle(listMyUserLevelTasks()) : { ok: false } as Settled<never>
@@ -486,6 +566,8 @@ function Index() {
       latestCheckin,
       latestTasks,
       latestReminders,
+      latestUnread,
+      subscriptionSettings,
     ] = await Promise.all([
       accountPromise,
       homeFeedPromise,
@@ -495,6 +577,8 @@ function Index() {
       checkinPromise,
       tasksPromise,
       remindersPromise,
+      unreadPromise,
+      subscriptionSettingsPromise,
     ])
 
     const selectedCampus = getSelectedCampus(latestRuntimeConfig)
@@ -534,6 +618,16 @@ function Index() {
     setDailyCheckin(latestCheckin.ok ? latestCheckin.value : null)
     setUserLevelTasks(latestTasks.ok ? latestTasks.value.items : [])
     setCalendarReminders(latestReminders.ok ? latestReminders.value.items : [])
+    const shouldShowGuide = !subscriptionSettings.enabled && shouldShowHomeNotificationGuide({
+      userId: latestUnread.userId,
+      unreadCount: latestUnread.notice + latestUnread.private,
+      templateIds: notificationTemplateIds,
+      record: readHomeNotificationGuideRecord(latestUnread.userId),
+    })
+    if (shouldShowGuide) saveHomeNotificationGuideRecord(latestUnread.userId)
+    setNotificationGuideUserId(latestUnread.userId)
+    setCustomTabBarHidden(shouldShowGuide)
+    setShowNotificationGuide(shouldShowGuide)
     if (homeFeedRequestId === homeFeedRequestSequence.current) {
       setHomeFeedLoading(false)
       setHomeFeedRefreshing(false)
@@ -866,6 +960,49 @@ function Index() {
     void Taro.navigateTo({ url: todayTask.route })
   }
 
+  const submitHomeCheckin = async () => {
+    if (!dailyCheckin?.enabled || dailyCheckin.checked_in || homeCheckinSubmitting) return
+    setHomeCheckinSubmitting(true)
+    try {
+      const result = await createDailyCheckin()
+      setDailyCheckin((current) => current ? {
+        ...current,
+        checked_in: true,
+        checked_in_at: result.checked_in_at,
+        consecutive_days: result.consecutive_days,
+        server_date: result.checked_in_date,
+        today_reward: result.reward,
+        user_level: result.user_level,
+      } : current)
+      Taro.showToast({
+        title: result.already_checked_in ? '今日已签到' : `签到成功 +${result.reward}经验`,
+        icon: 'none',
+      })
+    } catch (error) {
+      Taro.showToast({
+        title: isApiError(error) ? error.message : '签到失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setHomeCheckinSubmitting(false)
+    }
+  }
+
+  const dismissNotificationGuide = () => {
+    setCustomTabBarHidden(false)
+    setShowNotificationGuide(false)
+  }
+
+  const enableNotificationGuide = async () => {
+    if (!notificationGuideUserId) return
+    // 在原始点击同步链路中调起设置页，统一由微信设置管理总开关与各模板。
+    const openSettings = openWechatSubscriptionSettings()
+    setCustomTabBarHidden(false)
+    setShowNotificationGuide(false)
+    const opened = await openSettings
+    if (!opened) Taro.showToast({ title: '暂时无法打开提醒设置', icon: 'none' })
+  }
+
   const openRuntimeBanner = (banner: RuntimeBanner) => {
     if (banner.action.type === 'miniapp_path' && banner.action.value) {
       Taro.navigateTo({ url: banner.action.value })
@@ -991,7 +1128,29 @@ function Index() {
             <View className='campus__online' />
           </UserAvatar>
           <View className='campus__identity-copy'>
-            <Text className='campus__eyebrow'>{academicCalendarLabel}</Text>
+            <View className='campus__week-row'>
+              <Text className='campus__eyebrow'>{academicCalendarLabel}</Text>
+              {dailyCheckin?.enabled && !dailyCheckin.checked_in && (
+                <View
+                  className={`campus__checkin ${homeCheckinSubmitting ? 'campus__checkin--loading' : ''}`}
+                  ariaRole='button'
+                  ariaLabel={`今日签到，可获得 ${dailyCheckin.today_reward} 经验`}
+                  onClick={() => void submitHomeCheckin()}
+                >
+                  <Image src={icons.check} mode='aspectFit' />
+                  <Text>{homeCheckinSubmitting ? '签到中' : '签到'}</Text>
+                </View>
+              )}
+              {dailyCheckin?.enabled && dailyCheckin.checked_in && (
+                <View
+                  className='campus__checkin campus__checkin--completed'
+                  ariaLabel={`今日已签到，已连续签到 ${dailyCheckin.consecutive_days} 天`}
+                >
+                  <Image src={icons.check} mode='aspectFit' />
+                  <Text>已连签 {dailyCheckin.consecutive_days} 天</Text>
+                </View>
+              )}
+            </View>
             <View
               className='campus__school'
               ariaRole='button'
@@ -1129,7 +1288,7 @@ function Index() {
               onClick={() => openQuickService(item)}
             >
               <View className='service-panel__grid-icon'>
-                <Image src={item.icon} mode='aspectFit' />
+                <Image src={homeServiceIcons[campusTheme][item.iconKey]} mode='aspectFit' />
               </View>
               <Text className='service-panel__grid-name'>{item.name}</Text>
             </View>
@@ -1428,6 +1587,31 @@ function Index() {
           onCommentCreated={(comment) => updateHomeFeedComment(homeCommentItem, comment)}
         />
       ) : null}
+      {showNotificationGuide && (
+        <View className='home-notification-guide' onClick={dismissNotificationGuide}>
+          <View
+            className='home-notification-guide__sheet'
+            ariaRole='dialog'
+            ariaLabel='开启消息提醒'
+            onClick={(event) => event.stopPropagation()}
+          >
+            <View className='home-notification-guide__handle' />
+            <View className='home-notification-guide__icon'>
+              <Image src={require('../../assets/icons/service-notification.svg')} mode='aspectFit' />
+            </View>
+            <Text className='home-notification-guide__title'>别错过校园新消息</Text>
+            <Text className='home-notification-guide__description'>开启提醒后，重要消息会第一时间通知你。</Text>
+            <View className='home-notification-guide__actions'>
+              <View className='home-notification-guide__secondary' ariaRole='button' onClick={dismissNotificationGuide}>
+                <Text>暂不提醒</Text>
+              </View>
+              <View className='home-notification-guide__primary' ariaRole='button' onClick={() => void enableNotificationGuide()}>
+                <Text>开启提醒</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
       </>)}
 
     </View>

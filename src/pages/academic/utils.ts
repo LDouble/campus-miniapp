@@ -167,6 +167,33 @@ export const resolveHorizontalSwipeWeek = (
   return Math.max(1, Math.min(boundedTotalWeeks, nextWeek))
 }
 
+export const resolveHorizontalSwipeDay = (
+  currentWeek: number,
+  currentWeekday: number,
+  totalWeeks: number,
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) => {
+  const deltaX = end.x - start.x
+  const deltaY = end.y - start.y
+  const boundedTotalWeeks = Math.max(1, totalWeeks)
+  const boundedWeek = Math.max(1, Math.min(boundedTotalWeeks, currentWeek))
+  const boundedWeekday = Math.max(1, Math.min(7, currentWeekday))
+
+  if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+    return { week: boundedWeek, weekday: boundedWeekday }
+  }
+
+  const currentDay = (boundedWeek - 1) * 7 + boundedWeekday - 1
+  const targetDay = currentDay + (deltaX < 0 ? 1 : -1)
+  const lastDay = boundedTotalWeeks * 7 - 1
+  const nextDay = Math.max(0, Math.min(lastDay, targetDay))
+  return {
+    week: Math.floor(nextDay / 7) + 1,
+    weekday: nextDay % 7 + 1,
+  }
+}
+
 const localDateOrdinal = (date: Date) => Date.UTC(
   date.getFullYear(),
   date.getMonth(),

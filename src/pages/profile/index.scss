@@ -421,7 +421,7 @@ page {
     }
   }
 
-  // 功能入口统一使用 Ousea 蓝色单色图标，避免业务色同时抢占视觉层级。
+  // 与首页一致：只使用低饱和语义色辅助扫读，不把“我的服务”做成单色灰或高饱和按钮墙。
   &__icon {
     display: flex;
     width: 76rpx;
@@ -429,17 +429,21 @@ page {
     margin-bottom: 8rpx;
     align-items: center;
     justify-content: center;
-    background: var(--ousea-ocean-50, #f2f7fe);
-    border: 2rpx solid var(--ousea-ocean-100, #e3effe);
+    background: var(--campus-icon-surface, #f0f4f8);
+    border: 0;
     border-radius: 24rpx;
     box-shadow: none;
 
     image {
       width: 44rpx;
       height: 44rpx;
-      filter: brightness(0) saturate(100%) invert(43%) sepia(94%) saturate(2378%) hue-rotate(204deg) brightness(97%) contrast(93%);
     }
   }
+
+  &__item--blue &__icon { background: var(--campus-icon-surface-blue, #e3effe); }
+  &__item--cyan &__icon { background: var(--campus-icon-surface-cyan, #e6f9fc); }
+  &__item--sand &__icon { background: var(--campus-icon-surface-orange, #fff3df); }
+  &__item--pink &__icon { background: var(--campus-icon-surface-pink, #ffeef3); }
 }
 
 @media (prefers-reduced-motion: reduce) {

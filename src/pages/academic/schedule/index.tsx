@@ -51,6 +51,7 @@ import {
   getCurrentTeachingWeek,
   getWeekDates,
   isSameDay,
+  resolveHorizontalSwipeDay,
   resolvePeriodId,
   resolveHorizontalSwipeWeek,
   resolveScheduleAnchor,
@@ -273,6 +274,7 @@ export default function SchedulePage() {
   const scheduleRequestRef = useRef(0)
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
   const sectionTimes = Array.from({ length: 12 }, (_, index) => ({
@@ -495,6 +497,37 @@ export default function SchedulePage() {
 
   const handleWeekTouchCancel = () => {
     weekTouchStartRef.current = null
+  }
+
+  const handleDayTouchStart = (event: ITouchEvent) => {
+    const touch = event.touches[0] || event.changedTouches[0]
+    if (!touch) return
+    dayTouchStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+
+  const handleDayTouchEnd = (event: ITouchEvent) => {
+    const start = dayTouchStartRef.current
+    dayTouchStartRef.current = null
+    const touch = event.changedTouches[0] || event.touches[0]
+    if (!start || !touch) return
+
+    const nextDay = resolveHorizontalSwipeDay(
+      preferences.week,
+      preferences.selectedWeekday,
+      schedulePeriod?.weeks || 20,
+      start,
+      { x: touch.clientX, y: touch.clientY },
+    )
+    if (
+      nextDay.week !== preferences.week
+      || nextDay.weekday !== preferences.selectedWeekday
+    ) {
+      updatePreferences({ week: nextDay.week, selectedWeekday: nextDay.weekday })
+    }
+  }
+
+  const handleDayTouchCancel = () => {
+    dayTouchStartRef.current = null
   }
 
   const refreshSchedule = useCallback(async () => {
@@ -947,7 +980,13 @@ export default function SchedulePage() {
   )
 
   const renderDaySchedule = () => (
-    <View className='day-schedule'>
+    <View
+      className='day-schedule'
+      ariaLabel='日视图课程表，左右滑动切换日期'
+      onTouchStart={handleDayTouchStart}
+      onTouchEnd={handleDayTouchEnd}
+      onTouchCancel={handleDayTouchCancel}
+    >
       <ScrollView className='day-strip' scrollX showScrollbar={false}>
         <View className='day-strip__inner'>
           {weekDates.map((date, index) => (
