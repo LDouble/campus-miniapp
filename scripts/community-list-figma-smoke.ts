@@ -37,6 +37,8 @@ assert.match(cardSource, /const onlyStickers = contentParts\.length > 0/u)
 assert.match(cardSource, /readableContent\.trim\(\)\.length <= 20/u)
 assert.match(cardSource, /compactContent \? 'community-post--compact-content' : ''/u)
 assert.match(cardSource, /timeFormatter\?: \(value\?: string \| null\) => string/u)
+assert.match(cardSource, /showViewCount\?: boolean/u)
+assert.match(cardSource, /showViewCount && \([\s\S]*?formatCommunityViewCount\(post\.view_count\)[\s\S]*?浏览/u)
 assert.doesNotMatch(cardSource, /CommunityPostCardMode|isHomeMode|mode='home'/u)
 assert.match(cardSource, /community-post__avatar-button/u)
 assert.match(cardSource, /<UserAvatar[\s\S]*?className='community-post__avatar'[\s\S]*?userId=\{post\.author_deleted \? 0 : post\.author_id\}/u)
@@ -84,7 +86,7 @@ assert.doesNotMatch(
 )
 assert.match(
   cardSource,
-  /className='community-post__meta-copy'>[\s\S]{0,260}?community-post__review-status/u,
+  /className='community-post__meta-copy'>[\s\S]{0,420}?community-post__review-status/u,
 )
 assert.match(cardSource, /community-post__comment-preview/u)
 assert.match(cardSource, /id=\{`community-comment-preview-\$\{comment\.id\}`\}/u)
@@ -112,6 +114,7 @@ for (const [name, source] of [
   ['个人主页', profileSource],
 ] as const) {
   assert.match(source, /<CommunityPostCard/u, `${name}未复用公共帖子卡片`)
+  assert.match(source, /showViewCount/u, `${name}未展示真实浏览量`)
   assert.match(source, /onToggleLike=\{toggleLike\}/u, `${name}未保留真实点赞回调`)
   assert.match(source, /onOpenComments=/u, `${name}未接入评论输入框入口`)
   assert.match(source, /actionsOpen=\{/u, `${name}未接入单一展开状态`)
@@ -148,6 +151,7 @@ assert.match(feedStyles, /\.campus-user-avatar\.campus-user-avatar--circle\.comm
 assert.doesNotMatch(feedStyles, /@media \(max-width:\s*360px\)[\s\S]*?\.community-post__avatar[^}]*?(?:width|height):\s*72rpx;/u)
 assert.match(feedStyles, /\.community-post__author-line > text:first-child \{[\s\S]*?color:\s*var\(--campus-primary-strong,\s*#1d5fd6\);[\s\S]*?font-weight:\s*var\(--ousea-font-weight-regular,\s*400\);[\s\S]*?line-height:\s*42rpx;/u)
 assert.match(feedStyles, /\.community-post__author-line--deleted > text:first-child \{[^}]*color:\s*var\(--campus-text-secondary,\s*#6b7a90\);/u)
+assert.match(feedStyles, /\.community-post__view-count \{|\.community-post__time,[\s\S]*?\.community-post__view-count \{/u)
 assert.match(typographyStyles, /page \.community-post__author-line > text:first-child \{ font-size:\s*30rpx; \}/u)
 assert.match(feedStyles, /\.community-post__content-wrap--clamped \.community-post__content \{[\s\S]*?-webkit-line-clamp:\s*6;/u)
 assert.match(feedStyles, /\.community-post--compact-content \.community-post__content \{[^}]*line-height:\s*1\.45;/u)
@@ -206,6 +210,7 @@ assert.match(darkStyles, /& \.community-post__social \{/u)
 assert.match(darkStyles, /& \.community-post__action-menu \{/u)
 assert.match(darkStyles, /& \.community-post__action-menu::before \{[^}]*background:\s*var\(--ousea-ink-700,/u)
 assert.match(darkStyles, /& \.community-post__author-line--deleted > text:first-child \{[^}]*color:\s*var\(--campus-text-secondary,\s*#aab8ca\);/u)
+assert.match(darkStyles, /& \.community-post__view-count/u)
 assert.match(darkStyles, /& \.community-post__expand \{/u)
 assert.match(darkStyles, /& \.content-image-grid__reviewing--overlay \{[^}]*background:\s*rgba\(26, 35, 51, 0\.45\);/u)
 

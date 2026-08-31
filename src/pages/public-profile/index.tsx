@@ -375,6 +375,7 @@ export default function PublicProfilePage() {
             <CommunityPostCard
               key={post.id}
               post={post}
+              showViewCount
               sectionName='校园社区'
               actionsOpen={openActionPostId === post.id}
               onToggleActions={toggleCommunityActions}

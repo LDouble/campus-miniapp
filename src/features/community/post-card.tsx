@@ -13,6 +13,7 @@ import { parseStickerContent, plainStickerContent } from '../stickers/content'
 import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
+import { formatCommunityViewCount } from './post-view-utils'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -72,6 +73,7 @@ type Props = {
   businessPreview?: { title: string; meta: string }
   trailingAction?: ReactNode
   onReplyComment?: (post: CampusCirclePostView, comment: CommunityPostCommentPreview) => void
+  showViewCount?: boolean
 }
 
 export type CommunityPostCommentPreview = {
@@ -107,6 +109,7 @@ function CommunityPostCard({
   businessPreview,
   trailingAction,
   onReplyComment,
+  showViewCount = false,
 }: Props) {
   const [likePending, setLikePending] = useState(false)
   const authorName = communityAuthorName(post)
@@ -273,6 +276,9 @@ function CommunityPostCard({
         <View className='community-post__meta'>
           <View className='community-post__meta-copy'>
             <Text className='community-post__time'>{publishedAt}</Text>
+            {showViewCount && (
+              <Text className='community-post__view-count'>· {formatCommunityViewCount(post.view_count)} 浏览</Text>
+            )}
             {reviewStatus && (
               <Text className={`community-post__review-status community-post__review-status--${reviewStatus.tone}`}>
                 {reviewStatus.label}

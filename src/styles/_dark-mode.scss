@@ -996,7 +996,8 @@
     background: linear-gradient(90deg, rgba(17, 24, 39, 0), var(--campus-surface, #111827) 28rpx);
   }
 
-  & .community-post__time {
+  & .community-post__time,
+  & .community-post__view-count {
     color: var(--campus-text-muted, #8494aa);
   }
 

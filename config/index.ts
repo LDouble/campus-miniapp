@@ -139,6 +139,11 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
         limit: true,
         publicPath: '/'
       },
+      miniCssExtractPluginOption: {
+        // 各页面按独立依赖图抽取全局组件样式，无法为所有页面建立单一顺序。
+        // 这些样式使用组件级命名空间，顺序不会改变渲染结果，避免输出误导性的顺序告警。
+        ignoreOrder: true,
+      },
       postcss: {
         pxtransform: {
           enable: true,

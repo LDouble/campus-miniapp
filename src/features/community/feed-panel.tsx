@@ -452,6 +452,7 @@ export default function CommunityFeedPanel({
             <CommunityPostCard
               key={post.id}
               post={post}
+              showViewCount
               motionDelay={index < 4 ? index + 1 : undefined}
               sectionName={sectionNameForPost(post, '未知板块')}
               actionsOpen={openActionPostId === post.id}
