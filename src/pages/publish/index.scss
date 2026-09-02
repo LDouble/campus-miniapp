@@ -917,23 +917,18 @@ page {
 
 .publisher-topic-result {
   display: flex;
-  min-height: 108rpx;
-  padding: 16rpx 32rpx;
+  min-height: 100rpx;
+  padding: 0 32rpx;
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
   border-bottom: 2rpx solid token.$color-border;
   transition: opacity token.$motion-press ease, background-color token.$motion-state ease;
 
-  > view {
-    display: flex;
+  &__name {
+    display: block;
     min-width: 0;
     flex: 1;
-    flex-direction: column;
-    gap: 6rpx;
-  }
-
-  > view text:first-child {
     overflow: hidden;
     color: token.$color-text-heading;
     font-size: token.$ousea-font-size-label;
@@ -943,13 +938,30 @@ page {
     white-space: nowrap;
   }
 
-  > view text:last-child {
+  &__meta {
+    margin-left: 24rpx;
+    flex: none;
     color: token.$color-text-muted;
     font-size: token.$ousea-font-size-caption;
     line-height: token.$ousea-line-height-ui;
   }
 
-  > text {
+  &__copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 6rpx;
+  }
+
+  &__hint {
+    display: block;
+    color: token.$color-text-muted;
+    font-size: token.$ousea-font-size-caption;
+    line-height: token.$ousea-line-height-ui;
+  }
+
+  &__action {
     margin-left: 24rpx;
     flex: none;
     color: token.$color-primary-strong;
@@ -959,14 +971,17 @@ page {
   }
 
   &--create {
+    min-height: 108rpx;
+    padding: 16rpx 32rpx;
     background: token.$color-surface-primary;
   }
 
   &--selected {
     background: token.$color-surface-subtle;
 
-    > text {
-      color: token.$color-text-secondary;
+    .publisher-topic-result__name {
+      color: token.$color-primary-strong;
+      font-weight: token.$font-weight-semibold;
     }
   }
 

@@ -1809,11 +1809,11 @@ export default function PublishPage() {
                   ariaLabel={`添加新话题${normalizedTopicKeyword}`}
                   onClick={addCommunityTopicName}
                 >
-                  <View>
-                    <Text>#{normalizedTopicKeyword}</Text>
-                    <Text>创建为新话题</Text>
+                  <View className='publisher-topic-result__copy'>
+                    <Text className='publisher-topic-result__name'>#{normalizedTopicKeyword}</Text>
+                    <Text className='publisher-topic-result__hint'>创建为新话题</Text>
                   </View>
-                  <Text>添加</Text>
+                  <Text className='publisher-topic-result__action'>添加</Text>
                 </View>
               )}
               {!topicSearchLoading && !topicSearchError && filteredTopics.map((item) => {
@@ -1826,11 +1826,8 @@ export default function PublishPage() {
                     ariaLabel={`${selected ? '移除' : '添加'}话题${item.name}`}
                     onClick={() => toggleCommunityTopic(item.id)}
                   >
-                    <View>
-                      <Text>#{item.name}</Text>
-                      <Text>{item.post_count} 条动态</Text>
-                    </View>
-                    <Text>{selected ? '已添加' : '添加'}</Text>
+                    <Text className='publisher-topic-result__name'>#{item.name}</Text>
+                    <Text className='publisher-topic-result__meta'>{item.post_count} 条动态</Text>
                   </View>
                 )
               })}
