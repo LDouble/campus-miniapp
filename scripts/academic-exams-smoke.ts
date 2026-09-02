@@ -2,9 +2,13 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  formatExamCountdown,
+  getExamStatusLabel,
   resolveDefaultPeriodId,
 } from '../src/pages/academic/utils'
-import type { AcademicPeriod } from '../src/pages/academic/types'
+import type { AcademicPeriod, ExamRecord } from '../src/pages/academic/types'
+
+process.env.TZ = 'UTC'
 
 const period = (
   id: string,
@@ -33,6 +37,43 @@ assert.equal(
   resolveDefaultPeriodId([previous, latest]),
   latest.id,
   '没有当前学期时应选择开始日期最近的学期',
+)
+
+const hour = 60 * 60 * 1000
+assert.equal(formatExamCountdown(30 * 60 * 1000), '1 小时后', '不足一小时应向上取整到小时')
+assert.equal(formatExamCountdown(3 * hour), '3 小时后', '不足一天时应显示小时')
+assert.equal(formatExamCountdown(24 * hour), '1 天后', '恰好整天时不应显示 0 小时')
+assert.equal(formatExamCountdown(36 * hour), '1 天 12 小时后', '跨天倒计时应保留剩余小时')
+assert.equal(formatExamCountdown(49 * hour), '2 天 1 小时后', '跨天倒计时应正确计算余数')
+
+const exam: ExamRecord = {
+  id: 'exam-1',
+  periodId: current.id,
+  courseName: '高等数学',
+  startAt: '2026/09/02 12:00',
+  endAt: '2026/09/02 14:00',
+  campus: '崂山校区',
+  location: '教学楼 101',
+  seat: 'A01',
+  phase: '期末',
+  method: '闭卷',
+  materials: '',
+  notice: '',
+}
+assert.equal(
+  getExamStatusLabel(exam, new Date(2026, 8, 1, 0, 0).getTime()),
+  '1 天 12 小时后',
+  '考试卡片应使用小时级倒计时',
+)
+assert.equal(
+  getExamStatusLabel(exam, new Date(2026, 8, 2, 13, 0).getTime()),
+  '进行中',
+  '进行中的考试状态文案应保持不变',
+)
+assert.equal(
+  getExamStatusLabel(exam, new Date(2026, 8, 2, 15, 0).getTime()),
+  '已结束',
+  '已结束的考试状态文案应保持不变',
 )
 
 const examPageSource = readFileSync(

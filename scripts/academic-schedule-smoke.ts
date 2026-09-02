@@ -14,6 +14,7 @@ import {
   courseColorForClass,
   formatCourseTimeRange,
   formatCourseWeeks,
+  getAcademicWeekday,
   resolveHorizontalSwipeDay,
   resolveHorizontalSwipeWeek,
 } from '../src/pages/academic/utils'
@@ -110,6 +111,31 @@ assert.equal(
   formatCourseTimeRange('', '09:40'),
   '',
   '缺少任一端时间时应安全回退',
+)
+assert.equal(
+  getAcademicWeekday(new Date(2026, 8, 7)),
+  1,
+  '周一应映射为课表第 1 天',
+)
+assert.equal(
+  getAcademicWeekday(new Date(2026, 8, 6)),
+  7,
+  '周日应映射为课表第 7 天',
+)
+assert.match(
+  schedulePageSource,
+  /selectedWeekday:\s*getAcademicWeekday\(\)/u,
+  '课表初始化不能恢复本地保存的历史星期',
+)
+assert.match(
+  schedulePageSource,
+  /Taro\.useDidShow\(\(\) => \{[\s\S]*?setPreferences\(\(current\) => current\.selectedWeekday === todayWeekday/u,
+  '课表重新进入时必须重新定位到今天',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /selectedWeekday:\s*1/u,
+  '课表页面的进入和刷新逻辑不应写死为星期一',
 )
 const primaryClassColor = courseColorForClass('class-101')
 const differentClassNumber = ['class-102', 'class-103', 'class-104']
