@@ -26,7 +26,11 @@ export const relativeDeadline = (value?: string | null, now = Date.now()) => {
   if (minutes < 60) return `${minutes} 分钟后截止`
   const hours = Math.ceil(minutes / 60)
   if (hours < 24) return `${hours} 小时后截止`
-  return `${Math.ceil(hours / 24)} 天后截止`
+  const days = Math.floor(hours / 24)
+  const remainingHours = hours % 24
+  return remainingHours
+    ? `${days} 天 ${remainingHours} 小时后截止`
+    : `${days} 天后截止`
 }
 
 const reviewLabels: Record<string, string> = {

@@ -84,6 +84,20 @@ export const getPeriodLabel = (periods: AcademicPeriod[], id: string) => (
   periods.find((period) => period.id === id)?.label || '选择学期'
 )
 
+const periodStartTime = (period: AcademicPeriod) => {
+  const timestamp = parseDate(period.startDate).getTime()
+  return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY
+}
+
+/** 默认优先服务端标记的当前学期，校历没有当前标记时回退到最近开始的学期。 */
+export const resolveDefaultPeriodId = (periods: AcademicPeriod[]) => {
+  const current = periods.find((period) => period.isCurrent)
+  if (current) return current.id
+  return [...periods].sort((left, right) => (
+    periodStartTime(right) - periodStartTime(left)
+  ))[0]?.id || ''
+}
+
 export const resolvePeriodId = (periods: AcademicPeriod[], preferredId: string) => {
   if (periods.some((period) => period.id === preferredId)) return preferredId
   return periods.find((period) => period.isCurrent)?.id || periods[0]?.id || ''
