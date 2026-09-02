@@ -48,6 +48,7 @@ import {
   formatCourseWeeks,
   formatPeriodStartDate,
   formatMonthDay,
+  getAcademicWeekday,
   getCurrentTeachingWeek,
   getWeekDates,
   isSameDay,
@@ -119,7 +120,7 @@ const defaultPreferences: AcademicPreferences = {
   gradePeriodId: DEFAULT_PERIOD_ID,
   examPeriodId: DEFAULT_PERIOD_ID,
   week: 1,
-  selectedWeekday: 1,
+  selectedWeekday: getAcademicWeekday(),
   scheduleView: 'week',
 }
 
@@ -230,11 +231,12 @@ export default function SchedulePage() {
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
   ))
-  const [preferences, setPreferences] = useState<AcademicPreferences>({
+  const [preferences, setPreferences] = useState<AcademicPreferences>(() => ({
     ...defaultPreferences,
     ...academicStorage.getPreferences(defaultPreferences),
     section: 'schedule',
-  })
+    selectedWeekday: getAcademicWeekday(),
+  }))
   const [periods, setPeriods] = useState<AcademicPeriod[]>(
     initialScheduleCache ? initialScheduleCache.periods : [],
   )
@@ -332,17 +334,19 @@ export default function SchedulePage() {
     const applyPeriods = (records: AcademicPeriod[]) => {
       setPeriods(records)
       if (!records.length) setLoading(false)
+      const todayWeekday = getAcademicWeekday()
       setPreferences((current) => {
         const { periodId: schedulePeriodId, week } = resolveScheduleAnchor(records)
         if (
           schedulePeriodId === current.schedulePeriodId
           && week === current.week
+          && todayWeekday === current.selectedWeekday
         ) return current
         return {
           ...current,
           schedulePeriodId,
           week,
-          selectedWeekday: 1,
+          selectedWeekday: todayWeekday,
         }
       })
       setInitialized(true)
@@ -599,7 +603,7 @@ export default function SchedulePage() {
         week: resolvedPeriod && resolvedPeriod.isCurrent
           ? getCurrentTeachingWeek(resolvedPeriod)
           : 1,
-        selectedWeekday: 1,
+        selectedWeekday: getAcademicWeekday(),
       }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
     } catch (error) {
@@ -620,6 +624,10 @@ export default function SchedulePage() {
   }, [academicUserId, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
+    const todayWeekday = getAcademicWeekday()
+    setPreferences((current) => current.selectedWeekday === todayWeekday
+      ? current
+      : { ...current, selectedWeekday: todayWeekday })
     const shouldRefresh = consumeAcademicRefreshAfterVerification(
       Taro,
       '/pages/academic/schedule/index',
@@ -1145,7 +1153,7 @@ export default function SchedulePage() {
                       updatePreferences({
                         schedulePeriodId: period.id,
                         week: period.isCurrent ? getCurrentTeachingWeek(period) : 1,
-                        selectedWeekday: 1,
+                        selectedWeekday: getAcademicWeekday(),
                       })
                       setSheet(null)
                     }}
