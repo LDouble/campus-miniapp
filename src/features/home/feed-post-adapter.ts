@@ -87,6 +87,7 @@ const homeFeedItemToPost = (
   status: 'approved',
   updated_at: item.feed_time,
   version: item.version,
+  view_count: 0,
   viewer_relation: 'other',
 })
 

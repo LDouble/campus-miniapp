@@ -1520,6 +1520,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/topics/{id}/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询校园话题自动关联审计记录 */
+        get: operations["ListAdminCampusCircleTopicAudits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/topics/{id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端将一个校园话题合并到另一个话题 */
+        post: operations["MergeAdminCampusCircleTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campus-circle/home": {
         parameters: {
             query?: never;
@@ -1619,6 +1653,23 @@ export interface paths {
         put?: never;
         /** 重新提交被拒绝的校园圈帖子 */
         post: operations["SubmitCampusCirclePostReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/posts/{id}/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 上报一次校园圈帖子详情阅读并按读者和帖子去重 */
+        post: operations["RecordCampusCirclePostView"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6288,6 +6339,13 @@ export interface components {
         CampusCirclePostSort: "latest" | "curated" | "featured" | "recommended";
         /** @enum {string} */
         CampusCirclePostStatus: "pending_review" | "approved" | "rejected" | "withdrawn";
+        CampusCirclePostTopicView: {
+            /** Format: double */
+            confidence?: number | null;
+            role: components["schemas"]["CampusCircleTopicRole"];
+            source: components["schemas"]["CampusCircleTopicSource"];
+            topic: components["schemas"]["CampusCircleTopicSummary"];
+        };
         CampusCirclePostView: {
             author_avatar_url: string | null;
             author_deleted: boolean;
@@ -6321,6 +6379,7 @@ export interface components {
              * @description 管理端运营置顶截止时间；未置顶或公开视图不返回
              */
             pinned_until?: string | null;
+            primary_topic?: components["schemas"]["CampusCircleTopicSummary"];
             /** Format: date-time */
             published_at: string | null;
             review_reason: string | null;
@@ -6337,11 +6396,26 @@ export interface components {
             sort_order?: number | null;
             status: components["schemas"]["CampusCirclePostStatus"];
             topic?: components["schemas"]["CampusCircleTopicSummary"];
+            topics?: components["schemas"]["CampusCirclePostTopicView"][];
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
             version: number;
+            /**
+             * Format: int64
+             * @description 去重后的帖子详情阅读次数
+             */
+            view_count: number;
             viewer_relation: components["schemas"]["CampusCircleViewerRelation"];
+        };
+        CampusCirclePostViewRecord: {
+            counted: boolean;
+            /** Format: int64 */
+            view_count: number;
+        };
+        CampusCirclePostViewRecordResponseBody: {
+            data: components["schemas"]["CampusCirclePostViewRecord"];
+            request_id: string;
         };
         CampusCircleSectionResponseBody: {
             data: components["schemas"]["CampusCircleSectionView"];
@@ -6378,7 +6452,38 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        CampusCircleTopicAuditPage: {
+            items: components["schemas"]["CampusCircleTopicAuditView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTopicAuditPageResponseBody: {
+            data: components["schemas"]["CampusCircleTopicAuditPage"];
+            request_id: string;
+        };
+        CampusCircleTopicAuditView: {
+            action: string;
+            /** Format: uint64 */
+            actor_id?: number | null;
+            /** Format: double */
+            confidence?: number | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            payload?: string | null;
+            /** Format: uint64 */
+            post_id?: number | null;
+            reason?: string | null;
+            source: components["schemas"]["CampusCircleTopicSource"];
+            /** Format: uint64 */
+            topic_id?: number | null;
+        };
         CampusCircleTopicInput: {
+            aliases?: string[];
+            auto_association_enabled?: boolean;
             cover_url: string;
             description: string;
             /** Format: date-time */
@@ -6388,6 +6493,7 @@ export interface components {
             is_hot: boolean;
             kind: components["schemas"]["CampusCircleTopicKind"];
             name: string;
+            rules?: string[];
             slug: string;
             /** Format: int64 */
             sort_order: number;
@@ -6396,6 +6502,12 @@ export interface components {
         };
         /** @enum {string} */
         CampusCircleTopicKind: "topic" | "campaign";
+        CampusCircleTopicMergeInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            /** Format: uint64 */
+            target_topic_id: number;
+        };
         CampusCircleTopicPage: {
             items: components["schemas"]["CampusCircleTopicView"][];
             page: number;
@@ -6412,6 +6524,10 @@ export interface components {
             request_id: string;
         };
         /** @enum {string} */
+        CampusCircleTopicRole: "primary" | "secondary";
+        /** @enum {string} */
+        CampusCircleTopicSource: "manual" | "hashtag" | "rule" | "ai";
+        /** @enum {string} */
         CampusCircleTopicStatus: "draft" | "active" | "archived";
         CampusCircleTopicSummary: {
             cover_url?: string | null;
@@ -6423,6 +6539,9 @@ export interface components {
             slug: string;
         } | null;
         CampusCircleTopicView: {
+            aliases?: string[];
+            auto_association_enabled?: boolean;
+            auto_created?: boolean;
             cover_url: string | null;
             /** Format: date-time */
             created_at: string;
@@ -6438,6 +6557,7 @@ export interface components {
             name: string;
             /** Format: int64 */
             post_count: number;
+            rules?: string[];
             slug: string;
             /** Format: int64 */
             sort_order: number;
@@ -6471,7 +6591,10 @@ export interface components {
             comment_previews: components["schemas"]["PublicCommentPreview"][];
             contact: string;
             contact_type: string;
-            /** Format: uint64 */
+            /**
+             * Format: uint64
+             * @description 当前用户已加入且行程未结束时可私信的发起人 ID；其他场景为 null
+             */
             contact_user_id: number | null;
             /** Format: date-time */
             created_at: string;
@@ -6779,7 +6902,6 @@ export interface components {
             content: string;
             /** Format: uint64 */
             media_id?: number | null;
-            /** Format: uint64 */
             mention_user_ids?: number[];
             /** Format: uint64 */
             parent_id?: number | null;
@@ -6827,7 +6949,6 @@ export interface components {
             expected_version: number;
             /** Format: uint64 */
             media_id?: number;
-            /** Format: uint64 */
             mention_user_ids?: number[];
             /** @default false */
             remove_image: boolean;
@@ -7012,7 +7133,7 @@ export interface components {
             trace_id: string;
         };
         /** @enum {string} */
-        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback";
+        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
         ContentSecurityReviewPage: {
             items: components["schemas"]["ContentSecurityReviewView"][];
             page: number;
@@ -7716,8 +7837,6 @@ export interface components {
             cancelled_at: string | null;
             /** Format: date-time */
             completed_at: string | null;
-            /** Format: uint64 */
-            contact_user_id: number;
             /** Format: date-time */
             created_at: string;
             currency: string;
@@ -8422,6 +8541,16 @@ export interface components {
             data: components["schemas"]["PrivateMessageView"];
             request_id: string;
         };
+        PrivateMessageSource: {
+            /** Format: uint64 */
+            content_version: number;
+            /** Format: uint64 */
+            resource_id: number;
+            /** @enum {string} */
+            resource_type: "campus_circle_post" | "comment";
+            /** @enum {string} */
+            type: "mention";
+        };
         PrivateMessageUnreadCount: {
             /** Format: uint64 */
             count: number;
@@ -8442,6 +8571,7 @@ export interface components {
             image_state?: components["schemas"]["PrivateMessageImageState"];
             /** Format: uint64 */
             sender_id: number;
+            source?: components["schemas"]["PrivateMessageSource"];
         };
         UpdatePrivateConversationReadInput: {
             /** Format: uint64 */
@@ -8600,6 +8730,11 @@ export interface components {
             cancelled_at: string | null;
             /** Format: date-time */
             completed_at: string | null;
+            /**
+             * Format: uint64
+             * @description 当前订单另一方用户 ID，可用于创建私信会话
+             */
+            contact_user_id: number;
             /** Format: date-time */
             created_at: string;
             currency: string;
@@ -8873,6 +9008,7 @@ export interface components {
             request_id: string;
         };
         FoodListingRatingInput: {
+            image_media_ids?: number[];
             score: number;
         };
         FoodListingRatingResponseBody: {
@@ -9024,6 +9160,7 @@ export interface components {
                 "application/json": components["schemas"]["UserProfileEnvelope"];
             };
         };
+        /** @description Bounded public @ mention candidates */
         MentionCandidatePageResponse: {
             headers: {
                 [name: string]: unknown;
@@ -9520,6 +9657,15 @@ export interface components {
                 "application/json": components["schemas"]["CampusCirclePostResponseBody"];
             };
         };
+        /** @description 校园圈帖子阅读量上报结果 */
+        CampusCirclePostViewRecordResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCirclePostViewRecordResponseBody"];
+            };
+        };
         /** @description 校园圈子模块 */
         CampusCircleSectionResponse: {
             headers: {
@@ -9536,6 +9682,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CampusCircleSectionTreeResponseBody"];
+            };
+        };
+        /** @description 校园圈话题自动关联审计记录 */
+        CampusCircleTopicAuditPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicAuditPageResponseBody"];
             };
         };
         /** @description 校园圈话题分页 */
@@ -10549,6 +10704,20 @@ export interface operations {
             200: components["responses"]["UserPageResponse"];
         };
     };
+    CreateUser: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["CreateUser"];
+        responses: {
+            201: components["responses"]["UserResponse"];
+        };
+    };
     SearchMentionCandidates: {
         parameters: {
             query: {
@@ -10562,20 +10731,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["MentionCandidatePageResponse"];
-        };
-    };
-    CreateUser: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: components["requestBodies"]["CreateUser"];
-        responses: {
-            201: components["responses"]["UserResponse"];
+            400: components["responses"]["Error"];
         };
     };
     GetUser: {
@@ -12588,6 +12744,47 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    ListAdminCampusCircleTopicAudits: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTopicAuditPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    MergeAdminCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicMergeInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     GetCampusCircleHome: {
         parameters: {
             query?: never;
@@ -12635,12 +12832,15 @@ export interface operations {
                     /** Format: uint64 */
                     section_id: number;
                     content?: string;
-                    /** Format: uint64 */
-                    mention_user_ids?: number[];
                     image_urls?: string[];
                     media_ids?: number[];
+                    mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
+                    topic_ids?: number[];
+                    /** Format: uint64 */
+                    primary_topic_id?: number;
+                    topic_names?: string[];
                 };
             };
         };
@@ -12700,12 +12900,15 @@ export interface operations {
                     /** Format: uint64 */
                     section_id: number;
                     content?: string;
-                    /** Format: uint64 */
-                    mention_user_ids?: number[];
                     image_urls?: string[];
                     media_ids?: number[];
+                    mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
+                    topic_ids?: number[];
+                    /** Format: uint64 */
+                    primary_topic_id?: number;
+                    topic_names?: string[];
                     /** Format: uint64 */
                     expected_version: number;
                 };
@@ -12771,6 +12974,29 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    RecordCampusCirclePostView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reader_token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostViewRecordResponse"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     WithdrawCampusCirclePost: {
         parameters: {
             query?: never;
@@ -12811,6 +13037,7 @@ export interface operations {
         parameters: {
             query?: {
                 kind?: "topic" | "campaign";
+                keyword?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -13947,7 +14174,7 @@ export interface operations {
     ListAdminContentSecurityReviews: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback";
+                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
                 suggestion?: "pass" | "review" | "risky";
                 status?: "auto_approved" | "pending_manual" | "manual_approved" | "manual_rejected";
                 page?: number;

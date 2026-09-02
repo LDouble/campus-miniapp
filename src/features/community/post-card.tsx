@@ -1,4 +1,5 @@
 import { memo, useState, type ReactNode } from 'react'
+import Taro from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, PublicCommentPreview } from '../../api/types'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
@@ -13,6 +14,7 @@ import { parseStickerContent, plainStickerContent } from '../stickers/content'
 import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
+import { communityPostTopics, communityTopicUrl } from './topic'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -130,11 +132,12 @@ function CommunityPostCard({
   const readableContent = plainStickerContent(post.content || '')
   const contentParts = parseStickerContent(post.content || '')
   const contentIsClamped = readableContent.length > 90
+  const topicLinks = communityPostTopics(post)
   const operationBadges = [
     post.is_pinned && '置顶',
     post.is_featured && '精选',
     post.is_recommended && '推荐',
-    post.topic?.kind === 'campaign' && '活动',
+    topicLinks.some((topic) => topic.kind === 'campaign') && '活动',
   ].filter(Boolean) as string[]
   const onlyStickers = contentParts.length > 0 && contentParts.every((part) => (
     part.type === 'sticker' || part.text.trim().length === 0
@@ -171,6 +174,10 @@ function CommunityPostCard({
       ? `${post.liked_by_nicknames.join('、')} 等 ${post.like_count} 人`
       : post.liked_by_nicknames.join('、')
     : onToggleLike && post.like_count > 0 ? `${post.like_count} 位同学` : ''
+  const openTopic = (topicId: number) => {
+    const url = communityTopicUrl(topicId)
+    if (url) void Taro.navigateTo({ url })
+  }
 
   return (
     <View
@@ -292,6 +299,20 @@ function CommunityPostCard({
               </View>
             ) : (
               <Text className='community-post__section-label'> · {sectionName}</Text>
+            ))}
+            {topicLinks.map((topic) => (
+              <View
+                key={topic.id}
+                className='community-post__topic-link'
+                ariaRole='button'
+                ariaLabel={`查看话题：${topic.name}`}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  openTopic(topic.id)
+                }}
+              >
+                <Text selectable> · #{topic.name}</Text>
+              </View>
             ))}
           </View>
           <View className='community-post__meta-actions'>
