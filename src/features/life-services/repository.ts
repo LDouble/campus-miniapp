@@ -39,6 +39,8 @@ type CreateCampusPostBody = operations['CreateCampusCirclePost']['requestBody'][
 type UpdateCampusPostBody = operations['UpdateCampusCirclePost']['requestBody']['content']['application/json']
 type CreateCommentBody = operations['CreateComment']['requestBody']['content']['application/json']
 type CreateContentReportBody = operations['CreateContentReport']['requestBody']['content']['application/json']
+type RecordCampusCirclePostViewBody = operations['RecordCampusCirclePostView']['requestBody']['content']['application/json']
+type RecordCampusCirclePostViewResult = operations['RecordCampusCirclePostView']['responses'][200]['content']['application/json']['data']
 
 export type PagingQuery = {
   page?: number
@@ -218,6 +220,15 @@ export const lifeServicesRepository = {
   getCampusCirclePost(id: number) {
     return apiRequest<CampusCirclePostView>({
       path: `/api/v1/campus-circle/posts/${id}`,
+    })
+  },
+
+  recordCampusCirclePostView(id: number, readerToken: string) {
+    const data: RecordCampusCirclePostViewBody = { reader_token: readerToken }
+    return apiRequest<RecordCampusCirclePostViewResult>({
+      path: `/api/v1/campus-circle/posts/${id}/views`,
+      method: 'POST',
+      data,
     })
   },
 

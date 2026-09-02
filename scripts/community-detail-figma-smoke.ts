@@ -48,7 +48,9 @@ assert.match(detailSource, /openType='share'/u)
 assert.match(detailSource, /openContentReport\([\s\S]*?resourceType:\s*'campus_circle_post'/u)
 assert.match(detailSource, /showActionSheetSelection/u, '“更多”必须进入真实操作菜单')
 assert.match(detailSource, /post\.review_reason/u)
-assert.doesNotMatch(detailSource, /(?:关注(?:作者|用户)?|浏览量|地区|所在地区|定位)/u, '详情页不得渲染 Figma 示例关注、浏览量或地区数据')
+assert.match(detailSource, /formatCommunityViewCount\(post\.view_count\)/u, '详情页阅读量必须来自真实帖子字段')
+assert.match(detailSource, /community-detail__view-count/u, '详情页必须展示弱化的真实阅读量元数据')
+assert.doesNotMatch(detailSource, /(?:关注(?:作者|用户)?|地区|所在地区|定位)/u, '详情页不得渲染 Figma 示例关注或地区数据')
 
 // 共享评论区必须支持场景化标题，并完整包含三类头像、真实点赞和统一输入栏。
 assert.match(

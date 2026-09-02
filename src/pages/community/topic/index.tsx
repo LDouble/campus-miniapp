@@ -287,6 +287,7 @@ export default function CommunityTopicPage() {
         <CommunityPostCard
           key={post.id}
           post={post}
+          showViewCount
           sectionName='校园社区'
           actionsOpen={openActionPostId === post.id}
           onToggleActions={toggleActions}
