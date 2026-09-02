@@ -318,6 +318,38 @@ page {
   }
 }
 
+.publisher-composer-topics {
+  display: flex;
+  margin: 16rpx 0 4rpx;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.publisher-composer-topic {
+  display: inline-flex;
+  min-height: 56rpx;
+  padding: 0 14rpx;
+  align-items: center;
+  box-sizing: border-box;
+  color: token.$color-primary-strong;
+  background: token.$color-surface-primary;
+  border: 2rpx solid token.$color-border-strong;
+  border-radius: token.$radius-sm;
+  font-size: token.$ousea-font-size-caption;
+  line-height: token.$ousea-line-height-ui;
+  transition: opacity token.$motion-press ease, background-color token.$motion-state ease;
+
+  text + text {
+    margin-left: 10rpx;
+    color: token.$color-text-secondary;
+    font-size: 28rpx;
+  }
+
+  &--pressed {
+    opacity: 0.62;
+  }
+}
+
 .publisher-picker-row {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
@@ -672,141 +704,6 @@ page {
   margin: 10rpx 0 24rpx;
 }
 
-.publisher-topic-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  .publisher-section__head { margin-bottom: 0; }
-
-  > text {
-    color: token.$color-text-muted;
-    font-size: 22rpx;
-    line-height: 1.4;
-  }
-}
-
-.publisher-community-sections--topics {
-  margin-bottom: 8rpx;
-}
-
-.publisher-topic-selected {
-  display: flex;
-  margin: 12rpx 0 8rpx;
-  flex-wrap: wrap;
-  gap: 10rpx;
-
-  &__item {
-    display: inline-flex;
-    min-height: 48rpx;
-    padding: 0 14rpx;
-    align-items: center;
-    box-sizing: border-box;
-    border: 1rpx solid token.$color-primary;
-    border-radius: token.$radius-sm;
-    color: token.$color-primary-strong;
-    background: token.$color-surface-primary;
-    font-size: 22rpx;
-    line-height: 1.4;
-  }
-
-  &__item text + text {
-    margin-left: 8rpx;
-    color: token.$color-text-muted;
-    font-size: 26rpx;
-  }
-}
-
-.publisher-topic-detected {
-  margin: 10rpx 0 12rpx;
-  padding: 14rpx 16rpx;
-  border-left: 4rpx solid token.$color-primary;
-  border-radius: token.$radius-sm;
-  background: token.$color-surface-primary;
-
-  &__head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-
-    text:first-child {
-      color: token.$color-text-body;
-      font-size: 22rpx;
-      font-weight: token.$font-weight-semibold;
-    }
-
-    text:last-child {
-      color: token.$color-text-muted;
-      font-size: 20rpx;
-    }
-  }
-
-  &__list {
-    display: flex;
-    margin-top: 8rpx;
-    flex-wrap: wrap;
-    gap: 8rpx 16rpx;
-
-    text {
-      color: token.$color-primary-strong;
-      font-size: 23rpx;
-      line-height: 1.45;
-    }
-  }
-}
-
-.publisher-topic-picker-trigger {
-  display: flex;
-  min-height: token.$touch-target-min;
-  padding: 0 16rpx;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-  border: 2rpx dashed token.$color-border-strong;
-  border-radius: token.$radius-sm;
-  color: token.$color-primary-strong;
-  font-size: 24rpx;
-  font-weight: token.$font-weight-medium;
-
-  text:last-child {
-    color: token.$color-text-muted;
-    font-size: 28rpx;
-  }
-}
-
-.publisher-topic-picker {
-  padding: 12rpx 0 2rpx;
-
-  > input {
-    display: block;
-    width: 100%;
-    height: token.$touch-target-min;
-    padding: 0 16rpx;
-    box-sizing: border-box;
-    border: 2rpx solid token.$color-border;
-    border-radius: token.$radius-sm;
-    color: token.$color-text-heading;
-    background: token.$color-surface-subtle;
-    font-size: 24rpx;
-  }
-
-  &__empty {
-    display: block;
-    padding: 16rpx 2rpx 8rpx;
-    color: token.$color-text-muted;
-    font-size: 22rpx;
-    line-height: 1.5;
-  }
-
-  &__loading {
-    display: block;
-    padding: 12rpx 2rpx 0;
-    color: token.$color-text-muted;
-    font-size: 21rpx;
-    line-height: 1.4;
-  }
-}
-
 .publisher-community-section {
   display: flex;
   min-width: 0;
@@ -843,21 +740,239 @@ page {
   }
 }
 
-.publisher-topic-clear {
-  display: inline-flex;
-  min-height: 48rpx;
-  margin: 0 0 8rpx;
-  align-items: center;
-  color: token.$color-primary-strong;
-  font-size: 22rpx;
-  line-height: 1.4;
+.publisher-topic-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
 }
 
-.publisher-topic-help {
-  display: block;
-  color: token.$color-text-muted;
-  font-size: 22rpx;
-  line-height: 1.5;
+.publisher-topic-overlay__mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  pointer-events: auto;
+  background: var(--campus-overlay);
+}
+
+.publisher-topic-sheet {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  max-height: 76vh;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  background: token.$color-surface;
+  border-top: 2rpx solid token.$color-border;
+  border-radius: token.$ousea-radius-sheet token.$ousea-radius-sheet 0 0;
+  box-shadow: token.$shadow-sheet;
+  transition: transform token.$motion-enter token.$motion-ease-out;
+
+  &__header {
+    display: flex;
+    min-height: 104rpx;
+    padding: 0 24rpx 0 32rpx;
+    align-items: center;
+    justify-content: space-between;
+    flex: none;
+    border-bottom: 2rpx solid token.$color-border;
+  }
+
+  &__title {
+    color: token.$color-text-heading;
+    font-size: token.$ousea-font-size-title;
+    font-weight: token.$font-weight-semibold;
+    line-height: token.$ousea-line-height-ui;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+  }
+
+  &__clear,
+  &__done {
+    display: flex;
+    min-width: token.$touch-target-min;
+    min-height: token.$touch-target-min;
+    padding: 0 8rpx;
+    align-items: center;
+    justify-content: center;
+    color: token.$color-text-secondary;
+    font-size: token.$ousea-font-size-label;
+    font-weight: token.$font-weight-medium;
+    line-height: token.$ousea-line-height-ui;
+    transition: opacity token.$motion-press ease;
+
+    &--pressed {
+      opacity: 0.58;
+    }
+  }
+
+  &__done {
+    color: token.$color-primary-strong;
+    font-weight: token.$font-weight-semibold;
+  }
+
+  &__selected {
+    display: flex;
+    min-height: 80rpx;
+    padding: 12rpx 32rpx;
+    align-items: center;
+    gap: 16rpx;
+    flex: none;
+    background: token.$color-surface-subtle;
+    border-bottom: 2rpx solid token.$color-border;
+
+    > text {
+      flex: none;
+      color: token.$color-text-secondary;
+      font-size: token.$ousea-font-size-caption;
+      line-height: token.$ousea-line-height-ui;
+    }
+  }
+
+  &__selected-scroll {
+    min-width: 0;
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  &__selected-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 12rpx;
+  }
+
+  &__selected-item {
+    display: inline-flex;
+    min-height: 52rpx;
+    padding: 0 12rpx;
+    align-items: center;
+    box-sizing: border-box;
+    color: token.$color-primary-strong;
+    background: token.$color-surface;
+    border: 2rpx solid token.$color-border-strong;
+    border-radius: token.$radius-sm;
+    font-size: token.$ousea-font-size-caption;
+    line-height: token.$ousea-line-height-ui;
+
+    text + text {
+      margin-left: 8rpx;
+      color: token.$color-text-secondary;
+      font-size: 26rpx;
+    }
+  }
+
+  &__search {
+    display: flex;
+    min-height: token.$touch-target-min;
+    margin: 20rpx 32rpx 8rpx;
+    padding: 0 20rpx;
+    align-items: center;
+    flex: none;
+    color: token.$color-primary-strong;
+    background: token.$color-surface-subtle;
+    border: 2rpx solid token.$color-border;
+    border-radius: token.$radius-md;
+
+    > text {
+      margin-right: 12rpx;
+      font-size: 34rpx;
+      font-weight: token.$font-weight-semibold;
+      line-height: 1;
+    }
+
+    input {
+      min-width: 0;
+      height: token.$touch-target-min;
+      flex: 1;
+      color: token.$color-text-heading;
+      font-size: token.$ousea-font-size-label;
+      line-height: token.$ousea-line-height-ui;
+    }
+  }
+
+  &__results {
+    min-height: 220rpx;
+    flex: 1;
+  }
+
+  &__state {
+    display: block;
+    padding: 32rpx;
+    color: token.$color-text-muted;
+    font-size: token.$ousea-font-size-caption;
+    line-height: 1.5;
+    text-align: center;
+  }
+}
+
+.publisher-topic-result {
+  display: flex;
+  min-height: 108rpx;
+  padding: 16rpx 32rpx;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  border-bottom: 2rpx solid token.$color-border;
+  transition: opacity token.$motion-press ease, background-color token.$motion-state ease;
+
+  > view {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 6rpx;
+  }
+
+  > view text:first-child {
+    overflow: hidden;
+    color: token.$color-text-heading;
+    font-size: token.$ousea-font-size-label;
+    font-weight: token.$font-weight-medium;
+    line-height: token.$ousea-line-height-ui;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > view text:last-child {
+    color: token.$color-text-muted;
+    font-size: token.$ousea-font-size-caption;
+    line-height: token.$ousea-line-height-ui;
+  }
+
+  > text {
+    margin-left: 24rpx;
+    flex: none;
+    color: token.$color-primary-strong;
+    font-size: token.$ousea-font-size-caption;
+    font-weight: token.$font-weight-medium;
+    line-height: token.$ousea-line-height-ui;
+  }
+
+  &--create {
+    background: token.$color-surface-primary;
+  }
+
+  &--selected {
+    background: token.$color-surface-subtle;
+
+    > text {
+      color: token.$color-text-secondary;
+    }
+  }
+
+  &--pressed {
+    opacity: 0.58;
+  }
 }
 
 .publisher-loading {
@@ -1047,10 +1162,13 @@ page {
   .publisher-input,
   .publisher-contact,
   .publisher-composer-tool,
+  .publisher-composer-topic,
   .publisher-route-suggestion,
   .publisher-community-section,
-  .publisher-topic-selected__item,
-  .publisher-topic-picker-trigger,
+  .publisher-topic-sheet,
+  .publisher-topic-sheet__clear,
+  .publisher-topic-sheet__done,
+  .publisher-topic-result,
   .publisher-market-intents > view,
   .publisher-actions__draft,
   .publisher-actions__submit {

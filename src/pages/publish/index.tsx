@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
-import { Image, Picker, Text, View } from '@tarojs/components'
+import { Image, Picker, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import MediaImageEditor from '../../components/media-image-editor'
 import {
@@ -106,6 +106,8 @@ type PublisherForm = {
   communitySectionId: number
   communityTopicId: number
   communityTopicIds: number[]
+  // 选择器中新增、但尚未随帖子提交到服务端的话题名称。
+  communityTopicNames: string[]
   mentionCandidates: MentionCandidate[]
   version: number
 }
@@ -164,6 +166,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   communitySectionId: 0,
   communityTopicId: 0,
   communityTopicIds: [],
+  communityTopicNames: [],
   mentionCandidates: [],
   version: 0,
 })
@@ -201,6 +204,35 @@ const normalizeTopicIds = (value: unknown) => (
     : []
 )
 
+const normalizeTopicName = (value: unknown) => (
+  typeof value === 'string'
+    ? value.trim().replace(/^#+/u, '').trim()
+    : ''
+)
+
+const topicNameKey = (name: string) => normalizeTopicName(name).toLocaleLowerCase()
+
+const normalizeTopicNames = (value: unknown) => {
+  if (!Array.isArray(value)) return []
+  const result: string[] = []
+  const seen = new Set<string>()
+  for (const item of value) {
+    const name = normalizeTopicName(item)
+    const key = topicNameKey(name)
+    if (!name || seen.has(key)) continue
+    seen.add(key)
+    result.push(name)
+    if (result.length >= 3) break
+  }
+  return result
+}
+
+const isCreatableTopicName = (value: string) => (
+  value.length > 0
+    && value.length <= 64
+    && /^[A-Za-z0-9_\u4e00-\u9fff]+$/u.test(value)
+)
+
 const restoreLegacyDraftContent = (content: unknown, stickerIds: unknown) => {
   const text = typeof content === 'string' ? content : ''
   const legacyIds = Array.isArray(stickerIds)
@@ -216,6 +248,7 @@ const normalizeStoredDraft = (value: StoredPublisherForm): PublisherForm => {
   const { stickerIds, ...storedForm } = value
   const legacyPrimaryTopicId = Number(storedForm.communityTopicId || 0)
   const communityTopicIds = normalizeTopicIds(storedForm.communityTopicIds)
+  const communityTopicNames = normalizeTopicNames(storedForm.communityTopicNames)
   if (communityTopicIds.length === 0 && legacyPrimaryTopicId > 0) {
     communityTopicIds.push(legacyPrimaryTopicId)
   }
@@ -227,6 +260,7 @@ const normalizeStoredDraft = (value: StoredPublisherForm): PublisherForm => {
     ...storedForm,
     communityTopicId: primaryTopicId,
     communityTopicIds,
+    communityTopicNames,
     content: restoreLegacyDraftContent(storedForm.content, stickerIds),
   }
 }
@@ -247,6 +281,7 @@ const storedDrafts = () => {
     const { imageUrls, stickerIds, ...form } = value
     const legacyPrimaryTopicId = Number(form.communityTopicId || 0)
     const communityTopicIds = normalizeTopicIds(form.communityTopicIds)
+    const communityTopicNames = normalizeTopicNames(form.communityTopicNames)
     if (communityTopicIds.length === 0 && legacyPrimaryTopicId > 0) {
       communityTopicIds.push(legacyPrimaryTopicId)
     }
@@ -259,6 +294,7 @@ const storedDrafts = () => {
         ? legacyPrimaryTopicId
         : communityTopicIds[0] || 0,
       communityTopicIds,
+      communityTopicNames,
     } satisfies PublisherForm]
   })) as Partial<Record<string, PublisherForm>>
   if (Object.keys(migrated).length > 0) {
@@ -431,6 +467,7 @@ export default function PublishPage() {
   const [topicPickerOpen, setTopicPickerOpen] = useState(false)
   const [topicKeyword, setTopicKeyword] = useState('')
   const [topicSearchLoading, setTopicSearchLoading] = useState(false)
+  const [topicSearchError, setTopicSearchError] = useState(false)
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
@@ -462,10 +499,28 @@ export default function PublishPage() {
     setForm((draft) => ({ ...draft, [key]: value }))
   }
 
+  const selectedTopicCount = form.communityTopicIds.length + form.communityTopicNames.length
+
+  const changeTopicPickerOpen = (open: boolean) => {
+    if (open) {
+      contentFocusRequestRef.current += 1
+      setContentInputFocused(false)
+      setMentionPickerOpen(false)
+      changeStickerPickerOpen(false)
+      setTopicSearchError(false)
+      setTopicPickerOpen(true)
+      return
+    }
+    setTopicPickerOpen(false)
+    setTopicKeyword('')
+    setTopicSearchError(false)
+    void Taro.hideKeyboard()
+  }
+
   const toggleCommunityTopic = (topicId: number) => {
     if (!Number.isInteger(topicId) || topicId <= 0) return
     const selected = form.communityTopicIds.includes(topicId)
-    if (!selected && form.communityTopicIds.length >= 3) {
+    if (!selected && selectedTopicCount >= 3) {
       Taro.showToast({ title: '最多关联 3 个话题', icon: 'none' })
       return
     }
@@ -488,13 +543,45 @@ export default function PublishPage() {
     })
   }
 
+  const addCommunityTopicName = () => {
+    const name = normalizeTopicName(topicKeyword)
+    if (!isCreatableTopicName(name)) {
+      Taro.showToast({ title: '话题仅支持中文、字母、数字或下划线', icon: 'none' })
+      return
+    }
+    const matched = topics.find((item) => topicNameKey(item.name) === topicNameKey(name))
+    if (matched) {
+      toggleCommunityTopic(matched.id)
+      return
+    }
+    if (form.communityTopicNames.some((item) => topicNameKey(item) === topicNameKey(name))) return
+    if (selectedTopicCount >= 3) {
+      Taro.showToast({ title: '最多关联 3 个话题', icon: 'none' })
+      return
+    }
+    setForm((current) => ({
+      ...current,
+      communityTopicNames: [...current.communityTopicNames, name],
+    }))
+    setTopicKeyword('')
+  }
+
+  const removeCommunityTopicName = (name: string) => {
+    setForm((current) => ({
+      ...current,
+      communityTopicNames: current.communityTopicNames.filter(
+        (item) => topicNameKey(item) !== topicNameKey(name),
+      ),
+    }))
+  }
+
   const clearCommunityTopics = () => {
     setForm((current) => ({
       ...current,
       communityTopicId: 0,
       communityTopicIds: [],
+      communityTopicNames: [],
     }))
-    setTopicPickerOpen(false)
     setTopicKeyword('')
   }
 
@@ -733,12 +820,15 @@ export default function PublishPage() {
       .catch(() => setTopics([]))
   })
 
+  const normalizedTopicKeyword = normalizeTopicName(topicKeyword)
+
   useEffect(() => {
     if (!topicPickerOpen) return
     const requestId = ++topicSearchRequestRef.current
-    const keyword = topicKeyword.trim()
+    const keyword = normalizedTopicKeyword
     const timer = setTimeout(() => {
       setTopicSearchLoading(true)
+      setTopicSearchError(false)
       void lifeServicesRepository.listCampusCircleTopics({
         keyword: keyword || undefined,
         pageSize: 50,
@@ -755,7 +845,9 @@ export default function PublishPage() {
             ]
           })
         })
-        .catch(() => undefined)
+        .catch(() => {
+          if (requestId === topicSearchRequestRef.current) setTopicSearchError(true)
+        })
         .finally(() => {
           if (requestId === topicSearchRequestRef.current) setTopicSearchLoading(false)
         })
@@ -764,7 +856,7 @@ export default function PublishPage() {
       clearTimeout(timer)
       if (requestId === topicSearchRequestRef.current) topicSearchRequestRef.current += 1
     }
-  }, [form.communityTopicIds, topicKeyword, topicPickerOpen])
+  }, [form.communityTopicIds, normalizedTopicKeyword, topicPickerOpen])
 
   const communitySectionOptions = useMemo(
     () => flattenSections(sections).filter((item) => item.status === 'active'),
@@ -772,21 +864,35 @@ export default function PublishPage() {
   )
 
   const filteredTopics = useMemo(() => {
-    const keyword = topicKeyword.trim().toLocaleLowerCase()
+    const keyword = normalizedTopicKeyword.toLocaleLowerCase()
     if (!keyword) return topics
     return topics.filter((topic) => topic.name.toLocaleLowerCase().includes(keyword))
-  }, [topicKeyword, topics])
+  }, [normalizedTopicKeyword, topics])
 
-  const detectedTopicNames = useMemo(() => {
-    const selectedTopicNames = new Set(
-      topics
-        .filter((topic) => form.communityTopicIds.includes(topic.id))
-        .map((topic) => topic.name.toLocaleLowerCase()),
+  const topicNameExists = useMemo(() => (
+    Boolean(normalizedTopicKeyword) && topics.some(
+      (topic) => topicNameKey(topic.name) === topicNameKey(normalizedTopicKeyword),
     )
-    return extractCommunityTopicNames(form.content).filter(
-      (name) => !selectedTopicNames.has(name.toLocaleLowerCase()),
-    )
-  }, [form.communityTopicIds, form.content, topics])
+  ), [normalizedTopicKeyword, topics])
+
+  const selectedTopicEntries = useMemo(() => {
+    const selectedIds = form.communityTopicIds.map((id) => {
+      const topic = topics.find((item) => item.id === id)
+      return {
+        id,
+        key: `id:${id}`,
+        name: topic?.name || '已选话题',
+        pending: false,
+      }
+    })
+    const pendingNames = form.communityTopicNames.map((name) => ({
+      id: 0,
+      key: `name:${topicNameKey(name)}`,
+      name,
+      pending: true,
+    }))
+    return [...selectedIds, ...pendingNames]
+  }, [form.communityTopicIds, form.communityTopicNames, topics])
 
   useEffect(() => {
     if (section !== 'community' || mode !== 'create' || !sectionsReady) return
@@ -1035,7 +1141,10 @@ export default function PublishPage() {
           topic_id: form.communityTopicId || undefined,
           topic_ids: form.communityTopicIds.length > 0 ? form.communityTopicIds : undefined,
           primary_topic_id: form.communityTopicId || undefined,
-          topic_names: extractCommunityTopicNames(form.content),
+          topic_names: normalizeTopicNames([
+            ...form.communityTopicNames,
+            ...extractCommunityTopicNames(form.content),
+          ]),
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createCampusCirclePost(input)).id
@@ -1310,8 +1419,44 @@ export default function PublishPage() {
                       )
                     }}
                   />
+                  {section === 'community' && selectedTopicEntries.length > 0 && (
+                    <View className='publisher-composer-topics' ariaLabel='已关联话题'>
+                      {selectedTopicEntries.map((topic) => (
+                        <View
+                          key={topic.key}
+                          className='publisher-composer-topic'
+                          ariaRole='button'
+                          ariaLabel={`移除话题${topic.name}`}
+                          onClick={() => {
+                            if (topic.pending) removeCommunityTopicName(topic.name)
+                            else toggleCommunityTopic(topic.id)
+                          }}
+                        >
+                          <Text>#{topic.name}</Text>
+                          <Text>×</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
                   <View className='publisher-composer-toolbar'>
                     <View className='publisher-composer-toolbar__tools'>
+                      {section === 'community' && (
+                        <View
+                          id='publisher-topic-trigger'
+                          className={topicPickerOpen
+                            ? 'publisher-composer-tool publisher-composer-tool--active'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel={topicPickerOpen ? '收起话题选择器' : '添加话题'}
+                          onClick={() => changeTopicPickerOpen(!topicPickerOpen)}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon publisher-composer-tool__icon--topic'
+                            src={require('../../assets/community/topic.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
                       {section === 'community' && (
                         <View
                           className={mentionPickerOpen
@@ -1518,102 +1663,6 @@ export default function PublishPage() {
                     ))}
                   </View>
                 )}
-                <View className='publisher-topic-heading'>
-                  <SectionHeading title='关联话题（可选）' />
-                  {form.communityTopicIds.length > 0 && (
-                    <View
-                      className='publisher-topic-clear'
-                      ariaRole='button'
-                      ariaLabel='清除已选话题'
-                      onClick={clearCommunityTopics}
-                    >
-                      清除
-                    </View>
-                  )}
-                  <Text>{form.communityTopicIds.length}/3</Text>
-                </View>
-                {form.communityTopicIds.length > 0 && (
-                  <View className='publisher-topic-selected'>
-                    {form.communityTopicIds.map((topicId) => {
-                      const topic = topics.find((item) => item.id === topicId)
-                      return (
-                        <View
-                          key={topicId}
-                          className='publisher-topic-selected__item'
-                          ariaRole='button'
-                          ariaLabel={`移除话题${topic?.name || topicId}`}
-                          onClick={() => toggleCommunityTopic(topicId)}
-                        >
-                          <Text>#{topic?.name || topicId}</Text>
-                          <Text>×</Text>
-                        </View>
-                      )
-                    })}
-                  </View>
-                )}
-                {detectedTopicNames.length > 0 && (
-                  <View className='publisher-topic-detected'>
-                    <View className='publisher-topic-detected__head'>
-                      <Text>正文识别</Text>
-                      <Text>发布时自动关联</Text>
-                    </View>
-                    <View className='publisher-topic-detected__list'>
-                      {detectedTopicNames.map((name) => (
-                        <Text key={name} selectable>#{name}</Text>
-                      ))}
-                    </View>
-                  </View>
-                )}
-                <View
-                  className='publisher-topic-picker-trigger'
-                  ariaRole='button'
-                  ariaLabel={topicPickerOpen ? '收起话题选择器' : '添加或更换话题'}
-                  onClick={() => {
-                    setTopicPickerOpen((current) => !current)
-                    if (topicPickerOpen) setTopicKeyword('')
-                  }}
-                >
-                  <Text>{topicPickerOpen ? '收起话题选择器' : form.communityTopicIds.length > 0 ? '添加或更换话题' : '添加话题'}</Text>
-                  <Text>{topicPickerOpen ? '⌃' : '⌄'}</Text>
-                </View>
-                {topicPickerOpen && (
-                  <View className='publisher-topic-picker'>
-                    <KeyboardSafeInput
-                      id='publisher-topic-search'
-                      value={topicKeyword}
-                      maxlength={32}
-                      placeholder='搜索话题名称'
-                      placeholderClass='publisher-placeholder'
-                      onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                      onFocus={() => setStickerPickerOpen(false)}
-                      onInput={(event) => setTopicKeyword(event.detail.value)}
-                    />
-                    {topicSearchLoading && (
-                      <Text className='publisher-topic-picker__loading'>正在搜索话题…</Text>
-                    )}
-                    {filteredTopics.length > 0 ? (
-                      <View className='publisher-community-sections publisher-community-sections--topics'>
-                        {filteredTopics.map((item) => {
-                          const selected = form.communityTopicIds.includes(item.id)
-                          return (
-                            <View
-                              key={item.id}
-                              className={`publisher-community-section ${selected ? 'publisher-community-section--active' : ''}`}
-                              ariaRole='button'
-                              ariaLabel={`${selected ? '已选择，' : ''}关联话题${item.name}`}
-                              onClick={() => toggleCommunityTopic(item.id)}
-                            >
-                              <Text>{selected ? '✓ ' : ''}#{item.name}</Text>
-                            </View>
-                          )
-                        })}
-                      </View>
-                    ) : (
-                      <Text className='publisher-topic-picker__empty'>没有找到匹配话题，试试在正文中输入 #名称。</Text>
-                    )}
-                  </View>
-                )}
-                <Text className='publisher-topic-help'>正文中写入 #话题，也会自动关联；未收录的话题会自动创建。</Text>
               </View>
             )}
 
@@ -1659,6 +1708,142 @@ export default function PublishPage() {
           </View>
         )}
       </View>
+
+      {section === 'community' && topicPickerOpen && (
+        <View className='publisher-topic-overlay'>
+          <View
+            className='publisher-topic-overlay__mask'
+            style={keyboardHeight > 0 ? `bottom: ${keyboardHeight}px;` : undefined}
+            ariaRole='button'
+            ariaLabel='关闭话题选择器'
+            onClick={() => changeTopicPickerOpen(false)}
+          />
+          <View
+            className='publisher-topic-sheet'
+            style={keyboardHeight > 0
+              ? `bottom: ${keyboardHeight}px; max-height: calc(100vh - ${keyboardHeight}px - 24rpx);`
+              : undefined}
+            ariaRole='dialog'
+            ariaLabel='添加话题'
+          >
+            <View className='publisher-topic-sheet__header'>
+              <Text className='publisher-topic-sheet__title'>添加话题</Text>
+              <View className='publisher-topic-sheet__actions'>
+                {selectedTopicEntries.length > 0 && (
+                  <View
+                    className='publisher-topic-sheet__clear'
+                    ariaRole='button'
+                    ariaLabel='清除已选话题'
+                    onClick={clearCommunityTopics}
+                  >
+                    清空
+                  </View>
+                )}
+                <View
+                  className='publisher-topic-sheet__done'
+                  ariaRole='button'
+                  ariaLabel='完成添加话题'
+                  onClick={() => changeTopicPickerOpen(false)}
+                >
+                  完成
+                </View>
+              </View>
+            </View>
+
+            {selectedTopicEntries.length > 0 && (
+              <View className='publisher-topic-sheet__selected'>
+                <Text>{selectedTopicEntries.length}/3</Text>
+                <ScrollView scrollX enhanced showScrollbar={false} className='publisher-topic-sheet__selected-scroll'>
+                  <View className='publisher-topic-sheet__selected-list'>
+                    {selectedTopicEntries.map((topic) => (
+                      <View
+                        key={topic.key}
+                        className='publisher-topic-sheet__selected-item'
+                        ariaRole='button'
+                        ariaLabel={`移除话题${topic.name}`}
+                        onClick={() => {
+                          if (topic.pending) removeCommunityTopicName(topic.name)
+                          else toggleCommunityTopic(topic.id)
+                        }}
+                      >
+                        <Text>#{topic.name}</Text>
+                        <Text>×</Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            )}
+
+            <View className='publisher-topic-sheet__search'>
+              <Text>#</Text>
+              <KeyboardSafeInput
+                id='publisher-topic-search'
+                focus={topicPickerOpen}
+                value={topicKeyword}
+                maxlength={64}
+                placeholder='搜索或添加话题'
+                placeholderClass='publisher-placeholder'
+                confirmType='done'
+                keepVisibleOnKeyboard={false}
+                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                onFocus={() => setStickerPickerOpen(false)}
+                onInput={(event) => setTopicKeyword(event.detail.value.replace(/^#+/u, ''))}
+                onConfirm={() => {
+                  if (!topicNameExists && isCreatableTopicName(normalizedTopicKeyword)) {
+                    addCommunityTopicName()
+                  }
+                }}
+              />
+            </View>
+
+            <ScrollView className='publisher-topic-sheet__results' scrollY enhanced showScrollbar={false}>
+              {topicSearchLoading && <Text className='publisher-topic-sheet__state'>正在搜索</Text>}
+              {!topicSearchLoading && topicSearchError && (
+                <Text className='publisher-topic-sheet__state'>暂时无法加载话题</Text>
+              )}
+              {!topicSearchLoading && !topicSearchError && normalizedTopicKeyword && !topicNameExists && isCreatableTopicName(normalizedTopicKeyword) && (
+                <View
+                  className='publisher-topic-result publisher-topic-result--create'
+                  ariaRole='button'
+                  ariaLabel={`添加新话题${normalizedTopicKeyword}`}
+                  onClick={addCommunityTopicName}
+                >
+                  <View>
+                    <Text>#{normalizedTopicKeyword}</Text>
+                    <Text>创建为新话题</Text>
+                  </View>
+                  <Text>添加</Text>
+                </View>
+              )}
+              {!topicSearchLoading && !topicSearchError && filteredTopics.map((item) => {
+                const selected = form.communityTopicIds.includes(item.id)
+                return (
+                  <View
+                    key={item.id}
+                    className={`publisher-topic-result ${selected ? 'publisher-topic-result--selected' : ''}`}
+                    ariaRole='button'
+                    ariaLabel={`${selected ? '移除' : '添加'}话题${item.name}`}
+                    onClick={() => toggleCommunityTopic(item.id)}
+                  >
+                    <View>
+                      <Text>#{item.name}</Text>
+                      <Text>{item.post_count} 条动态</Text>
+                    </View>
+                    <Text>{selected ? '已添加' : '添加'}</Text>
+                  </View>
+                )
+              })}
+              {!topicSearchLoading && !topicSearchError && filteredTopics.length === 0 && !normalizedTopicKeyword && (
+                <Text className='publisher-topic-sheet__state'>暂无可选话题</Text>
+              )}
+              {!topicSearchLoading && !topicSearchError && normalizedTopicKeyword && !isCreatableTopicName(normalizedTopicKeyword) && (
+                <Text className='publisher-topic-sheet__state'>话题仅支持中文、字母、数字或下划线</Text>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      )}
 
       {!loadingForm && (
         <View className={`publisher-actions ${keyboardHeight > 0 ? 'publisher-actions--keyboard' : ''}`}>
