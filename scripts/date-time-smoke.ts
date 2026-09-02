@@ -37,6 +37,21 @@ assert.equal(
   relativeDeadline(utc, expectedTimestamp - 30 * 60_000),
   '30 分钟后截止',
 )
+const afterHours = (hours: number) => new Date(
+  expectedTimestamp + hours * 60 * 60 * 1000,
+).toISOString()
+assert.equal(
+  relativeDeadline(afterHours(24), expectedTimestamp),
+  '1 天后截止',
+)
+assert.equal(
+  relativeDeadline(afterHours(36), expectedTimestamp),
+  '1 天 12 小时后截止',
+)
+assert.equal(
+  relativeDeadline(afterHours(49), expectedTimestamp),
+  '2 天 1 小时后截止',
+)
 
 assert.equal(parseApiDateTime('2026-02-30T12:00:00Z'), null)
 assert.equal(parseApiDateTime('2026-08-14'), null)
