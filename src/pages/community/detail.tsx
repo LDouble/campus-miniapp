@@ -263,9 +263,13 @@ export default function CommunityDetailPage() {
                 )}
               />
 
-              {topicLinks.length > 0 && (
-                <View className='community-detail__topics'>
-                  {topicLinks.map((topic) => (
+              {(post.content || topicLinks.length > 0) && (
+                <MentionContent
+                  content={post.content || ''}
+                  segments={post.content_segments}
+                  className='community-detail__body community-detail-card__body'
+                  stickerClassName='community-detail__body-sticker'
+                  trailing={topicLinks.map((topic) => (
                     <View
                       key={topic.id}
                       className='community-detail__topic'
@@ -274,18 +278,8 @@ export default function CommunityDetailPage() {
                       onClick={() => openTopic(topic.id)}
                     >
                       <Text selectable>#{topic.name}</Text>
-                      <Text className='community-detail__topic-arrow'>›</Text>
                     </View>
                   ))}
-                </View>
-              )}
-
-              {post.content && (
-                <MentionContent
-                  content={post.content}
-                  segments={post.content_segments}
-                  className='community-detail__body community-detail-card__body'
-                  stickerClassName='community-detail__body-sticker'
                 />
               )}
 
