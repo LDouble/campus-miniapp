@@ -1,13 +1,12 @@
 import { useCallback, useRef, useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
-import { Image, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CampusCircleTopicView } from '../../../api/types'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
 import {
   communityTopicPublisherUrl,
   parsePositiveId,
-  topicPeriodLabel,
 } from '../../../features/community/topic'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
 import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
@@ -218,56 +217,19 @@ export default function CommunityTopicPage() {
     void load(topicId, page + 1, true)
   }, [load, loading, loadingMore, page, posts.length, topicId, total])
 
-  const topicLabel = topic?.kind === 'campaign'
-    ? '校园活动'
-    : topic?.is_hot
-      ? '热门话题'
-      : '校园话题'
   const participateLabel = topic?.kind === 'campaign' ? '参与活动' : '参与讨论'
-  const periodLabel = topic ? topicPeriodLabel(topic) : ''
 
   return <View className='community-topic-page'>
-    <CustomNavbar title={topic?.name || topicLabel} showBack />
+    <CustomNavbar
+      title={topic ? `#${topic.name}` : '话题'}
+      subtitle={topic?.description || '校园话题'}
+      showBack
+    />
     <View className='community-topic-page__content'>
-      {topic && (
-        <View className={`community-topic-hero ${topic.cover_url ? 'community-topic-hero--covered' : ''}`}>
-          {topic.cover_url && <Image className='community-topic-hero__cover' src={topic.cover_url} mode='aspectFill' />}
-          <View className='community-topic-hero__glow' />
-          <View className='community-topic-hero__content'>
-            <View className='community-topic-hero__eyebrow'>
-              <Text>{topicLabel}</Text>
-              {topic.is_hot && topic.kind === 'campaign' && <Text>热门</Text>}
-            </View>
-            <Text className='community-topic-hero__title'>#{topic.name}</Text>
-            <Text className='community-topic-hero__description'>
-              {topic.description || '和海大同学一起分享观点与校园见闻'}
-            </Text>
-            <View className='community-topic-hero__footer'>
-              <View className='community-topic-hero__meta'>
-                <Text>{topic.post_count} 条动态</Text>
-                {periodLabel && <Text>{periodLabel}</Text>}
-              </View>
-              <View
-                className='community-topic-hero__action'
-                ariaRole='button'
-                ariaLabel={`${participateLabel}：${topic.name}`}
-                onClick={openPublisher}
-              >
-                <Text>{participateLabel}</Text>
-                <Text>＋</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-
       {!loading && !error && topic && (
         <View className='community-topic-feed-heading'>
-          <View>
-            <Text>话题动态</Text>
-            <Text>看看同学们正在聊什么</Text>
-          </View>
-          <Text>{topic.post_count} 条</Text>
+          <Text className='community-topic-feed-heading__tab'>最新发表</Text>
+          <Text className='community-topic-feed-heading__count'>共 {topic.post_count} 条动态</Text>
         </View>
       )}
 
@@ -300,17 +262,8 @@ export default function CommunityTopicPage() {
       ))}
       {!loading && !error && topic && posts.length === 0 && (
         <View className='community-topic-empty'>
-          <View>OUC</View>
           <Text>还没有人发布动态</Text>
           <Text>带上这个话题，成为第一个参与讨论的人</Text>
-          <View
-            className='community-topic-empty__action'
-            ariaRole='button'
-            ariaLabel={`${participateLabel}：${topic.name}`}
-            onClick={openPublisher}
-          >
-            {participateLabel}
-          </View>
         </View>
       )}
       {!loading && !error && posts.length < total && (
@@ -346,5 +299,17 @@ export default function CommunityTopicPage() {
         />
       )}
     </View>
+    {!loading && !error && topic && (
+      <View className='community-topic-page__action-bar'>
+        <View
+          className='community-topic-page__participate'
+          ariaRole='button'
+          ariaLabel={`${participateLabel}：${topic.name}`}
+          onClick={openPublisher}
+        >
+          {participateLabel}
+        </View>
+      </View>
+    )}
   </View>
 }

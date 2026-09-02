@@ -98,6 +98,7 @@ export type CampusCircleSearch = PagingQuery & {
 
 export type CampusCircleTopicSearch = PagingQuery & {
   kind?: 'topic' | 'campaign'
+  keyword?: string
 }
 
 const versionAction = <T>(path: string, version: number, scope: string) => (
@@ -180,7 +181,12 @@ export const lifeServicesRepository = {
   listCampusCircleTopics(search: CampusCircleTopicSearch = {}) {
     return apiRequest<CampusCircleTopicPage>({
       path: '/api/v1/campus-circle/topics',
-      query: { kind: search.kind, page: search.page || 1, page_size: search.pageSize || 20 },
+      query: {
+        kind: search.kind,
+        keyword: search.keyword,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
     })
   },
 

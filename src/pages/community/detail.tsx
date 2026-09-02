@@ -14,6 +14,7 @@ import {
   communityAuthorName,
 } from '../../features/community/author'
 import { consumeCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import { communityPostTopics, communityTopicUrl } from '../../features/community/topic'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import { openContentReport } from '../../features/content-report'
 import FavoriteToggle from '../../features/favorites/favorite-toggle'
@@ -201,6 +202,13 @@ export default function CommunityDetailPage() {
     void Taro.pageScrollTo({ selector: '.business-detail-comments', duration: 180 })
   }
 
+  const openTopic = (topicId: number) => {
+    const url = communityTopicUrl(topicId)
+    if (url) void Taro.navigateTo({ url })
+  }
+
+  const topicLinks = post ? communityPostTopics(post) : []
+
   return (
     <View className='community-detail'>
       <CustomNavbar title='帖子详情' showBack />
@@ -255,18 +263,23 @@ export default function CommunityDetailPage() {
                 )}
               />
 
-              {post.topic?.name && (
-                <View className='community-detail__topic'>
-                  <Text selectable>#{post.topic.name}</Text>
-                </View>
-              )}
-
-              {post.content && (
+              {(post.content || topicLinks.length > 0) && (
                 <MentionContent
-                  content={post.content}
+                  content={post.content || ''}
                   segments={post.content_segments}
                   className='community-detail__body community-detail-card__body'
                   stickerClassName='community-detail__body-sticker'
+                  trailing={topicLinks.map((topic) => (
+                    <View
+                      key={topic.id}
+                      className='community-detail__topic'
+                      ariaRole='button'
+                      ariaLabel={`查看话题：${topic.name}`}
+                      onClick={() => openTopic(topic.id)}
+                    >
+                      <Text selectable>#{topic.name}</Text>
+                    </View>
+                  ))}
                 />
               )}
 

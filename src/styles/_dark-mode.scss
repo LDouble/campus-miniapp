@@ -1203,24 +1203,24 @@
   & .community-level-badge--deepsea { color: #93c5fd; background: #172554; border-color: #28477a; }
   & .community-level-badge--gold { color: #fde68a; background: #38331a; border-color: #6c6127; }
 
-  // 话题页与动态详情的浅色专属容器。
-  & .community-topic-hero {
-    background: linear-gradient(138deg, #172554 0%, #172033 58%, #12343d 100%);
-    border-color: var(--campus-border-strong, #2f4c73);
-    box-shadow: 0 18rpx 42rpx rgba(0, 0, 0, 0.28);
+  & .community-topic-page,
+  & .community-topic-page__action-bar {
+    background: var(--campus-surface, #111827);
   }
 
-  & .community-topic-hero__glow { background: rgba(96, 165, 250, 0.08); }
-  & .community-topic-hero__action,
-  & .community-topic-empty__action {
+  & .community-topic-feed-heading,
+  & .community-topic-page__action-bar {
+    border-color: var(--campus-border, #243244);
+  }
+
+  & .community-topic-page__participate {
     color: #fff;
     background: #2563eb;
   }
 
   & .community-topic-page__state,
   & .community-topic-empty {
-    border-color: var(--campus-border, #243244);
-    box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.22);
+    color: var(--campus-text-muted, #8494aa);
   }
 
   & .community-detail-state {

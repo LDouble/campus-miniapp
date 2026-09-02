@@ -10,6 +10,7 @@ import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type {
   CampusCirclePostView,
   CampusCircleSectionView,
+  CampusCircleTopicView,
 } from '../../api/types'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import CommunityFeedPanel from '../../features/community/feed-panel'
@@ -45,6 +46,7 @@ import {
 } from '../../features/runtime-config'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { useCampusShare } from '../../features/share'
+import { communityTopicUrl } from '../../features/community/topic'
 import {
   setCustomTabBarHidden,
   setCustomTabBarPublishSection,
@@ -72,6 +74,7 @@ export default function CommunityPage() {
   const [communityRoots, setCommunityRoots] = useState<CampusCircleSectionView[]>([])
   const [communitySectionsReady, setCommunitySectionsReady] = useState(false)
   const [communitySectionsError, setCommunitySectionsError] = useState('')
+  const [hotTopics, setHotTopics] = useState<CampusCircleTopicView[]>([])
   const [activeCommunitySectionId, setActiveCommunitySectionId] = useState(0)
   const [pinnedCommunityPost, setPinnedCommunityPost] = useState<
     CampusCirclePostView | null
@@ -185,6 +188,15 @@ export default function CommunityPage() {
     }
   }
 
+  const loadHotTopics = async () => {
+    try {
+      const result = await lifeServicesRepository.getCampusCircleHome()
+      setHotTopics((result.hot_topics || []).slice(0, 6))
+    } catch {
+      setHotTopics([])
+    }
+  }
+
   const selectSection = (section: LifeHubSection) => {
     const module = resolveMiniappModule(runtimeConfig, lifeSectionModules[section])
     if (module.state === 'maintenance') {
@@ -256,8 +268,10 @@ export default function CommunityPage() {
       ))
       if (resolveMiniappModule(config, 'community').state === 'enabled') {
         void loadCommunitySections()
+        void loadHotTopics()
       } else {
         setCommunityRoots([])
+        setHotTopics([])
         setCommunitySectionsReady(true)
       }
     })
@@ -303,6 +317,7 @@ export default function CommunityPage() {
     setRefreshSignal((current) => current + 1)
     if (resolveMiniappModule(runtimeConfig, 'community').state === 'enabled') {
       void loadCommunitySections(true).finally(() => Taro.stopPullDownRefresh())
+      void loadHotTopics()
       return
     }
     Taro.stopPullDownRefresh()
@@ -333,6 +348,11 @@ export default function CommunityPage() {
     }
     return shareImage ? { ...result, imageUrl: shareImage } : result
   })
+
+  const openHotTopic = (topic: CampusCircleTopicView) => {
+    const url = communityTopicUrl(topic.id)
+    if (url) void Taro.navigateTo({ url })
+  }
 
   return (
     <View className={`community-page community-page--${displayedSection}`}>
@@ -445,20 +465,53 @@ export default function CommunityPage() {
             </Text>
           </View>
         ) : displayedSection === 'community' ? (
-          <CommunityFeedPanel
-            sectionRoots={communityRoots}
-            activeSection={activeCommunitySection}
-            sectionsReady={communitySectionsReady}
-            sectionsError={communitySectionsError}
-            onRetrySections={() => void loadCommunitySections()}
-            pinnedPost={pinnedCommunityPost}
-            refreshSignal={refreshSignal}
-            searchFocusSignal={searchFocusSignal}
-            overlayDismissSignal={communityOverlayDismissSignal}
-            loadMoreSignal={loadMoreSignal}
-            onOverlayVisibilityChange={setCommunityOverlayVisible}
-            onSelectSection={(sectionId) => setActiveCommunitySectionId(sectionId)}
-          />
+          <>
+            {hotTopics.length > 0 && (
+              <View className='community-topic-rail'>
+                <View className='community-topic-rail__heading'>
+                  <View>
+                    <Text>热门话题</Text>
+                    <Text>校园里的新鲜讨论</Text>
+                  </View>
+                  <Text>向左滑动</Text>
+                </View>
+                <ScrollView className='community-topic-rail__scroll' scrollX enhanced showScrollbar={false}>
+                  <View className='community-topic-rail__list'>
+                    {hotTopics.map((topic) => (
+                      <View
+                        key={topic.id}
+                        className='community-topic-rail__item'
+                        ariaRole='button'
+                        ariaLabel={`进入话题${topic.name}`}
+                        onClick={() => openHotTopic(topic)}
+                      >
+                        <View className='community-topic-rail__item-topline'>
+                          <Text>{topic.kind === 'campaign' ? '活动' : '话题'}</Text>
+                          {topic.is_hot && <Text>热</Text>}
+                        </View>
+                        <Text className='community-topic-rail__name'>#{topic.name}</Text>
+                        <Text className='community-topic-rail__count'>{topic.post_count} 条动态</Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            )}
+            <CommunityFeedPanel
+              sectionRoots={communityRoots}
+              activeSection={activeCommunitySection}
+              sectionsReady={communitySectionsReady}
+              sectionsError={communitySectionsError}
+              onRetrySections={() => void loadCommunitySections()}
+              pinnedPost={pinnedCommunityPost}
+              refreshSignal={refreshSignal}
+              searchFocusSignal={searchFocusSignal}
+              overlayDismissSignal={communityOverlayDismissSignal}
+              loadMoreSignal={loadMoreSignal}
+              onOverlayVisibilityChange={setCommunityOverlayVisible}
+              onSelectSection={(sectionId) => setActiveCommunitySectionId(sectionId)}
+            />
+          </>
         ) : (
           <LifeServiceListPanel
             key={displayedSection}

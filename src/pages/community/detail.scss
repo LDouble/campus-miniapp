@@ -73,16 +73,15 @@ page {
 
 .community-detail__topic {
   display: inline-flex;
-  min-height: 42rpx;
-  padding: 0 14rpx;
-  margin-top: 20rpx;
+  min-height: 56rpx;
+  margin-left: 14rpx;
   align-items: center;
-  border-radius: 999rpx;
-  background: var(--campus-surface-primary, #eff6ff);
   color: var(--campus-primary, #2b7fff);
-  font-size: 22rpx;
-  font-weight: 650;
-  line-height: 1;
+  font-size: var(--ousea-font-size-body, 32rpx);
+  font-weight: var(--ousea-font-weight-regular, 400);
+  line-height: inherit;
+  vertical-align: baseline;
+  white-space: nowrap;
 }
 
 .community-detail__body {
@@ -93,8 +92,6 @@ page {
   line-height: var(--ousea-line-height-post, 1.85);
   white-space: pre-wrap;
 }
-
-.community-detail__topic + .community-detail__body { padding-top: 12rpx; }
 
 .community-detail__body-sticker {
   display: inline-block;

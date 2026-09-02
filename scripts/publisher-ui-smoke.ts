@@ -24,6 +24,10 @@ assert.ok(!pageSource.includes('父模块'), '页面不得展示内部板块层�
 assert.ok(!pageSource.includes('子模块'), '页面不得展示内部板块层级术语')
 assert.ok(!pageSource.includes('补充集合、行李或返程信息'), '同行发布不应展示无必要的补充说明编辑区')
 assert.ok(!pageSource.includes('首图作为封面'), '二手发布不应重复解释图片封面规则')
+assert.ok(pageSource.includes('publisher-topic-trigger'), '动态编辑工具栏必须保留话题入口')
+assert.ok(pageSource.includes('publisher-topic-sheet'), '话题选择必须使用独立底部 Sheet')
+assert.ok(pageSource.includes('communityTopicNames'), '未收录话题必须随当前草稿保存')
+assert.match(pageSource, /topic_names:\s*normalizeTopicNames\(/u, '新增话题必须在发布时提交给服务端创建并关联')
 
 for (const selector of [
   'publisher-content',
@@ -54,9 +58,15 @@ assert.match(styleSource, /\.publisher-page--errands \.publisher-actions__submit
 assert.match(styleSource, /\.publisher-page--market \.publisher-actions__submit/u)
 assert.match(styleSource, /\.publisher-page--carpool \.publisher-actions__submit/u)
 assert.match(styleSource, /\.publisher-composer-tool\s*\{[\s\S]*?min-width:\s*token\.\$touch-target-min/u)
+assert.match(styleSource, /\.publisher-topic-sheet\s*\{[\s\S]*?height:\s*70vh[\s\S]*?max-height:\s*76vh/u)
+assert.match(styleSource, /\.publisher-topic-sheet\s*\{[\s\S]*?border-radius:\s*token\.\$ousea-radius-sheet/u)
+assert.match(styleSource, /&__search\s*\{[\s\S]*?border-radius:\s*token\.\$radius-pill/u)
+assert.match(styleSource, /\.publisher-topic-result\s*\{[\s\S]*?min-height:\s*100rpx/u)
+assert.match(styleSource, /&__meta\s*\{[\s\S]*?color:\s*token\.\$color-text-muted/u)
 assert.match(styleSource, /&--keyboard\s*\{\s*display:\s*none;/u)
 assert.match(styleSource, /env\(safe-area-inset-bottom\)/u)
 assert.doesNotMatch(styleSource, /#[0-9a-f]{3,8}/iu, '发布器页面不得新增局部硬编码颜色')
 assert.ok(designSpecSource.includes('微信原生内容编辑器式布局'), '缺少发布器页面级设计规范')
+assert.ok(designSpecSource.includes('话题选择器'), '缺少话题选择器页面规范')
 
 process.stdout.write('publisher ui smoke: ok\n')

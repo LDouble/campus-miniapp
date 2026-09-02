@@ -429,7 +429,8 @@
 }
 
 .community-post__section-pill,
-.community-post__section-label {
+.community-post__section-label,
+.community-post__topic-link {
   display: inline-flex;
   max-width: 190rpx;
   min-height: 0;
@@ -456,6 +457,36 @@
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.community-post__topic-link {
+  max-width: 230rpx;
+  color: var(--campus-primary, #2b7fff);
+}
+
+.community-post__topic-link text {
+  overflow: hidden;
+  color: inherit;
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.community-post__topic-link--content {
+  max-width: 100%;
+  min-height: 0;
+  margin-right: 12rpx;
+  color: var(--campus-primary, #2b7fff);
+  font-size: var(--ousea-font-size-body, 32rpx);
+  font-weight: var(--ousea-font-weight-regular, 400);
+  line-height: var(--ousea-line-height-post, 1.85);
+  vertical-align: baseline;
+}
+
+.community-post__topic-link--content text {
+  font-size: var(--ousea-font-size-body, 32rpx);
+  line-height: var(--ousea-line-height-post, 1.85);
 }
 
 .community-post__section-pill--pressed {

@@ -99,6 +99,113 @@ page {
   padding-top: 0;
 }
 
+.community-topic-rail {
+  padding: 24rpx 0 8rpx;
+  background: var(--campus-surface, #fff);
+
+  &__heading {
+    display: flex;
+    padding: 0 32rpx 16rpx;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    > view {
+      display: flex;
+      min-width: 0;
+      align-items: baseline;
+    }
+
+    > view text:first-child {
+      color: var(--campus-text-heading, #1d293d);
+      font-size: 30rpx;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    > view text:last-child {
+      margin-left: 12rpx;
+      color: var(--campus-text-muted, #90a1b9);
+      font-size: 22rpx;
+      line-height: 1.4;
+    }
+
+    > text {
+      flex: none;
+      color: var(--campus-text-muted, #90a1b9);
+      font-size: 21rpx;
+      line-height: 1.4;
+    }
+  }
+
+  &__scroll {
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  &__list {
+    display: inline-flex;
+    padding: 0 32rpx 8rpx;
+    gap: 16rpx;
+  }
+
+  &__item {
+    display: flex;
+    width: 260rpx;
+    min-height: 148rpx;
+    padding: 20rpx;
+    box-sizing: border-box;
+    flex-direction: column;
+    border: 1rpx solid var(--campus-border, #e1eaf6);
+    border-radius: 22rpx;
+    background: var(--campus-surface-primary, #eff6ff);
+    box-shadow: 0 6rpx 18rpx rgba(36, 93, 158, 0.06);
+    transition: opacity 150ms ease, transform 150ms ease;
+  }
+
+  &__item--pressed { opacity: .72; transform: scale(.985); }
+
+  &__item-topline {
+    display: flex;
+    min-height: 28rpx;
+    align-items: center;
+    justify-content: space-between;
+
+    text {
+      color: var(--campus-primary-strong, #155dfc);
+      font-size: 20rpx;
+      line-height: 1.4;
+    }
+
+    text + text {
+      padding: 2rpx 8rpx;
+      border-radius: 8rpx;
+      color: var(--campus-on-accent, #fff);
+      background: var(--campus-primary, #2b7fff);
+      font-size: 18rpx;
+    }
+  }
+
+  &__name {
+    display: block;
+    margin-top: 12rpx;
+    overflow: hidden;
+    color: var(--campus-text-heading, #1d293d);
+    font-size: 28rpx;
+    font-weight: 700;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__count {
+    display: block;
+    margin-top: auto;
+    color: var(--campus-text-muted, #90a1b9);
+    font-size: 21rpx;
+    line-height: 1.4;
+  }
+}
+
 .life-hub-navigation {
   position: sticky;
   z-index: 40;
