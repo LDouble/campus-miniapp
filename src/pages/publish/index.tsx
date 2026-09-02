@@ -575,16 +575,6 @@ export default function PublishPage() {
     }))
   }
 
-  const clearCommunityTopics = () => {
-    setForm((current) => ({
-      ...current,
-      communityTopicId: 0,
-      communityTopicIds: [],
-      communityTopicNames: [],
-    }))
-    setTopicKeyword('')
-  }
-
   const removeMentionFromContent = (candidate: MentionCandidate) => {
     const removed = removeMentionTokens(
       form.content,
@@ -1721,59 +1711,22 @@ export default function PublishPage() {
           <View
             className='publisher-topic-sheet'
             style={keyboardHeight > 0
-              ? `bottom: ${keyboardHeight}px; max-height: calc(100vh - ${keyboardHeight}px - 24rpx);`
+              ? `bottom: ${keyboardHeight}px; height: calc(100vh - ${keyboardHeight}px - 24rpx); max-height: calc(100vh - ${keyboardHeight}px - 24rpx);`
               : undefined}
             ariaRole='dialog'
             ariaLabel='添加话题'
           >
             <View className='publisher-topic-sheet__header'>
               <Text className='publisher-topic-sheet__title'>添加话题</Text>
-              <View className='publisher-topic-sheet__actions'>
-                {selectedTopicEntries.length > 0 && (
-                  <View
-                    className='publisher-topic-sheet__clear'
-                    ariaRole='button'
-                    ariaLabel='清除已选话题'
-                    onClick={clearCommunityTopics}
-                  >
-                    清空
-                  </View>
-                )}
-                <View
-                  className='publisher-topic-sheet__done'
-                  ariaRole='button'
-                  ariaLabel='完成添加话题'
-                  onClick={() => changeTopicPickerOpen(false)}
-                >
-                  完成
-                </View>
+              <View
+                className='publisher-topic-sheet__cancel'
+                ariaRole='button'
+                ariaLabel='关闭话题选择器'
+                onClick={() => changeTopicPickerOpen(false)}
+              >
+                取消
               </View>
             </View>
-
-            {selectedTopicEntries.length > 0 && (
-              <View className='publisher-topic-sheet__selected'>
-                <Text>{selectedTopicEntries.length}/3</Text>
-                <ScrollView scrollX enhanced showScrollbar={false} className='publisher-topic-sheet__selected-scroll'>
-                  <View className='publisher-topic-sheet__selected-list'>
-                    {selectedTopicEntries.map((topic) => (
-                      <View
-                        key={topic.key}
-                        className='publisher-topic-sheet__selected-item'
-                        ariaRole='button'
-                        ariaLabel={`移除话题${topic.name}`}
-                        onClick={() => {
-                          if (topic.pending) removeCommunityTopicName(topic.name)
-                          else toggleCommunityTopic(topic.id)
-                        }}
-                      >
-                        <Text>#{topic.name}</Text>
-                        <Text>×</Text>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
-              </View>
-            )}
 
             <View className='publisher-topic-sheet__search'>
               <Text>#</Text>
@@ -1782,7 +1735,7 @@ export default function PublishPage() {
                 focus={topicPickerOpen}
                 value={topicKeyword}
                 maxlength={64}
-                placeholder='搜索或添加话题'
+                placeholder='搜索话题'
                 placeholderClass='publisher-placeholder'
                 confirmType='done'
                 keepVisibleOnKeyboard={false}

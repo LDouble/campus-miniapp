@@ -764,6 +764,7 @@ page {
   left: 0;
   z-index: 1;
   display: flex;
+  height: 70vh;
   max-height: 76vh;
   flex-direction: column;
   overflow: hidden;
@@ -775,11 +776,12 @@ page {
   transition: transform token.$motion-enter token.$motion-ease-out;
 
   &__header {
+    position: relative;
     display: flex;
     min-height: 104rpx;
-    padding: 0 24rpx 0 32rpx;
+    padding: 0 32rpx;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     flex: none;
     border-bottom: 2rpx solid token.$color-border;
   }
@@ -791,14 +793,9 @@ page {
     line-height: token.$ousea-line-height-ui;
   }
 
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 8rpx;
-  }
-
-  &__clear,
-  &__done {
+  &__cancel {
+    position: absolute;
+    right: 24rpx;
     display: flex;
     min-width: token.$touch-target-min;
     min-height: token.$touch-target-min;
@@ -816,86 +813,30 @@ page {
     }
   }
 
-  &__done {
-    color: token.$color-primary-strong;
-    font-weight: token.$font-weight-semibold;
-  }
-
-  &__selected {
-    display: flex;
-    min-height: 80rpx;
-    padding: 12rpx 32rpx;
-    align-items: center;
-    gap: 16rpx;
-    flex: none;
-    background: token.$color-surface-subtle;
-    border-bottom: 2rpx solid token.$color-border;
-
-    > text {
-      flex: none;
-      color: token.$color-text-secondary;
-      font-size: token.$ousea-font-size-caption;
-      line-height: token.$ousea-line-height-ui;
-    }
-  }
-
-  &__selected-scroll {
-    min-width: 0;
-    flex: 1;
-    white-space: nowrap;
-  }
-
-  &__selected-list {
-    display: inline-flex;
-    align-items: center;
-    gap: 12rpx;
-  }
-
-  &__selected-item {
-    display: inline-flex;
-    min-height: 52rpx;
-    padding: 0 12rpx;
-    align-items: center;
-    box-sizing: border-box;
-    color: token.$color-primary-strong;
-    background: token.$color-surface;
-    border: 2rpx solid token.$color-border-strong;
-    border-radius: token.$radius-sm;
-    font-size: token.$ousea-font-size-caption;
-    line-height: token.$ousea-line-height-ui;
-
-    text + text {
-      margin-left: 8rpx;
-      color: token.$color-text-secondary;
-      font-size: 26rpx;
-    }
-  }
-
   &__search {
     display: flex;
-    min-height: token.$touch-target-min;
-    margin: 20rpx 32rpx 8rpx;
-    padding: 0 20rpx;
+    min-height: 96rpx;
+    margin: 32rpx 32rpx 20rpx;
+    padding: 0 24rpx;
     align-items: center;
     flex: none;
-    color: token.$color-primary-strong;
+    color: token.$color-text-heading;
     background: token.$color-surface-subtle;
-    border: 2rpx solid token.$color-border;
-    border-radius: token.$radius-md;
+    border-radius: token.$radius-pill;
 
     > text {
-      margin-right: 12rpx;
-      font-size: 34rpx;
-      font-weight: token.$font-weight-semibold;
+      margin-right: 16rpx;
+      font-size: 38rpx;
+      font-weight: token.$font-weight-regular;
       line-height: 1;
     }
 
     input {
       min-width: 0;
-      height: token.$touch-target-min;
+      height: 96rpx;
       flex: 1;
       color: token.$color-text-heading;
-      font-size: token.$ousea-font-size-label;
+      font-size: 34rpx;
       line-height: token.$ousea-line-height-ui;
     }
   }
@@ -1181,8 +1122,7 @@ page {
   .publisher-route-suggestion,
   .publisher-community-section,
   .publisher-topic-sheet,
-  .publisher-topic-sheet__clear,
-  .publisher-topic-sheet__done,
+  .publisher-topic-sheet__cancel,
   .publisher-topic-result,
   .publisher-market-intents > view,
   .publisher-actions__draft,
