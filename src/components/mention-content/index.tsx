@@ -11,6 +11,7 @@ type MentionContentProps = {
   segments?: ContentSegment[] | null
   className?: string
   stickerClassName?: string
+  leading?: ReactNode
   trailing?: ReactNode
 }
 
@@ -53,12 +54,14 @@ export default function MentionContent({
   segments,
   className = '',
   stickerClassName = '',
+  leading,
   trailing,
 }: MentionContentProps) {
   const hasSegments = Array.isArray(segments) && segments.length > 0
 
   return (
     <View className={['mention-content', className].filter(Boolean).join(' ')}>
+      {leading}
       {hasSegments ? segments?.map((segment, index) => {
         if (segment.type !== 'mention' || !segment.user_id) {
           return renderText(segment.text, stickerClassName, `segment-${index}`)

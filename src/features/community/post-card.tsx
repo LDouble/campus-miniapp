@@ -244,16 +244,30 @@ function CommunityPostCard({
               {operationBadges.map((badge) => <Text key={badge}>{badge}</Text>)}
             </View>
           )}
-          {post.content && (
+          {(post.content || topicLinks.length > 0) && (
             <View className={contentIsClamped
               ? 'community-post__content-wrap community-post__content-wrap--clamped'
               : 'community-post__content-wrap'}
             >
               <MentionContent
-                content={post.content}
+                content={post.content || ''}
                 segments={post.content_segments}
                 className='community-post__content'
                 stickerClassName='community-post__content-sticker'
+                leading={topicLinks.map((topic) => (
+                  <View
+                    key={topic.id}
+                    className='community-post__topic-link community-post__topic-link--content'
+                    ariaRole='button'
+                    ariaLabel={`查看话题：${topic.name}`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      openTopic(topic.id)
+                    }}
+                  >
+                    <Text selectable>#{topic.name}</Text>
+                  </View>
+                ))}
               />
               {contentIsClamped && <Text className='community-post__expand'>全文</Text>}
             </View>
@@ -299,20 +313,6 @@ function CommunityPostCard({
               </View>
             ) : (
               <Text className='community-post__section-label'> · {sectionName}</Text>
-            ))}
-            {topicLinks.map((topic) => (
-              <View
-                key={topic.id}
-                className='community-post__topic-link'
-                ariaRole='button'
-                ariaLabel={`查看话题：${topic.name}`}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  openTopic(topic.id)
-                }}
-              >
-                <Text selectable> · #{topic.name}</Text>
-              </View>
             ))}
           </View>
           <View className='community-post__meta-actions'>

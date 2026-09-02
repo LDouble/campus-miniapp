@@ -473,6 +473,22 @@
   white-space: nowrap;
 }
 
+.community-post__topic-link--content {
+  max-width: 100%;
+  min-height: 0;
+  margin-right: 12rpx;
+  color: var(--campus-primary, #2b7fff);
+  font-size: var(--ousea-font-size-body, 32rpx);
+  font-weight: var(--ousea-font-weight-regular, 400);
+  line-height: var(--ousea-line-height-post, 1.85);
+  vertical-align: baseline;
+}
+
+.community-post__topic-link--content text {
+  font-size: var(--ousea-font-size-body, 32rpx);
+  line-height: var(--ousea-line-height-post, 1.85);
+}
+
 .community-post__section-pill--pressed {
   opacity: 0.58;
 }

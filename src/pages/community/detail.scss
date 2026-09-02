@@ -73,12 +73,12 @@ page {
 
 .community-detail__topic {
   display: inline-flex;
-  min-height: 40rpx;
+  min-height: 56rpx;
   margin-left: 14rpx;
   align-items: center;
   color: var(--campus-primary, #2b7fff);
-  font-size: var(--ousea-font-size-caption, 24rpx);
-  font-weight: var(--ousea-font-weight-medium, 500);
+  font-size: var(--ousea-font-size-body, 32rpx);
+  font-weight: var(--ousea-font-weight-regular, 400);
   line-height: inherit;
   vertical-align: baseline;
   white-space: nowrap;
