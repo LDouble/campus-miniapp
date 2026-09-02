@@ -552,6 +552,7 @@ export default function PublishPage() {
     const matched = topics.find((item) => topicNameKey(item.name) === topicNameKey(name))
     if (matched) {
       toggleCommunityTopic(matched.id)
+      changeTopicPickerOpen(false)
       return
     }
     if (form.communityTopicNames.some((item) => topicNameKey(item) === topicNameKey(name))) return
@@ -564,6 +565,7 @@ export default function PublishPage() {
       communityTopicNames: [...current.communityTopicNames, name],
     }))
     setTopicKeyword('')
+    changeTopicPickerOpen(false)
   }
 
   const removeCommunityTopicName = (name: string) => {
@@ -1777,7 +1779,10 @@ export default function PublishPage() {
                     className={`publisher-topic-result ${selected ? 'publisher-topic-result--selected' : ''}`}
                     ariaRole='button'
                     ariaLabel={`${selected ? '移除' : '添加'}话题${item.name}`}
-                    onClick={() => toggleCommunityTopic(item.id)}
+                    onClick={() => {
+                      toggleCommunityTopic(item.id)
+                      changeTopicPickerOpen(false)
+                    }}
                   >
                     <Text className='publisher-topic-result__name'>#{item.name}</Text>
                     <Text className='publisher-topic-result__meta'>{item.post_count} 条动态</Text>
