@@ -1,76 +1,73 @@
 .what-to-eat-feed-card {
-  padding: 24rpx;
+  padding: 20rpx 32rpx;
   margin-bottom: 20rpx;
   color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
-  background:
-    linear-gradient(135deg, var(--ousea-sand-50, #fff8ed), var(--campus-surface, #fff));
-  border: 1rpx solid var(--ousea-sand-100, #f7e7c8);
-  border-radius: var(--ousea-radius-card-lg, 36rpx);
-  box-shadow: 0 8rpx 24rpx rgba(180, 119, 34, 0.08);
+  background: var(--campus-surface, #fff);
+  border-top: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
+  border-bottom: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
 }
 
 .what-to-eat-feed-card__head,
 .what-to-eat-feed-card__eyebrow,
+.what-to-eat-feed-card__body,
 .what-to-eat-feed-card__foot {
   display: flex;
   align-items: center;
 }
 
 .what-to-eat-feed-card__head {
+  min-height: 36rpx;
   justify-content: space-between;
 }
 
 .what-to-eat-feed-card__eyebrow {
-  color: var(--ousea-sand-700, #a8661c);
+  color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
   font-size: var(--ousea-font-size-caption, 24rpx);
   font-weight: var(--ousea-font-weight-semibold, 600);
 }
 
 .what-to-eat-feed-card__spark {
-  width: 12rpx;
-  height: 12rpx;
+  width: 10rpx;
+  height: 10rpx;
   margin-right: 10rpx;
-  background: var(--ousea-sand-500, #e49a3a);
+  background: var(--campus-primary, var(--ousea-ocean-500, #2b7aef));
   border-radius: 50%;
-  box-shadow: 0 0 0 6rpx rgba(228, 154, 58, 0.14);
 }
 
 .what-to-eat-feed-card__campus {
-  color: var(--campus-text-muted, var(--ousea-ink-400, #8795aa));
+  color: var(--campus-text-muted, var(--ousea-ink-300, #a6b2c2));
   font-size: var(--ousea-font-size-badge, 20rpx);
 }
 
 .what-to-eat-feed-card__body {
-  display: flex;
   min-width: 0;
-  margin-top: 18rpx;
-  align-items: center;
+  margin-top: 14rpx;
 }
 
 .what-to-eat-feed-card__image,
 .what-to-eat-feed-card__placeholder {
-  width: 152rpx;
-  height: 152rpx;
+  width: 112rpx;
+  height: 112rpx;
   flex: none;
   overflow: hidden;
-  border-radius: var(--ousea-radius-card, 32rpx);
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
 }
 
-.what-to-eat-feed-card__image {
-  background: var(--ousea-sand-100, #f7e7c8);
+.what-to-eat-feed-card__image,
+.what-to-eat-feed-card__placeholder {
+  background: var(--ousea-ocean-50, #f2f7fe);
 }
 
 .what-to-eat-feed-card__placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--ousea-sand-100, #f7e7c8);
 }
 
 .what-to-eat-feed-card__placeholder image {
-  width: 74rpx;
-  height: 74rpx;
-  opacity: 0.7;
+  width: 58rpx;
+  height: 58rpx;
+  opacity: 0.65;
 }
 
 .what-to-eat-feed-card__info {
@@ -88,7 +85,7 @@
 }
 
 .what-to-eat-feed-card__name {
-  font-size: var(--ousea-font-size-title, 33rpx);
+  font-size: var(--ousea-font-size-comment, 30rpx);
   font-weight: var(--ousea-font-weight-semibold, 600);
 }
 
@@ -99,41 +96,49 @@
 }
 
 .what-to-eat-feed-card__copy {
-  margin-top: 18rpx;
-  color: var(--ousea-sand-700, #a8661c);
+  margin-top: 10rpx;
+  color: var(--campus-text-muted, var(--ousea-ink-300, #a6b2c2));
   font-size: var(--ousea-font-size-badge, 20rpx);
 }
 
 .what-to-eat-feed-card__foot {
-  justify-content: flex-end;
-  gap: 12rpx;
-  margin-top: 20rpx;
+  justify-content: space-between;
+  margin-top: 16rpx;
 }
 
 .what-to-eat-feed-card__action {
   display: flex;
-  min-width: 136rpx;
-  height: 64rpx;
-  padding: 0 22rpx;
+  min-width: 112rpx;
+  height: 56rpx;
+  padding: 0 18rpx;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  color: #fff;
+  color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
   font-size: var(--ousea-font-size-caption, 24rpx);
   font-weight: var(--ousea-font-weight-semibold, 600);
-  background: var(--ousea-sand-500, #e49a3a);
   border-radius: var(--ousea-radius-button, 20rpx);
 }
 
 .what-to-eat-feed-card__action--secondary {
-  color: var(--ousea-sand-700, #a8661c);
+  margin-left: auto;
+  color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
   background: transparent;
-  border: 1rpx solid var(--ousea-sand-200, #f0d5a4);
+}
+
+.what-to-eat-feed-card__action:not(.what-to-eat-feed-card__action--secondary) {
+  margin-left: 8rpx;
+  color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
+  background: var(--ousea-ocean-50, #f2f7fe);
 }
 
 page.dark .what-to-eat-feed-card,
 page.theme-dark .what-to-eat-feed-card {
-  background: linear-gradient(135deg, var(--ousea-sand-900, #3b2a18), var(--campus-surface, #182231));
-  border-color: var(--ousea-sand-700, #8c5b24);
-  box-shadow: none;
+  background: var(--campus-surface, #111827);
+  border-color: var(--campus-border, #243244);
+}
+
+page.dark .what-to-eat-feed-card__action:not(.what-to-eat-feed-card__action--secondary),
+page.theme-dark .what-to-eat-feed-card__action:not(.what-to-eat-feed-card__action--secondary) {
+  background: var(--campus-surface-primary, #172554);
 }
