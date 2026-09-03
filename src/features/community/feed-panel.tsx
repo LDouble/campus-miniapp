@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
+import { pickRandomFood, type FoodListing } from '../../api/what-to-eat'
+import { getMiniappRuntimeConfig, getSelectedCampus } from '../runtime-config'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -18,6 +20,7 @@ import CommunityCommentSheet from './comment-sheet'
 import { mergePublicCommentPreview } from './comments'
 import { saveCommunityDetailSnapshot } from './detail-snapshot'
 import CommunityPostCard, { type CommunityPostCommentPreview } from './post-card'
+import WhatToEatFeedCard, { openWhatToEatDetail } from './what-to-eat-feed-card'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './feed-panel.scss'
 
@@ -46,6 +49,31 @@ type CommunityFeedCacheEntry = {
 
 const communityFeedCache = new Map<string, CommunityFeedCacheEntry>()
 const COMMUNITY_FEED_CACHE_LIMIT = 20
+const WHAT_TO_EAT_CACHE_KEY = 'community.what-to-eat-feed.v1'
+
+type WhatToEatCache = { date: string; campus: string; item: FoodListing }
+
+const todayKey = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+const readWhatToEatCache = (campus: string) => {
+  try {
+    const cached = Taro.getStorageSync<WhatToEatCache>(WHAT_TO_EAT_CACHE_KEY)
+    return cached?.date === todayKey() && cached.campus === campus ? cached.item : null
+  } catch {
+    return null
+  }
+}
+
+const saveWhatToEatCache = (campus: string, item: FoodListing) => {
+  try {
+    Taro.setStorageSync(WHAT_TO_EAT_CACHE_KEY, { date: todayKey(), campus, item })
+  } catch {
+    // 缓存失败不影响 Feed 展示。
+  }
+}
 
 const saveCommunityFeedCache = (key: string, entry: CommunityFeedCacheEntry) => {
   communityFeedCache.delete(key)
@@ -96,11 +124,41 @@ export default function CommunityFeedPanel({
   const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+  const [whatToEatItem, setWhatToEatItem] = useState<FoodListing | null>(null)
+  const [whatToEatPicking, setWhatToEatPicking] = useState(false)
+  const [whatToEatCampus, setWhatToEatCampus] = useState('')
   const requestSequence = useRef(0)
   const loadingMoreRef = useRef(false)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
   const loadedQueryKeyRef = useRef<string | null>(null)
   const lastOverlayDismissSignalRef = useRef(overlayDismissSignal)
+
+  const pickWhatToEat = useCallback(async (force = false) => {
+    const campus = getSelectedCampus(getMiniappRuntimeConfig())
+    if (!campus) return
+    setWhatToEatCampus(campus)
+    if (!force) {
+      const cached = readWhatToEatCache(campus)
+      if (cached) {
+        setWhatToEatItem(cached)
+        return
+      }
+    }
+    setWhatToEatPicking(true)
+    try {
+      const item = await pickRandomFood(campus)
+      setWhatToEatItem(item)
+      saveWhatToEatCache(campus, item)
+    } catch {
+      setWhatToEatItem(null)
+    } finally {
+      setWhatToEatPicking(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void pickWhatToEat()
+  }, [pickWhatToEat])
 
   useEffect(() => {
     pendingPinnedPost.current = pinnedPost
@@ -353,6 +411,7 @@ export default function CommunityFeedPanel({
 
   const isCurrentQueryLoaded = loadedQueryKeyRef.current === queryKey
   const hasCurrentPosts = isCurrentQueryLoaded && posts.length > 0
+  const whatToEatInsertIndex = posts.length > 0 ? Math.min(3, posts.length - 1) : -1
   // 已有内容刷新时采用 stale-while-revalidate，避免返回详情页后先闪出骨架屏。
   const shouldRenderPostList = isCurrentQueryLoaded
     && (posts.length > 0 || (!loading && !error))
@@ -449,21 +508,30 @@ export default function CommunityFeedPanel({
       {sectionsReady && !sectionsError && activeSection && shouldRenderPostList && (
         <View className='community-post-list'>
           {posts.map((post, index) => (
-            <CommunityPostCard
-              key={post.id}
-              post={post}
-              motionDelay={index < 4 ? index + 1 : undefined}
-              sectionName={sectionNameForPost(post, '未知板块')}
-              actionsOpen={openActionPostId === post.id}
-              onToggleActions={toggleActions}
-              onCloseActions={closeActions}
-              onToggleLike={toggleLike}
-              onOpen={openPost}
-              onOpenComments={openComments}
-              onReplyComment={openCommentReply}
-              onOpenAuthor={openAuthor}
-              onSelectSection={onSelectSection}
-            />
+            <Fragment key={post.id}>
+              {index === whatToEatInsertIndex && whatToEatItem && whatToEatCampus && (
+                <WhatToEatFeedCard
+                  item={whatToEatItem}
+                  picking={whatToEatPicking}
+                  onPick={() => void pickWhatToEat(true)}
+                  onOpen={() => openWhatToEatDetail(whatToEatItem)}
+                />
+              )}
+              <CommunityPostCard
+                post={post}
+                motionDelay={index < 4 ? index + 1 : undefined}
+                sectionName={sectionNameForPost(post, '未知板块')}
+                actionsOpen={openActionPostId === post.id}
+                onToggleActions={toggleActions}
+                onCloseActions={closeActions}
+                onToggleLike={toggleLike}
+                onOpen={openPost}
+                onOpenComments={openComments}
+                onReplyComment={openCommentReply}
+                onOpenAuthor={openAuthor}
+                onSelectSection={onSelectSection}
+              />
+            </Fragment>
           ))}
         </View>
       )}

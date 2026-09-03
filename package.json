@@ -47,6 +47,7 @@
     "test:clubs": "ts-node --transpile-only scripts/clubs-smoke.ts",
     "test:official-notices": "ts-node --transpile-only scripts/official-notices-smoke.ts",
     "test:community-topic": "ts-node --transpile-only scripts/community-topic-smoke.ts",
+    "test:community-what-to-eat": "ts-node --transpile-only scripts/community-what-to-eat-smoke.ts",
     "test:community-performance": "ts-node --transpile-only scripts/community-performance-smoke.ts",
     "test:community-list-figma": "ts-node --transpile-only scripts/community-list-figma-smoke.ts",
     "test:community-tab-scroll-top": "ts-node --transpile-only scripts/community-tab-scroll-top-smoke.ts",
