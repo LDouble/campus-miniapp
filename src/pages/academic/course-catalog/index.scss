@@ -346,9 +346,12 @@
   }
 
   &__teacher {
-    flex: none;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
     color: #1e293b;
     font-weight: var(--ousea-font-weight-medium, 500);
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
