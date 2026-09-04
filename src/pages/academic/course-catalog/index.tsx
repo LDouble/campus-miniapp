@@ -23,7 +23,7 @@ import type {
   PersonalTimetableItemView,
 } from '../../../api/types'
 import CustomNavbar from '../../../components/custom-navbar'
-import { academicRepository } from '../repository'
+import { loadAcademicCalendar } from '../../../features/calendar/repository'
 import type { AcademicPeriod } from '../types'
 import { formatCourseWeeks, weekdays } from '../utils'
 import './index.scss'
@@ -396,12 +396,21 @@ export default function CourseCatalogPage() {
   useEffect(() => {
     let active = true
     setPeriodLoading(true)
-    // 复用学业仓库的周期缓存，避免课程检索页重复请求校历。
-    academicRepository.getPeriods()
-      .then((records) => {
+    // 课程目录可以切换学历层级，必须按当前层级读取校历。
+    // 私有学期接口只返回已绑定身份的学期，切换到另一学历后会留下错误的 period_id。
+    loadAcademicCalendar(educationLevel)
+      .then(({ calendar }) => {
         if (!active) return
+        const records: AcademicPeriod[] = (calendar?.terms || []).map((term) => ({
+          id: term.id,
+          label: term.label,
+          shortLabel: term.short_label,
+          startDate: term.start_date,
+          weeks: term.week_count,
+          isCurrent: term.is_current,
+        }))
         setPeriods(records)
-        setPeriodId((current) => current || records.find((period) => period.isCurrent)?.id || records[0]?.id || '')
+        setPeriodId(records.find((period) => period.isCurrent)?.id || records[0]?.id || '')
         if (!records.length) setLoading(false)
       })
       .catch((error) => {
@@ -415,7 +424,7 @@ export default function CourseCatalogPage() {
     return () => {
       active = false
     }
-  }, [])
+  }, [educationLevel])
 
   useEffect(() => {
     if (!periodId) return
@@ -440,6 +449,10 @@ export default function CourseCatalogPage() {
 
   const chooseEducationLevel = (next: AcademicEducationLevel) => {
     if (next === educationLevel) return
+    // 清空旧层级的学期，避免在新校历返回前以本科 period_id 查询研究生目录（反之亦然）。
+    setPeriodId('')
+    setPeriods([])
+    setPersonalItems([])
     setEducationLevel(next)
     setItems([])
     setPage(1)
