@@ -3,8 +3,13 @@ import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { ITouchEvent } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
-import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import {
+  getActiveAcademicUserId,
+  loadAcademicCredential,
+  type AcademicEducationLevel,
+} from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
+import { listPersonalTimetableItems } from '../../../api/personal-timetable'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
@@ -25,7 +30,10 @@ import { isAcademicBindingRequiredError } from '../../../features/academic-verif
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { findCourseConflicts } from '../calculations'
-import { academicRepository } from '../repository'
+import {
+  academicRepository,
+  mapPersonalTimetableItemCourses,
+} from '../repository'
 import {
   CoursesByPeriod,
   getCourseScheduleKey,
@@ -138,6 +146,14 @@ const emptyDraft = (periodId: string): CustomCourseDraft => ({
   color: 'aqua',
 })
 
+const getDefaultEducationLevel = (): AcademicEducationLevel => {
+  try {
+    return loadAcademicCredential(getActiveAcademicUserId()).educationLevel
+  } catch {
+    return 'undergraduate'
+  }
+}
+
 interface CourseDetailCardProps {
   course: Course
   currentWeek: number
@@ -184,8 +200,22 @@ function CourseDetailCard({
           <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
-          <View><Text>来源</Text><Text>{course.source === 'custom' ? '自定义课程' : '教务课程'}</Text></View>
+          <View><Text>来源</Text><Text>{course.source === 'custom'
+            ? '自定义课程'
+            : course.source === 'audit'
+              ? '蹭课课表'
+              : '教务课程'}</Text></View>
         </View>
+        {course.source === 'audit' && course.auditStatus && course.auditStatus !== 'current' && (
+          <View className='course-conflict-card__note'>
+            <Text className='course-conflict-card__note-label'>排课提示</Text>
+            <Text className='course-conflict-card__note-copy'>
+              {course.auditStatus === 'withdrawn'
+                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“蹭课检索”。'
+                : '课程目录已有更新，请到“蹭课检索”同步最新安排。'}
+            </Text>
+          </View>
+        )}
         {courseNote && (
           <View className='course-conflict-card__note'>
             <Text className='course-conflict-card__note-label'>课程备注</Text>
@@ -251,6 +281,8 @@ export default function SchedulePage() {
     initialCoursesByPeriod,
   )
   const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
+  const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
+  const [personalCourses, setPersonalCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(!hasInitialCourses)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
@@ -274,6 +306,7 @@ export default function SchedulePage() {
     emptyDraft(preferences.schedulePeriodId),
   )
   const scheduleRequestRef = useRef(0)
+  const personalTimetableRequestRef = useRef(0)
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
   const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
@@ -302,8 +335,9 @@ export default function SchedulePage() {
   )
   const allCourses = useMemo(() => [
     ...officialCourses,
+    ...personalCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
     ...customCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
-  ], [customCourses, officialCourses, preferences.schedulePeriodId])
+  ], [customCourses, officialCourses, personalCourses, preferences.schedulePeriodId])
   const weekCourses = useMemo(
     () => getCoursesForWeek(allCourses, preferences.week),
     [allCourses, preferences.week],
@@ -317,6 +351,24 @@ export default function SchedulePage() {
       )),
     [preferences.selectedWeekday, weekCourses],
   )
+
+  const loadPersonalCourses = useCallback(async (
+    nextPeriodId = preferences.schedulePeriodId,
+  ) => {
+    if (!nextPeriodId) {
+      setPersonalCourses([])
+      return
+    }
+    const requestId = personalTimetableRequestRef.current + 1
+    personalTimetableRequestRef.current = requestId
+    try {
+      const result = await listPersonalTimetableItems(educationLevel, nextPeriodId)
+      if (personalTimetableRequestRef.current !== requestId) return
+      setPersonalCourses(result.items.flatMap(mapPersonalTimetableItemCourses))
+    } catch {
+      if (personalTimetableRequestRef.current === requestId) setPersonalCourses([])
+    }
+  }, [educationLevel, preferences.schedulePeriodId])
 
   useEffect(() => {
     let active = true
@@ -461,6 +513,11 @@ export default function SchedulePage() {
       active = false
     }
   }, [academicUserId, initialized, periods, preferences.schedulePeriodId])
+
+  useEffect(() => {
+    if (!initialized) return
+    void loadPersonalCourses()
+  }, [initialized, loadPersonalCourses])
 
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
   useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
@@ -636,6 +693,7 @@ export default function SchedulePage() {
       firstPageShowRef.current = false
       return
     }
+    void loadPersonalCourses()
     if (shouldRefresh) void refreshSchedule()
   })
 

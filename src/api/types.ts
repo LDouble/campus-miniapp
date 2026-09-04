@@ -27,6 +27,13 @@ export type AcademicCourseSelection = components['schemas']['AcademicCourseSelec
 export type AcademicCoursePassRatePage = components['schemas']['AcademicCoursePassRatePage']
 export type AcademicInstructorPassRatePage = components['schemas']['AcademicInstructorPassRatePage']
 export type AcademicPassRateTrend = components['schemas']['AcademicPassRateTrend']
+export type MemberCourseCatalogCourse = components['schemas']['MemberCourseCatalogCourse']
+export type MemberCourseCatalogCoursePage = components['schemas']['MemberCourseCatalogCoursePage']
+export type MemberCourseCatalogScheduleSlot = components['schemas']['MemberCourseCatalogScheduleSlot']
+export type PersonalTimetableItemList = components['schemas']['PersonalTimetableItemList']
+export type PersonalTimetableItemView = components['schemas']['PersonalTimetableItemView']
+export type PersonalTimetableItemSlotView = components['schemas']['PersonalTimetableItemSlotView']
+export type PersonalTimetableSourceStatus = components['schemas']['PersonalTimetableSourceStatus']
 
 export type ErrandView = components['schemas']['ErrandView']
 export type ErrandViewPage = components['schemas']['ErrandViewPage']

@@ -1,6 +1,6 @@
 export type AcademicSection = 'schedule' | 'grades' | 'exams'
 export type ScheduleView = 'week' | 'day'
-export type CourseSource = 'official' | 'custom'
+export type CourseSource = 'official' | 'custom' | 'audit'
 export type ExamFilter = 'all' | 'upcoming' | 'finished'
 export type ExamPhase = '期中' | '期末' | '补考' | '入学'
 export type CourseSelectionStatus = 'selected' | 'pending' | 'failed'
@@ -30,6 +30,8 @@ export interface Course {
   weeks: number[]
   color: string
   source: CourseSource
+  auditItemId?: number
+  auditStatus?: 'current' | 'updated' | 'withdrawn'
 }
 
 export interface CustomCourseDraft {
