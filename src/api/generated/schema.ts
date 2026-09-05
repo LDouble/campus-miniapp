@@ -559,6 +559,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/academic-course-catalog/general-education/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 上传本科通识课程模块关系表 */
+        post: operations["ImportAdminGeneralEducationCourseModules"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/general-education/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询通识模块来源通知 */
+        get: operations["ListAdminGeneralEducationSources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/academic-course-catalog/runs": {
         parameters: {
             query?: never;
@@ -653,6 +687,23 @@ export interface paths {
         };
         /** 已认证 member 搜索当前有效课程目录 */
         get: operations["ListMemberCourseCatalogCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-catalog/general-education/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询本科通识模块筛选项 */
+        get: operations["ListMemberCourseCatalogGeneralEducationModules"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5856,6 +5907,53 @@ export interface components {
             start_section: number;
             teachers?: string | null;
         };
+        AdminGeneralEducationImportResponseBody: {
+            data: components["schemas"]["AdminGeneralEducationImportResult"];
+            request_id: string;
+        };
+        AdminGeneralEducationImportResult: {
+            /** Format: int64 */
+            created_course_count: number;
+            /** Format: int64 */
+            created_module_count: number;
+            /** Format: int64 */
+            created_relation_count: number;
+            /** Format: int64 */
+            duplicate_relation_count: number;
+            /** Format: int64 */
+            relation_count: number;
+            /** Format: int64 */
+            row_count: number;
+            /** Format: uint64 */
+            source_id: number;
+            source_title: string;
+        };
+        AdminGeneralEducationSource: {
+            /** Format: date-time */
+            created_at: string;
+            file_name: string;
+            /** Format: uint64 */
+            id: number;
+            notice_url?: string | null;
+            /** Format: int64 */
+            relation_count: number;
+            /** Format: int64 */
+            row_count: number;
+            title: string;
+            /** Format: uint64 */
+            uploaded_by: number;
+        };
+        AdminGeneralEducationSourcePage: {
+            items: components["schemas"]["AdminGeneralEducationSource"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AdminGeneralEducationSourcePageResponseBody: {
+            data: components["schemas"]["AdminGeneralEducationSourcePage"];
+            request_id: string;
+        };
         ArchiveAcademicCourseCatalogBatchInput: {
             /** Format: uint64 */
             expected_version: number;
@@ -5879,6 +5977,7 @@ export interface components {
             data_version: string;
             /** @enum {string} */
             education_level: "undergraduate" | "graduate";
+            general_education_modules: components["schemas"]["MemberCourseCatalogGeneralEducationModule"][];
             instruction_language?: string | null;
             location_text?: string | null;
             offering_id: string;
@@ -5900,6 +5999,18 @@ export interface components {
         };
         MemberCourseCatalogCoursePageResponseBody: {
             data: components["schemas"]["MemberCourseCatalogCoursePage"];
+            request_id: string;
+        };
+        MemberCourseCatalogGeneralEducationModule: {
+            /** Format: uint64 */
+            id: number;
+            name: string;
+        };
+        MemberCourseCatalogGeneralEducationModuleList: {
+            items: components["schemas"]["MemberCourseCatalogGeneralEducationModule"][];
+        };
+        MemberCourseCatalogGeneralEducationModuleListResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogGeneralEducationModuleList"];
             request_id: string;
         };
         MemberCourseCatalogScheduleSlot: {
@@ -9607,6 +9718,24 @@ export interface components {
                 "application/json": components["schemas"]["AcademicCourseCatalogScheduleSlotPageResponseBody"];
             };
         };
+        /** @description 通识模块关系导入结果 */
+        AdminGeneralEducationImportResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminGeneralEducationImportResponseBody"];
+            };
+        };
+        /** @description 通识模块来源通知分页 */
+        AdminGeneralEducationSourcePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminGeneralEducationSourcePageResponseBody"];
+            };
+        };
         /** @description 已认证 member 当前学期可用课程类别 */
         MemberCourseCatalogCategoryListResponse: {
             headers: {
@@ -9623,6 +9752,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MemberCourseCatalogCoursePageResponseBody"];
+            };
+        };
+        /** @description 已认证 member 查询本科通识模块筛选项 */
+        MemberCourseCatalogGeneralEducationModuleListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberCourseCatalogGeneralEducationModuleListResponseBody"];
             };
         };
         /** @description 课程通过率分页 */
@@ -11480,6 +11618,48 @@ export interface operations {
             200: components["responses"]["AcademicCourseCatalogEntryPageResponse"];
         };
     };
+    ImportAdminGeneralEducationCourseModules: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    notice_title: string;
+                    notice_url?: string;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["AdminGeneralEducationImportResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            413: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    ListAdminGeneralEducationSources: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminGeneralEducationSourcePageResponse"];
+        };
+    };
     TriggerAdminAcademicCourseCatalogRun: {
         parameters: {
             query?: never;
@@ -11606,6 +11786,7 @@ export interface operations {
                 offering_unit?: string;
                 campus?: string;
                 course_category?: string;
+                general_education_module_id?: number;
                 teaching_week?: number;
                 weekday?: number;
                 section?: number;
@@ -11620,6 +11801,21 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["MemberCourseCatalogCoursePageResponse"];
+        };
+    };
+    ListMemberCourseCatalogGeneralEducationModules: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberCourseCatalogGeneralEducationModuleListResponse"];
         };
     };
     ListAcademicCoursePassRates: {
