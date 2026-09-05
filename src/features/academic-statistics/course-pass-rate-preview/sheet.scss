@@ -1,0 +1,200 @@
+.course-pass-rate-overlay {
+  position: fixed;
+  z-index: 60;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(11, 18, 32, 0.68);
+}
+
+.course-pass-rate-sheet {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 76vh;
+  padding: 18rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  color: var(--campus-text-body, var(--ousea-ink-700, #3a4759));
+  background: var(--campus-surface, #fff);
+  border-radius: var(--ousea-radius-sheet, 44rpx) var(--ousea-radius-sheet, 44rpx) 0 0;
+  box-shadow: 0 -8rpx 32rpx rgba(0, 0, 0, 0.12);
+
+  &__handle {
+    width: 64rpx;
+    height: 8rpx;
+    margin: 0 auto 24rpx;
+    background: var(--campus-border, var(--ousea-bg-line, #e8edf4));
+    border-radius: var(--ousea-radius-pill, 999rpx);
+  }
+
+  &__close {
+    position: absolute;
+    top: 22rpx;
+    right: 28rpx;
+    display: flex;
+    width: 56rpx;
+    height: 56rpx;
+    align-items: center;
+    justify-content: center;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: 42rpx;
+    font-weight: var(--ousea-font-weight-regular, 400);
+    line-height: 1;
+  }
+
+  &__header {
+    display: flex;
+    min-width: 0;
+    padding-right: 56rpx;
+    flex-direction: column;
+    gap: 4rpx;
+  }
+
+  &__eyebrow {
+    color: var(--campus-primary, var(--ousea-ocean-500, #2b7aef));
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__title {
+    overflow: hidden;
+    color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
+    font-size: var(--ousea-font-size-title, 33rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__subtitle {
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.55;
+  }
+
+  &__state {
+    display: flex;
+    min-height: 184rpx;
+    align-items: center;
+    justify-content: center;
+    margin-top: 28rpx;
+    padding: 24rpx;
+    gap: 10rpx;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.55;
+    text-align: center;
+    background: var(--campus-surface-subtle, var(--ousea-bg-page, #f5f8fc));
+    border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+    flex-direction: column;
+  }
+
+  &__state-title {
+    color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+  }
+
+  &__loader {
+    width: 32rpx;
+    height: 32rpx;
+    border: 4rpx solid var(--campus-border-strong, var(--ousea-ocean-100, #e3effe));
+    border-top-color: var(--campus-primary, var(--ousea-ocean-500, #2b7aef));
+    border-radius: 50%;
+    animation: course-pass-rate-sheet-spin 800ms linear infinite;
+  }
+
+  &__text-action {
+    margin-top: 4rpx;
+    color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+  }
+
+  &__metrics {
+    display: grid;
+    margin-top: 28rpx;
+    padding: 22rpx 0;
+    background: var(--campus-surface-subtle, var(--ousea-bg-page, #f5f8fc));
+    border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
+    border-radius: var(--ousea-radius-card, 32rpx);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  &__metric {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    padding: 0 12rpx;
+    gap: 4rpx;
+    border-left: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
+    flex-direction: column;
+    text-align: center;
+
+    &:first-child { border-left: 0; }
+
+    > text:first-child {
+      overflow: hidden;
+      color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
+      font-size: 30rpx;
+      font-weight: var(--ousea-font-weight-semibold, 600);
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    > text:last-child {
+      overflow: hidden;
+      color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+      font-size: var(--ousea-font-size-badge, 20rpx);
+      line-height: var(--ousea-line-height-ui, 1.4);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &--primary > text:first-child {
+      color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
+    }
+  }
+
+  &__cache {
+    display: block;
+    margin-top: 12rpx;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.4;
+  }
+
+  &__details-action {
+    display: flex;
+    min-height: 88rpx;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 24rpx;
+    padding: 0 24rpx;
+    color: #fff;
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    background: var(--campus-primary, var(--ousea-ocean-500, #2b7aef));
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+
+    > text:last-child {
+      font-size: 40rpx;
+      font-weight: var(--ousea-font-weight-regular, 400);
+      line-height: 1;
+    }
+  }
+}
+
+@keyframes course-pass-rate-sheet-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-pass-rate-sheet__loader { animation: none; }
+}
