@@ -400,12 +400,6 @@ export default function GeneralEducationPage() {
     <View className='general-education-page'>
       <CustomNavbar title='通识模块查询' subtitle='本科通识课程 · 按模块或课程查归属' showBack />
       <View className='general-education-page__content'>
-        <View className='general-education-intro'>
-          <Text className='general-education-intro__eyebrow'>GENERAL EDUCATION</Text>
-          <Text className='general-education-intro__title'>本科通识课程</Text>
-          <Text className='general-education-intro__copy'>按模块浏览课程，或搜索课程查看全部通识归属。</Text>
-        </View>
-
         <View className='general-education-note' role='status' ariaLabel='通识模块数据说明'>
           <Text className='general-education-note__icon'>i</Text>
           <Text>这里展示独立维护的本科通识课程库，不与具体学期或实际开课绑定；一门课程可以同时属于多个模块。</Text>

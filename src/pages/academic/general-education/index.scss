@@ -12,39 +12,6 @@ page {
   }
 }
 
-.general-education-intro {
-  padding: 8rpx 4rpx 24rpx;
-
-  &__eyebrow,
-  &__title,
-  &__copy {
-    display: block;
-  }
-
-  &__eyebrow {
-    color: var(--ousea-ocean-600, #1d5fd6);
-    font-size: var(--ousea-font-size-badge, 20rpx);
-    font-weight: var(--ousea-font-weight-bold, 700);
-    letter-spacing: 2rpx;
-    line-height: var(--ousea-line-height-ui, 1.4);
-  }
-
-  &__title {
-    margin-top: 8rpx;
-    color: var(--ousea-ink-900, #1a2333);
-    font-size: 40rpx;
-    font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: 1.35;
-  }
-
-  &__copy {
-    margin-top: 8rpx;
-    color: var(--ousea-ink-500, #6b7a90);
-    font-size: var(--ousea-font-size-caption, 24rpx);
-    line-height: 1.55;
-  }
-}
-
 .general-education-note {
   display: flex;
   align-items: flex-start;
