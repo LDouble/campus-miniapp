@@ -688,6 +688,14 @@
     line-height: 1.5;
   }
 
+  &__note {
+    display: block;
+    margin-top: 8rpx;
+    color: var(--campus-danger, var(--ousea-danger-500, #e5484d));
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.5;
+  }
+
   &__no-slots {
     display: flex;
     flex-direction: column;
@@ -839,59 +847,6 @@
     display: flex;
     flex-direction: column;
     gap: 16rpx;
-  }
-}
-
-.course-catalog-saved-item {
-  padding: 22rpx 24rpx;
-  background: var(--campus-surface-subtle, var(--ousea-bg-page, #f5f8fc));
-  border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
-  border-radius: var(--ousea-radius-card-sm, 24rpx);
-
-  &__head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14rpx;
-  }
-
-  &__identity {
-    min-width: 0;
-  }
-
-  &__name {
-    display: block;
-    color: var(--campus-text-heading, var(--ousea-ink-900, #1a2333));
-    font-size: var(--ousea-font-size-title, 33rpx);
-    font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-  }
-
-  &__meta,
-  &__slots,
-  &__note {
-    display: block;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-  }
-
-  &__meta {
-    margin-top: 6rpx;
-    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
-    font-size: var(--ousea-font-size-caption, 24rpx);
-  }
-
-  &__slots {
-    margin-top: 16rpx;
-    color: var(--campus-text-body, var(--ousea-ink-700, #3a4759));
-    font-size: var(--ousea-font-size-label, 27rpx);
-  }
-
-  &__note {
-    margin-top: 8rpx;
-    color: var(--campus-danger, var(--ousea-danger-500, #e5484d));
-    font-size: var(--ousea-font-size-caption, 24rpx);
   }
 }
 

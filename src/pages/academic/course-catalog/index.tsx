@@ -97,15 +97,6 @@ const simulationCoursePrefix = (course: MemberCourseCatalogCourse) => (
   `simulation:${course.period_id}:${course.offering_id}:`
 )
 
-const personalSlotSummary = (slot: PersonalTimetableItemView['slots'][number], fallback?: string | null) => {
-  const location = slotLocation(slot, fallback)
-  return [
-    `${weekdays[slot.weekday - 1] || `星期${slot.weekday}`} 第 ${slot.start_section}-${slot.end_section} 节`,
-    formatCourseWeeks(slot.weeks),
-    location,
-  ].filter(Boolean).join(' · ')
-}
-
 const personalStatusLabel = (status: PersonalTimetableItemView['source_status']) => (
   status === 'updated'
       ? '目录有更新'
@@ -264,30 +255,74 @@ interface SavedCourseCardProps {
 }
 
 function SavedCourseCard({ item, busy, onRefresh, onRemove }: SavedCourseCardProps) {
+  const summary = [item.class_name, item.course_category]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(' · ')
   return (
-    <View className='course-catalog-saved-item'>
-      <View className='course-catalog-saved-item__head'>
-        <View className='course-catalog-saved-item__identity'>
-          <Text className='course-catalog-saved-item__name'>{item.course_name}</Text>
-          <Text className='course-catalog-saved-item__meta'>
-            {[
-              item.course_code && `课程代码：${item.course_code}`,
-              item.opening_code && `选课号：${item.opening_code}`,
-              item.teachers.length ? `教师：${item.teachers.join('、')}` : '教师未填写',
-            ].filter(Boolean).join(' · ')}
-          </Text>
+    <View className='course-catalog-card'>
+      <View className='course-catalog-card__head'>
+        <View className='course-catalog-card__identity'>
+          <View className='course-catalog-card__title-row'>
+            <Text className='course-catalog-card__name'>{item.course_name}</Text>
+            {item.course_category && <Text className='course-catalog-card__tag'>{item.course_category}</Text>}
+            {item.credits && <Text className='course-catalog-card__tag course-catalog-card__tag--neutral'>{item.credits} 学分</Text>}
+          </View>
         </View>
-        <View className={`course-catalog-card__status course-catalog-card__status--${item.source_status}`}>
-          {personalStatusLabel(item.source_status)}
+        <View className='course-catalog-card__head-actions'>
+          <View className={`course-catalog-card__status course-catalog-card__status--${item.source_status}`}>
+            {personalStatusLabel(item.source_status)}
+          </View>
         </View>
       </View>
-      <Text className='course-catalog-saved-item__slots'>
-        {item.slots.length
-          ? item.slots.map((slot) => personalSlotSummary(slot, item.location_text)).join('；')
-          : '原安排暂无可展示的排课信息'}
-      </Text>
+
+      {(item.course_code || item.opening_code) && (
+        <View className='course-catalog-card__reference'>
+          {item.opening_code && <Text>选课号 {item.opening_code}</Text>}
+          {item.course_code && <Text>课程代码 {item.course_code}</Text>}
+        </View>
+      )}
+
+      <View className='course-catalog-card__meta'>
+        <View className='course-catalog-card__facts'>
+          <Text className='course-catalog-card__teacher-avatar'>{item.teachers[0]?.slice(0, 1) || '师'}</Text>
+          <Text className='course-catalog-card__teacher'>{item.teachers.join('、') || '教师待确认'}</Text>
+          {item.offering_unit && <Text className='course-catalog-card__unit'>{item.offering_unit}</Text>}
+        </View>
+        {summary && <Text className='course-catalog-card__summary'>{summary}</Text>}
+        {!item.slots.length && (item.campus || item.location_text) && (
+          <Text>地点：{[item.campus, item.location_text].filter(Boolean).join(' · ')}</Text>
+        )}
+      </View>
+
+      {item.slots.length ? (
+        <View className='course-catalog-slots'>
+          <View className='course-catalog-card__section-head'>
+            <Text className='course-catalog-card__section-title'>上课安排</Text>
+            <Text className='course-catalog-card__section-summary'>共 {item.slots.length} 条</Text>
+          </View>
+          {item.slots.map((slot) => {
+            const location = slotLocation(slot, item.location_text)
+            return (
+              <View key={slot.source_schedule_slot_id} className='course-catalog-slot'>
+                <View className='course-catalog-slot__timing'>
+                  <Text className='course-catalog-slot__time'>
+                    {weekdays[slot.weekday - 1] || `星期${slot.weekday}`} · {slot.start_section}-{slot.end_section} 节
+                  </Text>
+                  <Text className='course-catalog-slot__weeks'>{formatCourseWeeks(slot.weeks)}</Text>
+                </View>
+                <Text className='course-catalog-slot__location'>{location || '地点待确认'}</Text>
+              </View>
+            )
+          })}
+        </View>
+      ) : (
+        <View className='course-catalog-card__no-slots'>
+          <Text>{item.schedule_text || '原安排暂无可展示的排课信息'}</Text>
+        </View>
+      )}
+
       {item.source_status === 'withdrawn' && (
-        <Text className='course-catalog-saved-item__note'>课程已从当前目录下架，原安排仍保留在课表中。</Text>
+        <Text className='course-catalog-card__note'>课程已从当前目录下架，原安排仍保留在课表中。</Text>
       )}
       <View className='course-catalog-card__actions'>
         {item.source_status === 'updated' && (

@@ -34,6 +34,8 @@ assert.match(courseCatalogPage, /course-catalog-view-tabs/u, '蹭课页应提供
 assert.match(courseCatalogPage, /activeView === 'saved'/u, '我的蹭课标签应切换到独立安排视图')
 assert.match(courseCatalogPage, /personalItems\.map/u, '我的蹭课视图应展示当前学期全部已加入安排')
 assert.match(courseCatalogPage, /onRemove=\{\(\) => void removeCourse\(item\)\}/u, '我的蹭课视图应支持移除安排')
+assert.match(courseCatalogPage, /function SavedCourseCard[\s\S]*<View className='course-catalog-card'>/u, '我的蹭课卡片应复用课程检索卡片样式')
+assert.doesNotMatch(courseCatalogPage, /course-catalog-saved-item/u, '我的蹭课卡片不应继续使用独立旧卡片样式')
 assert.match(courseCatalogPage, /course\.opening_code/u, '课程卡片应展示服务端返回的选课号')
 assert.match(courseCatalogPage, /item\.opening_code/u, '已保存蹭课快照应展示选课号')
 assert.doesNotMatch(courseCatalogStyle, /linear-gradient|filter:\s*blur/u, '蹭课页不应使用渐变或装饰光晕')
