@@ -767,7 +767,9 @@ export default function CourseCatalogPage() {
         >
           <View className='course-catalog-disclaimer__icon'>!</View>
           <View className='course-catalog-disclaimer__body'>
-            <Text className='course-catalog-disclaimer__title'>蹭课说明</Text>
+            {disclaimerExpanded && (
+              <Text className='course-catalog-disclaimer__title'>蹭课说明</Text>
+            )}
             {disclaimerExpanded ? (
               <>
                 <Text className='course-catalog-disclaimer__copy'>蹭课仅用于方便旁听、联系教师，不存在真实的选课关系。</Text>

@@ -45,6 +45,11 @@ assert.match(courseCatalogPage, /不存在真实的选课关系/u, '蹭课说明
 assert.match(courseCatalogPage, /请前往教务系统操作/u, '蹭课说明必须提示真实选课入口')
 assert.match(courseCatalogPage, /hasSeenCourseCatalogDisclaimer/u, '蹭课说明首次展示状态应从本地读取')
 assert.match(courseCatalogPage, /course-catalog-disclaimer__collapsed-copy/u, '蹭课说明收起后应展示缩略文案')
+assert.match(
+  courseCatalogPage,
+  /\{disclaimerExpanded && \(\s*<Text className='course-catalog-disclaimer__title'>蹭课说明<\/Text>\s*\)\}/u,
+  '蹭课说明标题只应在展开状态显示',
+)
 assert.match(courseCatalogStyle, /&__collapsed-copy[\s\S]*text-overflow:\s*ellipsis/u, '蹭课说明缩略文案过长时应省略')
 assert.match(courseCatalogPage, /course-catalog-card__teacher[\s\S]*course-catalog-card__summary/u, '课程卡片应先展示教师名，再在右侧展示班级说明')
 assert.match(courseCatalogStyle, /&__teacher\s*\{[\s\S]*flex:\s*0 0 72rpx[\s\S]*min-width:\s*72rpx[\s\S]*max-width:\s*72rpx/u, '教师名展示槽位应固定为三个中文字符宽度')
