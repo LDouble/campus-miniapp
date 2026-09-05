@@ -718,7 +718,7 @@ export default function CourseCatalogPage() {
     <View className='course-catalog-page'>
       <CustomNavbar title='蹭课检索' subtitle='按课程与教师寻找可旁听课程' showBack />
 
-      <View className='course-catalog-page__content'>
+        <View className='course-catalog-page__content'>
         <View className='course-catalog-scope'>
           <View className='course-catalog-level-switch'>
             {educationLevelOptions.map(([value, label]) => (
@@ -750,6 +750,19 @@ export default function CourseCatalogPage() {
               ))}
             </ScrollView>
           )}
+        </View>
+
+        <View
+          className='course-catalog-disclaimer'
+          role='note'
+          ariaLabel='蹭课说明：仅用于旁听和联系教师，不存在真实选课关系，真实选课请在教务系统操作'
+        >
+          <View className='course-catalog-disclaimer__icon'>!</View>
+          <View className='course-catalog-disclaimer__body'>
+            <Text className='course-catalog-disclaimer__title'>蹭课说明</Text>
+            <Text className='course-catalog-disclaimer__copy'>蹭课仅用于方便旁听、联系教师，不存在真实的选课关系。</Text>
+            <Text className='course-catalog-disclaimer__hint'>如需正式选课，请前往教务系统操作。</Text>
+          </View>
         </View>
 
         <View className='course-catalog-view-tabs'>

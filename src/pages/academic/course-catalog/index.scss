@@ -17,6 +17,64 @@
   font-weight: var(--ousea-font-weight-medium, 500);
 }
 
+.course-catalog-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  padding: 18rpx 20rpx;
+  margin: 0 0 16rpx;
+  background: #fff8eb;
+  border: 1rpx solid #f6d9a8;
+  border-radius: 18rpx;
+
+  &__icon {
+    display: flex;
+    width: 38rpx;
+    height: 38rpx;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2rpx;
+    color: #fff;
+    font-size: 24rpx;
+    font-weight: var(--ousea-font-weight-bold, 700);
+    background: #e49a32;
+    border-radius: 50%;
+  }
+
+  &__body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__title,
+  &__copy,
+  &__hint {
+    display: block;
+  }
+
+  &__title {
+    color: #8a5816;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: 1.4;
+  }
+
+  &__copy {
+    margin-top: 4rpx;
+    color: #6f4d24;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.55;
+  }
+
+  &__hint {
+    margin-top: 3rpx;
+    color: #a4773a;
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.45;
+  }
+}
+
 .course-catalog-float {
   position: fixed;
   right: 24rpx;
