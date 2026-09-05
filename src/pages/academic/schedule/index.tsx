@@ -135,7 +135,12 @@ const defaultPreferences: AcademicPreferences = {
   scheduleView: 'week',
 }
 
-type ScheduleSheet = 'period' | 'week' | 'course-detail' | 'course-form' | null
+type ScheduleSheet = 'period' | 'week' | 'course-detail' | 'course-form' | 'time-slot-actions' | null
+
+interface ScheduleTimeSlot {
+  weekday: number
+  section: number
+}
 
 const emptyDraft = (periodId: string): CustomCourseDraft => ({
   periodId,
@@ -326,6 +331,7 @@ export default function SchedulePage() {
   const [sheet, setSheet] = useState<ScheduleSheet>(null)
   const [activeCourse, setActiveCourse] = useState<Course | null>(null)
   const [activeSlotCourses, setActiveSlotCourses] = useState<Course[]>([])
+  const [activeTimeSlot, setActiveTimeSlot] = useState<ScheduleTimeSlot | null>(null)
   const [courseDraft, setCourseDraft] = useState<CustomCourseDraft>(
     emptyDraft(preferences.schedulePeriodId),
   )
@@ -762,6 +768,19 @@ export default function SchedulePage() {
     setSheet('course-detail')
   }
 
+  const openTimeSlotActions = (weekday: number, section: number) => {
+    setActiveTimeSlot({ weekday, section })
+    setSheet('time-slot-actions')
+  }
+
+  const openCourseCatalogAtTimeSlot = (slot: ScheduleTimeSlot) => {
+    setSheet(null)
+    setActiveTimeSlot(null)
+    void Taro.navigateTo({
+      url: `/pages/academic/course-catalog/index?weekday=${slot.weekday}&section=${slot.section}`,
+    })
+  }
+
   const closeCourseFloat = () => {
     setSheet(null)
     setActiveCourse(null)
@@ -1092,6 +1111,10 @@ export default function SchedulePage() {
                 gridRow: String(section),
               }}
               onClick={() => openTimeSlot(weekday, section)}
+              onLongPress={(event) => {
+                event.stopPropagation()
+                openTimeSlotActions(weekday, section)
+              }}
             />
           )
         })}
@@ -1148,6 +1171,10 @@ export default function SchedulePage() {
                   ? `${course.name}，同一时段另有 ${relatedCount} 门其他周次课程`
                   : `${course.name}，第 ${course.startSection} 到 ${course.endSection} 节`}
               onClick={() => openCourse(course)}
+              onLongPress={(event) => {
+                event.stopPropagation()
+                openTimeSlotActions(course.weekday, course.startSection)
+              }}
             >
               {hasConflict ? (
                 <>
@@ -1215,6 +1242,10 @@ export default function SchedulePage() {
                 key={getCourseScheduleKey(course)}
                 className='day-course'
                 onClick={() => openCourse(course)}
+                onLongPress={(event) => {
+                  event.stopPropagation()
+                  openTimeSlotActions(course.weekday, course.startSection)
+                }}
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
                 <View className='day-course__sections'>
@@ -1333,10 +1364,42 @@ export default function SchedulePage() {
       )
     }
     return (
-      <View className='academic-overlay' onClick={() => setSheet(null)}>
+      <View
+        className='academic-overlay'
+        onClick={() => {
+          setSheet(null)
+          setActiveTimeSlot(null)
+        }}
+      >
         <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
-          <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+          <View
+            className='academic-sheet__close'
+            onClick={() => {
+              setSheet(null)
+              setActiveTimeSlot(null)
+            }}
+          >×</View>
+          {sheet === 'time-slot-actions' && activeTimeSlot && (
+            <View className='academic-sheet__body academic-sheet__body--time-slot-actions'>
+              <Text className='academic-sheet__title'>
+                {isSimulation ? '为这个时段选课' : '为这个时段蹭课'}
+              </Text>
+              <Text className='academic-sheet__subtitle'>
+                {weekdays[activeTimeSlot.weekday - 1] || `星期${activeTimeSlot.weekday}`} · 第 {activeTimeSlot.section} 节
+              </Text>
+              <View className='academic-sheet__actions'>
+                <View
+                  className='academic-button academic-button--full'
+                  ariaRole='button'
+                  ariaLabel={isSimulation ? '选课' : '蹭课'}
+                  onClick={() => openCourseCatalogAtTimeSlot(activeTimeSlot)}
+                >
+                  {isSimulation ? '选课' : '蹭课'}
+                </View>
+              </View>
+            </View>
+          )}
           {sheet === 'period' && (
             <View className='academic-sheet__body'>
               <Text className='academic-sheet__title'>选择学年学期</Text>

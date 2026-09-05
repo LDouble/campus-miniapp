@@ -50,6 +50,16 @@ const hasCourseCatalogFilters = (filters: CourseCatalogFilters) => (
   filters.weekday > 0 || filters.section > 0 || Boolean(filters.courseCategory.trim())
 )
 
+const routeCourseCatalogFilters = (params: Record<string, string | undefined>): CourseCatalogFilters => {
+  const weekday = Number(params.weekday)
+  const section = Number(params.section)
+  return {
+    weekday: Number.isInteger(weekday) && weekday >= 1 && weekday <= 7 ? weekday : 0,
+    section: Number.isInteger(section) && section >= 1 && section <= 12 ? section : 0,
+    courseCategory: '',
+  }
+}
+
 const getDefaultEducationLevel = (): AcademicEducationLevel => {
   try {
     return loadAcademicCredential(getActiveAcademicUserId()).educationLevel
@@ -293,6 +303,8 @@ function SavedCourseCard({ item, busy, onRefresh }: SavedCourseCardProps) {
 }
 
 export default function CourseCatalogPage() {
+  const router = Taro.useRouter()
+  const initialRouteFilters = routeCourseCatalogFilters(router.params)
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
   const [periods, setPeriods] = useState<AcademicPeriod[]>([])
   const [periodId, setPeriodId] = useState('')
@@ -300,9 +312,9 @@ export default function CourseCatalogPage() {
   const [teacher, setTeacher] = useState('')
   const [submittedCourseName, setSubmittedCourseName] = useState('')
   const [submittedTeacher, setSubmittedTeacher] = useState('')
-  const [filters, setFilters] = useState<CourseCatalogFilters>(emptyCourseCatalogFilters)
-  const [submittedFilters, setSubmittedFilters] = useState<CourseCatalogFilters>(emptyCourseCatalogFilters)
-  const [showMoreFilters, setShowMoreFilters] = useState(false)
+  const [filters, setFilters] = useState<CourseCatalogFilters>(initialRouteFilters)
+  const [submittedFilters, setSubmittedFilters] = useState<CourseCatalogFilters>(initialRouteFilters)
+  const [showMoreFilters, setShowMoreFilters] = useState(() => hasCourseCatalogFilters(initialRouteFilters))
   const [items, setItems] = useState<MemberCourseCatalogCourse[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)

@@ -27,6 +27,8 @@ assert.match(courseCatalogPage, /placeholder='课程名、选课号、课程号'
 assert.match(courseCatalogPage, /教师<\/Text>/u, '课程检索页应提供独立的教师输入框')
 assert.match(courseCatalogPage, /placeholder='可选，如：李小明'/u, '课程检索页应提示教师名可选')
 assert.match(courseCatalogPage, /课程名、课程代码、选课号检索；教师名和更多筛选条件同时填写时，会同时满足全部条件/u, '页面应说明课程条件与教师条件是 AND 关系')
+assert.match(courseCatalogPage, /routeCourseCatalogFilters\(router\.params\)/u, '课程检索页应接收课表带入的筛选条件')
+assert.match(courseCatalogPage, /showMoreFilters.*hasCourseCatalogFilters\(initialRouteFilters\)/su, '课表带入筛选条件后应展开更多筛选')
 assert.match(courseCatalogPage, /course\.opening_code/u, '课程卡片应展示服务端返回的选课号')
 assert.match(courseCatalogPage, /item\.opening_code/u, '已保存蹭课快照应展示选课号')
 assert.doesNotMatch(courseCatalogStyle, /linear-gradient|filter:\s*blur/u, '蹭课页不应使用渐变或装饰光晕')
@@ -38,6 +40,9 @@ assert.match(academicRepository, /mapPersonalTimetableItemCourses/u, '仓储应�
 assert.match(academicRepository, /source:\s*'audit'/u, '蹭课课表课程必须保留 audit 来源')
 assert.match(schedulePage, /listPersonalTimetableItems/u, '课程表应读取个人蹭课条目')
 assert.match(schedulePage, /personalCourses/u, '课程表应合并蹭课课程')
+assert.match(schedulePage, /openCourseCatalogAtTimeSlot/u, '课表应支持从节次格子进入课程检索')
+assert.match(schedulePage, /isSimulation \? '选课' : '蹭课'/u, '正常课表和模拟课表应显示不同入口文案')
+assert.match(schedulePage, /weekday=\$\{slot\.weekday\}&section=\$\{slot\.section\}/u, '课表入口应携带星期和开始节次')
 assert.match(appConfig, /course-catalog\/index/u, '课程检索页必须注册到 academic 分包')
 assert.match(servicesPage, /course-audit/u, '服务页必须提供蹭课检索入口')
 
