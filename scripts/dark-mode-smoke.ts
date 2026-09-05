@@ -355,6 +355,16 @@ assert.match(
   /&\.course-catalog-page \.course-catalog-empty__action\s*\{[\s\S]*border-color:\s*var\(--campus-border-strong,/u,
   '蹭课页空状态操作按钮缺少暗色边框',
 )
+assert.match(
+  courseCatalogStyle,
+  /\.campus-theme--dark \.course-catalog-page\s*\{[\s\S]*--course-accent:\s*var\(--campus-primary,/u,
+  '蹭课页缺少主题类作为外层容器时的暗色主题变量兼容路径',
+)
+assert.match(
+  courseCatalogStyle,
+  /\.campus-theme--dark \.course-catalog-page \.course-catalog-search__field,[\s\S]*\.campus-theme--dark \.course-catalog-page \.course-catalog-search__advanced-category\s*\{[\s\S]*background:\s*var\(--campus-surface-subtle,/u,
+  '蹭课页缺少主题类作为外层容器时的暗色筛选区域',
+)
 assert.doesNotMatch(
   darkModeStyle,
   /service-panel__grid-icon image\s*\{[\s\S]{0,240}filter:/u,
