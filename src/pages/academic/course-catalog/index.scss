@@ -249,6 +249,13 @@
     min-width: 0;
   }
 
+  &__head-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10rpx;
+  }
+
   &__title-row {
     display: flex;
     align-items: center;
@@ -308,6 +315,17 @@
     &--withdrawn {
       color: var(--campus-danger, var(--ousea-danger-500, #e5484d));
     }
+  }
+
+  &__schedule-link {
+    display: flex;
+    min-height: 56rpx;
+    align-items: center;
+    padding: 0 8rpx;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    white-space: nowrap;
   }
 
   &__meta {

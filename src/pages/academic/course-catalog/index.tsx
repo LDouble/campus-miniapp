@@ -151,8 +151,18 @@ function CourseCatalogCard({
           </View>
         </View>
         {isAdded && (
-          <View className={`course-catalog-card__status course-catalog-card__status--${personalItem?.source_status}`}>
-            {personalStatusLabel(personalItem?.source_status || 'current')}
+          <View className='course-catalog-card__head-actions'>
+            <View className={`course-catalog-card__status course-catalog-card__status--${personalItem?.source_status}`}>
+              {personalStatusLabel(personalItem?.source_status || 'current')}
+            </View>
+            <View
+              className='course-catalog-card__schedule-link'
+              role='button'
+              ariaLabel={`前往课表查看${course.course_name}`}
+              onClick={() => void Taro.navigateTo({ url: '/pages/academic/schedule/index' })}
+            >
+              去课表 ›
+            </View>
           </View>
         )}
       </View>
