@@ -326,6 +326,10 @@
     font-size: var(--ousea-font-size-badge, 20rpx);
     font-weight: var(--ousea-font-weight-semibold, 600);
     white-space: nowrap;
+
+    &--danger {
+      color: var(--ousea-danger-500, #e5484d);
+    }
   }
 
   &__meta {

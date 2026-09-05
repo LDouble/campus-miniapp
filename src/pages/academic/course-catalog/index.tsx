@@ -16,6 +16,7 @@ import {
   addPersonalTimetableItem,
   listPersonalTimetableItems,
   refreshPersonalTimetableItem,
+  removePersonalTimetableItem,
 } from '../../../api/personal-timetable'
 import type {
   MemberCourseCatalogCourse,
@@ -124,6 +125,7 @@ interface CourseCatalogCardProps {
   personalItem?: PersonalTimetableItemView
   busy: boolean
   onAdd: () => void
+  onRemove: () => void
   onRefresh: () => void
 }
 
@@ -132,6 +134,7 @@ function CourseCatalogCard({
   personalItem,
   busy,
   onAdd,
+  onRemove,
   onRefresh,
 }: CourseCatalogCardProps) {
   const summary = courseSummary(course)
@@ -149,9 +152,11 @@ function CourseCatalogCard({
         </View>
         {isAdded && (
           <View className='course-catalog-card__head-actions'>
-            <View className={`course-catalog-card__status course-catalog-card__status--${personalItem?.source_status}`}>
-              {personalStatusLabel(personalItem?.source_status || 'current')}
-            </View>
+            {personalItem?.source_status !== 'current' && (
+              <View className={`course-catalog-card__status course-catalog-card__status--${personalItem?.source_status}`}>
+                {personalStatusLabel(personalItem?.source_status || 'current')}
+              </View>
+            )}
             <View
               className='course-catalog-card__schedule-link'
               role='button'
@@ -159,6 +164,14 @@ function CourseCatalogCard({
               onClick={() => void Taro.navigateTo({ url: '/pages/academic/schedule/index' })}
             >
               去课表 ›
+            </View>
+            <View
+              className='course-catalog-card__schedule-link course-catalog-card__schedule-link--danger'
+              role='button'
+              ariaLabel={`移除${course.course_name}的蹭课安排`}
+              onClick={busy ? undefined : onRemove}
+            >
+              移除
             </View>
           </View>
         )}
@@ -499,6 +512,25 @@ export default function CourseCatalogPage() {
     }
   }
 
+  const removeCourse = async (item: PersonalTimetableItemView) => {
+    const result = await Taro.showModal({
+      title: '移除蹭课安排',
+      content: `确定移除“${item.course_name}”吗？`,
+      confirmColor: '#c56f73',
+    })
+    if (!result.confirm) return
+    setBusyItemId(item.id)
+    try {
+      await removePersonalTimetableItem(item.id, item.version)
+      setPersonalItems((current) => current.filter((candidate) => candidate.id !== item.id))
+      Taro.showToast({ title: '已移除蹭课安排', icon: 'success' })
+    } catch (error) {
+      Taro.showToast({ title: apiErrorMessage(error, '移除失败，请刷新后重试'), icon: 'none' })
+    } finally {
+      setBusyItemId(0)
+    }
+  }
+
   const heading = submittedCourseName || submittedTeacher
     ? '检索结果'
     : '本学期开放课程'
@@ -645,6 +677,9 @@ export default function CourseCatalogPage() {
                     personalItem={personalItem}
                     busy={busy}
                     onAdd={() => void addCourse(course)}
+                    onRemove={() => {
+                      if (personalItem) void removeCourse(personalItem)
+                    }}
                     onRefresh={() => {
                       if (personalItem) void refreshCourse(personalItem)
                     }}
