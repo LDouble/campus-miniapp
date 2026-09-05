@@ -320,6 +320,9 @@ export default function SchedulePage() {
   const [showRefreshGuide, setShowRefreshGuide] = useState(() => (
     !academicStorage.hasSeenScheduleRefreshGuideToday()
   ))
+  const [showSelectionGuide, setShowSelectionGuide] = useState(() => (
+    !academicStorage.hasSeenScheduleSelectionGuideToday()
+  ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache
       ?.coursesUpdatedAtByPeriod[preferences.schedulePeriodId] || 0,
@@ -341,6 +344,11 @@ export default function SchedulePage() {
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
   const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  const dismissSelectionGuide = () => {
+    setShowSelectionGuide(false)
+    academicStorage.markScheduleSelectionGuideSeenToday()
+  }
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
   const sectionTimes = Array.from({ length: 12 }, (_, index) => ({
@@ -567,6 +575,21 @@ export default function SchedulePage() {
     return () => clearTimeout(timer)
   }, [loading, sheet, showRefreshGuide])
 
+  useEffect(() => {
+    if (
+      !showSelectionGuide
+      || showRefreshGuide
+      || loading
+      || sheet
+      || (loadError && !usingCache)
+    ) return undefined
+    const timer = setTimeout(() => {
+      setShowSelectionGuide(false)
+      academicStorage.markScheduleSelectionGuideSeenToday()
+    }, 5200)
+    return () => clearTimeout(timer)
+  }, [loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
+
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
   }
@@ -737,6 +760,7 @@ export default function SchedulePage() {
   Taro.usePullDownRefresh(() => {
     setShowRefreshGuide(false)
     academicStorage.markScheduleRefreshGuideSeenToday()
+    dismissSelectionGuide()
     refreshSchedule().finally(() => Taro.stopPullDownRefresh())
   })
 
@@ -769,6 +793,7 @@ export default function SchedulePage() {
   }
 
   const openTimeSlotActions = (weekday: number, section: number) => {
+    dismissSelectionGuide()
     setActiveTimeSlot({ weekday, section })
     setSheet('time-slot-actions')
   }
@@ -1605,6 +1630,43 @@ export default function SchedulePage() {
             />
             {scheduleNote.trim() && (
               <ScheduleNoteMarquee content={scheduleNote} />
+            )}
+            {showSelectionGuide && !showRefreshGuide && !sheet && (
+              <View
+                className={`schedule-selection-guide schedule-selection-guide--${isSimulation ? 'simulation' : 'audit'}`}
+                ariaRole='status'
+                ariaLabel={isSimulation
+                  ? '长按课表空白时段进入模拟选课'
+                  : '长按课表空白时段进入蹭课'}
+              >
+                <View className='schedule-selection-guide__pointer'>
+                  <View className='schedule-selection-guide__halo' />
+                  <View className='schedule-selection-guide__hand'>
+                    <View className='schedule-selection-guide__hand-shape'>
+                      <View className='schedule-selection-guide__hand-tip' />
+                      <View className='schedule-selection-guide__hand-palm' />
+                      <View className='schedule-selection-guide__hand-thumb' />
+                    </View>
+                  </View>
+                </View>
+                <View className='schedule-selection-guide__copy'>
+                  <Text className='schedule-selection-guide__eyebrow'>
+                    {isSimulation ? '模拟选课入口' : '蹭课入口'}
+                  </Text>
+                  <Text className='schedule-selection-guide__title'>
+                    长按空白时段，{isSimulation ? '继续选课' : '快速蹭课'}
+                  </Text>
+                </View>
+                <View
+                  className='schedule-selection-guide__close'
+                  role='button'
+                  ariaLabel='关闭操作引导'
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    dismissSelectionGuide()
+                  }}
+                >×</View>
+              </View>
             )}
             {preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
           </>

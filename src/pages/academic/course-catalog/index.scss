@@ -73,7 +73,79 @@
     &--open {
       background: #334155;
     }
+
+    &--guide-target {
+      animation: course-catalog-float-guide-pulse 1.35s ease-in-out infinite;
+    }
   }
+
+  &__guide {
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 2rpx;
+    margin-right: 8rpx;
+    pointer-events: none;
+    animation: course-catalog-float-guide-enter 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  &__guide-card {
+    max-width: 330rpx;
+    padding: 16rpx 18rpx 15rpx;
+    background: rgba(255, 255, 255, 0.98);
+    border: 2rpx solid rgba(43, 127, 255, 0.16);
+    border-radius: 22rpx 22rpx 8rpx 22rpx;
+    box-shadow: 0 12rpx 28rpx rgba(29, 95, 214, 0.16);
+  }
+
+  &__guide-title,
+  &__guide-copy {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__guide-title {
+    color: #1d5fd6;
+    font-size: 22rpx;
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: 1.35;
+  }
+
+  &__guide-copy {
+    margin-top: 4rpx;
+    color: #334155;
+    font-size: 23rpx;
+    font-weight: var(--ousea-font-weight-medium, 500);
+    line-height: 1.4;
+  }
+
+  &__guide-arrow {
+    display: block;
+    margin: -2rpx 42rpx 0 0;
+    color: #1d5fd6;
+    font-size: 42rpx;
+    font-weight: 600;
+    line-height: 0.8;
+    transform: rotate(3deg);
+    animation: course-catalog-float-guide-arrow 1.35s ease-in-out infinite;
+  }
+}
+
+@keyframes course-catalog-float-guide-enter {
+  0% { opacity: 0; transform: translateY(10rpx) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes course-catalog-float-guide-pulse {
+  0%, 100% { box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.14), 0 0 0 0 rgba(43, 127, 255, 0.28); }
+  52% { box-shadow: 0 10rpx 28rpx rgba(15, 23, 42, 0.18), 0 0 0 14rpx rgba(43, 127, 255, 0); }
+}
+
+@keyframes course-catalog-float-guide-arrow {
+  0%, 100% { opacity: 0.58; transform: translateY(-2rpx) rotate(3deg); }
+  52% { opacity: 1; transform: translateY(5rpx) rotate(3deg); }
 }
 
 .course-catalog-scope {
@@ -899,6 +971,12 @@
   }
 
   .course-catalog-state__loader {
+    animation: none;
+  }
+
+  .course-catalog-float__guide,
+  .course-catalog-float__toggle--guide-target,
+  .course-catalog-float__guide-arrow {
     animation: none;
   }
 }

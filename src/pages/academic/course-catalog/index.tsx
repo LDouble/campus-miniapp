@@ -310,6 +310,9 @@ export default function CourseCatalogPage() {
   const [personalItemsLoading, setPersonalItemsLoading] = useState(false)
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const [showFloatGuide, setShowFloatGuide] = useState(() => (
+    !academicStorage.hasSeenCourseCatalogFloatGuideToday()
+  ))
   const [busyOfferingId, setBusyOfferingId] = useState('')
   const [busyItemId, setBusyItemId] = useState(0)
   const requestSequence = useRef(0)
@@ -318,6 +321,20 @@ export default function CourseCatalogPage() {
   Taro.useDidShow(() => {
     setSimulationCourses(academicStorage.getSelectionDraftCourses())
   })
+
+  useEffect(() => {
+    if (!showFloatGuide) return undefined
+    const timer = setTimeout(() => {
+      setShowFloatGuide(false)
+      academicStorage.markCourseCatalogFloatGuideSeenToday()
+    }, 5600)
+    return () => clearTimeout(timer)
+  }, [showFloatGuide])
+
+  const dismissFloatGuide = () => {
+    setShowFloatGuide(false)
+    academicStorage.markCourseCatalogFloatGuideSeenToday()
+  }
 
   const personalItemsByOffering = useMemo(
     () => new Map(personalItems.map((item) => [item.offering_id, item])),
@@ -1027,6 +1044,19 @@ export default function CourseCatalogPage() {
       </View>
 
       <View className='course-catalog-float'>
+        {showFloatGuide && !quickActionsOpen && (
+          <View
+            className='course-catalog-float__guide'
+            ariaRole='status'
+            ariaLabel='点击课表按钮展开模拟选课和我的课表入口'
+          >
+            <View className='course-catalog-float__guide-card'>
+              <Text className='course-catalog-float__guide-title'>课表入口</Text>
+              <Text className='course-catalog-float__guide-copy'>点这里打开模拟选课和我的课表</Text>
+            </View>
+            <Text className='course-catalog-float__guide-arrow'>↘</Text>
+          </View>
+        )}
         {quickActionsOpen && (
           <View className='course-catalog-float__menu'>
             <View
@@ -1044,10 +1074,13 @@ export default function CourseCatalogPage() {
           </View>
         )}
         <View
-          className={`course-catalog-float__toggle ${quickActionsOpen ? 'course-catalog-float__toggle--open' : ''}`}
+          className={`course-catalog-float__toggle ${quickActionsOpen ? 'course-catalog-float__toggle--open' : ''} ${showFloatGuide && !quickActionsOpen ? 'course-catalog-float__toggle--guide-target' : ''}`}
           role='button'
           ariaLabel={quickActionsOpen ? '收起课表入口' : '展开课表入口'}
-          onClick={() => setQuickActionsOpen((current) => !current)}
+          onClick={() => {
+            dismissFloatGuide()
+            setQuickActionsOpen((current) => !current)
+          }}
         >{quickActionsOpen ? '收起' : '课表'}</View>
       </View>
     </View>

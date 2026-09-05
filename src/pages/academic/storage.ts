@@ -14,6 +14,8 @@ const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
 const PREFERENCES_KEY = 'academic.preferences.v1'
 const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
 const SCHEDULE_REFRESH_GUIDE_KEY = 'academic.scheduleRefreshGuide.v2'
+const SCHEDULE_SELECTION_GUIDE_KEY = 'academic.scheduleSelectionGuide.v1'
+const COURSE_CATALOG_FLOAT_GUIDE_KEY = 'academic.courseCatalogFloatGuide.v1'
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
 const SELECTION_DRAFT_KEY = 'academic.selectionDraft.v1'
@@ -272,6 +274,26 @@ export const academicStorage = {
   markScheduleRefreshGuideSeenToday: () => {
     try {
       Taro.setStorageSync(SCHEDULE_REFRESH_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenScheduleSelectionGuideToday: () => (
+    safeRead<string>(SCHEDULE_SELECTION_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markScheduleSelectionGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(SCHEDULE_SELECTION_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenCourseCatalogFloatGuideToday: () => (
+    safeRead<string>(COURSE_CATALOG_FLOAT_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markCourseCatalogFloatGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(COURSE_CATALOG_FLOAT_GUIDE_KEY, getLocalDayKey())
     } catch (error) {
       // 引导状态不是关键数据，保存失败时无需打扰用户。
     }
