@@ -225,6 +225,7 @@ const quickServices = [
   { key: 'market', name: '二手', iconKey: 'market' as HomeServiceIconKey, tone: 'pink', module: 'market' },
   { key: 'errands', name: '跑腿', iconKey: 'errands' as HomeServiceIconKey, tone: 'sand', module: 'errands' },
   { key: 'course-audit', name: '蹭课', iconKey: 'academic' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/course-catalog/index' },
+  { key: 'general-education', name: '通识查询', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/general-education/index' },
   { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
   { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
   { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },

@@ -827,6 +827,50 @@
     line-height: 1.5;
   }
 
+  &__modules {
+    display: flex;
+    align-items: flex-start;
+    gap: 12rpx;
+    margin-top: 14rpx;
+  }
+
+  &__modules-label {
+    flex: none;
+    padding-top: 5rpx;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.45;
+  }
+
+  &__module-list {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 8rpx;
+    min-width: 0;
+  }
+
+  &__module {
+    max-width: 100%;
+    padding: 4rpx 10rpx;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.45;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    border: 1rpx solid var(--ousea-ocean-100, #e3effe);
+    border-radius: 10rpx;
+    overflow-wrap: anywhere;
+  }
+
+  &__module-remark {
+    max-width: 100%;
+    padding: 4rpx 10rpx;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
   &__pass-rate-link {
     display: inline-flex;
     min-height: 52rpx;
