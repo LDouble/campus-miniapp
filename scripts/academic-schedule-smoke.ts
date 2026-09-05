@@ -108,6 +108,10 @@ assert.match(schedulePageSource, /className='timetable__time-end'/u, '左侧节�
 assert.doesNotMatch(schedulePageSource, /className='timetable__time-range'/u, '左侧节次栏不应展示箭头时间区间')
 assert.match(schedulePageSource, /schedule-selection-guide/u, '课表应提供进入蹭课或模拟选课的操作引导')
 assert.match(schedulePageSource, /长按空白时段，\{isSimulation \? '继续选课' : '快速蹭课'\}/u, '课表引导文案必须匹配当前模式')
+assert.match(schedulePageSource, /loadAcademicCalendar\(educationLevel, \{ force \}\)/u, '模拟选课应读取当前学历的完整校历学期')
+assert.match(schedulePageSource, /mapCalendarPeriods\(result\.calendar\)/u, '模拟选课学期应映射校历返回的全部学期')
+assert.match(schedulePageSource, /resolveDefaultPeriodId\(nextPeriods\)/u, '模拟选课首次进入应默认选择当前学期')
+assert.doesNotMatch(schedulePageSource, /simulationPeriodId = academicStorage\.getSelectionDraftCourses\(\)\[0\]/u, '模拟选课不应再用第一门课程伪造唯一学期')
 assert.match(runtimeConfigSource, /export const getSectionEndTime/u, '运行时配置必须提供节次结束时间')
 assert.equal(
   formatCourseTimeRange('08:00', '09:40'),
