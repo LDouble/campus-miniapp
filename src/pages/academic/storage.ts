@@ -16,6 +16,7 @@ const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
 const SCHEDULE_REFRESH_GUIDE_KEY = 'academic.scheduleRefreshGuide.v2'
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
+const SELECTION_DRAFT_KEY = 'academic.selectionDraft.v1'
 
 export interface AcademicScheduleCache {
   version: 1
@@ -263,6 +264,8 @@ const scheduleUpdatedAtByPeriod = (
 }
 
 export const academicStorage = {
+  getSelectionDraftCourses: (): Course[] => safeRead<Course[]>(SELECTION_DRAFT_KEY, []).filter((course) => course.source === 'simulation'),
+  setSelectionDraftCourses: (courses: Course[]) => safeWrite(SELECTION_DRAFT_KEY, courses),
   hasSeenScheduleRefreshGuideToday: () => (
     safeRead<string>(SCHEDULE_REFRESH_GUIDE_KEY, '') === getLocalDayKey()
   ),

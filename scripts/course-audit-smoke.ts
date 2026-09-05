@@ -26,7 +26,7 @@ assert.match(courseCatalogPage, /课程<\/Text>/u, '课程检索页应提供课�
 assert.match(courseCatalogPage, /placeholder='课程名、选课号、课程号'/u, '课程检索页应提示课程名、选课号和课程号')
 assert.match(courseCatalogPage, /教师<\/Text>/u, '课程检索页应提供独立的教师输入框')
 assert.match(courseCatalogPage, /placeholder='可选，如：李小明'/u, '课程检索页应提示教师名可选')
-assert.match(courseCatalogPage, /课程代码、选课号检索；教师名同时填写时，会同时满足两个条件/u, '页面应说明课程条件与教师条件是 AND 关系')
+assert.match(courseCatalogPage, /课程名、课程代码、选课号检索；教师名和更多筛选条件同时填写时，会同时满足全部条件/u, '页面应说明课程条件与教师条件是 AND 关系')
 assert.match(courseCatalogPage, /course\.opening_code/u, '课程卡片应展示服务端返回的选课号')
 assert.match(courseCatalogPage, /item\.opening_code/u, '已保存蹭课快照应展示选课号')
 assert.doesNotMatch(courseCatalogStyle, /linear-gradient|filter:\s*blur/u, '蹭课页不应使用渐变或装饰光晕')
