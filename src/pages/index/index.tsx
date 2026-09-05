@@ -224,7 +224,7 @@ const quickServices = [
   { key: 'community', name: '社区', iconKey: 'community' as HomeServiceIconKey, tone: 'cyan', tab: '/pages/community/index' },
   { key: 'market', name: '二手', iconKey: 'market' as HomeServiceIconKey, tone: 'pink', module: 'market' },
   { key: 'errands', name: '跑腿', iconKey: 'errands' as HomeServiceIconKey, tone: 'sand', module: 'errands' },
-  { key: 'carpool', name: '找同行', iconKey: 'carpool' as HomeServiceIconKey, tone: 'cyan', module: 'carpool' },
+  { key: 'course-audit', name: '蹭课', iconKey: 'academic' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/course-catalog/index' },
   { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
   { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
   { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },
@@ -877,7 +877,7 @@ function Index() {
   const visibleHomeServices = quickServices.filter((service) => {
     if (isQualificationEdition && migratedHomeServiceKeys.has(service.key)) return false
     const moduleKey = serviceModuleKeys[service.key]
-    if (!moduleKey) return false
+    if (!moduleKey) return 'route' in service && Boolean(service.route)
     return resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)

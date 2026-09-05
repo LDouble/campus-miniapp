@@ -14,8 +14,12 @@ const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
 const PREFERENCES_KEY = 'academic.preferences.v1'
 const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
 const SCHEDULE_REFRESH_GUIDE_KEY = 'academic.scheduleRefreshGuide.v2'
+const SCHEDULE_SELECTION_GUIDE_KEY = 'academic.scheduleSelectionGuide.v1'
+const COURSE_CATALOG_FLOAT_GUIDE_KEY = 'academic.courseCatalogFloatGuide.v1'
+const COURSE_CATALOG_DISCLAIMER_SEEN_KEY = 'academic.courseCatalogDisclaimerSeen.v1'
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
+const SELECTION_DRAFT_KEY = 'academic.selectionDraft.v1'
 
 export interface AcademicScheduleCache {
   version: 1
@@ -263,6 +267,8 @@ const scheduleUpdatedAtByPeriod = (
 }
 
 export const academicStorage = {
+  getSelectionDraftCourses: (): Course[] => safeRead<Course[]>(SELECTION_DRAFT_KEY, []).filter((course) => course.source === 'simulation'),
+  setSelectionDraftCourses: (courses: Course[]) => safeWrite(SELECTION_DRAFT_KEY, courses),
   hasSeenScheduleRefreshGuideToday: () => (
     safeRead<string>(SCHEDULE_REFRESH_GUIDE_KEY, '') === getLocalDayKey()
   ),
@@ -271,6 +277,36 @@ export const academicStorage = {
       Taro.setStorageSync(SCHEDULE_REFRESH_GUIDE_KEY, getLocalDayKey())
     } catch (error) {
       // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenScheduleSelectionGuideToday: () => (
+    safeRead<string>(SCHEDULE_SELECTION_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markScheduleSelectionGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(SCHEDULE_SELECTION_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenCourseCatalogFloatGuideToday: () => (
+    safeRead<string>(COURSE_CATALOG_FLOAT_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markCourseCatalogFloatGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(COURSE_CATALOG_FLOAT_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenCourseCatalogDisclaimer: () => (
+    safeRead<boolean>(COURSE_CATALOG_DISCLAIMER_SEEN_KEY, false)
+  ),
+  markCourseCatalogDisclaimerSeen: () => {
+    try {
+      Taro.setStorageSync(COURSE_CATALOG_DISCLAIMER_SEEN_KEY, true)
+    } catch (error) {
+      // 说明状态不是关键数据，保存失败时无需打扰用户。
     }
   },
   getCustomCourses: () => safeRead<Course[]>(CUSTOM_COURSES_KEY, []),

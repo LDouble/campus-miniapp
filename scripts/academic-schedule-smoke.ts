@@ -86,6 +86,11 @@ assert.match(
   '课表缓存必须按学期保存全局课表备注',
 )
 assert.match(
+  academicStorageSource,
+  /hasSeenScheduleSelectionGuideToday[\s\S]*markScheduleSelectionGuideSeenToday/u,
+  '课表选课引导必须按天记录展示状态',
+)
+assert.match(
   schedulePageSource,
   /schedule-note__track--marquee[\s\S]*?schedule-note__copy--duplicate/u,
   '课表页必须用双文本无缝跑马灯展示全局课表备注',
@@ -101,6 +106,8 @@ assert.match(schedulePageSource, /className='timetable__time-start'/u, '左侧�
 assert.match(schedulePageSource, /className='timetable__time-section'/u, '左侧节次栏必须展示节次')
 assert.match(schedulePageSource, /className='timetable__time-end'/u, '左侧节次栏必须展示结束时间')
 assert.doesNotMatch(schedulePageSource, /className='timetable__time-range'/u, '左侧节次栏不应展示箭头时间区间')
+assert.match(schedulePageSource, /schedule-selection-guide/u, '课表应提供进入蹭课或模拟选课的操作引导')
+assert.match(schedulePageSource, /长按空白时段，\{isSimulation \? '继续选课' : '快速蹭课'\}/u, '课表引导文案必须匹配当前模式')
 assert.match(runtimeConfigSource, /export const getSectionEndTime/u, '运行时配置必须提供节次结束时间')
 assert.equal(
   formatCourseTimeRange('08:00', '09:40'),
@@ -155,6 +162,11 @@ assert.match(
   academicStyleSource,
   /\.course-resource-actions--course-card\s*\{[\s\S]*?border-radius:\s*var\(--ousea-radius-card-sm/u,
   '课程操作入口应使用紧凑的 Ousea 卡片容器',
+)
+assert.match(
+  academicStyleSource,
+  /@keyframes schedule-selection-guide-enter[\s\S]*?schedule-selection-guide-halo/u,
+  '课表选课引导应包含进入和呼吸光圈动画',
 )
 assert.match(
   academicStyleSource,

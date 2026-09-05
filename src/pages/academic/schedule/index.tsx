@@ -135,7 +135,12 @@ const defaultPreferences: AcademicPreferences = {
   scheduleView: 'week',
 }
 
-type ScheduleSheet = 'period' | 'week' | 'course-detail' | 'course-form' | null
+type ScheduleSheet = 'period' | 'week' | 'course-detail' | 'course-form' | 'time-slot-actions' | null
+
+interface ScheduleTimeSlot {
+  weekday: number
+  section: number
+}
 
 const emptyDraft = (periodId: string): CustomCourseDraft => ({
   periodId,
@@ -168,9 +173,16 @@ interface CourseDetailCardProps {
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
-const isRemovableCourse = (course: Course) => course.source === 'custom' || course.source === 'audit'
+const isRemovableCourse = (course: Course) => ['custom', 'audit', 'simulation'].includes(course.source)
+const simulationCourseKey = (course: Course) => course.id.slice(0, course.id.lastIndexOf(':') + 1)
 const courseSourceLabel = (course: Course) => (
-  course.source === 'custom' ? '自定义课程' : course.source === 'audit' ? '蹭课课表' : '教务课程'
+  course.source === 'custom'
+    ? '自定义课程'
+    : course.source === 'audit'
+      ? '蹭课课表'
+      : course.source === 'simulation'
+        ? '模拟选课'
+        : '教务课程'
 )
 
 function CourseDetailCard({
@@ -225,7 +237,7 @@ function CourseDetailCard({
             <Text className='course-conflict-card__note-copy'>{courseNote}</Text>
           </View>
         )}
-        {course.source === 'official' && course.courseCode && (
+        {(course.source === 'official' || course.source === 'simulation') && course.courseCode && (
           <CoursePassRatePreview
             courseCode={course.courseCode}
             courseName={course.name}
@@ -251,7 +263,7 @@ function CourseDetailCard({
         </View>
         {isRemovableCourse(course) && onDelete && (
           <View className='course-conflict-card__danger-action' onClick={onDelete}>
-            <Text>{course.source === 'audit' ? '删除蹭课安排' : '删除课程'}</Text>
+            <Text>{course.source === 'audit' ? '删除蹭课安排' : course.source === 'simulation' ? '移除模拟选课' : '删除课程'}</Text>
           </View>
         )}
       </View>
@@ -260,6 +272,8 @@ function CourseDetailCard({
 }
 
 export default function SchedulePage() {
+  const isSimulation = Taro.useRouter().params.mode === 'simulation'
+  const simulationPeriodId = academicStorage.getSelectionDraftCourses()[0]?.periodId || DEFAULT_PERIOD_ID
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
@@ -274,9 +288,16 @@ export default function SchedulePage() {
     section: 'schedule',
     selectedWeekday: getAcademicWeekday(),
   }))
-  const [periods, setPeriods] = useState<AcademicPeriod[]>(
-    initialScheduleCache ? initialScheduleCache.periods : [],
-  )
+  const [periods, setPeriods] = useState<AcademicPeriod[]>(() => isSimulation
+    ? [{
+      id: simulationPeriodId,
+      label: simulationPeriodId,
+      shortLabel: simulationPeriodId,
+      startDate: '2026-09-01',
+      weeks: 30,
+      isCurrent: true,
+    }]
+    : (initialScheduleCache ? initialScheduleCache.periods : []))
   const initialCoursesByPeriod = sanitizeCoursesByPeriod(
     initialScheduleCache?.coursesByPeriod || {},
   )
@@ -290,6 +311,7 @@ export default function SchedulePage() {
   const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
   const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
   const [personalCourses, setPersonalCourses] = useState<Course[]>([])
+  const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
   const [loading, setLoading] = useState(!hasInitialCourses)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
@@ -297,6 +319,9 @@ export default function SchedulePage() {
   const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [showRefreshGuide, setShowRefreshGuide] = useState(() => (
     !academicStorage.hasSeenScheduleRefreshGuideToday()
+  ))
+  const [showSelectionGuide, setShowSelectionGuide] = useState(() => (
+    !academicStorage.hasSeenScheduleSelectionGuideToday()
   ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache
@@ -309,6 +334,7 @@ export default function SchedulePage() {
   const [sheet, setSheet] = useState<ScheduleSheet>(null)
   const [activeCourse, setActiveCourse] = useState<Course | null>(null)
   const [activeSlotCourses, setActiveSlotCourses] = useState<Course[]>([])
+  const [activeTimeSlot, setActiveTimeSlot] = useState<ScheduleTimeSlot | null>(null)
   const [courseDraft, setCourseDraft] = useState<CustomCourseDraft>(
     emptyDraft(preferences.schedulePeriodId),
   )
@@ -318,6 +344,11 @@ export default function SchedulePage() {
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
   const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  const dismissSelectionGuide = () => {
+    setShowSelectionGuide(false)
+    academicStorage.markScheduleSelectionGuideSeenToday()
+  }
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
   const sectionTimes = Array.from({ length: 12 }, (_, index) => ({
@@ -341,11 +372,11 @@ export default function SchedulePage() {
     officialCoursesByPeriod,
     preferences.schedulePeriodId,
   )
-  const allCourses = useMemo(() => [
+  const allCourses = useMemo(() => isSimulation ? simulationCourses.filter((course) => course.periodId === preferences.schedulePeriodId) : [
     ...officialCourses,
     ...personalCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
     ...customCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
-  ], [customCourses, officialCourses, personalCourses, preferences.schedulePeriodId])
+  ], [customCourses, isSimulation, officialCourses, personalCourses, preferences.schedulePeriodId, simulationCourses])
   const weekCourses = useMemo(
     () => getCoursesForWeek(allCourses, preferences.week),
     [allCourses, preferences.week],
@@ -391,6 +422,11 @@ export default function SchedulePage() {
   }, [])
 
   useEffect(() => {
+    if (isSimulation) {
+      setLoading(false)
+      setInitialized(true)
+      return undefined
+    }
     const applyPeriods = (records: AcademicPeriod[]) => {
       setPeriods(records)
       if (!records.length) setLoading(false)
@@ -442,10 +478,10 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [academicUserId, initialScheduleCache])
+  }, [academicUserId, initialScheduleCache, isSimulation])
 
   useEffect(() => {
-    if (!initialized) return
+    if (!initialized || isSimulation) return
     const periodId = preferences.schedulePeriodId
     if (!periods.some((period) => period.id === periodId)) return
     const cache = academicStorage.getScheduleCache(academicUserId)
@@ -520,12 +556,12 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [academicUserId, initialized, periods, preferences.schedulePeriodId])
+  }, [academicUserId, initialized, isSimulation, periods, preferences.schedulePeriodId])
 
   useEffect(() => {
-    if (!initialized) return
+    if (!initialized || isSimulation) return
     void loadPersonalCourses()
-  }, [initialized, loadPersonalCourses])
+  }, [initialized, isSimulation, loadPersonalCourses])
 
   useEffect(() => academicStorage.setPreferences(preferences), [preferences])
   useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
@@ -538,6 +574,21 @@ export default function SchedulePage() {
     }, 3000)
     return () => clearTimeout(timer)
   }, [loading, sheet, showRefreshGuide])
+
+  useEffect(() => {
+    if (
+      !showSelectionGuide
+      || showRefreshGuide
+      || loading
+      || sheet
+      || (loadError && !usingCache)
+    ) return undefined
+    const timer = setTimeout(() => {
+      setShowSelectionGuide(false)
+      academicStorage.markScheduleSelectionGuideSeenToday()
+    }, 5200)
+    return () => clearTimeout(timer)
+  }, [loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
 
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
@@ -689,6 +740,7 @@ export default function SchedulePage() {
   }, [academicUserId, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
+    if (isSimulation) setSimulationCourses(academicStorage.getSelectionDraftCourses())
     const todayWeekday = getAcademicWeekday()
     setPreferences((current) => current.selectedWeekday === todayWeekday
       ? current
@@ -708,6 +760,7 @@ export default function SchedulePage() {
   Taro.usePullDownRefresh(() => {
     setShowRefreshGuide(false)
     academicStorage.markScheduleRefreshGuideSeenToday()
+    dismissSelectionGuide()
     refreshSchedule().finally(() => Taro.stopPullDownRefresh())
   })
 
@@ -737,6 +790,20 @@ export default function SchedulePage() {
     setActiveCourse(slotCourses[0])
     setActiveSlotCourses(slotCourses)
     setSheet('course-detail')
+  }
+
+  const openTimeSlotActions = (weekday: number, section: number) => {
+    dismissSelectionGuide()
+    setActiveTimeSlot({ weekday, section })
+    setSheet('time-slot-actions')
+  }
+
+  const openCourseCatalogAtTimeSlot = (slot: ScheduleTimeSlot) => {
+    setSheet(null)
+    setActiveTimeSlot(null)
+    void Taro.navigateTo({
+      url: `/pages/academic/course-catalog/index?weekday=${slot.weekday}&section=${slot.section}`,
+    })
   }
 
   const closeCourseFloat = () => {
@@ -846,9 +913,12 @@ export default function SchedulePage() {
   const deleteCourse = async (course = activeCourse) => {
     if (!course || !isRemovableCourse(course) || courseMutationRef.current) return
     const isAuditCourse = course.source === 'audit'
+    const isSimulationCourse = course.source === 'simulation'
     const result = await Taro.showModal({
-      title: isAuditCourse ? '删除蹭课课程' : '删除自定义课程',
-      content: isAuditCourse
+      title: isSimulationCourse ? '移除模拟选课' : isAuditCourse ? '删除蹭课课程' : '删除自定义课程',
+      content: isSimulationCourse
+        ? `确定从模拟选课中移除“${course.name}”吗？真实课表不会受影响。`
+        : isAuditCourse
         ? `确定删除“${course.name}”的全部蹭课安排吗？`
         : `确定删除“${course.name}”吗？`,
       confirmColor: '#c56f73',
@@ -856,7 +926,12 @@ export default function SchedulePage() {
     if (!result.confirm) return
     courseMutationRef.current = true
     try {
-      if (isAuditCourse) {
+      if (isSimulationCourse) {
+        const courseKey = simulationCourseKey(course)
+        const next = academicStorage.getSelectionDraftCourses().filter((item) => !item.id.startsWith(courseKey))
+        academicStorage.setSelectionDraftCourses(next)
+        setSimulationCourses(next)
+      } else if (isAuditCourse) {
         if (!course.auditItemId || course.auditItemVersion === undefined) {
           Taro.showToast({ title: '课程信息不完整，请刷新后重试', icon: 'none' })
           return
@@ -867,7 +942,11 @@ export default function SchedulePage() {
         setCustomCourses((current) => current.filter((item) => item.id !== course.id))
       }
       const remainingCourses = activeSlotCourses.filter((item) => (
-        isAuditCourse ? item.auditItemId !== course.auditItemId : item.id !== course.id
+        isAuditCourse
+          ? item.auditItemId !== course.auditItemId
+          : isSimulationCourse
+            ? !item.id.startsWith(simulationCourseKey(course))
+            : item.id !== course.id
       ))
       if (!remainingCourses.length) {
         closeCourseFloat()
@@ -885,6 +964,26 @@ export default function SchedulePage() {
 
   const clearRemovableCourses = async () => {
     if (courseMutationRef.current) return
+    if (isSimulation) {
+      const count = simulationCourses.filter((course) => course.periodId === preferences.schedulePeriodId).length
+      if (!count) {
+        Taro.showToast({ title: '本学期没有模拟选课', icon: 'none' })
+        return
+      }
+      const result = await Taro.showModal({
+        title: '清空模拟选课',
+        content: `将清空本学期 ${count} 门模拟课程，不会影响真实课表。`,
+        confirmText: '确认清空',
+        confirmColor: '#c56f73',
+      })
+      if (!result.confirm) return
+      const next = academicStorage.getSelectionDraftCourses().filter((course) => course.periodId !== preferences.schedulePeriodId)
+      academicStorage.setSelectionDraftCourses(next)
+      setSimulationCourses(next)
+      closeCourseFloat()
+      Taro.showToast({ title: '模拟选课已清空', icon: 'success' })
+      return
+    }
     const customCourseIds = customCourses
       .filter((course) => course.periodId === preferences.schedulePeriodId)
       .map((course) => course.id)
@@ -932,7 +1031,7 @@ export default function SchedulePage() {
   }
 
   const openScheduleActions = async () => {
-    const result = await Taro.showActionSheet({ itemList: ['一键清除自定义与蹭课课程'] })
+    const result = await Taro.showActionSheet({ itemList: [isSimulation ? '清空本学期模拟选课' : '一键清除自定义与蹭课课程'] })
     if (result.tapIndex === 0) await clearRemovableCourses()
   }
 
@@ -1037,6 +1136,10 @@ export default function SchedulePage() {
                 gridRow: String(section),
               }}
               onClick={() => openTimeSlot(weekday, section)}
+              onLongPress={(event) => {
+                event.stopPropagation()
+                openTimeSlotActions(weekday, section)
+              }}
             />
           )
         })}
@@ -1093,6 +1196,10 @@ export default function SchedulePage() {
                   ? `${course.name}，同一时段另有 ${relatedCount} 门其他周次课程`
                   : `${course.name}，第 ${course.startSection} 到 ${course.endSection} 节`}
               onClick={() => openCourse(course)}
+              onLongPress={(event) => {
+                event.stopPropagation()
+                openTimeSlotActions(course.weekday, course.startSection)
+              }}
             >
               {hasConflict ? (
                 <>
@@ -1160,6 +1267,10 @@ export default function SchedulePage() {
                 key={getCourseScheduleKey(course)}
                 className='day-course'
                 onClick={() => openCourse(course)}
+                onLongPress={(event) => {
+                  event.stopPropagation()
+                  openTimeSlotActions(course.weekday, course.startSection)
+                }}
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
                 <View className='day-course__sections'>
@@ -1278,10 +1389,42 @@ export default function SchedulePage() {
       )
     }
     return (
-      <View className='academic-overlay' onClick={() => setSheet(null)}>
+      <View
+        className='academic-overlay'
+        onClick={() => {
+          setSheet(null)
+          setActiveTimeSlot(null)
+        }}
+      >
         <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
-          <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+          <View
+            className='academic-sheet__close'
+            onClick={() => {
+              setSheet(null)
+              setActiveTimeSlot(null)
+            }}
+          >×</View>
+          {sheet === 'time-slot-actions' && activeTimeSlot && (
+            <View className='academic-sheet__body academic-sheet__body--time-slot-actions'>
+              <Text className='academic-sheet__title'>
+                {isSimulation ? '为这个时段选课' : '为这个时段蹭课'}
+              </Text>
+              <Text className='academic-sheet__subtitle'>
+                {weekdays[activeTimeSlot.weekday - 1] || `星期${activeTimeSlot.weekday}`} · 第 {activeTimeSlot.section} 节
+              </Text>
+              <View className='academic-sheet__actions'>
+                <View
+                  className='academic-button academic-button--full'
+                  ariaRole='button'
+                  ariaLabel={isSimulation ? '选课' : '蹭课'}
+                  onClick={() => openCourseCatalogAtTimeSlot(activeTimeSlot)}
+                >
+                  {isSimulation ? '选课' : '蹭课'}
+                </View>
+              </View>
+            </View>
+          )}
           {sheet === 'period' && (
             <View className='academic-sheet__body'>
               <Text className='academic-sheet__title'>选择学年学期</Text>
@@ -1437,7 +1580,7 @@ export default function SchedulePage() {
   return (
     <View className={`academic-page academic-page--schedule academic-page--schedule-${preferences.scheduleView} ${sheet ? 'academic-page--locked' : ''}`}>
       <View className='academic-page__glow academic-page__glow--one' />
-      <AcademicHeader title='课程表' toolbar={toolbar} variant='schedule' />
+      <AcademicHeader title={isSimulation ? '模拟选课' : '课程表'} toolbar={toolbar} variant='schedule' />
       <View
         key={preferences.schedulePeriodId}
         className={[
@@ -1473,6 +1616,12 @@ export default function SchedulePage() {
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />
         ) : (
           <>
+            {isSimulation && (
+              <View className='schedule-note' ariaRole='status'>
+                <Text className='schedule-note__label'>模拟选课</Text>
+                <Text className='schedule-note__copy'>仅用于排课参考，真实选课请在教务系统操作。</Text>
+              </View>
+            )}
             <AcademicCacheNotice
               cache={serverCache}
               updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}
@@ -1482,11 +1631,48 @@ export default function SchedulePage() {
             {scheduleNote.trim() && (
               <ScheduleNoteMarquee content={scheduleNote} />
             )}
+            {showSelectionGuide && !showRefreshGuide && !sheet && (
+              <View
+                className={`schedule-selection-guide schedule-selection-guide--${isSimulation ? 'simulation' : 'audit'}`}
+                ariaRole='status'
+                ariaLabel={isSimulation
+                  ? '长按课表空白时段进入模拟选课'
+                  : '长按课表空白时段进入蹭课'}
+              >
+                <View className='schedule-selection-guide__pointer'>
+                  <View className='schedule-selection-guide__halo' />
+                  <View className='schedule-selection-guide__hand'>
+                    <View className='schedule-selection-guide__hand-shape'>
+                      <View className='schedule-selection-guide__hand-tip' />
+                      <View className='schedule-selection-guide__hand-palm' />
+                      <View className='schedule-selection-guide__hand-thumb' />
+                    </View>
+                  </View>
+                </View>
+                <View className='schedule-selection-guide__copy'>
+                  <Text className='schedule-selection-guide__eyebrow'>
+                    {isSimulation ? '模拟选课入口' : '蹭课入口'}
+                  </Text>
+                  <Text className='schedule-selection-guide__title'>
+                    长按空白时段，{isSimulation ? '继续选课' : '快速蹭课'}
+                  </Text>
+                </View>
+                <View
+                  className='schedule-selection-guide__close'
+                  role='button'
+                  ariaLabel='关闭操作引导'
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    dismissSelectionGuide()
+                  }}
+                >×</View>
+              </View>
+            )}
             {preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
           </>
         )}
       </View>
-      <View
+      {!isSimulation && <View
         className='academic-fab'
         ariaRole='button'
         ariaLabel='添加自定义课程'
@@ -1494,7 +1680,7 @@ export default function SchedulePage() {
       >
         <Text className='academic-fab__plus'>＋</Text>
         <Text>自定义课程</Text>
-      </View>
+      </View>}
       {renderSheet()}
     </View>
   )

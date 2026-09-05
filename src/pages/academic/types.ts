@@ -1,6 +1,6 @@
 export type AcademicSection = 'schedule' | 'grades' | 'exams'
 export type ScheduleView = 'week' | 'day'
-export type CourseSource = 'official' | 'custom' | 'audit'
+export type CourseSource = 'official' | 'custom' | 'audit' | 'simulation'
 export type ExamFilter = 'all' | 'upcoming' | 'finished'
 export type ExamPhase = '期中' | '期末' | '补考' | '入学'
 export type CourseSelectionStatus = 'selected' | 'pending' | 'failed'
