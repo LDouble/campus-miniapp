@@ -31,6 +31,7 @@ export interface Course {
   color: string
   source: CourseSource
   auditItemId?: number
+  auditItemVersion?: number
   auditStatus?: 'current' | 'updated' | 'withdrawn'
 }
 

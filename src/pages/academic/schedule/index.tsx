@@ -9,7 +9,10 @@ import {
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
-import { listPersonalTimetableItems } from '../../../api/personal-timetable'
+import {
+  listPersonalTimetableItems,
+  removePersonalTimetableItem,
+} from '../../../api/personal-timetable'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
@@ -165,6 +168,10 @@ interface CourseDetailCardProps {
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
+const isRemovableCourse = (course: Course) => course.source === 'custom' || course.source === 'audit'
+const courseSourceLabel = (course: Course) => (
+  course.source === 'custom' ? '自定义课程' : course.source === 'audit' ? '蹭课课表' : '教务课程'
+)
 
 function CourseDetailCard({
   course,
@@ -200,11 +207,7 @@ function CourseDetailCard({
           <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
-          <View><Text>来源</Text><Text>{course.source === 'custom'
-            ? '自定义课程'
-            : course.source === 'audit'
-              ? '蹭课课表'
-              : '教务课程'}</Text></View>
+          <View><Text>来源</Text><Text>{courseSourceLabel(course)}</Text></View>
         </View>
         {course.source === 'audit' && course.auditStatus && course.auditStatus !== 'current' && (
           <View className='course-conflict-card__note'>
@@ -229,10 +232,9 @@ function CourseDetailCard({
             teacherName={course.teacher}
           />
         )}
-        {course.source === 'custom' && onEdit && onDelete && (
+        {course.source === 'custom' && onEdit && (
           <View className='course-conflict-card__actions'>
-            <View onClick={onDelete}>删除</View>
-            <View onClick={onEdit}>编辑</View>
+            <View onClick={onEdit}>编辑课程</View>
           </View>
         )}
         <View className='course-resource-actions course-resource-actions--course-card'>
@@ -247,6 +249,11 @@ function CourseDetailCard({
             <View onClick={onWanted}>求购课本</View>
           </View>}
         </View>
+        {isRemovableCourse(course) && onDelete && (
+          <View className='course-conflict-card__danger-action' onClick={onDelete}>
+            <Text>{course.source === 'audit' ? '删除蹭课安排' : '删除课程'}</Text>
+          </View>
+        )}
       </View>
     </View>
   )
@@ -307,6 +314,7 @@ export default function SchedulePage() {
   )
   const scheduleRequestRef = useRef(0)
   const personalTimetableRequestRef = useRef(0)
+  const courseMutationRef = useRef(false)
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
   const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
@@ -836,22 +844,96 @@ export default function SchedulePage() {
   }
 
   const deleteCourse = async (course = activeCourse) => {
-    if (!course || course.source !== 'custom') return
+    if (!course || !isRemovableCourse(course) || courseMutationRef.current) return
+    const isAuditCourse = course.source === 'audit'
     const result = await Taro.showModal({
-      title: '删除自定义课程',
-      content: `确定删除“${course.name}”吗？`,
+      title: isAuditCourse ? '删除蹭课课程' : '删除自定义课程',
+      content: isAuditCourse
+        ? `确定删除“${course.name}”的全部蹭课安排吗？`
+        : `确定删除“${course.name}”吗？`,
       confirmColor: '#c56f73',
     })
     if (!result.confirm) return
-    setCustomCourses((current) => current.filter((item) => item.id !== course.id))
-    const remainingCourses = activeSlotCourses.filter((item) => item.id !== course.id)
-    if (!remainingCourses.length) {
-      closeCourseFloat()
-    } else {
-      setActiveSlotCourses(remainingCourses)
-      setActiveCourse(remainingCourses[0])
+    courseMutationRef.current = true
+    try {
+      if (isAuditCourse) {
+        if (!course.auditItemId || course.auditItemVersion === undefined) {
+          Taro.showToast({ title: '课程信息不完整，请刷新后重试', icon: 'none' })
+          return
+        }
+        await removePersonalTimetableItem(course.auditItemId, course.auditItemVersion)
+        setPersonalCourses((current) => current.filter((item) => item.auditItemId !== course.auditItemId))
+      } else {
+        setCustomCourses((current) => current.filter((item) => item.id !== course.id))
+      }
+      const remainingCourses = activeSlotCourses.filter((item) => (
+        isAuditCourse ? item.auditItemId !== course.auditItemId : item.id !== course.id
+      ))
+      if (!remainingCourses.length) {
+        closeCourseFloat()
+      } else {
+        setActiveSlotCourses(remainingCourses)
+        setActiveCourse(remainingCourses[0])
+      }
+      Taro.showToast({ title: '课程已删除', icon: 'success' })
+    } catch {
+      Taro.showToast({ title: '删除失败，请稍后重试', icon: 'none' })
+    } finally {
+      courseMutationRef.current = false
     }
-    Taro.showToast({ title: '课程已删除', icon: 'success' })
+  }
+
+  const clearRemovableCourses = async () => {
+    if (courseMutationRef.current) return
+    const customCourseIds = customCourses
+      .filter((course) => course.periodId === preferences.schedulePeriodId)
+      .map((course) => course.id)
+    const auditItems = Array.from(new Map(
+      personalCourses
+        .filter((course) => course.periodId === preferences.schedulePeriodId)
+        .filter((course) => course.auditItemId && course.auditItemVersion !== undefined)
+        .map((course) => [course.auditItemId as number, course.auditItemVersion as number]),
+    ).entries())
+    const count = customCourseIds.length + auditItems.length
+    if (!count) {
+      Taro.showToast({ title: '本学期没有可清除的课程', icon: 'none' })
+      return
+    }
+    const result = await Taro.showModal({
+      title: '一键清除课程',
+      content: `将清除本学期 ${count} 门自定义或蹭课课程，教务课程不会受影响。`,
+      confirmText: '确认清除',
+      confirmColor: '#c56f73',
+    })
+    if (!result.confirm) return
+    courseMutationRef.current = true
+    try {
+      const settled = await Promise.allSettled(auditItems.map(([itemId, version]) => (
+        removePersonalTimetableItem(itemId, version)
+      )))
+      const removedAuditItemIds = new Set(auditItems
+        .filter((_, index) => settled[index].status === 'fulfilled')
+        .map(([itemId]) => itemId))
+      setCustomCourses((current) => current.filter((course) => (
+        course.periodId !== preferences.schedulePeriodId || course.source !== 'custom'
+      )))
+      setPersonalCourses((current) => current.filter((course) => (
+        course.periodId !== preferences.schedulePeriodId || !removedAuditItemIds.has(course.auditItemId || 0)
+      )))
+      closeCourseFloat()
+      const failedAuditCount = auditItems.length - removedAuditItemIds.size
+      Taro.showToast({
+        title: failedAuditCount ? `已清除，${failedAuditCount} 门蹭课未删除` : '课程已清除',
+        icon: failedAuditCount ? 'none' : 'success',
+      })
+    } finally {
+      courseMutationRef.current = false
+    }
+  }
+
+  const openScheduleActions = async () => {
+    const result = await Taro.showActionSheet({ itemList: ['一键清除自定义与蹭课课程'] })
+    if (result.tapIndex === 0) await clearRemovableCourses()
   }
 
   const toolbar = (
@@ -906,6 +988,7 @@ export default function SchedulePage() {
       onTouchStart={handleWeekTouchStart}
       onTouchEnd={handleWeekTouchEnd}
       onTouchCancel={handleWeekTouchCancel}
+      onLongPress={() => void openScheduleActions()}
     >
       <View className='timetable__header'>
         <View className='timetable__corner'>节次</View>
@@ -1052,6 +1135,7 @@ export default function SchedulePage() {
       onTouchStart={handleDayTouchStart}
       onTouchEnd={handleDayTouchEnd}
       onTouchCancel={handleDayTouchCancel}
+      onLongPress={() => void openScheduleActions()}
     >
       <ScrollView className='day-strip' scrollX showScrollbar={false}>
         <View className='day-strip__inner'>

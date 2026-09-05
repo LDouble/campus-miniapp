@@ -105,6 +105,7 @@ export const mapPersonalTimetableItemCourses = (
   color: courseColorForClass(item.offering_id),
   source: 'audit',
   auditItemId: item.id,
+  auditItemVersion: item.version,
   auditStatus: item.source_status,
 }))
 
