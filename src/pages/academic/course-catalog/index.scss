@@ -542,8 +542,8 @@
   }
 
   &__summary {
-    display: block;
-    margin-top: 5rpx;
+    flex: 1 1 0;
+    min-width: 0;
     color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
     font-size: var(--ousea-font-size-caption, 24rpx);
     line-height: 1.5;
@@ -619,16 +619,19 @@
   }
 
   &__teacher {
-    flex: 1;
-    min-width: 0;
+    flex: 0 0 72rpx;
+    min-width: 72rpx;
+    max-width: 72rpx;
     overflow: hidden;
     color: #1e293b;
     font-weight: var(--ousea-font-weight-medium, 500);
-    text-overflow: ellipsis;
+    text-overflow: clip;
     white-space: nowrap;
   }
 
   &__unit {
+    display: block;
+    margin-top: 4rpx;
     min-width: 0;
     overflow: hidden;
     color: #64748b;

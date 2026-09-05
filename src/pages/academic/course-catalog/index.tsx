@@ -250,9 +250,9 @@ function CourseCatalogCard({
         <View className='course-catalog-card__facts'>
           <Text className='course-catalog-card__teacher-avatar'>{course.teachers[0]?.slice(0, 1) || '师'}</Text>
           <Text className='course-catalog-card__teacher'>{course.teachers.join('、') || '教师待确认'}</Text>
-          {course.offering_unit && <Text className='course-catalog-card__unit'>{course.offering_unit}</Text>}
+          {summary && <Text className='course-catalog-card__summary'>{summary}</Text>}
         </View>
-        {summary && <Text className='course-catalog-card__summary'>{summary}</Text>}
+        {course.offering_unit && <Text className='course-catalog-card__unit'>{course.offering_unit}</Text>}
         {!course.slots.length && (course.campus || course.location_text) && (
           <Text>地点：{[course.campus, course.location_text].filter(Boolean).join(' · ')}</Text>
         )}
