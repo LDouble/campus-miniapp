@@ -6070,7 +6070,7 @@ export interface components {
             course_name: string;
             modules: components["schemas"]["MemberGeneralEducationCourseModule"][];
             offering_unit: string;
-            remark?: string | null;
+            remark: string | null;
         };
         MemberGeneralEducationCourseModule: {
             /** Format: uint64 */
