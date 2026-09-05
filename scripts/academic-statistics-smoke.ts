@@ -70,7 +70,7 @@ assert.equal(
 for (const path of [
   '../src/pages/academic/statistics/courses.tsx',
   '../src/pages/academic/statistics/index.tsx',
-  '../src/features/academic-statistics/course-pass-rate-preview/index.tsx',
+  '../src/features/academic-statistics/course-pass-rate-preview/state.ts',
 ]) {
   const source = readFileSync(resolve(__dirname, path), 'utf8')
   assert.ok(
@@ -91,19 +91,34 @@ for (const path of [
   )
 }
 
+const coursePassRatePreviewState = readFileSync(
+  resolve(__dirname, '../src/features/academic-statistics/course-pass-rate-preview/state.ts'),
+  'utf8',
+)
+assert.match(
+  coursePassRatePreviewState,
+  /const nextData = result\.data && Number\.isFinite\(result\.data\.pass_rate\)/u,
+  '课程参考卡片只能接受带有效通过率的数据',
+)
 const coursePassRatePreview = readFileSync(
   resolve(__dirname, '../src/features/academic-statistics/course-pass-rate-preview/index.tsx'),
   'utf8',
 )
 assert.match(
   coursePassRatePreview,
-  /const nextData = result\.data && Number\.isFinite\(result\.data\.pass_rate\)/u,
-  '课程参考卡片只能接受带有效通过率的数据',
-)
-assert.match(
-  coursePassRatePreview,
   /!data[\s\S]*?Number\.isFinite\(data\.pass_rate\)[\s\S]*?return null/u,
   '没有有效通过率时不得渲染课程参考卡片',
+)
+
+const coursePassRateSheet = readFileSync(
+  resolve(__dirname, '../src/features/academic-statistics/course-pass-rate-preview/sheet.tsx'),
+  'utf8',
+)
+assert.ok(
+  coursePassRateSheet.includes('useCoursePassRatePreview')
+    && coursePassRateSheet.includes('openCourseStatistics')
+    && coursePassRateSheet.includes('academicBindingGuidance'),
+  '通过率浮层必须复用预览数据状态、详情导航和统一认证引导',
 )
 
 console.log('academic-statistics smoke tests passed')

@@ -25,6 +25,7 @@ import type {
 } from '../../../api/types'
 import CustomNavbar from '../../../components/custom-navbar'
 import { loadAcademicCalendar } from '../../../features/calendar/repository'
+import CoursePassRateSheet from '../../../features/academic-statistics/course-pass-rate-preview/sheet'
 import type { AcademicPeriod, Course } from '../types'
 import { academicStorage } from '../storage'
 import { formatCourseWeeks, resolvePeriodId, weekdays } from '../utils'
@@ -193,6 +194,7 @@ interface CourseCatalogCardProps {
   onRemoveSimulation: () => void
   onRefresh: () => void
   onAddSimulation: () => void
+  onOpenPassRate: () => void
 }
 
 function CourseCatalogCard({
@@ -205,6 +207,7 @@ function CourseCatalogCard({
   onRemoveSimulation,
   onRefresh,
   onAddSimulation,
+  onOpenPassRate,
 }: CourseCatalogCardProps) {
   const summary = courseSummary(course)
   const isAdded = Boolean(personalItem)
@@ -247,6 +250,18 @@ function CourseCatalogCard({
         <View className='course-catalog-card__reference'>
           {course.opening_code && <Text>选课号 {course.opening_code}</Text>}
           {course.course_code && <Text>课程代码 {course.course_code}</Text>}
+        </View>
+      )}
+
+      {course.course_code && (
+        <View
+          className='course-catalog-card__pass-rate-link'
+          role='button'
+          ariaLabel={`查看${course.course_name}的课程通过率`}
+          onClick={onOpenPassRate}
+        >
+          <Text>查看通过率</Text>
+          <Text>›</Text>
         </View>
       )}
 
@@ -314,6 +329,7 @@ export default function CourseCatalogPage() {
   const [personalItems, setPersonalItems] = useState<PersonalTimetableItemView[]>([])
   const [personalItemsLoading, setPersonalItemsLoading] = useState(false)
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
+  const [passRateCourse, setPassRateCourse] = useState<MemberCourseCatalogCourse | null>(null)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
   const [showFloatGuide, setShowFloatGuide] = useState(() => (
     !academicStorage.hasSeenCourseCatalogFloatGuideToday()
@@ -1009,6 +1025,7 @@ export default function CourseCatalogPage() {
                     }}
                     onAddSimulation={() => addSimulationCourse(course)}
                     onRemoveSimulation={() => void removeSimulationCourse(course)}
+                    onOpenPassRate={() => setPassRateCourse(course)}
                   />
                 )
               })}
@@ -1069,6 +1086,7 @@ export default function CourseCatalogPage() {
                       onRefresh={() => void refreshCourse(item)}
                       onAddSimulation={() => addSimulationCourse(course)}
                       onRemoveSimulation={() => void removeSimulationCourse(course)}
+                      onOpenPassRate={() => setPassRateCourse(course)}
                     />
                   )
                 })}
@@ -1077,6 +1095,15 @@ export default function CourseCatalogPage() {
           </View>
         )}
       </View>
+
+      {passRateCourse && (
+        <CoursePassRateSheet
+          courseCode={passRateCourse.course_code || ''}
+          courseName={passRateCourse.course_name}
+          teacherName={passRateCourse.teachers[0] || ''}
+          onClose={() => setPassRateCourse(null)}
+        />
+      )}
 
       <View className='course-catalog-float'>
         {showFloatGuide && !quickActionsOpen && (

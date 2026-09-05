@@ -827,6 +827,24 @@
     line-height: 1.5;
   }
 
+  &__pass-rate-link {
+    display: inline-flex;
+    min-height: 52rpx;
+    align-items: center;
+    gap: 4rpx;
+    margin-top: 4rpx;
+    color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: 1.4;
+
+    > text:last-child {
+      font-size: 32rpx;
+      font-weight: var(--ousea-font-weight-regular, 400);
+      line-height: 1;
+    }
+  }
+
   &__note {
     display: block;
     margin-top: 8rpx;
