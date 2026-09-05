@@ -37,6 +37,8 @@ type CourseCatalogFilters = {
   courseCategory: string
 }
 
+type CourseCatalogView = 'search' | 'saved'
+
 const emptyCourseCatalogFilters: CourseCatalogFilters = {
   weekday: 0,
   section: 0,
@@ -258,9 +260,10 @@ interface SavedCourseCardProps {
   item: PersonalTimetableItemView
   busy: boolean
   onRefresh: () => void
+  onRemove: () => void
 }
 
-function SavedCourseCard({ item, busy, onRefresh }: SavedCourseCardProps) {
+function SavedCourseCard({ item, busy, onRefresh, onRemove }: SavedCourseCardProps) {
   return (
     <View className='course-catalog-saved-item'>
       <View className='course-catalog-saved-item__head'>
@@ -297,6 +300,14 @@ function SavedCourseCard({ item, busy, onRefresh }: SavedCourseCardProps) {
             {busy ? '正在同步…' : '同步最新排课'}
           </View>
         )}
+        <View
+          className='course-catalog-card__action course-catalog-card__action--danger'
+          role='button'
+          ariaLabel={`移除${item.course_name}的蹭课安排`}
+          onClick={busy ? undefined : onRemove}
+        >
+          {busy ? '处理中…' : '移除蹭课'}
+        </View>
       </View>
     </View>
   )
@@ -305,6 +316,7 @@ function SavedCourseCard({ item, busy, onRefresh }: SavedCourseCardProps) {
 export default function CourseCatalogPage() {
   const router = Taro.useRouter()
   const initialRouteFilters = routeCourseCatalogFilters(router.params)
+  const [activeView, setActiveView] = useState<CourseCatalogView>('search')
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
   const [periods, setPeriods] = useState<AcademicPeriod[]>([])
   const [periodId, setPeriodId] = useState('')
@@ -326,6 +338,7 @@ export default function CourseCatalogPage() {
   const [categoryLoadError, setCategoryLoadError] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [personalItems, setPersonalItems] = useState<PersonalTimetableItemView[]>([])
+  const [personalItemsLoading, setPersonalItemsLoading] = useState(false)
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
   const [busyOfferingId, setBusyOfferingId] = useState('')
@@ -342,11 +355,6 @@ export default function CourseCatalogPage() {
     [personalItems],
   )
 
-  const unlistedPersonalItems = useMemo(() => {
-    const visibleOfferingIds = new Set(items.map((item) => item.offering_id))
-    return personalItems.filter((item) => !visibleOfferingIds.has(item.offering_id))
-  }, [items, personalItems])
-
   const updatePersonalItem = useCallback((nextItem: PersonalTimetableItemView) => {
     setPersonalItems((current) => [
       ...current.filter((item) => item.offering_id !== nextItem.offering_id),
@@ -360,10 +368,12 @@ export default function CourseCatalogPage() {
   ) => {
     if (!nextPeriodId) {
       setPersonalItems([])
+      setPersonalItemsLoading(false)
       return
     }
     const requestId = personalItemsRequestSequence.current + 1
     personalItemsRequestSequence.current = requestId
+    setPersonalItemsLoading(true)
     try {
       const result = await listPersonalTimetableItems(nextEducationLevel, nextPeriodId)
       if (personalItemsRequestSequence.current !== requestId) return
@@ -371,6 +381,8 @@ export default function CourseCatalogPage() {
     } catch {
       // 个人课表状态不是检索主链路，失败时仍允许搜索和加入。
       if (personalItemsRequestSequence.current === requestId) setPersonalItems([])
+    } finally {
+      if (personalItemsRequestSequence.current === requestId) setPersonalItemsLoading(false)
     }
   }, [])
 
@@ -567,6 +579,7 @@ export default function CourseCatalogPage() {
   const choosePeriod = (next: string) => {
     if (next === periodId) return
     setPeriodId(next)
+    setPersonalItems([])
     setFilters((current) => ({ ...current, courseCategory: '' }))
     setSubmittedFilters((current) => ({ ...current, courseCategory: '' }))
     setItems([])
@@ -753,6 +766,26 @@ export default function CourseCatalogPage() {
           )}
         </View>
 
+        <View className='course-catalog-view-tabs'>
+          <View
+            className={`course-catalog-view-tabs__item ${activeView === 'search' ? 'course-catalog-view-tabs__item--active' : ''}`}
+            role='button'
+            ariaLabel='查看课程检索'
+            onClick={() => setActiveView('search')}
+          >课程检索</View>
+          <View
+            className={`course-catalog-view-tabs__item ${activeView === 'saved' ? 'course-catalog-view-tabs__item--active' : ''}`}
+            role='button'
+            ariaLabel={`查看我的蹭课安排，共 ${personalItems.length} 门`}
+            onClick={() => setActiveView('saved')}
+          >
+            <Text>我的蹭课</Text>
+            <Text className='course-catalog-view-tabs__count'>{personalItems.length}</Text>
+          </View>
+        </View>
+
+        {activeView === 'search' && (
+          <>
         <View className='course-catalog-search'>
         <View className='course-catalog-search__card'>
           <View className='course-catalog-search__fields'>
@@ -966,22 +999,48 @@ export default function CourseCatalogPage() {
           </>
         )}
 
-        {!periodLoading && !loading && unlistedPersonalItems.length > 0 && (
-          <View className='course-catalog-saved-list'>
+          </>
+        )}
+
+        {activeView === 'saved' && (
+          <View className='course-catalog-saved-list course-catalog-saved-list--page'>
             <View className='course-catalog-saved-list__heading'>
               <Text>我的蹭课安排</Text>
-              <Text>不在当前检索结果中的已保存课程</Text>
+              <Text>
+                {personalItems.length > 0
+                  ? `当前学期共 ${personalItems.length} 门，不受课程检索条件影响`
+                  : '已加入的课程会集中显示在这里'}
+              </Text>
             </View>
-            <View className='course-catalog-saved-list__items'>
-              {unlistedPersonalItems.map((item) => (
-                <SavedCourseCard
-                  key={item.id}
-                  item={item}
-                  busy={busyItemId === item.id}
-                  onRefresh={() => void refreshCourse(item)}
-                />
-              ))}
-            </View>
+            {personalItemsLoading ? (
+              <View className='course-catalog-state'>
+                <View className='course-catalog-state__loader' />
+                <Text>正在读取我的蹭课…</Text>
+              </View>
+            ) : personalItems.length === 0 ? (
+              <View className='course-catalog-empty'>
+                <Text className='course-catalog-empty__title'>还没有蹭课安排</Text>
+                <Text className='course-catalog-empty__copy'>从课程检索中加入课程后，会在这里集中管理。</Text>
+                <View
+                  className='course-catalog-empty__action'
+                  role='button'
+                  ariaLabel='去检索课程'
+                  onClick={() => setActiveView('search')}
+                >去检索课程</View>
+              </View>
+            ) : (
+              <View className='course-catalog-saved-list__items'>
+                {personalItems.map((item) => (
+                  <SavedCourseCard
+                    key={item.id}
+                    item={item}
+                    busy={busyItemId === item.id}
+                    onRefresh={() => void refreshCourse(item)}
+                    onRemove={() => void removeCourse(item)}
+                  />
+                ))}
+              </View>
+            )}
           </View>
         )}
       </View>

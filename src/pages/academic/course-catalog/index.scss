@@ -83,6 +83,50 @@
   border-bottom: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4));
 }
 
+.course-catalog-view-tabs {
+  display: flex;
+  gap: 8rpx;
+  padding: 6rpx;
+  margin-bottom: 16rpx;
+  background: #eef2f7;
+  border-radius: 18rpx;
+
+  &__item {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 62rpx;
+    gap: 8rpx;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-medium, 500);
+    border-radius: 14rpx;
+    transition: color 180ms ease, background-color 180ms ease;
+  }
+
+  &__item--active {
+    color: var(--course-accent-strong);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    background: #fff;
+    box-shadow: 0 2rpx 8rpx rgba(15, 23, 42, 0.08);
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30rpx;
+    height: 30rpx;
+    padding: 0 6rpx;
+    color: var(--course-accent-strong);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 30rpx;
+    background: var(--course-accent-soft);
+    border-radius: 999rpx;
+  }
+}
+
 .course-catalog-level-switch {
   display: flex;
   max-width: 440rpx;
@@ -765,6 +809,10 @@
 
 .course-catalog-saved-list {
   margin-top: 34rpx;
+
+  &--page {
+    margin-top: 8rpx;
+  }
 
   &__heading {
     display: flex;
