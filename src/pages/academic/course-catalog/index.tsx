@@ -97,13 +97,44 @@ const simulationCoursePrefix = (course: MemberCourseCatalogCourse) => (
   `simulation:${course.period_id}:${course.offering_id}:`
 )
 
-const personalStatusLabel = (status: PersonalTimetableItemView['source_status']) => (
-  status === 'updated'
-      ? '目录有更新'
-    : status === 'withdrawn'
-      ? '课程已下架'
-      : '已加入蹭课'
-)
+const personalTimetableItemToCatalogCourse = (
+  item: PersonalTimetableItemView,
+): MemberCourseCatalogCourse => ({
+  campus: item.campus,
+  class_name: item.class_name,
+  course_category: item.course_category,
+  course_code: item.course_code,
+  course_name: item.course_name,
+  credits: item.credits,
+  data_version: item.source_data_version,
+  education_level: item.education_level,
+  instruction_language: item.instruction_language,
+  location_text: item.location_text,
+  offering_id: item.offering_id,
+  offering_unit: item.offering_unit,
+  opening_code: item.opening_code,
+  period_id: item.period_id,
+  schedule_parse_status: item.slots.length > 0
+    ? 'parsed'
+    : item.schedule_text
+      ? 'unparsed'
+      : 'no_schedule',
+  schedule_text: item.schedule_text,
+  slots: item.slots.map((slot) => ({
+    building: slot.building,
+    campus: slot.campus,
+    classroom_id: slot.classroom_id,
+    end_section: slot.end_section,
+    id: slot.source_schedule_slot_id,
+    location_parsed: slot.location_parsed,
+    raw_location: slot.raw_location,
+    room: slot.room,
+    start_section: slot.start_section,
+    weekday: slot.weekday,
+    weeks: slot.weeks,
+  })),
+  teachers: item.teachers,
+})
 
 const apiErrorMessage = (error: unknown, fallback: string) => {
   if (isApiError(error)) return error.message || fallback
@@ -231,6 +262,10 @@ function CourseCatalogCard({
         <SlotScheduleList course={course} />
       )}
 
+      {isAdded && personalItem?.source_status === 'withdrawn' && (
+        <Text className='course-catalog-card__note'>课程已从当前目录下架，原安排仍保留在课表中。</Text>
+      )}
+
       {isAdded && personalItem?.source_status === 'updated' && (
         <View className='course-catalog-card__actions'>
           <View
@@ -243,107 +278,6 @@ function CourseCatalogCard({
           </View>
         </View>
       )}
-    </View>
-  )
-}
-
-interface SavedCourseCardProps {
-  item: PersonalTimetableItemView
-  busy: boolean
-  onRefresh: () => void
-  onRemove: () => void
-}
-
-function SavedCourseCard({ item, busy, onRefresh, onRemove }: SavedCourseCardProps) {
-  const summary = [item.class_name, item.course_category]
-    .filter((value): value is string => Boolean(value?.trim()))
-    .join(' · ')
-  return (
-    <View className='course-catalog-card'>
-      <View className='course-catalog-card__head'>
-        <View className='course-catalog-card__identity'>
-          <View className='course-catalog-card__title-row'>
-            <Text className='course-catalog-card__name'>{item.course_name}</Text>
-            {item.course_category && <Text className='course-catalog-card__tag'>{item.course_category}</Text>}
-            {item.credits && <Text className='course-catalog-card__tag course-catalog-card__tag--neutral'>{item.credits} 学分</Text>}
-          </View>
-        </View>
-        <View className='course-catalog-card__head-actions'>
-          <View className={`course-catalog-card__status course-catalog-card__status--${item.source_status}`}>
-            {personalStatusLabel(item.source_status)}
-          </View>
-        </View>
-      </View>
-
-      {(item.course_code || item.opening_code) && (
-        <View className='course-catalog-card__reference'>
-          {item.opening_code && <Text>选课号 {item.opening_code}</Text>}
-          {item.course_code && <Text>课程代码 {item.course_code}</Text>}
-        </View>
-      )}
-
-      <View className='course-catalog-card__meta'>
-        <View className='course-catalog-card__facts'>
-          <Text className='course-catalog-card__teacher-avatar'>{item.teachers[0]?.slice(0, 1) || '师'}</Text>
-          <Text className='course-catalog-card__teacher'>{item.teachers.join('、') || '教师待确认'}</Text>
-          {item.offering_unit && <Text className='course-catalog-card__unit'>{item.offering_unit}</Text>}
-        </View>
-        {summary && <Text className='course-catalog-card__summary'>{summary}</Text>}
-        {!item.slots.length && (item.campus || item.location_text) && (
-          <Text>地点：{[item.campus, item.location_text].filter(Boolean).join(' · ')}</Text>
-        )}
-      </View>
-
-      {item.slots.length ? (
-        <View className='course-catalog-slots'>
-          <View className='course-catalog-card__section-head'>
-            <Text className='course-catalog-card__section-title'>上课安排</Text>
-            <Text className='course-catalog-card__section-summary'>共 {item.slots.length} 条</Text>
-          </View>
-          {item.slots.map((slot) => {
-            const location = slotLocation(slot, item.location_text)
-            return (
-              <View key={slot.source_schedule_slot_id} className='course-catalog-slot'>
-                <View className='course-catalog-slot__timing'>
-                  <Text className='course-catalog-slot__time'>
-                    {weekdays[slot.weekday - 1] || `星期${slot.weekday}`} · {slot.start_section}-{slot.end_section} 节
-                  </Text>
-                  <Text className='course-catalog-slot__weeks'>{formatCourseWeeks(slot.weeks)}</Text>
-                </View>
-                <Text className='course-catalog-slot__location'>{location || '地点待确认'}</Text>
-              </View>
-            )
-          })}
-        </View>
-      ) : (
-        <View className='course-catalog-card__no-slots'>
-          <Text>{item.schedule_text || '原安排暂无可展示的排课信息'}</Text>
-        </View>
-      )}
-
-      {item.source_status === 'withdrawn' && (
-        <Text className='course-catalog-card__note'>课程已从当前目录下架，原安排仍保留在课表中。</Text>
-      )}
-      <View className='course-catalog-card__actions'>
-        {item.source_status === 'updated' && (
-          <View
-            className='course-catalog-card__action course-catalog-card__action--primary'
-            role='button'
-            ariaLabel={`同步${item.course_name}的最新排课`}
-            onClick={busy ? undefined : onRefresh}
-          >
-            {busy ? '正在同步…' : '同步最新排课'}
-          </View>
-        )}
-        <View
-          className='course-catalog-card__action course-catalog-card__action--danger'
-          role='button'
-          ariaLabel={`移除${item.course_name}的蹭课安排`}
-          onClick={busy ? undefined : onRemove}
-        >
-          {busy ? '处理中…' : '移除蹭课'}
-        </View>
-      </View>
     </View>
   )
 }
@@ -1065,15 +999,27 @@ export default function CourseCatalogPage() {
               </View>
             ) : (
               <View className='course-catalog-saved-list__items'>
-                {personalItems.map((item) => (
-                  <SavedCourseCard
-                    key={item.id}
-                    item={item}
-                    busy={busyItemId === item.id}
-                    onRefresh={() => void refreshCourse(item)}
-                    onRemove={() => void removeCourse(item)}
-                  />
-                ))}
+                {personalItems.map((item) => {
+                  const course = personalTimetableItemToCatalogCourse(item)
+                  const simulationAdded = simulationCourses.some((draftCourse) => (
+                    draftCourse.id.startsWith(simulationCoursePrefix(course))
+                  ))
+                  const busy = busyItemId === item.id || busyOfferingId === course.offering_id
+                  return (
+                    <CourseCatalogCard
+                      key={item.id}
+                      course={course}
+                      personalItem={item}
+                      simulationAdded={simulationAdded}
+                      busy={busy}
+                      onAdd={() => void addCourse(course)}
+                      onRemove={() => void removeCourse(item)}
+                      onRefresh={() => void refreshCourse(item)}
+                      onAddSimulation={() => addSimulationCourse(course)}
+                      onRemoveSimulation={() => void removeSimulationCourse(course)}
+                    />
+                  )
+                })}
               </View>
             )}
           </View>

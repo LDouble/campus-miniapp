@@ -568,28 +568,6 @@
     }
   }
 
-  &__status {
-    flex: none;
-    padding: 0;
-    color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
-    font-size: var(--ousea-font-size-badge, 20rpx);
-    font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: 1.4;
-    white-space: nowrap;
-
-    &--updated {
-      color: var(--campus-primary-strong, var(--ousea-ocean-600, #1d5fd6));
-    }
-
-    &--withdrawn {
-      color: var(--campus-danger, var(--ousea-danger-500, #e5484d));
-    }
-
-    &--simulation {
-      color: var(--ousea-ocean-600, #1d5fd6);
-    }
-  }
-
   &__schedule-link {
     display: flex;
     min-height: 56rpx;
