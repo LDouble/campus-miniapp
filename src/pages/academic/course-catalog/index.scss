@@ -862,6 +862,15 @@
     overflow-wrap: anywhere;
   }
 
+  &__module-remark {
+    max-width: 100%;
+    padding: 4rpx 10rpx;
+    color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90));
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
   &__note {
     display: block;
     margin-top: 8rpx;

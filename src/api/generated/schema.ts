@@ -6012,6 +6012,8 @@ export interface components {
             /** @enum {string} */
             education_level: "undergraduate" | "graduate";
             general_education_modules: components["schemas"]["MemberCourseCatalogGeneralEducationModule"][];
+            /** @description 通识课程导入备注 */
+            general_education_remark?: string | null;
             instruction_language?: string | null;
             location_text?: string | null;
             offering_id: string;

@@ -142,6 +142,7 @@ const personalTimetableItemToCatalogCourse = (
     weeks: slot.weeks,
   })),
   general_education_modules: [],
+  general_education_remark: null,
   teachers: item.teachers,
 })
 
@@ -255,13 +256,18 @@ function CourseCatalogCard({
         </View>
       )}
 
-      {course.general_education_modules.length > 0 && (
-        <View className='course-catalog-card__modules' ariaRole='list' ariaLabel='通识模块归属'>
-          <Text className='course-catalog-card__modules-label'>通识模块</Text>
+      {(course.general_education_modules.length > 0 || course.general_education_remark) && (
+        <View className='course-catalog-card__modules' ariaRole='list' ariaLabel='通识模块归属及备注'>
+          {course.general_education_modules.length > 0 && (
+            <Text className='course-catalog-card__modules-label'>通识模块</Text>
+          )}
           <View className='course-catalog-card__module-list'>
             {course.general_education_modules.map((module) => (
               <Text key={module.id} className='course-catalog-card__module'>{module.name}</Text>
             ))}
+            {course.general_education_remark && (
+              <Text className='course-catalog-card__module-remark'>备注：{course.general_education_remark}</Text>
+            )}
           </View>
         </View>
       )}
