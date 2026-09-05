@@ -43,6 +43,7 @@ type ServiceItem = {
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
   schedule: 'academic_schedule',
+  simulation: 'academic_schedule',
   grades: 'academic_grades',
   exams: 'academic_exams',
   result: 'academic_selection',
@@ -80,6 +81,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'pass-rate', name: '课程通过率', icon: icons.passRate, route: '/pages/academic/statistics/courses' },
       { key: 'course-audit', name: '蹭课检索', icon: icons.academic, route: '/pages/academic/course-catalog/index' },
       { key: 'general-education', name: '通识查询', icon: icons.academic, route: '/pages/academic/general-education/index' },
+      { key: 'simulation', name: '模拟选课', icon: icons.academic, route: '/pages/academic/schedule/index?mode=simulation' },
       { key: 'calendar', name: '校历', icon: icons.calendar, route: '/pages/calendar/index' },
     ],
   },

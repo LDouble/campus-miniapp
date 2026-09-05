@@ -27,9 +27,10 @@ import type {
 } from '../../../api/types'
 import CustomNavbar from '../../../components/custom-navbar'
 import { loadAcademicCalendar } from '../../../features/calendar/repository'
+import CoursePassRateSheet from '../../../features/academic-statistics/course-pass-rate-preview/sheet'
 import type { AcademicPeriod, Course } from '../types'
 import { academicStorage } from '../storage'
-import { formatCourseWeeks, weekdays } from '../utils'
+import { formatCourseWeeks, resolvePeriodId, weekdays } from '../utils'
 import './index.scss'
 
 const PAGE_SIZE = 20
@@ -69,6 +70,10 @@ const routeCourseCatalogFilters = (params: Record<string, string | undefined>): 
     generalEducationModuleId: 0,
   }
 }
+
+const routeCourseCatalogPeriodId = (params: Record<string, string | undefined>) => (
+  params.periodId?.trim() || ''
+)
 
 const getDefaultEducationLevel = (): AcademicEducationLevel => {
   try {
@@ -199,6 +204,7 @@ interface CourseCatalogCardProps {
   onRemoveSimulation: () => void
   onRefresh: () => void
   onAddSimulation: () => void
+  onOpenPassRate: () => void
 }
 
 function CourseCatalogCard({
@@ -211,6 +217,7 @@ function CourseCatalogCard({
   onRemoveSimulation,
   onRefresh,
   onAddSimulation,
+  onOpenPassRate,
 }: CourseCatalogCardProps) {
   const summary = courseSummary(course)
   const isAdded = Boolean(personalItem)
@@ -272,6 +279,18 @@ function CourseCatalogCard({
         </View>
       )}
 
+      {course.course_code && (
+        <View
+          className='course-catalog-card__pass-rate-link'
+          role='button'
+          ariaLabel={`查看${course.course_name}的课程通过率`}
+          onClick={onOpenPassRate}
+        >
+          <Text>查看通过率</Text>
+          <Text>›</Text>
+        </View>
+      )}
+
       <View className='course-catalog-card__meta'>
         <View className='course-catalog-card__facts'>
           <Text className='course-catalog-card__teacher-avatar'>{course.teachers[0]?.slice(0, 1) || '师'}</Text>
@@ -311,6 +330,7 @@ function CourseCatalogCard({
 export default function CourseCatalogPage() {
   const router = Taro.useRouter()
   const initialRouteFilters = routeCourseCatalogFilters(router.params)
+  const initialRoutePeriodId = routeCourseCatalogPeriodId(router.params)
   const [activeView, setActiveView] = useState<CourseCatalogView>('search')
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
   const [periods, setPeriods] = useState<AcademicPeriod[]>([])
@@ -338,6 +358,7 @@ export default function CourseCatalogPage() {
   const [personalItems, setPersonalItems] = useState<PersonalTimetableItemView[]>([])
   const [personalItemsLoading, setPersonalItemsLoading] = useState(false)
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
+  const [passRateCourse, setPassRateCourse] = useState<MemberCourseCatalogCourse | null>(null)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
   const [showFloatGuide, setShowFloatGuide] = useState(() => (
     !academicStorage.hasSeenCourseCatalogFloatGuideToday()
@@ -492,7 +513,7 @@ export default function CourseCatalogPage() {
           isCurrent: term.is_current,
         }))
         setPeriods(records)
-        setPeriodId(records.find((period) => period.isCurrent)?.id || records[0]?.id || '')
+        setPeriodId(resolvePeriodId(records, initialRoutePeriodId))
         if (!records.length) setLoading(false)
       })
       .catch((error) => {
@@ -506,7 +527,7 @@ export default function CourseCatalogPage() {
     return () => {
       active = false
     }
-  }, [educationLevel])
+  }, [educationLevel, initialRoutePeriodId])
 
   useEffect(() => {
     if (!periodId) return
@@ -1116,6 +1137,7 @@ export default function CourseCatalogPage() {
                     }}
                     onAddSimulation={() => addSimulationCourse(course)}
                     onRemoveSimulation={() => void removeSimulationCourse(course)}
+                    onOpenPassRate={() => setPassRateCourse(course)}
                   />
                 )
               })}
@@ -1176,6 +1198,7 @@ export default function CourseCatalogPage() {
                       onRefresh={() => void refreshCourse(item)}
                       onAddSimulation={() => addSimulationCourse(course)}
                       onRemoveSimulation={() => void removeSimulationCourse(course)}
+                      onOpenPassRate={() => setPassRateCourse(course)}
                     />
                   )
                 })}
@@ -1184,6 +1207,15 @@ export default function CourseCatalogPage() {
           </View>
         )}
       </View>
+
+      {passRateCourse && (
+        <CoursePassRateSheet
+          courseCode={passRateCourse.course_code || ''}
+          courseName={passRateCourse.course_name}
+          teacherName={passRateCourse.teachers[0] || ''}
+          onClose={() => setPassRateCourse(null)}
+        />
+      )}
 
       <View className='course-catalog-float'>
         {showFloatGuide && !quickActionsOpen && (
