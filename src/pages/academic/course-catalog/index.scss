@@ -23,6 +23,7 @@
   gap: 14rpx;
   padding: 18rpx 20rpx;
   margin: 0 0 16rpx;
+  transition: padding 180ms ease, background-color 180ms ease;
   background: #fff8eb;
   border: 1rpx solid #f6d9a8;
   border-radius: 18rpx;
@@ -53,6 +54,18 @@
     display: block;
   }
 
+  &__collapsed-copy {
+    display: block;
+    min-width: 0;
+    margin-top: 4rpx;
+    overflow: hidden;
+    color: #6f4d24;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.45;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__title {
     color: #8a5816;
     font-size: var(--ousea-font-size-caption, 24rpx);
@@ -72,6 +85,21 @@
     color: #a4773a;
     font-size: var(--ousea-font-size-badge, 20rpx);
     line-height: 1.45;
+  }
+
+  &__toggle {
+    flex: none;
+    margin-top: 3rpx;
+    color: #a4773a;
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    white-space: nowrap;
+  }
+
+  &--collapsed {
+    align-items: center;
+    padding-top: 14rpx;
+    padding-bottom: 14rpx;
   }
 }
 

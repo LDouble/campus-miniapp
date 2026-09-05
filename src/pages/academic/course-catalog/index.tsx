@@ -313,6 +313,9 @@ export default function CourseCatalogPage() {
   const [showFloatGuide, setShowFloatGuide] = useState(() => (
     !academicStorage.hasSeenCourseCatalogFloatGuideToday()
   ))
+  const [disclaimerExpanded, setDisclaimerExpanded] = useState(() => (
+    !academicStorage.hasSeenCourseCatalogDisclaimer()
+  ))
   const [busyOfferingId, setBusyOfferingId] = useState('')
   const [busyItemId, setBusyItemId] = useState(0)
   const requestSequence = useRef(0)
@@ -330,6 +333,10 @@ export default function CourseCatalogPage() {
     }, 5600)
     return () => clearTimeout(timer)
   }, [showFloatGuide])
+
+  useEffect(() => {
+    if (disclaimerExpanded) academicStorage.markCourseCatalogDisclaimerSeen()
+  }, [disclaimerExpanded])
 
   const dismissFloatGuide = () => {
     setShowFloatGuide(false)
@@ -753,16 +760,24 @@ export default function CourseCatalogPage() {
         </View>
 
         <View
-          className='course-catalog-disclaimer'
-          role='note'
-          ariaLabel='蹭课说明：仅用于旁听和联系教师，不存在真实选课关系，真实选课请在教务系统操作'
+          className={`course-catalog-disclaimer ${disclaimerExpanded ? 'course-catalog-disclaimer--expanded' : 'course-catalog-disclaimer--collapsed'}`}
+          role='button'
+          ariaLabel={disclaimerExpanded ? '收起蹭课说明' : '展开蹭课说明'}
+          onClick={() => setDisclaimerExpanded((current) => !current)}
         >
           <View className='course-catalog-disclaimer__icon'>!</View>
           <View className='course-catalog-disclaimer__body'>
             <Text className='course-catalog-disclaimer__title'>蹭课说明</Text>
-            <Text className='course-catalog-disclaimer__copy'>蹭课仅用于方便旁听、联系教师，不存在真实的选课关系。</Text>
-            <Text className='course-catalog-disclaimer__hint'>如需正式选课，请前往教务系统操作。</Text>
+            {disclaimerExpanded ? (
+              <>
+                <Text className='course-catalog-disclaimer__copy'>蹭课仅用于方便旁听、联系教师，不存在真实的选课关系。</Text>
+                <Text className='course-catalog-disclaimer__hint'>如需正式选课，请前往教务系统操作。</Text>
+              </>
+            ) : (
+              <Text className='course-catalog-disclaimer__collapsed-copy'>蹭课仅用于旁听、联系教师，不存在真实选课关系…</Text>
+            )}
           </View>
+          <Text className='course-catalog-disclaimer__toggle'>{disclaimerExpanded ? '收起' : '展开'}</Text>
         </View>
 
         <View className='course-catalog-view-tabs'>
