@@ -48,5 +48,6 @@ assert.match(appConfig, /course-catalog\/index/u, '课程检索页必须注册�
 assert.match(servicesPage, /course-audit/u, '服务页必须提供蹭课检索入口')
 assert.match(homePage, /key: 'errands',[\s\S]*key: 'course-audit', name: '蹭课',[\s\S]*key: 'classroom'/u, '首页常用服务应在找同行原位置提供蹭课入口')
 assert.doesNotMatch(homePage, /key: 'carpool', name: '找同行'/u, '首页常用服务不应继续展示找同行入口')
+assert.match(homePage, /if \(!moduleKey\) return 'route' in service/u, '本地页面路由入口不应因缺少运行时模块配置被隐藏')
 
 process.stdout.write('course audit smoke: ok\n')

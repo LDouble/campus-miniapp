@@ -877,7 +877,7 @@ function Index() {
   const visibleHomeServices = quickServices.filter((service) => {
     if (isQualificationEdition && migratedHomeServiceKeys.has(service.key)) return false
     const moduleKey = serviceModuleKeys[service.key]
-    if (!moduleKey) return false
+    if (!moduleKey) return 'route' in service && Boolean(service.route)
     return resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
