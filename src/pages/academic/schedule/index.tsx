@@ -8,7 +8,7 @@ import {
   loadAcademicCredential,
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
-import type { AcademicCacheMetadata } from '../../../api/types'
+import type { AcademicCacheMetadata, AcademicCalendar } from '../../../api/types'
 import {
   listPersonalTimetableItems,
   removePersonalTimetableItem,
@@ -30,6 +30,7 @@ import { openCourseMaterials } from '../../../features/course-materials/navigati
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
+import { loadAcademicCalendar } from '../../../features/calendar/repository'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { findCourseConflicts } from '../calculations'
@@ -63,6 +64,7 @@ import {
   getCurrentTeachingWeek,
   getWeekDates,
   isSameDay,
+  resolveDefaultPeriodId,
   resolveHorizontalSwipeDay,
   resolvePeriodId,
   resolveHorizontalSwipeWeek,
@@ -153,6 +155,42 @@ const emptyDraft = (periodId: string): CustomCourseDraft => ({
   weeks: [1, 2, 3, 4, 5, 6, 7, 8],
   color: 'aqua',
 })
+
+const mapCalendarPeriods = (calendar: AcademicCalendar | null): AcademicPeriod[] => (
+  (calendar?.terms || []).map((term) => ({
+    id: term.id,
+    label: term.label,
+    shortLabel: term.short_label,
+    startDate: term.start_date,
+    weeks: term.week_count,
+    isCurrent: term.is_current,
+  }))
+)
+
+const fallbackSimulationPeriods = (courses: Course[]): AcademicPeriod[] => {
+  const coursesByPeriod = new Map<string, Course[]>()
+  courses.forEach((course) => {
+    const periodId = course.periodId.trim()
+    if (!periodId) return
+    coursesByPeriod.set(periodId, [
+      ...(coursesByPeriod.get(periodId) || []),
+      course,
+    ])
+  })
+
+  const now = new Date()
+  const weekday = now.getDay() || 7
+  now.setDate(now.getDate() - weekday + 1)
+  const startDate = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
+  return Array.from(coursesByPeriod.entries()).map(([id, periodCourses], index) => ({
+    id,
+    label: id,
+    shortLabel: id,
+    startDate,
+    weeks: Math.max(20, ...periodCourses.flatMap((course) => course.weeks)),
+    isCurrent: index === 0,
+  }))
+}
 
 const getDefaultEducationLevel = (): AcademicEducationLevel => {
   try {
@@ -273,7 +311,6 @@ function CourseDetailCard({
 
 export default function SchedulePage() {
   const isSimulation = Taro.useRouter().params.mode === 'simulation'
-  const simulationPeriodId = academicStorage.getSelectionDraftCourses()[0]?.periodId || DEFAULT_PERIOD_ID
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
@@ -288,16 +325,9 @@ export default function SchedulePage() {
     section: 'schedule',
     selectedWeekday: getAcademicWeekday(),
   }))
-  const [periods, setPeriods] = useState<AcademicPeriod[]>(() => isSimulation
-    ? [{
-      id: simulationPeriodId,
-      label: simulationPeriodId,
-      shortLabel: simulationPeriodId,
-      startDate: '2026-09-01',
-      weeks: 30,
-      isCurrent: true,
-    }]
-    : (initialScheduleCache ? initialScheduleCache.periods : []))
+  const [periods, setPeriods] = useState<AcademicPeriod[]>(() => (
+    isSimulation ? [] : (initialScheduleCache ? initialScheduleCache.periods : [])
+  ))
   const initialCoursesByPeriod = sanitizeCoursesByPeriod(
     initialScheduleCache?.coursesByPeriod || {},
   )
@@ -312,7 +342,7 @@ export default function SchedulePage() {
   const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
   const [personalCourses, setPersonalCourses] = useState<Course[]>([])
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
-  const [loading, setLoading] = useState(!hasInitialCourses)
+  const [loading, setLoading] = useState(isSimulation || !hasInitialCourses)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [usingCache, setUsingCache] = useState(hasInitialCourses)
@@ -339,6 +369,7 @@ export default function SchedulePage() {
     emptyDraft(preferences.schedulePeriodId),
   )
   const scheduleRequestRef = useRef(0)
+  const simulationPeriodsRequestRef = useRef(0)
   const personalTimetableRequestRef = useRef(0)
   const courseMutationRef = useRef(false)
   const firstPageShowRef = useRef(true)
@@ -421,11 +452,60 @@ export default function SchedulePage() {
     }
   }, [])
 
+  const loadSimulationPeriods = useCallback(async (
+    preferredPeriodId = '',
+    force = false,
+  ) => {
+    const requestId = ++simulationPeriodsRequestRef.current
+    setLoading(true)
+    setLoadError(null)
+    setServerCache(null)
+    setCacheUpdatedAt(0)
+    setScheduleNote('')
+    if (force) setRetrying(true)
+    try {
+      const result = await loadAcademicCalendar(educationLevel, { force })
+      if (simulationPeriodsRequestRef.current !== requestId) return
+      const calendarPeriods = mapCalendarPeriods(result.calendar)
+      const nextPeriods = calendarPeriods.length
+        ? calendarPeriods
+        : fallbackSimulationPeriods(academicStorage.getSelectionDraftCourses())
+      const nextPeriodId = preferredPeriodId && nextPeriods.some((period) => (
+        period.id === preferredPeriodId
+      ))
+        ? preferredPeriodId
+        : resolveDefaultPeriodId(nextPeriods)
+      const nextPeriod = nextPeriods.find((period) => period.id === nextPeriodId)
+      setPeriods(nextPeriods)
+      setPreferences((current) => ({
+        ...current,
+        schedulePeriodId: nextPeriodId,
+        week: nextPeriod?.isCurrent ? getCurrentTeachingWeek(nextPeriod) : 1,
+        selectedWeekday: getAcademicWeekday(),
+      }))
+      setUsingCache(result.source !== 'network' || !calendarPeriods.length)
+      setInitialized(true)
+      if (!nextPeriods.length) {
+        setLoadError(new Error('学期数据暂不可用'))
+      }
+    } catch (error) {
+      if (simulationPeriodsRequestRef.current !== requestId) return
+      setInitialized(true)
+      setLoadError(error)
+    } finally {
+      if (simulationPeriodsRequestRef.current === requestId) {
+        setLoading(false)
+        setRetrying(false)
+      }
+    }
+  }, [educationLevel])
+
   useEffect(() => {
     if (isSimulation) {
-      setLoading(false)
-      setInitialized(true)
-      return undefined
+      void loadSimulationPeriods()
+      return () => {
+        simulationPeriodsRequestRef.current += 1
+      }
     }
     const applyPeriods = (records: AcademicPeriod[]) => {
       setPeriods(records)
@@ -478,7 +558,7 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [academicUserId, initialScheduleCache, isSimulation])
+  }, [academicUserId, initialScheduleCache, isSimulation, loadSimulationPeriods])
 
   useEffect(() => {
     if (!initialized || isSimulation) return
@@ -651,6 +731,10 @@ export default function SchedulePage() {
   }
 
   const refreshSchedule = useCallback(async () => {
+    if (isSimulation) {
+      await loadSimulationPeriods(preferences.schedulePeriodId, true)
+      return
+    }
     const requestId = ++scheduleRequestRef.current
     const cache = academicStorage.getScheduleCache(academicUserId)
     const hasCachedCourses = Boolean(
@@ -737,7 +821,7 @@ export default function SchedulePage() {
         setRetrying(false)
       }
     }
-  }, [academicUserId, preferences.schedulePeriodId])
+  }, [academicUserId, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
     if (isSimulation) setSimulationCourses(academicStorage.getSelectionDraftCourses())
@@ -753,7 +837,7 @@ export default function SchedulePage() {
       firstPageShowRef.current = false
       return
     }
-    void loadPersonalCourses()
+    if (!isSimulation) void loadPersonalCourses()
     if (shouldRefresh) void refreshSchedule()
   })
 
