@@ -9,12 +9,13 @@ import {
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
 } from '../src/pages/academic/schedule-courses'
-import { Course } from '../src/pages/academic/types'
+import { AcademicPeriod, Course } from '../src/pages/academic/types'
 import {
   courseColorForClass,
   formatCourseTimeRange,
   formatCourseWeeks,
   getAcademicWeekday,
+  resolveNextPeriodId,
   resolveHorizontalSwipeDay,
   resolveHorizontalSwipeWeek,
 } from '../src/pages/academic/utils'
@@ -31,6 +32,15 @@ const course = (id: string, periodId: string): Course => ({
   weeks: [1],
   color: 'aqua',
   source: 'official',
+})
+
+const period = (id: string, startDate: string, isCurrent = false): AcademicPeriod => ({
+  id,
+  label: id,
+  shortLabel: id,
+  startDate,
+  weeks: 20,
+  isCurrent,
 })
 
 const academicRepositorySource = readFileSync(
@@ -92,6 +102,21 @@ assert.match(
 )
 assert.match(
   schedulePageSource,
+  /isSimulation \|\| !academicStorage\.hasSeenScheduleSelectionGuideToday\(\)/u,
+  '模拟选课引导每次进入都应显示，不受按天记录限制',
+)
+assert.match(
+  schedulePageSource,
+  /setShowSelectionGuide\(true\)/u,
+  '模拟选课页面重新显示时应重新展示长按引导',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \? 3000 : 5200/u,
+  '模拟选课长按引导应在 3 秒后自动消失',
+)
+assert.match(
+  schedulePageSource,
   /schedule-note__track--marquee[\s\S]*?schedule-note__copy--duplicate/u,
   '课表页必须用双文本无缝跑马灯展示全局课表备注',
 )
@@ -110,8 +135,40 @@ assert.match(schedulePageSource, /schedule-selection-guide/u, '课表应提供�
 assert.match(schedulePageSource, /长按空白时段，\{isSimulation \? '继续选课' : '快速蹭课'\}/u, '课表引导文案必须匹配当前模式')
 assert.match(schedulePageSource, /loadAcademicCalendar\(educationLevel, \{ force \}\)/u, '模拟选课应读取当前学历的完整校历学期')
 assert.match(schedulePageSource, /mapCalendarPeriods\(result\.calendar\)/u, '模拟选课学期应映射校历返回的全部学期')
-assert.match(schedulePageSource, /resolveDefaultPeriodId\(nextPeriods\)/u, '模拟选课首次进入应默认选择当前学期')
+assert.match(schedulePageSource, /resolveNextPeriodId\(nextPeriods\)/u, '模拟选课首次进入应默认选择当前学期的下一学期')
 assert.doesNotMatch(schedulePageSource, /simulationPeriodId = academicStorage\.getSelectionDraftCourses\(\)\[0\]/u, '模拟选课不应再用第一门课程伪造唯一学期')
+assert.equal(
+  resolveNextPeriodId([
+    period('2026-2027-1', '2026-09-20'),
+    period('2026-2027-3', '2026-08-24', true),
+    period('2025-2026-3', '2026-03-09'),
+  ]),
+  '2026-2027-1',
+  '当前学期为夏季时应选择同学年的秋季学期',
+)
+assert.equal(
+  resolveNextPeriodId([
+    period('2025-2026-1', '2025-09-01'),
+    period('2025-2026-2', '2026-02-23', true),
+    period('2025-2026-3', '2026-03-09'),
+  ]),
+  '2025-2026-3',
+  '当前学期为春季时应选择同学年的夏季学期',
+)
+assert.equal(
+  resolveNextPeriodId([period('2026-2027-3', '2026-08-24', true)]),
+  '2026-2027-3',
+  '只有当前学期时应安全回退到当前学期',
+)
+assert.equal(
+  resolveNextPeriodId([
+    period('2025-2026-1', '2025-09-01'),
+    period('2025-2026-2', '2026-02-23'),
+    period('2025-2026-3', '2026-03-09'),
+  ]),
+  '2025-2026-3',
+  '没有当前标记时应按时间顺序选择最近学期的下一学期回退项',
+)
 assert.match(runtimeConfigSource, /export const getSectionEndTime/u, '运行时配置必须提供节次结束时间')
 assert.equal(
   formatCourseTimeRange('08:00', '09:40'),

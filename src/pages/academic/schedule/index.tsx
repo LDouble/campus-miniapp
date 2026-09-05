@@ -64,8 +64,8 @@ import {
   getCurrentTeachingWeek,
   getWeekDates,
   isSameDay,
-  resolveDefaultPeriodId,
   resolveHorizontalSwipeDay,
+  resolveNextPeriodId,
   resolvePeriodId,
   resolveHorizontalSwipeWeek,
   resolveScheduleAnchor,
@@ -351,7 +351,7 @@ export default function SchedulePage() {
     !academicStorage.hasSeenScheduleRefreshGuideToday()
   ))
   const [showSelectionGuide, setShowSelectionGuide] = useState(() => (
-    !academicStorage.hasSeenScheduleSelectionGuideToday()
+    isSimulation || !academicStorage.hasSeenScheduleSelectionGuideToday()
   ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache
@@ -378,7 +378,7 @@ export default function SchedulePage() {
 
   const dismissSelectionGuide = () => {
     setShowSelectionGuide(false)
-    academicStorage.markScheduleSelectionGuideSeenToday()
+    if (!isSimulation) academicStorage.markScheduleSelectionGuideSeenToday()
   }
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
@@ -474,7 +474,7 @@ export default function SchedulePage() {
         period.id === preferredPeriodId
       ))
         ? preferredPeriodId
-        : resolveDefaultPeriodId(nextPeriods)
+        : resolveNextPeriodId(nextPeriods)
       const nextPeriod = nextPeriods.find((period) => period.id === nextPeriodId)
       setPeriods(nextPeriods)
       setPreferences((current) => ({
@@ -665,10 +665,10 @@ export default function SchedulePage() {
     ) return undefined
     const timer = setTimeout(() => {
       setShowSelectionGuide(false)
-      academicStorage.markScheduleSelectionGuideSeenToday()
-    }, 5200)
+      if (!isSimulation) academicStorage.markScheduleSelectionGuideSeenToday()
+    }, isSimulation ? 3000 : 5200)
     return () => clearTimeout(timer)
-  }, [loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
+  }, [isSimulation, loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
 
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
@@ -824,7 +824,10 @@ export default function SchedulePage() {
   }, [academicUserId, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
-    if (isSimulation) setSimulationCourses(academicStorage.getSelectionDraftCourses())
+    if (isSimulation) {
+      setSimulationCourses(academicStorage.getSelectionDraftCourses())
+      setShowSelectionGuide(true)
+    }
     const todayWeekday = getAcademicWeekday()
     setPreferences((current) => current.selectedWeekday === todayWeekday
       ? current
@@ -886,7 +889,7 @@ export default function SchedulePage() {
     setSheet(null)
     setActiveTimeSlot(null)
     void Taro.navigateTo({
-      url: `/pages/academic/course-catalog/index?weekday=${slot.weekday}&section=${slot.section}`,
+      url: `/pages/academic/course-catalog/index?weekday=${slot.weekday}&section=${slot.section}&periodId=${encodeURIComponent(preferences.schedulePeriodId)}`,
     })
   }
 

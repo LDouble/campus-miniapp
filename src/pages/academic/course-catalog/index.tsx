@@ -27,7 +27,7 @@ import CustomNavbar from '../../../components/custom-navbar'
 import { loadAcademicCalendar } from '../../../features/calendar/repository'
 import type { AcademicPeriod, Course } from '../types'
 import { academicStorage } from '../storage'
-import { formatCourseWeeks, weekdays } from '../utils'
+import { formatCourseWeeks, resolvePeriodId, weekdays } from '../utils'
 import './index.scss'
 
 const PAGE_SIZE = 20
@@ -61,6 +61,10 @@ const routeCourseCatalogFilters = (params: Record<string, string | undefined>): 
     courseCategory: '',
   }
 }
+
+const routeCourseCatalogPeriodId = (params: Record<string, string | undefined>) => (
+  params.periodId?.trim() || ''
+)
 
 const getDefaultEducationLevel = (): AcademicEducationLevel => {
   try {
@@ -285,6 +289,7 @@ function CourseCatalogCard({
 export default function CourseCatalogPage() {
   const router = Taro.useRouter()
   const initialRouteFilters = routeCourseCatalogFilters(router.params)
+  const initialRoutePeriodId = routeCourseCatalogPeriodId(router.params)
   const [activeView, setActiveView] = useState<CourseCatalogView>('search')
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
   const [periods, setPeriods] = useState<AcademicPeriod[]>([])
@@ -462,7 +467,7 @@ export default function CourseCatalogPage() {
           isCurrent: term.is_current,
         }))
         setPeriods(records)
-        setPeriodId(records.find((period) => period.isCurrent)?.id || records[0]?.id || '')
+        setPeriodId(resolvePeriodId(records, initialRoutePeriodId))
         if (!records.length) setLoading(false)
       })
       .catch((error) => {
@@ -476,7 +481,7 @@ export default function CourseCatalogPage() {
     return () => {
       active = false
     }
-  }, [educationLevel])
+  }, [educationLevel, initialRoutePeriodId])
 
   useEffect(() => {
     if (!periodId) return

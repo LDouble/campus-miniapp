@@ -104,6 +104,18 @@ export const resolveDefaultPeriodId = (periods: AcademicPeriod[]) => {
   ))[0]?.id || ''
 }
 
+/** 模拟选课默认选择当前学期的下一学期，无法前进时保留现有默认学期。 */
+export const resolveNextPeriodId = (periods: AcademicPeriod[]) => {
+  const currentId = resolveDefaultPeriodId(periods)
+  if (!currentId) return ''
+
+  const orderedPeriods = [...periods].sort((left, right) => (
+    periodStartTime(right) - periodStartTime(left)
+  ))
+  const currentIndex = orderedPeriods.findIndex((period) => period.id === currentId)
+  return orderedPeriods[currentIndex - 1]?.id || currentId
+}
+
 export const resolvePeriodId = (periods: AcademicPeriod[], preferredId: string) => {
   if (periods.some((period) => period.id === preferredId)) return preferredId
   return periods.find((period) => period.isCurrent)?.id || periods[0]?.id || ''
