@@ -1851,6 +1851,12 @@
 
   & .course-conflict-card__actions > view:first-child { color: #fda4af; }
 
+  & .course-conflict-card__danger-action {
+    color: #fda4af;
+    background: var(--campus-surface-danger, #3f1725);
+    border-color: var(--campus-surface-danger, #3f1725);
+  }
+
   & .course-detail__tone,
   & .color-options__item { color: #93c5fd; background: var(--campus-icon-surface-blue, #162a46); }
   & .course-detail__tone--mint,

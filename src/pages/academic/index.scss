@@ -3482,6 +3482,20 @@ page {
     background: var(--ousea-danger-50, #fdecec);
     border-color: rgba(229, 72, 77, .22);
   }
+
+  &__danger-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 72rpx;
+    margin-top: 20rpx;
+    color: var(--ousea-danger-500, #e5484d);
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    background: var(--ousea-danger-50, #fdecec);
+    border: 1rpx solid rgba(229, 72, 77, .22);
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+  }
 }
 
 .course-resource-actions--course-card {

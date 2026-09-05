@@ -4116,6 +4116,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/timetable/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的蹭课条目 */
+        get: operations["ListMyPersonalTimetableItems"];
+        put?: never;
+        /** 将课程教学班加入我的蹭课课表 */
+        post: operations["CreatePersonalTimetableItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 移除我的蹭课条目 */
+        delete: operations["DeletePersonalTimetableItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable/items/{id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按最新课程目录刷新蹭课条目 */
+        post: operations["RefreshPersonalTimetableItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/private-messages/conversations": {
         parameters: {
             query?: never;
@@ -5607,6 +5659,7 @@ export interface components {
             location_text?: string | null;
             offering_id: string;
             offering_unit?: string | null;
+            opening_code?: string | null;
             /** Format: int64 */
             parsed_schedule_slot_count: number;
             period_id: string;
@@ -5806,6 +5859,7 @@ export interface components {
             location_text?: string | null;
             offering_id: string;
             offering_unit?: string | null;
+            opening_code?: string | null;
             period_id: string;
             /** @enum {string} */
             schedule_parse_status: "no_schedule" | "parsed" | "partial" | "unparsed";
@@ -8454,6 +8508,67 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        PersonalTimetableItemList: {
+            items: components["schemas"]["PersonalTimetableItemView"][];
+        };
+        PersonalTimetableItemListResponseBody: {
+            data: components["schemas"]["PersonalTimetableItemList"];
+            request_id: string;
+        };
+        PersonalTimetableItemResponseBody: {
+            data: components["schemas"]["PersonalTimetableItemView"];
+            request_id: string;
+        };
+        PersonalTimetableItemSlotView: {
+            building?: string | null;
+            campus?: string | null;
+            /** Format: uint64 */
+            classroom_id?: number | null;
+            /** Format: int64 */
+            end_section: number;
+            location_parsed: boolean;
+            raw_location?: string | null;
+            room?: string | null;
+            /** Format: uint64 */
+            source_schedule_slot_id: number;
+            /** Format: int64 */
+            start_section: number;
+            /** Format: int64 */
+            weekday: number;
+            weeks: number[];
+        };
+        PersonalTimetableItemView: {
+            campus?: string | null;
+            class_name?: string | null;
+            course_category?: string | null;
+            course_code?: string | null;
+            course_name: string;
+            /** Format: date-time */
+            created_at: string;
+            credits?: string | null;
+            current_data_version?: string | null;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: uint64 */
+            id: number;
+            instruction_language?: string | null;
+            location_text?: string | null;
+            offering_id: string;
+            offering_unit?: string | null;
+            opening_code?: string | null;
+            period_id: string;
+            schedule_text?: string | null;
+            slots: components["schemas"]["PersonalTimetableItemSlotView"][];
+            source_data_version: string;
+            source_status: components["schemas"]["PersonalTimetableSourceStatus"];
+            teachers: string[];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        PersonalTimetableSourceStatus: "current" | "updated" | "withdrawn";
         CreatePrivateConversationInput: {
             /** Format: uint64 */
             peer_id: number;
@@ -10285,6 +10400,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeResponseBody"];
+            };
+        };
+        /** @description 我的蹭课条目列表 */
+        PersonalTimetableItemListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PersonalTimetableItemListResponseBody"];
+            };
+        };
+        /** @description 我的蹭课条目 */
+        PersonalTimetableItemResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PersonalTimetableItemResponseBody"];
             };
         };
         /** @description 私信会话游标列表 */
@@ -16437,6 +16570,94 @@ export interface operations {
         responses: {
             200: components["responses"]["OfficialNoticeResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    ListMyPersonalTimetableItems: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PersonalTimetableItemListResponse"];
+        };
+    };
+    CreatePersonalTimetableItem: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate";
+                    period_id: string;
+                    offering_id: string;
+                    schedule_slot_ids: number[];
+                    data_version: string;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["PersonalTimetableItemResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DeletePersonalTimetableItem: {
+        parameters: {
+            query: {
+                expected_version: number;
+            };
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PersonalTimetableItemResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RefreshPersonalTimetableItem: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["PersonalTimetableItemResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     ListPrivateConversations: {
