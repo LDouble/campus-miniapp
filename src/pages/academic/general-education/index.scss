@@ -361,6 +361,34 @@ page {
     font-size: var(--ousea-font-size-badge, 20rpx);
   }
 
+  &__remark {
+    display: flex;
+    align-items: flex-start;
+    gap: 12rpx;
+    padding: 14rpx 16rpx;
+    margin-top: 16rpx;
+    color: var(--campus-text-body, #3a4759);
+    background: var(--campus-surface-subtle, #f5f8fc);
+    border: 1rpx solid var(--campus-border, #e8edf4);
+    border-radius: 16rpx;
+    line-height: 1.55;
+  }
+
+  &__remark-label {
+    flex: none;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+  }
+
+  &__remark-text {
+    min-width: 0;
+    flex: 1;
+    color: var(--campus-text-body, #3a4759);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    overflow-wrap: anywhere;
+  }
+
   &__source-history {
     padding: 14rpx 16rpx 0;
   }

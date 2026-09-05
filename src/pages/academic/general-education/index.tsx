@@ -96,6 +96,7 @@ function GeneralEducationCourseCard({ course }: { course: MemberGeneralEducation
     course.course_code ? `课程代码 ${course.course_code}` : '',
     course.offering_unit ? `开设单位 ${course.offering_unit}` : '',
   ].filter(Boolean)
+  const remark = course.remark?.trim() || ''
 
   return (
     <View className='general-education-course-card'>
@@ -110,6 +111,12 @@ function GeneralEducationCourseCard({ course }: { course: MemberGeneralEducation
       )}
 
       <GeneralEducationModuleTags modules={course.modules} />
+      {remark && (
+        <View className='general-education-course-card__remark'>
+          <Text className='general-education-course-card__remark-label'>备注</Text>
+          <Text className='general-education-course-card__remark-text'>{remark}</Text>
+        </View>
+      )}
       <GeneralEducationSourceHistory modules={course.modules} />
     </View>
   )
