@@ -712,6 +712,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/general-education/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询全部本科通识课程及归属历史 */
+        get: operations["ListMemberGeneralEducationCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/general-education/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询全部本科通识模块 */
+        get: operations["ListMemberGeneralEducationModules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/pass-rates": {
         parameters: {
             query?: never;
@@ -6031,6 +6065,41 @@ export interface components {
             weekday: number;
             weeks: number[];
         };
+        MemberGeneralEducationCourse: {
+            course_code: string;
+            course_name: string;
+            modules: components["schemas"]["MemberGeneralEducationCourseModule"][];
+            offering_unit: string;
+        };
+        MemberGeneralEducationCourseModule: {
+            /** Format: uint64 */
+            id: number;
+            name: string;
+            sources: components["schemas"]["MemberGeneralEducationSource"][];
+        };
+        MemberGeneralEducationCoursePage: {
+            items: components["schemas"]["MemberGeneralEducationCourse"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MemberGeneralEducationCoursePageResponseBody: {
+            data: components["schemas"]["MemberGeneralEducationCoursePage"];
+            request_id: string;
+        };
+        MemberGeneralEducationModuleListResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogGeneralEducationModuleList"];
+            request_id: string;
+        };
+        MemberGeneralEducationSource: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            notice_url?: string | null;
+            title: string;
+        };
         AcademicCoursePassRatePage: {
             items: components["schemas"]["AcademicCoursePassRateView"][];
             metadata: components["schemas"]["AcademicStatisticsMetadata"];
@@ -9763,6 +9832,24 @@ export interface components {
                 "application/json": components["schemas"]["MemberCourseCatalogGeneralEducationModuleListResponseBody"];
             };
         };
+        /** @description 已认证 member 查询全部本科通识课程及归属历史 */
+        MemberGeneralEducationCoursePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberGeneralEducationCoursePageResponseBody"];
+            };
+        };
+        /** @description 已认证 member 查询全部本科通识模块 */
+        MemberGeneralEducationModuleListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberGeneralEducationModuleListResponseBody"];
+            };
+        };
         /** @description 课程通过率分页 */
         AcademicCoursePassRatePageResponse: {
             headers: {
@@ -11816,6 +11903,35 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["MemberCourseCatalogGeneralEducationModuleListResponse"];
+        };
+    };
+    ListMemberGeneralEducationCourses: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                module_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberGeneralEducationCoursePageResponse"];
+        };
+    };
+    ListMemberGeneralEducationModules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberGeneralEducationModuleListResponse"];
         };
     };
     ListAcademicCoursePassRates: {

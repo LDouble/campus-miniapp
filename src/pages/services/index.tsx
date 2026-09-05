@@ -79,6 +79,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'result', name: '选课结果', icon: icons.result, route: '/pages/academic/selection/index' },
       { key: 'pass-rate', name: '课程通过率', icon: icons.passRate, route: '/pages/academic/statistics/courses' },
       { key: 'course-audit', name: '蹭课检索', icon: icons.academic, route: '/pages/academic/course-catalog/index' },
+      { key: 'general-education', name: '通识查询', icon: icons.academic, route: '/pages/academic/general-education/index' },
       { key: 'calendar', name: '校历', icon: icons.calendar, route: '/pages/calendar/index' },
     ],
   },

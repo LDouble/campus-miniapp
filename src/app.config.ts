@@ -26,6 +26,7 @@ const fullPages = [
   'pages/academic/selection/index',
   'pages/academic/statistics/courses',
   'pages/academic/statistics/index',
+  'pages/academic/general-education/index',
   'pages/calendar/index',
   'pages/materials/index',
   'pages/empty-classroom/index',
@@ -90,7 +91,7 @@ const packageDefinitions = [
   {
     root: 'pages/academic',
     sourceRoot: 'pages/academic',
-    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index', 'course-catalog/index'],
+    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index', 'course-catalog/index', 'general-education/index'],
   },
   { root: 'pages/clubs', sourceRoot: 'pages/clubs', pages: ['index', 'detail', 'edit', 'mine'] },
   { root: 'pages/shuttle', sourceRoot: 'pages/shuttle', pages: ['index', 'detail'] },
