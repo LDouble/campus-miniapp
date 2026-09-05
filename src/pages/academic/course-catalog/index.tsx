@@ -16,7 +16,6 @@ import {
   addPersonalTimetableItem,
   listPersonalTimetableItems,
   refreshPersonalTimetableItem,
-  removePersonalTimetableItem,
 } from '../../../api/personal-timetable'
 import type {
   MemberCourseCatalogCourse,
@@ -125,7 +124,6 @@ interface CourseCatalogCardProps {
   personalItem?: PersonalTimetableItemView
   busy: boolean
   onAdd: () => void
-  onRemove: () => void
   onRefresh: () => void
 }
 
@@ -134,7 +132,6 @@ function CourseCatalogCard({
   personalItem,
   busy,
   onAdd,
-  onRemove,
   onRefresh,
 }: CourseCatalogCardProps) {
   const summary = courseSummary(course)
@@ -211,16 +208,6 @@ function CourseCatalogCard({
             {busy ? '正在同步…' : '同步最新排课'}
           </View>
         )}
-        {isAdded && (
-          <View
-            className='course-catalog-card__action course-catalog-card__action--quiet'
-            role='button'
-            ariaLabel={`移除${course.course_name}的蹭课安排`}
-            onClick={busy ? undefined : onRemove}
-          >
-            移除
-          </View>
-        )}
       </View>
     </View>
   )
@@ -229,11 +216,10 @@ function CourseCatalogCard({
 interface SavedCourseCardProps {
   item: PersonalTimetableItemView
   busy: boolean
-  onRemove: () => void
   onRefresh: () => void
 }
 
-function SavedCourseCard({ item, busy, onRemove, onRefresh }: SavedCourseCardProps) {
+function SavedCourseCard({ item, busy, onRefresh }: SavedCourseCardProps) {
   return (
     <View className='course-catalog-saved-item'>
       <View className='course-catalog-saved-item__head'>
@@ -270,14 +256,6 @@ function SavedCourseCard({ item, busy, onRemove, onRefresh }: SavedCourseCardPro
             {busy ? '正在同步…' : '同步最新排课'}
           </View>
         )}
-        <View
-          className='course-catalog-card__action course-catalog-card__action--quiet'
-          role='button'
-          ariaLabel={`移除${item.course_name}的蹭课安排`}
-          onClick={busy ? undefined : onRemove}
-        >
-          移除
-        </View>
       </View>
     </View>
   )
@@ -501,25 +479,6 @@ export default function CourseCatalogPage() {
     }
   }
 
-  const removeCourse = async (item: PersonalTimetableItemView) => {
-    const result = await Taro.showModal({
-      title: '移除蹭课安排',
-      content: `确定移除“${item.course_name}”吗？`,
-      confirmColor: '#c56f73',
-    })
-    if (!result.confirm) return
-    setBusyItemId(item.id)
-    try {
-      await removePersonalTimetableItem(item.id, item.version)
-      setPersonalItems((current) => current.filter((candidate) => candidate.id !== item.id))
-      Taro.showToast({ title: '已移除蹭课安排', icon: 'success' })
-    } catch (error) {
-      Taro.showToast({ title: apiErrorMessage(error, '移除失败，请刷新后重试'), icon: 'none' })
-    } finally {
-      setBusyItemId(0)
-    }
-  }
-
   const refreshCourse = async (item: PersonalTimetableItemView) => {
     const confirmation = await Taro.showModal({
       title: '同步最新排课',
@@ -686,9 +645,6 @@ export default function CourseCatalogPage() {
                     personalItem={personalItem}
                     busy={busy}
                     onAdd={() => void addCourse(course)}
-                    onRemove={() => {
-                      if (personalItem) void removeCourse(personalItem)
-                    }}
                     onRefresh={() => {
                       if (personalItem) void refreshCourse(personalItem)
                     }}
@@ -715,7 +671,6 @@ export default function CourseCatalogPage() {
                   key={item.id}
                   item={item}
                   busy={busyItemId === item.id}
-                  onRemove={() => void removeCourse(item)}
                   onRefresh={() => void refreshCourse(item)}
                 />
               ))}
