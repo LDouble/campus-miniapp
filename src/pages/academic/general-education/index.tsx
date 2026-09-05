@@ -402,7 +402,7 @@ export default function GeneralEducationPage() {
       <View className='general-education-page__content'>
         <View className='general-education-note' role='status' ariaLabel='通识模块数据说明'>
           <Text className='general-education-note__icon'>i</Text>
-          <Text>这里展示独立维护的本科通识课程库，不与具体学期或实际开课绑定；一门课程可以同时属于多个模块。</Text>
+          <Text>数据来源于教务处历史通知。</Text>
         </View>
 
         <View className='general-education-tabs'>
