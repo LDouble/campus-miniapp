@@ -332,27 +332,27 @@ assert.match(
 )
 assert.match(
   courseCatalogStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*\.course-catalog-page\s*\{[\s\S]*--course-accent:\s*var\(--campus-primary,/u,
+  /\.campus-theme--dark\s*\{[\s\S]*&\.course-catalog-page\s*\{[\s\S]*--course-accent:\s*var\(--campus-primary,/u,
   '蹭课页缺少页面最终样式层的暗色主题变量',
 )
 assert.match(
   courseCatalogStyle,
-  /\.course-catalog-page \.course-catalog-search__card,[\s\S]*\.course-catalog-page \.course-catalog-card\s*\{[\s\S]*background:\s*var\(--campus-surface,/u,
+  /&\.course-catalog-page \.course-catalog-search__card,[\s\S]*&\.course-catalog-page \.course-catalog-card\s*\{[\s\S]*background:\s*var\(--campus-surface,/u,
   '蹭课页搜索卡片和课程卡片缺少暗色表面',
 )
 assert.match(
   courseCatalogStyle,
-  /\.course-catalog-page \.course-catalog-search__field,[\s\S]*\.course-catalog-page \.course-catalog-search__advanced-category\s*\{[\s\S]*background:\s*var\(--campus-surface-subtle,/u,
+  /&\.course-catalog-page \.course-catalog-search__field,[\s\S]*&\.course-catalog-page \.course-catalog-search__advanced-category\s*\{[\s\S]*background:\s*var\(--campus-surface-subtle,/u,
   '蹭课页筛选输入区域缺少暗色次级表面',
 )
 assert.match(
   courseCatalogStyle,
-  /\.course-catalog-page \.course-catalog-slots\s*\{[\s\S]*background:\s*var\(--campus-surface-subtle,[\s\S]*\.course-catalog-page \.course-catalog-slot\s*\{[\s\S]*background:\s*var\(--campus-surface,/u,
+  /&\.course-catalog-page \.course-catalog-slots\s*\{[\s\S]*background:\s*var\(--campus-surface-subtle,[\s\S]*&\.course-catalog-page \.course-catalog-slot\s*\{[\s\S]*background:\s*var\(--campus-surface,/u,
   '蹭课页排课槽位缺少暗色层级',
 )
 assert.match(
   courseCatalogStyle,
-  /\.course-catalog-page \.course-catalog-empty__action\s*\{[\s\S]*border-color:\s*var\(--campus-border-strong,/u,
+  /&\.course-catalog-page \.course-catalog-empty__action\s*\{[\s\S]*border-color:\s*var\(--campus-border-strong,/u,
   '蹭课页空状态操作按钮缺少暗色边框',
 )
 assert.doesNotMatch(
