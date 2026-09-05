@@ -11,6 +11,7 @@ const academicRepository = read('src/pages/academic/repository.ts')
 const schedulePage = read('src/pages/academic/schedule/index.tsx')
 const appConfig = read('src/app.config.ts')
 const servicesPage = read('src/pages/services/index.tsx')
+const homePage = read('src/pages/index/index.tsx')
 
 assert.match(
   courseCatalogApi,
@@ -45,5 +46,7 @@ assert.match(schedulePage, /isSimulation \? '选课' : '蹭课'/u, '正常课表
 assert.match(schedulePage, /weekday=\$\{slot\.weekday\}&section=\$\{slot\.section\}/u, '课表入口应携带星期和开始节次')
 assert.match(appConfig, /course-catalog\/index/u, '课程检索页必须注册到 academic 分包')
 assert.match(servicesPage, /course-audit/u, '服务页必须提供蹭课检索入口')
+assert.match(homePage, /key: 'errands',[\s\S]*key: 'course-audit', name: '蹭课',[\s\S]*key: 'classroom'/u, '首页常用服务应在找同行原位置提供蹭课入口')
+assert.doesNotMatch(homePage, /key: 'carpool', name: '找同行'/u, '首页常用服务不应继续展示找同行入口')
 
 process.stdout.write('course audit smoke: ok\n')
