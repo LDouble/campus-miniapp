@@ -506,23 +506,34 @@ page {
 
 .campus-theme--dark,
 page.theme-dark {
+  & {
+    background: #0b1220 !important;
+  }
+
+  &.general-education-page,
   .general-education-page {
-    color: var(--campus-text-heading, #f8fafc);
-    background: var(--campus-page, #0b1220);
+    // 此处不用主题变量作二次回退：开发者工具有时会先应用页面样式、
+    // 再挂载应用根节点，导致变量短暂沿用浅色值，整屏闪出白底。
+    color: #f8fafc;
+    background: #0b1220 !important;
+  }
+
+  &.general-education-page {
+    min-height: 100vh;
   }
 
   .general-education-note {
-    color: var(--campus-text-secondary, #aab8ca);
-    background: var(--campus-surface-primary, #172554);
-    border-color: var(--campus-border-strong, #2f4c73);
+    color: #aab8ca;
+    background: #172554 !important;
+    border-color: #2f4c73;
   }
 
   .general-education-tabs,
   .general-education-module-option,
   .general-education-search__field,
   .general-education-course-card__remark {
-    background: var(--campus-surface-subtle, #172033);
-    border-color: var(--campus-border, #243244);
+    background: #172033 !important;
+    border-color: #243244;
   }
 
   .general-education-tabs__item--active,
@@ -530,15 +541,15 @@ page.theme-dark {
   .general-education-search,
   .general-education-course-card,
   .general-education-course-card__module {
-    background: var(--campus-surface, #111827);
-    border-color: var(--campus-border, #243244);
+    background: #111827 !important;
+    border-color: #243244;
   }
 
   .general-education-module-option--active,
   .general-education-course-card__modules,
   .general-education-empty__action {
-    background: var(--campus-surface-primary, #172554);
-    border-color: var(--campus-border-strong, #2f4c73);
+    background: #172554 !important;
+    border-color: #2f4c73;
   }
 
   .general-education-panel-heading__title,
