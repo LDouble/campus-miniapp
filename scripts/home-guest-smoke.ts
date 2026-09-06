@@ -77,9 +77,14 @@ assert.ok(
 )
 assert.ok(
   visibleHomeServicesSource.includes('const moduleKey = serviceModuleKeys[service.key]')
-    && visibleHomeServicesSource.includes('if (!moduleKey) return false')
+    && (
+      visibleHomeServicesSource.includes('if (!moduleKey) return false')
+      || visibleHomeServicesSource.includes(
+        "if (!moduleKey) return 'route' in service && Boolean(service.route)",
+      )
+    )
     && visibleHomeServicesSource.includes(".state === 'enabled'"),
-  '首页常用服务必须只展示具有模块映射且运行时状态为 enabled 的入口',
+  '首页常用服务必须通过模块运行时状态或本地 route 控制可见性',
 )
 assert.ok(
   !homeSource.includes("key: 'campus-card'")
@@ -341,8 +346,8 @@ assert.match(
 )
 assert.match(
   homeStyleSource,
-  /&__grid-icon,[\s\S]{0,520}&__grid-item--pink &__grid-icon\s*\{[^}]*width:\s*76rpx;[^}]*height:\s*76rpx;[^}]*margin-bottom:\s*8rpx;[^}]*background:\s*var\(--ousea-ocean-50,[^}]*border:\s*2rpx solid var\(--ousea-ocean-100,[^}]*border-radius:\s*24rpx;/u,
-  '常用服务图标必须统一使用 Ousea 浅蓝底板、描边与圆角',
+  /&__grid-icon,[\s\S]{0,520}&__grid-item--pink &__grid-icon\s*\{[^}]*width:\s*76rpx;[^}]*height:\s*76rpx;[^}]*margin-bottom:\s*8rpx;[^}]*background:\s*#f1f5f8;[^}]*border:\s*0;[^}]*border-radius:\s*20rpx;/u,
+  '常用服务图标必须统一使用低饱和底板与圆角',
 )
 assert.match(
   homeStyleSource,
@@ -355,9 +360,9 @@ assert.doesNotMatch(
   '常用服务不得被后置样式重新拉高',
 )
 assert.match(
-  homeStyleSource,
-  /&__grid-icon image\s*\{\s*filter:\s*brightness\(0\) saturate\(100%\)[^;}]+;/u,
-  '常用服务图标必须统一使用蓝色滤镜',
+  homeSource,
+  /homeServiceIcons\[campusTheme\]\[item\.iconKey\]/u,
+  '常用服务图标必须使用与主题匹配的预着色资源',
 )
 assert.match(
   homeStyleSource,
