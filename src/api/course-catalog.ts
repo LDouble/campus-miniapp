@@ -1,6 +1,7 @@
 import { apiRequest } from './client'
 import type {
   AcademicEducationLevel,
+  MemberCourseCatalogCampusList,
   MemberCourseCatalogCategoryList,
   MemberCourseCatalogCoursePage,
 } from './types'
@@ -13,12 +14,13 @@ export type CourseCatalogSearchInput = {
   weekday?: number
   section?: number
   courseCategory?: string
+  campus?: string
   page?: number
   pageSize?: number
 }
 
 /**
- * 课程名、课程代码和选课号共用后端的 keyword 条件；教师名、星期、节次和课程类别是独立过滤条件。
+ * 课程名、课程代码和选课号共用后端的 keyword 条件；教师名、星期、节次、课程类别和开课校区是独立过滤条件。
  * 中文模糊匹配、选课号前缀匹配和课程类别包含匹配由后端负责，客户端只提交用户输入的原始条件。
  */
 export const searchCourseCatalog = (input: CourseCatalogSearchInput) => apiRequest<MemberCourseCatalogCoursePage>({
@@ -32,6 +34,7 @@ export const searchCourseCatalog = (input: CourseCatalogSearchInput) => apiReque
     weekday: input.weekday || undefined,
     section: input.section || undefined,
     course_category: input.courseCategory?.trim() || undefined,
+    campus: input.campus?.trim() || undefined,
     page: input.page || 1,
     page_size: input.pageSize || 20,
   },
@@ -40,6 +43,17 @@ export const searchCourseCatalog = (input: CourseCatalogSearchInput) => apiReque
 export const listCourseCatalogCategories = (input: Pick<CourseCatalogSearchInput, 'educationLevel' | 'periodId'>) => (
   apiRequest<MemberCourseCatalogCategoryList>({
     path: '/api/v1/course-catalog/categories',
+    method: 'GET',
+    query: {
+      education_level: input.educationLevel,
+      period_id: input.periodId,
+    },
+  })
+)
+
+export const listCourseCatalogCampuses = (input: Pick<CourseCatalogSearchInput, 'educationLevel' | 'periodId'>) => (
+  apiRequest<MemberCourseCatalogCampusList>({
+    path: '/api/v1/course-catalog/campuses',
     method: 'GET',
     query: {
       education_level: input.educationLevel,

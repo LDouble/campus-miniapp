@@ -10,6 +10,7 @@ import {
 } from '../../../api/academic-credential'
 import {
   listCourseCatalogCategories,
+  listCourseCatalogCampuses,
   searchCourseCatalog,
   type CourseCatalogSearchInput,
 } from '../../../api/course-catalog'
@@ -34,23 +35,25 @@ import './index.scss'
 const PAGE_SIZE = 20
 type CourseCatalogFilters = {
   weekday: number
-  section: number
-  courseCategory: string
+	section: number
+	courseCategory: string
+	campus: string
 }
 
 type CourseCatalogView = 'search' | 'saved'
 
 const emptyCourseCatalogFilters: CourseCatalogFilters = {
   weekday: 0,
-  section: 0,
-  courseCategory: '',
+	section: 0,
+	courseCategory: '',
+	campus: '',
 }
 
 const weekdayFilterOptions = ['不限', ...weekdays]
 const sectionFilterOptions = ['不限', ...Array.from({ length: 12 }, (_, index) => `第 ${index + 1} 节`)]
 
 const hasCourseCatalogFilters = (filters: CourseCatalogFilters) => (
-  filters.weekday > 0 || filters.section > 0 || Boolean(filters.courseCategory.trim())
+	filters.weekday > 0 || filters.section > 0 || Boolean(filters.courseCategory.trim()) || Boolean(filters.campus.trim())
 )
 
 const routeCourseCatalogFilters = (params: Record<string, string | undefined>): CourseCatalogFilters => {
@@ -58,8 +61,9 @@ const routeCourseCatalogFilters = (params: Record<string, string | undefined>): 
   const section = Number(params.section)
   return {
     weekday: Number.isInteger(weekday) && weekday >= 1 && weekday <= 7 ? weekday : 0,
-    section: Number.isInteger(section) && section >= 1 && section <= 12 ? section : 0,
-    courseCategory: '',
+		section: Number.isInteger(section) && section >= 1 && section <= 12 ? section : 0,
+		courseCategory: '',
+		campus: '',
   }
 }
 
@@ -113,6 +117,7 @@ const personalTimetableItemToCatalogCourse = (
   credits: item.credits,
   data_version: item.source_data_version,
   education_level: item.education_level,
+  general_education_modules: [],
   instruction_language: item.instruction_language,
   location_text: item.location_text,
   offering_id: item.offering_id,
@@ -221,7 +226,6 @@ function CourseCatalogCard({
           <View className='course-catalog-card__title-row'>
             <Text className='course-catalog-card__name'>{course.course_name}</Text>
             {course.course_category && <Text className='course-catalog-card__tag'>{course.course_category}</Text>}
-            {course.credits && <Text className='course-catalog-card__tag course-catalog-card__tag--neutral'>{course.credits} 学分</Text>}
           </View>
         </View>
         <View className='course-catalog-card__head-actions'>
@@ -246,10 +250,11 @@ function CourseCatalogCard({
         </View>
       </View>
 
-      {(course.course_code || course.opening_code) && (
+      {(course.course_code || course.opening_code || course.credits) && (
         <View className='course-catalog-card__reference'>
           {course.opening_code && <Text>选课号 {course.opening_code}</Text>}
           {course.course_code && <Text>课程代码 {course.course_code}</Text>}
+          {course.credits && <Text>学分 {course.credits}</Text>}
         </View>
       )}
 
@@ -322,9 +327,12 @@ export default function CourseCatalogPage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [periodLoading, setPeriodLoading] = useState(true)
-  const [courseCategories, setCourseCategories] = useState<string[]>([])
+	const [courseCategories, setCourseCategories] = useState<string[]>([])
+	const [courseCampuses, setCourseCampuses] = useState<string[]>([])
   const [categoryLoading, setCategoryLoading] = useState(false)
-  const [categoryLoadError, setCategoryLoadError] = useState(false)
+	const [categoryLoadError, setCategoryLoadError] = useState(false)
+	const [campusLoading, setCampusLoading] = useState(false)
+	const [campusLoadError, setCampusLoadError] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [personalItems, setPersonalItems] = useState<PersonalTimetableItemView[]>([])
   const [personalItemsLoading, setPersonalItemsLoading] = useState(false)
@@ -431,7 +439,8 @@ export default function CourseCatalogPage() {
       teacher: nextTeacher,
       weekday: nextFilters.weekday,
       section: nextFilters.section,
-      courseCategory: nextFilters.courseCategory,
+		courseCategory: nextFilters.courseCategory,
+		campus: nextFilters.campus,
       page: nextPage,
       pageSize: PAGE_SIZE,
     }
@@ -548,7 +557,34 @@ export default function CourseCatalogPage() {
     return () => {
       active = false
     }
-  }, [educationLevel, periodId])
+	}, [educationLevel, periodId])
+
+	useEffect(() => {
+		let active = true
+		if (!periodId) {
+			setCourseCampuses([])
+			setCampusLoading(false)
+			setCampusLoadError(false)
+			return () => { active = false }
+		}
+		setCampusLoading(true)
+		setCampusLoadError(false)
+		listCourseCatalogCampuses({ educationLevel, periodId })
+			.then((result) => {
+				if (!active) return
+				const campuses = Array.from(new Set(result.items.map((campus) => campus.trim()).filter(Boolean)))
+				setCourseCampuses(campuses)
+				setFilters((current) => current.campus && !campuses.includes(current.campus) ? { ...current, campus: '' } : current)
+				setSubmittedFilters((current) => current.campus && !campuses.includes(current.campus) ? { ...current, campus: '' } : current)
+			})
+			.catch(() => {
+				if (!active) return
+				setCourseCampuses([])
+				setCampusLoadError(true)
+			})
+			.finally(() => { if (active) setCampusLoading(false) })
+		return () => { active = false }
+	}, [educationLevel, periodId])
 
   Taro.useReachBottom(() => {
     if (loading || loadingMore || items.length >= total || !periodId) return
@@ -560,14 +596,16 @@ export default function CourseCatalogPage() {
     const nextTeacher = teacher.trim()
     const nextFilters: CourseCatalogFilters = {
       weekday: filters.weekday,
-      section: filters.section,
-      courseCategory: filters.courseCategory.trim(),
+		section: filters.section,
+		courseCategory: filters.courseCategory.trim(),
+		campus: filters.campus.trim(),
     }
     const sameConditions = nextCourseName === submittedCourseName
       && nextTeacher === submittedTeacher
       && nextFilters.weekday === submittedFilters.weekday
       && nextFilters.section === submittedFilters.section
-      && nextFilters.courseCategory === submittedFilters.courseCategory
+		&& nextFilters.courseCategory === submittedFilters.courseCategory
+		&& nextFilters.campus === submittedFilters.campus
     setSubmittedCourseName(nextCourseName)
     setSubmittedTeacher(nextTeacher)
     setSubmittedFilters(nextFilters)
@@ -725,18 +763,22 @@ export default function CourseCatalogPage() {
   const activeCourseFilterCount = [
     filters.weekday > 0,
     filters.section > 0,
-    Boolean(filters.courseCategory.trim()),
+		Boolean(filters.courseCategory.trim()),
+		Boolean(filters.campus.trim()),
   ].filter(Boolean).length
   const courseCategoryOptions = ['全部类别', ...courseCategories]
   const courseCategoryIndex = filters.courseCategory
     ? Math.max(courseCategories.indexOf(filters.courseCategory) + 1, 0)
     : 0
-  const courseCategoryLabel = filters.courseCategory
+	const courseCategoryLabel = filters.courseCategory
     || (categoryLoading
       ? '读取中…'
       : categoryLoadError
         ? '暂不可用'
-        : '全部类别')
+		: '全部类别')
+	const courseCampusOptions = ['全部校区', ...courseCampuses]
+	const courseCampusIndex = filters.campus ? Math.max(courseCampuses.indexOf(filters.campus) + 1, 0) : 0
+	const courseCampusLabel = filters.campus || (campusLoading ? '读取中…' : campusLoadError ? '暂不可用' : '全部校区')
   const heading = submittedCourseName || submittedTeacher || hasCourseCatalogFilters(submittedFilters)
     ? '检索结果'
     : '本学期开放课程'
@@ -890,7 +932,7 @@ export default function CourseCatalogPage() {
               )}
               <Text className='course-catalog-search__more-chevron'>{showMoreFilters ? '收起' : '展开'}</Text>
             </View>
-            <Text className='course-catalog-search__more-hint'>星期 · 节次 · 类别</Text>
+			<Text className='course-catalog-search__more-hint'>星期 · 节次 · 类别 · 校区</Text>
           </View>
           {showMoreFilters && (
             <View className='course-catalog-search__advanced'>
@@ -928,7 +970,7 @@ export default function CourseCatalogPage() {
                   </View>
                 </Picker>
               </View>
-              <View className='course-catalog-search__advanced-category'>
+				<View className='course-catalog-search__advanced-category'>
                 <Text className='course-catalog-search__advanced-label'>课程类别</Text>
                 <Picker
                   mode='selector'
@@ -944,6 +986,26 @@ export default function CourseCatalogPage() {
                 >
                   <View className='course-catalog-search__picker'>
                     <Text>{courseCategoryLabel}</Text>
+                    <Text>›</Text>
+                  </View>
+                </Picker>
+              </View>
+              <View className='course-catalog-search__advanced-category'>
+                <Text className='course-catalog-search__advanced-label'>开课校区</Text>
+                <Picker
+                  mode='selector'
+                  range={courseCampusOptions}
+                  value={courseCampusIndex}
+                  onChange={(event) => {
+                    const index = Number(event.detail.value)
+                    setFilters((current) => ({
+                      ...current,
+                      campus: index > 0 ? courseCampuses[index - 1] || '' : '',
+                    }))
+                  }}
+                >
+                  <View className='course-catalog-search__picker'>
+                    <Text>{courseCampusLabel}</Text>
                     <Text>›</Text>
                   </View>
                 </Picker>
