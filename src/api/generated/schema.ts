@@ -661,6 +661,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/course-catalog/campuses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询当前学期开课校区 */
+        get: operations["ListMemberCourseCatalogCampuses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/course-catalog/categories": {
         parameters: {
             query?: never;
@@ -5993,6 +6010,13 @@ export interface components {
             expected_version: number;
             reason: string;
         };
+        MemberCourseCatalogCampusList: {
+            items: string[];
+        };
+        MemberCourseCatalogCampusListResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogCampusList"];
+            request_id: string;
+        };
         MemberCourseCatalogCategoryList: {
             items: string[];
         };
@@ -9808,6 +9832,15 @@ export interface components {
                 "application/json": components["schemas"]["AdminGeneralEducationSourcePageResponseBody"];
             };
         };
+        /** @description 已认证 member 当前学期可用开课校区 */
+        MemberCourseCatalogCampusListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberCourseCatalogCampusListResponseBody"];
+            };
+        };
         /** @description 已认证 member 当前学期可用课程类别 */
         MemberCourseCatalogCategoryListResponse: {
             headers: {
@@ -11848,6 +11881,21 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AcademicCourseCatalogScheduleSlotPageResponse"];
+        };
+    };
+    ListMemberCourseCatalogCampuses: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberCourseCatalogCampusListResponse"];
         };
     };
     ListMemberCourseCatalogCategories: {

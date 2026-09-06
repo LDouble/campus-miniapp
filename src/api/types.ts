@@ -30,6 +30,7 @@ export type AcademicPassRateTrend = components['schemas']['AcademicPassRateTrend
 export type MemberCourseCatalogCourse = components['schemas']['MemberCourseCatalogCourse']
 export type MemberCourseCatalogCoursePage = components['schemas']['MemberCourseCatalogCoursePage']
 export type MemberCourseCatalogCategoryList = components['schemas']['MemberCourseCatalogCategoryList']
+export type MemberCourseCatalogCampusList = components['schemas']['MemberCourseCatalogCampusList']
 export type MemberCourseCatalogGeneralEducationModule = components['schemas']['MemberCourseCatalogGeneralEducationModule']
 export type MemberCourseCatalogGeneralEducationModuleList = components['schemas']['MemberCourseCatalogGeneralEducationModuleList']
 export type MemberCourseCatalogScheduleSlot = components['schemas']['MemberCourseCatalogScheduleSlot']
