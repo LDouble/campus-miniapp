@@ -3,6 +3,7 @@ import type {
   AcademicEducationLevel,
   MemberCourseCatalogCategoryList,
   MemberCourseCatalogCoursePage,
+  MemberCourseCatalogGeneralEducationModuleList,
 } from './types'
 
 export type CourseCatalogSearchInput = {
@@ -13,6 +14,7 @@ export type CourseCatalogSearchInput = {
   weekday?: number
   section?: number
   courseCategory?: string
+  generalEducationModuleId?: number
   page?: number
   pageSize?: number
 }
@@ -32,6 +34,7 @@ export const searchCourseCatalog = (input: CourseCatalogSearchInput) => apiReque
     weekday: input.weekday || undefined,
     section: input.section || undefined,
     course_category: input.courseCategory?.trim() || undefined,
+    general_education_module_id: input.generalEducationModuleId || undefined,
     page: input.page || 1,
     page_size: input.pageSize || 20,
   },
@@ -47,3 +50,17 @@ export const listCourseCatalogCategories = (input: Pick<CourseCatalogSearchInput
     },
   })
 )
+
+/**
+ * 通识模块选项由服务端按本科课程目录和学期下发，客户端不维护模块名称。
+ */
+export const listCourseCatalogGeneralEducationModules = (
+  input: Pick<CourseCatalogSearchInput, 'educationLevel' | 'periodId'>,
+) => apiRequest<MemberCourseCatalogGeneralEducationModuleList>({
+  path: '/api/v1/course-catalog/general-education/modules',
+  method: 'GET',
+  query: {
+    education_level: input.educationLevel,
+    period_id: input.periodId,
+  },
+})
