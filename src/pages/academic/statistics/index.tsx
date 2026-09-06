@@ -23,6 +23,7 @@ import {
 import AcademicLoadStateCard from '../../../features/academic-verification/academic-load-state'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
+import CourseIntelligenceReader from '../../../features/course-intelligence/reader'
 import './index.scss'
 
 type TrendMetric = 'pass_rate' | 'average_score'
@@ -151,6 +152,7 @@ export default function AcademicStatisticsPage() {
   const courseCode = decodeParam(router.params.course_code).trim()
   const courseName = decodeParam(router.params.course_name).trim()
   const currentTeacherName = decodeParam(router.params.teacher_name).trim()
+  const initialTab = router.params.tab === 'intelligence' ? 'intelligence' : 'grades'
   const [statistics, setStatistics] = useState<CourseStatistics | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<unknown>(null)
@@ -160,6 +162,7 @@ export default function AcademicStatisticsPage() {
   const [selectedTeacher, setSelectedTeacher] = useState<InstructorPassRate | null>(null)
   const [teacherTrend, setTeacherTrend] = useState<AcademicPassRateTrend | null>(null)
   const [teacherTrendLoading, setTeacherTrendLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'grades' | 'intelligence'>(initialTab)
 
   const load = useCallback(async () => {
     if (!courseCode) {
@@ -239,6 +242,16 @@ export default function AcademicStatisticsPage() {
       ? loadError.message
       : '课程参考加载失败'
 
+  const openCourseIntelligenceContribution = (teacherId?: number) => {
+    const query = [
+      `course_code=${encodeURIComponent(courseCode)}`,
+      `course_name=${encodeURIComponent(title)}`,
+      ...(teacherId ? [`teacher_id=${teacherId}`] : []),
+      ...(currentTeacherName ? [`teacher_name=${encodeURIComponent(currentTeacherName)}`] : []),
+    ].join('&')
+    void Taro.navigateTo({ url: `/pages/academic/course-intelligence/contribute?${query}` })
+  }
+
   return (
     <View className={`statistics-page ${selectedTeacher ? 'statistics-page--locked' : ''}`}>
       <View className='statistics-page__glow statistics-page__glow--warm' />
@@ -301,7 +314,24 @@ export default function AcademicStatisticsPage() {
               {fromCache && <Text className='statistics-hero__cache'>网络异常，已展示上次统计结果</Text>}
             </View>
 
-            <View className='statistics-section'>
+            <View className='statistics-domain-tabs'>
+              <View
+                className={activeTab === 'grades' ? 'statistics-domain-tabs__item statistics-domain-tabs__item--active' : 'statistics-domain-tabs__item'}
+                ariaRole='tab'
+                ariaLabel='成绩数据'
+                onClick={() => setActiveTab('grades')}
+              >成绩数据</View>
+              <View
+                className={activeTab === 'intelligence' ? 'statistics-domain-tabs__item statistics-domain-tabs__item--active' : 'statistics-domain-tabs__item'}
+                ariaRole='tab'
+                ariaLabel='选课情报'
+                onClick={() => setActiveTab('intelligence')}
+              >选课情报</View>
+            </View>
+
+            {activeTab === 'grades' ? (
+              <View className='statistics-domain-panel'>
+              <View className='statistics-section'>
               <View className='statistics-section__heading'>
                 <View>
                   <Text>成绩段分布</Text>
@@ -450,6 +480,14 @@ export default function AcademicStatisticsPage() {
               <Text>数据来自历史成绩的匿名聚合，仅供选课和复习参考，不代表教师教学质量。平均分仅统计百分制成绩。</Text>
               <Text>统计更新于 {formatPublishedDate(statistics.publishedAt)}</Text>
             </View>
+              </View>
+            ) : (
+              <CourseIntelligenceReader
+                courseCode={courseCode}
+                currentTeacherName={currentTeacherName}
+                onShareExperience={openCourseIntelligenceContribution}
+              />
+            )}
           </>
         )}
       </View>
