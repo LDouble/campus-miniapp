@@ -504,7 +504,84 @@ page {
   .general-education-state__loader { animation: none; }
 }
 
-page.theme-dark .general-education-module-option,
-page.theme-dark .general-education-search__field {
-  background: var(--campus-surface-subtle, #172033);
+.campus-theme--dark,
+page.theme-dark {
+  & {
+    background: #0b1220 !important;
+  }
+
+  &.general-education-page,
+  .general-education-page {
+    // 此处不用主题变量作二次回退：开发者工具有时会先应用页面样式、
+    // 再挂载应用根节点，导致变量短暂沿用浅色值，整屏闪出白底。
+    color: #f8fafc;
+    background: #0b1220 !important;
+  }
+
+  &.general-education-page {
+    min-height: 100vh;
+  }
+
+  .general-education-note {
+    color: #aab8ca;
+    background: #172554 !important;
+    border-color: #2f4c73;
+  }
+
+  .general-education-tabs,
+  .general-education-module-option,
+  .general-education-search__field,
+  .general-education-course-card__remark {
+    background: #172033 !important;
+    border-color: #243244;
+  }
+
+  .general-education-tabs__item--active,
+  .general-education-module-panel,
+  .general-education-search,
+  .general-education-course-card,
+  .general-education-course-card__module {
+    background: #111827 !important;
+    border-color: #243244;
+  }
+
+  .general-education-module-option--active,
+  .general-education-course-card__modules,
+  .general-education-empty__action {
+    background: #172554 !important;
+    border-color: #2f4c73;
+  }
+
+  .general-education-panel-heading__title,
+  .general-education-search__label,
+  .general-education-results__heading text:first-child,
+  .general-education-course-card__name,
+  .general-education-empty__title,
+  .general-education-search input {
+    color: var(--campus-text-heading, #f8fafc);
+  }
+
+  .general-education-panel-heading__copy,
+  .general-education-panel-heading > text:last-child,
+  .general-education-results__heading text:last-child,
+  .general-education-course-card__references,
+  .general-education-course-card__module-count,
+  .general-education-course-card__modules-empty,
+  .general-education-course-card__source-date,
+  .general-education-course-card__source-more,
+  .general-education-state,
+  .general-education-empty,
+  .general-education-empty__copy,
+  .general-education-results__footer,
+  .general-education-search__placeholder,
+  .general-education-search__hint {
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+
+  .general-education-course-card__remark,
+  .general-education-course-card__remark-text,
+  .general-education-course-card__source-title,
+  .general-education-module-option {
+    color: var(--campus-text-body, #d7e0ec);
+  }
 }
