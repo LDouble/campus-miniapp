@@ -18,7 +18,7 @@ import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-l
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
 import { AcademicPeriod, AcademicPreferences, CourseSelectionRecord, CourseSelectionStatus } from '../types'
-import { getPeriodLabel, resolvePeriodId } from '../utils'
+import { getPeriodLabel, resolveNextPeriodId, resolvePeriodId } from '../utils'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -49,9 +49,17 @@ export default function SelectionPage() {
   const [initialRecordsCache] = useState(() => (
     academicStorage.getRecordsCache(academicUserId)
   ))
-  const [preferences, setPreferences] = useState<AcademicPreferences>({
-    ...defaultPreferences,
-    ...academicStorage.getPreferences(defaultPreferences),
+  const [preferences, setPreferences] = useState<AcademicPreferences>(() => {
+    const stored = academicStorage.getPreferences(defaultPreferences)
+    const defaultPeriodId = resolveNextPeriodId(initialScheduleCache?.periods || [])
+      || defaultPreferences.schedulePeriodId
+    return {
+      ...defaultPreferences,
+      ...stored,
+      section: 'schedule',
+      // 选课结果默认查看当前学期的未来一个学期，没有未来学期时回退到当前学期。
+      schedulePeriodId: defaultPeriodId,
+    }
   })
   const initialRecords = initialRecordsCache
     ?.selectionsByPeriod[preferences.schedulePeriodId]
@@ -148,7 +156,7 @@ export default function SelectionPage() {
     setLoadError(null)
     try {
       const result = await academicRepository.getPeriods({ force: true })
-      const periodId = resolvePeriodId(result, preferences.schedulePeriodId)
+      const periodId = resolveNextPeriodId(result) || resolvePeriodId(result, preferences.schedulePeriodId)
       if (!periodId) throw new Error('academic period unavailable')
       setPeriods(result)
       setPreferences((current) => ({ ...current, schedulePeriodId: periodId }))
@@ -171,7 +179,7 @@ export default function SelectionPage() {
         setPeriods(result)
         if (!result.length) setLoading(false)
         setPreferences((current) => {
-          const schedulePeriodId = resolvePeriodId(result, current.schedulePeriodId)
+          const schedulePeriodId = resolveNextPeriodId(result) || resolvePeriodId(result, current.schedulePeriodId)
           return schedulePeriodId === current.schedulePeriodId
             ? current
             : { ...current, schedulePeriodId }
@@ -191,7 +199,6 @@ export default function SelectionPage() {
     if (!hasSelectedPeriod) return
     void refreshSelections()
   }, [hasSelectedPeriod, refreshSelections])
-  useEffect(() => academicStorage.setPreferences(preferences), [preferences])
   Taro.usePullDownRefresh(() => refreshSelections(true).finally(() => Taro.stopPullDownRefresh()))
 
   const updatePeriod = (schedulePeriodId: string) => {

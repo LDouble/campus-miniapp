@@ -876,7 +876,7 @@ export default function CourseCatalogPage() {
 
   return (
     <View className='course-catalog-page'>
-      <CustomNavbar title='蹭课检索' subtitle='按课程与教师寻找可旁听课程' showBack />
+      <CustomNavbar title='课程查询' subtitle='按课程与教师寻找可旁听课程' showBack />
 
         <View className='course-catalog-page__content'>
         <View className='course-catalog-scope'>

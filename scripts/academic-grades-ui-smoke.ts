@@ -103,6 +103,16 @@ assert.match(
   /getGradePeriodLabel[\s\S]*?\.label[\s\S]*?formatGradePeriod\(id\)\.label/u,
   '成绩入口必须展示完整学期名称',
 )
+assert.match(
+  selectionPage,
+  /resolveNextPeriodId\(initialScheduleCache\?\.periods \|\| \[\]\)/u,
+  '选课结果默认应优先查看当前学期的未来一个学期',
+)
+assert.match(
+  selectionPage,
+  /resolveNextPeriodId\(result\)\s*\|\|\s*resolvePeriodId/u,
+  '选课结果刷新学期时没有未来学期应回退到当前学期',
+)
 for (const [pageSource, pageName] of [
   [gradePage, '成绩'],
   [examPage, '考试'],
