@@ -808,6 +808,29 @@ page {
     margin-bottom: 5rpx;
   }
 
+  &__selection-status {
+    display: inline-flex;
+    min-width: 0;
+    height: 26rpx;
+    padding: 0 7rpx;
+    align-items: center;
+    justify-content: center;
+    color: #58766f;
+    font-size: 18rpx;
+    font-weight: 720;
+    line-height: 1;
+    background: rgba(0, 187, 167, 0.13);
+    border-radius: 999rpx;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &--not-selected {
+      color: #a36a2e;
+      background: rgba(217, 154, 63, 0.15);
+    }
+  }
+
   &__related-count {
     display: flex;
     min-width: 28rpx;
@@ -896,6 +919,18 @@ page {
     line-height: 1.25;
     opacity: 0.7;
     -webkit-line-clamp: 2;
+  }
+
+  &__class-num {
+    display: block;
+    overflow: hidden;
+    color: currentColor;
+    font-size: 17rpx;
+    font-weight: 650;
+    line-height: 1.25;
+    opacity: 0.78;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &--pressed {
@@ -1064,6 +1099,20 @@ page {
       content: '';
       background: #a9b3b3;
       border-radius: 50%;
+    }
+
+    &--selected {
+      color: var(--campus-success, #00bba7);
+      font-weight: 700;
+
+      &::before { background: currentColor; }
+    }
+
+    &--not-selected {
+      color: #b8782f;
+      font-weight: 700;
+
+      &::before { background: currentColor; }
     }
   }
 
@@ -2132,6 +2181,18 @@ page {
       color: rgba(53, 83, 89, 0.8);
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+  }
+
+  &__selection-status {
+    > text:last-child { font-weight: 700; }
+
+    &--selected > text:last-child {
+      color: var(--campus-success, #00bba7);
+    }
+
+    &--not-selected > text:last-child {
+      color: var(--campus-errand, #ff6900);
     }
   }
 
@@ -3539,6 +3600,16 @@ page {
 .timetable-course {
   &__related-count { background: var(--campus-primary, #2b7fff); }
   &__status { color: var(--campus-text-secondary, #62748e); background: rgba(98, 116, 142, 0.11); }
+  &__selection-status {
+    color: var(--campus-success, #00bba7);
+    background: var(--campus-surface-success, #f0fdfa);
+
+    &--not-selected {
+      color: var(--campus-errand, #ff6900);
+      background: var(--campus-surface-errand, #fff7ed);
+    }
+  }
+  &__class-num { color: currentColor; }
 }
 
 .course-conflict-card {
@@ -3546,6 +3617,8 @@ page {
   &__tag { color: currentColor; background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9)); }
   &__details text:first-child { color: var(--campus-text-secondary, #62748e); }
   &__details text:last-child { color: var(--campus-text-body, #45556c); }
+  &__selection-status--selected > text:last-child { color: var(--campus-success, #00bba7); }
+  &__selection-status--not-selected > text:last-child { color: var(--campus-errand, #ff6900); }
 }
 
 .grade-list-heading--original {
@@ -3958,6 +4031,9 @@ page {
 
     &__note-copy { color: var(--campus-text-body, #d7e0ec); }
 
+    &__selection-status--selected > text:last-child { color: var(--campus-success, #2dd4bf); }
+    &__selection-status--not-selected > text:last-child { color: var(--campus-errand-end, #ffb900); }
+
     &__actions > view {
       color: var(--campus-primary-strong, #93c5fd);
       background: var(--campus-surface, #111827);
@@ -3970,6 +4046,19 @@ page {
       border-color: var(--campus-surface-danger, #3f1725);
     }
   }
+
+  .timetable-course__selection-status {
+    color: var(--campus-success, #2dd4bf);
+    background: var(--campus-surface-success, #12332e);
+
+    &--not-selected {
+      color: var(--campus-errand-end, #ffb900);
+      background: var(--campus-surface-errand, #3a2416);
+    }
+  }
+
+  .day-course__status--selected { color: var(--campus-success, #2dd4bf); }
+  .day-course__status--not-selected { color: var(--campus-errand-end, #ffb900); }
 
   .course-resource-actions--course-card {
     background: var(--campus-surface, #111827);
