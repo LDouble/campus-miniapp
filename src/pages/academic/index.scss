@@ -1128,6 +1128,25 @@ page {
   .academic-fab__plus { margin: 0; font-size: 39rpx; }
 }
 
+.academic-page--schedule .academic-fab--selection-sync {
+  box-sizing: border-box;
+  min-width: 200rpx;
+  width: auto;
+  padding: 0 22rpx;
+  gap: 8rpx;
+  border-radius: 999rpx;
+
+  text:last-child { display: block; }
+
+  .academic-fab__sync-icon {
+    flex: none;
+    width: 34rpx;
+    height: 34rpx;
+  }
+
+  &.academic-fab--busy { opacity: 0.72; }
+}
+
 .grade-summary {
   position: relative;
   display: flex;
@@ -3336,28 +3355,6 @@ page {
     color: var(--campus-primary, #2b7fff);
   }
 
-  .academic-toolbar__selection-sync {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    min-width: 112rpx;
-    min-height: 56rpx;
-    padding: 0 var(--ousea-space-1, 16rpx);
-    color: #fff;
-    font-size: var(--ousea-font-size-label, 27rpx);
-    font-weight: var(--ousea-font-weight-semibold, 600);
-    line-height: var(--ousea-line-height-ui, 1.4);
-    background: var(--ousea-ocean-500, #2b7aef);
-    border-radius: 16rpx;
-
-    text {
-      color: inherit;
-      font-size: inherit;
-      font-weight: inherit;
-      line-height: inherit;
-    }
-  }
 }
 
 .academic-week-stepper {

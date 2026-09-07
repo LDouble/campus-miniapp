@@ -93,6 +93,16 @@ assert.match(
 )
 assert.match(
   schedulePageSource,
+  /academic-fab--selection-sync[\s\S]*?syncCourseSelectionSchedule/u,
+  '模拟选课必须通过浮动按钮同步教务系统已选课程',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /academic-toolbar__selection-sync/u,
+  '同步已选课程不能占用课表工具栏',
+)
+assert.match(
+  schedulePageSource,
   /同步失败，已保留当前模拟课表/u,
   '已选课程同步失败时必须保留现有展示',
 )
