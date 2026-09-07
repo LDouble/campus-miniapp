@@ -43,6 +43,7 @@ import {
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
+  mergeSimulationCourses,
   requireCoursesForPeriod,
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
@@ -342,8 +343,12 @@ export default function SchedulePage() {
   const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
   const [personalCourses, setPersonalCourses] = useState<Course[]>([])
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
+  const [selectedScheduleCourses, setSelectedScheduleCourses] = useState<Course[]>(() => (
+    academicStorage.getCourseSelectionScheduleCourses(academicUserId)
+  ))
   const [loading, setLoading] = useState(isSimulation || !hasInitialCourses)
   const [retrying, setRetrying] = useState(false)
+  const [syncingSelectedCourses, setSyncingSelectedCourses] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [usingCache, setUsingCache] = useState(hasInitialCourses)
   const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
@@ -403,11 +408,14 @@ export default function SchedulePage() {
     officialCoursesByPeriod,
     preferences.schedulePeriodId,
   )
-  const allCourses = useMemo(() => isSimulation ? simulationCourses.filter((course) => course.periodId === preferences.schedulePeriodId) : [
+  const allCourses = useMemo(() => isSimulation ? mergeSimulationCourses(
+    simulationCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
+    selectedScheduleCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
+  ) : [
     ...officialCourses,
     ...personalCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
     ...customCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
-  ], [customCourses, isSimulation, officialCourses, personalCourses, preferences.schedulePeriodId, simulationCourses])
+  ], [customCourses, isSimulation, officialCourses, personalCourses, preferences.schedulePeriodId, selectedScheduleCourses, simulationCourses])
   const weekCourses = useMemo(
     () => getCoursesForWeek(allCourses, preferences.week),
     [allCourses, preferences.week],
@@ -728,6 +736,32 @@ export default function SchedulePage() {
 
   const handleDayTouchCancel = () => {
     dayTouchStartRef.current = null
+  }
+
+  const syncCourseSelectionSchedule = async () => {
+    const periodId = preferences.schedulePeriodId
+    if (!periodId || syncingSelectedCourses) return
+    setSyncingSelectedCourses(true)
+    try {
+      const result = await academicRepository.getCourseSelectionSchedule(periodId)
+      const courses = requireCoursesForPeriod(result.records, periodId)
+      const cachedCourses = academicStorage.getCourseSelectionScheduleCourses(academicUserId)
+      const nextCourses = [
+        ...cachedCourses.filter((course) => course.periodId !== periodId),
+        ...courses,
+      ]
+      academicStorage.setCourseSelectionScheduleCourses(academicUserId, nextCourses)
+      setSelectedScheduleCourses(nextCourses)
+      Taro.showToast({
+        title: courses.length ? `已同步 ${courses.length} 个课表时段` : '未同步到已选课程',
+        icon: 'none',
+      })
+    } catch {
+      // 失败时保留上次已成功同步的教务课表和全部本地模拟草稿。
+      Taro.showToast({ title: '同步失败，已保留当前模拟课表', icon: 'none' })
+    } finally {
+      setSyncingSelectedCourses(false)
+    }
   }
 
   const refreshSchedule = useCallback(async () => {
@@ -1164,6 +1198,16 @@ export default function SchedulePage() {
         <View className='academic-view-toggle__icon' />
         <Text>{preferences.scheduleView === 'week' ? '周' : '日'}</Text>
       </View>
+      {isSimulation && (
+        <View
+          className='academic-toolbar__selection-sync'
+          ariaRole='button'
+          ariaLabel='同步教务系统已选课程'
+          onClick={() => void syncCourseSelectionSchedule()}
+        >
+          <Text>{syncingSelectedCourses ? '同步中…' : '同步已选'}</Text>
+        </View>
+      )}
     </View>
   )
 
