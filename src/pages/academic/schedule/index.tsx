@@ -77,6 +77,7 @@ import '../index.scss'
 const DEFAULT_PERIOD_ID = '2025-2026-2'
 const icons = {
   semester: require('../../../assets/icons/calendar.svg'),
+  sync: require('../../../assets/icons/sync.svg'),
 }
 
 const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
@@ -1198,16 +1199,6 @@ export default function SchedulePage() {
         <View className='academic-view-toggle__icon' />
         <Text>{preferences.scheduleView === 'week' ? '周' : '日'}</Text>
       </View>
-      {isSimulation && (
-        <View
-          className='academic-toolbar__selection-sync'
-          ariaRole='button'
-          ariaLabel='同步教务系统已选课程'
-          onClick={() => void syncCourseSelectionSchedule()}
-        >
-          <Text>{syncingSelectedCourses ? '同步中…' : '同步已选'}</Text>
-        </View>
-      )}
     </View>
   )
 
@@ -1803,15 +1794,27 @@ export default function SchedulePage() {
           </>
         )}
       </View>
-      {!isSimulation && <View
-        className='academic-fab'
-        ariaRole='button'
-        ariaLabel='添加自定义课程'
-        onClick={() => openCourseForm()}
-      >
-        <Text className='academic-fab__plus'>＋</Text>
-        <Text>自定义课程</Text>
-      </View>}
+      {isSimulation ? (
+        <View
+          className={`academic-fab academic-fab--selection-sync ${syncingSelectedCourses ? 'academic-fab--busy' : ''}`}
+          ariaRole='button'
+          ariaLabel='同步教务系统已选课程'
+          onClick={() => void syncCourseSelectionSchedule()}
+        >
+          <Image src={icons.sync} className='academic-fab__sync-icon' mode='aspectFit' />
+          <Text>{syncingSelectedCourses ? '同步中…' : '同步已选'}</Text>
+        </View>
+      ) : (
+        <View
+          className='academic-fab'
+          ariaRole='button'
+          ariaLabel='添加自定义课程'
+          onClick={() => openCourseForm()}
+        >
+          <Text className='academic-fab__plus'>＋</Text>
+          <Text>自定义课程</Text>
+        </View>
+      )}
       {renderSheet()}
     </View>
   )
