@@ -922,15 +922,20 @@ page {
   }
 
   &__class-num {
-    display: block;
+    display: -webkit-box;
     overflow: hidden;
+    overflow-wrap: anywhere;
     color: currentColor;
     font-size: 18rpx;
     font-weight: 650;
     line-height: 1.25;
+    margin-top: 6rpx;
     opacity: 0.78;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    white-space: normal;
+    word-break: break-all;
   }
 
   &--pressed {

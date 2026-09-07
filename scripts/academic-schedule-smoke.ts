@@ -126,6 +126,11 @@ assert.match(
   /\.timetable-course\s*\{[\s\S]*?&__selection-status[\s\S]*?\.course-conflict-card\s*\{[\s\S]*?&__selection-status/u,
   '模拟选课卡片的选课状态必须有独立视觉样式',
 )
+assert.match(
+  academicStyleSource,
+  /&__class-num\s*\{[\s\S]*?-webkit-line-clamp:\s*3[\s\S]*?white-space:\s*normal/u,
+  '模拟选课卡片的选课号应允许换行并最多展示三行',
+)
 assert.doesNotMatch(
   schedulePageSource,
   /academic-toolbar__selection-sync/u,
