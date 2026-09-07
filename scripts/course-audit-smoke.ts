@@ -26,6 +26,7 @@ assert.match(
   '教师名必须单独映射到 teacher 查询参数',
 )
 assert.match(courseCatalogPage, /课程<\/Text>/u, '课程检索页应提供课程检索入口')
+assert.match(courseCatalogPage, /<CustomNavbar title='课程查询' subtitle='按课程与教师寻找可旁听课程'/u, '课程检索页头部应显示课程查询')
 assert.match(courseCatalogPage, /placeholder='课程名、选课号、课程号'/u, '课程检索页应提示课程名、选课号和课程号')
 assert.match(courseCatalogPage, /教师<\/Text>/u, '课程检索页应提供独立的教师输入框')
 assert.match(courseCatalogPage, /placeholder='可选，如：李小明'/u, '课程检索页应提示教师名可选')
@@ -81,7 +82,8 @@ assert.match(appConfig, /course-catalog\/index/u, '课程检索页必须注册�
 assert.match(servicesPage, /course-audit/u, '服务页必须提供蹭课检索入口')
 assert.match(servicesPage, /simulation: 'academic_schedule'/u, '模拟选课入口应复用课表模块配置')
 assert.match(servicesPage, /key: 'simulation', name: '模拟选课',[\s\S]*schedule\/index\?mode=simulation/u, '全部服务应提供模拟选课入口')
-assert.match(homePage, /key: 'errands',[\s\S]*key: 'course-audit', name: '蹭课',[\s\S]*key: 'classroom'/u, '首页常用服务应在找同行原位置提供蹭课入口')
+assert.match(homePage, /key: 'errands',[\s\S]*key: 'course-audit', name: '课程查询',[\s\S]*key: 'classroom'/u, '首页常用服务应在找同行原位置提供课程查询入口')
+assert.match(homePage, /key: 'result',[\s\S]*key: 'simulation', name: '模拟选课',[\s\S]*schedule\/index\?mode=simulation/u, '首页常用服务必须提供模拟选课入口')
 assert.doesNotMatch(homePage, /key: 'carpool', name: '找同行'/u, '首页常用服务不应继续展示找同行入口')
 assert.match(homePage, /if \(!moduleKey\) return 'route' in service/u, '本地页面路由入口不应因缺少运行时模块配置被隐藏')
 
