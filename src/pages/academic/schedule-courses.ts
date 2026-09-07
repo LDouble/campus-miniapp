@@ -53,3 +53,25 @@ export const setCoursesForPeriod = (
   ...sanitizeCoursesByPeriod(coursesByPeriod),
   [periodId]: requireCoursesForPeriod(courses, periodId),
 })
+
+const normalizedClassNum = (course: Course) => course.classNum?.trim() || ''
+
+/**
+ * 模拟选课以教务已选课为准。教务同一选课号的多个上课时段必须全部保留；
+ * 只隐藏选课号相同且非空的本地草稿，缺失选课号时不按课程名猜测关联。
+ */
+export const mergeSimulationCourses = (
+  localDraftCourses: Course[],
+  selectedScheduleCourses: Course[],
+) => {
+  const selectedClassNums = new Set(
+    selectedScheduleCourses.map(normalizedClassNum).filter(Boolean),
+  )
+  return [
+    ...selectedScheduleCourses,
+    ...localDraftCourses.filter((course) => {
+      const classNum = normalizedClassNum(course)
+      return !classNum || !selectedClassNums.has(classNum)
+    }),
+  ]
+}

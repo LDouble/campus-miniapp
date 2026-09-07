@@ -387,6 +387,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/course-selection-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 查询本人指定学期教务选课课表 */
+        post: operations["GetAcademicCourseSelectionSchedule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/course-selections": {
         parameters: {
             query?: never;
@@ -2713,6 +2730,57 @@ export interface paths {
         put?: never;
         /** 管理端隐藏或恢复学生贡献 */
         post: operations["ModerateAdminCourseIntelligenceContribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/course-aliases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询课程别名映射 */
+        get: operations["ListAdminCourseIntelligenceAliases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/course-aliases/{id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端批量确认课程别名映射 */
+        post: operations["DecideAdminCourseIntelligenceAliasMappings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/course-aliases/{id}/rematch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端重新匹配课程别名 */
+        post: operations["RematchAdminCourseIntelligenceAlias"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5736,6 +5804,8 @@ export interface components {
         };
         AcademicCourse: {
             campus: string;
+            /** @description 教务选课号，用于关联同一教学班的课表与模拟选课记录。 */
+            class_num: string;
             course_code: string;
             /** Format: int32 */
             end_section: number;
@@ -7700,6 +7770,26 @@ export interface components {
             };
             request_id: string;
         };
+        CourseIntelligenceAliasDecision: {
+            /** @enum {string} */
+            action: "activate" | "reject" | "revoke";
+            course_code: string;
+            course_name?: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: uint64 */
+            mapping_id?: number;
+            reason?: string;
+        };
+        CourseIntelligenceAliasDecisionInput: {
+            decisions: components["schemas"]["CourseIntelligenceAliasDecision"][];
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CourseIntelligenceAliasRematchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
         CourseIntelligenceChange: {
             /** @enum {string} */
             change_type: "new_signal" | "conflict" | "changed" | "resolved";
@@ -7739,13 +7829,18 @@ export interface components {
             expected_version: number;
         };
         CourseIntelligenceContributionView: {
+            attended_status?: string | null;
+            campus?: string | null;
+            class_name?: string | null;
             content: string;
+            context_source?: string;
             course_code: string;
             course_name?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: uint64 */
             current_version: number;
+            department?: string | null;
             guided_answers?: {
                 [key: string]: string;
             };
@@ -7762,7 +7857,72 @@ export interface components {
             updated_at: string;
             /** Format: uint64 */
             user_id: number;
+            /** Format: uint64 */
+            version: number;
             visibility: components["schemas"]["CourseIntelligenceVisibility"];
+        };
+        CourseIntelligenceCourseAlias: {
+            alias: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            last_match_error?: string | null;
+            /** Format: date-time */
+            last_matched_at?: string | null;
+            mappings: components["schemas"]["CourseIntelligenceCourseAliasMapping"][];
+            /** @enum {string} */
+            match_status: "queued" | "processing" | "matched" | "failed";
+            normalized_alias: string;
+            /** @enum {string} */
+            status: "pending" | "active" | "disabled";
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CourseIntelligenceCourseAliasMapping: {
+            /** Format: uint64 */
+            alias_id: number;
+            /** Format: int64 */
+            confidence: number;
+            course_code: string;
+            course_name_snapshot?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            decided_at?: string | null;
+            /** Format: uint64 */
+            decided_by?: number | null;
+            decision_reason?: string | null;
+            education_level: string;
+            evidence?: string | null;
+            /** Format: uint64 */
+            id: number;
+            model_version?: string | null;
+            rationale?: string | null;
+            source: string;
+            /** @enum {string} */
+            status: "suggested" | "active" | "rejected" | "revoked";
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CourseIntelligenceCourseAliasPage: {
+            items: components["schemas"]["CourseIntelligenceCourseAlias"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CourseIntelligenceCourseAliasPageResponseBody: {
+            data: components["schemas"]["CourseIntelligenceCourseAliasPage"];
+            request_id: string;
+        };
+        CourseIntelligenceCourseAliasResponseBody: {
+            data: components["schemas"]["CourseIntelligenceCourseAlias"];
+            request_id: string;
         };
         /** @enum {string} */
         CourseIntelligenceDimension: "grading" | "attendance" | "workload" | "exam" | "classroom" | "difficulty_time";
@@ -7856,15 +8016,19 @@ export interface components {
             request_id: string;
         };
         CourseIntelligenceQueueItem: {
+            contribution?: components["schemas"]["CourseIntelligenceContributionView"];
             detail: string;
             /** Format: uint64 */
             id: number;
             /** @enum {string} */
             queue_type: "course_binding" | "teacher_binding" | "contribution_moderation" | "report" | "duplicate" | "privacy" | "defamation" | "inaccurate" | "other";
+            review?: components["schemas"]["CourseIntelligenceReviewView"];
             status: string;
             title: string;
             /** Format: date-time */
             updated_at: string;
+            /** Format: uint64 */
+            version: number;
         };
         CourseIntelligenceQueuePage: {
             items: components["schemas"]["CourseIntelligenceQueueItem"][];
@@ -10814,6 +10978,24 @@ export interface components {
                 "application/json": components["schemas"]["CourseIntelligenceContributionResponseBody"];
             };
         };
+        /** @description 课程别名映射分页 */
+        CourseIntelligenceCourseAliasPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceCourseAliasPageResponseBody"];
+            };
+        };
+        /** @description 课程别名映射详情 */
+        CourseIntelligenceCourseAliasResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceCourseAliasResponseBody"];
+            };
+        };
         /** @description 历史导入批次 */
         CourseIntelligenceImportBatchPageResponse: {
             headers: {
@@ -12030,6 +12212,31 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AcademicCalendarResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAcademicCourseSelectionSchedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    student_no: string;
+                    password: string;
+                    period_id: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCourseListResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -15314,6 +15521,68 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["CourseIntelligenceContributionResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCourseIntelligenceAliases: {
+        parameters: {
+            query?: {
+                alias?: string;
+                status?: "pending" | "active" | "disabled";
+                match_status?: "queued" | "processing" | "matched" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceCourseAliasPageResponse"];
+        };
+    };
+    DecideAdminCourseIntelligenceAliasMappings: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceAliasDecisionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceCourseAliasResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RematchAdminCourseIntelligenceAlias: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceAliasRematchInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceCourseAliasResponse"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };

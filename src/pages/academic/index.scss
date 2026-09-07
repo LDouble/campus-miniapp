@@ -3335,6 +3335,29 @@ page {
   .academic-toolbar__period {
     color: var(--campus-primary, #2b7fff);
   }
+
+  .academic-toolbar__selection-sync {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 112rpx;
+    min-height: 56rpx;
+    padding: 0 var(--ousea-space-1, 16rpx);
+    color: #fff;
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+    background: var(--ousea-ocean-500, #2b7aef);
+    border-radius: 16rpx;
+
+    text {
+      color: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+    }
+  }
 }
 
 .academic-week-stepper {
