@@ -206,6 +206,7 @@ interface CourseDetailCardProps {
   course: Course
   currentWeek: number
   timeRange: string
+  simulationMode?: boolean
   onEdit?: () => void
   onDelete?: () => void
   onWanted: () => void
@@ -225,10 +226,27 @@ const courseSourceLabel = (course: Course) => (
         : '教务课程'
 )
 
+type SimulationSelectionState = 'selected' | 'not-selected'
+
+const getSimulationSelectionState = (
+  course: Course,
+): SimulationSelectionState | null => (
+  course.source === 'official'
+    ? 'selected'
+    : course.source === 'simulation'
+      ? 'not-selected'
+      : null
+)
+
+const getSimulationSelectionLabel = (state: SimulationSelectionState) => (
+  state === 'selected' ? '教务处已选' : '教务处未选'
+)
+
 function CourseDetailCard({
   course,
   currentWeek,
   timeRange,
+  simulationMode = false,
   onEdit,
   onDelete,
   onWanted,
@@ -236,6 +254,8 @@ function CourseDetailCard({
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   const courseNote = course.note?.trim() || ''
+  const classNum = course.classNum?.trim() || ''
+  const selectionState = simulationMode ? getSimulationSelectionState(course) : null
   return (
     <View className={[
       'course-conflict-card',
@@ -260,6 +280,13 @@ function CourseDetailCard({
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
           <View><Text>来源</Text><Text>{courseSourceLabel(course)}</Text></View>
+          {simulationMode && <View><Text>选课号</Text><Text>{classNum || '暂无选课号'}</Text></View>}
+          {selectionState && (
+            <View className={`course-conflict-card__selection-status course-conflict-card__selection-status--${selectionState}`}>
+              <Text>教务状态</Text>
+              <Text>{getSimulationSelectionLabel(selectionState)}</Text>
+            </View>
+          )}
         </View>
         {course.source === 'audit' && course.auditStatus && course.auditStatus !== 'current' && (
           <View className='course-conflict-card__note'>
@@ -1296,6 +1323,9 @@ export default function SchedulePage() {
             ...course.weeks.filter((week) => week > preferences.week),
             Number.POSITIVE_INFINITY,
           )
+          const selectionState = isSimulation
+            ? getSimulationSelectionState(course)
+            : null
           return (
             <View
               key={getCourseScheduleKey(course)}
@@ -1335,6 +1365,11 @@ export default function SchedulePage() {
               ) : (
                 <>
                   <View className='timetable-course__preview-head'>
+                    {selectionState && (
+                      <Text className={`timetable-course__selection-status timetable-course__selection-status--${selectionState}`}>
+                        {selectionState === 'selected' ? '已选' : '待教务选'}
+                      </Text>
+                    )}
                     {!isCurrentWeek && Number.isFinite(nextCourseWeek) ? (
                       <Text className='timetable-course__status'>
                         第{nextCourseWeek}周
@@ -1345,6 +1380,9 @@ export default function SchedulePage() {
                     ) : null}
                   </View>
                   <Text className='timetable-course__name'>{course.name}</Text>
+                  {isSimulation && course.classNum && (
+                    <Text className='timetable-course__class-num'>选课号 {course.classNum}</Text>
+                  )}
                   <Text className='timetable-course__location'>
                     {isCurrentWeek ? course.location : formatCourseWeeks(course.weeks)}
                   </Text>
@@ -1384,6 +1422,9 @@ export default function SchedulePage() {
       {dayCourses.length ? (
         <View className='day-course-list'>
           {dayCourses.map((course) => {
+            const selectionState = isSimulation
+              ? getSimulationSelectionState(course)
+              : null
             return (
               <View
                 key={getCourseScheduleKey(course)}
@@ -1401,9 +1442,18 @@ export default function SchedulePage() {
                 <View className='day-course__main'>
                   <View className='day-course__title-line'>
                     <Text className='day-course__name'>{course.name}</Text>
+                    {selectionState && (
+                      <Text className={`day-course__status day-course__status--${selectionState}`}>
+                        {selectionState === 'selected' ? '教务已选' : '待教务选'}
+                      </Text>
+                    )}
                   </View>
                   <Text className='day-course__meta'>
-                    {[course.location, course.teacher].filter(Boolean).join(' · ') || '自定义课程'}
+                    {[
+                      isSimulation && course.classNum ? `选课号 ${course.classNum}` : '',
+                      course.location,
+                      course.teacher,
+                    ].filter(Boolean).join(' · ') || '自定义课程'}
                   </Text>
                 </View>
                 <Text className='academic-chevron'>›</Text>
@@ -1499,6 +1549,7 @@ export default function SchedulePage() {
                   course={activeCourse}
                   currentWeek={preferences.week}
                   timeRange={getCourseTimeRange(activeCourse)}
+                  simulationMode={isSimulation}
                   onDelete={() => deleteCourse(activeCourse)}
                   onEdit={() => openCourseForm(activeCourse)}
                   onWanted={() => openCourseTrade(activeCourse)}

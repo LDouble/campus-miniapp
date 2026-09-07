@@ -96,6 +96,26 @@ assert.match(
   /academic-fab--selection-sync[\s\S]*?syncCourseSelectionSchedule/u,
   '模拟选课必须通过浮动按钮同步教务系统已选课程',
 )
+assert.match(
+  schedulePageSource,
+  /CourseDetailCardProps[\s\S]*?simulationMode\?: boolean/u,
+  '模拟选课详情卡片必须区分当前页面模式',
+)
+assert.match(
+  schedulePageSource,
+  /simulationMode && <View><Text>选课号<\/Text><Text>\{classNum \|\| '暂无选课号'\}<\/Text><\/View>/u,
+  '模拟选课详情卡片必须展示选课号',
+)
+assert.match(
+  schedulePageSource,
+  /getSimulationSelectionState[\s\S]*?教务处已选[\s\S]*?教务处未选/u,
+  '模拟选课卡片必须展示教务处选课状态',
+)
+assert.match(
+  academicStyleSource,
+  /\.timetable-course\s*\{[\s\S]*?&__selection-status[\s\S]*?\.course-conflict-card\s*\{[\s\S]*?&__selection-status/u,
+  '模拟选课卡片的选课状态必须有独立视觉样式',
+)
 assert.doesNotMatch(
   schedulePageSource,
   /academic-toolbar__selection-sync/u,
