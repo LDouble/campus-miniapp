@@ -57,6 +57,16 @@ assert.ok(
   '403 forbidden 应强制刷新教务身份，仅对未认证用户展示绑定引导',
 )
 
+const courseIntelligenceApi = readFileSync(
+  resolve(__dirname, '../src/api/course-intelligence.ts'),
+  'utf8',
+)
+assert.equal(
+  courseIntelligenceApi.includes('anonymous: true'),
+  false,
+  '选课情报接口需要携带访问令牌，不得按匿名请求发送',
+)
+
 const statisticsRepository = readFileSync(
   resolve(__dirname, '../src/features/academic-statistics/repository.ts'),
   'utf8',

@@ -14,7 +14,6 @@ export const getCourseIntelligenceOverview = (
 ) => apiRequest<CourseIntelligenceOverview>({
   path: `/api/v1/course-intelligence/courses/${coursePath(courseCode)}`,
   method: 'GET',
-  anonymous: true,
   query: {
     ...(options.teacherId ? { teacher_id: options.teacherId } : {}),
     ...(options.term?.trim() ? { term: options.term.trim() } : {}),
@@ -27,7 +26,6 @@ export const listCourseIntelligenceReviews = (
 ) => apiRequest<CourseIntelligenceReviewPage>({
   path: `/api/v1/course-intelligence/courses/${coursePath(courseCode)}/reviews`,
   method: 'GET',
-  anonymous: true,
   query: {
     ...(options.teacherId ? { teacher_id: options.teacherId } : {}),
     ...(options.dimension ? { dimension: options.dimension } : {}),
