@@ -20,6 +20,7 @@ const COURSE_CATALOG_DISCLAIMER_SEEN_KEY = 'academic.courseCatalogDisclaimerSeen
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
 const SELECTION_DRAFT_KEY = 'academic.selectionDraft.v1'
+const SELECTION_SCHEDULE_CACHE_KEY_PREFIX = 'academic.courseSelectionScheduleCache.v1.'
 
 export interface AcademicScheduleCache {
   version: 1
@@ -90,6 +91,7 @@ const validCourse = (value: unknown): value is Course => {
     && typeof course.name === 'string'
     && typeof course.teacher === 'string'
     && typeof course.location === 'string'
+    && (course.classNum === undefined || typeof course.classNum === 'string')
     && (course.note === undefined || typeof course.note === 'string')
     && (course.campus === undefined || typeof course.campus === 'string')
     && Number.isInteger(course.weekday)
@@ -164,6 +166,10 @@ const scheduleCacheKey = (platformUserId: number) => (
 
 const recordsCacheKey = (platformUserId: number) => (
   `${RECORDS_CACHE_KEY_PREFIX}${platformUserId}`
+)
+
+const selectionScheduleCacheKey = (platformUserId: number) => (
+  `${SELECTION_SCHEDULE_CACHE_KEY_PREFIX}${platformUserId}`
 )
 
 const validRecordMap = <T>(
@@ -269,6 +275,13 @@ const scheduleUpdatedAtByPeriod = (
 export const academicStorage = {
   getSelectionDraftCourses: (): Course[] => safeRead<Course[]>(SELECTION_DRAFT_KEY, []).filter((course) => course.source === 'simulation'),
   setSelectionDraftCourses: (courses: Course[]) => safeWrite(SELECTION_DRAFT_KEY, courses),
+  getCourseSelectionScheduleCourses: (platformUserId: number): Course[] => (
+    safeRead<Course[]>(selectionScheduleCacheKey(platformUserId), [])
+      .filter(validCourse)
+  ),
+  setCourseSelectionScheduleCourses: (platformUserId: number, courses: Course[]) => (
+    safeWrite(selectionScheduleCacheKey(platformUserId), courses)
+  ),
   hasSeenScheduleRefreshGuideToday: () => (
     safeRead<string>(SCHEDULE_REFRESH_GUIDE_KEY, '') === getLocalDayKey()
   ),

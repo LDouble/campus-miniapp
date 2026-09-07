@@ -91,7 +91,7 @@ const packageDefinitions = [
   {
     root: 'pages/academic',
     sourceRoot: 'pages/academic',
-    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index', 'course-catalog/index', 'general-education/index'],
+    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index', 'course-intelligence/contribute', 'course-catalog/index', 'general-education/index'],
   },
   { root: 'pages/clubs', sourceRoot: 'pages/clubs', pages: ['index', 'detail', 'edit', 'mine'] },
   { root: 'pages/shuttle', sourceRoot: 'pages/shuttle', pages: ['index', 'detail'] },

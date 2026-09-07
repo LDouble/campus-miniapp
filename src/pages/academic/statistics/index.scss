@@ -695,6 +695,32 @@
 
 .statistics-page__content { padding-bottom: calc(88rpx + env(safe-area-inset-bottom)); }
 
+.statistics-domain-tabs {
+  display: grid;
+  margin: 24rpx 0 8rpx;
+  padding: 5rpx;
+  border: 1rpx solid var(--ousea-bg-line, #e8edf4);
+  border-radius: 16rpx;
+  background: var(--campus-surface, #fff);
+  grid-template-columns: repeat(2, 1fr);
+
+  &__item {
+    padding: 16rpx 12rpx;
+    border-radius: 12rpx;
+    color: var(--ousea-ink-500, #6b7a90);
+    font-size: 27rpx;
+    text-align: center;
+
+    &--active {
+      background: var(--ousea-ocean-500, #2b7aef);
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+}
+
+.statistics-domain-panel { min-height: 200rpx; }
+
 .statistics-hero,
 .distribution-card,
 .trend-card,

@@ -1,5 +1,6 @@
 import {
   listAcademicCourses,
+  listAcademicCourseSelectionSchedule,
   listAcademicCourseSelections,
   listAcademicExams,
   listAcademicGrades,
@@ -31,12 +32,11 @@ type AcademicCourseWithClassNumber = AcademicCourse & {
 
 const getCourseClassNumber = (
   course: AcademicCourse,
-  index: number,
 ) => {
   const raw = course as AcademicCourseWithClassNumber
-  const candidate = [raw.class_num, raw.classNum, course.course_code, course.name]
+  const candidate = [raw.class_num, raw.classNum]
     .find((value) => value !== null && value !== undefined && String(value).trim())
-  return String(candidate ?? `course-${index + 1}`).trim()
+  return candidate === undefined ? undefined : String(candidate).trim()
 }
 
 const formatDateTime = (value?: string | null) => {
@@ -56,12 +56,12 @@ const mapPeriod = (period: AcademicPeriodDTO): AcademicPeriod => ({
 })
 
 const mapCourse = (course: AcademicCourse, index = 0): Course => {
-  const classNum = getCourseClassNumber(course, index)
+  const classNum = getCourseClassNumber(course)
   return {
     id: course.id,
     periodId: course.period_id,
     courseCode: course.course_code,
-    classNum,
+    ...(classNum ? { classNum } : {}),
     name: course.name,
     note: course.note,
     teacher: course.teacher,
@@ -71,7 +71,7 @@ const mapCourse = (course: AcademicCourse, index = 0): Course => {
     startSection: course.start_section,
     endSection: course.end_section,
     weeks: [...course.weeks],
-    color: courseColorForClass(classNum),
+    color: courseColorForClass(classNum || course.id || `course-${index + 1}`),
     source: 'official',
   }
 }
@@ -160,6 +160,7 @@ const mapCourseSelection = (
 export interface AcademicRepository {
   getPeriods: (options?: { force?: boolean }) => Promise<AcademicPeriod[]>
   getCourses: (periodId: string) => Promise<AcademicQueryResult<Course>>
+  getCourseSelectionSchedule: (periodId: string) => Promise<AcademicQueryResult<Course>>
   getGrades: () => Promise<AcademicQueryResult<GradeRecord>>
   getExams: (periodId: string) => Promise<AcademicQueryResult<ExamRecord>>
   getCourseSelections: (periodId: string) => Promise<AcademicQueryResult<CourseSelectionRecord>>
@@ -191,6 +192,10 @@ const getGrades = () => {
 export const academicRepository: AcademicRepository = {
   getPeriods: async (options) => (await listAcademicPeriods(options)).map(mapPeriod),
   getCourses: async (periodId) => mapQueryResult(await listAcademicCourses(periodId), mapCourse),
+  getCourseSelectionSchedule: async (periodId) => mapQueryResult(
+    await listAcademicCourseSelectionSchedule(periodId),
+    mapCourse,
+  ),
   getGrades,
   getExams: async (periodId) => mapQueryResult(await listAcademicExams(periodId), mapExam),
   getCourseSelections: async (periodId) => mapQueryResult(
