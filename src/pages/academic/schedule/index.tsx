@@ -276,11 +276,14 @@ function CourseDetailCard({
         </View>
         <View className='course-conflict-card__details'>
           <View><Text>时间</Text><Text>{timeRange || `第 ${course.startSection}-${course.endSection} 节`}</Text></View>
-          <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
+          {simulationMode ? (
+            <View><Text>选课号</Text><Text>{classNum || '暂无选课号'}</Text></View>
+          ) : (
+            <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
+          )}
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
           <View><Text>来源</Text><Text>{courseSourceLabel(course)}</Text></View>
-          {simulationMode && <View><Text>选课号</Text><Text>{classNum || '暂无选课号'}</Text></View>}
           {selectionState && (
             <View className={`course-conflict-card__selection-status course-conflict-card__selection-status--${selectionState}`}>
               <Text>教务状态</Text>
@@ -1380,12 +1383,15 @@ export default function SchedulePage() {
                     ) : null}
                   </View>
                   <Text className='timetable-course__name'>{course.name}</Text>
-                  {isSimulation && course.classNum && (
-                    <Text className='timetable-course__class-num'>选课号 {course.classNum}</Text>
+                  {isSimulation ? (
+                    <Text className='timetable-course__class-num'>
+                      选课号 {course.classNum || '暂无选课号'}
+                    </Text>
+                  ) : (
+                    <Text className='timetable-course__location'>
+                      {isCurrentWeek ? course.location : formatCourseWeeks(course.weeks)}
+                    </Text>
                   )}
-                  <Text className='timetable-course__location'>
-                    {isCurrentWeek ? course.location : formatCourseWeeks(course.weeks)}
-                  </Text>
                 </>
               )}
             </View>
@@ -1450,8 +1456,9 @@ export default function SchedulePage() {
                   </View>
                   <Text className='day-course__meta'>
                     {[
-                      isSimulation && course.classNum ? `选课号 ${course.classNum}` : '',
-                      course.location,
+                      isSimulation
+                        ? `选课号 ${course.classNum || '暂无选课号'}`
+                        : course.location,
                       course.teacher,
                     ].filter(Boolean).join(' · ') || '自定义课程'}
                   </Text>
@@ -1534,7 +1541,11 @@ export default function SchedulePage() {
                             ? '本周'
                             : formatCourseWeeks(course.weeks)}
                           {' · '}第 {course.startSection}-{course.endSection} 节
-                          {course.location ? ` · ${course.location}` : ''}
+                          {isSimulation
+                            ? ` · 选课号 ${course.classNum || '暂无选课号'}`
+                            : course.location
+                              ? ` · ${course.location}`
+                              : ''}
                         </Text>
                       </View>
                     )

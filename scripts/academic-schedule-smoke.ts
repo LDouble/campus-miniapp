@@ -103,8 +103,18 @@ assert.match(
 )
 assert.match(
   schedulePageSource,
-  /simulationMode && <View><Text>选课号<\/Text><Text>\{classNum \|\| '暂无选课号'\}<\/Text><\/View>/u,
+  /simulationMode \? \([\s\S]*?<View><Text>选课号<\/Text><Text>\{classNum \|\| '暂无选课号'\}<\/Text><\/View>[\s\S]*?\) : \([\s\S]*?<View><Text>地点<\/Text>/u,
   '模拟选课详情卡片必须展示选课号',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \? \([\s\S]*?timetable-course__class-num[\s\S]*?选课号 \{course\.classNum \|\| '暂无选课号'\}[\s\S]*?\) : \([\s\S]*?timetable-course__location/u,
+  '模拟选课周视图卡片应直接展示选课号而不是地点',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation[\s\S]*?`选课号 \$\{course\.classNum \|\| '暂无选课号'\}`[\s\S]*?: course\.location/u,
+  '模拟选课日视图卡片应直接展示选课号而不是地点',
 )
 assert.match(
   schedulePageSource,
