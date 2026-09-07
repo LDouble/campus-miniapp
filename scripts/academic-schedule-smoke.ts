@@ -96,6 +96,41 @@ assert.match(
   /academic-fab--selection-sync[\s\S]*?syncCourseSelectionSchedule/u,
   '模拟选课必须通过浮动按钮同步教务系统已选课程',
 )
+assert.match(
+  schedulePageSource,
+  /CourseDetailCardProps[\s\S]*?simulationMode\?: boolean/u,
+  '模拟选课详情卡片必须区分当前页面模式',
+)
+assert.match(
+  schedulePageSource,
+  /simulationMode \? \([\s\S]*?<View><Text>选课号<\/Text><Text>\{classNum \|\| '暂无选课号'\}<\/Text><\/View>[\s\S]*?\) : \([\s\S]*?<View><Text>地点<\/Text>/u,
+  '模拟选课详情卡片必须展示选课号',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \? \([\s\S]*?timetable-course__class-num[\s\S]*?选课号 \{course\.classNum \|\| '暂无选课号'\}[\s\S]*?\) : \([\s\S]*?timetable-course__location/u,
+  '模拟选课周视图卡片应直接展示选课号而不是地点',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation[\s\S]*?`选课号 \$\{course\.classNum \|\| '暂无选课号'\}`[\s\S]*?: course\.location/u,
+  '模拟选课日视图卡片应直接展示选课号而不是地点',
+)
+assert.match(
+  schedulePageSource,
+  /getSimulationSelectionState[\s\S]*?教务处已选[\s\S]*?教务处未选/u,
+  '模拟选课卡片必须展示教务处选课状态',
+)
+assert.match(
+  academicStyleSource,
+  /\.timetable-course\s*\{[\s\S]*?&__selection-status[\s\S]*?\.course-conflict-card\s*\{[\s\S]*?&__selection-status/u,
+  '模拟选课卡片的选课状态必须有独立视觉样式',
+)
+assert.match(
+  academicStyleSource,
+  /&__class-num\s*\{[\s\S]*?-webkit-line-clamp:\s*3[\s\S]*?white-space:\s*normal/u,
+  '模拟选课卡片的选课号应允许换行并最多展示三行',
+)
 assert.doesNotMatch(
   schedulePageSource,
   /academic-toolbar__selection-sync/u,
@@ -167,6 +202,26 @@ assert.match(schedulePageSource, /长按空白时段，\{isSimulation \? '继续
 assert.match(schedulePageSource, /loadAcademicCalendar\(educationLevel, \{ force \}\)/u, '模拟选课应读取当前学历的完整校历学期')
 assert.match(schedulePageSource, /mapCalendarPeriods\(result\.calendar\)/u, '模拟选课学期应映射校历返回的全部学期')
 assert.match(schedulePageSource, /resolveNextPeriodId\(nextPeriods\)/u, '模拟选课首次进入应默认选择当前学期的下一学期')
+assert.match(
+  schedulePageSource,
+  /scheduleView:\s*isSimulation \? 'week' : storedPreferences\.scheduleView/u,
+  '模拟选课进入时必须固定为周视图',
+)
+assert.match(
+  schedulePageSource,
+  /scheduleView:\s*isSimulation \? 'week' : \(patch\.scheduleView \|\| current\.scheduleView\)/u,
+  '模拟选课更新偏好时必须拒绝切换到日视图',
+)
+assert.match(
+  schedulePageSource,
+  /\{!isSimulation && \([\s\S]*?academic-view-toggle/u,
+  '模拟选课不应展示日周视图切换入口',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \|\| preferences\.scheduleView === 'week' \? renderWeekSchedule\(\) : renderDaySchedule\(\)/u,
+  '模拟选课即使读取到异常视图状态也必须渲染周视图',
+)
 assert.doesNotMatch(schedulePageSource, /simulationPeriodId = academicStorage\.getSelectionDraftCourses\(\)\[0\]/u, '模拟选课不应再用第一门课程伪造唯一学期')
 assert.equal(
   resolveNextPeriodId([
