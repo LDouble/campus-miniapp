@@ -351,11 +351,16 @@ export default function SchedulePage() {
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
   ))
+  const storedPreferences = useMemo(
+    () => academicStorage.getPreferences(defaultPreferences),
+    [],
+  )
   const [preferences, setPreferences] = useState<AcademicPreferences>(() => ({
     ...defaultPreferences,
-    ...academicStorage.getPreferences(defaultPreferences),
+    ...storedPreferences,
     section: 'schedule',
     selectedWeekday: getAcademicWeekday(),
+    scheduleView: isSimulation ? 'week' : storedPreferences.scheduleView,
   }))
   const [periods, setPeriods] = useState<AcademicPeriod[]>(() => (
     isSimulation ? [] : (initialScheduleCache ? initialScheduleCache.periods : [])
@@ -682,7 +687,11 @@ export default function SchedulePage() {
     void loadPersonalCourses()
   }, [initialized, isSimulation, loadPersonalCourses])
 
-  useEffect(() => academicStorage.setPreferences(preferences), [preferences])
+  useEffect(() => {
+    academicStorage.setPreferences(isSimulation
+      ? { ...preferences, scheduleView: storedPreferences.scheduleView }
+      : preferences)
+  }, [isSimulation, preferences, storedPreferences])
   useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
 
   useEffect(() => {
@@ -710,7 +719,12 @@ export default function SchedulePage() {
   }, [isSimulation, loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
 
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
-    setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
+    setPreferences((current) => ({
+      ...current,
+      ...patch,
+      scheduleView: isSimulation ? 'week' : (patch.scheduleView || current.scheduleView),
+      section: 'schedule',
+    }))
   }
 
   const handleWeekTouchStart = (event: ITouchEvent) => {
@@ -1220,15 +1234,17 @@ export default function SchedulePage() {
           onClick={() => updatePreferences({ week: Math.min(schedulePeriod?.weeks || 20, preferences.week + 1) })}
         />
       </View>
-      <View
-        className={`academic-view-toggle academic-view-toggle--${preferences.scheduleView}`}
-        ariaRole='button'
-        ariaLabel={`当前${preferences.scheduleView === 'week' ? '周' : '日'}视图，点击切换`}
-        onClick={() => updatePreferences({ scheduleView: preferences.scheduleView === 'week' ? 'day' : 'week' })}
-      >
-        <View className='academic-view-toggle__icon' />
-        <Text>{preferences.scheduleView === 'week' ? '周' : '日'}</Text>
-      </View>
+      {!isSimulation && (
+        <View
+          className={`academic-view-toggle academic-view-toggle--${preferences.scheduleView}`}
+          ariaRole='button'
+          ariaLabel={`当前${preferences.scheduleView === 'week' ? '周' : '日'}视图，点击切换`}
+          onClick={() => updatePreferences({ scheduleView: preferences.scheduleView === 'week' ? 'day' : 'week' })}
+        >
+          <View className='academic-view-toggle__icon' />
+          <Text>{preferences.scheduleView === 'week' ? '周' : '日'}</Text>
+        </View>
+      )}
     </View>
   )
 
@@ -1852,7 +1868,7 @@ export default function SchedulePage() {
                 >×</View>
               </View>
             )}
-            {preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
+            {isSimulation || preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
           </>
         )}
       </View>
