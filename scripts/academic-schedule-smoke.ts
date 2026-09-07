@@ -5,6 +5,7 @@ import {
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
+  mergeSimulationCourses,
   requireCoursesForPeriod,
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
@@ -80,6 +81,36 @@ assert.match(
 )
 assert.match(academicRepositorySource, /note:\s*course\.note/u, '课程映射必须保留课程备注')
 assert.match(academicRepositorySource, /class_num/u, '课程颜色映射必须优先读取 class_num')
+assert.match(
+  academicRepositorySource,
+  /getCourseSelectionSchedule[\s\S]*?listAcademicCourseSelectionSchedule/u,
+  '课表仓储必须提供已选课程课表同步能力',
+)
+assert.match(
+  schedulePageSource,
+  /syncCourseSelectionSchedule[\s\S]*?getCourseSelectionSchedule/u,
+  '模拟选课必须调用独立的已选课程课表接口',
+)
+assert.match(
+  schedulePageSource,
+  /academic-fab--selection-sync[\s\S]*?syncCourseSelectionSchedule/u,
+  '模拟选课必须通过浮动按钮同步教务系统已选课程',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /academic-toolbar__selection-sync/u,
+  '同步已选课程不能占用课表工具栏',
+)
+assert.match(
+  schedulePageSource,
+  /同步失败，已保留当前模拟课表/u,
+  '已选课程同步失败时必须保留现有展示',
+)
+assert.match(
+  academicStorageSource,
+  /courseSelectionScheduleCache/u,
+  '已选课程课表必须按教务用户缓存，避免同步失败时丢失旧数据',
+)
 assert.doesNotMatch(
   academicRepositorySource,
   /stableColor\(course\.id\)/u,
@@ -213,6 +244,33 @@ assert.equal(
   courseColorForClass('class-101'),
   primaryClassColor,
   '同一 class_num 必须保持稳定课程颜色',
+)
+const localSimulationCourse = {
+  ...course('local-simulation', '2026-2027-1'),
+  classNum: 'XK-1001',
+  source: 'simulation' as const,
+}
+const duplicateWithoutClassNum = {
+  ...course('local-no-class-num', '2026-2027-1'),
+  source: 'simulation' as const,
+}
+const selectedCourseFirstSlot = {
+  ...course('selected-slot-1', '2026-2027-1'),
+  classNum: 'XK-1001',
+}
+const selectedCourseSecondSlot = {
+  ...course('selected-slot-2', '2026-2027-1'),
+  classNum: 'XK-1001',
+  weekday: 3,
+}
+const mergedSimulationCourses = mergeSimulationCourses(
+  [localSimulationCourse, duplicateWithoutClassNum],
+  [selectedCourseFirstSlot, selectedCourseSecondSlot],
+)
+assert.deepEqual(
+  mergedSimulationCourses.map((item) => item.id),
+  ['selected-slot-1', 'selected-slot-2', 'local-no-class-num'],
+  '同步课表应保留同一选课号的全部真实时段，仅隐藏选课号相同的本地草稿',
 )
 assert.match(
   academicStyleSource,

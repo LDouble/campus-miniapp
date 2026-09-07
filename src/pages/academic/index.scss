@@ -1128,6 +1128,25 @@ page {
   .academic-fab__plus { margin: 0; font-size: 39rpx; }
 }
 
+.academic-page--schedule .academic-fab--selection-sync {
+  box-sizing: border-box;
+  min-width: 200rpx;
+  width: auto;
+  padding: 0 var(--ousea-space-2, 24rpx);
+  gap: var(--ousea-space-1, 16rpx);
+  border-radius: var(--ousea-radius-pill, 999rpx);
+
+  text:last-child { display: block; }
+
+  .academic-fab__sync-icon {
+    flex: none;
+    width: 34rpx;
+    height: 34rpx;
+  }
+
+  &.academic-fab--busy { opacity: 0.72; }
+}
+
 .grade-summary {
   position: relative;
   display: flex;
@@ -3335,6 +3354,7 @@ page {
   .academic-toolbar__period {
     color: var(--campus-primary, #2b7fff);
   }
+
 }
 
 .academic-week-stepper {
