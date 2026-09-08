@@ -54,6 +54,7 @@
     "test:community-tab-scroll-top": "ts-node --transpile-only scripts/community-tab-scroll-top-smoke.ts",
     "test:community-detail-figma": "ts-node --transpile-only scripts/community-detail-figma-smoke.ts",
     "test:community-detail-navigation": "ts-node --transpile-only scripts/community-detail-navigation-smoke.ts",
+    "test:community-admin-withdraw": "ts-node --transpile-only scripts/community-admin-withdraw-smoke.ts",
     "test:business-detail-navigation": "ts-node --transpile-only scripts/business-detail-navigation-smoke.ts",
     "test:detail-author-header": "ts-node --transpile-only scripts/detail-author-header-smoke.ts",
     "test:more-icon": "ts-node --transpile-only scripts/more-icon-smoke.ts",
