@@ -120,6 +120,48 @@
   margin-top: 18rpx;
 }
 
+.market-category-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: token.$space-2;
+  margin-top: 18rpx;
+}
+
+.market-category-option {
+  display: flex;
+  min-width: 0;
+  min-height: token.$touch-target-min;
+  padding: 0 token.$space-2;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  color: token.$color-text-body;
+  font-size: 25rpx;
+  font-weight: 650;
+  background: token.$color-surface-subtle;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-sm;
+}
+
+.market-category-option text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.market-category-option image {
+  width: 30rpx;
+  height: 30rpx;
+  flex: none;
+  margin-left: token.$space-1;
+}
+
+.market-category-option--active {
+  color: #7e22ce;
+  background: #f3e8ff;
+  border-color: #e9d5ff;
+}
+
 .market-price-option {
   display: flex;
   min-height: token.$touch-target-min;
