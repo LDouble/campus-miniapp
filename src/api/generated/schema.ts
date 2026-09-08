@@ -1778,6 +1778,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campus-circle/posts/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 在帖子所属版块置顶或取消置顶 */
+        patch: operations["UpdateCampusCirclePostPin"];
+        trace?: never;
+    };
     "/api/v1/campus-circle/posts/{id}/submit-review": {
         parameters: {
             query?: never;
@@ -6888,6 +6905,11 @@ export interface components {
             data: components["schemas"]["CampusCircleHome"];
             request_id: string;
         };
+        CampusCirclePinInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            pinned: boolean;
+        };
         CampusCirclePostImageView: {
             /** Format: uint64 */
             id: number;
@@ -7147,7 +7169,7 @@ export interface components {
             version: number;
         };
         /** @enum {string} */
-        CampusCircleViewerAction: "edit" | "withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic";
+        CampusCircleViewerAction: "edit" | "withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic" | "pin" | "unpin";
         /** @enum {string} */
         CampusCircleViewerRelation: "anonymous" | "owner" | "other" | "admin";
         CarpoolTripPageResponseBody: {
@@ -14241,6 +14263,28 @@ export interface operations {
         responses: {
             200: components["responses"]["CampusCirclePostResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    UpdateCampusCirclePostPin: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCirclePinInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     SubmitCampusCirclePostReview: {
