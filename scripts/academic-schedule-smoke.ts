@@ -118,8 +118,18 @@ assert.match(
 )
 assert.match(
   schedulePageSource,
-  /getSimulationSelectionState[\s\S]*?教务处已选[\s\S]*?教务处未选/u,
-  '模拟选课卡片必须展示教务处选课状态',
+  /selectionState === 'not-selected'[\s\S]*?待教务选/u,
+  '模拟选课卡片仅应为教务处未记录课程展示待教务选标签',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /selectionState === 'selected' &&/u,
+  '教务处已有课程不应展示选课状态标签',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /教务处已选|教务已选/u,
+  '模拟选课页面不应出现容易误解为最终选中的文案',
 )
 assert.match(
   academicStyleSource,
