@@ -29,6 +29,7 @@ const icons = {
   academic: require('../../assets/icons/academic.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
   whatToEat: require('../../assets/icons/what-to-eat.svg'),
+  catAtlas: require('../../assets/icons/community.svg'),
 }
 
 type ServiceItem = {
@@ -104,6 +105,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
       { key: 'clubs', name: '社团广场', icon: icons.clubs, route: '/pages/clubs/index' },
       { key: 'what-to-eat', name: '今天吃什么', icon: icons.whatToEat, route: '/pages/what-to-eat/index' },
+      { key: 'cat-atlas', name: '猫猫图鉴', icon: icons.catAtlas, route: '/pages/cat-atlas/index' },
     ],
   },
 ]

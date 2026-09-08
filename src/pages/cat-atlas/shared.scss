@@ -1,0 +1,33 @@
+page { background: var(--campus-page, var(--ousea-bg-page)); }
+.cat-page { min-height: 100vh; color: var(--campus-text-heading, var(--ousea-ink-900)); background: var(--campus-page, var(--ousea-bg-page)); }
+.cat-page__content { padding: 24rpx 32rpx calc(48rpx + env(safe-area-inset-bottom)); }
+.cat-hero { padding: 32rpx; border: 2rpx solid var(--campus-border, var(--ousea-line)); border-radius: var(--ousea-radius-card-lg, 36rpx); background: linear-gradient(135deg, var(--ousea-ocean-50), #fff); }
+.cat-hero__eyebrow, .cat-muted { display: block; color: var(--campus-text-secondary, var(--ousea-ink-500)); font-size: 24rpx; line-height: 1.5; }
+.cat-hero__title { display: block; margin-top: 8rpx; font-size: 48rpx; font-weight: 700; line-height: 1.25; }
+.cat-hero__copy { display: block; margin-top: 12rpx; color: var(--campus-text-body, var(--ousea-ink-700)); font-size: 27rpx; line-height: 1.65; }
+.cat-section { margin-top: 38rpx; }
+.cat-section__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
+.cat-section__title { font-size: 33rpx; font-weight: 600; }
+.cat-section__action { color: var(--campus-primary, var(--ousea-ocean-500)); font-size: 24rpx; }
+.cat-card { display: flex; gap: 20rpx; padding: 22rpx; margin-bottom: 16rpx; border: 2rpx solid var(--campus-border, var(--ousea-line)); border-radius: var(--ousea-radius-card, 28rpx); background: var(--campus-surface, #fff); }
+.cat-avatar { display: flex; flex: 0 0 112rpx; width: 112rpx; height: 112rpx; align-items: center; justify-content: center; border-radius: 28rpx; color: #fff; font-size: 48rpx; font-weight: 700; }
+.cat-card__body { display: flex; flex: 1; min-width: 0; flex-direction: column; justify-content: center; }
+.cat-card__name { font-size: 32rpx; font-weight: 600; }
+.cat-card__meta { display: block; margin-top: 8rpx; color: var(--campus-text-secondary, var(--ousea-ink-500)); font-size: 24rpx; }
+.cat-tags { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 10rpx; }
+.cat-tag { padding: 4rpx 12rpx; border-radius: 999rpx; color: var(--campus-primary-strong, var(--ousea-ocean-600)); background: var(--campus-surface-primary, var(--ousea-ocean-50)); font-size: 20rpx; }
+.cat-primary-button { display: flex; height: 96rpx; align-items: center; justify-content: center; margin-top: 32rpx; border-radius: 999rpx; color: #fff; background: var(--campus-primary, var(--ousea-ocean-500)); font-size: 32rpx; font-weight: 600; }
+.cat-primary-button::after { border: 0; }
+.cat-stat { display: flex; align-items: baseline; gap: 8rpx; padding: 24rpx; border-radius: 28rpx; background: var(--campus-surface-primary, var(--ousea-ocean-50)); }
+.cat-stat__number { color: var(--campus-primary-strong, var(--ousea-ocean-600)); font-size: 52rpx; font-weight: 700; }
+.cat-form-label { display: block; margin: 28rpx 0 12rpx; font-size: 28rpx; font-weight: 600; }
+.cat-options { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.cat-option { padding: 16rpx 24rpx; border: 2rpx solid var(--campus-border, var(--ousea-line)); border-radius: 16rpx; color: var(--campus-text-body, var(--ousea-ink-700)); font-size: 26rpx; }
+.cat-option--active { border-color: var(--campus-primary, var(--ousea-ocean-500)); color: var(--campus-primary-strong, var(--ousea-ocean-600)); background: var(--campus-surface-primary, var(--ousea-ocean-50)); }
+.cat-input { width: 100%; min-height: 160rpx; box-sizing: border-box; padding: 20rpx; border: 2rpx solid var(--campus-border, var(--ousea-line)); border-radius: 20rpx; background: var(--campus-surface, #fff); color: var(--campus-text-body, var(--ousea-ink-700)); font-size: 28rpx; }
+.cat-detail__title { display: block; margin-top: 18rpx; font-size: 48rpx; font-weight: 700; }
+.cat-detail__subtitle { display: block; margin-top: 8rpx; color: var(--campus-text-secondary, var(--ousea-ink-500)); font-size: 27rpx; }
+.cat-profile { margin-top: 32rpx; padding: 24rpx; border-radius: 28rpx; background: var(--campus-surface, #fff); }
+.cat-profile__row { display: flex; padding: 14rpx 0; font-size: 27rpx; }
+.cat-profile__label { flex: 0 0 150rpx; color: var(--campus-text-secondary, var(--ousea-ink-500)); }
+.cat-profile__value { flex: 1; color: var(--campus-text-body, var(--ousea-ink-700)); }
