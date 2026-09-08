@@ -239,7 +239,7 @@ const getSimulationSelectionState = (
 )
 
 const getSimulationSelectionLabel = (state: SimulationSelectionState) => (
-  state === 'selected' ? '教务处已选' : '教务处未选'
+  state === 'not-selected' ? '教务处未选' : ''
 )
 
 function CourseDetailCard({
@@ -284,7 +284,7 @@ function CourseDetailCard({
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
           <View><Text>来源</Text><Text>{courseSourceLabel(course)}</Text></View>
-          {selectionState && (
+          {selectionState === 'not-selected' && (
             <View className={`course-conflict-card__selection-status course-conflict-card__selection-status--${selectionState}`}>
               <Text>教务状态</Text>
               <Text>{getSimulationSelectionLabel(selectionState)}</Text>
@@ -1384,9 +1384,9 @@ export default function SchedulePage() {
               ) : (
                 <>
                   <View className='timetable-course__preview-head'>
-                    {selectionState && (
+                    {selectionState === 'not-selected' && (
                       <Text className={`timetable-course__selection-status timetable-course__selection-status--${selectionState}`}>
-                        {selectionState === 'selected' ? '已选' : '待教务选'}
+                        待教务选
                       </Text>
                     )}
                     {!isCurrentWeek && Number.isFinite(nextCourseWeek) ? (
@@ -1464,9 +1464,9 @@ export default function SchedulePage() {
                 <View className='day-course__main'>
                   <View className='day-course__title-line'>
                     <Text className='day-course__name'>{course.name}</Text>
-                    {selectionState && (
+                    {selectionState === 'not-selected' && (
                       <Text className={`day-course__status day-course__status--${selectionState}`}>
-                        {selectionState === 'selected' ? '教务已选' : '待教务选'}
+                        待教务选
                       </Text>
                     )}
                   </View>
