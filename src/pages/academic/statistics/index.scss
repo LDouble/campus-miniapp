@@ -625,6 +625,17 @@
     font-size: 26rpx;
     font-weight: 700;
   }
+
+  &__intelligence-entry {
+    margin-top: 24rpx;
+    padding: 20rpx 24rpx;
+    border: 1rpx solid var(--ousea-ocean-500, #2b7aef);
+    border-radius: 18rpx;
+    color: var(--ousea-ocean-600, #1765d1);
+    font-size: 26rpx;
+    font-weight: 600;
+    text-align: center;
+  }
 }
 
 .teacher-summary {

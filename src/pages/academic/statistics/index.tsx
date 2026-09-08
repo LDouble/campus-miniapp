@@ -163,6 +163,7 @@ export default function AcademicStatisticsPage() {
   const [teacherTrend, setTeacherTrend] = useState<AcademicPassRateTrend | null>(null)
   const [teacherTrendLoading, setTeacherTrendLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'grades' | 'intelligence'>(initialTab)
+  const [intelligenceTeacherName, setIntelligenceTeacherName] = useState(currentTeacherName)
 
   const load = useCallback(async () => {
     if (!courseCode) {
@@ -242,14 +243,20 @@ export default function AcademicStatisticsPage() {
       ? loadError.message
       : '课程参考加载失败'
 
-  const openCourseIntelligenceContribution = (teacherId?: number) => {
+  const openCourseIntelligenceContribution = (teacher?: { teacherId?: number; teacherName?: string }) => {
     const query = [
       `course_code=${encodeURIComponent(courseCode)}`,
       `course_name=${encodeURIComponent(title)}`,
-      ...(teacherId ? [`teacher_id=${teacherId}`] : []),
-      ...(currentTeacherName ? [`teacher_name=${encodeURIComponent(currentTeacherName)}`] : []),
+      ...(teacher?.teacherId ? [`teacher_id=${teacher.teacherId}`] : []),
+      ...(teacher?.teacherName ? [`teacher_name=${encodeURIComponent(teacher.teacherName)}`] : []),
     ].join('&')
     void Taro.navigateTo({ url: `/pages/academic/course-intelligence/contribute?${query}` })
+  }
+
+  const openTeacherIntelligence = (teacher: InstructorPassRate) => {
+    setIntelligenceTeacherName(teacher.teacher_name)
+    setSelectedTeacher(null)
+    setActiveTab('intelligence')
   }
 
   return (
@@ -484,7 +491,7 @@ export default function AcademicStatisticsPage() {
             ) : (
               <CourseIntelligenceReader
                 courseCode={courseCode}
-                currentTeacherName={currentTeacherName}
+                currentTeacherName={intelligenceTeacherName}
                 onShareExperience={openCourseIntelligenceContribution}
               />
             )}
@@ -526,6 +533,12 @@ export default function AcademicStatisticsPage() {
             {!teacherTrendLoading && (!teacherTrend || !teacherTrend.points.length) && (
               <Text className='teacher-trend-empty'>暂无可展示的分学期记录</Text>
             )}
+            <View
+              className='statistics-sheet__intelligence-entry'
+              ariaRole='button'
+              ariaLabel={`查看${selectedTeacher.teacher_name}的选课情报`}
+              onClick={() => openTeacherIntelligence(selectedTeacher)}
+            >查看该教师选课情报</View>
           </View>
         </View>
       )}

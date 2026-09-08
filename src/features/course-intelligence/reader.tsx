@@ -40,7 +40,7 @@ const dimensionHints: Record<CourseIntelligenceDimension, string> = {
 type CourseIntelligenceReaderProps = {
   courseCode: string
   currentTeacherName?: string
-  onShareExperience: (teacherId?: number) => void
+  onShareExperience: (teacher?: { teacherId?: number; teacherName?: string }) => void
 }
 
 const normalized = (value: string | null | undefined) => (value || '').replace(/\s+/g, '')
@@ -62,6 +62,7 @@ export default function CourseIntelligenceReader({
   const [overview, setOverview] = useState<CourseIntelligenceOverview | null>(null)
   const [reviews, setReviews] = useState<CourseIntelligenceReview[]>([])
   const [teacherId, setTeacherId] = useState<number | undefined>()
+  const [teacherName, setTeacherName] = useState(currentTeacherName.trim())
   const [dimension, setDimension] = useState<CourseIntelligenceDimension | 'all'>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
@@ -72,9 +73,10 @@ export default function CourseIntelligenceReader({
     setError(null)
     try {
       const [nextOverview, nextReviews] = await Promise.all([
-        getCourseIntelligenceOverview(courseCode, { teacherId }),
+        getCourseIntelligenceOverview(courseCode, { teacherId, teacherName }),
         listCourseIntelligenceReviews(courseCode, {
           teacherId,
+          teacherName,
           dimension: dimension === 'all' ? undefined : dimension,
           page: 1,
           pageSize: 20,
@@ -82,27 +84,34 @@ export default function CourseIntelligenceReader({
       ])
       setOverview(nextOverview)
       setReviews(nextReviews.items)
-      if (teacherId === undefined && currentTeacherName.trim()) {
+      if (teacherId === undefined && teacherName) {
         const matchingTeacher = nextOverview.teachers.find((teacher) => (
-          normalized(teacher.teacher_name) === normalized(currentTeacherName)
+          normalized(teacher.teacher_name) === normalized(teacherName)
         ))
-        if (matchingTeacher) setTeacherId(matchingTeacher.teacher_id)
+        if (matchingTeacher?.teacher_id) setTeacherId(matchingTeacher.teacher_id)
       }
     } catch (nextError) {
       setError(nextError)
     } finally {
       setLoading(false)
     }
-  }, [courseCode, currentTeacherName, dimension, teacherId])
+  }, [courseCode, dimension, teacherId, teacherName])
 
   useEffect(() => {
     if (courseCode) void load()
   }, [courseCode, load])
 
   const selectedTeacherName = useMemo(() => {
-    if (!overview || teacherId === undefined) return ''
-    return overview.teachers.find((teacher) => teacher.teacher_id === teacherId)?.teacher_name || ''
-  }, [overview, teacherId])
+    if (teacherId !== undefined && overview) {
+      return overview.teachers.find((teacher) => teacher.teacher_id === teacherId)?.teacher_name || teacherName
+    }
+    return teacherName
+  }, [overview, teacherId, teacherName])
+
+  const selectTeacher = (nextTeacherId?: number | null, nextTeacherName = '') => {
+    setTeacherId(nextTeacherId || undefined)
+    setTeacherName(nextTeacherName.trim())
+  }
 
   const toggleUseful = async (review: CourseIntelligenceReview) => {
     if (reacted[review.id]) return
@@ -159,20 +168,23 @@ export default function CourseIntelligenceReader({
             <Text className='course-intelligence__eyebrow'>教师范围</Text>
             <View className='course-intelligence__teacher-tabs'>
               <View
-                className={teacherId === undefined ? 'course-intelligence__teacher-tab course-intelligence__teacher-tab--active' : 'course-intelligence__teacher-tab'}
-                onClick={() => setTeacherId(undefined)}
+                className={teacherId === undefined && !teacherName ? 'course-intelligence__teacher-tab course-intelligence__teacher-tab--active' : 'course-intelligence__teacher-tab'}
+                onClick={() => selectTeacher()}
               >全部教师</View>
               {overview.teachers.map((teacher) => (
                 <View
-                  key={teacher.teacher_id}
-                  className={teacher.teacher_id === teacherId ? 'course-intelligence__teacher-tab course-intelligence__teacher-tab--active' : 'course-intelligence__teacher-tab'}
-                  onClick={() => setTeacherId(teacher.teacher_id)}
+                  key={`${teacher.teacher_id || 'name'}-${normalized(teacher.teacher_name)}`}
+                  className={(teacher.teacher_id && teacher.teacher_id === teacherId) || (!teacherId && normalized(teacher.teacher_name) === normalized(teacherName)) ? 'course-intelligence__teacher-tab course-intelligence__teacher-tab--active' : 'course-intelligence__teacher-tab'}
+                  onClick={() => selectTeacher(teacher.teacher_id, teacher.teacher_name)}
                 >
                   {teacher.teacher_name}
                 </View>
               ))}
             </View>
             {selectedTeacherName && <Text className='course-intelligence__filter-note'>当前查看：{selectedTeacherName}</Text>}
+            {selectedTeacherName && overview.sample_count === 0 && (
+              <Text className='course-intelligence__filter-note'>暂时还没有这位老师的情报，你可以分享第一条选课经验。</Text>
+            )}
           </View>
 
           <View className='course-intelligence__section'>
@@ -275,7 +287,7 @@ export default function CourseIntelligenceReader({
       )}
 
       <View className='course-intelligence__cta-wrap'>
-        <View className='course-intelligence__cta' onClick={() => onShareExperience(teacherId)}>
+        <View className='course-intelligence__cta' onClick={() => onShareExperience({ teacherId, teacherName: selectedTeacherName })}>
           <Text>分享我的选课经验</Text>
           <Text>自由表达，AI 会在后台整理维度</Text>
         </View>

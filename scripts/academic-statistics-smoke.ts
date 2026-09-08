@@ -66,6 +66,21 @@ assert.equal(
   false,
   '选课情报接口需要携带访问令牌，不得按匿名请求发送',
 )
+assert.ok(
+  courseIntelligenceApi.includes("teacher_name: options.teacherName.trim()"),
+  '选课情报接口应支持课程内按教师姓名查询未绑定教师 ID 的评价',
+)
+
+const statisticsDetailPage = readFileSync(
+  resolve(__dirname, '../src/pages/academic/statistics/index.tsx'),
+  'utf8',
+)
+assert.ok(
+  statisticsDetailPage.includes('查看该教师选课情报')
+    && statisticsDetailPage.includes('setIntelligenceTeacherName(teacher.teacher_name)')
+    && statisticsDetailPage.includes("setActiveTab('intelligence')"),
+  '教师统计面板应能携带教师姓名进入选课情报',
+)
 
 const statisticsRepository = readFileSync(
   resolve(__dirname, '../src/features/academic-statistics/repository.ts'),

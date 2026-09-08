@@ -8009,6 +8009,7 @@ export interface components {
         CourseIntelligenceOverviewQuery: {
             /** Format: uint64 */
             teacher_id?: number;
+            teacher_name?: string;
             term?: string;
         };
         CourseIntelligenceOverviewResponseBody: {
@@ -8099,7 +8100,7 @@ export interface components {
             /** Format: int64 */
             sample_count: number;
             /** Format: uint64 */
-            teacher_id: number;
+            teacher_id?: number | null;
             teacher_name: string;
         };
         CourseIntelligenceTeacherResponseBody: {
@@ -15764,6 +15765,7 @@ export interface operations {
         parameters: {
             query?: {
                 teacher_id?: number;
+                teacher_name?: string;
                 term?: string;
             };
             header?: never;
@@ -15781,6 +15783,7 @@ export interface operations {
         parameters: {
             query?: {
                 teacher_id?: number;
+                teacher_name?: string;
                 dimension?: "grading" | "attendance" | "workload" | "exam" | "classroom" | "difficulty_time";
                 page?: number;
                 page_size?: number;

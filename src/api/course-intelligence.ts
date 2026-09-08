@@ -10,24 +10,26 @@ const coursePath = (courseCode: string) => encodeURIComponent(courseCode.trim())
 
 export const getCourseIntelligenceOverview = (
   courseCode: string,
-  options: { teacherId?: number; term?: string } = {},
+  options: { teacherId?: number; teacherName?: string; term?: string } = {},
 ) => apiRequest<CourseIntelligenceOverview>({
   path: `/api/v1/course-intelligence/courses/${coursePath(courseCode)}`,
   method: 'GET',
   query: {
     ...(options.teacherId ? { teacher_id: options.teacherId } : {}),
+    ...(!options.teacherId && options.teacherName?.trim() ? { teacher_name: options.teacherName.trim() } : {}),
     ...(options.term?.trim() ? { term: options.term.trim() } : {}),
   },
 })
 
 export const listCourseIntelligenceReviews = (
   courseCode: string,
-  options: { teacherId?: number; dimension?: string; page?: number; pageSize?: number } = {},
+  options: { teacherId?: number; teacherName?: string; dimension?: string; page?: number; pageSize?: number } = {},
 ) => apiRequest<CourseIntelligenceReviewPage>({
   path: `/api/v1/course-intelligence/courses/${coursePath(courseCode)}/reviews`,
   method: 'GET',
   query: {
     ...(options.teacherId ? { teacher_id: options.teacherId } : {}),
+    ...(!options.teacherId && options.teacherName?.trim() ? { teacher_name: options.teacherName.trim() } : {}),
     ...(options.dimension ? { dimension: options.dimension } : {}),
     page: options.page || 1,
     page_size: options.pageSize || 20,
