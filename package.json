@@ -76,6 +76,7 @@
     "test:public-profile-campus": "ts-node --transpile-only scripts/public-profile-campus-smoke.ts",
     "test:media-images": "ts-node --transpile-only scripts/media-images-smoke.ts",
     "test:share": "ts-node --transpile-only scripts/share-smoke.ts",
+    "test:lottery": "ts-node --transpile-only scripts/lottery-smoke.ts",
     "test:dark-mode": "ts-node --transpile-only scripts/dark-mode-smoke.ts",
     "test:tabbar-layout": "ts-node --transpile-only scripts/tabbar-layout-smoke.ts",
     "test:typography": "ts-node --transpile-only scripts/typography-smoke.ts",

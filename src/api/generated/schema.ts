@@ -3956,6 +3956,349 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/lottery/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询抽奖活动 */
+        get: operations["ListAdminLotteryCampaigns"];
+        put?: never;
+        /** 管理端创建抽奖活动草稿 */
+        post: operations["CreateAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看抽奖活动草稿 */
+        get: operations["GetAdminLotteryCampaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端修改抽奖活动草稿 */
+        patch: operations["UpdateAdminLotteryCampaign"];
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消未开奖抽奖活动 */
+        post: operations["CancelAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布抽奖活动 */
+        post: operations["PublishAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停止抽奖活动后续参与 */
+        post: operations["StopAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询抽奖码 */
+        get: operations["ListAdminLotteryCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/draw-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询到期开奖批次 */
+        get: operations["ListAdminLotteryDrawBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/draw-batches/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 恢复失败的到期开奖批次 */
+        post: operations["RetryAdminLotteryDrawBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/share-attributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询分享归因 */
+        get: operations["ListAdminLotteryShareAttributions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/wins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询中奖履约记录 */
+        get: operations["ListAdminLotteryWins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/wins/{id}/fulfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登记中奖奖品已发放 */
+        post: operations["FulfillAdminLotteryWin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询抽奖活动 */
+        get: operations["ListLotteryCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看抽奖活动详情 */
+        get: operations["GetLotteryCampaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的抽奖码 */
+        get: operations["ListMyLotteryCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/draws": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的抽奖结果 */
+        get: operations["ListMyLotteryDraws"];
+        put?: never;
+        /** 即时抽奖并消耗一枚抽奖码 */
+        post: operations["DrawLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/participations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 参与活动并领取基础抽奖码 */
+        post: operations["JoinLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开中奖结果 */
+        get: operations["ListLotteryCampaignResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/share-attributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登录或注册后提交分享归因 */
+        post: operations["SubmitLotteryShareAttribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/share-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建抽奖分享入口 */
+        post: operations["CreateLotteryShareToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/wins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看我的中奖履约详情 */
+        get: operations["GetLotteryWin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/marketplace/listings": {
         parameters: {
             query?: never;
@@ -5421,6 +5764,7 @@ export interface components {
         WechatLoginRequest: {
             app_id: string;
             code: string;
+            lottery_share_token?: string;
         };
         AcceptNoticeSubscriptionsRequest: {
             template_ids: string[];
@@ -9110,6 +9454,325 @@ export interface components {
             /** Format: uint64 */
             root_id: number;
         };
+        LotteryCampaignInput: {
+            cover_url?: string;
+            description: string;
+            draw_mode: components["schemas"]["LotteryDrawMode"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: int64 */
+            max_wins: number;
+            prizes: components["schemas"]["LotteryPrizeInput"][];
+            /** Format: int64 */
+            share_attribution_ttl_seconds: number;
+            /** Format: int64 */
+            share_daily_code_limit: number;
+            share_enabled: boolean;
+            share_new_user_only: boolean;
+            /** Format: int64 */
+            share_reward_code_count: number;
+            /** Format: int64 */
+            share_total_code_limit: number;
+            /** Format: date-time */
+            start_at: string;
+            title: string;
+        };
+        LotteryCampaignPageResponseBody: {
+            data: components["schemas"]["LotteryPage"];
+            request_id: string;
+        };
+        LotteryCampaignResponseBody: {
+            data: components["schemas"]["LotteryCampaignView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryCampaignStatus: "draft" | "published" | "closed" | "completed" | "cancelled";
+        LotteryCampaignUpdateInput: components["schemas"]["LotteryCampaignInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        LotteryCampaignView: {
+            cover_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            description: string;
+            draw_mode: components["schemas"]["LotteryDrawMode"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: uint64 */
+            id: number;
+            joined: boolean;
+            /** Format: int64 */
+            max_wins: number;
+            /** Format: int64 */
+            my_available_code_count: number;
+            /** Format: int64 */
+            my_code_count: number;
+            /** Format: int64 */
+            my_win_count: number;
+            prizes: components["schemas"]["LotteryPrizeView"][];
+            /** Format: date-time */
+            server_time: string;
+            /** Format: int64 */
+            share_attribution_ttl_seconds: number;
+            /** Format: int64 */
+            share_daily_code_limit: number;
+            share_enabled: boolean;
+            share_new_user_only: boolean;
+            /** Format: int64 */
+            share_reward_code_count: number;
+            /** Format: int64 */
+            share_total_code_limit: number;
+            /** Format: date-time */
+            start_at: string;
+            status: components["schemas"]["LotteryCampaignStatus"];
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            verified: boolean;
+            /** Format: uint64 */
+            version: number;
+        };
+        LotteryCodePage: {
+            items: components["schemas"]["LotteryCodeView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryCodePageResponseBody: {
+            data: components["schemas"]["LotteryCodePage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryCodeStatus: "available" | "entered" | "won" | "lost" | "excluded" | "expired" | "void";
+        LotteryCodeView: {
+            code: string;
+            /** Format: date-time */
+            created_at: string;
+            exclusion_reason?: string | null;
+            /** Format: uint64 */
+            id: number;
+            source: string;
+            status: components["schemas"]["LotteryCodeStatus"];
+            /** Format: uint64 */
+            user_id?: number | null;
+        };
+        LotteryDrawBatchPage: {
+            items: components["schemas"]["LotteryDrawBatchView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryDrawBatchPageResponseBody: {
+            data: components["schemas"]["LotteryDrawBatchPage"];
+            request_id: string;
+        };
+        LotteryDrawBatchView: {
+            /** Format: int64 */
+            attempt_count: number;
+            /** Format: uint64 */
+            campaign_id: number;
+            /** Format: uint64 */
+            config_version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            last_error?: string | null;
+            status: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        LotteryDrawMode: "scheduled" | "instant";
+        LotteryDrawPage: {
+            items: components["schemas"]["LotteryDrawView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryDrawPageResponseBody: {
+            data: components["schemas"]["LotteryDrawPage"];
+            request_id: string;
+        };
+        LotteryDrawResponseBody: {
+            data: components["schemas"]["LotteryDrawView"];
+            request_id: string;
+        };
+        LotteryDrawView: {
+            /** Format: uint64 */
+            campaign_id: number;
+            /** Format: uint64 */
+            code_id: number;
+            /** Format: date-time */
+            drawn_at: string;
+            /** Format: uint64 */
+            id: number;
+            prize?: components["schemas"]["LotteryPrizeView"];
+            /** @enum {string} */
+            result: "won" | "lost";
+            /** Format: uint64 */
+            win_id?: number | null;
+        };
+        LotteryFulfillWinInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            fulfillment_note: string;
+        };
+        LotteryPage: {
+            items: components["schemas"]["LotteryCampaignView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryPrizeInput: {
+            /** Format: date-time */
+            claim_deadline_at: string;
+            claim_method: string;
+            description?: string;
+            /** Format: int64 */
+            display_order: number;
+            image_url?: string;
+            /** Format: int64 */
+            instant_probability_bps: number;
+            name: string;
+            /** Format: int64 */
+            scheduled_draw_order: number;
+            /** Format: int64 */
+            total_quantity: number;
+        };
+        LotteryPrizeView: {
+            /** Format: int64 */
+            allocated_quantity: number;
+            /** Format: date-time */
+            claim_deadline_at: string;
+            claim_method: string;
+            description?: string | null;
+            /** Format: int64 */
+            display_order: number;
+            /** Format: uint64 */
+            id: number;
+            image_url?: string | null;
+            /** Format: int64 */
+            instant_probability_bps: number;
+            name: string;
+            /** Format: int64 */
+            scheduled_draw_order: number;
+            /** Format: int64 */
+            total_quantity: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        LotteryPublicResultView: {
+            /** Format: uint64 */
+            draw_id: number;
+            /** Format: date-time */
+            drawn_at: string;
+            masked_code: string;
+            masked_user: string;
+            /** Format: uint64 */
+            prize_id: number;
+            prize_name: string;
+        };
+        LotteryResultPage: {
+            items: components["schemas"]["LotteryPublicResultView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryResultPageResponseBody: {
+            data: components["schemas"]["LotteryResultPage"];
+            request_id: string;
+        };
+        LotteryShareAttributionPage: {
+            items: components["schemas"]["LotteryShareAttributionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryShareAttributionPageResponseBody: {
+            data: components["schemas"]["LotteryShareAttributionPage"];
+            request_id: string;
+        };
+        LotteryShareAttributionResponseBody: {
+            data: components["schemas"]["LotteryShareAttributionSubmitView"];
+            request_id: string;
+        };
+        LotteryShareAttributionSubmitView: {
+            reason?: string | null;
+            /** Format: int64 */
+            rewarded_code_count: number;
+            status: string;
+        };
+        LotteryShareAttributionView: {
+            reason?: string | null;
+            /** Format: int64 */
+            rewarded_code_count: number;
+            /** Format: uint64 */
+            sharer_user_id?: number | null;
+            status: string;
+            /** Format: uint64 */
+            visitor_user_id?: number | null;
+        };
+        LotteryShareTokenResponseBody: {
+            data: components["schemas"]["LotteryShareTokenView"];
+            request_id: string;
+        };
+        LotteryShareTokenView: {
+            /** Format: date-time */
+            expires_at: string;
+            token: string;
+        };
+        LotteryVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        LotteryWinPage: {
+            items: components["schemas"]["LotteryWinView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryWinPageResponseBody: {
+            data: components["schemas"]["LotteryWinPage"];
+            request_id: string;
+        };
+        LotteryWinResponseBody: {
+            data: components["schemas"]["LotteryWinView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryWinStatus: "pending" | "fulfilled" | "expired";
+        LotteryWinView: {
+            /** Format: uint64 */
+            campaign_id: number;
+            campaign_title: string;
+            code: string;
+            /** Format: uint64 */
+            code_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            fulfilled_at?: string | null;
+            fulfillment_note?: string | null;
+            /** Format: uint64 */
+            id: number;
+            prize: components["schemas"]["LotteryPrizeView"];
+            status: components["schemas"]["LotteryWinStatus"];
+            /** Format: uint64 */
+            user_id: number;
+            /** Format: uint64 */
+            version: number;
+        };
         MarketplaceListingImageView: {
             /** Format: uint64 */
             media_id?: number | null;
@@ -11318,6 +11981,114 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["HomeFeedPageResponseBody"];
+            };
+        };
+        /** @description 抽奖活动分页 */
+        LotteryCampaignPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignPageResponseBody"];
+            };
+        };
+        /** @description 抽奖活动 */
+        LotteryCampaignResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignResponseBody"];
+            };
+        };
+        /** @description 我的抽奖码分页 */
+        LotteryCodePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCodePageResponseBody"];
+            };
+        };
+        /** @description 到期开奖批次分页 */
+        LotteryDrawBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawBatchPageResponseBody"];
+            };
+        };
+        /** @description 抽奖结果分页 */
+        LotteryDrawPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawPageResponseBody"];
+            };
+        };
+        /** @description 抽奖结果 */
+        LotteryDrawResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawResponseBody"];
+            };
+        };
+        /** @description 公开开奖结果分页 */
+        LotteryResultPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryResultPageResponseBody"];
+            };
+        };
+        /** @description 分享归因分页 */
+        LotteryShareAttributionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareAttributionPageResponseBody"];
+            };
+        };
+        /** @description 分享归因提交结果 */
+        LotteryShareAttributionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareAttributionResponseBody"];
+            };
+        };
+        /** @description 分享入口 */
+        LotteryShareTokenResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareTokenResponseBody"];
+            };
+        };
+        /** @description 中奖履约分页 */
+        LotteryWinPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryWinPageResponseBody"];
+            };
+        };
+        /** @description 中奖履约详情 */
+        LotteryWinResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryWinResponseBody"];
             };
         };
         /** @description 二手商品分页 */
@@ -17279,6 +18050,419 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["HomeFeedPageResponse"];
+        };
+    };
+    ListAdminLotteryCampaigns: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignPageResponse"];
+        };
+    };
+    CreateAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["LotteryCampaignResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CancelAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    StopAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminLotteryCodes: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCodePageResponse"];
+        };
+    };
+    ListAdminLotteryDrawBatches: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawBatchPageResponse"];
+        };
+    };
+    RetryAdminLotteryDrawBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["LotteryDrawBatchPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminLotteryShareAttributions: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryShareAttributionPageResponse"];
+        };
+    };
+    ListAdminLotteryWins: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryWinPageResponse"];
+        };
+    };
+    FulfillAdminLotteryWin: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryFulfillWinInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryWinResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListLotteryCampaigns: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignPageResponse"];
+        };
+    };
+    GetLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListMyLotteryCodes: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCodePageResponse"];
+        };
+    };
+    ListMyLotteryDraws: {
+        parameters: {
+            query?: {
+                request_key?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawPageResponse"];
+        };
+    };
+    DrawLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    JoinLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListLotteryCampaignResults: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryResultPageResponse"];
+        };
+    };
+    SubmitLotteryShareAttribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryShareAttributionResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateLotteryShareToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: components["responses"]["LotteryShareTokenResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetLotteryWin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryWinResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminMarketplaceListings: {

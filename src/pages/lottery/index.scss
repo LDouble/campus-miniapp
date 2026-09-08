@@ -1,0 +1,60 @@
+@use '../../styles/tokens' as token;
+
+page { background: token.$color-page; }
+
+.lottery-list-page {
+  min-height: 100vh;
+  color: token.$color-text-body;
+  background: token.$color-page;
+
+  &__content { padding: token.$space-3 token.$space-4 calc(64rpx + env(safe-area-inset-bottom)); }
+}
+
+.lottery-state {
+  padding: 120rpx token.$space-3;
+  color: token.$color-text-secondary;
+  font-size: 28rpx;
+  line-height: 1.6;
+  text-align: center;
+
+  text { display: block; }
+  text + text { margin-top: token.$space-2; color: token.$color-primary; }
+  &--error { color: token.$color-danger; }
+}
+
+.lottery-load-more {
+  padding: token.$space-3;
+  color: token.$color-primary-strong;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.lottery-campaign-card {
+  display: flex;
+  gap: token.$space-2;
+  padding: token.$space-2;
+  margin-bottom: token.$space-2;
+  border: 2rpx solid token.$color-border;
+  border-radius: token.$radius-lg;
+  background: token.$color-surface;
+  transition: opacity token.$motion-press ease, transform token.$motion-press ease;
+
+  &:active { opacity: .82; transform: scale(.99); }
+
+  &__cover {
+    flex: none;
+    width: 148rpx;
+    height: 148rpx;
+    border-radius: token.$radius-md;
+    background: token.$color-surface-primary;
+
+    &--placeholder { background: linear-gradient(135deg, token.$color-primary, #38bdf8); }
+  }
+
+  &__body { display: flex; flex: 1; min-width: 0; flex-direction: column; justify-content: center; }
+  &__head { display: flex; gap: token.$space-1; align-items: center; justify-content: space-between; }
+  &__head > text:first-child { overflow: hidden; color: token.$color-text-heading; font-size: 32rpx; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  &__status { flex: none; padding: 6rpx 12rpx; border-radius: token.$radius-sm; background: token.$color-surface-primary; color: token.$color-primary-strong; font-size: 20rpx; }
+  &__meta, &__prizes { display: block; margin-top: 10rpx; overflow: hidden; color: token.$color-text-secondary; font-size: 24rpx; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+  &__prizes { color: token.$color-text-body; }
+}
