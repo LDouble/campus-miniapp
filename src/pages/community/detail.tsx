@@ -29,6 +29,11 @@ import { useCampusShare } from '../../features/share'
 import { plainStickerContent } from '../../features/stickers/content'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import { showActionSheetSelection } from '../../utils/action-sheet'
+import {
+  communityPinActionLabel,
+  confirmCommunityPinAction,
+  getCommunityPinAction,
+} from '../../features/community/pin-action'
 import './detail.scss'
 
 const communityDetailIcons = {
@@ -42,6 +47,8 @@ const communityDetailIcons = {
 const actionLabels: Record<string, string> = {
   edit: '编辑动态',
   withdraw: '删除动态',
+  pin: '置顶到本版块',
+  unpin: '取消本版块置顶',
 }
 
 const formatDetailDateTime = (value?: string | null) => (
@@ -54,6 +61,7 @@ export default function CommunityDetailPage() {
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [loading, setLoading] = useState(true)
   const [deletingPost, setDeletingPost] = useState(false)
+  const [pinningPost, setPinningPost] = useState(false)
   const [error, setError] = useState('')
 
   const load = async (id: number, commentId = 0) => {
@@ -159,6 +167,36 @@ export default function CommunityDetailPage() {
     }
   }
 
+  const runPinAction = async () => {
+    if (!post || pinningPost || deletingPost) return
+    const action = getCommunityPinAction(post)
+    if (!action || !await confirmCommunityPinAction(action, '当前帖子所属')) return
+    setPinningPost(true)
+    try {
+      const updated = await lifeServicesRepository.updateCampusCirclePostPin(post.id, {
+        expectedVersion: post.version,
+        pinned: action === 'pin',
+      })
+      setPost(updated)
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: `${communityPinActionLabel(action)}成功`, icon: 'success' })
+    } catch (actionError) {
+      if (isApiError(actionError) && (actionError.statusCode === 403 || actionError.statusCode === 409)) {
+        await load(post.id, focusedCommentId)
+      }
+      Taro.showToast({
+        title: isApiError(actionError)
+          ? actionError.statusCode === 409
+            ? '状态已变化，已刷新最新内容'
+            : actionError.message
+          : '操作失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setPinningPost(false)
+    }
+  }
+
   const canReportPost = Boolean(
     post
     && post.viewer_relation !== 'owner'
@@ -177,10 +215,14 @@ export default function CommunityDetailPage() {
   const permissionActions = post ? buildDetailFooterActions({
     availableActions: post.available_actions,
     labels: actionLabels,
-    priority: ['edit', 'withdraw'],
+    priority: ['pin', 'unpin', 'edit', 'withdraw'],
     dangerActions: ['withdraw'],
-    busy: deletingPost,
-    onAction: (action) => action === 'edit' ? editPost() : void deletePost(),
+    busy: deletingPost || pinningPost,
+    onAction: (action) => {
+      if (action === 'edit') editPost()
+      else if (action === 'withdraw') void deletePost()
+      else void runPinAction()
+    },
   }) : []
 
   const postMenuItems = [
@@ -192,7 +234,7 @@ export default function CommunityDetailPage() {
   ]
 
   const openPostMenu = async () => {
-    if (postMenuItems.length === 0 || deletingPost) return
+    if (postMenuItems.length === 0 || deletingPost || pinningPost) return
     const tapIndex = await showActionSheetSelection(postMenuItems.map((item) => item.label))
     const selected = tapIndex === null ? null : postMenuItems[tapIndex]
     if (selected) selected.run()
