@@ -56,6 +56,11 @@ const sourceLabel = (value: CourseIntelligenceReview['source_kind']) => (
   value === 'contribution' ? '学生投稿' : '历史讨论'
 )
 
+const teacherAttribution = (review: CourseIntelligenceReview) => {
+  const teacherName = review.teacher_name?.trim()
+  return teacherName ? `教师：${teacherName}` : '未注明教师 · 课程通用评价'
+}
+
 export default function CourseIntelligenceReader({
   courseCode,
   currentTeacherName = '',
@@ -288,6 +293,9 @@ export default function CourseIntelligenceReader({
                         <Text>{dimensionLabels[review.dimension]}</Text>
                         <Text>{sourceLabel(review.source_kind)} · {review.applicable_term || reviewDate(review.published_at)}</Text>
                       </View>
+                      <Text className={`course-intelligence__review-attribution ${review.teacher_name?.trim() ? '' : 'course-intelligence__review-attribution--unspecified'}`}>
+                        {teacherAttribution(review)}
+                      </Text>
                       <Text className='course-intelligence__review-content'>{review.content}</Text>
                       <View className='course-intelligence__evidence'>
                         <Text>原文证据</Text>

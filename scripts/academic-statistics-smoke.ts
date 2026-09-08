@@ -99,6 +99,12 @@ assert.ok(
     && courseIntelligenceReader.includes('查看观点'),
   '考试摘要应能切换考试维度并定位原始观点列表',
 )
+assert.ok(
+  courseIntelligenceReader.includes('教师：${teacherName}')
+    && courseIntelligenceReader.includes('未注明教师 · 课程通用评价')
+    && courseIntelligenceReader.includes('review.teacher_name?.trim()'),
+  '原始观点应展示教师归属，缺少教师名时明确标记为课程通用评价',
+)
 
 const statisticsRepository = readFileSync(
   resolve(__dirname, '../src/features/academic-statistics/repository.ts'),

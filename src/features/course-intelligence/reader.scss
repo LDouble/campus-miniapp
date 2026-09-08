@@ -187,6 +187,24 @@
     font-weight: 600;
   }
 
+  &__review-attribution {
+    display: inline-block;
+    margin-top: 14rpx;
+    padding: 7rpx 12rpx;
+    border: 1rpx solid var(--ousea-ocean-100, #e3effe);
+    border-radius: 12rpx;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: 22rpx;
+    line-height: 1.4;
+
+    &--unspecified {
+      border-color: var(--ousea-bg-line, #e8edf4);
+      background: var(--ousea-bg-page, #f5f8fc);
+      color: var(--ousea-ink-500, #6b7a90);
+    }
+  }
+
   &__review-content {
     display: block;
     margin-top: 18rpx;
