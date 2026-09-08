@@ -9,6 +9,13 @@ import {
   type MigrationGuideCopy,
 } from '../app-edition/migration-copy'
 import { navigateToWithGuard } from '../../utils/navigation'
+import {
+  DEFAULT_MARKETPLACE_CATEGORIES,
+  normalizeMarketplaceCategories,
+  type MarketplaceCategory,
+} from './marketplace-categories'
+
+export type { MarketplaceCategory } from './marketplace-categories'
 
 export type CampusSection = {
   start: string
@@ -87,6 +94,7 @@ export type MiniappRuntimeConfig = {
   slogans: RuntimeSlogan[]
   banners: RuntimeBanner[]
   migration_guide: MigrationGuideCopy
+  marketplace_categories: MarketplaceCategory[]
 }
 
 type RuntimeConfigView = components['schemas']['RuntimeConfig']
@@ -219,6 +227,7 @@ export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
     },
   ],
   migration_guide: DEFAULT_MIGRATION_GUIDE_COPY,
+  marketplace_categories: DEFAULT_MARKETPLACE_CATEGORIES,
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -364,6 +373,7 @@ const normalizeRuntimeConfig = (
   modules: normalizeMiniappModules(value.modules),
   subscription_templates: normalizeSubscriptionTemplates(value.subscription_templates),
   migration_guide: normalizeMigrationGuideCopy(value.migration_guide),
+  marketplace_categories: normalizeMarketplaceCategories(value.marketplace_categories),
 })
 
 export const getMigrationGuideCopy = (

@@ -4,6 +4,7 @@ import { Image, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { setCustomTabBarHidden } from '../../../utils/tabbar'
 import FilterSheet from './filter-sheet'
+import type { MarketplaceCategory } from '../../runtime-config'
 import './filters.scss'
 
 const icons = {
@@ -15,13 +16,14 @@ const icons = {
 
 export type MarketplaceFilterValue = {
   intent?: 'sell' | 'wanted'
-  category?: 'general' | 'course_material'
+  category?: string
   minPriceCents?: number
   maxPriceCents?: number
 }
 
 type Props = {
   value: MarketplaceFilterValue
+  categories: MarketplaceCategory[]
   campusControl: ReactNode
   onChange: (value: MarketplaceFilterValue) => void
 }
@@ -85,13 +87,17 @@ const rangeSummary = (value: MarketplaceFilterValue) => {
   return ''
 }
 
-export default function MarketplaceFilters({ value, campusControl, onChange }: Props) {
+export default function MarketplaceFilters({ value, categories, campusControl, onChange }: Props) {
   const [typeMenuVisible, setTypeMenuVisible] = useState(false)
   const [typeMenuTop, setTypeMenuTop] = useState(0)
   const [sheetVisible, setSheetVisible] = useState(false)
   const [minYuan, setMinYuan] = useState('')
   const [maxYuan, setMaxYuan] = useState('')
   const [validation, setValidation] = useState('')
+  const enabledCategories = useMemo(
+    () => categories.filter((category) => category.enabled),
+    [categories],
+  )
   const currentTypeKey = selectedTypeKey(value)
   const currentTypeLabel = typeOptions.find((item) => item.key === currentTypeKey)?.label
     || '全部类型'
@@ -139,7 +145,6 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
       onChange({
         ...value,
         intent: 'sell',
-        category: undefined,
         minPriceCents: 0,
         maxPriceCents: 0,
       })
@@ -147,7 +152,6 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
       onChange({
         ...base,
         intent: key === 'all' ? undefined : key,
-        category: undefined,
       })
     }
     setTypeMenuVisible(false)
@@ -174,6 +178,13 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
       maxPriceCents: max === undefined ? undefined : Math.round(max * 100),
     })
     setSheetVisible(false)
+  }
+
+  const selectCategory = (category?: string) => {
+    onChange({
+      ...value,
+      category,
+    })
   }
 
   return (
@@ -213,7 +224,7 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
         <View
           className='life-service-filter-more'
           ariaRole='button'
-          ariaLabel='打开价格筛选'
+          ariaLabel='打开更多筛选'
           onClick={() => setSheetVisible(true)}
         >
           <Image src={icons.filter} mode='aspectFit' />
@@ -257,14 +268,47 @@ export default function MarketplaceFilters({ value, campusControl, onChange }: P
 
       <FilterSheet
         visible={sheetVisible}
-        title='价格范围'
+        title='更多筛选'
         onClose={() => setSheetVisible(false)}
         onReset={() => {
-          onChange({ intent: value.intent, category: value.category })
+          onChange({ intent: value.intent })
           setSheetVisible(false)
         }}
         onApply={applyCustom}
       >
+        <View className='filter-section'>
+          <Text className='filter-section__title'>商品分类</Text>
+          <View className='market-category-options' ariaRole='radiogroup' ariaLabel='商品分类'>
+            <View
+              className={value.category === undefined
+                ? 'market-category-option market-category-option--active'
+                : 'market-category-option'}
+              ariaRole='radio'
+              ariaLabel={`${value.category === undefined ? '已选择，' : ''}全部`}
+              onClick={() => selectCategory(undefined)}
+            >
+              <Text>全部</Text>
+              {value.category === undefined && <Image src={icons.check} mode='aspectFit' />}
+            </View>
+            {enabledCategories.map((category) => {
+              const selected = value.category === category.id
+              return (
+                <View
+                  key={category.id}
+                  className={selected
+                    ? 'market-category-option market-category-option--active'
+                    : 'market-category-option'}
+                  ariaRole='radio'
+                  ariaLabel={`${selected ? '已选择，' : ''}${category.name}`}
+                  onClick={() => selectCategory(category.id)}
+                >
+                  <Text>{category.name}</Text>
+                  {selected && <Image src={icons.check} mode='aspectFit' />}
+                </View>
+              )
+            })}
+          </View>
+        </View>
         <View className='filter-section'>
           <Text className='filter-section__title'>快捷价格</Text>
           <View className='market-price-options'>

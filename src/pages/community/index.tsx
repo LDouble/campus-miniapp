@@ -44,6 +44,7 @@ import {
   resolveMiniappModule,
   type MiniappModuleKey,
 } from '../../features/runtime-config'
+import { enabledMarketplaceCategories } from '../../features/runtime-config/marketplace-categories'
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { useCampusShare } from '../../features/share'
 import { communityTopicUrl } from '../../features/community/topic'
@@ -94,6 +95,14 @@ export default function CommunityPage() {
   const communitySectionsFreshAt = useRef(0)
   const communitySectionsRequest = useRef(0)
   const navbarMetrics = getNavbarMetrics()
+
+  useEffect(() => {
+    if (!marketFilters.category) return
+    if (enabledMarketplaceCategories(runtimeConfig.marketplace_categories).some(
+      (category) => category.id === marketFilters.category,
+    )) return
+    setMarketFilters((current) => ({ ...current, category: undefined }))
+  }, [marketFilters.category, runtimeConfig.marketplace_categories])
 
   useLoad((options) => {
     if (!isLifeHubSection(options.section)) return
@@ -445,6 +454,7 @@ export default function CommunityPage() {
             section={displayedSection as LifeServiceSection}
             campus={campus}
             marketFilters={marketFilters}
+            marketplaceCategories={enabledMarketplaceCategories(runtimeConfig.marketplace_categories)}
             carpoolFilters={carpoolFilters}
             onCampusChange={setCampus}
             onMarketFiltersChange={setMarketFilters}
@@ -521,6 +531,7 @@ export default function CommunityPage() {
             loadMoreSignal={loadMoreSignal}
             campus={campus}
             marketFilters={marketFilters}
+            marketplaceCategories={enabledMarketplaceCategories(runtimeConfig.marketplace_categories)}
             carpoolFilters={carpoolFilters}
             marketplaceSearchPrefill={marketplaceSearchPrefill}
             onCampusChange={setCampus}
