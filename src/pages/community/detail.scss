@@ -205,6 +205,97 @@ page {
 
 .community-detail__review text:first-child { font-weight: 730; }
 
+.community-detail__admin-withdraw-mask {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  padding: 32rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+  align-items: flex-end;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.68);
+}
+
+.community-detail__admin-withdraw-sheet {
+  width: 100%;
+  padding: 36rpx 32rpx 28rpx;
+  box-sizing: border-box;
+  border-radius: var(--ousea-radius-sheet, 40rpx) var(--ousea-radius-sheet, 40rpx) 32rpx 32rpx;
+  background: var(--campus-surface, #fff);
+}
+
+.community-detail__admin-withdraw-title {
+  display: block;
+  color: var(--campus-text-heading, #1a2333);
+  font-size: var(--ousea-font-size-title, 33rpx);
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  line-height: 1.4;
+}
+
+.community-detail__admin-withdraw-description {
+  display: block;
+  margin-top: 12rpx;
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: var(--ousea-font-size-label, 27rpx);
+  line-height: 1.6;
+}
+
+.community-detail__admin-withdraw-field {
+  margin-top: 24rpx;
+  padding: 16rpx 20rpx 12rpx;
+  border: 1rpx solid var(--campus-border, #e8edf4);
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+  background: var(--campus-surface-subtle, #f5f8fc);
+}
+
+.community-detail__admin-withdraw-textarea {
+  display: block;
+  width: 100%;
+  min-height: 144rpx;
+  box-sizing: border-box;
+  color: var(--campus-text-body, #3a4759);
+  font-size: var(--ousea-font-size-body, 32rpx);
+  line-height: 1.6;
+}
+
+.community-detail__admin-withdraw-field > text {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--campus-text-muted, #a6b2c2);
+  font-size: var(--ousea-font-size-badge, 20rpx);
+  text-align: right;
+}
+
+.community-detail__admin-withdraw-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-top: 28rpx;
+}
+
+.community-detail__admin-withdraw-cancel,
+.community-detail__admin-withdraw-confirm {
+  display: flex;
+  min-height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+  font-size: var(--ousea-font-size-label, 27rpx);
+  font-weight: var(--ousea-font-weight-medium, 500);
+}
+
+.community-detail__admin-withdraw-cancel {
+  background: var(--ousea-danger-50, #fdecec);
+  color: var(--ousea-danger-500, #e5484d);
+}
+
+.community-detail__admin-withdraw-confirm {
+  background: var(--ousea-danger-500, #e5484d);
+  color: #fff;
+}
+
+.community-detail__admin-withdraw-confirm--disabled { opacity: 0.48; }
+
 
 @media (prefers-reduced-motion: reduce) {
   .community-detail__action { transition: none; }

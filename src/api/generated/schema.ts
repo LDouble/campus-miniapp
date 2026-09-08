@@ -1517,6 +1517,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/posts/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理员撤销校园圈帖子 */
+        post: operations["AdminWithdrawCampusCirclePost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/sections": {
         parameters: {
             query?: never;
@@ -7147,7 +7164,7 @@ export interface components {
             version: number;
         };
         /** @enum {string} */
-        CampusCircleViewerAction: "edit" | "withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic";
+        CampusCircleViewerAction: "edit" | "withdraw" | "admin_withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic";
         /** @enum {string} */
         CampusCircleViewerRelation: "anonymous" | "owner" | "other" | "admin";
         CarpoolTripPageResponseBody: {
@@ -13766,6 +13783,32 @@ export interface operations {
         };
     };
     RevokeCampusCirclePostReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    AdminWithdrawCampusCirclePost: {
         parameters: {
             query?: never;
             header: {
