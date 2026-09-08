@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import {
@@ -37,6 +37,8 @@ const dimensionHints: Record<CourseIntelligenceDimension, string> = {
   difficulty_time: '理解难度、复习压力和时间成本',
 }
 
+const REVIEW_PAGE_SIZE = 20
+
 type CourseIntelligenceReaderProps = {
   courseCode: string
   currentTeacherName?: string
@@ -61,12 +63,20 @@ export default function CourseIntelligenceReader({
 }: CourseIntelligenceReaderProps) {
   const [overview, setOverview] = useState<CourseIntelligenceOverview | null>(null)
   const [reviews, setReviews] = useState<CourseIntelligenceReview[]>([])
+  const [reviewPage, setReviewPage] = useState(1)
+  const [reviewTotal, setReviewTotal] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadMoreError, setLoadMoreError] = useState(false)
   const [teacherId, setTeacherId] = useState<number | undefined>()
   const [teacherName, setTeacherName] = useState(currentTeacherName.trim())
   const [dimension, setDimension] = useState<CourseIntelligenceDimension | 'all'>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
   const [reacted, setReacted] = useState<Record<number, boolean>>({})
+  const loadingMoreRef = useRef(false)
+  const reviewQueryKey = `${courseCode}:${teacherId || ''}:${normalized(teacherName)}:${dimension}`
+  const activeReviewQueryRef = useRef(reviewQueryKey)
+  activeReviewQueryRef.current = reviewQueryKey
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -79,11 +89,14 @@ export default function CourseIntelligenceReader({
           teacherName,
           dimension: dimension === 'all' ? undefined : dimension,
           page: 1,
-          pageSize: 20,
+          pageSize: REVIEW_PAGE_SIZE,
         }),
       ])
       setOverview(nextOverview)
       setReviews(nextReviews.items)
+      setReviewPage(nextReviews.page)
+      setReviewTotal(nextReviews.total)
+      setLoadMoreError(false)
       if (teacherId === undefined && teacherName) {
         const matchingTeacher = nextOverview.teachers.find((teacher) => (
           normalized(teacher.teacher_name) === normalized(teacherName)
@@ -111,6 +124,43 @@ export default function CourseIntelligenceReader({
   const selectTeacher = (nextTeacherId?: number | null, nextTeacherName = '') => {
     setTeacherId(nextTeacherId || undefined)
     setTeacherName(nextTeacherName.trim())
+  }
+
+  const loadMoreReviews = async () => {
+    if (loadingMoreRef.current || reviews.length >= reviewTotal) return
+    loadingMoreRef.current = true
+    setLoadingMore(true)
+    setLoadMoreError(false)
+    const requestQueryKey = reviewQueryKey
+    try {
+      const nextPage = reviewPage + 1
+      const result = await listCourseIntelligenceReviews(courseCode, {
+        teacherId,
+        teacherName,
+        dimension: dimension === 'all' ? undefined : dimension,
+        page: nextPage,
+        pageSize: REVIEW_PAGE_SIZE,
+      })
+      if (activeReviewQueryRef.current !== requestQueryKey) return
+      setReviews((current) => {
+        const ids = new Set(current.map((review) => review.id))
+        return current.concat(result.items.filter((review) => !ids.has(review.id)))
+      })
+      setReviewPage(result.page)
+      setReviewTotal(result.total)
+    } catch {
+      if (activeReviewQueryRef.current === requestQueryKey) setLoadMoreError(true)
+    } finally {
+      loadingMoreRef.current = false
+      setLoadingMore(false)
+    }
+  }
+
+  const showExamReviews = () => {
+    setDimension('exam')
+    setTimeout(() => {
+      void Taro.pageScrollTo({ selector: '#course-intelligence-reviews', duration: 300 })
+    }, 0)
   }
 
   const toggleUseful = async (review: CourseIntelligenceReview) => {
@@ -215,7 +265,7 @@ export default function CourseIntelligenceReader({
             </View>
           </View>
 
-          <View className='course-intelligence__section'>
+          <View id='course-intelligence-reviews' className='course-intelligence__section'>
             <View className='course-intelligence__section-heading'>
               <View>
                 <Text>学生原始观点</Text>
@@ -230,41 +280,64 @@ export default function CourseIntelligenceReader({
             </View>
 
             {reviews.length > 0 ? (
-              <View className='course-intelligence__review-list'>
-                {reviews.map((review) => (
-                  <View key={review.id} className='course-intelligence__review-card'>
-                    <View className='course-intelligence__review-meta'>
-                      <Text>{dimensionLabels[review.dimension]}</Text>
-                      <Text>{sourceLabel(review.source_kind)} · {review.applicable_term || reviewDate(review.published_at)}</Text>
-                    </View>
-                    <Text className='course-intelligence__review-content'>{review.content}</Text>
-                    <View className='course-intelligence__evidence'>
-                      <Text>原文证据</Text>
-                      <Text>“{review.evidence_span}”</Text>
-                    </View>
-                    <View className='course-intelligence__review-actions'>
-                      <View className={reacted[review.id] ? 'course-intelligence__review-action course-intelligence__review-action--active' : 'course-intelligence__review-action'} onClick={() => { void toggleUseful(review) }}>
-                        {reacted[review.id] ? '已标记有帮助' : '这条有帮助'}
+              <>
+                <View className='course-intelligence__review-list'>
+                  {reviews.map((review) => (
+                    <View key={review.id} className='course-intelligence__review-card'>
+                      <View className='course-intelligence__review-meta'>
+                        <Text>{dimensionLabels[review.dimension]}</Text>
+                        <Text>{sourceLabel(review.source_kind)} · {review.applicable_term || reviewDate(review.published_at)}</Text>
                       </View>
-                      <View className='course-intelligence__review-action course-intelligence__review-action--muted' onClick={() => { void report(review) }}>举报</View>
+                      <Text className='course-intelligence__review-content'>{review.content}</Text>
+                      <View className='course-intelligence__evidence'>
+                        <Text>原文证据</Text>
+                        <Text>“{review.evidence_span}”</Text>
+                      </View>
+                      <View className='course-intelligence__review-actions'>
+                        <View className={reacted[review.id] ? 'course-intelligence__review-action course-intelligence__review-action--active' : 'course-intelligence__review-action'} onClick={() => { void toggleUseful(review) }}>
+                          {reacted[review.id] ? '已标记有帮助' : '这条有帮助'}
+                        </View>
+                        <View className='course-intelligence__review-action course-intelligence__review-action--muted' onClick={() => { void report(review) }}>举报</View>
+                      </View>
                     </View>
-                  </View>
-                ))}
-              </View>
+                  ))}
+                </View>
+                <View className='course-intelligence__pagination'>
+                  <Text>已展示 {reviews.length} / 共 {reviewTotal} 条</Text>
+                  {reviews.length < reviewTotal ? (
+                    <View
+                      className={`course-intelligence__load-more ${loadingMore ? 'course-intelligence__load-more--disabled' : ''}`}
+                      ariaRole='button'
+                      ariaLabel={loadMoreError ? '重新加载更多观点' : '加载更多观点'}
+                      onClick={() => { void loadMoreReviews() }}
+                    >{loadingMore ? '加载中…' : loadMoreError ? '加载失败，点击重试' : '加载更多'}</View>
+                  ) : (
+                    <Text>已加载全部观点</Text>
+                  )}
+                </View>
+              </>
             ) : (
               <View className='course-intelligence__empty-copy'>当前筛选下还没有具体观点，欢迎分享你的亲身经验。</View>
             )}
           </View>
 
           {overview.exam.sample_count > 0 && (
-            <View className='course-intelligence__exam'>
+            <View
+              className='course-intelligence__exam'
+              ariaRole='button'
+              ariaLabel={`查看${overview.exam.sample_count}条考试相关观点`}
+              onClick={showExamReviews}
+            >
               <View className='course-intelligence__section-heading'>
                 <View>
                   <Text>考试内容与方式</Text>
                   <Text>历史经验不等同于本学期确定安排</Text>
                 </View>
               </View>
-              <Text>{overview.exam.sample_count} 条考试相关观点，具体请结合学期和教师查看。</Text>
+              <View className='course-intelligence__exam-action'>
+                <Text>{overview.exam.sample_count} 条考试相关观点，具体请结合学期和教师查看。</Text>
+                <Text>查看观点</Text>
+              </View>
             </View>
           )}
 

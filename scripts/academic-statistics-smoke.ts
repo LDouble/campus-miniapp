@@ -82,6 +82,24 @@ assert.ok(
   '教师统计面板应能携带教师姓名进入选课情报',
 )
 
+const courseIntelligenceReader = readFileSync(
+  resolve(__dirname, '../src/features/course-intelligence/reader.tsx'),
+  'utf8',
+)
+assert.ok(
+  courseIntelligenceReader.includes('reviewPage + 1')
+    && courseIntelligenceReader.includes('current.concat(result.items.filter')
+    && courseIntelligenceReader.includes('已展示 {reviews.length} / 共 {reviewTotal} 条')
+    && courseIntelligenceReader.includes('加载失败，点击重试'),
+  '选课情报评价列表应支持逐页追加、总数提示和失败重试',
+)
+assert.ok(
+  courseIntelligenceReader.includes("setDimension('exam')")
+    && courseIntelligenceReader.includes("selector: '#course-intelligence-reviews'")
+    && courseIntelligenceReader.includes('查看观点'),
+  '考试摘要应能切换考试维度并定位原始观点列表',
+)
+
 const statisticsRepository = readFileSync(
   resolve(__dirname, '../src/features/academic-statistics/repository.ts'),
   'utf8',
