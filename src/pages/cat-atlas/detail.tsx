@@ -1,7 +1,7 @@
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
-import CustomNavbar from '../../components/custom-navbar'
+import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import { getCat, listCatSightings, setCatFavorite, type CatView, type SightingView } from '../../api/cat-atlas'
 import { formatCatDate, RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
@@ -21,6 +21,7 @@ const heroFallbacks = [
 export default function CatDetailPage() {
   const { params } = useRouter()
   const id = params.id || ''
+  const navbarMetrics = getNavbarMetrics()
   const [cat, setCat] = useState<CatView | null>(null)
   const [sightings, setSightings] = useState<SightingView[]>([])
   const [loading, setLoading] = useState(true)
@@ -94,7 +95,13 @@ export default function CatDetailPage() {
         </View>
       </ScrollView>
       <View className='cat-detail-hero__shade' />
-      <View className='cat-detail-hero__nav'>
+      <View
+        className='cat-detail-hero__nav'
+        style={{
+          top: `${navbarMetrics.statusBarHeight}px`,
+          height: `${navbarMetrics.navigationBarHeight}px`,
+        }}
+      >
         <View className='cat-detail-hero__round-action' ariaLabel='返回' onClick={goBack}><Text>‹</Text></View>
         <View className='cat-detail-hero__nav-right'>
           <View className='cat-detail-hero__round-action' ariaLabel='分享' onClick={share}><Text>↗</Text></View>

@@ -30,6 +30,8 @@ assert.match(source('../src/pages/services/index.tsx'), /cat-atlas.*pages\/cat-a
 assert.doesNotMatch(appConfig, /pagePath: 'pages\/cat-atlas\//u, '猫猫图鉴不应注册为独立 Tab')
 assert.match(catalogList, /cat-list-v2__card/u, '独立列表页应渲染猫咪卡片')
 assert.match(detail, /我遇到它了/u, '详情页应提供目击打卡入口')
+assert.match(detail, /getNavbarMetrics/u, '详情页沉浸式导航应读取胶囊适配指标')
+assert.match(detail, /navigationBarHeight/u, '详情页操作按钮应与胶囊导航高度对齐')
 assert.match(report, /uploadMediaImage/u, '投稿页应提供照片上传、预览和重试')
 assert.match(report, /submitCat/u, '投稿页应提交新猫审核')
 assert.match(map, /区域级目击热点/u, '地图应明确保护精确位置')
