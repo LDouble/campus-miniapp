@@ -313,21 +313,6 @@ page {
   background: linear-gradient(180deg, rgba(61, 35, 26, .62) 0%, rgba(61, 35, 26, .04) 38%, rgba(61, 35, 26, .56) 100%), linear-gradient(110deg, rgba(157, 88, 47, .2), transparent 62%);
 }
 
-.cat-detail-hero__round-action {
-  background: rgba(73, 42, 30, .42);
-  box-shadow: 0 8rpx 18rpx rgba(61, 35, 26, .2);
-}
-
-.cat-detail-hero__nav--actions {
-  left: auto;
-  transition: opacity 180ms ease;
-}
-
-.cat-detail-page > .custom-navbar.custom-navbar--collapsed + .cat-detail-hero .cat-detail-hero__nav--actions {
-  pointer-events: none;
-  opacity: 0;
-}
-
 .cat-detail-hero__slogan {
   background: rgba(73, 42, 30, .24);
 }

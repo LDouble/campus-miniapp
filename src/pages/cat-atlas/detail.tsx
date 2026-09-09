@@ -1,7 +1,7 @@
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
-import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
+import CustomNavbar from '../../components/custom-navbar'
 import { getCat, listCatSightings, setCatFavorite, type CatView, type SightingView } from '../../api/cat-atlas'
 import { formatCatDate, RequestState } from '../../features/cat-atlas/ui'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
@@ -22,7 +22,6 @@ const heroFallbacks = [
 export default function CatDetailPage() {
   const { params } = useRouter()
   const id = params.id || ''
-  const navbarMetrics = getNavbarMetrics()
   const [cat, setCat] = useState<CatView | null>(null)
   const [sightings, setSightings] = useState<SightingView[]>([])
   const [loading, setLoading] = useState(true)
@@ -97,18 +96,6 @@ export default function CatDetailPage() {
         </View>
       </ScrollView>
       <View className='cat-detail-hero__shade' />
-      <View
-        className='cat-detail-hero__nav cat-detail-hero__nav--actions'
-        style={{
-          top: `${navbarMetrics.statusBarHeight}px`,
-          height: `${navbarMetrics.navigationBarHeight}px`,
-          right: `${navbarMetrics.sideWidth + 6}px`,
-        }}
-      >
-        <View className='cat-detail-hero__nav-right'>
-          <View className={`cat-detail-hero__round-action ${isFavorite ? 'is-active' : ''}`} ariaLabel='收藏' onClick={() => void toggleFavorite()}><Image src={heartIcon} mode='aspectFit' /></View>
-        </View>
-      </View>
       <View className='cat-detail-hero__slogan'><Text>在海大的</Text><Text>每一天</Text><Text>都很值得 ♡</Text></View>
       <View className='cat-detail-hero__counter'><Text>▣</Text><Text>{galleryIndex + 1}/{gallery.length}</Text></View>
     </View>
