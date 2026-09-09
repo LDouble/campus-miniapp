@@ -1,6 +1,6 @@
 import { Image, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
 import { listCats, setCatFavorite, type CatSort, type CatView } from '../../api/cat-atlas'
 import { CatCover, RequestState } from '../../features/cat-atlas/ui'
@@ -21,6 +21,7 @@ const tagClass = (index: number) => ['cat-list-v2__tag--blue', 'cat-list-v2__tag
 export default function CatAtlasCatalogList() {
   const [items, setItems] = useState<CatView[]>([])
   const [total, setTotal] = useState(0)
+  const [areaCounts, setAreaCounts] = useState<number[]>(() => areas.map(() => 0))
   const [keyword, setKeyword] = useState('')
   const [area, setArea] = useState('全部')
   const [sort, setSort] = useState(sortOptions[0])
@@ -33,8 +34,17 @@ export default function CatAtlasCatalogList() {
     try {
       const sortValue: CatSort = sort === '最近遇见' ? 'latest_seen' : sort === '最新收录' ? 'newest' : 'popular'
       const page = await listCats({ keyword: keyword.trim(), area: area === '全部' ? undefined : area, sort: sortValue, pageSize: 50 })
+      const campusTotals = await Promise.all(areas.slice(1).map(async (campus) => {
+        try {
+          const campusPage = await listCats({ keyword: keyword.trim(), area: campus, sort: sortValue, pageSize: 1 })
+          return campusPage.total
+        } catch {
+          return null
+        }
+      }))
       setItems(page.items)
       setTotal(page.total)
+      setAreaCounts([page.total, ...campusTotals.map((count, index) => count ?? page.items.filter((cat) => cat.campus === areas[index + 1]).length)])
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : '网络连接不稳定，请稍后重试')
     } finally {
@@ -43,7 +53,6 @@ export default function CatAtlasCatalogList() {
   }, [area, keyword, sort])
   useDidShow(() => { void load() })
   usePullDownRefresh(() => load())
-  const areaCounts = useMemo(() => areas.map((item) => item === '全部' ? total : items.filter((cat) => cat.resident_area.includes(item)).length), [items, total])
   const changeSort = (value: string) => { setSort(value); setSortOpen(false) }
 
   return <View className='cat-list-page'>

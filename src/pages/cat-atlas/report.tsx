@@ -68,9 +68,15 @@ export default function CatReportPage() {
   return <View className={`report-page ${isNew ? 'report-page--new' : 'report-page--sighting'}`}>
     <View className='report-nav'><Text onClick={() => Taro.navigateBack()}>×</Text><Text>{isNew ? '' : '我遇到它了'}</Text><View /></View>
     <View className='report-page__content'>
-      <View className='report-heading'><Text>{isNew ? '发现了一只新猫？' : `我遇到${catName}了！`}</Text><Text>{isNew ? '— 让更多同学认识它吧！ ✦' : '留下这次温柔的相遇吧～'}</Text></View>
+      <View className='report-heading'>
+        <View className='report-heading__eyebrow'><Text>{isNew ? '新猫档案' : '相遇记录'}</Text><Text>OUC · CAT ATLAS</Text></View>
+        <Text className='report-heading__title'>{isNew ? '发现了一只新猫？' : `我遇到${catName}了！`}</Text>
+        <Text className='report-heading__subtitle'>{isNew ? '让更多同学认识这位校园邻居吧' : '把这次温柔的相遇，留在它的档案里'}</Text>
+        <View className='report-heading__meta'><Text>{isNew ? '一张照片 · 一段新的校园记忆' : `${catName} · 校园目击`}</Text><Text>{isNew ? 'NEW' : 'NOTE'}</Text></View>
+      </View>
       {isNew && <>
         <Text className='report-label'>上传照片 <Text>*</Text></Text>
+        <View className='report-upload-caption'><Text>拍下最能认出它的样子</Text><Text>必填 · JPG / PNG</Text></View>
         <View className='report-upload-row'>{renderPhoto()}<View className='report-photo report-photo--add' onClick={() => void chooseImages()}><Text>+</Text><Text>添加照片</Text></View></View>
         <Text className='report-label'>在哪里看到的？ <Text>*</Text></Text>
         <View className='report-options'>{campuses.map((item) => <Text key={item} className={campus === item ? 'is-active' : ''} onClick={() => setCampus(item)}>{item}</Text>)}</View>
@@ -81,7 +87,9 @@ export default function CatReportPage() {
       {!isNew && <>
         <Text className='report-label'>在哪里遇到？</Text><View className='report-options'>{areas.map((item) => <Text key={item} className={area === item ? 'is-active' : ''} onClick={() => setArea(item)}>{item}</Text>)}</View>
         <Text className='report-label'>它在做什么？</Text><View className='report-options'>{actions.map((item) => <Text key={item} className={action === item ? 'is-active' : ''} onClick={() => setAction(item)}>{item}</Text>)}</View>
-        <Text className='report-label'>上传照片 <Text className='report-label__optional'>（可选）</Text></Text><View className='report-upload-row'>{renderPhoto()}<View className='report-photo report-photo--add' onClick={() => void chooseImages()}><Text>+</Text><Text>添加照片</Text></View></View>
+        <Text className='report-label'>上传照片 <Text className='report-label__optional'>（可选）</Text></Text>
+        <View className='report-upload-caption'><Text>给这次相遇留一张现场照片</Text><Text>可选 · 记录此刻</Text></View>
+        <View className='report-upload-row'>{renderPhoto()}<View className='report-photo report-photo--add' onClick={() => void chooseImages()}><Text>+</Text><Text>添加照片</Text></View></View>
       </>}
       <Text className='report-label'>{isNew ? '它有什么特点？' : '想说点什么？'} <Text className='report-label__optional'>（可选）</Text></Text>
       <View className='report-textarea-wrap'><KeyboardSafeTextarea className='report-textarea' value={note} maxlength={200} placeholder={isNew ? '比如毛色、性格、外观特征、经常出现的地方…' : '分享一下你看到它吧～'} onInput={(event) => setNote(event.detail.value)} /><Text>{note.length}/200</Text></View>
