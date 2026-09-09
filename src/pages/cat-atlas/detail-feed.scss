@@ -88,6 +88,8 @@
 }
 
 .cat-detail-hero__nav {
+  position: fixed;
+  z-index: 12;
   top: calc(constant(safe-area-inset-top) + 24rpx);
   top: calc(env(safe-area-inset-top) + 24rpx);
   right: 30rpx;
