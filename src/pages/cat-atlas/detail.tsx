@@ -119,6 +119,10 @@ export default function CatDetailPage() {
       <View className='cat-detail-archive'>
         <Text className='cat-detail-archive__title'>基础档案</Text>
         <View className='cat-detail-archive__panel'>{fields.map(([label, value]) => <View className='cat-detail-archive__row' key={label}><Text>{label}</Text><Text>{value}</Text></View>)}</View>
+        <View className='cat-detail-archive__suggestion' onClick={() => void navigateToWithGuard(`/pages/cat-atlas/profile-suggestion?id=${cat.id}&name=${encodeURIComponent(cat.name)}`)}>
+          <View><Text>档案信息有补充？</Text><Text>别名、性格、毛色和常驻区域都可以提交建议</Text></View>
+          <Text>去补充 ›</Text>
+        </View>
       </View>
 
       <View className='cat-detail-live-preview'>

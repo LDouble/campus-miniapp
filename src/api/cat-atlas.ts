@@ -37,6 +37,11 @@ export type CatPage = { items: CatView[]; page: number; page_size: number; total
 export type SightingPage = { items: SightingView[]; page: number; page_size: number; total: number }
 export type CatCatalog = { seen_count: number; total_count: number; seen_cats: CatView[]; unseen_cats: CatView[] }
 export type CatHotspot = { area: string; sighting_count: number; last_seen_at: string }
+export type CatProfileSuggestionField = 'aliases' | 'gender' | 'coat' | 'traits' | 'resident_area'
+export type CatProfileSuggestion = {
+  id: number; cat_id: number; field: CatProfileSuggestionField; proposed_value: string; note?: string | null
+  status: 'pending' | 'approved' | 'rejected'; rejection_reason?: string | null; version: number; created_at: string
+}
 
 export type CatSort = 'newest' | 'latest_seen' | 'popular'
 
@@ -60,6 +65,13 @@ export const createCatSighting = (id: string | number, input: {
 }) => apiRequest<SightingPage>({
   path: `/api/v1/cats/${id}/sightings`, method: 'POST', data: input,
   idempotencyKey: createIdempotencyKey(`cat:${id}:sighting`),
+})
+
+export const createCatProfileSuggestion = (id: string | number, input: {
+  field: CatProfileSuggestionField; proposed_value: string; note?: string
+}) => apiRequest<CatProfileSuggestion>({
+  path: `/api/v1/cats/${id}/profile-suggestions`, method: 'POST', data: input,
+  idempotencyKey: createIdempotencyKey(`cat:${id}:profile-suggestion`),
 })
 
 export const getMyCatCatalog = () => apiRequest<CatCatalog>({ path: '/api/v1/me/cat-catalog' })
