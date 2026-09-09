@@ -399,3 +399,52 @@ page { background: var(--ousea-bg-page); }
     animation: none;
   }
 }
+
+/* 顶部导航与插画同层，状态栏进入头图形成真正的沉浸式首屏。 */
+.cat-list-page {
+  position: relative;
+}
+
+.cat-list-page > .custom-navbar {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0 !important;
+  min-height: 0;
+}
+
+.cat-list-page > .custom-navbar .custom-navbar__fixed {
+  color: #fff;
+  border-bottom-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.cat-list-page > .custom-navbar .custom-navbar__center {
+  opacity: 1;
+  transform: none;
+}
+
+.cat-list-page > .custom-navbar .custom-navbar__title {
+  color: #fff;
+  text-shadow: 0 3rpx 10rpx rgba(17, 55, 63, .42);
+}
+
+.cat-list-page > .custom-navbar .custom-navbar__back {
+  color: #fff;
+  background: rgba(17, 67, 78, .26);
+  box-shadow: 0 6rpx 14rpx rgba(13, 47, 56, .16);
+  backdrop-filter: blur(12px);
+}
+
+.cat-list-page__scroll {
+  padding-top: 0;
+}
+
+.cat-list-v2__hero-badge {
+  top: calc(constant(safe-area-inset-top) + 112rpx);
+  top: calc(env(safe-area-inset-top) + 112rpx);
+}
