@@ -634,21 +634,21 @@
 
 .report-location-primary {
   display: flex;
-  min-height: 92rpx;
+  min-height: 104rpx;
   align-items: center;
   justify-content: space-between;
-  gap: 16rpx;
+  gap: 12rpx;
   box-sizing: border-box;
-  padding: 16rpx 22rpx;
-  border: 2rpx solid #a7d4db;
-  border-radius: 24rpx 18rpx 24rpx 18rpx;
-  background: linear-gradient(145deg, rgba(240, 251, 252, .96), rgba(232, 246, 252, .88));
-  box-shadow: 0 8rpx 18rpx rgba(44, 112, 133, .08);
+  padding: 18rpx 18rpx 18rpx 20rpx;
+  border: 2rpx solid #deebef;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(46, 92, 110, .07);
   transition: transform .18s ease, box-shadow .18s ease;
 }
 
 .report-location-primary:active {
-  box-shadow: 0 4rpx 10rpx rgba(44, 112, 133, .06);
+  box-shadow: 0 4rpx 10rpx rgba(46, 92, 110, .05);
   transform: scale(.985);
 }
 
@@ -656,47 +656,56 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 14rpx;
+  flex: 1;
+  gap: 16rpx;
 }
 
 .report-location-primary__icon {
   display: flex;
-  width: 58rpx;
-  height: 58rpx;
+  width: 64rpx;
+  height: 64rpx;
   align-items: center;
   justify-content: center;
-  flex: 0 0 58rpx;
+  flex: 0 0 64rpx;
   border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(145deg, #43b4cf, #2f89bf);
-  font-size: 34rpx;
-  line-height: 1;
+  background: #edf7ff;
 }
 
-.report-location-primary__main > view {
+.report-location-primary__icon image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.report-location-primary__copy {
   display: flex;
   min-width: 0;
   gap: 5rpx;
   flex-direction: column;
 }
 
-.report-location-primary__main > view text:first-child {
+.report-location-primary__copy text:first-child {
   overflow: hidden;
-  color: #24516a;
-  font-size: 26rpx;
-  font-weight: 650;
+  color: #234a60;
+  font-size: 27rpx;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.report-location-primary__main > view text:last-child {
+.report-location-primary__copy text:last-child {
+  max-width: 440rpx;
   color: #7c9aa5;
   font-size: 20rpx;
+  line-height: 1.45;
 }
 
 .report-location-primary__action {
   flex: 0 0 auto;
-  color: #2e83b2;
+  padding: 12rpx 16rpx;
+  border: 2rpx solid #c9e3ed;
+  border-radius: 999rpx;
+  color: #277fae;
+  background: #f3fbff;
   font-size: 21rpx;
   font-weight: 600;
 }

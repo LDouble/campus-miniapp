@@ -42,6 +42,8 @@ assert.match(report, /uploadMediaImage/u, '投稿页应提供照片上传、预�
 assert.match(report, /submitCat/u, '投稿页应提交新猫审核')
 assert.match(report, /Taro\.getLocation/u, '目击投稿页应优先获取当前位置')
 assert.match(report, /report-location-primary/u, '目击投稿页应展示定位优先的地点入口')
+assert.match(report, /locationSnapshot/u, '目击投稿页应展示定位返回的经纬度和精度')
+assert.doesNotMatch(report, /useEffect/u, '目击投稿页不应进入页面后自动请求定位')
 assert.match(appConfig, /scope\.userLocation/u, '小程序应声明定位用途说明')
 assert.match(appConfig, /requiredPrivateInfos: \['getLocation'\]/u, '小程序应声明 getLocation 隐私接口')
 assert.match(map, /区域级目击热点/u, '地图应明确保护精确位置')
