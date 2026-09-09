@@ -1,3 +1,6 @@
-// 猫猫图鉴的入口页直接复用全部图鉴列表。
-// 保留 list 路由用于兼容旧版本深链接，但不再展示独立的宣传首页。
-export { default } from './list'
+import CatalogList from './catalog-list'
+
+// 猫猫图鉴入口直接展示全部图鉴；页面模块本身只注册一次 Page。
+export default function CatAtlasIndexPage() {
+  return <CatalogList />
+}
