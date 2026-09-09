@@ -800,6 +800,149 @@
   opacity: .58;
 }
 
+/* 我遇到了：用暖米白与杏橙强调相遇记录，和图鉴页的冷色浏览态区分。 */
+.report-page--sighting {
+  color: #5b463b;
+  background-color: #fff8ed;
+  background-image: radial-gradient(rgba(201, 120, 62, .065) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #fff4e4 0, #f8f6ef 100%);
+}
+
+.report-page--sighting .custom-navbar__fixed {
+  color: #5b463b;
+  border-bottom-color: rgba(229, 205, 179, .86);
+  background: rgba(255, 248, 237, .94);
+}
+
+.report-page--sighting .custom-navbar__title,
+.report-page--sighting .custom-navbar__back {
+  color: #5b463b;
+}
+
+.report-page--sighting .report-heading {
+  border-color: rgba(220, 178, 133, .72);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .92), rgba(255, 245, 228, .86));
+  box-shadow: 0 16rpx 28rpx rgba(157, 102, 58, .08), inset 0 1rpx 0 rgba(255, 255, 255, .92);
+}
+
+.report-page--sighting .report-heading__eyebrow > text:first-child {
+  background: #fff0dc;
+  color: #9a643c;
+}
+
+.report-page--sighting .report-heading__title,
+.report-page--sighting .report-label {
+  color: #604738;
+}
+
+.report-page--sighting .report-heading__subtitle,
+.report-page--sighting .report-location-fallback,
+.report-page--sighting .report-custom-area__hint {
+  color: #9d806d;
+}
+
+.report-page--sighting .report-heading__meta > text:last-child {
+  color: #bd713b;
+}
+
+.report-page--sighting .report-label::before {
+  background: #df9856;
+}
+
+.report-page--sighting .report-upload-caption > text:last-child {
+  color: #b27d59;
+}
+
+.report-page--sighting .report-options .is-active {
+  border-color: #e5b37d;
+  background: linear-gradient(145deg, #fff4e2, #ffecd1);
+  color: #a75e32;
+  box-shadow: 0 7rpx 14rpx rgba(189, 119, 56, .12);
+}
+
+.report-page--sighting .report-photo--add {
+  border-color: #e4c29e;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .9), rgba(255, 244, 228, .84));
+  color: #a67c60;
+}
+
+.report-page--sighting .report-photo--add text:first-child {
+  border-color: #d9a875;
+  background: rgba(255, 255, 255, .78);
+  color: #c9783e;
+}
+
+.report-page--sighting .report-photo--add text:last-child {
+  color: #9d765c;
+}
+
+.report-page--sighting .report-location-primary {
+  border-color: #ead9c7;
+  box-shadow: 0 8rpx 20rpx rgba(133, 92, 58, .08);
+}
+
+.report-page--sighting .report-location-primary__icon {
+  background: #fff0dc;
+}
+
+.report-page--sighting .report-location-primary__copy text:first-child {
+  color: #604738;
+}
+
+.report-page--sighting .report-location-primary__copy text:last-child {
+  color: #9d806d;
+}
+
+.report-page--sighting .report-location-primary__action {
+  border-color: #e8c69f;
+  color: #a75e32;
+  background: #fff6e8;
+}
+
+.report-page--sighting .report-custom-area {
+  border-color: rgba(225, 185, 142, .78);
+  background: rgba(255, 251, 244, .84);
+  box-shadow: 0 6rpx 14rpx rgba(133, 92, 58, .045);
+}
+
+.report-page--sighting .report-custom-area__input-wrap {
+  border-color: #ecd8c0;
+  background: rgba(255, 247, 235, .9);
+}
+
+.report-page--sighting .report-custom-area__input {
+  color: #604738;
+}
+
+.report-page--sighting .report-textarea-wrap {
+  border-color: rgba(225, 204, 179, .9);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .92), rgba(255, 247, 235, .84));
+  box-shadow: 0 8rpx 16rpx rgba(133, 92, 58, .055);
+}
+
+.report-page--sighting .report-textarea {
+  color: #604738;
+}
+
+.report-page--sighting .report-footer {
+  border-top-color: rgba(225, 204, 179, .86);
+  background: rgba(255, 249, 240, .92);
+  box-shadow: 0 -10rpx 26rpx rgba(133, 92, 58, .08);
+}
+
+.report-page--sighting .report-submit {
+  background: linear-gradient(135deg, #ad5c37, #984b31);
+  box-shadow: 0 14rpx 28rpx rgba(152, 75, 49, .22);
+}
+
+.report-page--sighting::before {
+  border-color: rgba(201, 120, 62, .18);
+  box-shadow: 0 0 0 28rpx rgba(201, 120, 62, .05), 0 0 0 58rpx rgba(201, 120, 62, .028);
+}
+
+.report-page--sighting::after {
+  background: rgba(229, 169, 105, .13);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .report-photo,
   .report-options text,

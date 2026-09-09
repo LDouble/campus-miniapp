@@ -13,7 +13,7 @@ import './catalog-report.scss'
 const areas = ['一食堂', '图书馆', '宿舍区', '小树林', '教学楼', '其他']
 const campuses = ['崂山校区', '鱼山校区', '西海岸校区']
 const actions = ['睡觉', '干饭', '散步', '发呆', '营业中']
-const locationIcon = require('../../assets/icons/location.svg')
+const locationIcon = require('../../assets/icons/location-warm.svg')
 
 type LocationSnapshot = { name?: string; address?: string; latitude: number; longitude: number; accuracy?: number }
 
