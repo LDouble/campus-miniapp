@@ -73,7 +73,8 @@ export default function CatSightingsPage() {
             <View className='cat-stitch-feed-card__identity'><Text>{item.reporter_name || '匿名用户'}</Text><View><Image src={locationIcon} mode='aspectFit' /><Text>{item.area}</Text></View></View>
             <Text className='cat-stitch-feed-card__time'>{formatTimelineTime(item.created_at)}</Text>
           </View>
-          <Text className='cat-stitch-feed-card__note'>{item.note || `它正在${item.activity}`}</Text>
+          <View className='cat-stitch-feed-card__activity'><Text>它在{item.activity || '悠闲活动'}</Text></View>
+          <Text className='cat-stitch-feed-card__note'>{item.note || '记录了这次相遇'}</Text>
           <Image className='cat-stitch-feed-card__photo' src={photo} mode='aspectFill' />
           <View className={`cat-stitch-feed-card__like ${isLiked ? 'is-liked' : ''}`} onClick={async () => { const previous = item; setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, liked: !isLiked, like_count: Math.max(0, entry.like_count + (isLiked ? -1 : 1)) } : entry)); try { const state = await setSightingLiked(item.id, !isLiked); setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, liked: state.liked, like_count: state.like_count } : entry)) } catch { setItems((current) => current.map((entry) => entry.id === item.id ? previous : entry)) } }}><Image src={heartIcon} mode='aspectFit' /><Text>{item.like_count}</Text></View>
         </View>

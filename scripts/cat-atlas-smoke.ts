@@ -40,6 +40,8 @@ assert.match(detail, /title=\{cat\.name\}/u, '详情页吸顶导航应显示当�
 assert.match(detail, /immersive=\{!headerCollapsed\}/u, '详情页首屏应保持沉浸式导航')
 assert.match(detail, /cat-detail-bottom__button--activity/u, '详情页应提供固定的最近动态按钮')
 assert.match(detail, /cat-detail-bottom__button--report/u, '详情页应提供固定的目击按钮')
+assert.match(detail, /cat-detail-live-preview__activity/u, '详情页最近动态应明确展示猫咪当时在做什么')
+assert.match(source('../src/pages/cat-atlas/sightings.tsx'), /cat-stitch-feed-card__activity/u, '动态列表应明确展示猫咪当时在做什么')
 assert.doesNotMatch(detail, /ariaLabel='分享'/u, '详情页不应显示与微信胶囊重复的分享快捷按钮')
 assert.doesNotMatch(detail, /ariaLabel='收藏'/u, '详情页封面不应显示遮挡图片的收藏快捷按钮')
 assert.doesNotMatch(detail, /出没地图|给它留言|cat-detail-live-preview--combined|cat-detail-shortcuts/u, '详情页不应展示已下线或重复入口')

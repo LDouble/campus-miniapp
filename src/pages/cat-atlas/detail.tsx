@@ -122,7 +122,11 @@ export default function CatDetailPage() {
       <View className='cat-detail-live-preview'>
         <View className='cat-detail-live-preview__head'><Text>最近动态</Text><Text onClick={() => void navigateToWithGuard(sightingsPath)}>查看全部</Text></View>
         {sightings.length > 0
-          ? sightings.map((item) => <View className='cat-detail-live-preview__row' key={item.id}><Text>{item.reporter_name} 在 {item.area} 遇见了它</Text><Text>{item.note || item.activity}</Text></View>)
+          ? sightings.map((item) => <View className='cat-detail-live-preview__row' key={item.id}>
+            <Text>{item.reporter_name} 在 {item.area} 遇见了它</Text>
+            <View className='cat-detail-live-preview__activity'><Text>它在{item.activity || '悠闲活动'}</Text></View>
+            <Text className='cat-detail-live-preview__note'>{item.note || '记录了这次相遇'}</Text>
+          </View>)
           : <View className='cat-detail-live-preview__empty'><Text>还没有新的相遇记录</Text><Text>成为第一个记录它的人吧</Text></View>}
       </View>
     </View>

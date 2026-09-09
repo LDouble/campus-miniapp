@@ -388,6 +388,25 @@ page {
   color: #745748;
 }
 
+.cat-detail-live-preview__activity,
+.cat-stitch-feed-card__activity {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5rpx 14rpx;
+  border: 1rpx solid #f0d4b4;
+  border-radius: 999rpx;
+  color: #a75b36;
+  background: #fff0df;
+  font-size: 21rpx;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.cat-detail-live-preview__note {
+  color: #9a7e6b;
+}
+
 .cat-detail-bottom {
   background: linear-gradient(0deg, rgba(255, 253, 247, .99) 72%, rgba(255, 253, 247, 0));
 }
@@ -450,6 +469,10 @@ page {
 
 .cat-stitch-feed-card__note {
   color: #745748;
+}
+
+.cat-stitch-feed-card__activity {
+  margin-top: 22rpx;
 }
 
 .cat-stitch-feed-card__like {
