@@ -32,9 +32,9 @@ page { background: var(--ousea-bg-page); }
 /* 猫咪图鉴 · 校园野外档案馆视觉层 */
 .cat-list-page {
   min-height: 100vh;
-  background-color: #f4f8fc;
-  background-image: radial-gradient(rgba(42, 126, 199, .07) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #eef7ff 0, #f7fbf6 46%, #fffaf2 100%);
-  background-size: 26rpx 26rpx, 100% 100%;
+  background-color: #f8f7f1;
+  background-image: radial-gradient(180rpx 120rpx at 4% 24%, rgba(239, 176, 102, .13), transparent 72%), radial-gradient(220rpx 160rpx at 96% 54%, rgba(88, 170, 153, .11), transparent 74%), linear-gradient(180deg, #f1f8f7 0, #faf9f3 52%, #f5eee2 100%);
+  background-size: auto;
 }
 
 .cat-list-page__scroll {
@@ -43,9 +43,9 @@ page { background: var(--ousea-bg-page); }
 }
 
 .cat-list-v2__hero {
-  height: 372rpx;
-  border-radius: 0 0 56rpx 56rpx;
-  box-shadow: 0 20rpx 46rpx rgba(30, 97, 157, .16);
+  height: 424rpx;
+  border-radius: 0 0 62rpx 62rpx;
+  box-shadow: 0 22rpx 48rpx rgba(53, 94, 93, .18);
   isolation: isolate;
 }
 
@@ -54,38 +54,38 @@ page { background: var(--ousea-bg-page); }
   position: absolute;
   z-index: 1;
   display: block;
-  border: 2rpx solid rgba(255, 255, 255, .52);
+  border: 2rpx solid rgba(255, 250, 220, .58);
   border-radius: 50%;
   content: '';
   pointer-events: none;
 }
 
 .cat-list-v2__hero::before {
-  width: 150rpx;
-  height: 150rpx;
-  top: 44rpx;
-  right: -46rpx;
+  width: 184rpx;
+  height: 184rpx;
+  top: 62rpx;
+  right: -64rpx;
   transform: rotate(18deg);
 }
 
 .cat-list-v2__hero::after {
   width: 18rpx;
   height: 18rpx;
-  top: 116rpx;
-  right: 132rpx;
+  top: 128rpx;
+  right: 146rpx;
   border: 0;
-  background: rgba(255, 226, 167, .9);
-  box-shadow: 38rpx 34rpx 0 rgba(255, 255, 255, .72), -22rpx 56rpx 0 rgba(176, 231, 222, .82);
+  background: rgba(255, 224, 158, .92);
+  box-shadow: 42rpx 38rpx 0 rgba(255, 249, 218, .82), -24rpx 62rpx 0 rgba(171, 226, 209, .84);
 }
 
 .cat-list-v2__hero-image {
-  transform: scale(1.045);
-  animation: cat-atlas-hero-drift 14s ease-in-out infinite alternate;
+  transform: scale(1.035);
+  animation: cat-atlas-hero-drift 18s ease-in-out infinite alternate;
 }
 
 .cat-list-v2__hero-veil {
   z-index: 0;
-  background: linear-gradient(115deg, rgba(11, 75, 130, .84) 0%, rgba(24, 117, 173, .42) 46%, rgba(251, 217, 153, .22) 100%), linear-gradient(0deg, rgba(247, 251, 246, .96) 0, rgba(247, 251, 246, 0) 48%);
+  background: linear-gradient(180deg, rgba(16, 67, 83, .16) 0%, rgba(18, 72, 83, .05) 35%, rgba(25, 67, 70, .7) 100%), linear-gradient(105deg, rgba(31, 102, 128, .42), rgba(239, 174, 99, .08) 72%);
 }
 
 .cat-list-v2__hero-badge {
@@ -94,18 +94,18 @@ page { background: var(--ousea-bg-page); }
   top: calc(env(safe-area-inset-top) + 20rpx);
   left: 32rpx;
   padding: 12rpx 18rpx;
-  border: 2rpx solid rgba(255, 255, 255, .58);
+  border: 2rpx solid rgba(255, 250, 226, .7);
   border-radius: 16rpx 22rpx 16rpx 22rpx;
-  color: #16486d;
-  background: rgba(255, 252, 239, .9);
-  box-shadow: 0 10rpx 24rpx rgba(12, 54, 92, .12);
+  color: #214e5f;
+  background: rgba(255, 250, 232, .88);
+  box-shadow: 0 10rpx 24rpx rgba(30, 73, 76, .16);
   transform: rotate(-2deg);
 }
 
 .cat-list-v2__hero-badge view {
   width: 10rpx;
   height: 10rpx;
-  background: #f29d50;
+  background: #ef9a55;
 }
 
 .cat-list-v2__hero-badge text:first-child {
@@ -114,38 +114,40 @@ page { background: var(--ousea-bg-page); }
 
 .cat-list-v2__hero-copy {
   z-index: 2;
-  right: 28rpx;
-  bottom: 30rpx;
-  left: 28rpx;
-  padding: 20rpx 24rpx;
-  border: 2rpx solid rgba(255, 255, 255, .68);
-  border-radius: 26rpx 18rpx 26rpx 18rpx;
-  background: rgba(255, 255, 255, .78);
-  box-shadow: 0 16rpx 32rpx rgba(25, 78, 114, .16);
-  backdrop-filter: blur(12px);
-  transform: rotate(.6deg);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 94rpx 34rpx 30rpx;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(22, 64, 67, 0), rgba(22, 64, 67, .82) 78%);
+  box-shadow: none;
+  transform: none;
 }
 
 .cat-list-v2__hero-copy text:first-child {
-  color: #173f62;
-  font-size: 32rpx;
-  letter-spacing: 1rpx;
+  color: #fff8e9;
+  font-size: 36rpx;
+  letter-spacing: 2rpx;
+  text-shadow: 0 4rpx 10rpx rgba(15, 50, 53, .32);
 }
 
 .cat-list-v2__hero-copy text:last-child {
-  color: #52718a;
-  font-size: 22rpx;
+  color: rgba(255, 244, 217, .88);
+  font-size: 23rpx;
+  text-shadow: 0 3rpx 8rpx rgba(15, 50, 53, .26);
 }
 
 .cat-list-v2__search {
   position: relative;
   z-index: 3;
   height: 86rpx;
-  margin: -32rpx 28rpx 0;
+  margin: -34rpx 28rpx 0;
   padding: 0 18rpx 0 24rpx;
-  border: 2rpx solid rgba(185, 220, 237, .8);
-  border-radius: 28rpx;
-  box-shadow: 0 16rpx 30rpx rgba(50, 106, 139, .12);
+  border: 2rpx solid rgba(255, 255, 255, .9);
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, .93);
+  box-shadow: 0 18rpx 34rpx rgba(63, 102, 97, .15);
 }
 
 .cat-list-v2__search > text {
@@ -159,14 +161,14 @@ page { background: var(--ousea-bg-page); }
 
 .cat-list-v2__filters {
   gap: 14rpx;
-  padding: 30rpx 28rpx 8rpx;
+  padding: 32rpx 28rpx 8rpx;
 }
 
 .cat-list-v2__filters > text {
   padding: 13rpx 18rpx;
-  border-color: rgba(169, 203, 219, .72);
+  border-color: rgba(164, 199, 204, .78);
   border-radius: 18rpx 22rpx 18rpx 22rpx;
-  background: rgba(255, 255, 255, .72);
+  background: rgba(255, 255, 255, .6);
 }
 
 .cat-list-v2__filters > .is-active {
@@ -209,15 +211,15 @@ page { background: var(--ousea-bg-page); }
   gap: 20rpx;
   padding: 20rpx;
   margin-bottom: 20rpx;
-  border: 2rpx solid rgba(195, 220, 226, .66);
+  border: 2rpx solid rgba(224, 211, 188, .84);
   border-radius: 30rpx 24rpx 30rpx 24rpx;
-  background: rgba(255, 255, 255, .9);
-  box-shadow: 0 12rpx 26rpx rgba(47, 91, 111, .09);
+  background: rgba(255, 252, 244, .94);
+  box-shadow: 0 14rpx 28rpx rgba(91, 84, 68, .1);
   transition: transform .2s ease, box-shadow .2s ease;
 }
 
 .cat-list-v2__card:active {
-  box-shadow: 0 6rpx 12rpx rgba(47, 91, 111, .08);
+  box-shadow: 0 7rpx 14rpx rgba(91, 84, 68, .08);
   transform: translateY(2rpx) scale(.99);
 }
 
@@ -229,7 +231,7 @@ page { background: var(--ousea-bg-page); }
 
 .cat-list-v2__cover .cat-cover {
   border-radius: 28rpx 20rpx 28rpx 20rpx;
-  box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, .7);
+  box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, .78);
 }
 
 .cat-list-v2__rank {
@@ -275,7 +277,8 @@ page { background: var(--ousea-bg-page); }
   justify-content: center;
   flex-basis: 76rpx;
   border-radius: 50%;
-  background: #f3f8fa;
+  border: 2rpx solid #f0e2cb;
+  background: #fff4df;
 }
 
 .cat-list-v2__heart image {
@@ -299,8 +302,8 @@ page { background: var(--ousea-bg-page); }
 }
 
 @keyframes cat-atlas-hero-drift {
-  from { transform: scale(1.045) translate3d(-1%, 0, 0); }
-  to { transform: scale(1.09) translate3d(1%, -1%, 0); }
+  from { transform: scale(1.035) translate3d(-.7%, 0, 0); }
+  to { transform: scale(1.075) translate3d(.7%, -1%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
