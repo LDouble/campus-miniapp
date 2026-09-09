@@ -9,3 +9,349 @@
 .report-picker, .report-input-wrap, .report-textarea-wrap { box-sizing: border-box; border-radius: 24rpx; background: #f8fafc; }.report-picker { display: flex; height: 88rpx; align-items: center; justify-content: space-between; padding: 0 27rpx; color: #94a3b8; font-size: 25rpx; }.report-picker > view { display: flex; gap: 11rpx; align-items: center; }.report-picker > view text:first-child { color: #f43f5e; font-size: 18rpx; }.report-picker > text { color: #cbd5e1; font-size: 35rpx; }.report-input-wrap { height: 88rpx; padding: 0 27rpx; }.report-input { height: 88rpx; color: #1e293b; font-size: 25rpx; }.report-textarea-wrap { position: relative; min-height: 220rpx; padding: 21rpx 27rpx 36rpx; }.report-textarea { width: 100%; min-height: 150rpx; color: #1e293b; font-size: 25rpx; line-height: 1.55; }.report-textarea-wrap > text { position: absolute; right: 23rpx; bottom: 15rpx; color: #94a3b8; font-size: 18rpx; }
 .report-footer { position: fixed; z-index: 4; right: 0; bottom: 0; left: 0; padding: 14rpx 40rpx calc(22rpx + env(safe-area-inset-bottom)); background: #fff; }.report-submit { display: flex; height: 88rpx; align-items: center; justify-content: center; border-radius: 999rpx; background: #3b82f6; box-shadow: 0 4rpx 12rpx rgba(59,130,246,.28); color: #fff; font-size: 28rpx; font-weight: 500; }.report-submit::after { border: 0; }.report-footer > text { display: block; margin-top: 16rpx; color: #94a3b8; font-size: 19rpx; text-align: center; }
 .report-page--sighting { background: #f8fafc; }.report-page--sighting .report-nav, .report-page--sighting .report-footer { background: #f8fafc; }.report-page--sighting .report-heading { margin-bottom: 20rpx; }.report-page--sighting .report-heading text:first-child { font-size: 38rpx; }.report-options { display: flex; flex-wrap: wrap; gap: 14rpx; }.report-options text { min-width: 108rpx; box-sizing: border-box; padding: 15rpx 14rpx; border: 1rpx solid transparent; border-radius: 16rpx; background: #f1f5f9; color: #64748b; font-size: 23rpx; text-align: center; }.report-options .is-active { border-color: #93c5fd; background: #eff6ff; color: #2563eb; }
+
+/* 我的图鉴 · 旅行手册式收藏页 */
+.catalog-page {
+  color: #24465b;
+  background-color: #f4f8fc;
+  background-image: radial-gradient(rgba(42, 126, 199, .065) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #eff8ff 0, #fffaf2 100%);
+  background-size: 28rpx 28rpx, 100% 100%;
+}
+
+.catalog-nav {
+  height: calc(100rpx + constant(safe-area-inset-top));
+  height: calc(100rpx + env(safe-area-inset-top));
+  padding: 0 28rpx 18rpx;
+  background: rgba(239, 248, 255, .86);
+  backdrop-filter: blur(16px);
+}
+
+.catalog-nav__back {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  color: #27556f;
+  background: rgba(255, 255, 255, .76);
+}
+
+.catalog-nav__title {
+  color: #183b54;
+  font-size: 30rpx;
+  letter-spacing: 1rpx;
+}
+
+.catalog-nav__actions {
+  width: 106rpx;
+  height: 54rpx;
+  border-color: #d6e7eb;
+  background: rgba(255, 255, 255, .78);
+  color: #3e687b;
+}
+
+.catalog-page__content {
+  padding: 20rpx 28rpx calc(74rpx + env(safe-area-inset-bottom));
+}
+
+.catalog-summary {
+  position: relative;
+  min-height: 214rpx;
+  padding: 30rpx;
+  border: 2rpx solid rgba(181, 219, 228, .72);
+  border-radius: 34rpx 24rpx 34rpx 24rpx;
+  background: linear-gradient(135deg, #dcf2fb 0%, #eef9f2 58%, #fff1dc 100%);
+  box-shadow: 0 14rpx 30rpx rgba(47, 102, 125, .1);
+  isolation: isolate;
+}
+
+.catalog-summary::after {
+  position: absolute;
+  z-index: -1;
+  right: -26rpx;
+  bottom: -40rpx;
+  width: 148rpx;
+  height: 148rpx;
+  border: 2rpx solid rgba(255, 255, 255, .68);
+  border-radius: 50%;
+  content: '';
+}
+
+.catalog-summary__copy > view:first-child {
+  color: #365a6d;
+}
+
+.catalog-summary__number {
+  color: #1b4863;
+  font-size: 52rpx;
+}
+
+.catalog-summary__track {
+  height: 16rpx;
+  margin-top: 14rpx;
+  background: rgba(255, 255, 255, .86);
+}
+
+.catalog-summary__track view {
+  background: linear-gradient(90deg, #41b9c4, #2f87c8);
+}
+
+.catalog-summary__percent {
+  color: #5e8591;
+}
+
+.catalog-summary__hint {
+  color: #55767e;
+}
+
+.catalog-summary__cat {
+  width: 132rpx;
+  height: 132rpx;
+  margin-left: 18rpx;
+  border: 2rpx solid rgba(255, 255, 255, .82);
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 8rpx 16rpx rgba(46, 112, 133, .1);
+  transform: rotate(4deg);
+}
+
+.catalog-summary__cat image {
+  width: 106rpx;
+  height: 106rpx;
+}
+
+.catalog-summary__cat text {
+  top: -2rpx;
+  right: 4rpx;
+  color: #ef9b4a;
+}
+
+.catalog-tabs {
+  gap: 10rpx;
+  margin: 30rpx 0 24rpx;
+  padding: 6rpx;
+  border: 2rpx solid #dcebee;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, .68);
+}
+
+.catalog-tabs text {
+  flex: 1;
+  padding: 13rpx 12rpx;
+  border: 0;
+  border-radius: 14rpx;
+  text-align: center;
+}
+
+.catalog-tabs .is-active {
+  border-color: transparent;
+  background: #2c82c6;
+  color: #fff;
+  box-shadow: 0 6rpx 12rpx rgba(44, 130, 198, .18);
+}
+
+.catalog-grid {
+  column-gap: 18rpx;
+  row-gap: 28rpx;
+}
+
+.catalog-grid__photo {
+  width: 142rpx;
+  height: 142rpx;
+  border: 5rpx solid rgba(255, 255, 255, .92);
+  border-radius: 30rpx 22rpx 30rpx 22rpx;
+  box-shadow: 0 8rpx 16rpx rgba(44, 86, 103, .13);
+}
+
+.catalog-grid__item:nth-child(3n + 1) .catalog-grid__photo { transform: rotate(-1.5deg); }
+.catalog-grid__item:nth-child(3n + 2) .catalog-grid__photo { transform: rotate(1.5deg); }
+.catalog-grid__item:nth-child(3n) .catalog-grid__photo { transform: rotate(-.5deg); }
+
+.catalog-grid__item > text {
+  margin-top: 12rpx;
+  color: #32556b;
+  font-size: 23rpx;
+}
+
+.catalog-grid__item--locked {
+  opacity: .68;
+}
+
+.catalog-grid__lock {
+  background: rgba(26, 69, 86, .44);
+  color: #fff8e9;
+  backdrop-filter: blur(2px);
+}
+
+/* 投稿与打卡 · 档案录入页 */
+.report-page {
+  color: #284a5d;
+  background-color: #fffaf3;
+  background-image: radial-gradient(rgba(211, 132, 57, .055) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #fffaf2 0, #f4f9fb 100%);
+  background-size: 28rpx 28rpx, 100% 100%;
+}
+
+.report-nav {
+  height: calc(100rpx + constant(safe-area-inset-top));
+  height: calc(100rpx + env(safe-area-inset-top));
+  padding: 0 28rpx 18rpx;
+  background: rgba(255, 250, 243, .84);
+  backdrop-filter: blur(16px);
+}
+
+.report-nav > text:first-child {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  color: #365d70;
+  background: rgba(255, 255, 255, .78);
+}
+
+.report-nav > text:nth-child(2) {
+  color: #183b54;
+  letter-spacing: 1rpx;
+}
+
+.report-page__content {
+  padding: 18rpx 30rpx 40rpx;
+}
+
+.report-heading {
+  position: relative;
+  padding: 24rpx 18rpx 28rpx;
+  margin: 6rpx 0 28rpx;
+  border: 2rpx solid #f0dfc7;
+  border-radius: 28rpx 18rpx 28rpx 18rpx;
+  background: rgba(255, 255, 255, .64);
+  box-shadow: 0 10rpx 22rpx rgba(172, 117, 65, .07);
+  transform: rotate(-.45deg);
+}
+
+.report-heading text:first-child {
+  color: #234b61;
+  font-size: 44rpx;
+}
+
+.report-heading text:last-child {
+  color: #8b9a9c;
+}
+
+.report-label {
+  margin: 28rpx 0 14rpx;
+  color: #31556a;
+}
+
+.report-upload-row {
+  gap: 16rpx;
+}
+
+.report-photo {
+  width: 188rpx;
+  height: 188rpx;
+  border: 2rpx solid #e1eceb;
+  border-radius: 28rpx 20rpx 28rpx 20rpx;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 8rpx 16rpx rgba(43, 84, 98, .08);
+}
+
+.report-photo--add {
+  border: 2rpx dashed #c7dede;
+  color: #72949b;
+  background: rgba(246, 252, 250, .8);
+}
+
+.report-photo--add text:first-child {
+  color: #5f9ca7;
+}
+
+.report-picker,
+.report-input-wrap,
+.report-textarea-wrap {
+  border: 2rpx solid #dfebea;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: 0 6rpx 14rpx rgba(44, 88, 102, .045);
+}
+
+.report-picker {
+  height: 92rpx;
+  color: #78939b;
+}
+
+.report-picker > view text:first-child {
+  color: #ec9250;
+}
+
+.report-input-wrap {
+  height: 92rpx;
+}
+
+.report-input {
+  height: 92rpx;
+  color: #2a4d61;
+}
+
+.report-textarea-wrap {
+  min-height: 236rpx;
+  padding: 24rpx 24rpx 38rpx;
+}
+
+.report-textarea {
+  min-height: 162rpx;
+  color: #2a4d61;
+}
+
+.report-options {
+  gap: 12rpx;
+}
+
+.report-options text {
+  min-width: 112rpx;
+  padding: 16rpx 14rpx;
+  border: 2rpx solid transparent;
+  border-radius: 16rpx 20rpx 16rpx 20rpx;
+  background: rgba(232, 242, 244, .84);
+  color: #6e8993;
+}
+
+.report-options .is-active {
+  border-color: #9ccfe0;
+  background: #e4f4fb;
+  color: #2479b3;
+  box-shadow: 0 5rpx 10rpx rgba(36, 121, 179, .1);
+}
+
+.report-footer {
+  padding: 18rpx 30rpx calc(24rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid rgba(221, 234, 233, .78);
+  background: rgba(255, 252, 247, .92);
+  backdrop-filter: blur(14px);
+}
+
+.report-submit {
+  height: 94rpx;
+  border: 2rpx solid rgba(255, 255, 255, .64);
+  background: linear-gradient(135deg, #2d8bd8, #2471b9);
+  box-shadow: 0 14rpx 26rpx rgba(36, 113, 185, .22);
+}
+
+.report-footer > text {
+  color: #91a0a0;
+}
+
+.report-page--sighting {
+  background-color: #f2f8fb;
+  background-image: radial-gradient(rgba(42, 126, 199, .055) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #f0f8ff 0, #fffaf2 100%);
+}
+
+.report-page--sighting .report-nav,
+.report-page--sighting .report-footer {
+  background-color: rgba(242, 248, 251, .9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-grid__photo,
+  .report-heading,
+  .report-submit,
+  .catalog-summary__cat {
+    transition: none;
+  }
+}
