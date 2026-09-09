@@ -65,10 +65,6 @@ export default function CatDetailPage() {
     if (Taro.getCurrentPages().length > 1) Taro.navigateBack()
     else Taro.reLaunch({ url: '/pages/index/index' })
   }
-  const share = () => {
-    Taro.showShareMenu({ withShareTicket: false }).catch(() => undefined)
-    void Taro.showToast({ title: '可通过右上角分享给同学', icon: 'none' })
-  }
   const toggleFavorite = async () => {
     const next = !isFavorite
     setFavorite(next)
@@ -110,7 +106,6 @@ export default function CatDetailPage() {
         }}
       >
         <View className='cat-detail-hero__nav-right'>
-          <View className='cat-detail-hero__round-action' ariaLabel='分享' onClick={share}><Text>↗</Text></View>
           <View className={`cat-detail-hero__round-action ${isFavorite ? 'is-active' : ''}`} ariaLabel='收藏' onClick={() => void toggleFavorite()}><Image src={heartIcon} mode='aspectFit' /></View>
         </View>
       </View>

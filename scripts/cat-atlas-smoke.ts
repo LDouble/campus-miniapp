@@ -40,6 +40,7 @@ assert.match(detail, /title=\{cat\.name\}/u, '详情页吸顶导航应显示当�
 assert.match(detail, /immersive=\{!headerCollapsed\}/u, '详情页首屏应保持沉浸式导航')
 assert.match(detail, /cat-detail-bottom__button--activity/u, '详情页应提供固定的最近动态按钮')
 assert.match(detail, /cat-detail-bottom__button--report/u, '详情页应提供固定的目击按钮')
+assert.doesNotMatch(detail, /ariaLabel='分享'/u, '详情页不应显示与微信胶囊重复的分享快捷按钮')
 assert.doesNotMatch(detail, /出没地图|给它留言|cat-detail-live-preview--combined|cat-detail-shortcuts/u, '详情页不应展示已下线或重复入口')
 assert.match(detailFeed, /\.cat-detail-bottom\s*\{[\s\S]*?position:\s*fixed/u, '详情页操作按钮应固定在初始视口底部')
 assert.match(detailFeed, /\.cat-detail-hero__nav\s*\{[\s\S]*?position:\s*fixed/u, '详情页滚动时返回按钮应保持可见')
