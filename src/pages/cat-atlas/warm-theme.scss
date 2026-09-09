@@ -219,9 +219,89 @@ page {
 
 /* 详情页：把深蓝夜景遮罩和蓝色主按钮换成暖棕与陶土橙。 */
 .cat-detail-page {
+  position: relative;
   color: #5a4033;
   background-color: #f8f1e7;
   background-image: linear-gradient(180deg, #fff4e5 0, #fbf7ef 58%, #f7eadb 100%);
+}
+
+/* 详情首屏与封面融为一体；越过封面后再出现档案标题，返回入口始终固定在胶囊安全区左侧。 */
+.cat-detail-page > .custom-navbar {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0 !important;
+  min-height: 0;
+}
+
+.cat-detail-page > .custom-navbar .custom-navbar__fixed {
+  color: #fffaf2;
+  border-bottom-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.cat-detail-page > .custom-navbar:not(.custom-navbar--collapsed) .custom-navbar__center {
+  opacity: 0;
+  transform: translateY(10rpx);
+}
+
+.cat-detail-page > .custom-navbar .custom-navbar__title {
+  color: #fffaf2;
+  text-shadow: 0 3rpx 10rpx rgba(61, 35, 26, .48);
+}
+
+.cat-detail-page > .custom-navbar .custom-navbar__subtitle {
+  color: rgba(255, 250, 242, .76);
+}
+
+.cat-detail-page > .custom-navbar .custom-navbar__back {
+  color: #fffaf2;
+  background: rgba(73, 42, 30, .42);
+  box-shadow: 0 6rpx 14rpx rgba(61, 35, 26, .18);
+  backdrop-filter: blur(12px);
+}
+
+.cat-detail-page > .custom-navbar.custom-navbar--collapsed {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: auto !important;
+  min-height: 0;
+}
+
+.cat-detail-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__fixed {
+  color: #5a4033;
+  border-bottom-color: rgba(232, 210, 185, .92);
+  background: rgba(255, 249, 240, .96);
+  box-shadow: 0 8rpx 22rpx rgba(133, 86, 53, .09);
+  backdrop-filter: blur(22rpx);
+}
+
+.cat-detail-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__center {
+  opacity: 1;
+  transform: none;
+}
+
+.cat-detail-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__title {
+  color: #5a4033;
+  text-shadow: none;
+}
+
+.cat-detail-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__subtitle {
+  color: #9a7e6b;
+}
+
+.cat-detail-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__back {
+  color: #6b5143;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .cat-detail-hero {
@@ -236,6 +316,16 @@ page {
 .cat-detail-hero__round-action {
   background: rgba(73, 42, 30, .42);
   box-shadow: 0 8rpx 18rpx rgba(61, 35, 26, .2);
+}
+
+.cat-detail-hero__nav--actions {
+  left: auto;
+  transition: opacity 180ms ease;
+}
+
+.cat-detail-page > .custom-navbar.custom-navbar--collapsed + .cat-detail-hero .cat-detail-hero__nav--actions {
+  pointer-events: none;
+  opacity: 0;
 }
 
 .cat-detail-hero__slogan {

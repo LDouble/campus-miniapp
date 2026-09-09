@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import { getCat, listCatSightings, setCatFavorite, type CatView, type SightingView } from '../../api/cat-atlas'
 import { formatCatDate, RequestState } from '../../features/cat-atlas/ui'
+import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './shared.scss'
 import './detail-feed.scss'
@@ -28,6 +29,7 @@ export default function CatDetailPage() {
   const [error, setError] = useState('')
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [isFavorite, setFavorite] = useState(false)
+  const headerCollapsed = useCollapsingHeader({ threshold: 320, releaseGap: 56 })
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -82,6 +84,7 @@ export default function CatDetailPage() {
   const reportPath = `/pages/cat-atlas/report?id=${cat.id}&name=${encodeURIComponent(cat.name)}`
 
   return <View className='cat-page cat-detail-page'>
+    <CustomNavbar title={cat.name} subtitle='猫咪档案' showBack onBack={goBack} immersive={!headerCollapsed} collapsed={headerCollapsed} />
     <View className='cat-detail-hero'>
       <ScrollView
         className='cat-detail-hero__gallery'
@@ -99,13 +102,13 @@ export default function CatDetailPage() {
       </ScrollView>
       <View className='cat-detail-hero__shade' />
       <View
-        className='cat-detail-hero__nav'
+        className='cat-detail-hero__nav cat-detail-hero__nav--actions'
         style={{
           top: `${navbarMetrics.statusBarHeight}px`,
           height: `${navbarMetrics.navigationBarHeight}px`,
+          right: `${navbarMetrics.sideWidth + 6}px`,
         }}
       >
-        <View className='cat-detail-hero__round-action' ariaLabel='返回' onClick={goBack}><Text>‹</Text></View>
         <View className='cat-detail-hero__nav-right'>
           <View className='cat-detail-hero__round-action' ariaLabel='分享' onClick={share}><Text>↗</Text></View>
           <View className={`cat-detail-hero__round-action ${isFavorite ? 'is-active' : ''}`} ariaLabel='收藏' onClick={() => void toggleFavorite()}><Image src={heartIcon} mode='aspectFit' /></View>
