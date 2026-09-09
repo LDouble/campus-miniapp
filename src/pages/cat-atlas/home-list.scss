@@ -447,4 +447,8 @@ page { background: var(--ousea-bg-page); }
 .cat-list-v2__hero-badge {
   top: calc(constant(safe-area-inset-top) + 112rpx);
   top: calc(env(safe-area-inset-top) + 112rpx);
+  left: 50%;
+  max-width: calc(100% - 128rpx);
+  white-space: nowrap;
+  transform: translateX(-50%) rotate(-2deg);
 }
