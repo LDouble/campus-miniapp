@@ -8,8 +8,6 @@ import { navigateToWithGuard } from '../../utils/navigation'
 import './shared.scss'
 import './detail-feed.scss'
 
-const locationIcon = require('../../assets/icons/location.svg')
-const messageIcon = require('../../assets/icons/message.svg')
 const eyeIcon = require('../../assets/icons/eye.svg')
 const heartIcon = require('../../assets/community/heart.svg')
 const heroFallbacks = [
@@ -131,10 +129,12 @@ export default function CatDetailPage() {
         <View className='cat-detail-archive__panel'>{fields.map(([label, value]) => <View className='cat-detail-archive__row' key={label}><Text>{label}</Text><Text>{value}</Text></View>)}</View>
       </View>
 
-      <View className='cat-detail-shortcuts'>
-        <View onClick={() => void navigateToWithGuard(`/pages/cat-atlas/map?id=${cat.id}`)}><View className='cat-detail-shortcuts__icon cat-detail-shortcuts__icon--map'><Image src={locationIcon} mode='aspectFit' /></View><Text>出没地图</Text></View>
-        <View onClick={() => void navigateToWithGuard(`/pages/cat-atlas/sightings?id=${cat.id}`)}><View className='cat-detail-shortcuts__icon cat-detail-shortcuts__icon--activity'><Image src={eyeIcon} mode='aspectFit' /></View><Text>最近动态</Text></View>
-        <View onClick={() => void navigateToWithGuard(`/pages/cat-atlas/sightings?id=${cat.id}`)}><View className='cat-detail-shortcuts__icon cat-detail-shortcuts__icon--message'><Image src={messageIcon} mode='aspectFit' /></View><Text>给它留言</Text></View>
+      <View className='cat-detail-shortcuts cat-detail-shortcuts--single'>
+        <View onClick={() => void navigateToWithGuard(`/pages/cat-atlas/sightings?id=${cat.id}`)}>
+          <View className='cat-detail-shortcuts__icon cat-detail-shortcuts__icon--activity'><Image src={eyeIcon} mode='aspectFit' /></View>
+          <View className='cat-detail-shortcuts__copy'><Text>最近动态</Text><Text>看看大家最近在哪里遇见它</Text></View>
+          <Text className='cat-detail-shortcuts__arrow'>›</Text>
+        </View>
       </View>
 
       {sightings.length > 0 && <View className='cat-detail-live-preview'>

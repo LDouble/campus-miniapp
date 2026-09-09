@@ -33,6 +33,8 @@ assert.match(catalogList, /cat-list-v2__card/u, '独立列表页应渲染猫咪�
 assert.match(detail, /我遇到它了/u, '详情页应提供目击打卡入口')
 assert.match(detail, /getNavbarMetrics/u, '详情页沉浸式导航应读取胶囊适配指标')
 assert.match(detail, /navigationBarHeight/u, '详情页操作按钮应与胶囊导航高度对齐')
+assert.match(detail, /cat-detail-shortcuts--single/u, '详情页只保留最近动态单入口')
+assert.doesNotMatch(detail, /出没地图|给它留言/u, '详情页不应展示已下线的地图和留言入口')
 assert.match(detailFeed, /\.cat-detail-hero__nav\s*\{[\s\S]*?position:\s*fixed/u, '详情页滚动时返回按钮应保持可见')
 assert.match(report, /uploadMediaImage/u, '投稿页应提供照片上传、预览和重试')
 assert.match(report, /submitCat/u, '投稿页应提交新猫审核')

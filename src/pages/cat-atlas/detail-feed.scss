@@ -33,7 +33,13 @@
 .cat-detail-archive__row text:first-child { color: #94a3b8; }
 .cat-detail-archive__row text:last-child { color: #1e293b; font-weight: 500; }
 .cat-detail-shortcuts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18rpx; padding-top: 28rpx; }
+.cat-detail-shortcuts--single { display: block; }
 .cat-detail-shortcuts > view { display: flex; min-height: 150rpx; align-items: center; justify-content: center; flex-direction: column; border: 1rpx solid #f1f5f9; border-radius: 32rpx; color: #334155; background: #fff; box-shadow: 0 4rpx 16rpx rgba(0,0,0,.04); font-size: 22rpx; font-weight: 500; }
+.cat-detail-shortcuts--single > view { min-height: 118rpx; align-items: center; justify-content: flex-start; flex-direction: row; gap: 18rpx; padding: 0 26rpx; }
+.cat-detail-shortcuts__copy { display: flex; min-width: 0; flex: 1; gap: 5rpx; flex-direction: column; }
+.cat-detail-shortcuts__copy text:first-child { color: #183b54; font-size: 27rpx; font-weight: 700; }
+.cat-detail-shortcuts__copy text:last-child { color: #7c97a5; font-size: 21rpx; font-weight: 400; }
+.cat-detail-shortcuts__arrow { color: #7c97a5; font-size: 42rpx; font-weight: 300; line-height: 1; }
 .cat-detail-shortcuts__icon { display: flex; width: 72rpx; height: 72rpx; align-items: center; justify-content: center; margin-bottom: 10rpx; border-radius: 50%; }
 .cat-detail-shortcuts__icon image { width: 39rpx; height: 39rpx; }
 .cat-detail-shortcuts__icon--map { background: #f0f9ff; }.cat-detail-shortcuts__icon--map image { filter: invert(48%) sepia(73%) saturate(474%) hue-rotate(158deg); }
@@ -256,6 +262,27 @@
 .cat-detail-shortcuts {
   gap: 14rpx;
   padding-top: 30rpx;
+}
+
+.cat-detail-shortcuts--single > view {
+  min-height: 122rpx;
+  border-radius: 28rpx 22rpx 28rpx 22rpx;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 10rpx 22rpx rgba(43, 91, 107, .07);
+}
+
+.cat-detail-shortcuts--single .cat-detail-shortcuts__icon {
+  flex: 0 0 76rpx;
+  margin-bottom: 0;
+}
+
+.cat-detail-shortcuts__copy text:first-child {
+  color: #183b54;
+}
+
+.cat-detail-shortcuts__copy text:last-child,
+.cat-detail-shortcuts__arrow {
+  color: #7c97a5;
 }
 
 .cat-detail-shortcuts > view {
