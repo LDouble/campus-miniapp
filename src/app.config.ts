@@ -204,6 +204,12 @@ export default defineAppConfig({
     navigationBarTextStyle: '@navigationBarTextStyle' as 'black',
     backgroundColor: '@backgroundColor'
   },
+  permission: {
+    'scope.userLocation': {
+      desc: '用于记录你遇到猫咪的地点'
+    }
+  },
+  requiredPrivateInfos: ['getLocation'],
   usingComponents: {},
   tabBar: {
     custom: true,

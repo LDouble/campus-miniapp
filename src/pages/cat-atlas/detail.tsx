@@ -9,6 +9,7 @@ import './shared.scss'
 import './detail-feed.scss'
 
 const eyeIcon = require('../../assets/icons/eye.svg')
+const plusIcon = require('../../assets/icons/plus.svg')
 const heartIcon = require('../../assets/community/heart.svg')
 const heroFallbacks = [
   require('../../assets/cat-atlas/stitch/detail-hero-1.jpg'),
@@ -132,20 +133,23 @@ export default function CatDetailPage() {
         <View className='cat-detail-archive__panel'>{fields.map(([label, value]) => <View className='cat-detail-archive__row' key={label}><Text>{label}</Text><Text>{value}</Text></View>)}</View>
       </View>
 
-      <View className='cat-detail-live-preview cat-detail-live-preview--combined'>
-        <View className='cat-detail-live-preview__head'>
-          <View className='cat-detail-live-preview__heading'>
-            <View className='cat-detail-live-preview__icon'><Image src={eyeIcon} mode='aspectFit' /></View>
-            <View className='cat-detail-live-preview__title-group'><Text>最近动态</Text><Text>看看大家最近在哪里遇见它</Text></View>
-          </View>
-          <View className='cat-detail-live-preview__actions'>
-            <Text className='cat-detail-live-preview__all' onClick={() => void navigateToWithGuard(sightingsPath)}>查看全部</Text>
-            <View className='cat-detail-live-preview__report' onClick={() => void navigateToWithGuard(reportPath)}><Text>我遇到它了</Text></View>
-          </View>
-        </View>
+      <View className='cat-detail-live-preview'>
+        <View className='cat-detail-live-preview__head'><Text>最近动态</Text><Text onClick={() => void navigateToWithGuard(sightingsPath)}>查看全部</Text></View>
         {sightings.length > 0
           ? sightings.map((item) => <View className='cat-detail-live-preview__row' key={item.id}><Text>{item.reporter_name} 在 {item.area} 遇见了它</Text><Text>{item.note || item.activity}</Text></View>)
           : <View className='cat-detail-live-preview__empty'><Text>还没有新的相遇记录</Text><Text>成为第一个记录它的人吧</Text></View>}
+      </View>
+    </View>
+    <View className='cat-detail-bottom'>
+      <View className='cat-detail-bottom__actions'>
+        <View className='cat-detail-bottom__button cat-detail-bottom__button--activity' onClick={() => void navigateToWithGuard(sightingsPath)}>
+          <Image src={eyeIcon} mode='aspectFit' />
+          <Text>最近动态</Text>
+        </View>
+        <View className='cat-detail-bottom__button cat-detail-bottom__button--report' onClick={() => void navigateToWithGuard(reportPath)}>
+          <Image src={plusIcon} mode='aspectFit' />
+          <Text>我遇到它了</Text>
+        </View>
       </View>
     </View>
   </View>
