@@ -1,16 +1,13 @@
 import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState } from 'react'
-import CustomNavbar from '../../components/custom-navbar'
-import MediaImageEditor from '../../components/media-image-editor'
 import { KeyboardSafeInput, KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
 import { createCatSighting, submitCat } from '../../api/cat-atlas'
 import { isApiError } from '../../api/client'
 import { uploadMediaImage } from '../../api/media'
-import { DEFAULT_MEDIA_IMAGE_QUALITY, mediaImageValidationError } from '../../features/media/images'
-import type { MediaImageDraft } from '../../features/media/images'
+import { DEFAULT_MEDIA_IMAGE_QUALITY, mediaImageValidationError, type MediaImageDraft } from '../../features/media/images'
 import { chooseMediaImages } from '../../features/media/selection'
-import './shared.scss'
+import './catalog-report.scss'
 
 const areas = ['一食堂', '图书馆', '宿舍区', '小树林', '教学楼', '其他']
 const actions = ['睡觉', '干饭', '散步', '发呆', '营业中']
@@ -35,14 +32,16 @@ export default function CatReportPage() {
   }
   const chooseImages = async () => {
     if (images.length >= 1) return
-    try { const selected = await chooseMediaImages({ count: 1, maxDimension: 1600, quality: DEFAULT_MEDIA_IMAGE_QUALITY }); if (selected.length) { setImages(selected); void uploadImage(selected[0]) } }
-    catch (chooseError) { void Taro.showToast({ title: chooseError instanceof Error ? chooseError.message : '图片选择失败', icon: 'none' }) }
+    try {
+      const selected = await chooseMediaImages({ count: 1, maxDimension: 1600, quality: DEFAULT_MEDIA_IMAGE_QUALITY })
+      if (selected.length) { setImages(selected); void uploadImage(selected[0]) }
+    } catch (chooseError) { void Taro.showToast({ title: chooseError instanceof Error ? chooseError.message : '图片选择失败', icon: 'none' }) }
+  }
+  const chooseArea = async () => {
+    try { const result = await Taro.showActionSheet({ itemList: areas }); if (typeof result.tapIndex === 'number') setArea(areas[result.tapIndex]) } catch { /* 用户取消 */ }
   }
   const submit = async () => {
-    if (isNew && !images.length) {
-      await Taro.showToast({ title: '请上传一张猫咪照片', icon: 'none' })
-      return
-    }
+    if (isNew && !images.length) { await Taro.showToast({ title: '请上传一张猫咪照片', icon: 'none' }); return }
     const imageError = mediaImageValidationError(images, 1)
     if (imageError) { await Taro.showToast({ title: imageError, icon: 'none' }); return }
     setSubmitting(true)
@@ -54,15 +53,33 @@ export default function CatReportPage() {
     } catch (submitError) { await Taro.showToast({ title: isApiError(submitError) ? submitError.message : '提交失败，请稍后重试', icon: 'none' }) }
     finally { setSubmitting(false) }
   }
-  return <View className='cat-page'><CustomNavbar title={isNew ? '发现了一只新猫？' : '我遇到它了'} showBack /><View className='cat-page__content'>
-    <View className='cat-hero'><Text className='cat-hero__eyebrow'>{isNew ? '让更多同学认识它' : '留下这次温柔的相遇'}</Text><Text className='cat-hero__copy'>{isNew ? '投稿审核通过后，猫咪才会出现在公开图鉴。' : '公开展示只会使用区域级位置，不会暴露精确坐标。'}</Text></View>
-    {isNew && <><Text className='cat-form-label'>大家怎么叫它？ <Text className='cat-muted'>（可选）</Text></Text><KeyboardSafeInput className='cat-input cat-input--single' value={name} maxlength={32} placeholder='不知道也可以不填' onInput={(event) => setName(event.detail.value)} /></>}
-    <Text className='cat-form-label'>在哪里遇到？</Text><View className='cat-options'>{areas.map((item) => <Text key={item} className={`cat-option ${area === item ? 'cat-option--active' : ''}`} onClick={() => setArea(item)}>{item}</Text>)}</View>
-    {!isNew && <><Text className='cat-form-label'>它在做什么？</Text><View className='cat-options'>{actions.map((item) => <Text key={item} className={`cat-option ${action === item ? 'cat-option--active' : ''}`} onClick={() => setAction(item)}>{item}</Text>)}</View></>}
-    <Text className='cat-form-label'>上传照片 {isNew ? <Text className='cat-required'>*</Text> : <Text className='cat-muted'>（可选）</Text>}</Text>
-    <MediaImageEditor images={images} maxCount={1} title='现场照片' hint={isNew ? '投稿必须上传清晰照片' : '可选，帮助其他同学认出它'} showCover={false} onAdd={() => void chooseImages()} onMove={() => undefined} onRemove={(key) => setImages((current) => current.filter((image) => image.key !== key))} onRetry={(image) => void uploadImage(image)} />
-    {!images.length && <View className='cat-upload-empty' onClick={() => void chooseImages()}><Image src={require('../../assets/icons/image.svg')} mode='aspectFit' /><Text>从相册或相机添加照片</Text><Text>{isNew ? '清晰展示猫咪即可' : '不上传也能完成打卡'}</Text></View>}
-    <Text className='cat-form-label'>{isNew ? '它有什么特点？' : '想说点什么？'} <Text className='cat-muted'>（可选）</Text></Text><KeyboardSafeTextarea className='cat-input' value={note} maxlength={200} placeholder={isNew ? '比如毛色、性格、常出没的地方…' : '分享一下你看到它吧～'} onInput={(event) => setNote(event.detail.value)} />
-    <Button className='cat-primary-button' loading={submitting} disabled={submitting || images.some((image) => image.status === 'uploading')} onClick={() => void submit()}>{isNew ? '提交申请' : '发布目击记录'}</Button>
-  </View></View>
+  const image = images[0]
+  const renderPhoto = () => image && <View className='report-photo'>
+    <Image src={image.previewUrl} mode='aspectFill' onClick={() => Taro.previewImage({ current: image.previewUrl, urls: [image.previewUrl] })} />
+    <View className='report-photo__delete' onClick={() => setImages([])}><Text>×</Text></View>
+    {image.status === 'uploading' && <View className='report-photo__state'><Text>上传 {image.progress}%</Text><View><View style={{ width: `${image.progress}%` }} /></View></View>}
+    {image.status === 'failed' && <View className='report-photo__state report-photo__state--failed' onClick={() => void uploadImage(image)}><Text>上传失败</Text><Text>点击重试</Text></View>}
+  </View>
+  return <View className={`report-page ${isNew ? 'report-page--new' : 'report-page--sighting'}`}>
+    <View className='report-nav'><Text onClick={() => Taro.navigateBack()}>×</Text><Text>{isNew ? '' : '我遇到它了'}</Text><View /></View>
+    <View className='report-page__content'>
+      <View className='report-heading'><Text>{isNew ? '发现了一只新猫？' : '我遇到橘座了！'}</Text><Text>{isNew ? '— 让更多同学认识它吧！ ✦' : '留下这次温柔的相遇吧～'}</Text></View>
+      {isNew && <>
+        <Text className='report-label'>上传照片 <Text>*</Text></Text>
+        <View className='report-upload-row'>{renderPhoto()}<View className='report-photo report-photo--add' onClick={() => void chooseImages()}><Text>+</Text><Text>添加照片</Text></View></View>
+        <Text className='report-label'>在哪里看到的？ <Text>*</Text></Text>
+        <View className='report-picker' onClick={() => void chooseArea()}><View><Text>●</Text><Text>{area || '请选择地点'}</Text></View><Text>›</Text></View>
+        <Text className='report-label'>大家怎么叫它？ <Text className='report-label__optional'>（可选）</Text></Text>
+        <View className='report-input-wrap'><KeyboardSafeInput className='report-input' value={name} maxlength={32} placeholder='不知道也可以不填' onInput={(event) => setName(event.detail.value)} /></View>
+      </>}
+      {!isNew && <>
+        <Text className='report-label'>在哪里遇到？</Text><View className='report-options'>{areas.map((item) => <Text key={item} className={area === item ? 'is-active' : ''} onClick={() => setArea(item)}>{item}</Text>)}</View>
+        <Text className='report-label'>它在做什么？</Text><View className='report-options'>{actions.map((item) => <Text key={item} className={action === item ? 'is-active' : ''} onClick={() => setAction(item)}>{item}</Text>)}</View>
+        <Text className='report-label'>上传照片 <Text className='report-label__optional'>（可选）</Text></Text><View className='report-upload-row'>{renderPhoto()}<View className='report-photo report-photo--add' onClick={() => void chooseImages()}><Text>+</Text><Text>添加照片</Text></View></View>
+      </>}
+      <Text className='report-label'>{isNew ? '它有什么特点？' : '想说点什么？'} <Text className='report-label__optional'>（可选）</Text></Text>
+      <View className='report-textarea-wrap'><KeyboardSafeTextarea className='report-textarea' value={note} maxlength={200} placeholder={isNew ? '比如毛色、性格、外观特征、经常出现的地方…' : '分享一下你看到它吧～'} onInput={(event) => setNote(event.detail.value)} /><Text>{note.length}/200</Text></View>
+    </View>
+    <View className='report-footer'><Button className='report-submit' loading={submitting} disabled={submitting || images.some((item) => item.status === 'uploading')} onClick={() => void submit()}>{isNew ? '提交申请' : '发布目击记录'}</Button><Text>{isNew ? '我们会尽快审核，感谢你的发现！ ♡' : '让更多同学知道它刚刚在这里出现过 ♡'}</Text></View>
+  </View>
 }
