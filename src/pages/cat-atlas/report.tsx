@@ -1,6 +1,7 @@
 import { Button, Image, Text, View } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
+import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput, KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
 import { createCatSighting, submitCat } from '../../api/cat-atlas'
 import { isApiError } from '../../api/client'
@@ -142,7 +143,7 @@ export default function CatReportPage() {
     {image.status === 'failed' && <View className='report-photo__state report-photo__state--failed' onClick={() => void uploadImage(image)}><Text>上传失败</Text><Text>点击重试</Text></View>}
   </View>
   return <View className={`report-page ${isNew ? 'report-page--new' : 'report-page--sighting'}`}>
-    <View className='report-nav'><Text onClick={() => Taro.navigateBack()}>×</Text><Text>{isNew ? '' : '我遇到它了'}</Text><View /></View>
+    <CustomNavbar title={isNew ? '发现新猫' : '我遇到它了'} showBack onBack={() => { void Taro.navigateBack() }} />
     <View className='report-page__content'>
       <View className='report-heading'>
         <View className='report-heading__eyebrow'><Text>{isNew ? '新猫档案' : '相遇记录'}</Text><Text>OUC · CAT ATLAS</Text></View>
