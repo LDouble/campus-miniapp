@@ -290,6 +290,19 @@ page { background: var(--ousea-bg-page); }
   color: #7d99a5;
 }
 
+.cat-list-v2__load-more {
+  display: block;
+  padding: 28rpx 0 20rpx;
+  color: #267bc2;
+  text-align: center;
+  font-size: 21rpx;
+  font-weight: 600;
+}
+
+.cat-list-v2__load-more.is-loading {
+  color: #7d99a5;
+}
+
 .cat-list-v2__fab {
   right: 28rpx;
   bottom: calc(30rpx + constant(safe-area-inset-bottom));
