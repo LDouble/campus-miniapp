@@ -14,7 +14,7 @@ const campuses = ['崂山校区', '鱼山校区', '西海岸校区']
 const actions = ['睡觉', '干饭', '散步', '发呆', '营业中']
 const locationIcon = require('../../assets/icons/location.svg')
 
-type LocationSnapshot = { latitude: number; longitude: number; accuracy: number }
+type LocationSnapshot = { name?: string; address?: string; latitude: number; longitude: number; accuracy?: number }
 
 export default function CatReportPage() {
   const { params } = useRouter()
@@ -35,13 +35,28 @@ export default function CatReportPage() {
     setLocationStatus('locating')
     setLocationSnapshot(null)
     try {
-      const result = await Taro.getLocation({ type: 'gcj02', isHighAccuracy: true, highAccuracyExpireTime: 5000 })
-      setArea('当前位置')
-      setLocationSnapshot({ latitude: result.latitude, longitude: result.longitude, accuracy: result.accuracy })
+      const result = await Taro.choosePoi({})
+      const label = [result.name, result.address].filter(Boolean).join(' · ') || '当前位置'
+      setArea(label.slice(0, 160))
+      setLocationSnapshot({ name: result.name, address: result.address, latitude: result.latitude, longitude: result.longitude })
       setLocationStatus('located')
-    } catch {
-      setLocationStatus('failed')
-      if (showError) await Taro.showToast({ title: '定位失败，请手动选择地点', icon: 'none' })
+    } catch (chooseError) {
+      const errorMessage = chooseError && typeof chooseError === 'object' && 'errMsg' in chooseError
+        ? String(chooseError.errMsg)
+        : chooseError instanceof Error ? chooseError.message : ''
+      if (/cancel/i.test(errorMessage)) {
+        setLocationStatus('idle')
+        return
+      }
+      try {
+        const result = await Taro.getLocation({ type: 'gcj02', isHighAccuracy: true, highAccuracyExpireTime: 5000 })
+        setArea('当前位置')
+        setLocationSnapshot({ latitude: result.latitude, longitude: result.longitude, accuracy: result.accuracy })
+        setLocationStatus('located')
+      } catch {
+        setLocationStatus('failed')
+        if (showError) await Taro.showToast({ title: '定位失败，请手动选择地点', icon: 'none' })
+      }
     }
   }, [isNew])
   const updateImage = (key: string, updater: (image: MediaImageDraft) => MediaImageDraft) => setImages((current) => current.map((image) => image.key === key ? updater(image) : image))
@@ -86,6 +101,11 @@ export default function CatReportPage() {
     finally { setSubmitting(false) }
   }
   const image = images[0]
+  const locationTitle = locationStatus === 'located' ? locationSnapshot?.name || '当前位置' : area || '尚未选择地点'
+  const locationDetail = locationStatus === 'located' && locationSnapshot
+    ? locationSnapshot.address || (locationSnapshot.accuracy ? `纬度 ${locationSnapshot.latitude.toFixed(5)} · 经度 ${locationSnapshot.longitude.toFixed(5)} · 约 ${Math.round(locationSnapshot.accuracy)}m` : '已获取位置')
+    : locationStatus === 'locating' ? '正在获取当前位置…' : locationStatus === 'failed' ? '定位失败，可手动选择' : locationStatus === 'manual' ? '已手动选择，可点击重新定位' : '点击后选择当前位置'
+  const locationAction = locationStatus === 'locating' ? '定位中…' : locationStatus === 'located' ? locationSnapshot?.name ? '重新选择' : '重新定位' : '使用当前位置'
   const renderPhoto = () => image && <View className='report-photo'>
     <Image src={image.previewUrl} mode='aspectFill' onClick={() => Taro.previewImage({ current: image.previewUrl, urls: [image.previewUrl] })} />
     <View className='report-photo__delete' onClick={() => setImages([])}><Text>×</Text></View>
@@ -116,9 +136,9 @@ export default function CatReportPage() {
         <View className='report-location-primary' onClick={() => void locateCurrentPosition(true)}>
           <View className='report-location-primary__main'>
             <View className='report-location-primary__icon'><Image src={locationIcon} mode='aspectFit' /></View>
-            <View className='report-location-primary__copy'><Text>{locationStatus === 'located' ? '当前位置' : area || '尚未选择地点'}</Text><Text>{locationStatus === 'located' && locationSnapshot ? `纬度 ${locationSnapshot.latitude.toFixed(5)} · 经度 ${locationSnapshot.longitude.toFixed(5)} · 约 ${Math.round(locationSnapshot.accuracy)}m` : locationStatus === 'locating' ? '正在获取当前位置…' : locationStatus === 'failed' ? '定位失败，可手动选择' : locationStatus === 'manual' ? '已手动选择，可点击重新定位' : '点击后获取当前位置'}</Text></View>
+            <View className='report-location-primary__copy'><Text>{locationTitle}</Text><Text>{locationDetail}</Text></View>
           </View>
-          <Text className='report-location-primary__action'>{locationStatus === 'locating' ? '定位中…' : locationStatus === 'located' ? '重新定位' : '使用当前位置'}</Text>
+          <Text className='report-location-primary__action'>{locationAction}</Text>
         </View>
         <Text className='report-location-fallback'>也可以直接选择校内区域</Text>
         <View className='report-options'>{areas.map((item) => <Text key={item} className={area === item ? 'is-active' : ''} onClick={() => { setArea(item); setLocationSnapshot(null); setLocationStatus('manual') }}>{item}</Text>)}</View>

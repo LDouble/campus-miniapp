@@ -209,7 +209,7 @@ export default defineAppConfig({
       desc: '用于记录你遇到猫咪的地点'
     }
   },
-  requiredPrivateInfos: ['getLocation'],
+  requiredPrivateInfos: ['choosePoi', 'getLocation'],
   usingComponents: {},
   tabBar: {
     custom: true,
