@@ -22,6 +22,8 @@ export default function CatReportPage() {
   const catID = params.id || ''
   const catName = params.name ? decodeURIComponent(params.name) : '它'
   const [area, setArea] = useState(isNew ? areas[0] : '')
+  const [customArea, setCustomArea] = useState('')
+  const [customAreaActive, setCustomAreaActive] = useState(false)
   const [locationStatus, setLocationStatus] = useState<'idle' | 'locating' | 'located' | 'manual' | 'failed'>(isNew ? 'manual' : 'idle')
   const [locationSnapshot, setLocationSnapshot] = useState<LocationSnapshot | null>(null)
   const [campus, setCampus] = useState(campuses[0])
@@ -37,6 +39,8 @@ export default function CatReportPage() {
     try {
       const result = await Taro.choosePoi({})
       const label = [result.name, result.address].filter(Boolean).join(' · ') || '当前位置'
+      setCustomArea('')
+      setCustomAreaActive(false)
       setArea(label.slice(0, 160))
       setLocationSnapshot({ name: result.name, address: result.address, latitude: result.latitude, longitude: result.longitude })
       setLocationStatus('located')
@@ -50,6 +54,8 @@ export default function CatReportPage() {
       }
       try {
         const result = await Taro.getLocation({ type: 'gcj02', isHighAccuracy: true, highAccuracyExpireTime: 5000 })
+        setCustomArea('')
+        setCustomAreaActive(false)
         setArea('当前位置')
         setLocationSnapshot({ latitude: result.latitude, longitude: result.longitude, accuracy: result.accuracy })
         setLocationStatus('located')
@@ -59,6 +65,25 @@ export default function CatReportPage() {
       }
     }
   }, [isNew])
+  const selectArea = (value: string) => {
+    setLocationSnapshot(null)
+    setLocationStatus('manual')
+    if (value === '其他') {
+      setArea('')
+      setCustomArea('')
+      setCustomAreaActive(true)
+      return
+    }
+    setArea(value)
+    setCustomArea('')
+    setCustomAreaActive(false)
+  }
+  const updateCustomArea = (value: string) => {
+    setCustomArea(value)
+    setArea(value.trim())
+    setLocationSnapshot(null)
+    setLocationStatus('manual')
+  }
   const updateImage = (key: string, updater: (image: MediaImageDraft) => MediaImageDraft) => setImages((current) => current.map((image) => image.key === key ? updater(image) : image))
   const uploadImage = async (image: MediaImageDraft) => {
     if (!image.localPath) return
@@ -79,9 +104,7 @@ export default function CatReportPage() {
     try {
       const result = await Taro.showActionSheet({ itemList: areas })
       if (typeof result.tapIndex === 'number') {
-        setArea(areas[result.tapIndex])
-        setLocationSnapshot(null)
-        setLocationStatus('manual')
+        selectArea(areas[result.tapIndex])
       }
     } catch { /* 用户取消 */ }
   }
@@ -101,11 +124,17 @@ export default function CatReportPage() {
     finally { setSubmitting(false) }
   }
   const image = images[0]
-  const locationTitle = locationStatus === 'located' ? locationSnapshot?.name || '当前位置' : area || '尚未选择地点'
+  const locationTitle = locationStatus === 'located' ? locationSnapshot?.name || '当前位置' : customAreaActive ? customArea || '其他地点' : area || '尚未选择地点'
   const locationDetail = locationStatus === 'located' && locationSnapshot
     ? locationSnapshot.address || (locationSnapshot.accuracy ? `纬度 ${locationSnapshot.latitude.toFixed(5)} · 经度 ${locationSnapshot.longitude.toFixed(5)} · 约 ${Math.round(locationSnapshot.accuracy)}m` : '已获取位置')
-    : locationStatus === 'locating' ? '正在获取当前位置…' : locationStatus === 'failed' ? '定位失败，可手动选择' : locationStatus === 'manual' ? '已手动选择，可点击重新定位' : '点击后选择当前位置'
+    : locationStatus === 'locating' ? '正在获取当前位置…' : locationStatus === 'failed' ? '定位失败，可手动选择' : customAreaActive ? '请填写校内具体地点' : locationStatus === 'manual' ? '已手动选择，可点击重新定位' : '点击后选择当前位置'
   const locationAction = locationStatus === 'locating' ? '定位中…' : locationStatus === 'located' ? locationSnapshot?.name ? '重新选择' : '重新定位' : '使用当前位置'
+  const renderCustomAreaInput = () => customAreaActive && <View className='report-custom-area'>
+    <Text className='report-custom-area__hint'>请输入具体地点</Text>
+    <View className='report-custom-area__input-wrap'>
+      <KeyboardSafeInput className='report-custom-area__input' value={customArea} maxlength={120} placeholder='例如：图书馆后门、宿舍楼下' onInput={(event) => updateCustomArea(event.detail.value)} />
+    </View>
+  </View>
   const renderPhoto = () => image && <View className='report-photo'>
     <Image src={image.previewUrl} mode='aspectFill' onClick={() => Taro.previewImage({ current: image.previewUrl, urls: [image.previewUrl] })} />
     <View className='report-photo__delete' onClick={() => setImages([])}><Text>×</Text></View>
@@ -127,7 +156,8 @@ export default function CatReportPage() {
         <View className='report-upload-row'>{renderPhoto()}<View className='report-photo report-photo--add' onClick={() => void chooseImages()}><Text>+</Text><Text>添加照片</Text></View></View>
         <Text className='report-label'>在哪里看到的？ <Text>*</Text></Text>
         <View className='report-options'>{campuses.map((item) => <Text key={item} className={campus === item ? 'is-active' : ''} onClick={() => setCampus(item)}>{item}</Text>)}</View>
-        <View className='report-picker' onClick={() => void chooseArea()}><View><Text>●</Text><Text>{area || '请选择地点'}</Text></View><Text>›</Text></View>
+        <View className='report-picker' onClick={() => void chooseArea()}><View><Text>●</Text><Text>{customAreaActive ? area || '其他' : area || '请选择地点'}</Text></View><Text>›</Text></View>
+        {renderCustomAreaInput()}
         <Text className='report-label'>大家怎么叫它？ <Text className='report-label__optional'>（可选）</Text></Text>
         <View className='report-input-wrap'><KeyboardSafeInput className='report-input' value={name} maxlength={32} placeholder='不知道也可以不填' onInput={(event) => setName(event.detail.value)} /></View>
       </>}
@@ -141,7 +171,8 @@ export default function CatReportPage() {
           <Text className='report-location-primary__action'>{locationAction}</Text>
         </View>
         <Text className='report-location-fallback'>也可以直接选择校内区域</Text>
-        <View className='report-options'>{areas.map((item) => <Text key={item} className={area === item ? 'is-active' : ''} onClick={() => { setArea(item); setLocationSnapshot(null); setLocationStatus('manual') }}>{item}</Text>)}</View>
+        <View className='report-options'>{areas.map((item) => <Text key={item} className={(item === '其他' ? customAreaActive : area === item) ? 'is-active' : ''} onClick={() => selectArea(item)}>{item}</Text>)}</View>
+        {renderCustomAreaInput()}
         <Text className='report-label'>它在做什么？</Text><View className='report-options'>{actions.map((item) => <Text key={item} className={action === item ? 'is-active' : ''} onClick={() => setAction(item)}>{item}</Text>)}</View>
         <Text className='report-label'>上传照片 <Text className='report-label__optional'>（可选）</Text></Text>
         <View className='report-upload-caption'><Text>给这次相遇留一张现场照片</Text><Text>可选 · 记录此刻</Text></View>

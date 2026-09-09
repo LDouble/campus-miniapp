@@ -717,6 +717,37 @@
   font-size: 20rpx;
 }
 
+.report-custom-area {
+  padding: 16rpx;
+  margin-top: 14rpx;
+  border: 2rpx solid rgba(156, 207, 208, .72);
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: 0 6rpx 14rpx rgba(44, 88, 102, .04);
+}
+
+.report-custom-area__hint {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #78939b;
+  font-size: 20rpx;
+}
+
+.report-custom-area__input-wrap {
+  height: 78rpx;
+  padding: 0 18rpx;
+  border: 2rpx solid #dcebea;
+  border-radius: 16rpx;
+  background: rgba(246, 252, 250, .86);
+  box-sizing: border-box;
+}
+
+.report-custom-area__input {
+  height: 78rpx;
+  color: #2a4d61;
+  font-size: 24rpx;
+}
+
 .report-picker,
 .report-input-wrap,
 .report-textarea-wrap {

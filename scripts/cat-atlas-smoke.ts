@@ -44,6 +44,8 @@ assert.match(report, /Taro\.getLocation/u, '目击投稿页应优先获取当前
 assert.match(report, /Taro\.choosePoi/u, '目击投稿页应优先选择可读的 POI 地点')
 assert.match(report, /report-location-primary/u, '目击投稿页应展示定位优先的地点入口')
 assert.match(report, /locationSnapshot/u, '目击投稿页应展示定位返回的经纬度和精度')
+assert.match(report, /customAreaActive/u, '投稿页选择其他地点后应进入自定义地点状态')
+assert.match(report, /report-custom-area/u, '投稿页应展示自定义地点输入框')
 assert.doesNotMatch(report, /useEffect/u, '目击投稿页不应进入页面后自动请求定位')
 assert.match(appConfig, /scope\.userLocation/u, '小程序应声明定位用途说明')
 assert.match(appConfig, /requiredPrivateInfos: \['choosePoi', 'getLocation'\]/u, '小程序应声明定位相关隐私接口')
