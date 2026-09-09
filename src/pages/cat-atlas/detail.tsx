@@ -2,7 +2,7 @@ import { Image, ScrollView, Text, View } from '@tarojs/components'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
-import { getCat, listCatSightings, type CatView, type SightingView } from '../../api/cat-atlas'
+import { getCat, listCatSightings, setCatFavorite, type CatView, type SightingView } from '../../api/cat-atlas'
 import { formatCatDate, RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './shared.scss'
@@ -34,6 +34,7 @@ export default function CatDetailPage() {
     try {
       const [profile, feed] = await Promise.all([getCat(id), listCatSightings(id)])
       setCat(profile)
+      setFavorite(profile.favorited)
       setSightings(feed.items.slice(0, 2))
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : '暂时无法获取猫咪档案')
@@ -65,6 +66,16 @@ export default function CatDetailPage() {
     Taro.showShareMenu({ withShareTicket: false }).catch(() => undefined)
     void Taro.showToast({ title: '可通过右上角分享给同学', icon: 'none' })
   }
+  const toggleFavorite = async () => {
+    const next = !isFavorite
+    setFavorite(next)
+    try {
+      await setCatFavorite(cat.id, next)
+    } catch (favoriteError) {
+      setFavorite(!next)
+      void Taro.showToast({ title: favoriteError instanceof Error ? favoriteError.message : '收藏失败', icon: 'none' })
+    }
+  }
 
   return <View className='cat-page cat-detail-page'>
     <View className='cat-detail-hero'>
@@ -87,7 +98,7 @@ export default function CatDetailPage() {
         <View className='cat-detail-hero__round-action' ariaLabel='返回' onClick={goBack}><Text>‹</Text></View>
         <View className='cat-detail-hero__nav-right'>
           <View className='cat-detail-hero__round-action' ariaLabel='分享' onClick={share}><Text>↗</Text></View>
-          <View className={`cat-detail-hero__round-action ${isFavorite ? 'is-active' : ''}`} ariaLabel='收藏' onClick={() => setFavorite((value) => !value)}><Image src={heartIcon} mode='aspectFit' /></View>
+          <View className={`cat-detail-hero__round-action ${isFavorite ? 'is-active' : ''}`} ariaLabel='收藏' onClick={() => void toggleFavorite()}><Image src={heartIcon} mode='aspectFit' /></View>
         </View>
       </View>
       <View className='cat-detail-hero__slogan'><Text>在海大的</Text><Text>每一天</Text><Text>都很值得 ♡</Text></View>
@@ -98,11 +109,11 @@ export default function CatDetailPage() {
       <View className='cat-detail-profile-head'>
         <View className='cat-detail-profile-head__main'>
           <View className='cat-detail-profile-head__name'><Text>{cat.name}</Text><Text className='cat-detail-profile-head__crown'>♛</Text></View>
-          <Text className='cat-detail-profile-head__subtitle'>{cat.resident_area}资深校猫</Text>
+          <Text className='cat-detail-profile-head__subtitle'>{cat.campus}资深校猫</Text>
           <View className='cat-detail-profile-head__tags'>{cat.traits.map((trait) => <Text key={trait}>{trait}</Text>)}</View>
         </View>
         <View className='cat-detail-profile-head__stat'>
-          <View className={`cat-detail-profile-head__favorite ${isFavorite ? 'is-active' : ''}`} onClick={() => setFavorite((value) => !value)}><Image src={heartIcon} mode='aspectFit' /></View>
+          <View className={`cat-detail-profile-head__favorite ${isFavorite ? 'is-active' : ''}`} onClick={() => void toggleFavorite()}><Image src={heartIcon} mode='aspectFit' /></View>
           <Text>{cat.sighting_count} 人遇见</Text>
         </View>
       </View>
@@ -124,6 +135,6 @@ export default function CatDetailPage() {
         {sightings.map((item) => <View className='cat-detail-live-preview__row' key={item.id}><Text>{item.reporter_name} 在 {item.area} 遇见了它</Text><Text>{item.note || item.activity}</Text></View>)}
       </View>}
     </View>
-    <View className='cat-detail-bottom'><View onClick={() => void navigateToWithGuard(`/pages/cat-atlas/report?id=${cat.id}`)}><Text className='cat-detail-bottom__paw'>●</Text><Text>我遇到它了</Text></View></View>
+    <View className='cat-detail-bottom'><View onClick={() => void navigateToWithGuard(`/pages/cat-atlas/report?id=${cat.id}&name=${encodeURIComponent(cat.name)}`)}><Text className='cat-detail-bottom__paw'>●</Text><Text>我遇到它了</Text></View></View>
   </View>
 }

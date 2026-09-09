@@ -2256,6 +2256,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cats/{id}/hotspots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询猫咪区域级出没热点 */
+        get: operations["ListCatHotspots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cats/{id}/sightings": {
         parameters: {
             query?: never;
@@ -7423,8 +7440,20 @@ export interface components {
         };
         /** @enum {string} */
         CarpoolViewerAction: "edit" | "submit_review" | "cancel" | "join" | "leave" | "verify_academic";
+        CatHotspot: {
+            area: string;
+            /** Format: date-time */
+            last_seen_at: string;
+            /** Format: int64 */
+            sighting_count: number;
+        };
+        CatHotspotResponseBody: {
+            data: components["schemas"]["CatHotspot"][];
+            request_id: string;
+        };
         CatInput: {
             aliases: string[];
+            campus: string;
             coat: string;
             /** Format: uint64 */
             cover_media_id?: number;
@@ -7457,10 +7486,12 @@ export interface components {
         CatStatus: "published" | "hidden";
         CatView: {
             aliases: string[];
+            campus: string;
             coat: string;
             cover_url?: string | null;
             /** Format: date-time */
             created_at: string;
+            favorited: boolean;
             /** Format: date-time */
             first_recorded_at: string;
             gender: string;
@@ -7512,18 +7543,25 @@ export interface components {
         SightingView: {
             activity: string;
             area: string;
+            cat_cover_url?: string | null;
             /** Format: uint64 */
             cat_id: number;
+            cat_name: string;
             /** Format: date-time */
             created_at: string;
             /** Format: uint64 */
             id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
             note?: string | null;
             photo_url?: string | null;
+            reporter_avatar_url?: string | null;
             reporter_name: string;
         };
         SubmissionInput: {
             area: string;
+            campus: string;
             description?: string;
             /** Format: uint64 */
             photo_media_id: number;
@@ -7555,6 +7593,7 @@ export interface components {
         SubmissionStatus: "pending" | "approved" | "rejected";
         SubmissionView: {
             area: string;
+            campus: string;
             /** Format: date-time */
             created_at: string;
             description?: string | null;
@@ -9363,7 +9402,7 @@ export interface components {
             total_seats?: number | null;
         };
         /** @enum {string} */
-        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
         FavoriteState: {
             favorited: boolean;
             /** Format: uint64 */
@@ -9920,7 +9959,7 @@ export interface components {
             message_id: number;
         };
         /** @enum {string} */
-        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
         ReactionState: {
             /** Format: int64 */
             like_count: number;
@@ -11132,6 +11171,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CarpoolTripResponseBody"];
+            };
+        };
+        /** @description 猫咪区域级出没热点 */
+        CatHotspotResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatHotspotResponseBody"];
             };
         };
         /** @description 猫咪分页列表 */
@@ -15242,6 +15290,7 @@ export interface operations {
             query?: {
                 area?: string;
                 keyword?: string;
+                sort?: "newest" | "latest_seen" | "popular";
                 page?: number;
                 page_size?: number;
             };
@@ -15266,6 +15315,23 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CatResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListCatHotspots: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatHotspotResponse"];
             404: components["responses"]["Error"];
         };
     };
@@ -17841,7 +17907,7 @@ export interface operations {
     ListMyFavorites: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
                 page?: number;
                 page_size?: number;
             };
@@ -17858,7 +17924,7 @@ export interface operations {
     GetFavoriteState: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -17875,7 +17941,7 @@ export interface operations {
     AddFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -17893,7 +17959,7 @@ export interface operations {
     RemoveFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -18943,7 +19009,7 @@ export interface operations {
     LikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {
@@ -18961,7 +19027,7 @@ export interface operations {
     UnlikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {

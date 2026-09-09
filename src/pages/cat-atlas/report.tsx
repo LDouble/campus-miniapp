@@ -10,12 +10,16 @@ import { chooseMediaImages } from '../../features/media/selection'
 import './catalog-report.scss'
 
 const areas = ['一食堂', '图书馆', '宿舍区', '小树林', '教学楼', '其他']
+const campuses = ['崂山校区', '鱼山校区', '西海岸校区']
 const actions = ['睡觉', '干饭', '散步', '发呆', '营业中']
 
 export default function CatReportPage() {
   const { params } = useRouter()
   const isNew = params.mode === 'new'
+  const catID = params.id || ''
+  const catName = params.name ? decodeURIComponent(params.name) : '它'
   const [area, setArea] = useState(areas[0])
+  const [campus, setCampus] = useState(campuses[0])
   const [action, setAction] = useState(actions[0])
   const [name, setName] = useState('')
   const [note, setNote] = useState('')
@@ -41,14 +45,15 @@ export default function CatReportPage() {
     try { const result = await Taro.showActionSheet({ itemList: areas }); if (typeof result.tapIndex === 'number') setArea(areas[result.tapIndex]) } catch { /* 用户取消 */ }
   }
   const submit = async () => {
+    if (!isNew && !catID) { await Taro.showToast({ title: '缺少猫咪信息，请返回图鉴重新进入', icon: 'none' }); return }
     if (isNew && !images.length) { await Taro.showToast({ title: '请上传一张猫咪照片', icon: 'none' }); return }
     const imageError = mediaImageValidationError(images, 1)
     if (imageError) { await Taro.showToast({ title: imageError, icon: 'none' }); return }
     setSubmitting(true)
     try {
       const mediaId = images[0]?.mediaId
-      if (isNew) await submitCat({ proposed_name: name.trim() || undefined, area, description: note.trim() || undefined, photo_media_id: mediaId! })
-      else await createCatSighting(params.id || '', { area, activity: action, note: note.trim() || undefined, photo_media_id: mediaId })
+      if (isNew) await submitCat({ proposed_name: name.trim() || undefined, campus, area, description: note.trim() || undefined, photo_media_id: mediaId! })
+      else await createCatSighting(catID, { area, activity: action, note: note.trim() || undefined, photo_media_id: mediaId })
       await Taro.showToast({ title: isNew ? '已提交审核' : '打卡成功', icon: 'success' }); setTimeout(() => Taro.navigateBack(), 700)
     } catch (submitError) { await Taro.showToast({ title: isApiError(submitError) ? submitError.message : '提交失败，请稍后重试', icon: 'none' }) }
     finally { setSubmitting(false) }
@@ -63,11 +68,12 @@ export default function CatReportPage() {
   return <View className={`report-page ${isNew ? 'report-page--new' : 'report-page--sighting'}`}>
     <View className='report-nav'><Text onClick={() => Taro.navigateBack()}>×</Text><Text>{isNew ? '' : '我遇到它了'}</Text><View /></View>
     <View className='report-page__content'>
-      <View className='report-heading'><Text>{isNew ? '发现了一只新猫？' : '我遇到橘座了！'}</Text><Text>{isNew ? '— 让更多同学认识它吧！ ✦' : '留下这次温柔的相遇吧～'}</Text></View>
+      <View className='report-heading'><Text>{isNew ? '发现了一只新猫？' : `我遇到${catName}了！`}</Text><Text>{isNew ? '— 让更多同学认识它吧！ ✦' : '留下这次温柔的相遇吧～'}</Text></View>
       {isNew && <>
         <Text className='report-label'>上传照片 <Text>*</Text></Text>
         <View className='report-upload-row'>{renderPhoto()}<View className='report-photo report-photo--add' onClick={() => void chooseImages()}><Text>+</Text><Text>添加照片</Text></View></View>
         <Text className='report-label'>在哪里看到的？ <Text>*</Text></Text>
+        <View className='report-options'>{campuses.map((item) => <Text key={item} className={campus === item ? 'is-active' : ''} onClick={() => setCampus(item)}>{item}</Text>)}</View>
         <View className='report-picker' onClick={() => void chooseArea()}><View><Text>●</Text><Text>{area || '请选择地点'}</Text></View><Text>›</Text></View>
         <Text className='report-label'>大家怎么叫它？ <Text className='report-label__optional'>（可选）</Text></Text>
         <View className='report-input-wrap'><KeyboardSafeInput className='report-input' value={name} maxlength={32} placeholder='不知道也可以不填' onInput={(event) => setName(event.detail.value)} /></View>

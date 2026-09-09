@@ -2,7 +2,7 @@ import { Image, Text, View } from '@tarojs/components'
 import { useDidShow, useRouter } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
-import { getCat, listCatSightings, type CatView, type SightingView } from '../../api/cat-atlas'
+import { getCat, listCatSightings, setSightingLiked, type CatView, type SightingView } from '../../api/cat-atlas'
 import { RequestState } from '../../features/cat-atlas/ui'
 import './shared.scss'
 import './detail-feed.scss'
@@ -36,7 +36,6 @@ export default function CatSightingsPage() {
   const [items, setItems] = useState<SightingView[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [liked, setLiked] = useState<Record<number, boolean>>({})
   const load = useCallback(async () => {
     if (!params.id) {
       setLoading(false)
@@ -62,20 +61,20 @@ export default function CatSightingsPage() {
     <View className='cat-sightings-page__content'>
       <RequestState loading={loading} error={error} empty={!loading && !error && !items.length ? '还没有目击记录' : undefined} onRetry={() => void load()} />
       {items.map((item, index) => {
-        const isLiked = liked[item.id]
+        const isLiked = item.liked
         const photo = item.photo_url || fallbackPhotos[index % fallbackPhotos.length]
         const avatar = index < fallbackAvatars.length ? fallbackAvatars[index] : undefined
         return <View key={item.id} className='cat-stitch-feed-card'>
           <View className='cat-stitch-feed-card__head'>
-            <View className={`cat-stitch-feed-card__avatar ${avatar ? '' : 'cat-stitch-feed-card__avatar--anonymous'}`}>
-              {avatar ? <Image src={avatar} mode='aspectFill' /> : <Text>{item.reporter_name.slice(0, 1) || '匿'}</Text>}
+            <View className={`cat-stitch-feed-card__avatar ${item.reporter_avatar_url || avatar ? '' : 'cat-stitch-feed-card__avatar--anonymous'}`}>
+              {item.reporter_avatar_url || avatar ? <Image src={item.reporter_avatar_url || avatar} mode='aspectFill' /> : <Text>{item.reporter_name.slice(0, 1) || '匿'}</Text>}
             </View>
             <View className='cat-stitch-feed-card__identity'><Text>{item.reporter_name || '匿名用户'}</Text><View><Image src={locationIcon} mode='aspectFit' /><Text>{item.area}</Text></View></View>
             <Text className='cat-stitch-feed-card__time'>{formatTimelineTime(item.created_at)}</Text>
           </View>
           <Text className='cat-stitch-feed-card__note'>{item.note || `它正在${item.activity}`}</Text>
           <Image className='cat-stitch-feed-card__photo' src={photo} mode='aspectFill' />
-          <View className={`cat-stitch-feed-card__like ${isLiked ? 'is-liked' : ''}`} onClick={() => setLiked((current) => ({ ...current, [item.id]: !current[item.id] }))}><Image src={heartIcon} mode='aspectFit' /><Text>{isLiked ? 1 : 0}</Text></View>
+          <View className={`cat-stitch-feed-card__like ${isLiked ? 'is-liked' : ''}`} onClick={async () => { const previous = item; setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, liked: !isLiked, like_count: Math.max(0, entry.like_count + (isLiked ? -1 : 1)) } : entry)); try { const state = await setSightingLiked(item.id, !isLiked); setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, liked: state.liked, like_count: state.like_count } : entry)) } catch { setItems((current) => current.map((entry) => entry.id === item.id ? previous : entry)) } }}><Image src={heartIcon} mode='aspectFit' /><Text>{item.like_count}</Text></View>
         </View>
       })}
     </View>

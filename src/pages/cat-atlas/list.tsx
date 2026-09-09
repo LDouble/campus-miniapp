@@ -1,8 +1,8 @@
 import { Image, Text, View } from '@tarojs/components'
-import { useDidShow, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useCallback, useMemo, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
-import { listCats, type CatView } from '../../api/cat-atlas'
+import { listCats, setCatFavorite, type CatSort, type CatView } from '../../api/cat-atlas'
 import { CatCover, RequestState } from '../../features/cat-atlas/ui'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { navigateToWithGuard } from '../../utils/navigation'
@@ -25,16 +25,15 @@ export default function CatAtlasListPage() {
   const [area, setArea] = useState('全部')
   const [sort, setSort] = useState(sortOptions[0])
   const [sortOpen, setSortOpen] = useState(false)
-  const [liked, setLiked] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
-      const page = await listCats({ keyword: keyword.trim(), area: area === '全部' ? undefined : area, pageSize: 50 })
-      const sorted = [...page.items].sort((left, right) => sort === '最新遇见' ? String(right.last_seen_at || '').localeCompare(String(left.last_seen_at || '')) : right.sighting_count - left.sighting_count)
-      setItems(sorted)
+      const sortValue: CatSort = sort === '最新遇见' ? 'latest_seen' : 'popular'
+      const page = await listCats({ keyword: keyword.trim(), area: area === '全部' ? undefined : area, sort: sortValue, pageSize: 50 })
+      setItems(page.items)
       setTotal(page.total)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : '网络连接不稳定，请稍后重试')
@@ -57,8 +56,8 @@ export default function CatAtlasListPage() {
       <RequestState loading={loading} error={error} onRetry={() => void load()} />
       {!loading && !error && <RequestState empty={!items.length ? '还没有符合条件的猫咪' : undefined} />}
       {!loading && !error && <View className='cat-list-v2__items'>{items.map((cat, index) => {
-        const isLiked = liked.includes(cat.id)
-        return <View className='cat-list-v2__card' style={{ animationDelay: `${Math.min(index, 6) * 70}ms` }} key={cat.id} onClick={() => void navigateToWithGuard(`/pages/cat-atlas/detail?id=${cat.id}`)}><View className='cat-list-v2__cover'><CatCover cat={cat} />{index === 0 && <Text className='cat-list-v2__rank'>TOP 1</Text>}</View><View className='cat-list-v2__body'><View className='cat-list-v2__title'><Text>{cat.name}</Text>{index === 0 && <Text>✦</Text>}</View><View className='cat-list-v2__tags'>{cat.traits.slice(0, 3).map((trait, traitIndex) => <Text className={tagClass(traitIndex)} key={trait}>{trait}</Text>)}</View><View className='cat-list-v2__meta'><View><Image src={locationIcon} mode='aspectFit' /><Text>{cat.resident_area}</Text></View><Text>{cat.sighting_count} 人遇见</Text></View></View><View className={`cat-list-v2__heart ${isLiked ? 'is-liked' : ''}`} ariaRole='button' ariaLabel={isLiked ? '取消收藏猫咪' : '收藏猫咪'} onClick={(event) => { event.stopPropagation(); setLiked((current) => isLiked ? current.filter((id) => id !== cat.id) : [...current, cat.id]) }}><Image src={heartIcon} mode='aspectFit' /></View></View>
+        const isLiked = cat.favorited
+        return <View className='cat-list-v2__card' style={{ animationDelay: `${Math.min(index, 6) * 70}ms` }} key={cat.id} onClick={() => void navigateToWithGuard(`/pages/cat-atlas/detail?id=${cat.id}`)}><View className='cat-list-v2__cover'><CatCover cat={cat} />{index === 0 && <Text className='cat-list-v2__rank'>TOP 1</Text>}</View><View className='cat-list-v2__body'><View className='cat-list-v2__title'><Text>{cat.name}</Text>{index === 0 && <Text>✦</Text>}</View><View className='cat-list-v2__tags'>{cat.traits.slice(0, 3).map((trait, traitIndex) => <Text className={tagClass(traitIndex)} key={trait}>{trait}</Text>)}</View><View className='cat-list-v2__meta'><View><Image src={locationIcon} mode='aspectFit' /><Text>{cat.resident_area}</Text></View><Text>{cat.sighting_count} 人遇见</Text></View></View><View className={`cat-list-v2__heart ${isLiked ? 'is-liked' : ''}`} ariaRole='button' ariaLabel={isLiked ? '取消收藏猫咪' : '收藏猫咪'} onClick={async (event) => { event.stopPropagation(); setItems((current) => current.map((item) => item.id === cat.id ? { ...item, favorited: !isLiked } : item)); try { await setCatFavorite(cat.id, !isLiked) } catch (favoriteError) { setItems((current) => current.map((item) => item.id === cat.id ? { ...item, favorited: isLiked } : item)); void Taro.showToast({ title: favoriteError instanceof Error ? favoriteError.message : '收藏失败', icon: 'none' }) } }}><Image src={heartIcon} mode='aspectFit' /></View></View>
       })}</View>}
       {!loading && !error && items.length > 0 && <Text className='cat-list-v2__end'>已加载全部 {total} 只在录猫咪 · 持续补充中</Text>}
     </View>
