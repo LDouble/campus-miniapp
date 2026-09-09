@@ -328,8 +328,14 @@ page {
 }
 
 .cat-detail-bottom__button--report {
+  border-color: #9f4f31;
+  color: #fffdf8;
   background: linear-gradient(135deg, #c5723e, #9f4f31);
   box-shadow: 0 14rpx 28rpx rgba(159, 79, 49, .28);
+}
+
+.cat-detail-bottom__button--report text {
+  color: #fffdf8;
 }
 
 /* 最近动态：卡片保持纸张感，定位与匿名状态使用陶土色。 */
