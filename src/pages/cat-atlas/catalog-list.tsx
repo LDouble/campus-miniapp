@@ -5,6 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import { listCats, setCatFavorite, type CatSort, type CatView } from '../../api/cat-atlas'
 import { CatCover, RequestState } from '../../features/cat-atlas/ui'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './home-list.scss'
 
@@ -28,6 +29,7 @@ export default function CatAtlasCatalogList() {
   const [sortOpen, setSortOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const headerCollapsed = useCollapsingHeader({ threshold: 180, releaseGap: 28 })
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -56,7 +58,7 @@ export default function CatAtlasCatalogList() {
   const changeSort = (value: string) => { setSort(value); setSortOpen(false) }
 
   return <View className='cat-list-page'>
-    <CustomNavbar title='' showBack theme='ocean' immersive collapsed={false} />
+    <CustomNavbar title='全部图鉴' showBack theme='ocean' immersive={!headerCollapsed} collapsed={headerCollapsed} />
     <View className='cat-list-page__scroll'>
       <View className='cat-list-v2__hero'><Image src={heroImage} className='cat-list-v2__hero-image' mode='aspectFill' /><View className='cat-list-v2__hero-veil' /><View className='cat-list-v2__hero-badge'><Text>OUC 海大萌宠档案库</Text><View /><Text>共 3 个校区</Text></View><View className='cat-list-v2__hero-copy'><Text>记录海大的每一次偶遇</Text><Text>遇见身边毛绒绒的温暖与心动</Text></View></View>
       <View className='cat-list-v2__search'><Image src={searchIcon} mode='aspectFit' /><KeyboardSafeInput value={keyword} placeholder='搜索猫咪名字 / 地点 / 毛色特征…' confirmType='search' onInput={(event) => setKeyword(event.detail.value)} onConfirm={() => void load()} /><Text onClick={() => void load()}>搜索</Text></View>

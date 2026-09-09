@@ -452,3 +452,40 @@ page { background: var(--ousea-bg-page); }
   white-space: nowrap;
   transform: translateX(-50%) rotate(-2deg);
 }
+
+/* 滚动后切换成首页式的吸顶标题栏，保留胶囊与安全区的适配。 */
+.cat-list-page > .custom-navbar.custom-navbar--collapsed {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: auto !important;
+  min-height: 0;
+  pointer-events: auto;
+}
+
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__fixed {
+  color: #24465b;
+  border-bottom: 1rpx solid rgba(214, 231, 229, .92);
+  background: rgba(255, 252, 247, .94);
+  box-shadow: 0 8rpx 22rpx rgba(42, 78, 90, .09);
+  backdrop-filter: blur(22rpx);
+}
+
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__center {
+  opacity: 1;
+  transform: none;
+}
+
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__title {
+  color: #24465b;
+  text-shadow: none;
+}
+
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__back {
+  color: #31576c;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
