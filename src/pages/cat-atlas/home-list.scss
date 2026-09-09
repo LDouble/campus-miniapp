@@ -423,9 +423,9 @@ page { background: var(--ousea-bg-page); }
   backdrop-filter: none;
 }
 
-.cat-list-page > .custom-navbar .custom-navbar__center {
-  opacity: 1;
-  transform: none;
+.cat-list-page > .custom-navbar:not(.custom-navbar--collapsed) .custom-navbar__center {
+  opacity: 0;
+  transform: translateY(10rpx);
 }
 
 .cat-list-page > .custom-navbar .custom-navbar__title {
