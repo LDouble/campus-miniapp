@@ -19,6 +19,8 @@ const heroFallbacks = [
   require('../../assets/cat-atlas/stitch/detail-hero-3.jpg'),
 ]
 
+const compactArea = (area: string) => area.length > 14 ? `${area.slice(0, 14)}…` : area
+
 export default function CatDetailPage() {
   const { params } = useRouter()
   const id = params.id || ''
@@ -120,14 +122,21 @@ export default function CatDetailPage() {
       </View>
 
       <View className='cat-detail-live-preview'>
-        <View className='cat-detail-live-preview__head'><Text>最近动态</Text><Text onClick={() => void navigateToWithGuard(sightingsPath)}>查看全部</Text></View>
+        <View className='cat-detail-live-preview__head'>
+          <View><Text>最近动态</Text><Text className='cat-detail-live-preview__subtitle'>同学们记录的相遇瞬间</Text></View>
+          <Text onClick={() => void navigateToWithGuard(sightingsPath)}>查看全部</Text>
+        </View>
         {sightings.length > 0
           ? sightings.map((item) => <View className='cat-detail-live-preview__row' key={item.id}>
-            <Text>{item.reporter_name} 在 {item.area} 遇见了它</Text>
+            <View className='cat-detail-live-preview__row-head'><Text>{item.reporter_name || '匿名同学'}</Text><Text>{compactArea(item.area)}</Text></View>
             <View className='cat-detail-live-preview__activity'><Text>它在{item.activity || '悠闲活动'}</Text></View>
             <Text className='cat-detail-live-preview__note'>{item.note || '记录了这次相遇'}</Text>
           </View>)
           : <View className='cat-detail-live-preview__empty'><Text>还没有新的相遇记录</Text><Text>成为第一个记录它的人吧</Text></View>}
+        <View className='cat-detail-live-preview__compose' onClick={() => void navigateToWithGuard(reportPath)}>
+          <View><Text>我也遇见它了</Text><Text>补充它此刻在做什么、在哪里</Text></View>
+          <Text>›</Text>
+        </View>
       </View>
     </View>
     <View className='cat-detail-bottom'>

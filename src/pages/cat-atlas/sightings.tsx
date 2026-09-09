@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
 import { getCat, listCatSightings, setSightingLiked, type CatView, type SightingView } from '../../api/cat-atlas'
 import { RequestState } from '../../features/cat-atlas/ui'
+import { navigateToWithGuard } from '../../utils/navigation'
 import './shared.scss'
 import './detail-feed.scss'
 import './warm-theme.scss'
@@ -61,6 +62,10 @@ export default function CatSightingsPage() {
     <CustomNavbar title={cat ? `${cat.name} · 最近动态` : '最近动态'} showBack />
     <View className='cat-sightings-page__content'>
       <RequestState loading={loading} error={error} empty={!loading && !error && !items.length ? '还没有目击记录' : undefined} onRetry={() => void load()} />
+      {cat && <View className='cat-sightings-page__contribute' onClick={() => void navigateToWithGuard(`/pages/cat-atlas/report?id=${cat.id}&name=${encodeURIComponent(cat.name)}`)}>
+        <View><Text>你也见到 {cat.name} 了吗？</Text><Text>补充它此刻的状态、地点或照片</Text></View>
+        <Text>去记录</Text>
+      </View>}
       {items.map((item, index) => {
         const isLiked = item.liked
         const photo = item.photo_url || fallbackPhotos[index % fallbackPhotos.length]
