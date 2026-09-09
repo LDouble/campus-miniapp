@@ -6,8 +6,9 @@ import { getCat, listCatSightings, setSightingLiked, type CatView, type Sighting
 import { RequestState } from '../../features/cat-atlas/ui'
 import './shared.scss'
 import './detail-feed.scss'
+import './warm-theme.scss'
 
-const locationIcon = require('../../assets/icons/location.svg')
+const locationIcon = require('../../assets/icons/location-warm.svg')
 const heartIcon = require('../../assets/community/heart.svg')
 const fallbackPhotos = [
   require('../../assets/cat-atlas/stitch/sighting-library.jpg'),

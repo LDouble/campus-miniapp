@@ -7,6 +7,7 @@ import { formatCatDate, RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './shared.scss'
 import './detail-feed.scss'
+import './warm-theme.scss'
 
 const eyeIcon = require('../../assets/icons/eye.svg')
 const plusIcon = require('../../assets/icons/plus.svg')

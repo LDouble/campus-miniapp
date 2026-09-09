@@ -5,6 +5,7 @@ import { getMyCatCatalog, type CatCatalog, type CatView } from '../../api/cat-at
 import { RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './catalog-report.scss'
+import './warm-theme.scss'
 
 const referenceCovers = [
   require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-1.jpg'),

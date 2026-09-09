@@ -6,9 +6,10 @@ import { getCat, listCatHotspots, type CatHotspot, type CatView } from '../../ap
 import { RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './shared.scss'
+import './warm-theme.scss'
 
-const locationIcon = require('../../assets/icons/location.svg')
-const eyeIcon = require('../../assets/icons/eye.svg')
+const locationIcon = require('../../assets/icons/location-warm.svg')
+const eyeIcon = require('../../assets/icons/eye-warm.svg')
 
 const clusterPositions = [
   { left: '28%', top: '32%' },

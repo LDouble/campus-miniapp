@@ -1,0 +1,721 @@
+/* 猫猫图鉴统一暖系主题：浏览、详情、地图、动态和投稿页共享同一组暖米白 / 杏橙 / 棕色语义。 */
+page {
+  background: #fff8ee;
+}
+
+.cat-page,
+.cat-list-page,
+.catalog-page,
+.report-page {
+  color: #5a4033;
+  background-color: #fff8ee;
+  background-image: linear-gradient(180deg, #fff5e8 0, #f8f1e7 100%);
+}
+
+.cat-page .custom-navbar__fixed,
+.report-page .custom-navbar__fixed {
+  color: #5a4033;
+  border-bottom-color: rgba(232, 210, 185, .88);
+  background: rgba(255, 248, 238, .94);
+  box-shadow: 0 4rpx 18rpx rgba(133, 86, 53, .06);
+}
+
+.cat-page .custom-navbar__title,
+.cat-page .custom-navbar__back,
+.report-page .custom-navbar__title,
+.report-page .custom-navbar__back {
+  color: #5a4033;
+}
+
+.cat-page .custom-navbar__back,
+.report-page .custom-navbar__back {
+  background: rgba(255, 241, 221, .82);
+}
+
+/* 全部图鉴：保留沉浸式图片，但把交互层从海蓝改为陶土橙。 */
+.cat-list-page {
+  background-color: #fbf5eb;
+  background-image: radial-gradient(180rpx 120rpx at 4% 24%, rgba(239, 176, 102, .14), transparent 72%), radial-gradient(220rpx 160rpx at 96% 54%, rgba(201, 137, 83, .09), transparent 74%), linear-gradient(180deg, #f9f1e5 0, #fbf8f1 52%, #f5eee2 100%);
+}
+
+.cat-list-page > .custom-navbar .custom-navbar__fixed {
+  color: #fffaf2;
+}
+
+.cat-list-page > .custom-navbar .custom-navbar__title,
+.cat-list-page > .custom-navbar .custom-navbar__back {
+  color: #fffaf2;
+}
+
+.cat-list-page > .custom-navbar .custom-navbar__back {
+  background: rgba(91, 55, 35, .28);
+  box-shadow: 0 6rpx 14rpx rgba(75, 42, 26, .16);
+}
+
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__fixed {
+  color: #5a4033;
+  border-bottom-color: rgba(232, 210, 185, .92);
+  background: rgba(255, 249, 240, .96);
+  box-shadow: 0 8rpx 22rpx rgba(133, 86, 53, .09);
+}
+
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__title,
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__back {
+  color: #5a4033;
+}
+
+.cat-list-page > .custom-navbar.custom-navbar--collapsed .custom-navbar__back {
+  background: transparent;
+  box-shadow: none;
+}
+
+.cat-list-v2__hero-veil {
+  background: linear-gradient(180deg, rgba(92, 56, 38, .12) 0%, rgba(91, 55, 35, .06) 35%, rgba(72, 43, 28, .74) 100%), linear-gradient(105deg, rgba(132, 76, 44, .42), rgba(239, 174, 99, .1) 72%);
+}
+
+.cat-list-v2__hero-badge {
+  color: #5a4033;
+  border-color: rgba(255, 247, 231, .82);
+  background: rgba(255, 248, 235, .92);
+  box-shadow: 0 10rpx 24rpx rgba(133, 86, 53, .14);
+}
+
+.cat-list-v2__hero-badge text:last-child {
+  color: #927461;
+}
+
+.cat-list-v2__hero-copy {
+  background: linear-gradient(180deg, rgba(72, 43, 28, 0), rgba(72, 43, 28, .84) 78%);
+}
+
+.cat-list-v2__search > text,
+.cat-list-v2__filters > .is-active,
+.cat-list-v2__fab {
+  background: linear-gradient(135deg, #c5723e, #a95332);
+}
+
+.cat-list-v2__search > text {
+  box-shadow: 0 8rpx 16rpx rgba(169, 83, 50, .22);
+}
+
+.cat-list-v2__filters > text {
+  border-color: rgba(220, 191, 157, .8);
+  color: #6b5143;
+  background: rgba(255, 253, 248, .72);
+}
+
+.cat-list-v2__filters > .is-active {
+  border-color: #b76136;
+  box-shadow: 0 8rpx 16rpx rgba(169, 83, 50, .18);
+}
+
+.cat-list-v2__filters > .is-active > text {
+  color: #ffe6c7;
+}
+
+.cat-list-v2__toolbar {
+  color: #6b5143;
+}
+
+.cat-list-v2__sort {
+  border-color: rgba(220, 191, 157, .78);
+  color: #6b5143;
+  background: rgba(255, 253, 248, .84);
+}
+
+.cat-list-v2__sort-menu {
+  border-color: #ead8c1;
+  box-shadow: 0 18rpx 34rpx rgba(133, 86, 53, .14);
+}
+
+.cat-list-v2__sort-menu .is-current {
+  color: #9d512f;
+  background: #fff0dc;
+}
+
+.cat-list-v2__submit {
+  color: #a85a31;
+  background: #fff0dc;
+}
+
+.cat-list-v2__card {
+  border-color: rgba(224, 205, 181, .92);
+  background: rgba(255, 253, 248, .96);
+  box-shadow: 0 14rpx 28rpx rgba(133, 86, 53, .1);
+}
+
+.cat-list-v2__card:active {
+  box-shadow: 0 7rpx 14rpx rgba(133, 86, 53, .08);
+}
+
+.cat-list-v2__rank {
+  background: #e69a51;
+  box-shadow: 0 5rpx 10rpx rgba(190, 104, 39, .22);
+}
+
+.cat-list-v2__title {
+  color: #5a4033;
+}
+
+.cat-list-v2__title text:last-child {
+  color: #d9823f;
+}
+
+.cat-list-v2__tag--blue {
+  color: #a75b36;
+  background: #fff0df;
+}
+
+.cat-list-v2__tag--mint {
+  color: #6d866d;
+  background: #edf3e9;
+}
+
+.cat-list-v2__tag--orange {
+  color: #b5662c;
+  background: #fff0dc;
+}
+
+.cat-list-v2__meta,
+.cat-list-v2__end,
+.cat-list-v2__load-more.is-loading {
+  color: #9a7e6b;
+}
+
+.cat-list-v2__load-more {
+  color: #ae5e34;
+}
+
+.cat-list-v2__heart {
+  border-color: #f0ddc3;
+  background: #fff4e2;
+}
+
+.cat-list-v2__fab {
+  border-color: rgba(255, 236, 211, .64);
+  box-shadow: 0 16rpx 28rpx rgba(169, 83, 50, .28);
+}
+
+.cat-cover {
+  background: #f2e4d3;
+}
+
+.cat-cover__veil {
+  background: linear-gradient(135deg, rgba(88, 52, 35, .22), rgba(88, 52, 35, .58));
+}
+
+.cat-request-state {
+  color: #9a7e6b;
+}
+
+.cat-request-state__title {
+  color: #6b5143;
+}
+
+.cat-request-state__spinner {
+  border-color: #f0ddc3;
+  border-top-color: #b76535;
+}
+
+/* 详情页：把深蓝夜景遮罩和蓝色主按钮换成暖棕与陶土橙。 */
+.cat-detail-page {
+  color: #5a4033;
+  background-color: #f8f1e7;
+  background-image: linear-gradient(180deg, #fff4e5 0, #fbf7ef 58%, #f7eadb 100%);
+}
+
+.cat-detail-hero {
+  background: #4c3027;
+  box-shadow: 0 22rpx 48rpx rgba(121, 74, 45, .2);
+}
+
+.cat-detail-hero__shade {
+  background: linear-gradient(180deg, rgba(61, 35, 26, .62) 0%, rgba(61, 35, 26, .04) 38%, rgba(61, 35, 26, .56) 100%), linear-gradient(110deg, rgba(157, 88, 47, .2), transparent 62%);
+}
+
+.cat-detail-hero__round-action {
+  background: rgba(73, 42, 30, .42);
+  box-shadow: 0 8rpx 18rpx rgba(61, 35, 26, .2);
+}
+
+.cat-detail-hero__slogan {
+  background: rgba(73, 42, 30, .24);
+}
+
+.cat-detail-hero__counter {
+  background: rgba(73, 42, 30, .56);
+  box-shadow: 0 8rpx 18rpx rgba(61, 35, 26, .18);
+}
+
+.cat-detail-sheet {
+  background: rgba(255, 253, 247, .97);
+  box-shadow: 0 -14rpx 30rpx rgba(121, 74, 45, .08);
+}
+
+.cat-detail-profile-head {
+  border-bottom-color: #eadcc9;
+}
+
+.cat-detail-profile-head__name,
+.cat-detail-archive__title,
+.cat-detail-live-preview__head {
+  color: #5a4033;
+}
+
+.cat-detail-profile-head__subtitle,
+.cat-detail-profile-head__stat,
+.cat-detail-live-preview__empty {
+  color: #9a7e6b;
+}
+
+.cat-detail-profile-head__tags text {
+  color: #a75b36;
+  background: #fff0df;
+}
+
+.cat-detail-profile-head__favorite {
+  background: #fff1e3;
+}
+
+.cat-detail-quote {
+  color: #8b5a2c;
+  background: #fff3df;
+  box-shadow: 0 9rpx 18rpx rgba(207, 132, 59, .08);
+}
+
+.cat-detail-archive__panel {
+  border-color: #ead8c1;
+  background: #fff8ee;
+}
+
+.cat-detail-archive__row {
+  color: #745748;
+}
+
+.cat-detail-archive__row text:first-child {
+  color: #a88c78;
+}
+
+.cat-detail-archive__row text:last-child {
+  color: #65483a;
+}
+
+.cat-detail-live-preview {
+  background: #fff4e5;
+}
+
+.cat-detail-live-preview__head text:last-child {
+  color: #ae5e34;
+}
+
+.cat-detail-live-preview__row {
+  border-bottom-color: #eadcc9;
+  color: #745748;
+}
+
+.cat-detail-bottom {
+  background: linear-gradient(0deg, rgba(255, 253, 247, .99) 72%, rgba(255, 253, 247, 0));
+}
+
+.cat-detail-bottom__button {
+  border-color: #ead8c1;
+  color: #795846;
+  box-shadow: 0 10rpx 22rpx rgba(133, 86, 53, .12);
+}
+
+.cat-detail-bottom__button--activity image {
+  filter: sepia(1) saturate(3) hue-rotate(335deg) brightness(78%);
+}
+
+.cat-detail-bottom__button--report {
+  background: linear-gradient(135deg, #c5723e, #9f4f31);
+  box-shadow: 0 14rpx 28rpx rgba(159, 79, 49, .28);
+}
+
+/* 最近动态：卡片保持纸张感，定位与匿名状态使用陶土色。 */
+.cat-sightings-page {
+  background-color: #fff8ee;
+  background-image: radial-gradient(rgba(201, 120, 62, .06) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #fff4e5 0, #f8f1e7 100%);
+}
+
+.cat-sightings-page .custom-navbar__fixed {
+  color: #5a4033;
+  background: rgba(255, 248, 238, .94);
+}
+
+.cat-stitch-feed-card {
+  border-color: rgba(229, 205, 179, .82);
+  box-shadow: 0 14rpx 28rpx rgba(133, 86, 53, .08);
+}
+
+.cat-stitch-feed-card__avatar {
+  border-color: #eadcc9;
+  background: #fff1df;
+}
+
+.cat-stitch-feed-card__avatar--anonymous {
+  color: #a75b36;
+  background: #fff0df;
+}
+
+.cat-stitch-feed-card__identity {
+  color: #65483a;
+}
+
+.cat-stitch-feed-card__identity > view,
+.cat-stitch-feed-card__time {
+  color: #a88c78;
+}
+
+.cat-stitch-feed-card__note {
+  color: #745748;
+}
+
+.cat-stitch-feed-card__like {
+  color: #9a7e6b;
+}
+
+/* 出没地图：道路使用沙砾、草地和陶土标记，去掉蓝色水面感。 */
+.cat-map-page {
+  background: linear-gradient(180deg, #fff4e5 0, #f8f1e7 100%);
+}
+
+.cat-map-canvas {
+  background-color: #e8ead8;
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, .38) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .24) 50%, rgba(255, 255, 255, .24) 75%, transparent 75%), linear-gradient(145deg, #e2eadb 0 30%, #e9d9c2 30% 34%, #f0ecd7 34% 64%, #e1e5d2 64%);
+  box-shadow: inset 0 -30rpx 42rpx rgba(126, 124, 87, .12);
+}
+
+.cat-map-canvas::after,
+.cat-map-canvas::before {
+  box-shadow: 0 14rpx 0 rgba(180, 137, 93, .1);
+}
+
+.cat-map-canvas__label {
+  color: #65483a;
+  background: rgba(255, 248, 235, .9);
+  box-shadow: 0 8rpx 16rpx rgba(133, 86, 53, .1);
+}
+
+.cat-map-canvas__privacy {
+  color: #9a7e6b;
+}
+
+.cat-map-pin {
+  color: #65483a;
+}
+
+.cat-map-pin > view {
+  background: #b76535;
+  box-shadow: 0 8rpx 16rpx rgba(159, 79, 49, .24);
+}
+
+.cat-map-pin:nth-of-type(4n + 1) > view {
+  background: #e3954f;
+}
+
+.cat-map-pin:nth-of-type(4n + 2) > view {
+  background: #83986e;
+}
+
+.cat-map-summary {
+  background: rgba(255, 253, 247, .97);
+  box-shadow: 0 16rpx 30rpx rgba(133, 86, 53, .12);
+}
+
+.cat-map-summary__name,
+.cat-map-list > text {
+  color: #65483a;
+}
+
+.cat-map-summary > view:first-child text:last-child,
+.cat-map-summary__count {
+  color: #9a7e6b;
+}
+
+.cat-map-summary__button {
+  background: linear-gradient(135deg, #c5723e, #9f4f31);
+  box-shadow: 0 10rpx 18rpx rgba(159, 79, 49, .18);
+}
+
+.cat-map-list > view {
+  border-bottom-color: #eadcc9;
+  color: #745748;
+}
+
+@keyframes cat-map-pin-breathe-warm {
+  0%, 100% { box-shadow: 0 8rpx 16rpx rgba(159, 79, 49, .24), 0 0 0 0 rgba(183, 101, 53, .2); }
+  50% { box-shadow: 0 8rpx 16rpx rgba(159, 79, 49, .24), 0 0 0 16rpx rgba(183, 101, 53, 0); }
+}
+
+.cat-map-pin:first-of-type > view {
+  animation-name: cat-map-pin-breathe-warm;
+}
+
+/* 我的图鉴：进度和已遇见状态使用纸张与杏橙，不再使用海蓝进度条。 */
+.catalog-page {
+  background-color: #fbf5eb;
+  background-image: radial-gradient(rgba(201, 120, 62, .05) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #fff4e5 0, #f8f1e7 100%);
+}
+
+.catalog-nav {
+  color: #5a4033;
+  border-bottom-color: #eadcc9;
+  background: rgba(255, 249, 240, .96);
+}
+
+.catalog-nav__back {
+  color: #5a4033;
+  background: #fff1df;
+}
+
+.catalog-nav__title {
+  color: #5a4033;
+}
+
+.catalog-nav__actions {
+  border-color: #ead8c1;
+  color: #795846;
+  background: rgba(255, 253, 248, .9);
+}
+
+.catalog-summary {
+  border-color: rgba(226, 196, 159, .84);
+  background: linear-gradient(135deg, #fff0dc 0%, #fff7eb 58%, #f5eadc 100%);
+  box-shadow: 0 14rpx 30rpx rgba(133, 86, 53, .1);
+}
+
+.catalog-summary__copy > view:first-child,
+.catalog-summary__number {
+  color: #65483a;
+}
+
+.catalog-summary__track view {
+  background: linear-gradient(90deg, #d88b47, #b76535);
+}
+
+.catalog-summary__percent,
+.catalog-summary__hint {
+  color: #9a7e6b;
+}
+
+.catalog-summary__cat {
+  border-color: rgba(255, 255, 255, .86);
+  box-shadow: 0 8rpx 16rpx rgba(133, 86, 53, .1);
+}
+
+.catalog-tabs {
+  border-color: #ead8c1;
+  background: rgba(255, 253, 248, .78);
+}
+
+.catalog-tabs .is-active {
+  background: #c5723e;
+  box-shadow: 0 6rpx 12rpx rgba(169, 83, 50, .18);
+}
+
+.catalog-grid__item > text {
+  color: #745748;
+}
+
+/* 发现新猫 / 我遇到了：两个投稿动作都沿用统一暖系，只保留状态上的绿色与红色。 */
+.report-page--new,
+.report-page--sighting {
+  color: #5a4033;
+  background-color: #fff8ee;
+  background-image: radial-gradient(rgba(201, 120, 62, .06) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #fff4e5 0, #f8f1e7 100%);
+}
+
+.report-page--new .custom-navbar__fixed,
+.report-page--sighting .custom-navbar__fixed {
+  color: #5a4033;
+  border-bottom-color: rgba(232, 210, 185, .88);
+  background: rgba(255, 248, 238, .95);
+}
+
+.report-page--new .report-heading,
+.report-page--sighting .report-heading {
+  border-color: rgba(220, 178, 133, .76);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(255, 245, 228, .88));
+  box-shadow: 0 16rpx 28rpx rgba(157, 102, 58, .08), inset 0 1rpx 0 rgba(255, 255, 255, .92);
+}
+
+.report-page--new .report-heading__eyebrow > text:first-child,
+.report-page--sighting .report-heading__eyebrow > text:first-child {
+  color: #9a643c;
+  background: #fff0dc;
+}
+
+.report-page--new .report-heading__title,
+.report-page--new .report-label,
+.report-page--sighting .report-heading__title,
+.report-page--sighting .report-label {
+  color: #604738;
+}
+
+.report-page--new .report-heading__subtitle,
+.report-page--new .report-location-fallback,
+.report-page--new .report-custom-area__hint,
+.report-page--sighting .report-heading__subtitle,
+.report-page--sighting .report-location-fallback,
+.report-page--sighting .report-custom-area__hint {
+  color: #9d806d;
+}
+
+.report-page--new .report-label::before,
+.report-page--sighting .report-label::before {
+  background: #df9856;
+}
+
+.report-page--new .report-options text,
+.report-page--sighting .report-options text {
+  border-color: rgba(225, 204, 179, .86);
+  color: #806858;
+  background: rgba(255, 253, 248, .82);
+}
+
+.report-page--new .report-options .is-active,
+.report-page--sighting .report-options .is-active {
+  border-color: #e5b37d;
+  color: #a75e32;
+  background: linear-gradient(145deg, #fff4e2, #ffecd1);
+  box-shadow: 0 7rpx 14rpx rgba(189, 119, 56, .12);
+}
+
+.report-page--new .report-photo--add,
+.report-page--sighting .report-photo--add {
+  border-color: #e4c29e;
+  color: #a67c60;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .9), rgba(255, 244, 228, .84));
+}
+
+.report-page--new .report-photo--add text:first-child,
+.report-page--sighting .report-photo--add text:first-child {
+  border-color: #d9a875;
+  color: #c9783e;
+  background: rgba(255, 255, 255, .78);
+}
+
+.report-page--new .report-photo--add text:last-child,
+.report-page--sighting .report-photo--add text:last-child {
+  color: #9d765c;
+}
+
+.report-page--new .report-picker,
+.report-page--new .report-input-wrap,
+.report-page--new .report-textarea-wrap,
+.report-page--sighting .report-picker,
+.report-page--sighting .report-input-wrap,
+.report-page--sighting .report-textarea-wrap {
+  border-color: rgba(225, 204, 179, .9);
+  color: #604738;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(255, 247, 235, .86));
+  box-shadow: 0 8rpx 16rpx rgba(133, 92, 58, .055);
+}
+
+.report-page--new .report-input,
+.report-page--new .report-textarea,
+.report-page--new .report-custom-area__input,
+.report-page--sighting .report-input,
+.report-page--sighting .report-textarea,
+.report-page--sighting .report-custom-area__input {
+  color: #604738;
+}
+
+.report-page--new .report-location-primary,
+.report-page--sighting .report-location-primary {
+  border-color: #ead9c7;
+  box-shadow: 0 8rpx 20rpx rgba(133, 92, 58, .08);
+}
+
+.report-page--new .report-location-primary__icon,
+.report-page--sighting .report-location-primary__icon {
+  background: #fff0dc;
+}
+
+.report-page--new .report-location-primary__copy text:first-child,
+.report-page--sighting .report-location-primary__copy text:first-child {
+  color: #604738;
+}
+
+.report-page--new .report-location-primary__copy text:last-child,
+.report-page--sighting .report-location-primary__copy text:last-child {
+  color: #9d806d;
+}
+
+.report-page--new .report-location-primary__action,
+.report-page--sighting .report-location-primary__action {
+  border-color: #e8c69f;
+  color: #a75e32;
+  background: #fff6e8;
+}
+
+.report-page--new .report-custom-area,
+.report-page--sighting .report-custom-area {
+  border-color: rgba(225, 185, 142, .78);
+  background: rgba(255, 251, 244, .86);
+}
+
+.report-page--new .report-footer,
+.report-page--sighting .report-footer {
+  border-top-color: rgba(225, 204, 179, .86);
+  background: rgba(255, 249, 240, .94);
+  box-shadow: 0 -10rpx 26rpx rgba(133, 92, 58, .08);
+}
+
+.report-page--new .report-submit,
+.report-page--sighting .report-submit {
+  background: linear-gradient(135deg, #b96538, #974a31);
+  box-shadow: 0 14rpx 28rpx rgba(151, 74, 49, .22);
+}
+
+.report-page--new .report-footer > text,
+.report-page--sighting .report-footer > text {
+  color: #9d806d;
+}
+
+/* 避免旧入口复用这些样式时重新露出海蓝。 */
+.cat-home-hero-v2__veil,
+.cat-home-hero__veil {
+  background: linear-gradient(112deg, rgba(126, 70, 41, .76), rgba(231, 151, 79, .2));
+}
+
+.cat-home-shortcuts__icon--blue,
+.cat-quick-grid__icon--blue {
+  background: #fff0dc;
+}
+
+.cat-home-encounter__avatar,
+.cat-filter--active,
+.cat-fab,
+.cat-primary-button,
+.cat-sighting-card__avatar,
+.cat-catalog-hero__progress view {
+  background: #b76535;
+}
+
+.cat-tag,
+.cat-option--active,
+.cat-stat,
+.cat-catalog-hero {
+  color: #a75b36;
+  border-color: #ead8c1;
+  background: #fff0dc;
+}
+
+.cat-stat__number,
+.cat-section__action,
+.cat-text-action,
+.cat-catalog-tabs .is-active {
+  color: #ae5e34;
+}
+
+.cat-list-page .custom-navbar--ocean.custom-navbar--collapsed .custom-navbar__fixed {
+  background: linear-gradient(135deg, #b96538, #d88b47 62%, #f0c47e);
+}
+
+.cat-page .cat-primary-button,
+.cat-page .cat-map-summary__button,
+.cat-list-page .cat-list-v2__fab {
+  box-shadow: 0 12rpx 26rpx rgba(159, 79, 49, .22);
+}

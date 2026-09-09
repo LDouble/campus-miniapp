@@ -8,9 +8,10 @@ import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { navigateToWithGuard } from '../../utils/navigation'
 import './home-list.scss'
+import './warm-theme.scss'
 
 const searchIcon = require('../../assets/icons/search.svg')
-const locationIcon = require('../../assets/icons/location.svg')
+const locationIcon = require('../../assets/icons/location-warm.svg')
 const plusIcon = require('../../assets/icons/plus.svg')
 const heartIcon = require('../../assets/community/heart.svg')
 const heroImage = require('../../assets/cat-atlas/stitch/list-1.jpg')

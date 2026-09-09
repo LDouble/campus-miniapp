@@ -9,6 +9,7 @@ import { uploadMediaImage } from '../../api/media'
 import { DEFAULT_MEDIA_IMAGE_QUALITY, mediaImageValidationError, type MediaImageDraft } from '../../features/media/images'
 import { chooseMediaImages } from '../../features/media/selection'
 import './catalog-report.scss'
+import './warm-theme.scss'
 
 const areas = ['一食堂', '图书馆', '宿舍区', '小树林', '教学楼', '其他']
 const campuses = ['崂山校区', '鱼山校区', '西海岸校区']
