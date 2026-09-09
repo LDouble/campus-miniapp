@@ -1,1 +1,1 @@
-export default definePageConfig({ navigationStyle: 'custom', enableShareAppMessage: true, backgroundColor: '@backgroundColor' })
+export default definePageConfig({ navigationStyle: 'custom', enablePullDownRefresh: true, enableShareAppMessage: true, backgroundColor: '@backgroundColor' })

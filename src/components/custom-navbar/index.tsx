@@ -49,8 +49,10 @@ export const getNavbarMetrics = () => {
     }
 
     const menuGap = Math.max(menuRect.top - statusBarHeight, 4)
-    const navigationBarHeight = Math.max(menuRect.height + menuGap * 2, 40)
-    const sideWidth = Math.max(windowInfo.windowWidth - menuRect.left, 72)
+    const navigationBarHeight = Math.max(menuRect.height + menuGap * 2, 44)
+    // 胶囊左边缘是不同设备上最稳定的右侧锚点，额外预留间距避免操作按钮压住胶囊。
+    const capsuleRightInset = windowInfo.windowWidth - menuRect.left + 6
+    const sideWidth = Math.max(capsuleRightInset, 88)
 
     return { statusBarHeight, navigationBarHeight, sideWidth }
   } catch (error) {
