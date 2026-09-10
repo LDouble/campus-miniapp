@@ -4,6 +4,14 @@
   width: 100%;
   color: var(--campus-text-heading, #1d293d);
 
+  &--fixed {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 50;
+  }
+
   &__fixed {
     position: fixed;
     top: 0;

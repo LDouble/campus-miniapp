@@ -16,6 +16,7 @@ interface CustomNavbarProps {
   immersive?: boolean
   compactImmersive?: boolean
   collapsed?: boolean
+  fixed?: boolean
   actionIcon?: string
   actionLabel?: string
   actionVisible?: boolean
@@ -69,6 +70,7 @@ function CustomNavbar({
   immersive = false,
   compactImmersive = false,
   collapsed = true,
+  fixed = false,
   actionIcon,
   actionLabel = '导航操作',
   actionVisible = true,
@@ -108,6 +110,7 @@ function CustomNavbar({
         compactImmersive ? 'custom-navbar--compact-immersive' : '',
         compactImmersive && !showBack ? 'custom-navbar--pass-through' : '',
         collapsed ? 'custom-navbar--collapsed' : '',
+        fixed ? 'custom-navbar--fixed' : '',
         bottomContent ? 'custom-navbar--has-bottom' : '',
       ].filter(Boolean).join(' ')}
       style={{ height: `${compactImmersive ? metrics.statusBarHeight : navbarHeight + bottomContentHeight}px` }}

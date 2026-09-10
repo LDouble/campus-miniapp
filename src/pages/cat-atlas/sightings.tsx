@@ -1,7 +1,7 @@
 import { Image, Text, View } from '@tarojs/components'
 import { useDidShow, useRouter } from '@tarojs/taro'
 import { useCallback, useState } from 'react'
-import CustomNavbar from '../../components/custom-navbar'
+import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import { getCat, listCatSightings, setSightingLiked, type CatView, type SightingView } from '../../api/cat-atlas'
 import { RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
@@ -38,6 +38,8 @@ export default function CatSightingsPage() {
   const [items, setItems] = useState<SightingView[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const navbarMetrics = getNavbarMetrics()
+  const navbarHeight = navbarMetrics.statusBarHeight + navbarMetrics.navigationBarHeight
   const load = useCallback(async () => {
     if (!params.id) {
       setLoading(false)
@@ -59,8 +61,8 @@ export default function CatSightingsPage() {
   useDidShow(() => { void load() })
 
   return <View className='cat-page cat-sightings-page'>
-    <CustomNavbar title={cat ? `${cat.name} · 最近动态` : '最近动态'} showBack />
-    <View className='cat-sightings-page__content'>
+    <CustomNavbar title={cat ? `${cat.name} · 最近动态` : '最近动态'} showBack fixed />
+    <View className='cat-sightings-page__content' style={{ paddingTop: `${navbarHeight + 14}px` }}>
       <RequestState loading={loading} error={error} empty={!loading && !error && !items.length ? '还没有目击记录' : undefined} onRetry={() => void load()} />
       {cat && <View className='cat-sightings-page__contribute' onClick={() => void navigateToWithGuard(`/pages/cat-atlas/report?id=${cat.id}&name=${encodeURIComponent(cat.name)}`)}>
         <View><Text>你也见到 {cat.name} 了吗？</Text><Text>补充它此刻的状态、地点或照片</Text></View>
