@@ -943,6 +943,53 @@
   background: rgba(229, 169, 105, .13);
 }
 
+/* 投稿页导语保持轻量：让表单自然承接，不再用海报式边框、英文标识和重复元信息抢走注意力。 */
+.report-heading {
+  padding: 16rpx 6rpx 12rpx;
+  margin: 0 0 28rpx;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.report-page--new .report-heading,
+.report-page--sighting .report-heading {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.report-heading__eyebrow {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #a75e32;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+
+.report-heading__title,
+.report-page--new .report-heading__title,
+.report-page--sighting .report-heading__title {
+  margin-top: 0;
+  color: #5d4335;
+  font-size: 46rpx;
+  font-weight: 700;
+  letter-spacing: -1rpx;
+  line-height: 1.28;
+}
+
+.report-heading__subtitle,
+.report-page--new .report-heading__subtitle,
+.report-page--sighting .report-heading__subtitle {
+  max-width: 610rpx;
+  margin-top: 12rpx;
+  color: #9a7e6b;
+  font-size: 25rpx;
+  line-height: 1.65;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .report-photo,
   .report-options text,

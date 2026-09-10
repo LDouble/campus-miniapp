@@ -145,12 +145,11 @@ export default function CatReportPage() {
   </View>
   return <View className={`report-page ${isNew ? 'report-page--new' : 'report-page--sighting'}`}>
     <CustomNavbar title={isNew ? '发现新猫' : '我遇到它了'} showBack onBack={() => { void Taro.navigateBack() }} />
-    <View className='report-page__content'>
+      <View className='report-page__content'>
       <View className='report-heading'>
-        <View className='report-heading__eyebrow'><Text>{isNew ? '新猫档案' : '相遇记录'}</Text><Text>OUC · CAT ATLAS</Text></View>
-        <Text className='report-heading__title'>{isNew ? '发现了一只新猫？' : `我遇到${catName}了！`}</Text>
-        <Text className='report-heading__subtitle'>{isNew ? '让更多同学认识这位校园邻居吧' : '把这次温柔的相遇，留在它的档案里'}</Text>
-        <View className='report-heading__meta'><Text>{isNew ? '一张照片 · 一段新的校园记忆' : `${catName} · 校园目击`}</Text><Text>{isNew ? 'NEW' : 'NOTE'}</Text></View>
+        <Text className='report-heading__eyebrow'>{isNew ? '新猫档案' : '相遇记录'}</Text>
+        <Text className='report-heading__title'>{isNew ? '发现一只新猫' : `遇见 ${catName}`}</Text>
+        <Text className='report-heading__subtitle'>{isNew ? '留下一张照片和它的特征，帮它建立第一份档案。' : '补充地点、状态或一张现场照片，让大家知道它此刻在哪里。'}</Text>
       </View>
       {isNew && <>
         <Text className='report-label'>上传照片 <Text>*</Text></Text>
