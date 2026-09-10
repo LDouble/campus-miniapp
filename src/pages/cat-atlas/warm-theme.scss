@@ -1154,3 +1154,251 @@ page {
 .cat-list-page .cat-list-v2__fab {
   box-shadow: 0 12rpx 26rpx rgba(159, 79, 49, .22);
 }
+
+/* 无真实照片时只保留内容占位，不借用其他猫咪或插画图片。 */
+.cat-cover__pattern {
+  background: radial-gradient(circle at 22% 24%, rgba(255, 255, 255, .18) 0 8rpx, transparent 9rpx), radial-gradient(circle at 78% 68%, rgba(255, 255, 255, .12) 0 18rpx, transparent 19rpx), linear-gradient(145deg, #b95f3d, #7f4435);
+}
+
+.cat-detail-hero__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 0;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16rpx;
+  color: rgba(255, 248, 238, .82);
+  background: radial-gradient(circle at 72% 28%, rgba(239, 165, 95, .36), transparent 38%), linear-gradient(145deg, #8d4d39, #4c3027);
+  font-size: 24rpx;
+}
+
+.cat-detail-hero__empty-mark {
+  display: flex;
+  width: 112rpx;
+  height: 112rpx;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid rgba(255, 248, 238, .46);
+  border-radius: 50%;
+  color: #fff2dd;
+  background: rgba(255, 248, 238, .12);
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.catalog-summary__cat--empty {
+  flex-direction: column;
+  gap: 2rpx;
+  color: #fff6e8;
+  background: linear-gradient(145deg, #c87349, #9b4e37);
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.catalog-summary__cat--empty text:last-child {
+  position: static;
+  color: #ffd29a;
+  font-size: 20rpx;
+}
+
+.catalog-grid__photo--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a86a4c;
+  background: linear-gradient(145deg, #fff0dc, #f2d7bc);
+  font-size: 20rpx;
+}
+
+.catalog-grid__photo--empty text {
+  width: auto;
+  margin-top: 0;
+  color: inherit;
+  font-size: 20rpx;
+  font-weight: 600;
+}
+
+/* 统一“暖纸张 + 陶土 + 鼠尾草”配色，避免页面之间出现突兀的冷蓝。 */
+.cat-page,
+.cat-list-page,
+.catalog-page,
+.report-page {
+  --cat-bg: #fcf7f0;
+  --cat-surface: #fffdf9;
+  --cat-ink: #4a3229;
+  --cat-body: #6f5547;
+  --cat-muted: #947d6c;
+  --cat-line: #ead8c6;
+  --cat-primary: #b9694a;
+  --cat-primary-deep: #934d3b;
+  --cat-apricot: #e4a45f;
+  --cat-apricot-soft: #fff0dc;
+  --cat-sage: #7d9272;
+  color: var(--cat-ink);
+  background-color: var(--cat-bg);
+}
+
+.cat-list-page,
+.cat-sightings-page,
+.cat-profile-suggestion-page,
+.report-page--new,
+.report-page--sighting,
+.catalog-page {
+  background-image: radial-gradient(rgba(185, 105, 74, .06) 1.5rpx, transparent 1.5rpx), linear-gradient(180deg, #fffaf4 0, #f7eee3 100%);
+  background-size: 28rpx 28rpx, 100% 100%;
+}
+
+.cat-list-v2__hero-veil {
+  background: linear-gradient(180deg, rgba(91, 53, 40, .08), rgba(70, 42, 32, .82) 100%), linear-gradient(105deg, rgba(145, 76, 51, .38), rgba(228, 164, 95, .12) 72%);
+}
+
+.cat-list-v2__search > text,
+.cat-list-v2__filters > .is-active,
+.cat-list-v2__fab,
+.cat-detail-bottom__button--report,
+.cat-sightings-page__contribute > text,
+.cat-profile-suggestion-page__submit,
+.report-page--new .report-submit,
+.report-page--sighting .report-submit,
+.cat-map-summary__button {
+  background: linear-gradient(135deg, var(--cat-primary), var(--cat-primary-deep));
+  box-shadow: 0 10rpx 22rpx rgba(147, 77, 59, .2);
+}
+
+.cat-list-v2__filters > text,
+.cat-list-v2__sort,
+.cat-list-v2__card,
+.cat-detail-sheet,
+.cat-stitch-feed-card,
+.cat-profile-suggestion-page__value-card,
+.cat-profile-suggestion-page__note,
+.catalog-summary,
+.catalog-tabs,
+.report-page--new .report-picker,
+.report-page--new .report-input-wrap,
+.report-page--new .report-textarea-wrap,
+.report-page--sighting .report-picker,
+.report-page--sighting .report-input-wrap,
+.report-page--sighting .report-textarea-wrap {
+  border-color: var(--cat-line);
+  background-color: var(--cat-surface);
+}
+
+.cat-list-v2__toolbar,
+.cat-detail-profile-head__name,
+.cat-detail-archive__title,
+.cat-detail-live-preview__head,
+.cat-profile-suggestion-page__label,
+.report-page--new .report-heading__title,
+.report-page--sighting .report-heading__title,
+.report-page--new .report-label,
+.report-page--sighting .report-label,
+.catalog-summary__copy > view:first-child,
+.catalog-summary__number {
+  color: var(--cat-ink);
+}
+
+.cat-list-v2__meta,
+.cat-list-v2__end,
+.cat-list-v2__load-more,
+.cat-detail-profile-head__subtitle,
+.cat-detail-profile-head__stat,
+.cat-detail-live-preview__empty,
+.cat-detail-live-preview__row-head text:last-child,
+.cat-profile-suggestion-page__hero text:last-child,
+.cat-profile-suggestion-page__footer > text,
+.catalog-summary__percent,
+.catalog-summary__hint,
+.report-page--new .report-heading__subtitle,
+.report-page--sighting .report-heading__subtitle {
+  color: var(--cat-muted);
+}
+
+.cat-list-v2__title text:last-child,
+.cat-list-v2__load-more,
+.cat-list-v2__submit,
+.cat-detail-live-preview__head > text:last-child,
+.cat-detail-live-preview__compose,
+.cat-detail-archive__suggestion,
+.cat-profile-suggestion-page__fields text.is-active,
+.cat-profile-suggestion-page__value-card > text:first-child,
+.cat-profile-suggestion-page__note,
+.catalog-grid__item > text {
+  color: var(--cat-primary);
+}
+
+.cat-list-v2__submit,
+.cat-detail-live-preview__head > text:last-child,
+.cat-detail-profile-head__tags text,
+.cat-detail-live-preview__activity,
+.cat-stitch-feed-card__activity,
+.cat-profile-suggestion-page__fields text.is-active,
+.cat-sightings-page__contribute,
+.report-page--new .report-options .is-active,
+.report-page--sighting .report-options .is-active {
+  border-color: rgba(185, 105, 74, .28);
+  color: var(--cat-primary-deep);
+  background: var(--cat-apricot-soft);
+}
+
+.cat-list-v2__tag--mint {
+  color: #657c5e;
+  background: #edf2e8;
+}
+
+.cat-list-v2__tag--blue,
+.cat-list-v2__tag--orange {
+  color: var(--cat-primary-deep);
+  background: #fff0dc;
+}
+
+.cat-list-v2__heart,
+.cat-detail-profile-head__favorite,
+.cat-detail-bottom__button--activity {
+  border-color: #efdcc6;
+  background: #fff4e6;
+}
+
+.cat-detail-live-preview,
+.cat-sightings-page__contribute,
+.cat-detail-live-preview__compose,
+.cat-profile-suggestion-page__hero {
+  border-color: #ecd6bd;
+  background: linear-gradient(145deg, #fffaf2, #fff0dc);
+}
+
+.cat-detail-archive__panel {
+  border-color: #ead8c6;
+  background: #fff8ef;
+}
+
+.cat-detail-bottom,
+.cat-profile-suggestion-page__footer,
+.report-page--new .report-footer,
+.report-page--sighting .report-footer {
+  background: linear-gradient(0deg, rgba(255, 253, 249, .99) 72%, rgba(255, 253, 249, 0));
+}
+
+.catalog-summary {
+  background: linear-gradient(135deg, #fff0dc 0%, #fff9ef 62%, #f3e6d8 100%);
+}
+
+.catalog-summary__track view {
+  background: linear-gradient(90deg, var(--cat-apricot), var(--cat-primary));
+}
+
+.catalog-tabs .is-active {
+  background: var(--cat-primary);
+  box-shadow: 0 6rpx 12rpx rgba(147, 77, 59, .18);
+}
+
+.cat-map-canvas {
+  background: linear-gradient(145deg, #e7ead9 0 32%, #e6d6c0 32% 35%, #f3ecd9 35% 65%, #dfe6d6 65%);
+}
+
+.cat-map-pin > view,
+.cat-map-summary__button {
+  background: linear-gradient(135deg, var(--cat-primary), var(--cat-primary-deep));
+}

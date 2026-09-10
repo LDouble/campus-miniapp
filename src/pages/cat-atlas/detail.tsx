@@ -13,11 +13,6 @@ import './warm-theme.scss'
 const eyeIcon = require('../../assets/icons/eye.svg')
 const plusIcon = require('../../assets/icons/plus.svg')
 const heartIcon = require('../../assets/community/heart.svg')
-const heroFallbacks = [
-  require('../../assets/cat-atlas/stitch/detail-hero-1.jpg'),
-  require('../../assets/cat-atlas/stitch/detail-hero-2.jpg'),
-  require('../../assets/cat-atlas/stitch/detail-hero-3.jpg'),
-]
 
 const compactArea = (area: string) => area.length > 14 ? `${area.slice(0, 14)}…` : area
 
@@ -61,7 +56,7 @@ export default function CatDetailPage() {
     ['常驻区域', cat.resident_area],
     ['首次记录', formatCatDate(cat.first_recorded_at)],
   ]
-  const gallery = cat.cover_url ? [cat.cover_url, ...heroFallbacks] : heroFallbacks
+  const gallery = cat.cover_url ? [cat.cover_url] : []
   const goBack = () => {
     if (Taro.getCurrentPages().length > 1) Taro.navigateBack()
     else Taro.reLaunch({ url: '/pages/index/index' })
@@ -83,23 +78,28 @@ export default function CatDetailPage() {
   return <View className='cat-page cat-detail-page'>
     <CustomNavbar title={cat.name} subtitle='猫咪档案' showBack onBack={goBack} immersive={!headerCollapsed} collapsed={headerCollapsed} />
     <View className='cat-detail-hero'>
-      <ScrollView
-        className='cat-detail-hero__gallery'
-        scrollX
-        enhanced
-        showScrollbar={false}
-        onScroll={(event) => {
-        const width = event.detail.scrollWidth / gallery.length
-        if (width > 0) setGalleryIndex(Math.max(0, Math.min(gallery.length - 1, Math.round(event.detail.scrollLeft / width))))
-        }}
-      >
-        <View className='cat-detail-hero__track'>
-          {gallery.map((source, index) => <Image key={`${source}-${index}`} className='cat-detail-hero__image' src={source} mode='aspectFill' />)}
-        </View>
-      </ScrollView>
+      {gallery.length > 0
+        ? <ScrollView
+            className='cat-detail-hero__gallery'
+            scrollX
+            enhanced
+            showScrollbar={false}
+            onScroll={(event) => {
+              const width = event.detail.scrollWidth / gallery.length
+              if (width > 0) setGalleryIndex(Math.max(0, Math.min(gallery.length - 1, Math.round(event.detail.scrollLeft / width))))
+            }}
+        >
+          <View className='cat-detail-hero__track'>
+            {gallery.map((source, index) => <Image key={`${source}-${index}`} className='cat-detail-hero__image' src={source} mode='aspectFill' />)}
+          </View>
+        </ScrollView>
+        : <View className='cat-detail-hero__empty'>
+          <Text className='cat-detail-hero__empty-mark'>猫</Text>
+          <Text>等待一张真实的相遇照片</Text>
+        </View>}
       <View className='cat-detail-hero__shade' />
       <View className='cat-detail-hero__slogan'><Text>在海大的</Text><Text>每一天</Text><Text>都很值得 ♡</Text></View>
-      <View className='cat-detail-hero__counter'><Text>▣</Text><Text>{galleryIndex + 1}/{gallery.length}</Text></View>
+      {gallery.length > 0 && <View className='cat-detail-hero__counter'><Text>▣</Text><Text>{galleryIndex + 1}/{gallery.length}</Text></View>}
     </View>
 
     <View className='cat-detail-sheet'>

@@ -347,16 +347,11 @@ page { background: var(--ousea-bg-page); }
   color: #fff;
 }
 
-.cat-cover__fallback-image,
-.cat-cover__veil {
+.cat-cover__pattern {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-}
-
-.cat-cover__veil {
-  background: linear-gradient(135deg, rgba(20, 73, 95, .25), rgba(20, 73, 95, .58));
 }
 
 .cat-cover__name,

@@ -7,29 +7,16 @@ import { navigateToWithGuard } from '../../utils/navigation'
 import './catalog-report.scss'
 import './warm-theme.scss'
 
-const referenceCovers = [
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-1.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-2.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-3.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-4.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-5.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-6.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-7.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-8.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-9.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-10.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-11.jpg'),
-  require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-12.jpg'),
-]
-
-function CatalogCat({ cat, index, locked }: { cat: CatView; index: number; locked: boolean }) {
-  const cover = cat.cover_url || referenceCovers[index % referenceCovers.length]
+function CatalogCat({ cat, locked }: { cat: CatView; locked: boolean }) {
   const handleClick = () => {
     if (locked) { void Taro.showToast({ title: '先在校园里遇见它吧', icon: 'none' }); return }
     void navigateToWithGuard(`/pages/cat-atlas/detail?id=${cat.id}`)
   }
   return <View className={`catalog-grid__item ${locked ? 'catalog-grid__item--locked' : ''}`} onClick={handleClick}>
-    <View className='catalog-grid__photo'><Image src={cover} mode='aspectFill' />{locked && <View className='catalog-grid__lock'><Text>?</Text></View>}</View>
+    <View className={`catalog-grid__photo ${cat.cover_url ? '' : 'catalog-grid__photo--empty'}`}>
+      {cat.cover_url ? <Image src={cat.cover_url} mode='aspectFill' /> : <Text>暂无照片</Text>}
+      {locked && <View className='catalog-grid__lock'><Text>?</Text></View>}
+    </View>
     <Text>{locked ? '未解锁' : cat.name}</Text>
   </View>
 }
@@ -67,11 +54,11 @@ export default function MyCatCatalogPage() {
             <Text className='catalog-summary__percent'>{percentage}%</Text>
             <Text className='catalog-summary__hint'>再多走走，说不定下一只就在转角～</Text>
           </View>
-          <View className='catalog-summary__cat'><Image src={require('../../assets/cat-atlas/stitch/f97d873c34d0485c9dde409ccfbb1170-1.jpg')} mode='aspectFill' /><Text>✦</Text></View>
+          <View className='catalog-summary__cat catalog-summary__cat--empty'><Text>猫</Text><Text>✦</Text></View>
         </View>
         <View className='catalog-tabs'><Text className={tab === 'seen' ? 'is-active' : ''} onClick={() => setTab('seen')}>已遇见 ({seen.length})</Text><Text className={tab === 'unseen' ? 'is-active' : ''} onClick={() => setTab('unseen')}>未遇见 ({unseen.length})</Text></View>
         <RequestState empty={!display.length ? (tab === 'seen' ? '还没有点亮图鉴' : '所有猫咪都已遇见') : undefined} />
-        <View className='catalog-grid'>{display.map((cat, index) => <CatalogCat key={cat.id} cat={cat} index={index} locked={tab === 'unseen'} />)}</View>
+        <View className='catalog-grid'>{display.map((cat) => <CatalogCat key={cat.id} cat={cat} locked={tab === 'unseen'} />)}</View>
       </>}
     </View>
   </View>

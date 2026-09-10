@@ -10,10 +10,9 @@ export const formatCatDate = (value?: string | null) => {
 export function CatCover({ cat, large = false }: { cat: CatView; large?: boolean }) {
   if (cat.cover_url) return <Image className={`cat-cover ${large ? 'cat-cover--large' : ''}`} src={cat.cover_url} mode='aspectFill' />
   return <View className={`cat-cover cat-cover--placeholder ${large ? 'cat-cover--large' : ''}`} ariaLabel={`${cat.name}暂无真实图片`}>
-    <Image className='cat-cover__fallback-image' src={require('../../assets/cat-atlas/campus-cats-hero.jpg')} mode='aspectFill' />
-    <View className='cat-cover__veil' />
+    <View className='cat-cover__pattern' />
     <Text className='cat-cover__name'>{cat.name}</Text>
-    <Text className='cat-cover__hint'>暂无真实照片</Text>
+    <Text className='cat-cover__hint'>等待真实照片</Text>
   </View>
 }
 
