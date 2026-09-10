@@ -11,15 +11,6 @@ import './warm-theme.scss'
 
 const locationIcon = require('../../assets/icons/location-warm.svg')
 const heartIcon = require('../../assets/community/heart.svg')
-const fallbackPhotos = [
-  require('../../assets/cat-atlas/stitch/sighting-library.jpg'),
-  require('../../assets/cat-atlas/stitch/sighting-canteen.jpg'),
-  require('../../assets/cat-atlas/stitch/sighting-dorm.jpg'),
-]
-const fallbackAvatars = [
-  require('../../assets/cat-atlas/stitch/avatar-chen.jpg'),
-  require('../../assets/cat-atlas/stitch/avatar-seasalt.jpg'),
-]
 
 const formatTimelineTime = (value: string) => {
   const date = new Date(value)
@@ -68,21 +59,19 @@ export default function CatSightingsPage() {
         <View><Text>你也见到 {cat.name} 了吗？</Text><Text>补充它此刻的状态、地点或照片</Text></View>
         <Text>去记录</Text>
       </View>}
-      {items.map((item, index) => {
+      {items.map((item) => {
         const isLiked = item.liked
-        const photo = item.photo_url || fallbackPhotos[index % fallbackPhotos.length]
-        const avatar = index < fallbackAvatars.length ? fallbackAvatars[index] : undefined
         return <View key={item.id} className='cat-stitch-feed-card'>
           <View className='cat-stitch-feed-card__head'>
-            <View className={`cat-stitch-feed-card__avatar ${item.reporter_avatar_url || avatar ? '' : 'cat-stitch-feed-card__avatar--anonymous'}`}>
-              {item.reporter_avatar_url || avatar ? <Image src={item.reporter_avatar_url || avatar} mode='aspectFill' /> : <Text>{item.reporter_name.slice(0, 1) || '匿'}</Text>}
+            <View className={`cat-stitch-feed-card__avatar ${item.reporter_avatar_url ? '' : 'cat-stitch-feed-card__avatar--anonymous'}`}>
+              {item.reporter_avatar_url ? <Image src={item.reporter_avatar_url} mode='aspectFill' /> : <Text>{item.reporter_name.slice(0, 1) || '匿'}</Text>}
             </View>
             <View className='cat-stitch-feed-card__identity'><Text>{item.reporter_name || '匿名用户'}</Text><View><Image src={locationIcon} mode='aspectFit' /><Text>{item.area}</Text></View></View>
             <Text className='cat-stitch-feed-card__time'>{formatTimelineTime(item.created_at)}</Text>
           </View>
           <View className='cat-stitch-feed-card__activity'><Text>它在{item.activity || '悠闲活动'}</Text></View>
           <Text className='cat-stitch-feed-card__note'>{item.note || '记录了这次相遇'}</Text>
-          <Image className='cat-stitch-feed-card__photo' src={photo} mode='aspectFill' />
+          {item.photo_url && <Image className='cat-stitch-feed-card__photo' src={item.photo_url} mode='aspectFill' />}
           <View className={`cat-stitch-feed-card__like ${isLiked ? 'is-liked' : ''}`} onClick={async () => { const previous = item; setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, liked: !isLiked, like_count: Math.max(0, entry.like_count + (isLiked ? -1 : 1)) } : entry)); try { const state = await setSightingLiked(item.id, !isLiked); setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, liked: state.liked, like_count: state.like_count } : entry)) } catch { setItems((current) => current.map((entry) => entry.id === item.id ? previous : entry)) } }}><Image src={heartIcon} mode='aspectFit' /><Text>{item.like_count}</Text></View>
         </View>
       })}
