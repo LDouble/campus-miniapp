@@ -121,7 +121,7 @@ export default function CatReportPage() {
       const mediaId = images[0]?.mediaId
       if (isNew) await submitCat({ proposed_name: name.trim() || undefined, campus, area, description: note.trim() || undefined, photo_media_id: mediaId! })
       else await createCatSighting(catID, { area, activity: action, note: note.trim() || undefined, photo_media_id: mediaId })
-      await Taro.showToast({ title: isNew ? '已提交审核' : '打卡成功', icon: 'success' }); setTimeout(() => Taro.navigateBack(), 700)
+      await Taro.showToast({ title: '审核通过后发布', icon: 'success' }); setTimeout(() => Taro.navigateBack(), 700)
     } catch (submitError) { await Taro.showToast({ title: isApiError(submitError) ? submitError.message : '提交失败，请稍后重试', icon: 'none' }) }
     finally { setSubmitting(false) }
   }
@@ -182,6 +182,6 @@ export default function CatReportPage() {
       <Text className='report-label'>{isNew ? '它有什么特点？' : '想说点什么？'} <Text className='report-label__optional'>（可选）</Text></Text>
       <View className='report-textarea-wrap'><KeyboardSafeTextarea className='report-textarea' value={note} maxlength={200} placeholder={isNew ? '比如毛色、性格、外观特征、经常出现的地方…' : '分享一下你看到它吧～'} onInput={(event) => setNote(event.detail.value)} /><Text>{note.length}/200</Text></View>
     </View>
-    <View className='report-footer'><Button className='report-submit' hoverClass='none' loading={submitting} disabled={submitting || images.some((item) => item.status === 'uploading')} onClick={() => void submit()}>{isNew ? '提交申请' : '发布目击记录'}</Button><Text>{isNew ? '我们会尽快审核，感谢你的发现！ ♡' : '让更多同学知道它刚刚在这里出现过 ♡'}</Text></View>
+    <View className='report-footer'><Button className='report-submit' hoverClass='none' loading={submitting} disabled={submitting || images.some((item) => item.status === 'uploading')} onClick={() => void submit()}>{isNew ? '提交审核' : '提交目击记录'}</Button><Text>{isNew ? '微信审核通过后将自动收录，感谢你的发现！ ♡' : '微信审核通过后将自动发布给大家 ♡'}</Text></View>
   </View>
 }
