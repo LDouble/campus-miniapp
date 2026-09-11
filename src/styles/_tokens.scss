@@ -2,6 +2,14 @@
 // Campus 语义令牌是兼容层；页面不得重新声明同义基础值。
 
 // Ousea primitives
+$ousea-cat-sage: var(--ousea-cat-sage, #637b65);
+$ousea-cat-cream: var(--ousea-cat-cream, #fffbeb);
+$ousea-cat-paper: var(--ousea-cat-paper, #faf7f2);
+$ousea-cat-sand: var(--ousea-cat-sand, #f4e7d6);
+$ousea-cat-line: var(--ousea-cat-line, #f5f5f4);
+$ousea-cat-cocoa: var(--ousea-cat-cocoa, #292524);
+$ousea-cat-muted: var(--ousea-cat-muted, #847971);
+$ousea-cat-caramel: var(--ousea-cat-caramel, #c86230);
 $ousea-ocean-50: var(--ousea-ocean-50, #f2f7fe);
 $ousea-ocean-100: var(--ousea-ocean-100, #e3effe);
 $ousea-ocean-400: var(--ousea-ocean-400, #4c96f5);

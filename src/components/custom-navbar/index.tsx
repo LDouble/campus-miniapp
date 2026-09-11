@@ -16,6 +16,7 @@ interface CustomNavbarProps {
   immersive?: boolean
   compactImmersive?: boolean
   collapsed?: boolean
+  fixed?: boolean
   actionIcon?: string
   actionLabel?: string
   actionVisible?: boolean
@@ -25,6 +26,8 @@ interface CustomNavbarProps {
   bottomContentClassName?: string
   barContent?: ReactNode
   barContentClassName?: string
+  rightContent?: ReactNode
+  rightContentClassName?: string
 }
 
 export const getNavbarMetrics = () => {
@@ -49,8 +52,10 @@ export const getNavbarMetrics = () => {
     }
 
     const menuGap = Math.max(menuRect.top - statusBarHeight, 4)
-    const navigationBarHeight = Math.max(menuRect.height + menuGap * 2, 40)
-    const sideWidth = Math.max(windowInfo.windowWidth - menuRect.left, 72)
+    const navigationBarHeight = Math.max(menuRect.height + menuGap * 2, 44)
+    // 胶囊左边缘是不同设备上最稳定的右侧锚点，额外预留间距避免操作按钮压住胶囊。
+    const capsuleRightInset = windowInfo.windowWidth - menuRect.left + 6
+    const sideWidth = Math.max(capsuleRightInset, 88)
 
     return { statusBarHeight, navigationBarHeight, sideWidth }
   } catch (error) {
@@ -67,6 +72,7 @@ function CustomNavbar({
   immersive = false,
   compactImmersive = false,
   collapsed = true,
+  fixed = false,
   actionIcon,
   actionLabel = '导航操作',
   actionVisible = true,
@@ -76,6 +82,8 @@ function CustomNavbar({
   bottomContentClassName = '',
   barContent,
   barContentClassName = '',
+  rightContent,
+  rightContentClassName = '',
 }: CustomNavbarProps) {
   useEffect(() => {
     applyCampusThemeToNativeChrome()
@@ -106,6 +114,7 @@ function CustomNavbar({
         compactImmersive ? 'custom-navbar--compact-immersive' : '',
         compactImmersive && !showBack ? 'custom-navbar--pass-through' : '',
         collapsed ? 'custom-navbar--collapsed' : '',
+        fixed ? 'custom-navbar--fixed' : '',
         bottomContent ? 'custom-navbar--has-bottom' : '',
       ].filter(Boolean).join(' ')}
       style={{ height: `${compactImmersive ? metrics.statusBarHeight : navbarHeight + bottomContentHeight}px` }}
@@ -162,6 +171,15 @@ function CustomNavbar({
               onClick={onAction}
             >
               <Image src={actionIcon} mode='aspectFit' />
+            </View>
+          )}
+
+          {rightContent && (
+            <View
+              className={`custom-navbar__right-content ${rightContentClassName}`}
+              ariaRole='toolbar'
+            >
+              {rightContent}
             </View>
           )}
         </View>

@@ -2,6 +2,16 @@
   "$schema": "https://tr.designtokens.org/format/",
   "global": {
     "color": {
+      "cat": {
+        "sage": { "value": "#637B65", "type": "color", "description": "图鉴植物与辅助强调" },
+        "cream": { "value": "#FFFBEB", "type": "color", "description": "猫咪图鉴奶油底" },
+        "paper": { "value": "#FAF7F2", "type": "color", "description": "猫咪图鉴纸面" },
+        "sand": { "value": "#F4E7D6", "type": "color", "description": "猫咪图鉴浅杏分区" },
+        "line": { "value": "#F5F5F4", "type": "color", "description": "猫咪图鉴分隔线" },
+        "cocoa": { "value": "#292524", "type": "color", "description": "猫咪图鉴标题" },
+        "muted": { "value": "#847971", "type": "color", "description": "猫咪图鉴辅助文字" },
+        "caramel": { "value": "#C86230", "type": "color", "description": "猫咪图鉴主操作" }
+      },
       "ocean": {
         "50": { "value": "#F2F7FE", "type": "color", "description": "浅蓝底 / 信息条" },
         "100": { "value": "#E3EFFE", "type": "color", "description": "徽章底 / 计数胶囊" },
