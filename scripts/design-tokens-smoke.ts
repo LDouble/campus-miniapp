@@ -18,6 +18,14 @@ const master = readFileSync(
 const agentRules = readFileSync(resolve(__dirname, '../AGENTS.md'), 'utf8')
 
 const expectedCssVariables: Record<string, string> = {
+  '--ousea-cat-sage': '#637b65',
+  '--ousea-cat-cream': '#fffbeb',
+  '--ousea-cat-paper': '#faf7f2',
+  '--ousea-cat-sand': '#f4e7d6',
+  '--ousea-cat-line': '#f5f5f4',
+  '--ousea-cat-cocoa': '#292524',
+  '--ousea-cat-muted': '#847971',
+  '--ousea-cat-caramel': '#c86230',
   '--ousea-ocean-50': '#f2f7fe',
   '--ousea-ocean-100': '#e3effe',
   '--ousea-ocean-400': '#4c96f5',
@@ -87,5 +95,9 @@ assert.equal(
 assert.match(master, /Ousea \/ Global[^。]*唯一基础视觉源/u)
 assert.match(master, /不得新建[^。\n]*同义基础 Token/u)
 assert.match(agentRules, /All new miniapp UI[^.]*Ousea \/ Global[^.]*single source of truth/u)
+
+for (const [cat, global] of [['page', 'page'], ['surface', 'surface'], ['subtle', 'surface-subtle'], ['border', 'border']]) {
+  assert.ok(appStyle.includes(`--campus-cat-${cat}: var(--campus-${global});`), '猫咪图鉴基础表面必须复用全局语义')
+}
 
 process.stdout.write('Ousea design tokens smoke: ok\n')

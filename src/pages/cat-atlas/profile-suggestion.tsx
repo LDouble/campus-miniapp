@@ -4,8 +4,7 @@ import { useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
 import { KeyboardSafeInput, KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
 import { createCatProfileSuggestion, type CatProfileSuggestionField } from '../../api/cat-atlas'
-import './shared.scss'
-import './warm-theme.scss'
+import './atlas.scss'
 
 const fields: Array<{ key: CatProfileSuggestionField; label: string; hint: string; placeholder: string }> = [
   { key: 'aliases', label: '别名', hint: '多个别名请用顿号或逗号分隔', placeholder: '例如：大橘、橘老板' },
@@ -43,30 +42,35 @@ export default function CatProfileSuggestionPage() {
     }
   }
 
-  return <View className='cat-page cat-profile-suggestion-page'>
+  return <View className='atlas-form-page cat-page cat-profile-suggestion-page'>
     <CustomNavbar title='补充档案' showBack />
-    <View className='cat-profile-suggestion-page__content'>
-      <View className='cat-profile-suggestion-page__hero'>
-        <Text>一起把 {name} 的档案补充得更完整</Text>
-        <Text>你的建议会先交由管理员审核，通过后才会更新公开信息。</Text>
+    <View className='cat-profile-suggestion-page__content atlas-form__content'>
+      <View className='cat-profile-suggestion-page__hero atlas-form__intro'>
+        <Text className='atlas-form__title'>补全 {name} 的档案</Text>
+        <Text className='atlas-form__subtitle'>提交后会由管理员审核，通过后更新公开信息。</Text>
       </View>
-      <Text className='cat-profile-suggestion-page__label'>补充哪一项？</Text>
-      <View className='cat-profile-suggestion-page__fields'>
-        {fields.map((item) => <Text key={item.key} className={field === item.key ? 'is-active' : ''} onClick={() => { setField(item.key); setValue('') }}>{item.label}</Text>)}
+      <View className='atlas-form__section'>
+        <View className='atlas-form__section-heading'><Text className='atlas-form__step'>01</Text><View><Text className='cat-profile-suggestion-page__label atlas-form__section-title'>选择补充内容</Text><Text className='atlas-form__section-help'>每次提交一项，审核更清晰</Text></View></View>
+        <View className='cat-profile-suggestion-page__fields atlas-form__options atlas-form__options--fields'>
+          {fields.map((item) => <Text key={item.key} className={field === item.key ? 'is-active' : ''} onClick={() => { setField(item.key); setValue('') }}>{item.label}</Text>)}
+        </View>
       </View>
-      <View className='cat-profile-suggestion-page__value-card'>
-        <Text>{selected.label}</Text>
-        <Text>{selected.hint}</Text>
-        <KeyboardSafeInput value={value} maxlength={field === 'resident_area' ? 160 : field === 'gender' ? 16 : 64} placeholder={selected.placeholder} onInput={(event) => setValue(event.detail.value)} />
+      <View className='atlas-form__section'>
+        <View className='atlas-form__section-heading'><Text className='atlas-form__step'>02</Text><View><Text className='cat-profile-suggestion-page__label atlas-form__section-title'>填写{selected.label}</Text><Text className='atlas-form__section-help'>{selected.hint}</Text></View></View>
+        <View className='cat-profile-suggestion-page__value-card atlas-form__input-wrap'>
+          <KeyboardSafeInput value={value} maxlength={field === 'resident_area' ? 160 : field === 'gender' ? 16 : 64} placeholder={selected.placeholder} onInput={(event) => setValue(event.detail.value)} />
+        </View>
       </View>
-      <Text className='cat-profile-suggestion-page__label'>为什么这样补充？<Text>（可选）</Text></Text>
-      <View className='cat-profile-suggestion-page__note'>
-        <KeyboardSafeTextarea value={note} maxlength={200} placeholder='例如：经常在这里见到它，大家都这么叫它…' onInput={(event) => setNote(event.detail.value)} />
-        <Text>{note.length}/200</Text>
+      <View className='atlas-form__section atlas-form__section--last'>
+        <View className='atlas-form__section-heading'><Text className='atlas-form__step'>03</Text><View><Text className='cat-profile-suggestion-page__label atlas-form__section-title'>补充依据 <Text>（可选）</Text></Text><Text className='atlas-form__section-help'>告诉我们你在哪里见过它，或为什么这样判断</Text></View></View>
+        <View className='cat-profile-suggestion-page__note atlas-form__textarea-wrap'>
+          <KeyboardSafeTextarea value={note} maxlength={200} placeholder='例如：经常在这里见到它，大家都这么叫它…' onInput={(event) => setNote(event.detail.value)} />
+          <Text>{note.length}/200</Text>
+        </View>
       </View>
     </View>
-    <View className='cat-profile-suggestion-page__footer'>
-      <Button className='cat-profile-suggestion-page__submit' hoverClass='none' loading={submitting} disabled={submitting} onClick={() => void submit()}>提交补充建议</Button>
+    <View className='cat-profile-suggestion-page__footer atlas-form__footer'>
+      <Button className='cat-profile-suggestion-page__submit atlas-form__submit' hoverClass='none' loading={submitting} disabled={submitting} onClick={() => void submit()}>提交补充建议</Button>
       <Text>审核通过后会同步更新猫咪基础档案</Text>
     </View>
   </View>

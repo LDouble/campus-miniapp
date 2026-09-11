@@ -5,8 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import { getCat, listCatHotspots, type CatHotspot, type CatView } from '../../api/cat-atlas'
 import { RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
-import './shared.scss'
-import './warm-theme.scss'
+import './atlas.scss'
 
 const locationIcon = require('../../assets/icons/location-warm.svg')
 const eyeIcon = require('../../assets/icons/eye-warm.svg')

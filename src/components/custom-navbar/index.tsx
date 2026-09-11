@@ -26,6 +26,8 @@ interface CustomNavbarProps {
   bottomContentClassName?: string
   barContent?: ReactNode
   barContentClassName?: string
+  rightContent?: ReactNode
+  rightContentClassName?: string
 }
 
 export const getNavbarMetrics = () => {
@@ -80,6 +82,8 @@ function CustomNavbar({
   bottomContentClassName = '',
   barContent,
   barContentClassName = '',
+  rightContent,
+  rightContentClassName = '',
 }: CustomNavbarProps) {
   useEffect(() => {
     applyCampusThemeToNativeChrome()
@@ -167,6 +171,15 @@ function CustomNavbar({
               onClick={onAction}
             >
               <Image src={actionIcon} mode='aspectFit' />
+            </View>
+          )}
+
+          {rightContent && (
+            <View
+              className={`custom-navbar__right-content ${rightContentClassName}`}
+              ariaRole='toolbar'
+            >
+              {rightContent}
             </View>
           )}
         </View>
