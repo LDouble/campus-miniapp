@@ -3,4 +3,6 @@ export default definePageConfig({
   backgroundColor: '@backgroundColor',
   backgroundTextStyle: '@backgroundTextStyle' as 'dark',
   enablePullDownRefresh: true,
+  enableShareAppMessage: true,
+  enableShareTimeline: true,
 })

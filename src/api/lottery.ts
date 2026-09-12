@@ -18,6 +18,14 @@ export type LotteryPrize = {
   claim_deadline_at?: string | null
 }
 
+export type LotterySponsor = {
+  name: string
+  description: string
+  wechat_id: string
+  image_url?: string | null
+  display_order: number
+}
+
 export type LotteryCampaignSummary = {
   id: number
   title: string
@@ -62,6 +70,8 @@ export type LotteryWin = {
 
 export type LotteryCampaignDetail = LotteryCampaignSummary & {
   description: string
+  // 服务端已按 display_order 升序返回；客户端保持原顺序展示。
+  sponsors?: LotterySponsor[]
   max_wins: number
   share_enabled: boolean
   share_new_user_only: boolean

@@ -2,6 +2,11 @@
   "$schema": "https://tr.designtokens.org/format/",
   "global": {
     "color": {
+      "lottery": {
+        "accent": { "value": "#EC5B13", "type": "color", "description": "用户指定抽奖设计稿强调色" },
+        "page": { "value": "#F8F6F6", "type": "color", "description": "抽奖详情页面底色" },
+        "warm": { "value": "#FFF5F0", "type": "color", "description": "抽奖详情渐变起点" }
+      },
       "ocean": {
         "50": { "value": "#F2F7FE", "type": "color", "description": "浅蓝底 / 信息条" },
         "100": { "value": "#E3EFFE", "type": "color", "description": "徽章底 / 计数胶囊" },
