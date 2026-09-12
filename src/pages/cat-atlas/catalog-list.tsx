@@ -17,10 +17,6 @@ const locationIcon = require('../../assets/cat-atlas/figma/location.svg')
 const chevronRightIcon = require('../../assets/cat-atlas/figma/chevron-right.svg')
 const chevronDownIcon = require('../../assets/cat-atlas/figma/chevron-down.svg')
 const plusIcon = require('../../assets/cat-atlas/figma/plus.svg')
-const navAtlasIcon = require('../../assets/cat-atlas/figma/nav-atlas.svg')
-const navMapIcon = require('../../assets/cat-atlas/figma/nav-map.svg')
-const navLogIcon = require('../../assets/cat-atlas/figma/nav-log.svg')
-const navMeIcon = require('../../assets/cat-atlas/figma/nav-me.svg')
 
 const areas = ['全部', '崂山校区', '鱼山校区', '西海岸校区']
 const sortOptions = ['按遇见次数', '最近遇见', '最新收录']
@@ -287,11 +283,5 @@ export default function CatAtlasCatalogList() {
       <View className='cat-journal__feed'>{items.map((cat) => <CatJournalCard key={cat.id} cat={cat} />)}</View>
       {items.length > 0 && (hasMore ? <View className='cat-journal__load-more' ariaRole='button' onClick={loadMore}><Text>{loadingMore ? '正在寻找更多猫咪…' : '继续看更多猫咪 ↓'}</Text></View> : <View className='cat-journal__end'><Text>已看完 {items.length} 位校园伙伴</Text><Text>下一次相遇，也许就有新朋友。</Text></View>)}
     </>}
-    <View className='cat-journal__bottom-nav'>
-      <View className='cat-journal__bottom-item is-active'><Image src={navAtlasIcon} mode='aspectFit' /><Text>图鉴</Text></View>
-      <View className='cat-journal__bottom-item' onClick={() => void navigateToWithGuard('/pages/cat-atlas/map')}><Image src={navMapIcon} mode='aspectFit' /><Text>猫咪地图</Text></View>
-      <View className='cat-journal__bottom-item' onClick={() => void navigateToWithGuard('/pages/cat-atlas/sightings')}><Image src={navLogIcon} mode='aspectFit' /><Text>相遇日志</Text></View>
-      <View className='cat-journal__bottom-item' onClick={() => void navigateToWithGuard('/pages/cat-atlas/my-catalog')}><Image src={navMeIcon} mode='aspectFit' /><Text>我的</Text></View>
-    </View>
   </View>
 }

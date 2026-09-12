@@ -13,7 +13,7 @@
 
   min-height: 100vh;
   box-sizing: border-box;
-  padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
   overflow-x: hidden;
   background: var(--cat-paper);
   color: var(--cat-ink);
@@ -259,30 +259,49 @@
 .cat-journal .cat-request-state__title { color: var(--cat-ink); font-size: 30rpx; }
 .cat-journal .cat-text-action { min-height: 72rpx; display: flex; align-items: center; color: var(--cat-caramel); }
 
-.cat-journal__bottom-nav {
-  position: fixed;
-  z-index: 25;
-  right: 40rpx;
-  bottom: calc(20rpx + env(safe-area-inset-bottom));
-  left: 40rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  min-height: 104rpx;
-  padding: 16rpx 24rpx;
-  border: 1rpx solid rgba(231, 229, 228, 0.7);
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 20rpx 30rpx -6rpx rgba(0, 0, 0, 0.1), 0 8rpx 12rpx -8rpx rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
-  backdrop-filter: blur(12rpx);
-}
-
-.cat-journal__bottom-item { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 4rpx; color: var(--cat-faint); font-size: 20rpx; line-height: 1.25; }
-.cat-journal__bottom-item image { width: 40rpx; height: 40rpx; opacity: 0.72; }
-.cat-journal__bottom-item.is-active { color: var(--cat-caramel); }
-.cat-journal__bottom-item.is-active image { opacity: 1; }
-
 @media (prefers-reduced-motion: reduce) {
   .cat-journal__card { transition: none; }
+}
+
+/* Theme class is attached to the page root by the runtime.  Keep this as a
+ * self-match as well as an ancestor match so the catalogue does not retain
+ * its warm light-paper variables in dark mode. */
+.cat-journal.campus-theme--dark,
+.campus-theme--dark .cat-journal {
+  --cat-paper: var(--campus-page);
+  --cat-card: var(--campus-surface);
+  --cat-ink: var(--campus-text-heading);
+  --cat-muted: var(--campus-text-secondary);
+  --cat-faint: var(--campus-text-muted);
+  --cat-line: var(--campus-border);
+  --cat-caramel: var(--campus-errand);
+  --cat-orange: var(--campus-errand);
+  --cat-cream: var(--campus-surface-subtle);
+  --cat-sage: var(--campus-success);
+
+  .custom-navbar__fixed { background: var(--campus-surface-glass); }
+  .custom-navbar--immersive:not(.custom-navbar--collapsed) .custom-navbar__fixed { background: rgba(11, 18, 32, .14); }
+  .cat-journal__illustration-wrap,
+  .cat-journal__stats,
+  .cat-journal__search,
+  .cat-journal__campus,
+  .cat-journal__sort-menu { border-color: var(--campus-border); background: var(--campus-surface); }
+  .cat-journal__illustration-wrap { background: var(--campus-surface-subtle); }
+  .cat-journal__illustration-count,
+  .cat-journal__check-in { border-color: var(--campus-border-strong); background: var(--campus-surface-primary); }
+  .cat-journal__stats,
+  .cat-journal__search,
+  .cat-journal__campus,
+  .cat-journal__mine { color: var(--campus-text-secondary); }
+  .cat-journal__mine-badge,
+  .cat-journal__name-tag--warm { background: var(--campus-surface-errand); color: var(--campus-errand); }
+  .cat-journal__name-tag--rose { background: var(--campus-surface-danger); color: var(--campus-danger); }
+  .cat-journal__discover,
+  .cat-journal__campus.is-active,
+  .cat-journal__check-in--solid { background: var(--campus-surface-errand); color: #fff; }
+  .cat-journal__trait-tag,
+  .cat-journal__stat-badge { background: var(--campus-surface-success); color: var(--campus-success); }
+  .cat-journal__hero,
+  .cat-journal__photo-frame { background: var(--campus-surface-subtle); }
+  .cat-journal__dot { color: var(--campus-text-muted); }
 }

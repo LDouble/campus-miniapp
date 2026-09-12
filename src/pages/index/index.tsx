@@ -166,6 +166,7 @@ const homeServiceIcons = {
     errands: require('../../assets/icons/home-service-errands.svg'),
     clubs: require('../../assets/icons/home-service-clubs.svg'),
     whatToEat: require('../../assets/icons/home-service-what-to-eat.svg'),
+    catAtlas: require('../../assets/icons/home-service-cat-atlas.svg'),
   },
   dark: {
     academic: require('../../assets/icons/home-service-academic-dark.svg'),
@@ -183,6 +184,7 @@ const homeServiceIcons = {
     errands: require('../../assets/icons/home-service-errands-dark.svg'),
     clubs: require('../../assets/icons/home-service-clubs-dark.svg'),
     whatToEat: require('../../assets/icons/home-service-what-to-eat-dark.svg'),
+    catAtlas: require('../../assets/icons/home-service-cat-atlas-dark.svg'),
   },
 }
 type HomeServiceIconKey = keyof typeof homeServiceIcons.light
@@ -230,6 +232,7 @@ const quickServices = [
   { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
   { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
   { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },
+  { key: 'cat-atlas', name: '猫猫图鉴', iconKey: 'catAtlas' as HomeServiceIconKey, tone: 'sand', route: '/pages/cat-atlas/index' },
 ]
 
 const migratedHomeServiceKeys = new Set([

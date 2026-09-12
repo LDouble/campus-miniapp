@@ -1,5 +1,6 @@
 @use '../../../styles/tokens' as token;
 page { background:token.$color-page; }
+.campus-theme--dark .lottery-win-hero { background:token.$color-surface-primary; color:token.$color-text-heading; }
 .lottery-win-page { min-height:100vh; color:token.$color-text-body; background:token.$color-page; &__content { padding:token.$space-3 token.$space-4 calc(64rpx + env(safe-area-inset-bottom)); } }
 .lottery-win-state { padding:120rpx token.$space-3; color:token.$color-text-secondary; font-size:28rpx; text-align:center; &--error { color:token.$color-danger; } }
 .lottery-win-hero { display:flex; flex-direction:column; align-items:center; padding:token.$space-4; border-radius:token.$ousea-radius-card-lg; background:linear-gradient(135deg, token.$color-primary, #38bdf8); color:token.$color-on-accent; text-align:center; image { width:160rpx; height:160rpx; margin-bottom:token.$space-2; border-radius:token.$ousea-radius-card; } text:nth-of-type(1) { font-size:26rpx; } text:nth-of-type(2) { margin-top:token.$space-1; font-size:40rpx; font-weight:token.$font-weight-semibold; } text:nth-of-type(3) { margin-top:token.$space-1; font-size:24rpx; opacity:.82; } }
