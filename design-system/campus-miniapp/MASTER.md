@@ -32,6 +32,10 @@
 
 ## 2. 颜色系统
 
+猫图鉴增加 `cat.sage #637B65` 用作小面积植物与辅助强调，不作为页面底色。
+
+猫猫图鉴沿用已确认 Figma 首页与详情的影集视觉：`cat.cream #FFFBEB`、`paper #FAF7F2`、`sand #F4E7D6`、`line #F5F5F4`、`cocoa #292524`、`muted #847971`、`caramel #C86230`。纸面仅用于猫图鉴页面，白卡复用全局 surface；其他模块不变。二级页导航为 24rpx 中等字重，页面卡片可使用与详情一致的 48rpx 圆角。详见 `pages/cat-atlas.md`。
+
 ### 2.1 基础颜色
 
 | 令牌 | 色值 | 用途 |

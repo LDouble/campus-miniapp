@@ -5,6 +5,21 @@
 @use './components/sticker-picker/index' as sticker-picker;
 
 page {
+  --ousea-cat-sage: #637b65;
+  --ousea-cat-cream: #fffbeb;
+  --ousea-cat-paper: #faf7f2;
+  --ousea-cat-sand: #f4e7d6;
+  --ousea-cat-line: #f5f5f4;
+  --ousea-cat-cocoa: #292524;
+  --ousea-cat-muted: #847971;
+  --ousea-cat-caramel: #c86230;
+  --campus-cat-page: var(--campus-page);
+  --campus-cat-surface: var(--campus-surface);
+  --campus-cat-subtle: var(--campus-surface-subtle);
+  --campus-cat-border: var(--campus-border);
+  --campus-cat-heading: var(--ousea-cat-cocoa);
+  --campus-cat-secondary: var(--ousea-cat-muted);
+  --campus-cat-primary: var(--ousea-cat-caramel);
   /* Ousea / Global primitives: the single source for new miniapp UI. */
   --ousea-ocean-50: #f2f7fe;
   --ousea-ocean-100: #e3effe;
@@ -195,6 +210,13 @@ button {
 }
 
 .campus-theme--dark {
+  --campus-cat-page: var(--campus-page);
+  --campus-cat-surface: var(--campus-surface);
+  --campus-cat-subtle: var(--campus-surface-subtle);
+  --campus-cat-border: var(--campus-border);
+  --campus-cat-heading: var(--campus-text-heading);
+  --campus-cat-secondary: var(--campus-text-secondary);
+  --campus-cat-primary: var(--ousea-cat-caramel);
   --campus-primary: #60a5fa;
   --campus-primary-strong: #93c5fd;
   --campus-primary-cyan: #22d3ee;

@@ -1517,6 +1517,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/posts/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理员撤销校园圈帖子 */
+        post: operations["AdminWithdrawCampusCirclePost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/sections": {
         parameters: {
             query?: never;
@@ -1776,6 +1793,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/posts/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 在帖子所属版块置顶或取消置顶 */
+        patch: operations["UpdateCampusCirclePostPin"];
         trace?: never;
     };
     "/api/v1/campus-circle/posts/{id}/submit-review": {
@@ -2078,6 +2112,194 @@ export interface paths {
         };
         /** 查询用户主页中公开可见的拼车发布 */
         get: operations["ListUserCarpoolTrips"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询新猫投稿 */
+        get: operations["ListAdminCatSubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-submissions/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核新猫投稿 */
+        post: operations["ReviewAdminCatSubmission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询猫咪档案 */
+        get: operations["ListAdminCats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 管理端更新猫咪档案 */
+        put: operations["UpdateAdminCat"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cat-sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询全校公开猫咪目击动态 */
+        get: operations["ListGlobalCatSightings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cat-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 投稿发现的新猫 */
+        post: operations["SubmitCat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开猫咪图鉴 */
+        get: operations["ListCats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开猫咪详情 */
+        get: operations["GetCat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/hotspots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询猫咪区域级出没热点 */
+        get: operations["ListCatHotspots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询猫咪目击动态 */
+        get: operations["ListCatSightings"];
+        put?: never;
+        /** 发布目击打卡 */
+        post: operations["CreateCatSighting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cat-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的猫咪图鉴 */
+        get: operations["GetMyCatCatalog"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7232,6 +7454,11 @@ export interface components {
             data: components["schemas"]["CampusCircleHome"];
             request_id: string;
         };
+        CampusCirclePinInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            pinned: boolean;
+        };
         CampusCirclePostImageView: {
             /** Format: uint64 */
             id: number;
@@ -7491,7 +7718,7 @@ export interface components {
             version: number;
         };
         /** @enum {string} */
-        CampusCircleViewerAction: "edit" | "withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic";
+        CampusCircleViewerAction: "edit" | "withdraw" | "admin_withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic" | "pin" | "unpin";
         /** @enum {string} */
         CampusCircleViewerRelation: "anonymous" | "owner" | "other" | "admin";
         CarpoolTripPageResponseBody: {
@@ -7557,6 +7784,172 @@ export interface components {
         };
         /** @enum {string} */
         CarpoolViewerAction: "edit" | "submit_review" | "cancel" | "join" | "leave" | "verify_academic";
+        CatHotspot: {
+            area: string;
+            /** Format: date-time */
+            last_seen_at: string;
+            /** Format: int64 */
+            sighting_count: number;
+        };
+        CatHotspotResponseBody: {
+            data: components["schemas"]["CatHotspot"][];
+            request_id: string;
+        };
+        CatInput: {
+            aliases: string[];
+            campus: string;
+            coat: string;
+            /** Format: uint64 */
+            cover_media_id?: number;
+            /** Format: uint64 */
+            expected_version?: number;
+            /** Format: date-time */
+            first_recorded_at: string;
+            gender: string;
+            name: string;
+            resident_area: string;
+            status?: components["schemas"]["CatStatus"];
+            traits: string[];
+        };
+        CatPage: {
+            items: components["schemas"]["CatView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CatPageResponseBody: {
+            data: components["schemas"]["CatPage"];
+            request_id: string;
+        };
+        CatResponseBody: {
+            data: components["schemas"]["CatView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CatStatus: "published" | "hidden";
+        CatView: {
+            aliases: string[];
+            campus: string;
+            coat: string;
+            cover_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            favorited: boolean;
+            /** Format: date-time */
+            first_recorded_at: string;
+            gender: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            last_seen_at?: string | null;
+            name: string;
+            resident_area: string;
+            /** Format: int64 */
+            sighting_count: number;
+            status: components["schemas"]["CatStatus"];
+            traits: string[];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CatalogResponseBody: {
+            data: components["schemas"]["CatalogView"];
+            request_id: string;
+        };
+        CatalogView: {
+            seen_cats: components["schemas"]["CatView"][];
+            /** Format: int64 */
+            seen_count: number;
+            /** Format: int64 */
+            total_count: number;
+            unseen_cats: components["schemas"]["CatView"][];
+        };
+        SightingInput: {
+            activity: string;
+            area: string;
+            note?: string;
+            /** Format: uint64 */
+            photo_media_id?: number;
+        };
+        SightingPage: {
+            items: components["schemas"]["SightingView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SightingPageResponseBody: {
+            data: components["schemas"]["SightingPage"];
+            request_id: string;
+        };
+        SightingView: {
+            activity: string;
+            area: string;
+            cat_cover_url?: string | null;
+            /** Format: uint64 */
+            cat_id: number;
+            cat_name: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
+            note?: string | null;
+            photo_url?: string | null;
+            reporter_avatar_url?: string | null;
+            reporter_name: string;
+        };
+        SubmissionInput: {
+            area: string;
+            campus: string;
+            description?: string;
+            /** Format: uint64 */
+            photo_media_id: number;
+            proposed_name?: string;
+        };
+        SubmissionPage: {
+            items: components["schemas"]["SubmissionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SubmissionPageResponseBody: {
+            data: components["schemas"]["SubmissionPage"];
+            request_id: string;
+        };
+        SubmissionResponseBody: {
+            data: components["schemas"]["SubmissionView"];
+            request_id: string;
+        };
+        SubmissionReviewInput: {
+            /** @enum {string} */
+            decision: "approved" | "rejected";
+            /** Format: uint64 */
+            expected_version: number;
+            rejection_reason?: string;
+        };
+        /** @enum {string} */
+        SubmissionStatus: "pending" | "approved" | "rejected";
+        SubmissionView: {
+            area: string;
+            campus: string;
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: uint64 */
+            id: number;
+            photo_url?: string | null;
+            proposed_name?: string | null;
+            rejection_reason?: string | null;
+            status: components["schemas"]["SubmissionStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
         /** @enum {string} */
         ClubAvailableAction: "edit" | "submit_review" | "verify_academic";
         ClubCategory: {
@@ -9353,7 +9746,7 @@ export interface components {
             total_seats?: number | null;
         };
         /** @enum {string} */
-        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
         FavoriteState: {
             favorited: boolean;
             /** Format: uint64 */
@@ -9897,7 +10290,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat" | "cat_atlas";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -10229,7 +10622,7 @@ export interface components {
             message_id: number;
         };
         /** @enum {string} */
-        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
         ReactionState: {
             /** Format: int64 */
             like_count: number;
@@ -11441,6 +11834,69 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CarpoolTripResponseBody"];
+            };
+        };
+        /** @description 猫咪区域级出没热点 */
+        CatHotspotResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatHotspotResponseBody"];
+            };
+        };
+        /** @description 猫咪分页列表 */
+        CatPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatPageResponseBody"];
+            };
+        };
+        /** @description 猫咪档案 */
+        CatResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatResponseBody"];
+            };
+        };
+        /** @description 我的图鉴 */
+        CatalogResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatalogResponseBody"];
+            };
+        };
+        /** @description 目击动态分页列表 */
+        SightingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SightingPageResponseBody"];
+            };
+        };
+        /** @description 新猫投稿分页列表 */
+        SubmissionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SubmissionPageResponseBody"];
+            };
+        };
+        /** @description 新猫投稿 */
+        SubmissionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SubmissionResponseBody"];
             };
         };
         /** @description 社团分类列表 */
@@ -14562,6 +15018,32 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    AdminWithdrawCampusCirclePost: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListAdminCampusCircleSections: {
         parameters: {
             query?: never;
@@ -15014,6 +15496,28 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    UpdateCampusCirclePostPin: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCirclePinInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     SubmitCampusCirclePostReview: {
         parameters: {
             query?: never;
@@ -15445,6 +15949,210 @@ export interface operations {
         responses: {
             200: components["responses"]["CarpoolTripPageResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    ListAdminCatSubmissions: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SubmissionPageResponse"];
+        };
+    };
+    ReviewAdminCatSubmission: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["SubmissionResponse"];
+        };
+    };
+    ListAdminCats: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatPageResponse"];
+        };
+    };
+    UpdateAdminCat: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CatResponse"];
+        };
+    };
+    ListGlobalCatSightings: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SightingPageResponse"];
+        };
+    };
+    SubmitCat: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["SubmissionResponse"];
+        };
+    };
+    ListCats: {
+        parameters: {
+            query?: {
+                area?: string;
+                keyword?: string;
+                sort?: "newest" | "latest_seen" | "popular";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatPageResponse"];
+        };
+    };
+    GetCat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListCatHotspots: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatHotspotResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListCatSightings: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SightingPageResponse"];
+        };
+    };
+    CreateCatSighting: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SightingInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["SightingPageResponse"];
+        };
+    };
+    GetMyCatCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatalogResponse"];
         };
     };
     ListAdminClubCategories: {
@@ -17970,7 +18678,7 @@ export interface operations {
     ListMyFavorites: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
                 page?: number;
                 page_size?: number;
             };
@@ -17987,7 +18695,7 @@ export interface operations {
     GetFavoriteState: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -18004,7 +18712,7 @@ export interface operations {
     AddFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -18022,7 +18730,7 @@ export interface operations {
     RemoveFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -19485,7 +20193,7 @@ export interface operations {
     LikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {
@@ -19503,7 +20211,7 @@ export interface operations {
     UnlikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {
