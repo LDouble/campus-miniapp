@@ -392,7 +392,7 @@ export default function LotteryCampaignDetailPage() {
                 ? '当前进入场景暂不支持快捷关注，请在微信搜索并关注 WeOUC。'
                 : '可通过上方组件关注；若组件未显示，请在微信搜索并关注 WeOUC。'}
             </Text>
-            <Button className='lottery-official-account__copy' hoverClass='none' onClick={() => void copyWechatId('WeOUC', 'WeOUC')}><Image className='lottery-asset' src={copyIcon} />复制 WeOUC 搜索</Button>
+            <Button className='lottery-official-account__copy' hoverClass='none' onClick={() => void copyWechatId('weouc1924', 'WeOUC')}><Image className='lottery-asset' src={copyIcon} />复制公众号微信号</Button>
           </View>
 
           <View className='lottery-detail-section'>
