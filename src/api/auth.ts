@@ -2,6 +2,8 @@ import Taro from '@tarojs/taro'
 import type { ApiErrorEnvelope, ApiSuccessEnvelope, TokenPair } from './types'
 import { resolveApiBaseUrl } from './environment'
 import { invalidateSharedResourceGroup } from '../state/shared-resource'
+import { getLotteryShareAttributionToken } from './lottery-share-attribution'
+import { clearAllPendingLotteryDrawKeys } from '../features/lottery/draw-request'
 
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
@@ -59,6 +61,7 @@ export const clearSession = () => {
   Taro.removeStorageSync(ACCESS_TOKEN_KEY)
   Taro.removeStorageSync(REFRESH_TOKEN_KEY)
   Taro.removeStorageSync(TOKEN_EXPIRES_AT_KEY)
+  clearAllPendingLotteryDrawKeys()
   invalidateSharedResourceGroup('session')
   invalidateSharedResourceGroup('verification')
   invalidateSharedResourceGroup('academic')
@@ -111,6 +114,8 @@ const wechatLogin = async () => {
     data: {
       app_id: WECHAT_APP_ID,
       code: loginResult.code,
+      // 新用户首次微信登录时携带入口 token，后端仅在创建账号的事务中固定来源。
+      ...(getCurrentLotteryShareToken() ? { lottery_share_token: getCurrentLotteryShareToken() } : {}),
     },
     header: {
       Accept: 'application/json',
@@ -118,6 +123,18 @@ const wechatLogin = async () => {
     },
   })
   return parseTokenResponse(response.statusCode, response.data)
+}
+
+const getCurrentLotteryShareToken = () => {
+  const pages = Taro.getCurrentPages()
+  const current = pages[pages.length - 1] as unknown as { route?: string; options?: Record<string, unknown> } | undefined
+  const campaignId = current?.route === 'pages/lottery/detail'
+    ? String(current.options?.id || '')
+    : ''
+  // 生命周期函数尚未执行时，也要优先从原始分享参数读取，确保首次微信登录能关联新用户来源。
+  const queryToken = String(current?.options?.share_token || '')
+  if (queryToken && queryToken.length <= 128) return queryToken
+  return getLotteryShareAttributionToken(campaignId)
 }
 
 export const login = () => {

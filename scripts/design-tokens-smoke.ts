@@ -18,6 +18,15 @@ const master = readFileSync(
 const agentRules = readFileSync(resolve(__dirname, '../AGENTS.md'), 'utf8')
 
 const expectedCssVariables: Record<string, string> = {
+  '--ousea-lottery-accent': '#ea580c',
+  '--ousea-lottery-page': '#faf7f4',
+  '--ousea-lottery-warm': '#fff7ed',
+  '--ousea-lottery-golden': '#f59e0b',
+  '--ousea-lottery-orange': '#f97316',
+  '--ousea-lottery-ink': '#1c1917',
+  '--ousea-lottery-secondary': '#78716c',
+  '--ousea-lottery-muted': '#a8a29e',
+  '--ousea-lottery-line': '#f5f5f4',
   '--ousea-cat-sage': '#637b65',
   '--ousea-cat-cream': '#fffbeb',
   '--ousea-cat-paper': '#faf7f2',

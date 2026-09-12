@@ -41,7 +41,11 @@ const fullPages = [
   'pages/clubs/edit',
   'pages/clubs/mine',
   'pages/direct-messages/index',
-  'pages/direct-messages/chat'
+  'pages/direct-messages/chat',
+  'pages/lottery/index',
+  'pages/lottery/detail',
+  'pages/lottery/codes/index',
+  'pages/lottery/win/index',
 ]
 
 const qualificationExcludedPages = new Set([
@@ -111,6 +115,7 @@ const packageDefinitions = [
   { root: 'pages/favorites', sourceRoot: 'pages/favorites', pages: ['index'] },
   { root: 'pages/webview', sourceRoot: 'pages/webview', pages: ['index'] },
   { root: 'pages/feature-unavailable', sourceRoot: 'pages/feature-unavailable', pages: ['index'] },
+  { root: 'pages/lottery', sourceRoot: 'pages/lottery', pages: ['index', 'detail', 'codes/index', 'win/index'] },
 ]
 
 const subPackages = packageDefinitions.flatMap(({ root, sourceRoot, pages }) => {

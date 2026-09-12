@@ -1,0 +1,8 @@
+@use '../../../styles/tokens' as token;
+page { background: token.$color-page; }
+.lottery-codes-page { min-height:100vh; color:token.$color-text-body; background:token.$color-page; &__content { padding:token.$space-3 token.$space-4 calc(64rpx + env(safe-area-inset-bottom)); } }
+.lottery-codes-state { padding:120rpx token.$space-3; color:token.$color-text-secondary; font-size:28rpx; text-align:center; &--error { color:token.$color-danger; } }
+.lottery-codes-state--more { padding:token.$space-3; font-size:24rpx; }
+.lottery-code-card { padding:token.$space-3; margin-bottom:token.$space-2; border:2rpx solid token.$color-border; border-radius:token.$ousea-radius-card; background:token.$color-surface; &__head { display:flex; justify-content:space-between; color:token.$color-primary-strong; font-size:24rpx; } &__head text:last-child { color:token.$color-text-secondary; } &__value { display:block; margin-top:token.$space-2; color:token.$color-text-heading; font-family:monospace; font-size:31rpx; font-weight:token.$font-weight-semibold; letter-spacing:2rpx; } &__time { display:block; margin-top:token.$space-1; color:token.$color-text-secondary; font-size:23rpx; line-height:1.5; } }
+.lottery-codes-win { display:flex; justify-content:space-between; gap:token.$space-2; padding:token.$space-2; margin-top:token.$space-2; border-radius:token.$ousea-radius-card-sm; background:token.$color-surface-primary; color:token.$color-primary-strong; font-size:26rpx; }
+.lottery-codes-load-more { padding:token.$space-3; color:token.$color-primary-strong; font-size:26rpx; text-align:center; }
