@@ -32,12 +32,14 @@ import {
   type LotteryServerClock,
 } from '../../features/lottery/time'
 import './detail.scss'
-import giftImage from '../../assets/lottery/gift.png'
+import giftImage from '../../assets/lottery/gift-3750.png'
 import shareIcon from '../../assets/lottery/share.svg'
-import drawIcon from '../../assets/lottery/draw.svg'
-import broadcastIcon from '../../assets/lottery/broadcast.svg'
-import chevronIcon from '../../assets/lottery/chevron.svg'
-import clockIcon from '../../assets/lottery/clock.svg'
+import drawIcon from '../../assets/lottery/draw-3750.svg'
+import broadcastIcon from '../../assets/lottery/broadcast-3750.svg'
+import chevronIcon from '../../assets/lottery/chevron-3750.svg'
+import clockIcon from '../../assets/lottery/clock-3750.svg'
+import copyIcon from '../../assets/lottery/copy-3750.svg'
+import plusIcon from '../../assets/lottery/plus-3750.svg'
 
 const formatTime = (value?: string | null) => value ? value.replace('T', ' ').slice(0, 16) : '待公布'
 const RESULT_PAGE_SIZE = 50
@@ -282,6 +284,7 @@ export default function LotteryCampaignDetailPage() {
   return (
     <View className='lottery-detail-page'>
       <CustomNavbar title='幸运大抽奖' showBack />
+      {campaign && !!publicResults.length && <View className='lottery-broadcast' ariaRole='button' ariaLabel='查看中奖名单' onClick={() => setResultsExpanded(value => !value)}><Image className='lottery-asset' src={broadcastIcon} /><Text>恭喜 {publicResults[0].masked_user} 抽中 {publicResults[0].prize_name}</Text></View>}
       {loading && !campaign && <View className='lottery-detail-state'>正在加载活动…</View>}
       {!loading && error && !campaign && <View className='lottery-detail-state lottery-detail-state--error' onClick={() => void load()}><Text>{error}</Text><Text>点击重试</Text></View>}
       {campaign && (
@@ -298,7 +301,7 @@ export default function LotteryCampaignDetailPage() {
               <Text className='lottery-detail-hero__description'>认证参与，收获一份校园惊喜</Text>
               <View className='lottery-detail-hero__countdown'>
                 <View className='lottery-countdown-label'><Image className='lottery-asset' src={clockIcon} />{scheduledDrawing(campaign) ? '开奖中，结果待公布' : isLotteryCampaignActive(campaign, serverNow) ? '距离本轮开奖收官' : lotteryRemainingLabel(campaign.end_at, serverNow)}</View>
-                {isLotteryCampaignActive(campaign, serverNow) && <View className='lottery-countdown-digits'>{countdown.map((part, index) => <Text key={index}>{part}</Text>)}</View>}
+                {isLotteryCampaignActive(campaign, serverNow) && <View className='lottery-countdown-digits'>{countdown.map((part, index) => <View className='lottery-countdown-part' key={index}>{index > 0 && <Text className='lottery-countdown-separator'>:</Text>}<Text className='lottery-countdown-value'>{part}</Text></View>)}</View>}
               </View>
             </View>
           </View>
@@ -323,19 +326,17 @@ export default function LotteryCampaignDetailPage() {
             <Text className='lottery-prizes-heading__title'>本期奖品池</Text>
             <View className='lottery-prizes-heading__link' ariaRole='button' onClick={() => setResultsExpanded(value => !value)}>中奖名单 ›</View>
           </View>
-          <View className='lottery-prize-grid'>
+          <View className={`lottery-prize-grid${campaign.prizes.length === 1 ? ' lottery-prize-grid--single' : ''}`}>
             {campaign.prizes.map((prize) => (
               <View key={prize.id} className='lottery-prize-card'>
                 <Text className='lottery-prize-card__badge'>共 {prize.total_quantity} 份</Text>
-                <Image className='lottery-prize-card__image' src={failedImages[prize.id] ? giftImage : prize.image_url || giftImage} mode={prize.image_url && !failedImages[prize.id] ? 'aspectFill' : 'aspectFit'} onError={() => setFailedImages(current => ({ ...current, [prize.id]: true }))} />
+                <View className='lottery-prize-card__media'><Image className={`lottery-prize-card__image${!prize.image_url || failedImages[prize.id] ? ' lottery-prize-card__image--placeholder' : ''}`} src={failedImages[prize.id] ? giftImage : prize.image_url || giftImage} mode={prize.image_url && !failedImages[prize.id] ? 'aspectFill' : 'aspectFit'} onError={() => setFailedImages(current => ({ ...current, [prize.id]: true }))} /></View>
                 <Text className='lottery-prize-card__name'>{prize.name}</Text>
                 <Text className='lottery-prize-card__description'>{prize.description || '奖品详情以活动规则为准'}</Text>
-                <View className='lottery-prize-card__footer'><Text>{campaign.draw_mode === 'instant' ? `概率 ${(prize.instant_probability_bps / 100).toFixed(2)}%` : `第 ${prize.scheduled_draw_order} 顺位`}</Text><Text>剩余 {Math.max(0, prize.total_quantity - prize.allocated_quantity)} 份</Text></View>
               </View>
             ))}
           </View>
 
-          {!!publicResults.length && <View className='lottery-broadcast' onClick={() => setResultsExpanded(value => !value)}><Image className='lottery-asset' src={broadcastIcon} /><Text>恭喜 {publicResults[0].masked_user} 抽中 {publicResults[0].prize_name}</Text></View>}
           {resultsExpanded && <View className='lottery-detail-section'>
             <Text className='lottery-detail-section__title'>中奖结果</Text>
             {!publicResults.length && <Text className='lottery-detail-section__copy'>{scheduledDrawing(campaign) ? '开奖中，结果完成后统一公布' : '暂无已公布的中奖结果'}</Text>}
@@ -345,15 +346,14 @@ export default function LotteryCampaignDetailPage() {
           </View>}
 
           {!!campaign.sponsors?.length && <View className='lottery-detail-section lottery-sponsors'>
-            <Text className='lottery-detail-section__title'>活动赞助商</Text>
+            <View className='lottery-sponsors__heading'><Text className='lottery-detail-section__title'>活动赞助商</Text><Text className='lottery-sponsors__subtitle'>校园特约合作</Text></View>
             {campaign.sponsors.map((sponsor) => (
               <View key={`${sponsor.display_order}-${sponsor.name}`} className='lottery-sponsor-card'>
                 {sponsor.image_url && <Image className='lottery-sponsor-card__image' src={sponsor.image_url} mode='aspectFill' />}
                 <View className='lottery-sponsor-card__body'>
-                  <Text className='lottery-sponsor-card__name'>{sponsor.name}</Text>
+                  <View className='lottery-sponsor-card__header'><Text className='lottery-sponsor-card__name'>{sponsor.name}</Text><Button className='lottery-sponsor-card__copy' hoverClass='none' ariaLabel={`复制${sponsor.name}微信号`} onClick={() => void copyWechatId(sponsor.wechat_id, sponsor.name)}><Image className='lottery-asset' src={plusIcon} />加微咨询</Button></View>
                   <Text className='lottery-sponsor-card__description'>{sponsor.description}</Text>
                 </View>
-                <Button className='lottery-sponsor-card__copy' hoverClass='none' onClick={() => void copyWechatId(sponsor.wechat_id, sponsor.name)}>+ V</Button>
               </View>
             ))}
           </View>}
@@ -368,17 +368,18 @@ export default function LotteryCampaignDetailPage() {
                 ? '当前进入场景暂不支持快捷关注，请在微信搜索并关注 WeOUC。'
                 : '可通过上方组件关注；若组件未显示，请在微信搜索并关注 WeOUC。'}
             </Text>
-            <Button className='lottery-official-account__copy' hoverClass='none' onClick={() => void copyWechatId('WeOUC', 'WeOUC')}>复制 WeOUC 搜索</Button>
+            <Button className='lottery-official-account__copy' hoverClass='none' onClick={() => void copyWechatId('WeOUC', 'WeOUC')}><Image className='lottery-asset' src={copyIcon} />复制 WeOUC 搜索</Button>
           </View>
 
           <View className='lottery-detail-section'>
-            <Button className='lottery-rules-toggle' hoverClass='none' onClick={() => setRulesExpanded(value => !value)}>抽奖规则说明<Image className='lottery-asset' src={chevronIcon} style={{ transform: rulesExpanded ? 'rotate(180deg)' : 'none' }} /></Button>
+            <Button className='lottery-rules-toggle' hoverClass='none' onClick={() => setRulesExpanded(value => !value)}>抽奖规则说明<Image className='lottery-asset' src={chevronIcon} style={{ transform: rulesExpanded ? 'none' : 'rotate(180deg)' }} /></Button>
             {rulesExpanded && <>
               <Text className='lottery-detail-section__copy'>1. 认证用户每场首次参与可获得 1 枚基础抽奖码；每人每场最多中奖 {campaign.max_wins} 份。</Text>
               <Text className='lottery-detail-section__copy'>2. {campaign.draw_mode === 'instant' ? '每次抽奖使用 1 枚码，未中奖同样会消耗；奖品发完后不再中奖，不保证每次中奖。' : '活动截止后统一开奖，所有已获得的码自动入池；结果公布前不展示部分中奖名单。'}</Text>
               <Text className='lottery-detail-section__copy'>3. 活动截止：{formatTime(campaign.end_at)}。领奖方式及期限以中奖详情为准。</Text>
               {campaign.share_enabled && <Text className='lottery-share-hint'>{campaign.share_new_user_only ? '仅通过分享链接完成首次注册的好友可计入奖励。' : '好友完成登录后可计入奖励；同一好友仅首次归因有效。'}每次 {campaign.share_reward_code_count} 枚，每日最多 {campaign.share_daily_code_limit} 枚、活动累计最多 {campaign.share_total_code_limit} 枚。</Text>}
-              {!!campaign.description && <Text className='lottery-detail-section__copy'>{campaign.description}</Text>}
+              <View className='lottery-prize-odds'>{campaign.prizes.map(prize => <Text className='lottery-detail-section__copy' key={prize.id}>{prize.name}：{campaign.draw_mode === 'instant' ? `概率 ${(prize.instant_probability_bps / 100).toFixed(2)}%` : `第 ${prize.scheduled_draw_order} 顺位`}，剩余 {Math.max(0, prize.total_quantity - prize.allocated_quantity)} 份</Text>)}</View>
+              {!!campaign.description && <Text className='lottery-detail-section__copy lottery-rules-description'>{campaign.description}</Text>}
             </>}
           </View>
           {campaign.my_win_count ? <View className='lottery-detail-win-link' ariaRole='button' ariaLabel='查看我的中奖结果' onClick={openCodes}>查看我的中奖与领奖信息</View> : null}

@@ -3,9 +3,15 @@
   "global": {
     "color": {
       "lottery": {
-        "accent": { "value": "#EC5B13", "type": "color", "description": "用户指定抽奖设计稿强调色" },
-        "page": { "value": "#F8F6F6", "type": "color", "description": "抽奖详情页面底色" },
-        "warm": { "value": "#FFF5F0", "type": "color", "description": "抽奖详情渐变起点" }
+        "accent": { "value": "#EA580C", "type": "color", "description": "3750:2 抽奖强调色" },
+        "page": { "value": "#FAF7F4", "type": "color", "description": "抽奖详情页面底色" },
+        "warm": { "value": "#FFF7ED", "type": "color", "description": "抽奖详情暖色表面" },
+        "golden": { "value": "#F59E0B", "type": "color", "description": "抽奖操作渐变终点" },
+        "orange": { "value": "#F97316", "type": "color", "description": "3750:2 抽奖专属orange原始令牌" },
+        "ink": { "value": "#1C1917", "type": "color", "description": "3750:2 抽奖专属ink原始令牌" },
+        "secondary": { "value": "#78716C", "type": "color", "description": "3750:2 抽奖专属secondary原始令牌" },
+        "muted": { "value": "#A8A29E", "type": "color", "description": "3750:2 抽奖专属muted原始令牌" },
+        "line": { "value": "#F5F5F4", "type": "color", "description": "3750:2 抽奖专属line原始令牌" }
       },
       "ocean": {
         "50": { "value": "#F2F7FE", "type": "color", "description": "浅蓝底 / 信息条" },
