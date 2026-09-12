@@ -1,6 +1,6 @@
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
@@ -13,6 +13,7 @@ import {
   type MiniappModuleKey,
 } from '../../features/runtime-config'
 import { useCampusShare } from '../../features/share'
+import { getCampusTheme, subscribeCampusTheme } from '../../features/theme-preference'
 import './index.scss'
 
 const icons = {
@@ -29,7 +30,7 @@ const icons = {
   academic: require('../../assets/icons/academic.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
   whatToEat: require('../../assets/icons/what-to-eat.svg'),
-  catAtlas: require('../../assets/icons/community.svg'),
+  catAtlas: require('../../assets/icons/home-service-cat-atlas.svg'),
 }
 
 type ServiceItem = {
@@ -112,6 +113,8 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
 ]
 
 export default function Services() {
+  const [campusTheme, setCampusTheme] = useState(getCampusTheme)
+  useEffect(() => subscribeCampusTheme(setCampusTheme), [])
   useCampusShare(() => ({
     title: 'OUSea服务｜学业、出行与校园生活',
     path: '/pages/services/index',
@@ -202,8 +205,8 @@ export default function Services() {
                   ariaLabel={`打开${item.name}`}
                   onClick={() => openService(item)}
                 >
-                  <View className='services-group__icon'>
-                    <Image src={item.icon} mode='aspectFit' />
+                  <View className='services-group__icon' style={item.key === 'cat-atlas' ? { background: 'var(--campus-icon-surface-orange)' } : undefined}>
+                    <Image src={item.key === 'cat-atlas' && campusTheme === 'dark' ? require('../../assets/icons/home-service-cat-atlas-dark.svg') : item.icon} mode='aspectFit' />
                   </View>
                   <Text>{item.name}</Text>
                 </View>

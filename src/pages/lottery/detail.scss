@@ -2,7 +2,7 @@
 
 page { background: var(--ousea-lottery-page, #faf7f4); }
 
-.lottery-detail-page {
+.lottery-detail-page:not(.campus-theme--dark) {
   // Lottery's warm palette stays local to this page and maps back to semantic
   // colors so nested, reusable primitives do not need parallel color classes.
   --campus-text-primary: #{token.$ousea-lottery-ink};
@@ -12,6 +12,9 @@ page { background: var(--ousea-lottery-page, #faf7f4); }
   --campus-text-auxiliary: #{token.$ousea-lottery-muted};
   --campus-text-muted: #{token.$ousea-lottery-muted};
   --campus-border: #{token.$ousea-lottery-line};
+}
+
+.lottery-detail-page {
   min-height: 100vh;
   color: token.$color-text-body;
   background: var(--ousea-lottery-page, #faf7f4);
@@ -157,6 +160,10 @@ page { background: var(--ousea-lottery-page, #faf7f4); }
 .lottery-scheduled-copy { flex: 1.5; min-width: 0; padding: 18rpx; border-radius: 16rpx; color: token.$ousea-lottery-accent; background: var(--ousea-lottery-warm, #fff7ed); font-size: 24rpx; line-height: 1.5; text-align: center; }
 .lottery-asset { flex: none; width: 28rpx; height: 28rpx; vertical-align: -4rpx; }
 
+.lottery-detail-page.campus-theme--dark {
+  background: token.$color-page;
+}
+
 .campus-theme--dark {
   .lottery-detail-page {
     // Reset the page-local light mappings to the existing dark semantic palette.
@@ -169,13 +176,24 @@ page { background: var(--ousea-lottery-page, #faf7f4); }
     --campus-border: inherit;
   }
   .lottery-detail-page, .lottery-detail-page__content { background: token.$color-page; }
+  .lottery-broadcast { color: token.$color-errand; }
+  .lottery-guarantees text:first-child { color: token.$color-errand; border-color: token.$color-border; background: token.$color-surface-subtle; }
+  .lottery-detail-hero__mode, .lottery-mine-badge, .lottery-mine-number--accent,
+  .lottery-detail-mine__link, .lottery-invite-strip, .lottery-detail-win-link,
+  .lottery-draw-recovery, .lottery-scheduled-copy, .lottery-result-more,
+  .lottery-official-account__copy { color: token.$color-errand; }
+  .lottery-countdown-separator { color: token.$color-text-secondary; }
   .lottery-broadcast, .lottery-mine-stat, .lottery-invite-strip, .lottery-detail-win-link, .lottery-draw-recovery, .lottery-scheduled-copy { background: token.$color-surface-subtle; }
   .lottery-detail-hero, .lottery-detail-mine, .lottery-detail-section, .lottery-prize-card { border-color: token.$color-border; background: token.$color-surface; box-shadow: none; }
   .lottery-mine-stat:first-child, .lottery-detail-hero__countdown, .lottery-rules-description { border-color: token.$color-border; }
   .lottery-prize-card__media, .lottery-sponsor-card, .lottery-sponsor-card__image { border-color: token.$color-border; background: token.$color-surface-subtle; }
   .lottery-detail-actions { border-color: token.$color-border; background: var(--campus-surface-glass); box-shadow: none; }
   .lottery-countdown-digits .lottery-countdown-value { color: token.$color-text-heading; background: token.$color-surface-subtle; }
-  .lottery-countdown-digits .lottery-countdown-part:last-child .lottery-countdown-value, .lottery-primary-button, .lottery-sponsor-card__copy { color: #fff; background: linear-gradient(100deg, token.$ousea-lottery-orange, var(--ousea-lottery-golden, #f59e0b)); }
+  .lottery-countdown-digits .lottery-countdown-part:last-child .lottery-countdown-value,
+  .lottery-primary-button, .lottery-sponsor-card__copy, .lottery-prize-card__badge {
+    color: token.$color-on-accent;
+    background: var(--campus-surface-errand);
+  }
   .lottery-share-button { border-color: token.$color-border; background: token.$color-surface; }
 }
 

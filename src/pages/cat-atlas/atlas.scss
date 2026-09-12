@@ -1507,3 +1507,97 @@
   width: 32rpx;
   height: 32rpx;
 }
+
+/* The runtime applies the theme class to the same element as the page root.
+ * These selectors deliberately support both root and ancestor placement. */
+.cat-page.campus-theme--dark,
+.atlas-form-page.campus-theme--dark,
+.catalog-page.campus-theme--dark,
+.campus-theme--dark .cat-page,
+.campus-theme--dark .atlas-form-page,
+.campus-theme--dark .catalog-page {
+  --campus-cat-page: var(--campus-page);
+  --campus-cat-surface: var(--campus-surface);
+  --campus-cat-subtle: var(--campus-surface-subtle);
+  --campus-cat-border: var(--campus-border);
+  --campus-cat-heading: var(--campus-text-heading);
+  --campus-cat-secondary: var(--campus-text-secondary);
+  --campus-cat-primary: var(--campus-errand);
+  --cat-atlas-cream: var(--campus-surface-subtle);
+  --cat-atlas-shadow: rgba(0, 0, 0, .2);
+
+  .custom-navbar__fixed { border-bottom-color: var(--campus-border); background: var(--campus-surface-glass); }
+  .custom-navbar--immersive:not(.custom-navbar--collapsed) .custom-navbar__fixed { background: rgba(11, 18, 32, .14); }
+  .cat-map-canvas { border-color: var(--campus-border); background-color: var(--campus-surface-subtle); background-image: repeating-linear-gradient(45deg, rgba(96, 165, 250, .12) 0 2rpx, transparent 2rpx 42rpx); }
+  .cat-map-canvas__label,
+  .cat-map-pin text { background: var(--campus-surface); color: var(--campus-text-heading); }
+  .cat-map-canvas__privacy { color: var(--campus-text-secondary); }
+  .cat-map-pin > view { border-color: var(--campus-surface); background: var(--ousea-cat-caramel); }
+  .cat-map-summary,
+  .cat-map-list > view,
+  .atlas-form__section,
+  .atlas-form__picker,
+  .atlas-form__input-wrap,
+  .atlas-form__textarea-wrap,
+  .cat-profile-suggestion-page__value-card,
+  .cat-profile-suggestion-page__note { border-color: var(--campus-border); background: var(--campus-surface); }
+  &.atlas-form-page,
+  &.catalog-page { background: var(--campus-page); }
+  .atlas-form__intro { border-color: var(--campus-border); background: var(--campus-surface-subtle); }
+  .atlas-form__step { background: var(--campus-surface-primary); color: var(--campus-cat-primary); }
+  .atlas-form__section-help { color: var(--campus-text-secondary); }
+  .atlas-form__options > text,
+  .cat-profile-suggestion-page__fields > text { border-color: var(--campus-border); background: var(--campus-surface-subtle); color: var(--campus-text-secondary); }
+  .atlas-form__options > .is-active,
+  .cat-profile-suggestion-page__fields > .is-active { border-color: var(--campus-cat-primary); background: var(--campus-surface-errand); color: var(--campus-cat-primary); }
+  .catalog-summary { border-color: var(--campus-border); background: var(--campus-surface-subtle); }
+  .catalog-summary__track { background: var(--campus-border); }
+  .catalog-tabs { border-color: var(--campus-border); background: var(--campus-surface-subtle); }
+  .catalog-tabs .is-active { background: var(--campus-surface-errand); color: #fff; }
+  .cat-map-summary__button,
+  .cat-profile-suggestion-page__submit { background: var(--campus-surface-errand); color: #fff; }
+  .cat-map-summary__count { background: var(--campus-surface-success); color: var(--campus-success); }
+  .catalog-grid__item { border-color: var(--campus-border); background: var(--campus-surface); }
+  .catalog-grid__photo { background: var(--campus-surface-subtle); }
+  .catalog-grid__photo--empty { border-color: var(--campus-border); background: var(--campus-surface-subtle); color: var(--campus-text-secondary); }
+  .catalog-grid__lock { background: var(--campus-overlay); }
+  .cat-profile-suggestion-page__footer { border-top-color: var(--campus-border); background: var(--campus-surface-glass); }
+}
+
+.cat-detail-page.campus-theme--dark,
+.campus-theme--dark .cat-detail-page {
+  --figma-paper: var(--campus-page);
+  --figma-surface: var(--campus-surface);
+  --figma-ink: var(--campus-text-heading);
+  --figma-body: var(--campus-text-body);
+  --figma-muted: var(--campus-text-secondary);
+  --figma-line: var(--campus-border);
+  --figma-accent: var(--campus-errand);
+  --figma-warm: var(--campus-surface-subtle);
+
+  .custom-navbar__fixed,
+  .custom-navbar--immersive:not(.custom-navbar--collapsed) .custom-navbar__fixed { color: var(--figma-body); background: var(--campus-surface-glass); }
+  .custom-navbar__title { color: var(--figma-body); }
+  .custom-navbar__back,
+  .cat-detail-nav-pill { border-color: var(--campus-border); background: var(--campus-surface); }
+  .custom-navbar__back-icon { border-bottom-color: var(--figma-body); border-left-color: var(--figma-body); }
+  .cat-detail-nav-pill__divider { background: var(--campus-border); }
+  .cat-detail-nav-pill__item image { filter: brightness(0) invert(1); }
+  .cat-detail-visual-card,
+  .cat-detail-profile-card,
+  .cat-detail-archive-card,
+  .cat-detail-sighting-card { border-color: var(--campus-border); }
+  .cat-detail-profile-card__location text:nth-last-child(2),
+  .cat-detail-profile-card__location text:last-child { color: var(--campus-text-secondary); }
+  .cat-detail-profile-card__tags text:nth-child(1) { border-color: var(--campus-border); background: var(--campus-surface-success); color: var(--campus-success); }
+  .cat-detail-profile-card__tags text:nth-child(2),
+  .cat-detail-sighting-card__activity { border-color: var(--campus-border-strong); background: var(--campus-surface-errand); color: var(--figma-accent); }
+  .cat-detail-profile-card__tags text:nth-child(3) { border-color: var(--campus-border); background: var(--campus-surface-subtle); color: var(--campus-text-secondary); }
+  .cat-detail-profile-card__stat { border-color: var(--campus-border-strong); background: var(--campus-surface-subtle); }
+  .cat-detail-archive-card__suggestion { border-color: var(--campus-border-strong); background: var(--campus-surface-subtle); }
+  .cat-detail-sighting-compose { border-color: var(--campus-border-strong); }
+  .cat-detail-sighting-compose__arrow { background: var(--campus-surface-primary); }
+  .cat-detail-bottom { border-top-color: var(--campus-border); background: var(--campus-surface-glass); }
+  .cat-detail-bottom__button--activity { border-color: var(--campus-border); background: var(--campus-surface-subtle); color: var(--campus-text-heading); }
+  .cat-detail-bottom__button--report { background: var(--campus-surface-errand); color: #fff; }
+}

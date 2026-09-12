@@ -44,6 +44,7 @@
   .journal-card__like.is-liked { color: var(--ousea-like-500); font-weight: 600; }
   .journal-pagination { display: flex; align-items: center; justify-content: center; min-height: 88rpx; padding: 8rpx 16rpx; color: var(--campus-cat-secondary); font-size: 22rpx; text-align: center; }
 }
+.cat-journal-page.campus-theme--dark,
 .campus-theme--dark .cat-journal-page {
   --campus-cat-page: var(--campus-page);
   --campus-cat-surface: var(--campus-surface);
@@ -51,4 +52,5 @@
   --campus-cat-border: var(--campus-border);
   --campus-cat-heading: var(--campus-text-heading);
   --campus-cat-secondary: var(--campus-text-secondary);
+  --campus-cat-primary: var(--campus-errand);
 }
