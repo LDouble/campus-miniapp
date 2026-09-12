@@ -5,6 +5,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import { listCats, type CatSort, type CatView } from '../../api/cat-atlas'
 import { RequestState } from '../../features/cat-atlas/ui'
 import { catPhotoHeightPercent } from '../../features/cat-atlas/photo-layout'
+import { mergeVisibleCats } from '../../features/cat-atlas/return-refresh'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { navigateToWithGuard } from '../../utils/navigation'
@@ -84,7 +85,7 @@ function CatJournalCard({ cat }: { cat: CatView }) {
     void navigateToWithGuard(`/pages/cat-atlas/report?id=${cat.id}&name=${encodeURIComponent(cat.name)}`)
   }
 
-  return <View className={`cat-journal__card ${photo ? 'cat-journal__card--photo' : 'cat-journal__card--text'}`} hoverClass='cat-journal__card--pressed' onClick={goDetail}>
+  return <View className={`cat-journal__card ${photo ? 'cat-journal__card--photo' : 'cat-journal__card--text'}`} hoverClass='none' onClick={goDetail}>
     <View className='cat-journal__card-head'>
       <View className='cat-journal__card-copy'>
         <View className='cat-journal__title-row'>
@@ -135,6 +136,8 @@ export default function CatAtlasCatalogList() {
   const loadingMoreRef = useRef(false)
   const hasMoreRef = useRef(true)
   const hasShownRef = useRef(false)
+  const hasLoadedRef = useRef(false)
+  const loadedPageRef = useRef(1)
   const headerCollapsed = useCollapsingHeader({ threshold: 100, releaseGap: 28 })
 
   const load = useCallback(async ({ page: requestedPage = 1, append = false }: LoadOptions = {}) => {
@@ -146,6 +149,7 @@ export default function CatAtlasCatalogList() {
       loadingMoreRef.current = true
       setLoadingMore(true)
     } else {
+      hasLoadedRef.current = false
       loadingMoreRef.current = false
       setLoadingMore(false)
       hasMoreRef.current = true
@@ -173,6 +177,8 @@ export default function CatAtlasCatalogList() {
         return Array.from(merged.values())
       })
       setPage(result.page)
+      loadedPageRef.current = result.page
+      hasLoadedRef.current = true
       setTotalCount(result.total)
       hasMoreRef.current = result.page * result.page_size < result.total
       setHasMore(hasMoreRef.current)
@@ -197,18 +203,38 @@ export default function CatAtlasCatalogList() {
     }
   }, [area, query, sort])
 
+  const refreshVisible = useCallback(async () => {
+    if (!hasLoadedRef.current || loadingMoreRef.current) return
+    const version = ++requestVersion.current
+    const lastPage = loadedPageRef.current
+    const sortValue: CatSort = sort === '最近遇见' ? 'latest_seen' : sort === '最新收录' ? 'newest' : 'popular'
+    const refreshed: CatView[] = []
+    try {
+      for (let currentPage = 1; currentPage <= lastPage; currentPage += 1) {
+        const result = await listCats({ keyword: query, area: area === '全部' ? undefined : area, sort: sortValue, page: currentPage, pageSize: PAGE_SIZE })
+        if (version !== requestVersion.current) return
+        refreshed.push(...result.items)
+        if (result.page * result.page_size >= result.total) break
+      }
+      setItems((current) => mergeVisibleCats(current, refreshed))
+    } catch {
+      // 静默刷新失败不替换列表，也不重置分页或图片的布局状态。
+    }
+  }, [area, query, sort])
+
   const loadMore = useCallback(() => {
     if (loading || loadingMoreRef.current || !hasMoreRef.current) return
     void load({ page: page + 1, append: true })
   }, [load, loading, page])
 
   useEffect(() => {
-    if (hasShownRef.current) void load()
+    void load()
+    return () => { requestVersion.current += 1 }
   }, [load])
 
   useDidShow(() => {
+    if (hasShownRef.current) void refreshVisible()
     hasShownRef.current = true
-    void load()
   })
   usePullDownRefresh(() => { void load() })
   useReachBottom(loadMore)

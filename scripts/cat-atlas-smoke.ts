@@ -2,6 +2,15 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { catPhotoHeightPercent } from '../src/features/cat-atlas/photo-layout'
+import { mergeVisibleCats } from '../src/features/cat-atlas/return-refresh'
+
+const visibleCats = [{ id: 1, count: 1 }, { id: 2, count: 2 }, { id: 3, count: 3 }]
+const refreshedCats = [{ id: 2, count: 4 }, { id: 4, count: 1 }, { id: 1, count: 2 }]
+assert.deepEqual(mergeVisibleCats(visibleCats, refreshedCats), [
+  { id: 1, count: 2 }, { id: 2, count: 4 }, { id: 3, count: 3 },
+], '返回刷新更新计数但保留已加载分页、顺序和缺失卡片')
+assert.deepEqual(mergeVisibleCats(visibleCats, []), visibleCats, '空响应不得清空当前列表')
+assert.deepEqual(mergeVisibleCats([], refreshedCats), [], '返回刷新不替代首次加载')
 
 assert.equal(catPhotoHeightPercent(1600, 900), 56.25, '横图保留原比例')
 assert.equal(catPhotoHeightPercent(800, 1000), 125, '4:5 竖图完整展示')
@@ -15,6 +24,11 @@ const appConfig = source('../src/app.config.ts')
 const catalog = source('../src/pages/cat-atlas/index.tsx')
 const list = source('../src/pages/cat-atlas/list.tsx')
 const catalogList = source('../src/pages/cat-atlas/catalog-list.tsx')
+const returnRefresh = catalogList.split('const refreshVisible =')[1].split('const loadMore =')[0]
+assert.doesNotMatch(returnRefresh, /setLoading\(|setPage\(|setHasMore\(|setError\(/u, '静默刷新不得卸载列表或重置分页')
+assert.match(returnRefresh, /version !== requestVersion.current/u, '旧响应不得覆盖新筛选')
+assert.match(returnRefresh, /currentPage <= lastPage/u, '刷新所有已加载页面而非只取第一页')
+assert.match(catalogList, /if \(hasShownRef.current\) void refreshVisible\(\)/u)
 const detail = source('../src/pages/cat-atlas/detail.tsx')
 const atlasStyles = source('../src/pages/cat-atlas/atlas.scss')
 const catalogStyles = source('../src/pages/cat-atlas/catalog.scss')

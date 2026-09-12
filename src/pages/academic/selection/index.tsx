@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Image, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
@@ -21,6 +21,7 @@ import { academicStorage } from '../storage'
 import { AcademicPeriod, AcademicPreferences, CourseSelectionRecord, CourseSelectionStatus } from '../types'
 import { getPeriodLabel, resolveNextPeriodId, resolvePeriodId } from '../utils'
 import '../index.scss'
+import './selection-sheet.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
 const COURSE_TRADE_GUIDE_DURATION_MS = 3000
@@ -103,6 +104,8 @@ export default function SelectionPage() {
   const hasSelectedPeriod = periods.some((period) => (
     period.id === preferences.schedulePeriodId
   ))
+  // 每个学期选项按现有最小触控高度估算；短列表保持紧凑，超出视口后交给 ScrollView。
+  const periodSheetScrollHeight = `min(calc(76vh - 80rpx - env(safe-area-inset-bottom)), ${112 + periods.length * 128}rpx)`
 
   const refreshSelections = useCallback(async (
     manual = false,
@@ -304,7 +307,7 @@ export default function SelectionPage() {
   )
 
   return (
-    <View className={`academic-page academic-page--selection ${sheet ? 'academic-page--locked' : ''}`}>
+    <View className='academic-page academic-page--selection'>
       <View className='academic-page__glow academic-page__glow--two' />
       <AcademicHeader title='选课结果' toolbar={toolbar} />
       <View className='academic-content'>
@@ -383,10 +386,11 @@ export default function SelectionPage() {
           {!displayedRecords.length && <View className='academic-empty'><View className='academic-empty__art'><View /><View /></View><Text className='academic-empty__title'>{activeTab === 'failed' ? '本学期没有未选记录' : '本学期暂无课程记录'}</Text><Text className='academic-empty__copy'>切换学期或下拉刷新再看看</Text></View>}
         </>}
       </View>
-      {sheet && <View className='academic-overlay' onClick={() => setSheet(null)}><View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}><View className='academic-sheet__handle' /><View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
-        {sheet === 'period' && <View className='academic-sheet__body'><Text className='academic-sheet__title'>选择选课学期</Text><Text className='academic-sheet__subtitle'>查看不同学期的选课结果</Text><View className='period-options'>{periods.map((period) => <View key={period.id} className={`period-options__item ${preferences.schedulePeriodId === period.id ? 'period-options__item--active' : ''}`} onClick={() => { updatePeriod(period.id); setSheet(null) }}><View><Text>{period.label}</Text><Text>查看该学期选课记录</Text></View><View className='period-options__check'>{preferences.schedulePeriodId === period.id ? '✓' : ''}</View></View>)}</View></View>}
-        {sheet === 'detail' && activeRecord && (
-          <View className='academic-sheet__body'>
+      {sheet && <View className='academic-overlay selection-sheet-overlay' catchMove onClick={() => setSheet(null)}><View className={`academic-sheet selection-sheet academic-sheet--${sheet}`} catchMove onClick={requestWechatSubscriptionAndStopPropagation}><View className='academic-sheet__handle' /><View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+        {sheet === 'period' && <ScrollView className='selection-sheet__scroll selection-sheet__scroll--period' style={{ height: periodSheetScrollHeight }} scrollY enhanced showScrollbar={false}><View className='selection-sheet__scroll-content'><View className='academic-sheet__body'><Text className='academic-sheet__title'>选择选课学期</Text><Text className='academic-sheet__subtitle'>查看不同学期的选课结果</Text><View className='period-options'>{periods.map((period) => <View key={period.id} className={`period-options__item ${preferences.schedulePeriodId === period.id ? 'period-options__item--active' : ''}`} onClick={() => { updatePeriod(period.id); setSheet(null) }}><View><Text>{period.label}</Text><Text>查看该学期选课记录</Text></View><View className='period-options__check'>{preferences.schedulePeriodId === period.id ? '✓' : ''}</View></View>)}</View></View></View></ScrollView>}
+        {sheet === 'detail' && activeRecord && <ScrollView className='selection-sheet__scroll' scrollY enhanced showScrollbar={false}>
+          <View className='selection-sheet__scroll-content'>
+              <View className='academic-sheet__body'>
             <View className={`selection-detail__badge selection-detail__badge--${activeRecord.status}`}>
               {statusMeta[activeRecord.status].label}
             </View>
@@ -431,8 +435,9 @@ export default function SelectionPage() {
             <View className='academic-button academic-button--full' onClick={() => setSheet(null)}>
               知道了
             </View>
+              </View>
           </View>
-        )}
+        </ScrollView>}
       </View></View>}
     </View>
   )
