@@ -1,60 +1,28 @@
 @use '../../styles/tokens' as token;
-
 page { background: token.$color-page; }
-
-.lottery-list-page {
-  min-height: 100vh;
-  color: token.$color-text-body;
-  background: token.$color-page;
-
-  &__content { padding: token.$space-3 token.$space-4 calc(64rpx + env(safe-area-inset-bottom)); }
-}
-
-.lottery-state {
-  padding: 120rpx token.$space-3;
-  color: token.$color-text-secondary;
-  font-size: 28rpx;
-  line-height: 1.6;
-  text-align: center;
-
-  text { display: block; }
-  text + text { margin-top: token.$space-2; color: token.$color-primary; }
-  &--error { color: token.$color-danger; }
-}
-
-.lottery-load-more {
-  padding: token.$space-3;
-  color: token.$color-primary-strong;
-  font-size: 26rpx;
-  text-align: center;
-}
-
+.lottery-list-page { min-height:100vh; color:token.$color-text-body; background:token.$color-page; &__content { padding:24rpx 32rpx calc(48rpx + env(safe-area-inset-bottom)); } }
+.lottery-state { padding:100rpx 32rpx; color:token.$color-text-secondary; font-size:24rpx; line-height:1.6; text-align:center; text { display:block; } text + text { margin-top:24rpx; color:token.$color-primary; } &--error { color:token.$color-danger; } &--more { padding:32rpx; } }
+.lottery-load-more,.lottery-list-end { padding:32rpx 0; text-align:center; font-size:22rpx; line-height:1.5; }
+.lottery-load-more { color:token.$color-primary; }
+.lottery-list-end { color:token.$color-text-muted; }
 .lottery-campaign-card {
-  display: flex;
-  gap: token.$space-2;
-  padding: token.$space-2;
-  margin-bottom: token.$space-2;
-  border: 2rpx solid token.$color-border;
-  border-radius: token.$radius-lg;
-  background: token.$color-surface;
-  transition: opacity token.$motion-press ease, transform token.$motion-press ease;
-
-  &:active { opacity: .82; transform: scale(.99); }
-
-  &__cover {
-    flex: none;
-    width: 148rpx;
-    height: 148rpx;
-    border-radius: token.$radius-md;
-    background: token.$color-surface-primary;
-
-    &--placeholder { background: linear-gradient(135deg, token.$color-primary, #38bdf8); }
-  }
-
-  &__body { display: flex; flex: 1; min-width: 0; flex-direction: column; justify-content: center; }
-  &__head { display: flex; gap: token.$space-1; align-items: center; justify-content: space-between; }
-  &__head > text:first-child { overflow: hidden; color: token.$color-text-heading; font-size: 32rpx; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-  &__status { flex: none; padding: 6rpx 12rpx; border-radius: token.$radius-sm; background: token.$color-surface-primary; color: token.$color-primary-strong; font-size: 20rpx; }
-  &__meta, &__prizes { display: block; margin-top: 10rpx; overflow: hidden; color: token.$color-text-secondary; font-size: 24rpx; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
-  &__prizes { color: token.$color-text-body; }
+  padding:28rpx; margin-bottom:28rpx; border:1rpx solid token.$color-surface; border-radius:token.$ousea-radius-card-lg; background:token.$color-surface; box-shadow:0 8rpx 24rpx rgba(26,35,51,.045); transition:opacity 120ms ease;
+  &:active { opacity:.82; }
+  &__main { display:flex; gap:28rpx; align-items:flex-start; }
+  &__cover { flex:none; width:160rpx; height:160rpx; border-radius:token.$ousea-radius-card-sm; background:token.$color-surface-primary; }
+  &__cover--placeholder { box-sizing:border-box; padding:12rpx; }
+  &__body { flex:1; min-width:0; }
+  &__head { display:flex; flex-wrap:wrap; gap:8rpx; align-items:flex-start; }
+  &__head > text:first-child { flex:1; min-width:140rpx; display:-webkit-box; overflow:hidden; -webkit-line-clamp:2; -webkit-box-orient:vertical; color:token.$color-text-heading; font-size:28rpx; font-weight:token.$ousea-font-weight-semibold; line-height:1.375; overflow-wrap:anywhere; }
+  &__status { flex:none; padding:4rpx 12rpx; border-radius:token.$ousea-radius-pill; color:token.$color-success; background:token.$color-surface-subtle; font-size:20rpx; line-height:1.5; }
+  &__tags { display:flex; flex-wrap:wrap; gap:12rpx; align-items:center; margin-top:10rpx; color:token.$color-text-muted; font-size:20rpx; line-height:1.5; }
+  &__tag { padding:2rpx 10rpx; border:1rpx solid token.$color-border-strong; border-radius:8rpx; color:token.$color-primary; background:token.$color-surface-primary; font-size:18rpx; }
+  &__prizes { display:-webkit-box; overflow:hidden; margin-top:12rpx; color:token.$color-text-secondary; font-size:24rpx; line-height:1.5; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:anywhere; }
+  &__footer { display:flex; gap:12rpx; align-items:center; justify-content:space-between; margin-top:24rpx; padding-top:18rpx; border-top:1rpx solid token.$color-border; }
+  &__time { display:flex; flex:1; min-width:0; gap:8rpx; align-items:center; color:token.$color-text-muted; font-size:22rpx; line-height:1.5; image { flex:none; width:24rpx; height:24rpx; } text { overflow-wrap:anywhere; } }
+  &__action { flex:none; padding:8rpx 24rpx; border-radius:token.$ousea-radius-pill; color:token.$color-on-accent; background:linear-gradient(90deg,token.$ousea-lottery-orange,token.$ousea-lottery-golden); font-size:24rpx; line-height:1.4; }
+  &--ended { border-color:token.$color-border; box-shadow:none; .lottery-campaign-card__status { color:token.$color-text-muted; } .lottery-campaign-card__action { color:token.$color-text-secondary; background:transparent; } }
 }
+.campus-theme--dark .lottery-campaign-card { border-color:token.$color-border; box-shadow:none; }
+@media (max-width:340px) { .lottery-campaign-card { padding:24rpx; &__main { gap:20rpx; } &__cover { width:136rpx; height:136rpx; } &__footer { flex-wrap:wrap; } } }
+@media (prefers-reduced-motion:reduce) { .lottery-campaign-card { transition:none; } }

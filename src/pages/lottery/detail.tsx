@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Taro, { useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
-import { Button, Image, OfficialAccount, Text, View } from '@tarojs/components'
+import { Button, Canvas, Image, OfficialAccount, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { createIdempotencyKey, isApiError } from '../../api/client'
 import {
@@ -40,6 +40,8 @@ import chevronIcon from '../../assets/lottery/chevron-3750.svg'
 import clockIcon from '../../assets/lottery/clock-3750.svg'
 import copyIcon from '../../assets/lottery/copy-3750.svg'
 import plusIcon from '../../assets/lottery/plus-3750.svg'
+import { lotteryShareCard } from '../../features/lottery/share-card'
+import { LOTTERY_SHARE_CANVAS, renderLotteryShareCard } from '../../features/lottery/share-card-image'
 
 const formatTime = (value?: string | null) => value ? value.replace('T', ' ').slice(0, 16) : '待公布'
 const RESULT_PAGE_SIZE = 50
@@ -75,6 +77,27 @@ export default function LotteryCampaignDetailPage() {
   const [resultsExpanded, setResultsExpanded] = useState(false)
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({})
   const [officialAccountUnavailable, setOfficialAccountUnavailable] = useState(false)
+  const [shareCardImage, setShareCardImage] = useState<{ key: string; path: string } | null>(null)
+  const shareRenderQueue = useRef<Promise<void>>(Promise.resolve())
+  const shareCard = campaign ? lotteryShareCard(campaign, clock ? lotteryServerNow(clock) : Date.now()) : null
+  const shareCardKey = shareCard ? JSON.stringify(shareCard) : ''
+
+  useEffect(() => {
+    if (!shareCardKey) return
+    let cancelled = false
+    // 同一画布串行绘制，刷新详情时不让旧活动的导出覆盖新卡片。
+    shareRenderQueue.current = shareRenderQueue.current.then(async () => {
+      if (cancelled) return
+      try {
+        await new Promise<void>(resolve => Taro.nextTick(resolve))
+        const path = await renderLotteryShareCard(JSON.parse(shareCardKey))
+        if (!cancelled) setShareCardImage({ key: shareCardKey, path })
+      } catch {
+        // 图片未准备好或导出失败时，分享仍可立即使用包内礼盒图。
+      }
+    })
+    return () => { cancelled = true }
+  }, [shareCardKey])
 
   useLoad((options) => {
     const id = String(options.id || '')
@@ -84,10 +107,10 @@ export default function LotteryCampaignDetailPage() {
   })
 
   useCampusShare(() => ({
-    title: campaign ? `${campaign.title}｜校园抽奖` : '校园抽奖活动｜OUSea',
+    title: shareCard?.title || '校园抽奖活动｜OUSea',
     path: '/pages/lottery/detail',
     query: { id: campaignId, share_token: shareToken || undefined },
-    imageUrl: campaign?.cover_url || undefined,
+    imageUrl: shareCardImage?.key === shareCardKey ? shareCardImage.path : giftImage,
   }))
 
   const canShare = (detail: LotteryCampaignDetail, now: number) => (
@@ -283,6 +306,7 @@ export default function LotteryCampaignDetailPage() {
 
   return (
     <View className='lottery-detail-page'>
+      <Canvas canvasId={LOTTERY_SHARE_CANVAS} style={{ position: 'fixed', left: '-10000px', top: '0', width: '500px', height: '400px', pointerEvents: 'none' }} />
       <CustomNavbar title='幸运大抽奖' showBack />
       {campaign && !!publicResults.length && <View className='lottery-broadcast' ariaRole='button' ariaLabel='查看中奖名单' onClick={() => setResultsExpanded(value => !value)}><Image className='lottery-asset' src={broadcastIcon} /><Text>恭喜 {publicResults[0].masked_user} 抽中 {publicResults[0].prize_name}</Text></View>}
       {loading && !campaign && <View className='lottery-detail-state'>正在加载活动…</View>}
