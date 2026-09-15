@@ -62,6 +62,42 @@ export const formatStatus = (status: string, reviewStatus?: string) => {
   return lifecycleLabels[status] || reviewLabels[status] || status
 }
 
+type ErrandStatusDisplay = {
+  status: string
+  review_status: string
+  viewer_relation: string
+  deadline?: string | null
+}
+
+// 认证门槛会把 available_actions 中的 accept 替换为 verify_academic，
+// 不能据此误判任务本身不可接。
+export const isErrandAcceptable = (
+  item: ErrandStatusDisplay,
+  now = Date.now(),
+) => (
+  item.status === 'open'
+  && item.review_status === 'approved'
+  && item.viewer_relation === 'none'
+  && Boolean(item.deadline)
+  && apiDateTimeTimestamp(item.deadline) > now
+)
+
+export const formatErrandStatus = (item: ErrandStatusDisplay) => {
+  if (item.review_status !== 'approved') {
+    return formatStatus(item.status, item.review_status)
+  }
+  if (item.status === 'open') {
+    if (apiDateTimeTimestamp(item.deadline) <= Date.now()) return '已截止'
+    if (item.viewer_relation === 'publisher') return '待接单'
+  }
+  if (item.status === 'delivered') {
+    if (item.viewer_relation === 'publisher') return '待确认完成'
+    if (item.viewer_relation === 'runner') return '已送达，等待对方确认'
+    return '已送达'
+  }
+  return isErrandAcceptable(item) ? '可接单' : formatStatus(item.status, item.review_status)
+}
+
 const orderStatusLabels: Record<string, string> = {
   confirmed: '进行中',
   completed: '已完成',
