@@ -111,8 +111,8 @@ export default function EarningsPage() {
       <View className='earnings-summary'>
         <Text className='earnings-summary__label'>可提现收益</Text>
         <Text className='earnings-summary__amount'>{formatMoney(summary?.available_amount_cents || 0)}</Text>
-        <Text className='earnings-summary__hint'>按收益场景合并申请；审核中的金额会锁定，新收益可继续单独申请。</Text>
-        <View className='earnings-summary__totals'><Text>审核中 {formatMoney(summary?.reserved_amount_cents || 0)}</Text><Text>已到账 {formatMoney(summary?.paid_amount_cents || 0)}</Text></View>
+        <Text className='earnings-summary__hint'>按收益场景合并申请；提现中的金额会锁定，新收益可继续单独申请。</Text>
+        <View className='earnings-summary__totals'><Text>提现中 {formatMoney(summary?.reserved_amount_cents || 0)}</Text><Text>已到账 {formatMoney(summary?.paid_amount_cents || 0)}</Text></View>
       </View>
       {loading && <View className='earnings-state'>正在加载收益记录</View>}
       {!loading && error && <View className='earnings-state earnings-state--error'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
