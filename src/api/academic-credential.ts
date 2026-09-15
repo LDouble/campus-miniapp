@@ -4,6 +4,7 @@ import {
   writeStoredAcademicCredential,
   type StoredAcademicCredential,
 } from './academic-credential-storage'
+import { invalidateSharedResourceGroup } from '../state/shared-resource'
 
 export type AcademicCredential = {
   studentNo: string
@@ -118,6 +119,7 @@ export const saveAcademicCredential = (
     platformUserId,
     credential: normalizedCredential,
   })
+  invalidateSharedResourceGroup('academic', { clearData: false })
 }
 
 export const loadAcademicCredential = (platformUserId: number): AcademicCredential => {
@@ -147,6 +149,7 @@ export const hasAcademicCredential = (platformUserId: number) => {
 }
 
 export const clearAcademicCredential = (platformUserId?: number) => {
+  invalidateSharedResourceGroup('academic', { clearData: false })
   if (!platformUserId) {
     clearRuntimeCredentials()
     removeStoredAcademicCredential()

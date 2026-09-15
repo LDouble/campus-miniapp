@@ -1,18 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
-import { Picker, Text, View } from '@tarojs/components'
+import { Image, Picker, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import MediaImageEditor from '../../components/media-image-editor'
 import {
   KeyboardSafeInput,
   KeyboardSafeTextarea,
   useKeyboardInset,
 } from '../../components/keyboard-safe-input'
+import StickerPicker from '../../components/sticker-picker'
 import { isApiError } from '../../api/client'
+import { getErrandPaymentPolicy } from '../../api/payments'
+import { uploadMediaImage } from '../../api/media'
+import { getCurrentIdentity } from '../../api/account'
 import type {
   CarpoolTripView,
+  CampusCirclePostView,
   CampusCircleSectionView,
   CampusCircleTopicView,
   ErrandView,
+  ErrandPaymentPolicy,
+  MentionCandidate,
   MarketplaceListingView,
 } from '../../api/types'
 import {
@@ -21,8 +29,53 @@ import {
   type MarketplaceSource,
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import MentionPicker from '../../features/mentions/mention-picker'
+import {
+  expandMentionDeletion,
+  insertMentionToken,
+  removeMentionTokens,
+} from '../../features/mentions/content'
 import { markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
+import {
+  publisherContactStorage,
+  withRememberedPublisherContact,
+  type PublisherContact,
+} from '../../features/life-services/publisher-contact-storage'
+import CampusSelector from '../../features/life-services/components/campus-selector'
+import {
+  isCampusName,
+  preferredCampus,
+  type CampusName,
+} from '../../features/life-services/campus'
+import {
+  getRecentRouteValues,
+  rememberRoutePair,
+  ROUTE_SHORTCUTS,
+  type RouteHistoryKind,
+} from '../../features/life-services/route-history'
+import {
+  MAX_PUBLISH_IMAGES,
+  mediaImageValidationError,
+  moveMediaImage,
+  serverMediaImageDraft,
+} from '../../features/media/images'
+import type { MediaImageDraft } from '../../features/media/images'
+import { chooseMediaImages } from '../../features/media/selection'
 import { requestWechatSubscriptionForPublishSection } from '../../features/wechat-subscription'
+import {
+  editableStickerContent,
+  insertStickerToken,
+  serializeStickerTokens,
+  stickerTokenForId,
+} from '../../features/stickers/content'
+import {
+  communityPostTopics,
+  extractCommunityTopicNames,
+} from '../../features/community/topic'
+import {
+  apiDateTimeCampusParts,
+  campusDateTimeToISOString,
+} from '../../utils/date-time'
 import './index.scss'
 
 type PublishSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -37,9 +90,11 @@ type PublisherForm = {
   academicPeriodId: string
   academicPeriodLabel: string
   marketSource: MarketplaceSource
+  campus: CampusName | ''
   pickupLocation: string
   dropoffLocation: string
   rewardYuan: string
+  paymentMode: 'offline' | 'wechat'
   deadlineDate: string
   deadlineTime: string
   priceYuan: string
@@ -50,25 +105,29 @@ type PublisherForm = {
   totalSeats: string
   contactType: 'wechat' | 'phone' | 'qq'
   contact: string
-  imageUrls: string[]
+  images: MediaImageDraft[]
   communitySectionId: number
   communityTopicId: number
+  communityTopicIds: number[]
+  // 选择器中新增、但尚未随帖子提交到服务端的话题名称。
+  communityTopicNames: string[]
+  mentionCandidates: MentionCandidate[]
   version: number
 }
 
-const DRAFT_KEY = 'lifePublisher.drafts.v3'
+const DRAFT_KEY = 'lifePublisher.drafts.v4'
+const LEGACY_DRAFT_KEY = 'lifePublisher.drafts.v3'
 const CONTACT_LABELS = ['微信', '手机号', 'QQ']
 const CONTACT_VALUES: PublisherForm['contactType'][] = ['wechat', 'phone', 'qq']
 
 const sectionOptions: Array<{
   key: PublishSection
   label: string
-  title: string
 }> = [
-  { key: 'community', label: '动态', title: '分享校园动态' },
-  { key: 'errands', label: '跑腿', title: '发布跑腿需求' },
-  { key: 'market', label: '二手', title: '发布二手交易' },
-  { key: 'carpool', label: '拼车', title: '发布拼车行程' },
+  { key: 'community', label: '动态' },
+  { key: 'errands', label: '跑腿' },
+  { key: 'market', label: '二手' },
+  { key: 'carpool', label: '找同行' },
 ]
 
 const isSection = (value?: string): value is PublishSection => (
@@ -92,9 +151,11 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   academicPeriodId: '',
   academicPeriodLabel: '',
   marketSource: 'manual',
+  campus: preferredCampus(),
   pickupLocation: '',
   dropoffLocation: '',
   rewardYuan: '',
+  paymentMode: 'offline',
   deadlineDate: tomorrow(),
   deadlineTime: '18:00',
   priceYuan: '',
@@ -105,9 +166,12 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   totalSeats: '2',
   contactType: 'wechat',
   contact: '',
-  imageUrls: [],
+  images: [],
   communitySectionId: 0,
   communityTopicId: 0,
+  communityTopicIds: [],
+  communityTopicNames: [],
+  mentionCandidates: [],
   version: 0,
 })
 
@@ -115,9 +179,134 @@ const flattenSections = (items: CampusCircleSectionView[]): CampusCircleSectionV
   items.flatMap((item) => [item, ...flattenSections(item.children || [])])
 )
 
-const storedDrafts = () => (
-  Taro.getStorageSync<Partial<Record<string, PublisherForm>>>(DRAFT_KEY) || {}
+const restoreStickerContent = (content?: string | null) => (
+  editableStickerContent(content || '')
 )
+
+const mentionCandidatesFromSegments = (
+  segments?: CampusCirclePostView['content_segments'],
+): MentionCandidate[] => {
+  if (!segments) return []
+  const seen = new Set<number>()
+  return segments.flatMap((segment) => {
+    if (segment.type !== 'mention' || !segment.user_id || !segment.nickname) return []
+    if (seen.has(segment.user_id)) return []
+    seen.add(segment.user_id)
+    return [{ id: segment.user_id, nickname: segment.nickname, avatar_url: null }]
+  })
+}
+
+type StoredPublisherForm = Partial<PublisherForm> & { stickerIds?: unknown }
+type LegacyPublisherForm = Omit<PublisherForm, 'images'> & {
+  imageUrls: string[]
+  stickerIds?: unknown
+}
+
+const normalizeTopicIds = (value: unknown) => (
+  Array.isArray(value)
+    ? [...new Set(value.map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0))].slice(0, 3)
+    : []
+)
+
+const normalizeTopicName = (value: unknown) => (
+  typeof value === 'string'
+    ? value.trim().replace(/^#+/u, '').trim()
+    : ''
+)
+
+const topicNameKey = (name: string) => normalizeTopicName(name).toLocaleLowerCase()
+
+const normalizeTopicNames = (value: unknown) => {
+  if (!Array.isArray(value)) return []
+  const result: string[] = []
+  const seen = new Set<string>()
+  for (const item of value) {
+    const name = normalizeTopicName(item)
+    const key = topicNameKey(name)
+    if (!name || seen.has(key)) continue
+    seen.add(key)
+    result.push(name)
+    if (result.length >= 3) break
+  }
+  return result
+}
+
+const isCreatableTopicName = (value: string) => (
+  value.length > 0
+    && value.length <= 64
+    && /^[A-Za-z0-9_\u4e00-\u9fff]+$/u.test(value)
+)
+
+const restoreLegacyDraftContent = (content: unknown, stickerIds: unknown) => {
+  const text = typeof content === 'string' ? content : ''
+  const legacyIds = Array.isArray(stickerIds)
+    ? stickerIds.filter((id): id is string => typeof id === 'string')
+    : []
+  const legacyTokens = legacyIds.length > 0
+    ? legacyIds.map(stickerTokenForId).join('')
+    : ''
+  return restoreStickerContent(`${text}${legacyTokens}`)
+}
+
+const normalizeStoredDraft = (value: StoredPublisherForm): PublisherForm => {
+  const { stickerIds, ...storedForm } = value
+  const legacyPrimaryTopicId = Number(storedForm.communityTopicId || 0)
+  const communityTopicIds = normalizeTopicIds(storedForm.communityTopicIds)
+  const communityTopicNames = normalizeTopicNames(storedForm.communityTopicNames)
+  if (communityTopicIds.length === 0 && legacyPrimaryTopicId > 0) {
+    communityTopicIds.push(legacyPrimaryTopicId)
+  }
+  const primaryTopicId = communityTopicIds.includes(legacyPrimaryTopicId)
+    ? legacyPrimaryTopicId
+    : communityTopicIds[0] || 0
+  return {
+    ...emptyForm(storedForm.marketIntent),
+    ...storedForm,
+    communityTopicId: primaryTopicId,
+    communityTopicIds,
+    communityTopicNames,
+    content: restoreLegacyDraftContent(storedForm.content, stickerIds),
+  }
+}
+
+const storedDrafts = () => {
+  const stored = Taro.getStorageSync<Partial<Record<string, StoredPublisherForm>>>(DRAFT_KEY) || {}
+  if (Object.keys(stored).length > 0) {
+    return Object.fromEntries(Object.entries(stored).map(([key, value]) => [
+      key,
+      value ? normalizeStoredDraft(value) : value,
+    ])) as Partial<Record<string, PublisherForm>>
+  }
+  const legacy = Taro.getStorageSync<Partial<Record<string, LegacyPublisherForm>>>(
+    LEGACY_DRAFT_KEY,
+  ) || {}
+  const migrated = Object.fromEntries(Object.entries(legacy).map(([key, value]) => {
+    if (!value) return [key, value]
+    const { imageUrls, stickerIds, ...form } = value
+    const legacyPrimaryTopicId = Number(form.communityTopicId || 0)
+    const communityTopicIds = normalizeTopicIds(form.communityTopicIds)
+    const communityTopicNames = normalizeTopicNames(form.communityTopicNames)
+    if (communityTopicIds.length === 0 && legacyPrimaryTopicId > 0) {
+      communityTopicIds.push(legacyPrimaryTopicId)
+    }
+    return [key, {
+      ...form,
+      content: restoreLegacyDraftContent(form.content, stickerIds),
+      campus: isCampusName(form.campus) ? form.campus : preferredCampus(),
+      images: (imageUrls || []).map((url) => serverMediaImageDraft({ url })),
+      communityTopicId: communityTopicIds.includes(legacyPrimaryTopicId)
+        ? legacyPrimaryTopicId
+        : communityTopicIds[0] || 0,
+      communityTopicIds,
+      communityTopicNames,
+    } satisfies PublisherForm]
+  })) as Partial<Record<string, PublisherForm>>
+  if (Object.keys(migrated).length > 0) {
+    Taro.setStorageSync(DRAFT_KEY, migrated)
+    Taro.removeStorageSync(LEGACY_DRAFT_KEY)
+  }
+  return migrated
+}
 
 const draftKey = (section: PublishSection, intent: MarketplaceIntent = 'sell') => (
   section === 'market' ? `${section}:${intent}` : section
@@ -145,14 +334,22 @@ const toCents = (value: string) => {
   return Number.isFinite(amount) ? Math.round(amount * 100) : 0
 }
 
-const toIso = (date: string, time: string) => {
-  const result = new Date(`${date}T${time}:00`)
-  return Number.isNaN(result.getTime()) ? '' : result.toISOString()
-}
+const toIso = campusDateTimeToISOString
 
 const yuanValue = (cents: number) => {
   const value = cents / 100
   return Number.isInteger(value) ? String(value) : value.toFixed(2)
+}
+
+const marketplaceImageDrafts = (item: MarketplaceListingView) => {
+  const media = item.images
+  if (media?.length) {
+    return media.map((image) => serverMediaImageDraft({
+      url: image.url,
+      mediaId: image.media_id || undefined,
+    }))
+  }
+  return item.image_urls.map((url) => serverMediaImageDraft({ url }))
 }
 
 const InputField = ({
@@ -163,7 +360,9 @@ const InputField = ({
   type = 'text',
   suffix,
   inputId,
+  className,
   onKeyboardVisibilityChange,
+  onFocus,
   onInput,
 }: {
   label: string
@@ -173,10 +372,12 @@ const InputField = ({
   type?: 'text' | 'number' | 'digit'
   suffix?: string
   inputId?: string
+  className?: string
   onKeyboardVisibilityChange: (height: number) => void
+  onFocus?: () => void
   onInput: (value: string) => void
 }) => (
-  <View className='publisher-field'>
+  <View className={`publisher-field ${className || ''}`}>
     <Text className='publisher-field__label'>{label}</Text>
     <View className='publisher-input'>
       <KeyboardSafeInput
@@ -187,12 +388,67 @@ const InputField = ({
         placeholder={placeholder}
         placeholderClass='publisher-placeholder'
         onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+        onFocus={onFocus}
         onInput={(event) => onInput(event.detail.value)}
       />
       {suffix && <Text>{suffix}</Text>}
     </View>
   </View>
 )
+
+const RouteSuggestions = ({
+  kind,
+  value: currentValue,
+  onSelect,
+}: {
+  kind: RouteHistoryKind
+  value: string
+  onSelect: (value: string) => void
+}) => {
+  const recent = getRecentRouteValues(kind).filter(
+    (value) => !ROUTE_SHORTCUTS.some((shortcut) => shortcut === value),
+  )
+  return (
+    <View className='publisher-route-suggestions'>
+      <Text className='publisher-route-suggestions__label'>常用地点</Text>
+      <View className='publisher-route-suggestions__items'>
+        {ROUTE_SHORTCUTS.map((option) => (
+          <View
+            key={option}
+            className={currentValue === option
+              ? 'publisher-route-suggestion publisher-route-suggestion--active'
+              : 'publisher-route-suggestion'}
+            ariaRole='button'
+            ariaLabel={`${currentValue === option ? '已选择，' : ''}选择常用地点${option}`}
+            onClick={() => onSelect(option)}
+          >
+            {option}
+          </View>
+        ))}
+      </View>
+      {recent.length > 0 && (
+        <>
+          <Text className='publisher-route-suggestions__label'>最近使用</Text>
+          <View className='publisher-route-suggestions__items publisher-route-suggestions__items--recent'>
+            {recent.map((option) => (
+              <View
+                key={option}
+                className={currentValue === option
+                  ? 'publisher-route-suggestion publisher-route-suggestion--recent publisher-route-suggestion--active'
+                  : 'publisher-route-suggestion publisher-route-suggestion--recent'}
+                ariaRole='button'
+                ariaLabel={`${currentValue === option ? '已选择，' : ''}选择最近使用地点${option}`}
+                onClick={() => onSelect(option)}
+              >
+                {option}
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+    </View>
+  )
+}
 
 const SectionHeading = ({
   title,
@@ -209,79 +465,267 @@ export default function PublishPage() {
   const [mode, setMode] = useState<PublishMode>('create')
   const [resourceId, setResourceId] = useState(0)
   const [form, setForm] = useState<PublisherForm>(emptyForm)
+  const [errandPaymentPolicy, setErrandPaymentPolicy] = useState<ErrandPaymentPolicy>({
+    enabled_payment_modes: ['offline'],
+    default_payment_mode: 'offline',
+    payment_timeout_minutes: 15,
+  })
   const [sections, setSections] = useState<CampusCircleSectionView[]>([])
   const [sectionsReady, setSectionsReady] = useState(false)
   const [topics, setTopics] = useState<CampusCircleTopicView[]>([])
+  const [topicPickerOpen, setTopicPickerOpen] = useState(false)
+  const [topicKeyword, setTopicKeyword] = useState('')
+  const [topicSearchLoading, setTopicSearchLoading] = useState(false)
+  const [topicSearchError, setTopicSearchError] = useState(false)
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
+  const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const skipNextDraftSave = useRef(false)
+  const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
+  const [contentInputFocused, setContentInputFocused] = useState(false)
+  const contentSelectionStartRef = useRef(0)
+  const contentSelectionEndRef = useRef(0)
+  const contentFocusRequestRef = useRef(0)
+  const [activeRouteField, setActiveRouteField] = useState<keyof Pick<
+    PublisherForm,
+    'pickupLocation' | 'dropoffLocation' | 'origin' | 'destination'
+  > | null>(null)
+  const identityUserIdRef = useRef(0)
+  const rememberedContactRef = useRef<PublisherContact | null>(null)
+  const topicSearchRequestRef = useRef(0)
   const {
     keyboardHeight,
     onKeyboardVisibilityChange,
   } = useKeyboardInset()
-  const current = sectionOptions.find((item) => item.key === section) || sectionOptions[0]
-  const hasDraftContent = useMemo(() => (
-    [
-      form.content,
-      form.courseName,
-      form.courseCode,
-      form.pickupLocation,
-      form.dropoffLocation,
-      form.rewardYuan,
-      form.priceYuan,
-      form.origin,
-      form.destination,
-      form.contact,
-    ].some((value) => value.trim().length > 0) || form.imageUrls.length > 0
-  ), [form])
 
+  useEffect(() => {
+    if (keyboardHeight > 0) setStickerPickerOpen(false)
+  }, [keyboardHeight])
+
+  useEffect(() => {
+    void getErrandPaymentPolicy()
+      .then((policy) => {
+        setErrandPaymentPolicy(policy)
+        setForm((current) => current.paymentMode === 'offline'
+          && policy.default_payment_mode === 'wechat'
+          && policy.enabled_payment_modes.includes('wechat')
+          ? { ...current, paymentMode: 'wechat' }
+          : current)
+      })
+      .catch(() => undefined)
+  }, [])
+
+  const loadingForm = loadingEdit || restoringCreateDefaults
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
     setForm((draft) => ({ ...draft, [key]: value }))
   }
 
-  const mapErrand = (item: ErrandView): PublisherForm => ({
-    ...emptyForm(),
-    content: item.description,
-    pickupLocation: item.pickup_location,
-    dropoffLocation: item.dropoff_location,
-    rewardYuan: yuanValue(item.reward_cents),
-    deadlineDate: item.deadline.slice(0, 10),
-    deadlineTime: item.deadline.slice(11, 16),
-    contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
-    contact: item.contact.includes('*') ? '' : item.contact,
-    version: item.version,
-  })
+  const selectedTopicCount = form.communityTopicIds.length + form.communityTopicNames.length
 
-  const mapMarketplace = (item: MarketplaceListingView): PublisherForm => ({
-    ...emptyForm(item.intent),
-    content: item.description,
-    marketIntent: item.intent,
-    marketCategory: item.category,
-    courseName: item.course_name || '',
-    courseCode: item.course_code || '',
-    academicPeriodId: item.academic_period_id || '',
-    academicPeriodLabel: item.academic_period_label || '',
-    marketSource: item.source,
-    priceYuan: yuanValue(item.price_cents),
-    contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
-    contact: item.contact.includes('*') ? '' : item.contact,
-    imageUrls: [...item.image_urls],
-    version: item.version,
-  })
+  const changeTopicPickerOpen = (open: boolean) => {
+    if (open) {
+      contentFocusRequestRef.current += 1
+      setContentInputFocused(false)
+      setMentionPickerOpen(false)
+      changeStickerPickerOpen(false)
+      setTopicSearchError(false)
+      setTopicPickerOpen(true)
+      return
+    }
+    setTopicPickerOpen(false)
+    setTopicKeyword('')
+    setTopicSearchError(false)
+    void Taro.hideKeyboard()
+  }
 
-  const mapCarpool = (item: CarpoolTripView): PublisherForm => ({
-    ...emptyForm(),
-    content: item.description || '',
-    origin: item.origin,
-    destination: item.destination,
-    departureDate: item.departure_at.slice(0, 10),
-    departureTime: item.departure_at.slice(11, 16),
-    totalSeats: String(item.total_seats),
-    contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
-    contact: item.contact.includes('*') ? '' : item.contact,
-    version: item.version,
-  })
+  const toggleCommunityTopic = (topicId: number) => {
+    if (!Number.isInteger(topicId) || topicId <= 0) return
+    const selected = form.communityTopicIds.includes(topicId)
+    if (!selected && selectedTopicCount >= 3) {
+      Taro.showToast({ title: '最多关联 3 个话题', icon: 'none' })
+      return
+    }
+    setForm((current) => {
+      const nextTopicIds = selected
+        ? current.communityTopicIds.filter((id) => id !== topicId)
+        : [...current.communityTopicIds, topicId]
+      const nextPrimaryTopicId = nextTopicIds.length === 0
+        ? 0
+        : selected && current.communityTopicId === topicId
+          ? nextTopicIds[0]
+          : nextTopicIds.includes(current.communityTopicId)
+            ? current.communityTopicId
+            : nextTopicIds[0]
+      return {
+        ...current,
+        communityTopicId: nextPrimaryTopicId,
+        communityTopicIds: nextTopicIds,
+      }
+    })
+  }
+
+  const addCommunityTopicName = () => {
+    const name = normalizeTopicName(topicKeyword)
+    if (!isCreatableTopicName(name)) {
+      Taro.showToast({ title: '话题仅支持中文、字母、数字或下划线', icon: 'none' })
+      return
+    }
+    const matched = topics.find((item) => topicNameKey(item.name) === topicNameKey(name))
+    if (matched) {
+      toggleCommunityTopic(matched.id)
+      changeTopicPickerOpen(false)
+      return
+    }
+    if (form.communityTopicNames.some((item) => topicNameKey(item) === topicNameKey(name))) return
+    if (selectedTopicCount >= 3) {
+      Taro.showToast({ title: '最多关联 3 个话题', icon: 'none' })
+      return
+    }
+    setForm((current) => ({
+      ...current,
+      communityTopicNames: [...current.communityTopicNames, name],
+    }))
+    setTopicKeyword('')
+    changeTopicPickerOpen(false)
+  }
+
+  const removeCommunityTopicName = (name: string) => {
+    setForm((current) => ({
+      ...current,
+      communityTopicNames: current.communityTopicNames.filter(
+        (item) => topicNameKey(item) !== topicNameKey(name),
+      ),
+    }))
+  }
+
+  const removeMentionFromContent = (candidate: MentionCandidate) => {
+    const removed = removeMentionTokens(
+      form.content,
+      candidate.nickname,
+      contentSelectionStartRef.current,
+    )
+    contentSelectionStartRef.current = removed.cursor
+    contentSelectionEndRef.current = removed.cursor
+    update('content', removed.text)
+  }
+
+  const clearMentionContent = (selected: MentionCandidate[]) => {
+    let nextContent = form.content
+    let cursor = contentSelectionStartRef.current
+    selected.forEach((candidate) => {
+      const removed = removeMentionTokens(nextContent, candidate.nickname, cursor)
+      nextContent = removed.text
+      cursor = removed.cursor
+    })
+    contentSelectionStartRef.current = cursor
+    contentSelectionEndRef.current = cursor
+    update('content', nextContent)
+  }
+
+  const changeMentionPickerOpen = (open: boolean) => {
+    contentFocusRequestRef.current += 1
+    setMentionPickerOpen(open)
+    if (open) {
+      setContentInputFocused(false)
+      return
+    }
+
+    const requestId = contentFocusRequestRef.current
+    setContentInputFocused(false)
+    setTimeout(() => {
+      if (contentFocusRequestRef.current !== requestId) return
+      setContentInputFocused(true)
+    }, 80)
+  }
+
+  const loadRememberedContact = async () => {
+    try {
+      const identity = await getCurrentIdentity()
+      identityUserIdRef.current = identity.user_id
+      const remembered = publisherContactStorage.read(Taro, identity.user_id)
+      rememberedContactRef.current = remembered
+      return remembered
+    } catch {
+      return null
+    }
+  }
+
+  const rememberCurrentContact = async () => {
+    if (section === 'community') return
+    let userId = identityUserIdRef.current
+    if (!userId) {
+      try {
+        const identity = await getCurrentIdentity()
+        userId = identity.user_id
+        identityUserIdRef.current = userId
+      } catch {
+        return
+      }
+    }
+    const remembered = {
+      contactType: form.contactType,
+      contact: form.contact.trim(),
+    }
+    if (publisherContactStorage.write(Taro, userId, remembered)) {
+      rememberedContactRef.current = remembered
+    }
+  }
+
+  const mapErrand = (item: ErrandView): PublisherForm => {
+    const deadline = apiDateTimeCampusParts(item.deadline)
+    return {
+      ...emptyForm(),
+      campus: isCampusName(item.campus) ? item.campus : '',
+      content: restoreStickerContent(item.description),
+      pickupLocation: item.pickup_location,
+      dropoffLocation: item.dropoff_location,
+      rewardYuan: yuanValue(item.reward_cents),
+      paymentMode: item.payment_mode || 'offline',
+      deadlineDate: deadline ? deadline.date : item.deadline.slice(0, 10),
+      deadlineTime: deadline ? deadline.time : item.deadline.slice(11, 16),
+      contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
+      contact: item.contact.includes('*') ? '' : item.contact,
+      version: item.version,
+    }
+  }
+
+  const mapMarketplace = (item: MarketplaceListingView): PublisherForm => {
+    return {
+      ...emptyForm(item.intent),
+      campus: isCampusName(item.campus) ? item.campus : '',
+      content: restoreStickerContent(item.description),
+      marketIntent: item.intent,
+      marketCategory: item.category as PublisherForm['marketCategory'],
+      courseName: item.course_name || '',
+      courseCode: item.course_code || '',
+      academicPeriodId: item.academic_period_id || '',
+      academicPeriodLabel: item.academic_period_label || '',
+      marketSource: item.source as MarketplaceSource,
+      priceYuan: yuanValue(item.price_cents),
+      contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
+      contact: item.contact.includes('*') ? '' : item.contact,
+      images: marketplaceImageDrafts(item),
+      version: item.version,
+    }
+  }
+
+  const mapCarpool = (item: CarpoolTripView): PublisherForm => {
+    const departure = apiDateTimeCampusParts(item.departure_at)
+    return {
+      ...emptyForm(),
+      campus: isCampusName(item.campus) ? item.campus : '',
+      content: restoreStickerContent(item.description),
+      origin: item.origin,
+      destination: item.destination,
+      departureDate: departure ? departure.date : item.departure_at.slice(0, 10),
+      departureTime: departure ? departure.time : item.departure_at.slice(11, 16),
+      totalSeats: String(item.total_seats),
+      contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
+      contact: item.contact.includes('*') ? '' : item.contact,
+      version: item.version,
+    }
+  }
 
   const loadEdit = async (targetSection: PublishSection, id: number) => {
     setLoadingEdit(true)
@@ -294,12 +738,20 @@ export default function PublishPage() {
         setForm(mapCarpool(await lifeServicesRepository.getCarpoolTrip(id)))
       } else {
         const post = await lifeServicesRepository.getCampusCirclePost(id)
+        const postTopics = communityPostTopics(post)
+        const postTopicIds = postTopics.map((topic) => topic.id).slice(0, 3)
+        const primaryTopicId = post.primary_topic?.id || post.topic?.id || postTopicIds[0] || 0
         setForm({
           ...emptyForm(),
-          content: post.content || '',
-          imageUrls: post.images.map((image) => image.url),
+          content: restoreStickerContent(post.content),
+          mentionCandidates: mentionCandidatesFromSegments(post.content_segments),
+          images: post.images.map((image) => serverMediaImageDraft({
+            url: image.url,
+            mediaId: image.media_id || undefined,
+          })),
           communitySectionId: post.section_id,
-          communityTopicId: post.topic?.id || 0,
+          communityTopicId: primaryTopicId,
+          communityTopicIds: postTopicIds.length > 0 ? postTopicIds : primaryTopicId > 0 ? [primaryTopicId] : [],
           version: post.version,
         })
       }
@@ -334,35 +786,45 @@ export default function PublishPage() {
         : 0,
     )
     if (initialMode !== 'create' && initialId > 0) {
+      setRestoringCreateDefaults(false)
       void loadEdit(initialSection, initialId)
     } else {
-      const initialForm = storedDrafts()[draftKey(initialSection, initialIntent)]
-        || emptyForm(initialIntent)
-      const prefill = initialSection === 'market' && options.course_prefill === '1'
-        ? consumeMarketplacePublishPrefill()
-        : null
-      const nextForm = prefill ? {
-        ...initialForm,
-        marketIntent: prefill.intent,
-        content: prefill.description,
-        marketCategory: 'course_material' as const,
-        courseName: prefill.courseName,
-        courseCode: prefill.courseCode,
-        academicPeriodId: prefill.academicPeriodId,
-        academicPeriodLabel: prefill.academicPeriodLabel,
-        marketSource: prefill.source,
-      } : initialForm
-      setForm(initialSection === 'community'
-        ? {
-          ...nextForm,
-          communitySectionId: Number.isInteger(initialCommunitySectionId) && initialCommunitySectionId > 0
-            ? initialCommunitySectionId
-            : nextForm.communitySectionId,
-          communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
-            ? initialCommunityTopicId
-            : nextForm.communityTopicId,
-        }
-        : nextForm)
+      setRestoringCreateDefaults(true)
+      void loadRememberedContact().then((remembered) => {
+        const draft = storedDrafts()[draftKey(initialSection, initialIntent)]
+          || emptyForm(initialIntent)
+        const initialForm = initialSection === 'community'
+          ? draft
+          : withRememberedPublisherContact(draft, remembered)
+        const prefill = initialSection === 'market' && options.course_prefill === '1'
+          ? consumeMarketplacePublishPrefill()
+          : null
+        const nextForm = prefill ? {
+          ...initialForm,
+          marketIntent: prefill.intent,
+          content: prefill.description,
+          marketCategory: 'course_material' as const,
+          courseName: prefill.courseName,
+          courseCode: prefill.courseCode,
+          academicPeriodId: prefill.academicPeriodId,
+          academicPeriodLabel: prefill.academicPeriodLabel,
+          marketSource: prefill.source,
+        } : initialForm
+        setForm(initialSection === 'community'
+          ? {
+            ...nextForm,
+            communitySectionId: Number.isInteger(initialCommunitySectionId) && initialCommunitySectionId > 0
+              ? initialCommunitySectionId
+              : nextForm.communitySectionId,
+            communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
+              ? initialCommunityTopicId
+              : nextForm.communityTopicId,
+            communityTopicIds: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
+              ? [initialCommunityTopicId]
+              : nextForm.communityTopicIds,
+          }
+          : nextForm)
+      }).finally(() => setRestoringCreateDefaults(false))
     }
     void lifeServicesRepository.listCampusCircleSections()
       .then((result) => setSections(result.items))
@@ -373,10 +835,79 @@ export default function PublishPage() {
       .catch(() => setTopics([]))
   })
 
+  const normalizedTopicKeyword = normalizeTopicName(topicKeyword)
+
+  useEffect(() => {
+    if (!topicPickerOpen) return
+    const requestId = ++topicSearchRequestRef.current
+    const keyword = normalizedTopicKeyword
+    const timer = setTimeout(() => {
+      setTopicSearchLoading(true)
+      setTopicSearchError(false)
+      void lifeServicesRepository.listCampusCircleTopics({
+        keyword: keyword || undefined,
+        pageSize: 50,
+      })
+        .then((result) => {
+          if (requestId !== topicSearchRequestRef.current) return
+          const activeTopics = result.items.filter((item) => item.status === 'active')
+          setTopics((current) => {
+            const selected = current.filter((item) => form.communityTopicIds.includes(item.id))
+            const selectedIds = new Set(selected.map((item) => item.id))
+            return [
+              ...selected,
+              ...activeTopics.filter((item) => !selectedIds.has(item.id)),
+            ]
+          })
+        })
+        .catch(() => {
+          if (requestId === topicSearchRequestRef.current) setTopicSearchError(true)
+        })
+        .finally(() => {
+          if (requestId === topicSearchRequestRef.current) setTopicSearchLoading(false)
+        })
+    }, keyword ? 220 : 0)
+    return () => {
+      clearTimeout(timer)
+      if (requestId === topicSearchRequestRef.current) topicSearchRequestRef.current += 1
+    }
+  }, [form.communityTopicIds, normalizedTopicKeyword, topicPickerOpen])
+
   const communitySectionOptions = useMemo(
     () => flattenSections(sections).filter((item) => item.status === 'active'),
     [sections],
   )
+
+  const filteredTopics = useMemo(() => {
+    const keyword = normalizedTopicKeyword.toLocaleLowerCase()
+    if (!keyword) return topics
+    return topics.filter((topic) => topic.name.toLocaleLowerCase().includes(keyword))
+  }, [normalizedTopicKeyword, topics])
+
+  const topicNameExists = useMemo(() => (
+    Boolean(normalizedTopicKeyword) && topics.some(
+      (topic) => topicNameKey(topic.name) === topicNameKey(normalizedTopicKeyword),
+    )
+  ), [normalizedTopicKeyword, topics])
+
+  const selectedTopicEntries = useMemo(() => {
+    const selectedIds = form.communityTopicIds.map((id) => {
+      const topic = topics.find((item) => item.id === id)
+      return {
+        id,
+        key: `id:${id}`,
+        name: topic?.name || '已选话题',
+        pending: false,
+      }
+    })
+    const pendingNames = form.communityTopicNames.map((name) => ({
+      id: 0,
+      key: `name:${topicNameKey(name)}`,
+      name,
+      pending: true,
+    }))
+    return [...selectedIds, ...pendingNames]
+  }, [form.communityTopicIds, form.communityTopicNames, topics])
 
   useEffect(() => {
     if (section !== 'community' || mode !== 'create' || !sectionsReady) return
@@ -403,48 +934,39 @@ export default function PublishPage() {
   ])
 
   useEffect(() => {
-    if (mode !== 'create' || loadingEdit) return
-    if (skipNextDraftSave.current) {
-      skipNextDraftSave.current = false
-      return
-    }
+    if (mode !== 'create' || loadingEdit || restoringCreateDefaults) return
     const timer = setTimeout(() => saveDraft(section, form), 350)
     return () => clearTimeout(timer)
-  }, [form, loadingEdit, mode, section])
+  }, [form, loadingEdit, mode, restoringCreateDefaults, section])
 
   const selectSection = (next: PublishSection) => {
-    if (mode !== 'create' || next === section) return
+    if (mode !== 'create' || next === section || restoringCreateDefaults) return
+    if (form.images.some((image) => image.status === 'uploading')) {
+      Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
+      return
+    }
     requestWechatSubscriptionForPublishSection(next)
     saveDraft(section, form)
     setSection(next)
-    setForm(storedDrafts()[draftKey(next)] || emptyForm())
+    const nextForm = storedDrafts()[draftKey(next)] || emptyForm()
+    setForm(next === 'community'
+      ? nextForm
+      : withRememberedPublisherContact(nextForm, rememberedContactRef.current))
   }
 
   const selectMarketIntent = (intent: MarketplaceIntent) => {
     if (form.marketIntent === intent) return
+    if (form.images.some((image) => image.status === 'uploading')) {
+      Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
+      return
+    }
     if (mode === 'create') {
       saveDraft(section, form)
-      setForm(storedDrafts()[draftKey('market', intent)] || emptyForm(intent))
+      const nextForm = storedDrafts()[draftKey('market', intent)] || emptyForm(intent)
+      setForm(withRememberedPublisherContact(nextForm, rememberedContactRef.current))
       return
     }
     update('marketIntent', intent)
-  }
-
-  const clearCurrentDraft = async () => {
-    if (mode !== 'create' || !hasDraftContent) return
-    const result = await Taro.showModal({
-      title: '清空当前草稿',
-      content: section === 'market'
-        ? `将清空当前“${form.marketIntent === 'wanted' ? '求购' : '出售'}”草稿，其他发布草稿不受影响。`
-        : '将清空当前发布草稿，其他类型的草稿不受影响。',
-      confirmText: '清空',
-      confirmColor: '#d87567',
-    })
-    if (!result.confirm) return
-    skipNextDraftSave.current = true
-    clearDraft(section, form)
-    setForm(emptyForm(form.marketIntent))
-    Taro.showToast({ title: '草稿已清空', icon: 'success' })
   }
 
   const removeCourseContext = () => {
@@ -459,22 +981,129 @@ export default function PublishPage() {
     }))
   }
 
+  const updateImage = (
+    key: string,
+    updater: (image: MediaImageDraft) => MediaImageDraft,
+  ) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      images: currentForm.images.map((image) => image.key === key ? updater(image) : image),
+    }))
+  }
+
+  const uploadImage = async (
+    image: MediaImageDraft,
+    purpose: 'community' | 'marketplace' = section === 'market' ? 'marketplace' : 'community',
+  ) => {
+    if (!image.localPath) {
+      updateImage(image.key, (currentImage) => ({
+        ...currentImage,
+        status: 'failed',
+        error: '本地临时图片已失效，请删除后重新选择',
+      }))
+      return
+    }
+    updateImage(image.key, (currentImage) => ({
+      ...currentImage,
+      status: 'uploading',
+      progress: 0,
+      error: '',
+    }))
+    try {
+      const uploaded = await uploadMediaImage({
+        purpose,
+        filePath: image.localPath,
+        mimeType: image.mimeType,
+        sizeBytes: image.sizeBytes,
+        onProgress: (progress) => updateImage(image.key, (currentImage) => ({
+          ...currentImage,
+          progress,
+        })),
+      })
+      updateImage(image.key, (currentImage) => ({
+        ...currentImage,
+        mediaId: uploaded.id,
+        width: uploaded.width || currentImage.width,
+        height: uploaded.height || currentImage.height,
+        status: 'uploaded',
+        progress: 100,
+        error: '',
+      }))
+    } catch (uploadError) {
+      updateImage(image.key, (currentImage) => ({
+        ...currentImage,
+        status: 'failed',
+        error: isApiError(uploadError)
+          ? uploadError.message
+          : uploadError instanceof Error ? uploadError.message : '图片上传失败',
+      }))
+    }
+  }
+
+  const chooseImages = async () => {
+    const replacingLegacy = form.images.some((image) => Boolean(image.legacyUrl))
+    if (replacingLegacy) {
+      const result = await Taro.showModal({
+        title: '替换原图片',
+        content: '历史图片与新媒体不能混用。继续后将移除全部原图片，再选择新的图片。',
+        confirmText: '替换',
+        confirmColor: '#d87567',
+      })
+      if (!result.confirm) return
+    }
+    const existingImages = replacingLegacy ? [] : form.images
+    const remaining = MAX_PUBLISH_IMAGES - existingImages.length
+    if (remaining <= 0) {
+      Taro.showToast({ title: '图片最多上传 9 张', icon: 'none' })
+      return
+    }
+    const purpose = section === 'market' ? 'marketplace' : 'community'
+    try {
+      const selected = await chooseMediaImages({ count: remaining })
+      if (!selected.length) return
+      setForm((currentForm) => ({
+        ...currentForm,
+        images: replacingLegacy ? selected : [...currentForm.images, ...selected],
+      }))
+      selected.forEach((image) => void uploadImage(image, purpose))
+    } catch (chooseError) {
+      Taro.showToast({
+        title: chooseError instanceof Error ? chooseError.message : '图片选择失败',
+        icon: 'none',
+      })
+    }
+  }
+
+  const changeStickerPickerOpen = (open: boolean) => {
+    setStickerPickerOpen(open)
+    if (open) void Taro.hideKeyboard()
+  }
+
+  const contentMaxLength = section === 'community' ? 5000 : 2000
+  const serializedContent = useMemo(
+    () => serializeStickerTokens(form.content.trim()),
+    [form.content],
+  )
   const validationError = useMemo(() => {
+    if (serializedContent.length > contentMaxLength) return `内容最多 ${contentMaxLength} 个字符`
     if (section === 'community') {
-      if (!form.content.trim() && form.imageUrls.length === 0) return '请填写动态内容或添加图片'
+      if (!serializedContent && form.images.length === 0) return '请填写动态内容、表情或添加图片'
       if (!sectionsReady) return '社区板块正在加载'
       if (!communitySectionOptions.some((item) => item.id === form.communitySectionId)) {
         return '请选择服务端启用的社区板块'
       }
-      return ''
+      return mediaImageValidationError(form.images)
     }
-    if (!form.content.trim() && section !== 'carpool') return '请补充详细说明'
+    if (!serializedContent && section !== 'carpool') return '请补充详细说明或添加表情'
+    if (!form.campus) return '请选择业务所属校区'
     if (section === 'errands') {
       if (!form.pickupLocation.trim() || !form.dropoffLocation.trim()) return '请填写取件地和送达地'
       if (toCents(form.rewardYuan) <= 0) return '跑腿报酬必须大于 0 元'
       if (!toIso(form.deadlineDate, form.deadlineTime)) return '请选择有效截止时间'
     }
     if (section === 'market') {
+      const imageError = mediaImageValidationError(form.images)
+      if (imageError) return imageError
       if (toCents(form.priceYuan) <= 0) {
         return form.marketIntent === 'wanted' ? '求购预算必须大于 0 元' : '商品价格必须大于 0 元'
       }
@@ -482,12 +1111,12 @@ export default function PublishPage() {
     if (section === 'carpool') {
       if (!form.origin.trim() || !form.destination.trim()) return '请填写出发地和目的地'
       const seats = Number(form.totalSeats)
-      if (!Number.isInteger(seats) || seats < 1 || seats > 20) return '座位数必须为 1–20'
+      if (!Number.isInteger(seats) || seats < 1 || seats > 20) return '同行名额必须为 1–20 人'
       if (!toIso(form.departureDate, form.departureTime)) return '请选择有效出发时间'
     }
     if (!form.contact.trim()) return '请填写联系方式'
     return ''
-  }, [communitySectionOptions, form, section, sectionsReady])
+  }, [communitySectionOptions, contentMaxLength, form, section, sectionsReady, serializedContent])
 
   const navigateAfterSubmit = async (id: number) => {
     clearDraft(section, form)
@@ -500,8 +1129,7 @@ export default function PublishPage() {
     } else if (section === 'carpool') {
       await Taro.redirectTo({ url: `/pages/carpool/detail?id=${id}` })
     } else {
-      Taro.setStorageSync('campus.lifeHub.section.v1', 'community')
-      await Taro.switchTab({ url: '/pages/community/index' })
+      await Taro.redirectTo({ url: `/pages/community/detail?id=${id}&mode=post` })
     }
   }
 
@@ -515,14 +1143,23 @@ export default function PublishPage() {
     setSubmitting(true)
     try {
       let id = resourceId
+      const selectedCampus = isCampusName(form.campus) ? form.campus : preferredCampus()
       if (section === 'community') {
         const sectionId = form.communitySectionId
         if (!sectionId) throw new Error('服务端尚未提供可发布的社区板块')
         const input = {
           section_id: sectionId,
-          content: form.content.trim() || undefined,
-          image_urls: form.imageUrls,
+          content: serializedContent || undefined,
+          media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
+          image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
+          mention_user_ids: form.mentionCandidates.map((candidate) => candidate.id),
           topic_id: form.communityTopicId || undefined,
+          topic_ids: form.communityTopicIds.length > 0 ? form.communityTopicIds : undefined,
+          primary_topic_id: form.communityTopicId || undefined,
+          topic_names: normalizeTopicNames([
+            ...form.communityTopicNames,
+            ...extractCommunityTopicNames(form.content),
+          ]),
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createCampusCirclePost(input)).id
@@ -534,13 +1171,15 @@ export default function PublishPage() {
         }
       } else if (section === 'errands') {
         const input = {
-          description: form.content.trim(),
+          campus: selectedCampus,
+          description: serializedContent,
           reward_cents: toCents(form.rewardYuan),
           pickup_location: form.pickupLocation.trim(),
           dropoff_location: form.dropoffLocation.trim(),
           deadline: toIso(form.deadlineDate, form.deadlineTime),
           contact_type: form.contactType,
           contact: form.contact.trim(),
+          payment_mode: form.paymentMode,
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createErrand(input)).id
@@ -556,8 +1195,9 @@ export default function PublishPage() {
         }
       } else if (section === 'market') {
         const input = {
+          campus: selectedCampus,
           intent: form.marketIntent,
-          description: form.content.trim(),
+          description: serializedContent,
           price_cents: toCents(form.priceYuan),
           category: form.marketCategory,
           course_name: form.courseName.trim() || undefined,
@@ -567,7 +1207,8 @@ export default function PublishPage() {
           source: form.marketSource,
           contact_type: form.contactType,
           contact: form.contact.trim(),
-          image_urls: form.imageUrls,
+          media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
+          image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
         }
         if (mode === 'create') {
           const created = await lifeServicesRepository.createMarketplaceListing(input)
@@ -585,9 +1226,10 @@ export default function PublishPage() {
         }
       } else {
         const input = {
+          campus: selectedCampus,
           origin: form.origin.trim(),
           destination: form.destination.trim(),
-          description: form.content.trim() || undefined,
+          description: serializedContent || undefined,
           departure_at: toIso(form.departureDate, form.departureTime),
           total_seats: Number(form.totalSeats),
           contact_type: form.contactType,
@@ -606,6 +1248,12 @@ export default function PublishPage() {
           }
         }
       }
+      if (section === 'errands') {
+        rememberRoutePair(form.pickupLocation, form.dropoffLocation)
+      } else if (section === 'carpool') {
+        rememberRoutePair(form.origin, form.destination)
+      }
+      await rememberCurrentContact()
       markLifeHubSectionDirty(section)
       await navigateAfterSubmit(id)
     } catch (error) {
@@ -621,76 +1269,75 @@ export default function PublishPage() {
   }
 
   const saveAndLeave = () => {
+    if (form.images.some((image) => image.status === 'uploading')) {
+      Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
+      return
+    }
     saveDraft(section, form)
     Taro.showToast({ title: '草稿已保存', icon: 'success' })
     setTimeout(() => Taro.navigateBack(), 350)
   }
 
+  const navbarTitle = section === 'market'
+    ? form.marketIntent === 'wanted' ? '发布求购' : '出售闲置'
+    : section === 'community' ? '发布动态'
+      : section === 'errands' ? '发布跑腿'
+        : '发布同行'
   return (
     <View className={`publisher-page publisher-page--${section}`}>
-      <View className='publisher-page__orb publisher-page__orb--one' />
-      <View className='publisher-page__orb publisher-page__orb--two' />
       <CustomNavbar
-        title={mode === 'create' ? '发布' : '编辑发布'}
+        title={navbarTitle}
         showBack
       />
       <View
         className='publisher-page__content'
         style={keyboardHeight > 0
-          ? `padding-bottom: calc(244rpx + env(safe-area-inset-bottom) + ${keyboardHeight}px)`
+          ? `padding-bottom: calc(196rpx + env(safe-area-inset-bottom) + ${keyboardHeight}px)`
           : undefined}
       >
-        <View className='publisher-types' ariaRole='tablist'>
-          {sectionOptions.map((item) => (
-            <View
-              key={item.key}
-              className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
-              ariaRole='button'
-              ariaLabel={`${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
-              onClick={() => selectSection(item.key)}
-            >
-              <Text>{item.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View className='publisher-intro'>
-          <Text className='publisher-intro__title'>
-            {section === 'market'
-              ? form.marketIntent === 'wanted' ? '发布求购' : '出售闲置好物'
-              : current.title}
-          </Text>
-          <View className='publisher-intro__meta'>
-            <Text>{mode === 'create' ? '草稿自动保存' : `编辑 #${resourceId}`}</Text>
-            {mode === 'create' && hasDraftContent && (
-              <Text
-                className='publisher-intro__clear'
-                onClick={() => void clearCurrentDraft()}
+        <View className='publisher-type-panel'>
+          <View className='publisher-types' ariaRole='tablist'>
+            {sectionOptions.map((item) => (
+              <View
+                key={item.key}
+                className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
+                ariaRole='button'
+                ariaLabel={`${section === item.key ? '已选择，' : ''}${mode !== 'create' ? '当前编辑类型' : '切换发布类型为'}${item.label}`}
+                onClick={() => selectSection(item.key)}
               >
-                清空草稿
-              </Text>
-            )}
+                <Text>{item.label}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
-        {loadingEdit ? (
-          <View className='publisher-loading'>正在加载原内容</View>
+        {loadingForm ? (
+          <View className='publisher-loading'>
+            {loadingEdit ? '正在加载原内容' : '正在恢复发布信息'}
+          </View>
         ) : (
-          <>
+          <View className='publisher-form'>
             {section === 'market' && (
               <View className='publisher-section publisher-section--market-context'>
                 <View className='publisher-market-intents'>
-                  <View
-                    className={form.marketIntent === 'sell' ? 'publisher-market-intent--active' : ''}
-                    onClick={() => selectMarketIntent('sell')}
-                  >
-                    我要出售
-                  </View>
-                  <View
-                    className={form.marketIntent === 'wanted' ? 'publisher-market-intent--active' : ''}
-                    onClick={() => selectMarketIntent('wanted')}
-                  >
-                    我要求购
+                  <Text className='publisher-market-intents__label'>交易方式</Text>
+                  <View className='publisher-market-intents__options'>
+                    <View
+                      className={form.marketIntent === 'sell' ? 'publisher-market-intent--active' : ''}
+                      ariaRole='button'
+                      ariaLabel={`${form.marketIntent === 'sell' ? '已选择，' : ''}出售`}
+                      onClick={() => selectMarketIntent('sell')}
+                    >
+                      出售
+                    </View>
+                    <View
+                      className={form.marketIntent === 'wanted' ? 'publisher-market-intent--active' : ''}
+                      ariaRole='button'
+                      ariaLabel={`${form.marketIntent === 'wanted' ? '已选择，' : ''}求购`}
+                      onClick={() => selectMarketIntent('wanted')}
+                    >
+                      求购
+                    </View>
                   </View>
                 </View>
                 {(form.courseName || form.academicPeriodLabel) && (
@@ -710,83 +1357,315 @@ export default function PublishPage() {
               </View>
             )}
 
-            <View className='publisher-section publisher-section--content'>
+            {section !== 'carpool' && <View className='publisher-section publisher-section--content'>
               <View className='publisher-field publisher-field--content'>
                 <View className='publisher-textarea'>
                   <KeyboardSafeTextarea
                     id='publisher-content'
                     value={form.content}
-                    maxlength={section === 'community' ? 5000 : 2000}
+                    focus={contentInputFocused && !mentionPickerOpen}
+                    maxlength={contentMaxLength}
                     placeholder={section === 'market'
                       ? form.marketIntent === 'wanted'
                         ? '说明版本、预算和希望的交易地点'
                         : '描述成色、配件和使用情况'
-                      : section === 'errands' ? '说明物品、时间要求和注意事项' : section === 'carpool' ? '补充集合、行李或返程信息（可选）' : '分享真实、友善的校园内容'}
+                      : section === 'errands' ? '说明物品、时间要求和注意事项' : '分享真实、友善的校园内容'}
                     placeholderClass='publisher-placeholder'
                     onKeyboardVisibilityChange={onKeyboardVisibilityChange}
-                    onInput={(event) => update('content', event.detail.value)}
+                    onFocus={() => {
+                      setContentInputFocused(true)
+                      setStickerPickerOpen(false)
+                    }}
+                    onBlur={() => setContentInputFocused(false)}
+                    onInput={(event) => {
+                      const detail = event.detail as typeof event.detail & {
+                        cursor?: number
+                        selectionEnd?: number
+                        selectionStart?: number
+                      }
+                      const cursor = Number.isFinite(detail.cursor)
+                        ? Number(detail.cursor)
+                        : detail.value.length
+                      const selectionStart = Number.isFinite(detail.selectionStart)
+                        ? Number(detail.selectionStart)
+                        : cursor
+                      const selectionEnd = Number.isFinite(detail.selectionEnd)
+                        ? Number(detail.selectionEnd)
+                        : cursor
+                      const mentionDeletion = expandMentionDeletion(
+                        form.content,
+                        detail.value,
+                        form.mentionCandidates,
+                      )
+                      if (mentionDeletion.cursor !== null) {
+                        contentSelectionStartRef.current = mentionDeletion.cursor
+                        contentSelectionEndRef.current = mentionDeletion.cursor
+                      } else {
+                        contentSelectionStartRef.current = Math.max(0, selectionStart)
+                        contentSelectionEndRef.current = Math.max(
+                          contentSelectionStartRef.current,
+                          selectionEnd,
+                        )
+                      }
+                      if (mentionDeletion.removedCandidateIds.length > 0) {
+                        const removedIds = new Set(mentionDeletion.removedCandidateIds)
+                        setForm((currentForm) => ({
+                          ...currentForm,
+                          content: mentionDeletion.text,
+                          mentionCandidates: currentForm.mentionCandidates.filter(
+                            (candidate) => !removedIds.has(candidate.id),
+                          ),
+                        }))
+                      } else {
+                        update('content', mentionDeletion.text)
+                      }
+                    }}
+                    onSelectionChange={(event) => {
+                      const detail = event.detail as {
+                        selectionEnd?: number
+                        selectionStart?: number
+                      }
+                      const selectionStart = Number(detail.selectionStart)
+                      const selectionEnd = Number(detail.selectionEnd)
+                      if (!Number.isFinite(selectionStart) || !Number.isFinite(selectionEnd)) return
+                      contentSelectionStartRef.current = Math.max(0, selectionStart)
+                      contentSelectionEndRef.current = Math.max(
+                        contentSelectionStartRef.current,
+                        selectionEnd,
+                      )
+                    }}
                   />
-                  <Text>{form.content.length}</Text>
-                </View>
-              </View>
-            </View>
-
-            {section === 'errands' && (
-              <View className='publisher-section'>
-                <SectionHeading title='任务信息' />
-                <InputField inputId='publisher-pickup-location' label='取件地' value={form.pickupLocation} maxlength={100} placeholder='例如：北区快递站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('pickupLocation', value)} />
-                <InputField inputId='publisher-dropoff-location' label='送达地' value={form.dropoffLocation} maxlength={100} placeholder='例如：图书馆南门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('dropoffLocation', value)} />
-                <View className='publisher-field'>
-                  <Text className='publisher-field__label'>截止时间</Text>
-                  <View className='publisher-picker-row'>
-                    <Picker mode='date' value={form.deadlineDate} onChange={(event) => update('deadlineDate', String(event.detail.value))}><View>{form.deadlineDate}</View></Picker>
-                    <Picker mode='time' value={form.deadlineTime} onChange={(event) => update('deadlineTime', String(event.detail.value))}><View>{form.deadlineTime}</View></Picker>
+                  {section === 'community' && selectedTopicEntries.length > 0 && (
+                    <View className='publisher-composer-topics' ariaLabel='已关联话题'>
+                      {selectedTopicEntries.map((topic) => (
+                        <View
+                          key={topic.key}
+                          className='publisher-composer-topic'
+                          ariaRole='button'
+                          ariaLabel={`移除话题${topic.name}`}
+                          onClick={() => {
+                            if (topic.pending) removeCommunityTopicName(topic.name)
+                            else toggleCommunityTopic(topic.id)
+                          }}
+                        >
+                          <Text>#{topic.name}</Text>
+                          <Text>×</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  <View className='publisher-composer-toolbar'>
+                    <View className='publisher-composer-toolbar__tools'>
+                      {section === 'community' && (
+                        <View
+                          id='publisher-topic-trigger'
+                          className={topicPickerOpen
+                            ? 'publisher-composer-tool publisher-composer-tool--active'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel={topicPickerOpen ? '收起话题选择器' : '添加话题'}
+                          onClick={() => changeTopicPickerOpen(!topicPickerOpen)}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon publisher-composer-tool__icon--topic'
+                            src={require('../../assets/community/topic.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
+                      {section === 'community' && (
+                        <View
+                          className={mentionPickerOpen
+                            ? 'publisher-composer-tool publisher-composer-tool--active'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel='选择要提及的同学'
+                          onClick={() => {
+                            changeStickerPickerOpen(false)
+                            changeMentionPickerOpen(true)
+                          }}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon'
+                            src={require('../../assets/icons/mention.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
+                      <View
+                        className={stickerPickerOpen
+                          ? 'publisher-composer-tool publisher-composer-tool--active'
+                          : 'publisher-composer-tool'}
+                        ariaRole='button'
+                        ariaLabel={stickerPickerOpen ? '收起表情面板' : '选择表情'}
+                        onClick={() => changeStickerPickerOpen(!stickerPickerOpen)}
+                      >
+                        <Image
+                          className='publisher-composer-tool__icon'
+                          src={require('../../assets/icons/smile.svg')}
+                          mode='aspectFit'
+                        />
+                      </View>
+                      {(section === 'community' || section === 'market') && (
+                        <View
+                          className={form.images.length >= MAX_PUBLISH_IMAGES
+                            ? 'publisher-composer-tool publisher-composer-tool--disabled'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel={form.images.length >= MAX_PUBLISH_IMAGES
+                            ? `已达到 ${MAX_PUBLISH_IMAGES} 张图片上限`
+                            : '选择图片'}
+                          onClick={form.images.length >= MAX_PUBLISH_IMAGES
+                            ? undefined
+                            : () => void chooseImages()}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon'
+                            src={require('../../assets/icons/image.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
+                    </View>
+                    <Text>{form.content.length}/{contentMaxLength}</Text>
                   </View>
                 </View>
-                <InputField inputId='publisher-reward-yuan' label='任务报酬' value={form.rewardYuan} type='digit' maxlength={8} placeholder='请输入报酬' suffix='元' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('rewardYuan', value)} />
+                {section === 'community' && (
+                  <MentionPicker
+                    open={mentionPickerOpen}
+                    selected={form.mentionCandidates}
+                    onChange={(mentionCandidates) => update('mentionCandidates', mentionCandidates)}
+                    onSelect={(candidate) => {
+                      const inserted = insertMentionToken(
+                        form.content,
+                        candidate.nickname,
+                        contentSelectionStartRef.current,
+                        contentSelectionEndRef.current,
+                      )
+                      contentSelectionStartRef.current = inserted.cursor
+                      contentSelectionEndRef.current = inserted.cursor
+                      update('content', inserted.text)
+                    }}
+                    onRemove={removeMentionFromContent}
+                    onClear={clearMentionContent}
+                    onOpenChange={changeMentionPickerOpen}
+                  />
+                )}
+                <StickerPicker
+                  open={stickerPickerOpen}
+                  onOpenChange={changeStickerPickerOpen}
+                  onSelect={(sticker) => {
+                    const inserted = insertStickerToken(
+                      form.content,
+                      sticker.id,
+                      contentSelectionStartRef.current,
+                      contentSelectionEndRef.current,
+                    )
+                    contentSelectionStartRef.current = inserted.cursor
+                    contentSelectionEndRef.current = inserted.cursor
+                    update('content', inserted.text)
+                  }}
+                  className='publisher-sticker-picker'
+                />
+              </View>
+              {(section === 'community' || section === 'market') && form.images.length > 0 && (
+                <MediaImageEditor
+                  images={form.images}
+                  maxCount={MAX_PUBLISH_IMAGES}
+                  onAdd={() => void chooseImages()}
+                  onMove={(index, direction) => update('images', moveMediaImage(form.images, index, direction))}
+                  onRemove={(key) => update('images', form.images.filter((image) => image.key !== key))}
+                  onRetry={(image) => void uploadImage(image)}
+                />
+              )}
+            </View>}
+
+            {section === 'errands' && (
+              <View className='publisher-section publisher-section--details publisher-section--errands-details'>
+                <SectionHeading title='任务信息' />
+                <View className='publisher-route'>
+                  <InputField className='publisher-route__field publisher-route__field--origin' inputId='publisher-pickup-location' label='取件地' value={form.pickupLocation} maxlength={100} placeholder='例如：北区快递站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => { setStickerPickerOpen(false); setActiveRouteField('pickupLocation') }} onInput={(value) => update('pickupLocation', value)} />
+                  {activeRouteField === 'pickupLocation' && <RouteSuggestions kind='origin' value={form.pickupLocation} onSelect={(value) => { update('pickupLocation', value); setActiveRouteField(null) }} />}
+                  <InputField className='publisher-route__field publisher-route__field--destination' inputId='publisher-dropoff-location' label='送达地' value={form.dropoffLocation} maxlength={100} placeholder='例如：图书馆南门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => { setStickerPickerOpen(false); setActiveRouteField('dropoffLocation') }} onInput={(value) => update('dropoffLocation', value)} />
+                  {activeRouteField === 'dropoffLocation' && <RouteSuggestions kind='destination' value={form.dropoffLocation} onSelect={(value) => { update('dropoffLocation', value); setActiveRouteField(null) }} />}
+                </View>
+                <View className='publisher-task-meta'>
+                  <View className='publisher-field publisher-field--inline'>
+                    <Text className='publisher-field__label'>截止时间</Text>
+                    <View className='publisher-picker-row'>
+                      <Picker mode='date' value={form.deadlineDate} onChange={(event) => update('deadlineDate', String(event.detail.value))}><View>{form.deadlineDate}</View></Picker>
+                      <Picker mode='time' value={form.deadlineTime} onChange={(event) => update('deadlineTime', String(event.detail.value))}><View>{form.deadlineTime}</View></Picker>
+                    </View>
+                  </View>
+                  <InputField className='publisher-field--inline publisher-field--amount' inputId='publisher-reward-yuan' label='任务报酬' value={form.rewardYuan} type='digit' maxlength={8} placeholder='0.00' suffix='元' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setStickerPickerOpen(false)} onInput={(value) => update('rewardYuan', value)} />
+                </View>
+                <View className='publisher-payment-mode'>
+                  <Text className='publisher-payment-mode__label'>结算方式</Text>
+                  <View className='publisher-payment-mode__choices'>
+                    <View
+                      className={`publisher-payment-mode__choice ${form.paymentMode === 'offline' ? 'publisher-payment-mode__choice--active' : ''}`}
+                      ariaRole='button'
+                      ariaLabel='选择线下结算'
+                      onClick={() => update('paymentMode', 'offline')}
+                    >
+                      <Text>线下结算</Text><Text>双方当面核对款项</Text>
+                    </View>
+                    {errandPaymentPolicy.enabled_payment_modes.includes('wechat') && <View
+                      className={`publisher-payment-mode__choice ${form.paymentMode === 'wechat' ? 'publisher-payment-mode__choice--active publisher-payment-mode__choice--wechat' : ''}`}
+                      ariaRole='button'
+                      ariaLabel='选择微信支付'
+                      onClick={() => update('paymentMode', 'wechat')}
+                    >
+                      <Text>微信支付</Text><Text>接单后由发布者付款</Text>
+                    </View>}
+                  </View>
+                  <Text className='publisher-payment-mode__hint'>微信支付在接单后 {errandPaymentPolicy.payment_timeout_minutes} 分钟内完成；确认完成后平台向跑腿员结算。线下结算不经过平台。</Text>
+                </View>
               </View>
             )}
 
             {section === 'market' && (
-              <View className='publisher-section'>
-                <SectionHeading title='交易信息' />
+              <View className='publisher-section publisher-section--details publisher-section--market-details'>
                 <InputField
+                  className='publisher-field--inline publisher-field--amount publisher-field--price'
                   inputId='publisher-price-yuan'
                   label={form.marketIntent === 'wanted' ? '求购预算' : '商品售价'}
                   value={form.priceYuan}
                   type='digit'
                   maxlength={10}
-                  placeholder={form.marketIntent === 'wanted' ? '请输入预算' : '请输入售价'}
+                  placeholder='0.00'
                   suffix='元'
                   onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                  onFocus={() => setStickerPickerOpen(false)}
                   onInput={(value) => update('priceYuan', value)}
                 />
-                {form.imageUrls.length > 0 && (
-                  <View className='publisher-note publisher-note--compact'>
-                    <Text>已保留 {form.imageUrls.length} 张原图片</Text>
-                  </View>
-                )}
               </View>
             )}
 
             {section === 'carpool' && (
-              <View className='publisher-section'>
-                <SectionHeading title='行程信息' />
-                <InputField inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('origin', value)} />
-                <InputField inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('destination', value)} />
-                <View className='publisher-field'>
-                  <Text className='publisher-field__label'>出发时间</Text>
-                  <View className='publisher-picker-row'>
-                    <Picker mode='date' value={form.departureDate} onChange={(event) => update('departureDate', String(event.detail.value))}><View>{form.departureDate}</View></Picker>
-                    <Picker mode='time' value={form.departureTime} onChange={(event) => update('departureTime', String(event.detail.value))}><View>{form.departureTime}</View></Picker>
-                  </View>
+              <View className='publisher-section publisher-section--details publisher-section--carpool-details'>
+                <SectionHeading title='同行计划' />
+                <View className='publisher-route'>
+                  <InputField className='publisher-route__field publisher-route__field--origin' inputId='publisher-origin' label='出发地' value={form.origin} maxlength={100} placeholder='例如：海大崂山校区北门' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => { setStickerPickerOpen(false); setActiveRouteField('origin') }} onInput={(value) => update('origin', value)} />
+                  {activeRouteField === 'origin' && <RouteSuggestions kind='origin' value={form.origin} onSelect={(value) => { update('origin', value); setActiveRouteField(null) }} />}
+                  <InputField className='publisher-route__field publisher-route__field--destination' inputId='publisher-destination' label='目的地' value={form.destination} maxlength={100} placeholder='例如：青岛北站' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => { setStickerPickerOpen(false); setActiveRouteField('destination') }} onInput={(value) => update('destination', value)} />
+                  {activeRouteField === 'destination' && <RouteSuggestions kind='destination' value={form.destination} onSelect={(value) => { update('destination', value); setActiveRouteField(null) }} />}
                 </View>
-                <InputField inputId='publisher-total-seats' label='可加入人数' value={form.totalSeats} type='number' maxlength={2} placeholder='1–20' suffix='人' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onInput={(value) => update('totalSeats', value)} />
+                <View className='publisher-carpool-meta'>
+                  <View className='publisher-field publisher-field--inline'>
+                    <Text className='publisher-field__label'>出发时间</Text>
+                    <View className='publisher-picker-row'>
+                      <Picker mode='date' value={form.departureDate} onChange={(event) => update('departureDate', String(event.detail.value))}><View>{form.departureDate}</View></Picker>
+                      <Picker mode='time' value={form.departureTime} onChange={(event) => update('departureTime', String(event.detail.value))}><View>{form.departureTime}</View></Picker>
+                    </View>
+                  </View>
+                  <InputField className='publisher-field--inline publisher-field--seats' inputId='publisher-total-seats' label='同行名额' value={form.totalSeats} type='number' maxlength={2} placeholder='1–20' suffix='人' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setStickerPickerOpen(false)} onInput={(value) => update('totalSeats', value)} />
+                </View>
               </View>
             )}
 
             {section === 'community' && (
-              <View className='publisher-section'>
+              <View className='publisher-section publisher-section--community-details'>
                 <SectionHeading title='发布板块' />
                 {!sectionsReady && (
                   <View className='publisher-note publisher-note--compact'>
@@ -813,28 +1692,30 @@ export default function PublishPage() {
                             ? 'publisher-community-section--active'
                             : ''
                         }`}
+                        ariaRole='button'
+                        ariaLabel={`${form.communitySectionId === item.id ? '已选择，' : ''}发布到${item.name}`}
                         onClick={() => update('communitySectionId', item.id)}
                       >
                         <Text>{item.name}</Text>
-                        <Text>{item.parent_id === null ? '父模块' : '子模块'}</Text>
                       </View>
                     ))}
                   </View>
-                )}
-                {topics.length > 0 && (
-                  <>
-                    <SectionHeading title='关联话题（可选）' />
-                    <View className='publisher-community-sections'>
-                      <View className={`publisher-community-section ${form.communityTopicId === 0 ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', 0)}><Text>不关联话题</Text><Text>普通动态</Text></View>
-                      {topics.map((item) => <View key={item.id} className={`publisher-community-section ${form.communityTopicId === item.id ? 'publisher-community-section--active' : ''}`} onClick={() => update('communityTopicId', item.id)}><Text>#{item.name}</Text><Text>{item.kind === 'campaign' ? '活动' : '话题'}</Text></View>)}
-                    </View>
-                  </>
                 )}
               </View>
             )}
 
             {section !== 'community' && (
-              <View className='publisher-section'>
+              <View className='publisher-section publisher-section--campus'>
+                <SectionHeading title='发布范围' />
+                <CampusSelector
+                  value={form.campus}
+                  onChange={(value) => update('campus', value)}
+                />
+              </View>
+            )}
+
+            {section !== 'community' && (
+              <View className='publisher-section publisher-section--contact'>
                 <SectionHeading title='联系方式' />
                 <View className='publisher-field'>
                   <Text className='publisher-field__label'>联系方式</Text>
@@ -854,6 +1735,7 @@ export default function PublishPage() {
                       placeholder='仅在服务端授权后展示'
                       placeholderClass='publisher-placeholder'
                       onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                      onFocus={() => setStickerPickerOpen(false)}
                       onInput={(event) => update('contact', event.detail.value)}
                     />
                   </View>
@@ -861,31 +1743,134 @@ export default function PublishPage() {
                 </View>
               </View>
             )}
-          </>
+          </View>
         )}
       </View>
 
-      {!loadingEdit && (
-        <View className='publisher-actions'>
-          <View className={`publisher-actions__status ${validationError ? '' : 'publisher-actions__status--ready'}`}>
-            <View />
-            <Text>{validationError ? `尚缺：${validationError}` : '内容完整，提交后进入审核'}</Text>
+      {section === 'community' && topicPickerOpen && (
+        <View className='publisher-topic-overlay'>
+          <View
+            className='publisher-topic-overlay__mask'
+            style={keyboardHeight > 0 ? `bottom: ${keyboardHeight}px;` : undefined}
+            ariaRole='button'
+            ariaLabel='关闭话题选择器'
+            onClick={() => changeTopicPickerOpen(false)}
+          />
+          <View
+            className='publisher-topic-sheet'
+            style={keyboardHeight > 0
+              ? `bottom: ${keyboardHeight}px; height: calc(100vh - ${keyboardHeight}px - 24rpx); max-height: calc(100vh - ${keyboardHeight}px - 24rpx);`
+              : undefined}
+            ariaRole='dialog'
+            ariaLabel='添加话题'
+          >
+            <View className='publisher-topic-sheet__header'>
+              <Text className='publisher-topic-sheet__title'>添加话题</Text>
+              <View
+                className='publisher-topic-sheet__cancel'
+                ariaRole='button'
+                ariaLabel='关闭话题选择器'
+                onClick={() => changeTopicPickerOpen(false)}
+              >
+                取消
+              </View>
+            </View>
+
+            <View className='publisher-topic-sheet__search'>
+              <Text>#</Text>
+              <KeyboardSafeInput
+                id='publisher-topic-search'
+                focus={topicPickerOpen}
+                value={topicKeyword}
+                maxlength={64}
+                placeholder='搜索话题'
+                placeholderClass='publisher-placeholder'
+                confirmType='done'
+                keepVisibleOnKeyboard={false}
+                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                onFocus={() => setStickerPickerOpen(false)}
+                onInput={(event) => setTopicKeyword(event.detail.value.replace(/^#+/u, ''))}
+                onConfirm={() => {
+                  if (!topicNameExists && isCreatableTopicName(normalizedTopicKeyword)) {
+                    addCommunityTopicName()
+                  }
+                }}
+              />
+            </View>
+
+            <ScrollView className='publisher-topic-sheet__results' scrollY enhanced showScrollbar={false}>
+              {topicSearchLoading && <Text className='publisher-topic-sheet__state'>正在搜索</Text>}
+              {!topicSearchLoading && topicSearchError && (
+                <Text className='publisher-topic-sheet__state'>暂时无法加载话题</Text>
+              )}
+              {!topicSearchLoading && !topicSearchError && normalizedTopicKeyword && !topicNameExists && isCreatableTopicName(normalizedTopicKeyword) && (
+                <View
+                  className='publisher-topic-result publisher-topic-result--create'
+                  ariaRole='button'
+                  ariaLabel={`添加新话题${normalizedTopicKeyword}`}
+                  onClick={addCommunityTopicName}
+                >
+                  <View className='publisher-topic-result__copy'>
+                    <Text className='publisher-topic-result__name'>#{normalizedTopicKeyword}</Text>
+                    <Text className='publisher-topic-result__hint'>创建为新话题</Text>
+                  </View>
+                  <Text className='publisher-topic-result__action'>添加</Text>
+                </View>
+              )}
+              {!topicSearchLoading && !topicSearchError && filteredTopics.map((item) => {
+                const selected = form.communityTopicIds.includes(item.id)
+                return (
+                  <View
+                    key={item.id}
+                    className={`publisher-topic-result ${selected ? 'publisher-topic-result--selected' : ''}`}
+                    ariaRole='button'
+                    ariaLabel={`${selected ? '移除' : '添加'}话题${item.name}`}
+                    onClick={() => {
+                      toggleCommunityTopic(item.id)
+                      changeTopicPickerOpen(false)
+                    }}
+                  >
+                    <Text className='publisher-topic-result__name'>#{item.name}</Text>
+                    <Text className='publisher-topic-result__meta'>{item.post_count} 条动态</Text>
+                  </View>
+                )
+              })}
+              {!topicSearchLoading && !topicSearchError && filteredTopics.length === 0 && !normalizedTopicKeyword && (
+                <Text className='publisher-topic-sheet__state'>暂无可选话题</Text>
+              )}
+              {!topicSearchLoading && !topicSearchError && normalizedTopicKeyword && !isCreatableTopicName(normalizedTopicKeyword) && (
+                <Text className='publisher-topic-sheet__state'>话题仅支持中文、字母、数字或下划线</Text>
+              )}
+            </ScrollView>
           </View>
+        </View>
+      )}
+
+      {!loadingForm && (
+        <View className={`publisher-actions ${keyboardHeight > 0 ? 'publisher-actions--keyboard' : ''}`}>
+          {validationError && (
+            <View className='publisher-actions__status'>
+              <View />
+              <Text>{validationError}</Text>
+            </View>
+          )}
           <View className='publisher-actions__buttons'>
             {mode === 'create' && (
               <View
                 className='publisher-actions__draft'
-                hoverClass='publisher-actions__button--pressed'
-                onClick={saveAndLeave}
+                ariaRole='button'
+                ariaLabel='保存草稿并退出'
+                onClick={() => !submitting && saveAndLeave()}
               >
                 保存退出
               </View>
             )}
             <View
               id='publisher-submit'
-              className={`publisher-actions__submit ${validationError ? 'publisher-actions__submit--disabled' : ''}`}
-              hoverClass='publisher-actions__button--pressed'
-              onClick={() => void submit()}
+              className={`publisher-actions__submit ${validationError || submitting ? 'publisher-actions__submit--disabled' : ''}`}
+              ariaRole='button'
+              ariaLabel={submitting ? '正在提交' : validationError ? `暂不可提交，${validationError}` : '提交审核'}
+              onClick={() => !validationError && !submitting && void submit()}
             >
               {submitting ? '正在提交' : mode === 'create' ? '提交审核' : '保存并提交'}
             </View>

@@ -1,12 +1,14 @@
 import Taro from '@tarojs/taro'
 import { apiRequest } from '../../api/client'
 import type { components } from '../../api/generated/schema'
+import { apiDateTimeTimestamp } from '../../utils/date-time'
 import { requestWechatSubscription } from '../wechat-subscription/request'
 import {
   DEFAULT_MIGRATION_GUIDE_COPY,
   normalizeMigrationGuideCopy,
   type MigrationGuideCopy,
 } from '../app-edition/migration-copy'
+import { navigateToWithGuard } from '../../utils/navigation'
 
 export type CampusSection = {
   start: string
@@ -59,6 +61,8 @@ export const MINIAPP_MODULE_KEYS = [
   'empty_classroom',
   'shuttle',
   'club',
+  'private_message',
+  'what_to_eat',
 ] as const
 
 export type MiniappModuleKey = typeof MINIAPP_MODULE_KEYS[number]
@@ -132,6 +136,7 @@ const conservativeModules: Record<MiniappModuleKey, MiniappModuleConfig> = {
   carpool: { state: 'hidden' },
   course_materials: { state: 'hidden' },
   club: { state: 'hidden' },
+  private_message: { state: 'hidden' },
 }
 
 export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
@@ -200,7 +205,7 @@ export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
     {
       id: 'west-coast-guide-demo',
       title: '西海岸校区服务指南',
-      subtitle: '校车、空教室与校园卡服务一站直达',
+      subtitle: '校车、空教室与校园生活服务一站直达',
       image_url: '',
       campuses: ['西海岸校区'],
       action: {
@@ -274,7 +279,7 @@ const isModuleConfig = (value: unknown): value is MiniappModuleConfig => (
   && (value.message === undefined || typeof value.message === 'string')
 )
 
-const normalizeModules = (
+export const normalizeMiniappModules = (
   value: unknown,
 ): Record<MiniappModuleKey, MiniappModuleConfig> => {
   if (!isRecord(value)) return conservativeModules
@@ -356,7 +361,7 @@ const normalizeRuntimeConfig = (
   value: MiniappRuntimeConfig,
 ): MiniappRuntimeConfig => ({
   ...value,
-  modules: normalizeModules(value.modules),
+  modules: normalizeMiniappModules(value.modules),
   subscription_templates: normalizeSubscriptionTemplates(value.subscription_templates),
   migration_guide: normalizeMigrationGuideCopy(value.migration_guide),
 })
@@ -460,7 +465,11 @@ export const visibleMiniappModule = (
 export const openMiniappModule = async (
   key: MiniappModuleKey,
   url: string,
-  options: { tab?: boolean; config?: MiniappRuntimeConfig } = {},
+  options: {
+    tab?: boolean
+    config?: MiniappRuntimeConfig
+    subscriptionAlreadyRequested?: boolean
+  } = {},
 ) => {
   const config = options.config || getMiniappRuntimeConfig()
   const module = resolveMiniappModule(config, key)
@@ -469,16 +478,18 @@ export const openMiniappModule = async (
     return false
   }
   if (module.state === 'maintenance') {
-    await Taro.navigateTo({
-      url: `/pages/feature-unavailable/index?module=${key}&message=${encodeURIComponent(
+    await navigateToWithGuard(
+      `/pages/feature-unavailable/index?module=${key}&message=${encodeURIComponent(
         module.message || '功能维护中，请稍后再试',
       )}`,
-    })
+    )
     return false
   }
-  requestWechatSubscription(config.subscription_templates[key])
+  if (!options.subscriptionAlreadyRequested) {
+    requestWechatSubscription(config.subscription_templates[key])
+  }
   if (options.tab) await Taro.switchTab({ url })
-  else await Taro.navigateTo({ url })
+  else if (!await navigateToWithGuard(url)) return false
   return true
 }
 
@@ -522,6 +533,15 @@ export const getSectionStartTime = (
   return item ? item.start : ''
 }
 
+export const getSectionEndTime = (
+  config: MiniappRuntimeConfig,
+  campusName: string,
+  section: number,
+) => {
+  const item = getCampusSections(config, campusName)[String(section)]
+  return item ? item.end : ''
+}
+
 export const activeBanners = (
   config: MiniappRuntimeConfig,
   campusName: string,
@@ -530,8 +550,8 @@ export const activeBanners = (
   .filter((banner) => {
     if (!banner.enabled) return false
     if (banner.campuses.length && !banner.campuses.includes(campusName)) return false
-    const startsAt = banner.starts_at ? new Date(banner.starts_at).getTime() : 0
-    const endsAt = banner.ends_at ? new Date(banner.ends_at).getTime() : Number.MAX_SAFE_INTEGER
+    const startsAt = banner.starts_at ? apiDateTimeTimestamp(banner.starts_at) : 0
+    const endsAt = banner.ends_at ? apiDateTimeTimestamp(banner.ends_at) : Number.MAX_SAFE_INTEGER
     return now.getTime() >= startsAt && now.getTime() < endsAt
   })
   .sort((left, right) => right.priority - left.priority)

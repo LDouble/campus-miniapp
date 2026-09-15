@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
-import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Taro, {
+  useDidShow,
+  usePageScroll,
+  usePullDownRefresh,
+  useReachBottom,
+} from '@tarojs/taro'
 import {
   Image,
   ScrollView,
@@ -10,7 +15,8 @@ import {
 } from '@tarojs/components'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
-import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
+import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
+import { isApiError } from '../../api/client'
 import { listMyUserLevelTasks } from '../../api/user-levels'
 import {
   deleteMyCalendarReminder,
@@ -23,15 +29,19 @@ import {
   hasAcademicCredential,
 } from '../../api/academic-credential'
 import type {
-  CampusCirclePostView,
-  CampusCircleSectionView,
-  MarketplaceListingView,
+  CommentView,
+  HomeFeedItemView,
   CalendarReminderView,
   DailyCheckinStatus,
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
-import { saveCommunityFeedPin } from '../../features/community/feed-pin'
+import UserAvatar from '../../components/user-avatar'
+import CommunityCommentSheet from '../../features/community/comment-sheet'
+import CommunityPostCard, { type CommunityPostCommentPreview } from '../../features/community/post-card'
+import { mergePublicCommentPreview } from '../../features/community/comments'
+import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
+import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
 import {
@@ -39,15 +49,27 @@ import {
   resolveCoursePreview,
 } from '../../features/home/data'
 import {
-  communityAuthorInitial,
-  communityAuthorName,
-  communityAuthorTone,
-} from '../../features/community/author'
-import { formatDateTime } from '../../features/life-services/format'
-import { noticesRepository } from '../../features/notices/repository'
+  homeFeedItemToPost,
+  homeFeedBusinessPreview,
+  homeFeedKey,
+  sourceLabels as homeFeedSourceLabels,
+} from '../../features/home/feed-post-adapter'
+import { formatHomeMomentsTime } from '../../features/home/moments'
 import { officialNoticesRepository } from '../../features/official-notices/repository'
+import { noticesRepository } from '../../features/notices/repository'
+import { refreshPrivateMessageUnreadCount } from '../../features/direct-messages/unread'
 import {
-  formatOfficialNoticeDate,
+  readHomeNotificationGuideRecord,
+  resolveHomeNotificationTemplateIds,
+  saveHomeNotificationGuideRecord,
+  shouldShowHomeNotificationGuide,
+} from '../../features/home/notification-guide'
+import {
+  getWechatSubscriptionSettings,
+  openWechatSubscriptionSettings,
+} from '../../features/wechat-subscription/request'
+import {
+  formatOfficialNoticeCompactDate,
   officialNoticeSourceLabels,
 } from '../../features/official-notices/types'
 import type { OfficialNotice } from '../../features/official-notices/types'
@@ -67,7 +89,12 @@ import {
   saveSelectedCampus,
 } from '../../features/runtime-config'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
+import { useLoadMoreSignal } from '../../hooks/use-load-more-signal'
 import { academicRepository } from '../academic/repository'
+import {
+  requireCoursesForPeriod,
+  setCoursesForPeriod,
+} from '../academic/schedule-courses'
 import {
   academicStorage,
   type AcademicScheduleCache,
@@ -87,19 +114,20 @@ import {
   getCalendarEducationLevel,
   loadAcademicCalendar,
 } from '../../features/calendar/repository'
-import { syncCustomTabBar } from '../../utils/tabbar'
+import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
+import { useCampusShare } from '../../features/share'
+import {
+  getCampusTheme,
+  subscribeCampusTheme,
+  type CampusTheme,
+} from '../../features/theme-preference'
 import './index.scss'
 
 const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
   ? null
   : require('../../features/life-services/repository').lifeServicesRepository as typeof import('../../features/life-services/repository').lifeServicesRepository
 
-const FullMarketplaceCard = __CAMPUS_APP_EDITION__ === 'qualification'
-  ? null
-  : require('../../features/life-services/components/marketplace-card').default as typeof import('../../features/life-services/components/marketplace-card').default
-
 const icons = {
-  bell: require('../../assets/icons/bell.svg'),
   academic: require('../../assets/icons/academic.svg'),
   community: require('../../assets/icons/community.svg'),
   market: require('../../assets/icons/market.svg'),
@@ -113,66 +141,100 @@ const icons = {
   shuttle: require('../../assets/icons/shuttle.svg'),
   location: require('../../assets/icons/location.svg'),
   arrow: require('../../assets/icons/arrow.svg'),
-  comment: require('../../assets/community/comment.svg'),
-  heart: require('../../assets/community/heart.svg'),
+  check: require('../../assets/icons/check-circle.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
+  whatToEat: require('../../assets/icons/what-to-eat.svg'),
+  campaign: require('../../assets/icons/campaign.svg'),
+  arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
+
+// 首页服务入口使用预着色的 SDR SVG，避免微信 iOS 为 CSS filter 创建原生图像合成层。
+const homeServiceIcons = {
+  light: {
+    academic: require('../../assets/icons/home-service-academic.svg'),
+    calendar: require('../../assets/icons/home-service-calendar.svg'),
+    schedule: require('../../assets/icons/home-service-schedule.svg'),
+    grade: require('../../assets/icons/home-service-grade.svg'),
+    exam: require('../../assets/icons/home-service-exam.svg'),
+    result: require('../../assets/icons/home-service-result.svg'),
+    passRate: require('../../assets/icons/home-service-pass-rate.svg'),
+    materials: require('../../assets/icons/home-service-materials.svg'),
+    shuttle: require('../../assets/icons/home-service-shuttle.svg'),
+    carpool: require('../../assets/icons/home-service-carpool.svg'),
+    community: require('../../assets/icons/home-service-community.svg'),
+    market: require('../../assets/icons/home-service-market.svg'),
+    errands: require('../../assets/icons/home-service-errands.svg'),
+    clubs: require('../../assets/icons/home-service-clubs.svg'),
+    whatToEat: require('../../assets/icons/home-service-what-to-eat.svg'),
+    catAtlas: require('../../assets/icons/home-service-cat-atlas.svg'),
+  },
+  dark: {
+    academic: require('../../assets/icons/home-service-academic-dark.svg'),
+    calendar: require('../../assets/icons/home-service-calendar-dark.svg'),
+    schedule: require('../../assets/icons/home-service-schedule-dark.svg'),
+    grade: require('../../assets/icons/home-service-grade-dark.svg'),
+    exam: require('../../assets/icons/home-service-exam-dark.svg'),
+    result: require('../../assets/icons/home-service-result-dark.svg'),
+    passRate: require('../../assets/icons/home-service-pass-rate-dark.svg'),
+    materials: require('../../assets/icons/home-service-materials-dark.svg'),
+    shuttle: require('../../assets/icons/home-service-shuttle-dark.svg'),
+    carpool: require('../../assets/icons/home-service-carpool-dark.svg'),
+    community: require('../../assets/icons/home-service-community-dark.svg'),
+    market: require('../../assets/icons/home-service-market-dark.svg'),
+    errands: require('../../assets/icons/home-service-errands-dark.svg'),
+    clubs: require('../../assets/icons/home-service-clubs-dark.svg'),
+    whatToEat: require('../../assets/icons/home-service-what-to-eat-dark.svg'),
+    catAtlas: require('../../assets/icons/home-service-cat-atlas-dark.svg'),
+  },
+}
+type HomeServiceIconKey = keyof typeof homeServiceIcons.light
 
 const homeFeatureFlags = {
   todayTask: false,
 } as const
 
+const HOME_COURSE_PREVIEW_LIMIT = 8
+const SCHEDULE_SCROLL_VISIBLE_ROWS = 3
+
 const quickServices = [
   {
     key: 'schedule',
     name: '课程表',
-    icon: icons.calendar,
-    tone: 'mint',
+    iconKey: 'schedule' as HomeServiceIconKey,
+    tone: 'blue',
     route: '/pages/academic/schedule/index',
   },
   {
     key: 'grades',
     name: '成绩',
-    icon: icons.grade,
+    iconKey: 'grade' as HomeServiceIconKey,
     tone: 'blue',
     route: '/pages/academic/grades/index',
   },
   {
     key: 'exams',
     name: '考试',
-    icon: icons.exam,
+    iconKey: 'exam' as HomeServiceIconKey,
     tone: 'sand',
     route: '/pages/academic/exams/index',
   },
-  { key: 'result', name: '选课结果', icon: icons.result, tone: 'orange', route: '/pages/academic/selection/index' },
-  { key: 'pass-rate', name: '通过率', icon: icons.passRate, tone: 'cyan', route: '/pages/academic/statistics/courses' },
-  { key: 'materials', name: '资料', icon: icons.materials, tone: 'green', route: '/pages/materials/index' },
-  { key: 'calendar', name: '校历', icon: icons.calendar, tone: 'pink', route: '/pages/calendar/index' },
-  { key: 'shuttle', name: '校车', icon: icons.shuttle, tone: 'blue', route: '/pages/shuttle/index' },
-  { key: 'community', name: '社区', icon: icons.community, tone: 'purple', tab: '/pages/community/index' },
-  { key: 'market', name: '二手', icon: icons.market, tone: 'orange', module: 'market' },
-  { key: 'errands', name: '跑腿', icon: icons.errands, tone: 'blue', module: 'errands' },
-  { key: 'carpool', name: '拼车', icon: icons.shuttle, tone: 'cyan', module: 'carpool' },
-  { key: 'classroom', name: '空教室', icon: icons.academic, tone: 'mint', route: '/pages/empty-classroom/index' },
-  { key: 'clubs', name: '社团', icon: icons.clubs, tone: 'green', route: '/pages/clubs/index' },
+  { key: 'result', name: '选课结果', iconKey: 'result' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/selection/index' },
+  { key: 'simulation', name: '模拟选课', iconKey: 'schedule' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/schedule/index?mode=simulation' },
+  { key: 'pass-rate', name: '通过率', iconKey: 'passRate' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/statistics/courses' },
+  { key: 'materials', name: '资料', iconKey: 'materials' as HomeServiceIconKey, tone: 'cyan', route: '/pages/materials/index' },
+  { key: 'calendar', name: '校历', iconKey: 'calendar' as HomeServiceIconKey, tone: 'pink', route: '/pages/calendar/index' },
+  { key: 'shuttle', name: '校车', iconKey: 'shuttle' as HomeServiceIconKey, tone: 'blue', route: '/pages/shuttle/index' },
+  { key: 'community', name: '社区', iconKey: 'community' as HomeServiceIconKey, tone: 'cyan', tab: '/pages/community/index' },
+  { key: 'market', name: '二手', iconKey: 'market' as HomeServiceIconKey, tone: 'pink', module: 'market' },
+  { key: 'errands', name: '跑腿', iconKey: 'errands' as HomeServiceIconKey, tone: 'sand', module: 'errands' },
+  { key: 'course-audit', name: '课程查询', iconKey: 'academic' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/course-catalog/index' },
+  { key: 'general-education', name: '通识查询', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/general-education/index' },
+  { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
+  { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
+  { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },
+  { key: 'cat-atlas', name: '猫猫图鉴', iconKey: 'catAtlas' as HomeServiceIconKey, tone: 'sand', route: '/pages/cat-atlas/index' },
 ]
 
-const homeServiceKeys = new Set([
-  'schedule',
-  'grades',
-  'exams',
-  'result',
-  'pass-rate',
-  'materials',
-  'calendar',
-  'shuttle',
-  'community',
-  'market',
-  'errands',
-  'carpool',
-  'clubs',
-])
-const homeServices = quickServices.filter((item) => homeServiceKeys.has(item.key))
 const migratedHomeServiceKeys = new Set([
   'materials',
   'community',
@@ -181,16 +243,12 @@ const migratedHomeServiceKeys = new Set([
   'carpool',
   'clubs',
 ])
-const serviceFeatureKeys: Record<string, string> = {
-  classroom: 'classroom',
-  shuttle: 'shuttle',
-  'campus-card': 'campus_card',
-}
 const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
   schedule: 'academic_schedule',
   grades: 'academic_grades',
   exams: 'academic_exams',
   result: 'academic_selection',
+  simulation: 'academic_schedule',
   'pass-rate': 'academic_statistics',
   materials: 'course_materials',
   calendar: 'calendar',
@@ -201,12 +259,48 @@ const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
   carpool: 'carpool',
   classroom: 'empty_classroom',
   clubs: 'club',
+  'what-to-eat': 'what_to_eat',
 }
 const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   community: 'community',
   errands: 'errand',
   market: 'marketplace',
   carpool: 'carpool',
+}
+
+const HOME_FEED_PAGE_SIZE = 8
+const homeFeedSourceModules: Record<HomeFeedItemView['source_type'], MiniappModuleKey> = {
+  campus_circle_post: 'community',
+  marketplace_listing: 'marketplace',
+  errand: 'errand',
+  carpool: 'carpool',
+}
+
+const enabledHomeFeedItems = (
+  items: HomeFeedItemView[],
+  config: MiniappRuntimeConfig,
+) => items.filter((item) => (
+  resolveMiniappModule(config, homeFeedSourceModules[item.source_type]).state === 'enabled'
+))
+
+const mergeHomeFeedItems = (
+  current: HomeFeedItemView[],
+  incoming: HomeFeedItemView[],
+) => {
+  const byKey = new Map(current.map((item) => [homeFeedKey(item), item]))
+  incoming.forEach((item) => {
+    const currentItem = byKey.get(homeFeedKey(item))
+    byKey.set(homeFeedKey(item), currentItem
+      ? {
+          ...item,
+          comment_count: Math.max(currentItem.comment_count, item.comment_count),
+          comment_previews: currentItem.comment_previews.length
+            ? currentItem.comment_previews
+            : item.comment_previews,
+        }
+      : item)
+  })
+  return [...byKey.values()]
 }
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 type LifeHubSection = 'community' | 'errands' | 'market' | 'carpool'
@@ -230,6 +324,8 @@ const loadCachedCoursePreview = (
     academicStorage.getCustomCourses(),
     config,
     campusName,
+    new Date(),
+    HOME_COURSE_PREVIEW_LIMIT,
   )
 }
 
@@ -241,13 +337,22 @@ const loadCachedAcademicLabel = () => {
 const loadLatestAcademic = async (
   userId: number,
   cache: AcademicScheduleCache | null,
+  force = false,
 ) => {
-  const periodsResult = await settle(academicRepository.getPeriods())
+  const periodsResult = await settle(academicRepository.getPeriods({ force }))
   if (!periodsResult.ok || !periodsResult.value.length) return cache
 
   const periods = periodsResult.value
   let coursesByPeriod = cache ? cache.coursesByPeriod : {}
-  academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
+  let coursesUpdatedAtByPeriod = cache?.coursesUpdatedAtByPeriod || {}
+  let scheduleNotesByPeriod = cache?.scheduleNotesByPeriod || {}
+  academicStorage.setScheduleCache(
+    userId,
+    periods,
+    coursesByPeriod,
+    coursesUpdatedAtByPeriod,
+    scheduleNotesByPeriod,
+  )
 
   const { periodId } = resolveScheduleAnchor(periods)
   const anchoredPeriod = periods.find((period) => period.id === periodId)
@@ -260,11 +365,31 @@ const loadLatestAcademic = async (
   if (periodId && isCurrentPeriod && !hasCachedCourses && hasCredential) {
     const coursesResult = await settle(academicRepository.getCourses(periodId))
     if (coursesResult.ok) {
-      coursesByPeriod = {
-        ...coursesByPeriod,
-        [periodId]: coursesResult.value,
+      try {
+        const updatedAt = Date.now()
+        coursesByPeriod = setCoursesForPeriod(
+          coursesByPeriod,
+          periodId,
+          requireCoursesForPeriod(coursesResult.value.records, periodId),
+        )
+        coursesUpdatedAtByPeriod = {
+          ...coursesUpdatedAtByPeriod,
+          [periodId]: updatedAt,
+        }
+        scheduleNotesByPeriod = {
+          ...scheduleNotesByPeriod,
+          [periodId]: coursesResult.value.scheduleNote ?? '',
+        }
+        academicStorage.setScheduleCache(
+          userId,
+          periods,
+          coursesByPeriod,
+          coursesUpdatedAtByPeriod,
+          scheduleNotesByPeriod,
+        )
+      } catch {
+        // 串学期响应不得污染首页课表缓存；课表页会继续提供显式重试入口。
       }
-      academicStorage.setScheduleCache(userId, periods, coursesByPeriod)
     }
   }
 
@@ -273,59 +398,84 @@ const loadLatestAcademic = async (
     platformUserId: userId,
     periods,
     coursesByPeriod,
+    coursesUpdatedAtByPeriod,
+    scheduleNotesByPeriod,
   } satisfies AcademicScheduleCache
 }
 
-const loadHomeAcademic = async (accountPromise: Promise<Settled<Awaited<ReturnType<typeof getCurrentUser>>>>) => {
+const loadHomeAcademic = async (
+  accountPromise: Promise<Settled<Awaited<ReturnType<typeof getCurrentUser>>>>,
+  force = false,
+) => {
   const account = await accountPromise
   const userId = account.ok ? account.value.user.id : getActiveAcademicUserId()
   const cache = academicStorage.getScheduleCache(userId)
   if (!account.ok) return cache
 
-  const verification = await settle(getAcademicVerificationStatus())
+  const verification = await settle(getAcademicVerificationStatus({ force }))
   if (!verification.ok || verification.value.identity?.status !== 'verified') return cache
-  return loadLatestAcademic(userId, cache)
+  return loadLatestAcademic(userId, cache, force)
 }
 
-const latestCommunityPosts = (items: CampusCirclePostView[]) => (
-  [...items]
-    .filter((item) => item.status === 'approved')
-    .sort((left, right) => (
-      new Date(right.published_at || right.created_at).getTime()
-      - new Date(left.published_at || left.created_at).getTime()
-    ))
-    .slice(0, 3)
-)
-
-const communitySectionNames = (sections: CampusCircleSectionView[]) => (
-  sections.reduce<Record<number, string>>((names, section) => {
-    names[section.id] = section.name
-    section.children.forEach((child) => {
-      names[child.id] = child.name
-    })
-    return names
-  }, {})
-)
-
 function Index() {
+  useCampusShare((event) => {
+    const target = event.target as {
+      dataset?: Record<string, string | number>
+    } | undefined
+    const dataset = target?.dataset || {}
+    const postId = Number(dataset.postId)
+    const shareTitle = typeof dataset.shareTitle === 'string'
+      ? dataset.shareTitle
+      : 'OUSea社区'
+    const shareImage = typeof dataset.shareImage === 'string'
+      ? dataset.shareImage
+      : ''
+    const result = {
+      title: postId > 0 ? shareTitle : 'OUSea｜一站式校园生活',
+      path: postId > 0 ? '/pages/community/detail' : '/pages/index/index',
+      query: postId > 0 ? { id: postId, mode: 'post' } : undefined,
+    }
+    return shareImage ? { ...result, imageUrl: shareImage } : result
+  })
+
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
+  const [campusTheme, setCampusTheme] = useState<CampusTheme>(getCampusTheme)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
   const [username, setUsername] = useState('')
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [communityPosts, setCommunityPosts] = useState<CampusCirclePostView[]>([])
-  const [sectionNames, setSectionNames] = useState<Record<number, string>>({})
-  const [marketItems, setMarketItems] = useState<MarketplaceListingView[]>([])
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarUserId, setAvatarUserId] = useState(0)
+  const [homeFeedItems, setHomeFeedItems] = useState<HomeFeedItemView[]>([])
+  const [homeFeedPage, setHomeFeedPage] = useState(1)
+  const [homeFeedTotal, setHomeFeedTotal] = useState(0)
+  const [homeFeedLoadingMore, setHomeFeedLoadingMore] = useState(false)
+  const [homeFeedLoadMoreError, setHomeFeedLoadMoreError] = useState(false)
+  const [homeFeedRefreshing, setHomeFeedRefreshing] = useState(false)
+  const [homeFeedLoadMoreSignal, setHomeFeedLoadMoreSignal] = useState(0)
+  const [showHomeBackTop, setShowHomeBackTop] = useState(false)
+  const [homeCommentItem, setHomeCommentItem] = useState<HomeFeedItemView | null>(null)
+  const [homeCommentReplyTarget, setHomeCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
+  const [homeCommentSubmitting, setHomeCommentSubmitting] = useState(false)
+  const [openHomeActionKey, setOpenHomeActionKey] = useState<string | null>(null)
+
+  useEffect(() => subscribeCampusTheme((theme) => setCampusTheme(theme)), [])
+  const [homeReactions, setHomeReactions] = useState<Record<string, {
+    liked: boolean
+    likeCount: number
+    likedByNicknames: string[]
+  }>>({})
+  const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>([])
   const [calendar, setCalendar] = useState<Awaited<ReturnType<typeof loadAcademicCalendar>>['calendar']>(null)
   const [calendarReminders, setCalendarReminders] = useState<CalendarReminderView[]>([])
   const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinStatus | null>(null)
+  const [homeCheckinSubmitting, setHomeCheckinSubmitting] = useState(false)
+  const [showNotificationGuide, setShowNotificationGuide] = useState(false)
+  const [notificationGuideUserId, setNotificationGuideUserId] = useState(0)
   const [userLevelTasks, setUserLevelTasks] = useState<UserLevelTask[]>([])
-  const [communityLoading, setCommunityLoading] = useState(true)
-  const [marketLoading, setMarketLoading] = useState(true)
-  const [communityError, setCommunityError] = useState(false)
-  const [marketError, setMarketError] = useState(false)
+  const [homeFeedLoading, setHomeFeedLoading] = useState(true)
+  const [homeFeedError, setHomeFeedError] = useState(false)
   const [coursePreview, setCoursePreview] = useState(() => (
     loadCachedCoursePreview(runtimeConfig, campusName)
   ))
@@ -333,50 +483,78 @@ function Index() {
     loadCachedAcademicLabel,
   )
   const [bannerIndex, setBannerIndex] = useState(0)
+  const homeFeedRequestSequence = useRef(0)
+  const homeFeedLoadingMoreRef = useRef(false)
+  const homeHasShown = useRef(false)
+  const homeBackTopVisibleRef = useRef(false)
   const headerCollapsed = useCollapsingHeader({
     triggerSelector: '.campus__eyebrow',
     threshold: 48,
     releaseGap: 16,
   })
 
-  const loadHome = useCallback(async () => {
+  usePageScroll(({ scrollTop }) => {
+    const nextVisible = Number(scrollTop) > 480
+    if (nextVisible === homeBackTopVisibleRef.current) return
+    homeBackTopVisibleRef.current = nextVisible
+    setShowHomeBackTop(nextVisible)
+  })
+
+  useReachBottom(() => {
+    setHomeFeedLoadMoreSignal((current) => current + 1)
+  })
+
+  const loadHome = useCallback(async (force = false) => {
+    const homeFeedRequestId = ++homeFeedRequestSequence.current
+    homeFeedLoadingMoreRef.current = false
+    setHomeFeedLoadingMore(false)
+    setHomeFeedLoadMoreError(false)
+    setHomeFeedRefreshing(true)
     const latestRuntimeConfig = await loadMiniappRuntimeConfig()
+    const notificationTemplateIds = resolveHomeNotificationTemplateIds(
+      latestRuntimeConfig.subscription_templates,
+    )
     const moduleEnabled = (key: MiniappModuleKey) => (
       resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
     )
-    const accountPromise = settle(getCurrentUser())
+    const accountPromise = settle(getCurrentUser({ force }))
     // 未认证用户只展示缓存；已认证用户才在后台刷新教务数据。
     const academicPromise = moduleEnabled('academic_schedule')
-      ? loadHomeAcademic(accountPromise)
+      ? loadHomeAcademic(accountPromise, force)
       : accountPromise.then((account) => academicStorage.getScheduleCache(
         account.ok ? account.value.user.id : getActiveAcademicUserId(),
       ))
-    const communityPromise = !isQualificationEdition
+    const homeFeedEnabled = ['community', 'marketplace', 'errand', 'carpool']
+      .some((key) => moduleEnabled(key as MiniappModuleKey))
+    const homeFeedPromise = !isQualificationEdition
       && fullLifeServicesRepository
-      && moduleEnabled('community')
-      ? settle(fullLifeServicesRepository.listCampusCirclePosts({ page: 1, pageSize: 8 }))
-      : Promise.resolve({ ok: false } as Settled<never>)
-    const communitySectionsPromise = !isQualificationEdition
-      && fullLifeServicesRepository
-      && moduleEnabled('community')
-      ? settle(fullLifeServicesRepository.listCampusCircleSections())
-      : Promise.resolve({ ok: false } as Settled<never>)
-    const marketplacePromise = !isQualificationEdition
-      && fullLifeServicesRepository
-      && moduleEnabled('marketplace')
-      ? settle(fullLifeServicesRepository.listMarketplace({ page: 1, pageSize: 2 }))
+      && homeFeedEnabled
+      ? settle(fullLifeServicesRepository.listHomeFeed({ page: 1, pageSize: HOME_FEED_PAGE_SIZE }))
       : Promise.resolve({ ok: false } as Settled<never>)
     const officialNoticesPromise = settle(officialNoticesRepository.feed({
       pageSize: 2,
     }))
     const calendarPromise = moduleEnabled('calendar')
-      ? loadAcademicCalendar(getCalendarEducationLevel())
+      ? loadAcademicCalendar(getCalendarEducationLevel(), { force })
       : Promise.resolve({ calendar: null, source: 'unavailable' as const, updatedAt: 0 })
-    const checkinPromise = homeFeatureFlags.todayTask
-      ? accountPromise.then((account) => (
-        account.ok ? settle(getMyDailyCheckinStatus()) : { ok: false } as Settled<never>
-      ))
-      : Promise.resolve({ ok: false } as Settled<never>)
+    const checkinPromise = accountPromise.then((account) => (
+      account.ok ? settle(getMyDailyCheckinStatus()) : { ok: false } as Settled<never>
+    ))
+    const unreadPromise = accountPromise.then(async (account) => {
+      if (!account.ok) return { notice: 0, private: 0, userId: 0 }
+      const [notice, privateMessage] = await Promise.all([
+        settle(noticesRepository.unreadCount()),
+        settle(refreshPrivateMessageUnreadCount(true)),
+      ])
+      return {
+        notice: notice.ok ? Number(notice.value.count) || 0 : 0,
+        private: privateMessage.ok ? Number(privateMessage.value) || 0 : 0,
+        userId: account.value.user.id,
+      }
+    })
+    const subscriptionSettingsPromise = accountPromise.then((account) => (
+      account.ok ? getWechatSubscriptionSettings(notificationTemplateIds) : { enabled: false, mainSwitchOff: false }
+    ))
     const tasksPromise = homeFeatureFlags.todayTask
       ? accountPromise.then((account) => (
         account.ok ? settle(listMyUserLevelTasks()) : { ok: false } as Settled<never>
@@ -387,28 +565,26 @@ function Index() {
     ))
     const [
       account,
-      community,
-      communitySections,
-      unread,
-      marketplace,
+      homeFeed,
       latestAcademic,
       latestOfficialNotices,
       latestCalendar,
       latestCheckin,
       latestTasks,
       latestReminders,
+      latestUnread,
+      subscriptionSettings,
     ] = await Promise.all([
       accountPromise,
-      communityPromise,
-      communitySectionsPromise,
-      settle(noticesRepository.unreadCount()),
-      marketplacePromise,
+      homeFeedPromise,
       academicPromise,
       officialNoticesPromise,
       calendarPromise,
       checkinPromise,
       tasksPromise,
       remindersPromise,
+      unreadPromise,
+      subscriptionSettingsPromise,
     ])
 
     const selectedCampus = getSelectedCampus(latestRuntimeConfig)
@@ -420,36 +596,88 @@ function Index() {
       academicStorage.getCustomCourses(),
       latestRuntimeConfig,
       selectedCampus,
+      new Date(),
+      HOME_COURSE_PREVIEW_LIMIT,
     ))
-    if (account.ok) setUsername(account.value.user.username)
+    if (account.ok) {
+      setUsername(account.value.user.username)
+      setAvatarUrl(account.value.user.avatar_url || '')
+      setAvatarUserId(account.value.user.id)
+    }
     setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))
-    if (community.ok) {
-      setCommunityPosts(latestCommunityPosts(community.value.items))
-      setCommunityError(false)
-    } else {
-      setCommunityPosts([])
-      setCommunityError(moduleEnabled('community'))
-    }
-    if (communitySections.ok) {
-      setSectionNames(communitySectionNames(communitySections.value.items))
-    }
-    if (unread.ok) setUnreadCount(Number(unread.value.count) || 0)
-    if (marketplace.ok) {
-      setMarketItems(marketplace.value.items)
-      setMarketError(false)
-    } else {
-      setMarketItems([])
-      setMarketError(moduleEnabled('marketplace'))
+    if (homeFeedRequestId === homeFeedRequestSequence.current) {
+      if (homeFeed.ok) {
+        setHomeFeedItems(enabledHomeFeedItems(homeFeed.value.items, latestRuntimeConfig))
+        setHomeFeedPage(homeFeed.value.page)
+        setHomeFeedTotal(Number(homeFeed.value.total))
+        setHomeReactions({})
+        setHomeFeedError(false)
+      } else {
+        setHomeFeedItems([])
+        setHomeFeedPage(1)
+        setHomeFeedTotal(0)
+        setHomeFeedError(homeFeedEnabled)
+      }
     }
     setOfficialNotices(latestOfficialNotices.ok ? latestOfficialNotices.value.items : [])
     setCalendar(latestCalendar.calendar)
     setDailyCheckin(latestCheckin.ok ? latestCheckin.value : null)
     setUserLevelTasks(latestTasks.ok ? latestTasks.value.items : [])
     setCalendarReminders(latestReminders.ok ? latestReminders.value.items : [])
-    setCommunityLoading(false)
-    setMarketLoading(false)
+    const shouldShowGuide = !subscriptionSettings.enabled && shouldShowHomeNotificationGuide({
+      userId: latestUnread.userId,
+      unreadCount: latestUnread.notice + latestUnread.private,
+      templateIds: notificationTemplateIds,
+      record: readHomeNotificationGuideRecord(latestUnread.userId),
+    })
+    if (shouldShowGuide) saveHomeNotificationGuideRecord(latestUnread.userId)
+    setNotificationGuideUserId(latestUnread.userId)
+    setCustomTabBarHidden(shouldShowGuide)
+    setShowNotificationGuide(shouldShowGuide)
+    if (homeFeedRequestId === homeFeedRequestSequence.current) {
+      setHomeFeedLoading(false)
+      setHomeFeedRefreshing(false)
+    }
     Taro.stopPullDownRefresh()
   }, [])
+
+  const loadHomeFeedMore = useCallback(async () => {
+    if (
+      !fullLifeServicesRepository
+      || isQualificationEdition
+      || homeFeedLoadingMoreRef.current
+      || homeFeedRefreshing
+      || homeFeedItems.length >= homeFeedTotal
+    ) return
+
+    const requestId = ++homeFeedRequestSequence.current
+    homeFeedLoadingMoreRef.current = true
+    setHomeFeedLoadingMore(true)
+    setHomeFeedLoadMoreError(false)
+    try {
+      const latestRuntimeConfig = await loadMiniappRuntimeConfig()
+      const result = await fullLifeServicesRepository.listHomeFeed({
+        page: homeFeedPage + 1,
+        pageSize: HOME_FEED_PAGE_SIZE,
+      })
+      if (requestId !== homeFeedRequestSequence.current) return
+      setHomeFeedItems((current) => mergeHomeFeedItems(
+        current,
+        enabledHomeFeedItems(result.items, latestRuntimeConfig),
+      ))
+      setHomeFeedPage(result.page)
+      setHomeFeedTotal(Number(result.total))
+    } catch {
+      if (requestId === homeFeedRequestSequence.current) {
+        setHomeFeedLoadMoreError(true)
+      }
+    } finally {
+      if (requestId === homeFeedRequestSequence.current) {
+        homeFeedLoadingMoreRef.current = false
+        setHomeFeedLoadingMore(false)
+      }
+    }
+  }, [homeFeedItems.length, homeFeedPage, homeFeedRefreshing, homeFeedTotal])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -464,13 +692,16 @@ function Index() {
       void Taro.reLaunch({ url: '/pages/account-cancellation/index?success=1' })
       return
     }
+    // 首页从详情返回时保留 Feed 分页和滚动位置，完整刷新交给下拉刷新。
+    if (homeHasShown.current) return
+    homeHasShown.current = true
     void loadHome()
   })
 
   usePullDownRefresh(() => {
     setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
     setAcademicCalendarLabel(loadCachedAcademicLabel())
-    void loadHome()
+    void loadHome(true)
   })
 
   const openLifeHub = async (section: LifeHubSection) => {
@@ -488,14 +719,6 @@ function Index() {
       '/pages/community/index',
       { tab: true, config: runtimeConfig },
     )
-  }
-
-  const openModule = (type: string) => {
-    if (['community', 'errands', 'market', 'carpool'].includes(type)) {
-      void openLifeHub(type as LifeHubSection)
-      return
-    }
-    Taro.showToast({ title: '服务入口已更新', icon: 'none' })
   }
 
   const openAcademic = (route: string) => {
@@ -550,19 +773,97 @@ function Index() {
 
   const chooseCampus = async () => {
     const campuses = enabledCampuses(runtimeConfig)
-    const result = await Taro.showActionSheet({ itemList: campuses })
-    if (typeof result.tapIndex !== 'number') return
-    const selectedCampus = campuses[result.tapIndex]
+    const tapIndex = await showActionSheetSelection(campuses)
+    if (tapIndex === null) return
+    const selectedCampus = campuses[tapIndex]
     setCampusName(selectedCampus)
     setBannerIndex(0)
     saveSelectedCampus(selectedCampus)
     setCoursePreview(loadCachedCoursePreview(runtimeConfig, selectedCampus))
   }
 
-  const openCommunityPost = (item: CampusCirclePostView) => {
-    saveCommunityFeedPin(item)
-    void openLifeHub('community')
+  const openHomeFeedItem = (item: HomeFeedItemView) => {
+    setOpenHomeActionKey(null)
+    const routes: Record<HomeFeedItemView['source_type'], string> = {
+      campus_circle_post: `/pages/community/detail?id=${item.source_id}`,
+      marketplace_listing: `/pages/marketplace/detail?id=${item.source_id}`,
+      errand: `/pages/errands/detail?id=${item.source_id}`,
+      carpool: `/pages/carpool/detail?id=${item.source_id}`,
+    }
+    void Taro.navigateTo({ url: routes[item.source_type] })
   }
+
+  const toggleHomeFeedLike = async (item: HomeFeedItemView) => {
+    if (!fullLifeServicesRepository || item.source_type !== 'campus_circle_post') return
+    const key = homeFeedKey(item)
+    const current = homeReactions[key] || {
+      liked: item.liked,
+      likeCount: item.like_count,
+      likedByNicknames: item.liked_by_nicknames,
+    }
+    try {
+      const reaction = current.liked
+        ? await fullLifeServicesRepository.unlikeResource(item.source_id, 'campus_circle_post')
+        : await fullLifeServicesRepository.likeResource(item.source_id, 'campus_circle_post')
+      const currentUserName = username.trim()
+      const likedByNicknames = reaction.liked
+        ? currentUserName && !current.likedByNicknames.includes(currentUserName)
+          ? [currentUserName, ...current.likedByNicknames].slice(0, 5)
+          : current.likedByNicknames
+        : currentUserName
+          ? current.likedByNicknames.filter((nickname) => nickname !== currentUserName)
+          : current.likedByNicknames.slice(0, reaction.like_count)
+      setHomeReactions((reactions) => ({
+        ...reactions,
+        [key]: {
+          liked: reaction.liked,
+          likeCount: reaction.like_count,
+          likedByNicknames: likedByNicknames.slice(0, reaction.like_count),
+        },
+      }))
+    } catch {
+      Taro.showToast({ title: '操作失败，请稍后重试', icon: 'none' })
+    }
+  }
+
+  const updateHomeFeedComment = (target: HomeFeedItemView, comment: CommentView) => {
+    setHomeFeedItems((current) => current.map((item) => (
+      item.source_type === target.source_type && item.source_id === comment.target_id
+        ? {
+            ...item,
+            comment_previews: mergePublicCommentPreview(
+              item.comment_previews,
+              comment,
+              homeCommentReplyTarget,
+            ),
+          }
+        : item
+    )))
+  }
+
+  const dismissCommunityOverlays = useCallback(() => {
+    setOpenHomeActionKey(null)
+    if (homeCommentItem) {
+      setCommentDismissSignal((current) => current + 1)
+    }
+  }, [homeCommentItem])
+
+  const scrollHomeToTop = useCallback(() => {
+    void Taro.pageScrollTo({ scrollTop: 0, duration: 240 })
+  }, [])
+
+  useDismissCommunityOverlaysOnScroll({
+    active: openHomeActionKey !== null || (homeCommentItem !== null && !homeCommentSubmitting),
+    onDismiss: dismissCommunityOverlays,
+  })
+
+  const updateHomeFeedCommentCount = useCallback((target: HomeFeedItemView, delta: number) => {
+    setHomeFeedItems((current) => current.map((item) => (
+      item.source_type === target.source_type && item.source_id === target.source_id
+        ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
+        : item
+    )))
+  }, [])
 
   const openOfficialNotices = () => {
     void Taro.navigateTo({ url: '/pages/official-notices/index' })
@@ -579,21 +880,46 @@ function Index() {
     30000,
     Math.max(3000, runtimeConfig.slogan_interval_ms),
   )
-  const campusConfig = runtimeConfig.campuses[campusName]
-  const visibleHomeServices = homeServices.filter((service) => {
+  const visibleHomeServices = quickServices.filter((service) => {
     if (isQualificationEdition && migratedHomeServiceKeys.has(service.key)) return false
-    const featureKey = serviceFeatureKeys[service.key]
     const moduleKey = serviceModuleKeys[service.key]
-    return (
-      (!featureKey || !campusConfig || campusConfig.features[featureKey] !== false)
-      && (!moduleKey
-        || resolveMiniappModule(runtimeConfig, moduleKey, campusName).state !== 'hidden')
-    )
+    if (!moduleKey) return 'route' in service && Boolean(service.route)
+    return resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
-  const visibleCommunityPosts = communityPosts.slice(0, 3)
+  const homeFeedCanLoadMore = homeFeedItems.length < homeFeedTotal
+  useLoadMoreSignal({
+    signal: homeFeedLoadMoreSignal,
+    enabled: Boolean(fullLifeServicesRepository)
+      && !isQualificationEdition
+      && !homeFeedLoading
+      && !homeFeedRefreshing
+      && !homeFeedLoadingMore
+      && !homeFeedError
+      && homeFeedCanLoadMore,
+    onLoadMore: loadHomeFeedMore,
+  })
+  const momentsLoading = homeFeedLoading
+  const momentsError = homeFeedError && homeFeedItems.length === 0
   const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
+  const scheduleRowCount = coursePreview.items.length + todayCalendarEvents.length
+  const scheduleCanScroll = scheduleRowCount > SCHEDULE_SCROLL_VISIBLE_ROWS
+  const ongoingCourseIndex = coursePreview.items.findIndex((item) => item.status === 'ongoing')
+  const highlightedCourseIndex = ongoingCourseIndex >= 0
+    ? ongoingCourseIndex
+    : coursePreview.items.length > 0
+      ? 0
+      : -1
   const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
+  const holidayCountdown = coursePreview.dayLabel === '假期'
+    ? Math.max(1, Math.round(
+      (new Date(
+        coursePreview.targetDate.getFullYear(),
+        coursePreview.targetDate.getMonth(),
+        coursePreview.targetDate.getDate(),
+      ).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
+    ))
+    : null
 
   const toggleCalendarReminder = async (eventId: string) => {
     const existing = calendarReminders.find((item) => item.event_id === eventId)
@@ -640,6 +966,49 @@ function Index() {
     void Taro.navigateTo({ url: todayTask.route })
   }
 
+  const submitHomeCheckin = async () => {
+    if (!dailyCheckin?.enabled || dailyCheckin.checked_in || homeCheckinSubmitting) return
+    setHomeCheckinSubmitting(true)
+    try {
+      const result = await createDailyCheckin()
+      setDailyCheckin((current) => current ? {
+        ...current,
+        checked_in: true,
+        checked_in_at: result.checked_in_at,
+        consecutive_days: result.consecutive_days,
+        server_date: result.checked_in_date,
+        today_reward: result.reward,
+        user_level: result.user_level,
+      } : current)
+      Taro.showToast({
+        title: result.already_checked_in ? '今日已签到' : `签到成功 +${result.reward}经验`,
+        icon: 'none',
+      })
+    } catch (error) {
+      Taro.showToast({
+        title: isApiError(error) ? error.message : '签到失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setHomeCheckinSubmitting(false)
+    }
+  }
+
+  const dismissNotificationGuide = () => {
+    setCustomTabBarHidden(false)
+    setShowNotificationGuide(false)
+  }
+
+  const enableNotificationGuide = async () => {
+    if (!notificationGuideUserId) return
+    // 在原始点击同步链路中调起设置页，统一由微信设置管理总开关与各模板。
+    const openSettings = openWechatSubscriptionSettings()
+    setCustomTabBarHidden(false)
+    setShowNotificationGuide(false)
+    const opened = await openSettings
+    if (!opened) Taro.showToast({ title: '暂时无法打开提醒设置', icon: 'none' })
+  }
+
   const openRuntimeBanner = (banner: RuntimeBanner) => {
     if (banner.action.type === 'miniapp_path' && banner.action.value) {
       Taro.navigateTo({ url: banner.action.value })
@@ -662,13 +1031,92 @@ function Index() {
       && !!normalizeWebViewUrl(runtimeBanner.action.value))
   )
 
+  const scheduleTimeline = (
+    <View className='schedule-card__timeline'>
+      <View className='schedule-card__timeline-line' />
+      {coursePreview.items.map((item, index) => (
+        <View
+          key={`${item.course.id}-${item.startsAt.getTime()}`}
+          className={[
+            'schedule-card__course-row',
+            index === highlightedCourseIndex
+              ? 'schedule-card__course-row--active'
+              : '',
+          ].filter(Boolean).join(' ')}
+          ariaRole='button'
+          ariaLabel={`查看课表：${item.course.name}`}
+          onClick={openSchedule}
+        >
+          <View className='schedule-card__timeline-marker'>
+            <View className='schedule-card__timeline-dot' />
+          </View>
+          <View className='schedule-card__course-copy'>
+            <Text className='schedule-card__course-name'>{item.course.name}</Text>
+            <View className='schedule-card__meta'>
+              <Text>第 {item.course.startSection}-{item.course.endSection} 节</Text>
+              <Text className='schedule-card__meta-divider'>·</Text>
+              <Image src={icons.location} mode='aspectFit' />
+              <Text>{item.course.location || '地点待定'}</Text>
+            </View>
+          </View>
+        </View>
+      ))}
+      {todayCalendarEvents.length > 0 && coursePreview.items.length > 0 && (
+        <View className='schedule-card__event-divider' />
+      )}
+      {todayCalendarEvents.map((event, eventIndex) => {
+        const reminder = calendarReminders.find((item) => item.event_id === event.id)
+        return (
+          <View
+            key={`calendar-${event.id}`}
+            className={[
+              'schedule-card__course-row',
+              'today-card__event-row',
+              eventIndex === 0 ? 'today-card__event-row--first' : '',
+              event.priority === 'important' ? 'today-card__event-row--important' : '',
+            ].filter(Boolean).join(' ')}
+            ariaRole='button'
+            ariaLabel={`查看校历：${event.title}`}
+            onClick={openCalendar}
+          >
+            <View className='schedule-card__timeline-marker'>
+              <View className='schedule-card__timeline-dot schedule-card__timeline-dot--event' />
+            </View>
+            <View className='schedule-card__course-copy'>
+              <View className='today-card__event-title-line'>
+                <Text className='schedule-card__course-name'>{event.title}</Text>
+                {event.priority === 'important' && <Text className='today-card__important'>重要</Text>}
+              </View>
+              <View className='today-card__event-date'>
+                <Text>{calendarEventDateLabel(event)}</Text>
+              </View>
+            </View>
+            {event.remindable && (
+              <View
+                className={[
+                  'today-card__reminder',
+                  reminder ? 'today-card__reminder--active' : '',
+                ].filter(Boolean).join(' ')}
+                ariaRole='button'
+                ariaLabel={reminder ? '取消提醒' : '设置提醒'}
+                onClick={(clickEvent) => {
+                  clickEvent.stopPropagation()
+                  void toggleCalendarReminder(event.id)
+                }}
+              >
+                {reminder ? `已设 ${reminder.advance_days} 天` : '提醒我'}
+              </View>
+            )}
+          </View>
+        )
+      })}
+    </View>
+  )
+
   return (
     <View className='campus'>
-      <View className='campus__orb campus__orb--one' />
-      <View className='campus__orb campus__orb--two' />
-
       <CustomNavbar
-        title='海大校园'
+        title='OUSea'
         immersive
         compactImmersive
         collapsed={headerCollapsed}
@@ -676,36 +1124,48 @@ function Index() {
 
       <View className='campus__header motion-enter'>
         <View className='campus__identity'>
-          <View className='campus__avatar'>
-            <Text>{avatarText(username)}</Text>
+          <UserAvatar
+            className='campus__avatar'
+            imageClassName='campus__avatar-image'
+            src={avatarUrl}
+            fallback={avatarText(username)}
+            userId={avatarUserId}
+          >
             <View className='campus__online' />
-          </View>
+          </UserAvatar>
           <View className='campus__identity-copy'>
-            <Text className='campus__eyebrow'>{academicCalendarLabel}</Text>
+            <View className='campus__week-row'>
+              <Text className='campus__eyebrow'>{academicCalendarLabel}</Text>
+              {dailyCheckin?.enabled && !dailyCheckin.checked_in && (
+                <View
+                  className={`campus__checkin ${homeCheckinSubmitting ? 'campus__checkin--loading' : ''}`}
+                  ariaRole='button'
+                  ariaLabel={`今日签到，可获得 ${dailyCheckin.today_reward} 经验`}
+                  onClick={() => void submitHomeCheckin()}
+                >
+                  <Image src={icons.check} mode='aspectFit' />
+                  <Text>{homeCheckinSubmitting ? '签到中' : '签到'}</Text>
+                </View>
+              )}
+              {dailyCheckin?.enabled && dailyCheckin.checked_in && (
+                <View
+                  className='campus__checkin campus__checkin--completed'
+                  ariaLabel={`今日已签到，已连续签到 ${dailyCheckin.consecutive_days} 天`}
+                >
+                  <Image src={icons.check} mode='aspectFit' />
+                  <Text>已连签 {dailyCheckin.consecutive_days} 天</Text>
+                </View>
+              )}
+            </View>
             <View
               className='campus__school'
-              hoverClass='campus__school--pressed'
               ariaRole='button'
               ariaLabel={`切换校区，当前为${campusName}`}
               onClick={chooseCampus}
             >
-              <Text>中国海洋大学 · {campusName}</Text>
+              <Text>{campusName}</Text>
               <Image className='campus__chevron' src={icons.arrow} mode='aspectFit' />
             </View>
-          </View>
-        </View>
-        <View className='campus__header-actions'>
-          <View
-            className='icon-button motion-press'
-            hoverClass='motion-press--active'
-            hoverStartTime={20}
-            hoverStayTime={100}
-            ariaRole='button'
-            ariaLabel={unreadCount > 0 ? `消息，${unreadCount} 条未读` : '消息'}
-            onClick={() => Taro.switchTab({ url: '/pages/messages/index' })}
-          >
-            <Image src={icons.bell} mode='aspectFit' />
-            {unreadCount > 0 && <View className='icon-button__dot' />}
           </View>
         </View>
       </View>
@@ -713,118 +1173,72 @@ function Index() {
       <View className='schedule-card today-card motion-enter motion-enter--delay-2'>
         <View className='schedule-card__header'>
           <View className='schedule-card__date'>
-            <Text className='schedule-card__day-label'>今天</Text>
-            <Text className='schedule-card__date-label'>{coursePreview.dateLabel}</Text>
+            <View className='schedule-card__heading-bar' />
+            <Text className='schedule-card__day-label'>
+              {coursePreview.dayLabel === '假期' ? '假期中' : coursePreview.dayLabel}
+            </Text>
           </View>
           <View
             className='schedule-card__summary'
-            hoverClass='schedule-card__summary--pressed'
             ariaRole='button'
             ariaLabel='查看完整校历'
             onClick={openCalendar}
           >
-            <Text>全部日程</Text>
+            <Text>校历</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
 
         {(coursePreview.items.length > 0 || todayCalendarEvents.length > 0) ? (
           <View className='schedule-card__courses'>
-            {coursePreview.items.map((item, index) => (
+            <View className='schedule-card__timeline-scroll'>
+              {scheduleCanScroll ? (
+                <ScrollView
+                  className='schedule-card__scroll'
+                  scrollY
+                  enhanced
+                  showScrollbar={false}
+                >
+                  {scheduleTimeline}
+                </ScrollView>
+              ) : scheduleTimeline}
+              {scheduleCanScroll && (
+                <View
+                  className='schedule-card__scroll-cue'
+                  ariaRole='img'
+                  ariaLabel='课表提醒可以上下滑动查看'
+                >
+                  <Image
+                    className='schedule-card__scroll-cue-arrow schedule-card__scroll-cue-arrow--up'
+                    src={icons.arrow}
+                    mode='aspectFit'
+                  />
+                  <Image
+                    className='schedule-card__scroll-cue-arrow schedule-card__scroll-cue-arrow--down'
+                    src={icons.arrow}
+                    mode='aspectFit'
+                  />
+                </View>
+              )}
+            </View>
+            {coursePreview.hiddenCount > 0 && (
               <View
-                key={`${item.course.id}-${item.startsAt.getTime()}`}
-                className={[
-                  'schedule-card__course-row',
-                  item.status === 'ongoing'
-                    ? 'schedule-card__course-row--ongoing'
-                    : '',
-                ].filter(Boolean).join(' ')}
-                hoverClass='today-card__row--pressed'
+                className='schedule-card__more'
                 ariaRole='button'
-                ariaLabel={`查看课表：${item.course.name}`}
+                ariaLabel={`查看剩余 ${coursePreview.hiddenCount} 节课程`}
                 onClick={openSchedule}
               >
-                <Text className='schedule-card__section'>
-                  第 {item.course.startSection}-{item.course.endSection} 节
-                </Text>
-                <View className='schedule-card__course-copy'>
-                  <Text className='schedule-card__course-name'>
-                    {item.course.name}
-                  </Text>
-                  <View className='schedule-card__meta'>
-                    <Image src={icons.location} mode='aspectFit' />
-                    <Text>{item.course.location || '地点待定'}</Text>
-                    {item.status === 'ongoing' && (
-                      <Text>· {item.statusText}</Text>
-                    )}
-                  </View>
-                </View>
-                {item.status === 'ongoing' && (
-                  <Text className='schedule-card__state'>上课中</Text>
-                )}
-                {item.status === 'upcoming'
-                  && coursePreview.dayLabel === '今天'
-                  && index === 0
-                  && (
-                    <Text className='schedule-card__state schedule-card__state--next'>
-                      下一节
-                    </Text>
-                  )}
+                <Text>还有 {coursePreview.hiddenCount} 节课程</Text>
+                <Image src={icons.arrow} mode='aspectFit' />
               </View>
-            ))}
-            {todayCalendarEvents.map((event) => {
-              const reminder = calendarReminders.find((item) => item.event_id === event.id)
-              return (
-                <View
-                  key={`calendar-${event.id}`}
-                  className={[
-                    'schedule-card__course-row',
-                    'today-card__event-row',
-                    event.priority === 'important' ? 'today-card__event-row--important' : '',
-                  ].filter(Boolean).join(' ')}
-                  hoverClass='today-card__row--pressed'
-                  ariaRole='button'
-                  ariaLabel={`查看校历：${event.title}`}
-                  onClick={openCalendar}
-                >
-                  <View className='today-card__event-date'>
-                    <Text>{calendarEventDateLabel(event)}</Text>
-                    <Text>{event.type === 'registration' ? '教务' : '校历'}</Text>
-                  </View>
-                  <View className='schedule-card__course-copy'>
-                    <View className='today-card__event-title-line'>
-                      <Text className='schedule-card__course-name'>{event.title}</Text>
-                      {event.priority === 'important' && <Text className='today-card__important'>重要</Text>}
-                    </View>
-                    <View className='schedule-card__meta'>
-                      <Text>{event.description || '查看校历详情'}</Text>
-                    </View>
-                  </View>
-                  {event.remindable && (
-                    <View
-                      className={[
-                        'today-card__reminder',
-                        reminder ? 'today-card__reminder--active' : '',
-                      ].filter(Boolean).join(' ')}
-                      hoverClass='today-card__reminder--pressed'
-                      ariaRole='button'
-                      ariaLabel={reminder ? '取消提醒' : '设置提醒'}
-                      onClick={(clickEvent) => {
-                        clickEvent.stopPropagation()
-                        void toggleCalendarReminder(event.id)
-                      }}
-                    >
-                      {reminder ? `已设 ${reminder.advance_days} 天` : '提醒我'}
-                    </View>
-                  )}
-                </View>
-              )
-            })}
+            )}
           </View>
         ) : (
           <View className='schedule-card__empty'>
-            <Text>今天没有待办日程</Text>
-            <Text>课程、考试和推荐校历事件会汇总在这里</Text>
+            <View className='schedule-card__empty-copy'>
+              <Text>{coursePreview.emptyText}</Text>
+              <Text>{holidayCountdown ? `${holidayCountdown}天后开学` : coursePreview.emptyHint}</Text>
+            </View>
           </View>
         )}
       </View>
@@ -837,7 +1251,6 @@ function Index() {
             'motion-enter--delay-3',
             todayTask.completed ? 'today-task--completed' : '',
           ].filter(Boolean).join(' ')}
-          hoverClass='today-task--pressed'
           ariaRole='button'
           ariaLabel={`${todayTask.title}，${todayTask.actionLabel}`}
           onClick={openTodayTask}
@@ -857,13 +1270,12 @@ function Index() {
 
       <View className='service-panel motion-enter motion-enter--delay-3'>
         <View className='service-panel__simple-head'>
-          <View className='service-panel__title-group'>
+          <View className='service-panel__heading'>
+            <View className='service-panel__heading-bar' />
             <Text className='service-panel__title'>常用服务</Text>
-            <Text className='service-panel__subtitle'>学习生活，一触即达</Text>
           </View>
           <View
             className='service-panel__all'
-            hoverClass='service-panel__all--pressed'
             ariaRole='button'
             ariaLabel='查看全部服务'
             onClick={openAllServices}
@@ -876,14 +1288,13 @@ function Index() {
           {visibleHomeServices.map((item) => (
             <View
               key={item.key}
-              className={`service-panel__grid-item service-panel__grid-item--${item.tone}`}
-              hoverClass='service-panel__item--pressed'
+              className={`service-panel__grid-item service-panel__grid-item--${item.tone} service-panel__grid-item--key-${item.key}`}
               ariaRole='button'
               ariaLabel={item.name}
               onClick={() => openQuickService(item)}
             >
               <View className='service-panel__grid-icon'>
-                <Image src={item.icon} mode='aspectFit' />
+                <Image src={homeServiceIcons[campusTheme][item.iconKey]} mode='aspectFit' />
               </View>
               <Text className='service-panel__grid-name'>{item.name}</Text>
             </View>
@@ -894,13 +1305,12 @@ function Index() {
       <View className='official-notices-home motion-enter motion-enter--delay-4'>
         <View
           className='official-notices-home__head'
-          hoverClass='official-notices-home__head--pressed'
           ariaRole='button'
           ariaLabel='查看全部官方通知'
           onClick={openOfficialNotices}
         >
-          <View>
-            <Text className='official-notices-home__eyebrow'>OFFICIAL</Text>
+          <View className='official-notices-home__heading'>
+            <View className='official-notices-home__heading-bar' />
             <Text className='official-notices-home__title'>全校通知</Text>
           </View>
           <View className='official-notices-home__more'>
@@ -916,15 +1326,25 @@ function Index() {
           <View
             key={item.id}
             className='official-notices-home__item'
-            hoverClass='official-notices-home__item--pressed'
+            ariaRole='button'
+            ariaLabel={`查看通知：${item.title}`}
             onClick={() => openOfficialNotice(item)}
           >
-            <View className='official-notices-home__source'>
-              {officialNoticeSourceLabels[item.source]}
+            <View className='official-notices-home__icon'>
+              <Image src={icons.campaign} mode='aspectFit' />
             </View>
             <View className='official-notices-home__copy'>
-              <Text>{item.title}</Text>
-              <Text>{item.publisher} · {formatOfficialNoticeDate(item.source_published_at)}</Text>
+              <Text className='official-notices-home__copy-title'>{item.title}</Text>
+              <View className='official-notices-home__meta'>
+                <Text className='official-notices-home__source'>
+                  {officialNoticeSourceLabels[item.source]}
+                </Text>
+                <Text className='official-notices-home__publisher'>{item.publisher}</Text>
+                <Text className='official-notices-home__meta-separator'>·</Text>
+                <Text className='official-notices-home__date'>
+                  {formatOfficialNoticeCompactDate(item.source_published_at)}
+                </Text>
+              </View>
             </View>
             <Image className='official-notices-home__arrow' src={icons.arrow} mode='aspectFit' />
           </View>
@@ -938,7 +1358,6 @@ function Index() {
           <Text className='home-migrated__copy'>{migrationGuide.description}</Text>
           <View
             className='home-migrated__action'
-            hoverClass='home-migrated__action--pressed'
             onClick={() => void openMigratedFeaturePage({ module: 'community' })}
           >
             <Text>{migrationGuide.entry_button_text}</Text>
@@ -956,14 +1375,11 @@ function Index() {
           runtimeBanner ? 'hero-card--notice' : '',
           runtimeBanner?.image_url ? 'hero-card--image' : '',
         ].filter(Boolean).join(' ')}
-        hoverClass='motion-press--active'
-        hoverStartTime={20}
-        hoverStayTime={100}
         ariaRole={!runtimeBanner || bannerActionable ? 'button' : undefined}
-        ariaLabel={runtimeBanner?.title || '发现校园新鲜事'}
+        ariaLabel={runtimeBanner?.title || '查看开学安排'}
         onClick={() => runtimeBanner
           ? openRuntimeBanner(runtimeBanner)
-          : openModule('community')}
+          : openCalendar()}
       >
         <View className='hero-card__glow' />
         {runtimeBanner?.image_url && (
@@ -979,7 +1395,7 @@ function Index() {
         <View className='hero-card__content'>
           <View className='hero-card__pill'>
             <View className='hero-card__pulse' />
-            <Text>{runtimeBanner ? '校园推荐' : '今日校园'}</Text>
+            <Text>{runtimeBanner ? '校园推荐' : '开学季'}</Text>
           </View>
           {runtimeBanner ? (
             <Swiper
@@ -1013,8 +1429,8 @@ function Index() {
             >
               {(slogans.length ? slogans : [{
                 id: 'fallback',
-                title: '海纳百川，取则行远',
-                subtitle: '一站式连接海大学习与生活',
+                title: '新学期，从这片海出发',
+                subtitle: '课表、成绩与校园服务触手可及',
               }]).map((slogan) => (
                 <SwiperItem key={slogan.id}>
                   <View className='hero-card__slogan-slide'>
@@ -1027,188 +1443,181 @@ function Index() {
           )}
           {(!runtimeBanner || bannerActionable) && (
             <View className='hero-card__action'>
-              <Text>{runtimeBanner ? '查看详情' : '发现校园新鲜事'}</Text>
+              <Text>{runtimeBanner ? '查看详情' : '查看开学安排'}</Text>
               <Image src={icons.arrow} mode='aspectFit' />
             </View>
           )}
         </View>
         {!runtimeBanner?.image_url && (
           <View className='hero-card__art'>
-            <View className='hero-card__sun' />
-            <View className='hero-card__cloud hero-card__cloud--one' />
-            <View className='hero-card__cloud hero-card__cloud--two' />
-            <View className='hero-card__building'>
-              <View className='hero-card__roof' />
-              <View className='hero-card__windows'>
-                <View /><View /><View />
-              </View>
+            <View className='hero-card__bubble hero-card__bubble--one' />
+            <View className='hero-card__bubble hero-card__bubble--two' />
+            <View className='hero-card__sailboat'>
+              <View className='hero-card__mast' />
+              <View className='hero-card__sail hero-card__sail--main' />
+              <View className='hero-card__sail hero-card__sail--small' />
+              <View className='hero-card__hull' />
             </View>
-            <View className='hero-card__tree hero-card__tree--one' />
-            <View className='hero-card__tree hero-card__tree--two' />
           </View>
         )}
       </View>
 
-      <View className='community-panel'>
-        <View className='section-heading section-heading--community'>
-          <View>
-            <Text className='section-heading__eyebrow'>CAMPUS</Text>
-            <Text className='section-heading__title'>校园新鲜事</Text>
+      <View className='moments-panel'>
+        <View className='moments-panel__header'>
+          <View className='moments-panel__heading'>
+            <View className='moments-panel__bar' />
+            <Text className='moments-panel__title'>校园动态</Text>
           </View>
           <View
-            className='section-heading__more'
-            hoverClass='section-heading__more--pressed'
+            className='moments-panel__more'
             ariaRole='button'
-            ariaLabel='查看更多校园动态'
+            ariaLabel='进入校园社区'
             onClick={() => openLifeHub('community')}
           >
-            <Text>查看更多</Text>
+            <Text>进社区</Text>
             <Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
 
-        <View className='news-card'>
-        {communityLoading && <View className='home-section-state'>正在加载校园动态</View>}
-        {!communityLoading && communityError && (
-          <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
-            动态加载失败，点击重试
-          </View>
-        )}
-        {!communityLoading && !communityError && visibleCommunityPosts.length === 0 && (
-          <View className='home-section-state'>暂时没有校园动态</View>
-        )}
-        {!communityLoading && !communityError && visibleCommunityPosts.map((item, index) => (
-          <View
-            key={item.id}
-            className={[
-              'news-card__item',
-              'motion-enter',
-              `motion-enter--delay-${Math.min(index + 1, 4)}`,
-              index === 0 ? 'news-card__item--featured' : 'news-card__item--compact',
-            ].join(' ')}
-            hoverClass='news-card__item--pressed'
-            hoverStartTime={20}
-            hoverStayTime={120}
-            ariaRole='button'
-            ariaLabel={`查看${communityAuthorName(item)}发布的动态`}
-            onClick={() => openCommunityPost(item)}
-          >
-            {index === 0 ? (<>
-              <View className='news-card__topline'>
-                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <Text>{communityAuthorInitial(item)}</Text>
-                </View>
-                <View className='news-card__author'>
-                  <Text className='news-card__author-name'>{communityAuthorName(item)}</Text>
-                  <Text className='news-card__time'>
-                    {formatDateTime(item.published_at || item.created_at)}
-                  </Text>
-                </View>
-                <View className='news-card__tag'>
-                  <Text>{sectionNames[item.section_id] || '社区'}</Text>
-                </View>
-              </View>
-
-              <View className='news-card__body'>
-                <Text className='news-card__title'>
-                  {item.content?.trim() || '分享了一组校园图片'}
-                </Text>
-                {item.images[0] && (
-                  <Image
-                    className='news-card__cover'
-                    src={item.images[0].url}
-                    mode='aspectFill'
-                    lazyLoad
-                  />
-                )}
-              </View>
-
-              <View className='news-card__footer'>
-                <View className='news-card__metric'>
-                  <Image src={icons.heart} mode='aspectFit' />
-                  <Text>{item.like_count}</Text>
-                </View>
-                <View className='news-card__metric'>
-                  <Image src={icons.comment} mode='aspectFit' />
-                  <Text>{item.comment_count}</Text>
-                </View>
-                <View className='news-card__read'>
-                  <Text>去看看</Text>
-                  <Image src={icons.arrow} mode='aspectFit' />
-                </View>
-              </View>
-            </>) : (
-              <View className='news-card__compact-main'>
-                <View className={`news-card__avatar news-card__avatar--tone-${communityAuthorTone(item)}`}>
-                  <Text>{communityAuthorInitial(item)}</Text>
-                </View>
-                <View className='news-card__compact-copy'>
-                  <View className='news-card__compact-meta'>
-                    <Text>{communityAuthorName(item)} · {sectionNames[item.section_id] || '社区'}</Text>
-                    <Text>{formatDateTime(item.published_at || item.created_at)}</Text>
-                  </View>
-                  <Text className='news-card__compact-title'>
-                    {item.content?.trim() || '分享了一组校园图片'}
-                  </Text>
-                </View>
-                <Image className='news-card__compact-arrow' src={icons.arrow} mode='aspectFit' />
-              </View>
-            )}
-          </View>
-        ))}
+        <View className='moments-feed'>
+          {momentsLoading && <View className='home-section-state'>正在加载校园动态</View>}
+          {!momentsLoading && momentsError && (
+            <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
+              动态加载失败，点击重试
+            </View>
+          )}
+          {!momentsLoading && !momentsError && homeFeedItems.length === 0 && (
+            <View className='home-section-state'>暂时没有校园动态</View>
+          )}
+          {!momentsLoading && homeFeedItems.map((item, index) => {
+            const key = homeFeedKey(item)
+            const post = homeFeedItemToPost(item, homeReactions[key])
+            const variant = item.source_type === 'marketplace_listing'
+              ? 'marketplace'
+              : item.source_type === 'campus_circle_post' ? 'community' : item.source_type
+            return (
+              <CommunityPostCard
+                key={`${key}-${item.version}`}
+                post={post}
+                instanceKey={key}
+                variant={variant}
+                businessPreview={homeFeedBusinessPreview(item) || undefined}
+                motionDelay={index + 1}
+                sectionName={homeFeedSourceLabels[item.source_type]}
+                timeFormatter={formatHomeMomentsTime}
+                actionsOpen={openHomeActionKey === key}
+                onToggleActions={() => setOpenHomeActionKey((current) => current === key ? null : key)}
+                onCloseActions={() => setOpenHomeActionKey(null)}
+                onToggleLike={item.source_type === 'campus_circle_post'
+                  ? () => toggleHomeFeedLike(item)
+                  : undefined}
+                onOpen={() => openHomeFeedItem(item)}
+                onOpenComments={() => {
+                  setOpenHomeActionKey(null)
+                  setHomeCommentSubmitting(false)
+                  setHomeCommentReplyTarget(null)
+                  setHomeCommentItem(item)
+                }}
+                onReplyComment={(_, comment) => {
+                  setOpenHomeActionKey(null)
+                  setHomeCommentSubmitting(false)
+                  setHomeCommentReplyTarget(comment)
+                  setHomeCommentItem(item)
+                }}
+              />
+            )
+          })}
+          {!momentsLoading && !momentsError && homeFeedCanLoadMore && (
+            <View className='moments-feed__load-more' ariaRole='status'>
+              {homeFeedLoadingMore
+                ? '正在加载更多…'
+                : homeFeedLoadMoreError
+                  ? '加载失败，请继续上滑重试'
+                  : '继续上滑加载更多'}
+            </View>
+          )}
+          {!momentsLoading && !momentsError && homeFeedItems.length > 0 && !homeFeedCanLoadMore && (
+            <View className='moments-feed__load-more moments-feed__load-more--end' ariaRole='status'>
+              没有更多了
+            </View>
+          )}
         </View>
       </View>
-
-      <View className='market-panel'>
-        <View className='section-heading section-heading--market'>
-          <View>
-            <Text className='section-heading__eyebrow section-heading__eyebrow--market'>MARKET</Text>
-            <Text className='section-heading__title'>同学们在淘</Text>
-          </View>
+      <View
+        className={`home-back-top ${showHomeBackTop ? 'home-back-top--visible' : ''}`}
+        ariaRole='button'
+        ariaLabel='返回顶部'
+        onClick={scrollHomeToTop}
+      >
+        <Image src={icons.arrowUp} mode='aspectFit' />
+        <Text>顶部</Text>
+      </View>
+      {homeCommentItem ? (
+        <CommunityCommentSheet
+          key={`${homeCommentItem.source_type}-${homeCommentItem.source_id}`}
+          target={{
+            type: homeCommentItem.source_type === 'marketplace_listing'
+              ? 'marketplace'
+              : homeCommentItem.source_type === 'campus_circle_post'
+                ? 'campus_circle_post'
+                : homeCommentItem.source_type,
+            id: homeCommentItem.source_id,
+            enabled: true,
+            tone: homeCommentItem.source_type === 'marketplace_listing'
+              ? 'marketplace'
+              : homeCommentItem.source_type === 'campus_circle_post'
+                ? 'community'
+                : homeCommentItem.source_type,
+            dirtySection: homeCommentItem.source_type === 'marketplace_listing'
+              ? 'market'
+              : homeCommentItem.source_type === 'campus_circle_post'
+                ? 'community'
+                : homeCommentItem.source_type === 'errand' ? 'errands' : 'carpool',
+            placeholder: '友善交流，分享你的想法',
+          }}
+          initialReplyTarget={homeCommentReplyTarget ? {
+            id: homeCommentReplyTarget.id,
+            author_id: homeCommentReplyTarget.authorId,
+            author_deleted: homeCommentReplyTarget.authorDeleted,
+            author_nickname: homeCommentReplyTarget.authorNickname,
+            root_id: homeCommentReplyTarget.rootId,
+          } : null}
+          onClose={() => {
+            setHomeCommentItem(null)
+            setHomeCommentReplyTarget(null)
+            setHomeCommentSubmitting(false)
+          }}
+          onSubmittingChange={setHomeCommentSubmitting}
+          dismissSignal={commentDismissSignal}
+          onApprovedDelta={(delta) => updateHomeFeedCommentCount(homeCommentItem, delta)}
+          onCommentCreated={(comment) => updateHomeFeedComment(homeCommentItem, comment)}
+        />
+      ) : null}
+      {showNotificationGuide && (
+        <View className='home-notification-guide' onClick={dismissNotificationGuide}>
           <View
-            className='section-heading__more'
-            hoverClass='section-heading__more--pressed'
-            ariaRole='button'
-            ariaLabel='查看更多二手好物'
-            onClick={() => openModule('market')}
+            className='home-notification-guide__sheet'
+            ariaRole='dialog'
+            ariaLabel='开启消息提醒'
+            onClick={(event) => event.stopPropagation()}
           >
-            <Text>逛一逛</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
-          </View>
-        </View>
-
-        <ScrollView className='market-scroll' scrollX enhanced showScrollbar={false}>
-          <View className='market-list'>
-            {marketLoading && <View className='home-section-state home-section-state--market'>正在加载校内闲置</View>}
-            {!marketLoading && marketError && (
-              <View
-                className='home-section-state home-section-state--market home-section-state--error'
-                onClick={() => void loadHome()}
-              >
-                闲置加载失败，点击重试
+            <View className='home-notification-guide__handle' />
+            <View className='home-notification-guide__icon'>
+              <Image src={require('../../assets/icons/service-notification.svg')} mode='aspectFit' />
+            </View>
+            <Text className='home-notification-guide__title'>别错过校园新消息</Text>
+            <Text className='home-notification-guide__description'>开启提醒后，重要消息会第一时间通知你。</Text>
+            <View className='home-notification-guide__actions'>
+              <View className='home-notification-guide__secondary' ariaRole='button' onClick={dismissNotificationGuide}>
+                <Text>暂不提醒</Text>
               </View>
-            )}
-            {!marketLoading && !marketError && marketItems.length === 0 && (
-              <View className='home-section-state home-section-state--market'>暂时没有在售闲置</View>
-            )}
-            {!marketLoading && !marketError && FullMarketplaceCard && marketItems.map((item) => (
-              <FullMarketplaceCard key={item.id} item={item} variant='compact' />
-            ))}
-            <View
-              className='market-card market-card--more'
-              hoverClass='market-card--pressed'
-              ariaRole='button'
-              ariaLabel='查看更多二手好物'
-              onClick={() => openModule('market')}
-            >
-              <View className='market-card__more-icon'>
-                <Image src={icons.arrow} mode='aspectFit' />
+              <View className='home-notification-guide__primary' ariaRole='button' onClick={() => void enableNotificationGuide()}>
+                <Text>开启提醒</Text>
               </View>
-              <Text>查看更多好物</Text>
             </View>
           </View>
-        </ScrollView>
-      </View>
+        </View>
+      )}
       </>)}
 
     </View>

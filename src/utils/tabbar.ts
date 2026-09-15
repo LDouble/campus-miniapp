@@ -1,7 +1,15 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../features/app-edition'
+import type { LifeHubSection } from '../features/life-services/business-theme'
+import {
+  applyCampusThemeToCurrentPage,
+  getCampusTheme,
+} from '../features/theme-preference'
 
 export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
+
+const TAB_BAR_NOTICE_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
+const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v1'
 
 const fullTabIndexes: Record<TabBarPage, number> = {
   home: 0,
@@ -23,27 +31,98 @@ export const tabBarIndex = (page: TabBarPage) => (
 )
 
 interface CustomTabBarInstance {
-  setData: (data: { selected?: number; hidden?: boolean }) => void
+  setData: (data: {
+    selected?: number
+    hidden?: boolean
+    darkMode?: boolean
+    publishSection?: LifeHubSection
+    unreadCount?: number
+  }) => void
+}
+
+type TabBarPageInstance = {
+  getTabBar?: () => CustomTabBarInstance
 }
 
 const getCustomTabBar = () => {
-  const page = Taro.getCurrentInstance().page as
-    | { getTabBar?: () => CustomTabBarInstance }
-    | undefined
+  const instancePage = Taro.getCurrentInstance().page as TabBarPageInstance | undefined
+  if (instancePage?.getTabBar) return instancePage.getTabBar()
 
+  const pages = Taro.getCurrentPages() as TabBarPageInstance[]
+  const page = pages[pages.length - 1]
   return page?.getTabBar?.()
 }
+
+const normalizeUnreadCount = (value: unknown) => {
+  const count = Number(value)
+  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
+}
+
+const getStoredUnreadCount = () => {
+  try {
+    return normalizeUnreadCount(Taro.getStorageSync(TAB_BAR_NOTICE_UNREAD_COUNT_KEY))
+  } catch {
+    return 0
+  }
+}
+
+const getStoredPrivateUnreadCount = () => {
+  try {
+    return normalizeUnreadCount(Taro.getStorageSync(TAB_BAR_PRIVATE_UNREAD_COUNT_KEY))
+  } catch {
+    return 0
+  }
+}
+
+const getStoredTotalUnreadCount = () => (
+  getStoredUnreadCount() + getStoredPrivateUnreadCount()
+)
 
 /**
  * 微信运行时会为每个 Tab 页创建一个自定义 TabBar 实例。
  * 页面显示时只同步当前页面所属的原生组件实例。
  */
 export function syncCustomTabBar(page: TabBarPage) {
+  applyCampusThemeToCurrentPage()
   const selected = tabBarIndex(page)
   if (selected < 0) return
-  getCustomTabBar()?.setData({ selected, hidden: false })
+  getCustomTabBar()?.setData({
+    selected,
+    hidden: false,
+    darkMode: getCampusTheme() === 'dark',
+    unreadCount: getStoredTotalUnreadCount(),
+  })
+}
+
+export function setCustomTabBarUnreadCount(count: number) {
+  const unreadCount = normalizeUnreadCount(count)
+  try {
+    Taro.setStorageSync(TAB_BAR_NOTICE_UNREAD_COUNT_KEY, unreadCount)
+  } catch {
+    // TabBar 仍会同步当前实例；存储失败不阻断页面消息状态。
+  }
+  const sync = () => getCustomTabBar()?.setData({ unreadCount: getStoredTotalUnreadCount() })
+  sync()
+  Taro.nextTick(sync)
 }
 
 export function setCustomTabBarHidden(hidden: boolean) {
   getCustomTabBar()?.setData({ hidden })
+}
+
+export function setCustomTabBarPublishSection(publishSection: LifeHubSection) {
+  getCustomTabBar()?.setData({ publishSection })
+}
+
+export function syncPrivateMessageUnreadBadge(count: number) {
+  if (isQualificationEdition) return
+  const normalized = Math.max(0, Number(count) || 0)
+  try {
+    Taro.setStorageSync(TAB_BAR_PRIVATE_UNREAD_COUNT_KEY, normalized)
+  } catch {
+    // 私信角标同步失败时保留当前页面实例状态，不阻断消息页。
+  }
+  const sync = () => getCustomTabBar()?.setData({ unreadCount: getStoredTotalUnreadCount() })
+  sync()
+  Taro.nextTick(sync)
 }

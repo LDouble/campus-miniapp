@@ -1,6 +1,20 @@
-import { requestWechatSubscriptionForModule } from '../features/wechat-subscription'
+import {
+  requestWechatSubscriptionForModule,
+  requestWechatSubscriptionForPublishSection
+} from '../features/wechat-subscription'
+import { getCampusTheme, subscribeCampusTheme } from '../features/theme-preference'
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
+const unreadCountStorageKey = 'campus.messages.unread-count.v1'
+const privateUnreadCountStorageKey = 'campus.private-messages.unread-count.v1'
+
+const getStoredUnreadCount = () => {
+  const noticeCount = Number(wx.getStorageSync(unreadCountStorageKey))
+  const privateCount = Number(wx.getStorageSync(privateUnreadCountStorageKey))
+  const normalizedNoticeCount = Number.isFinite(noticeCount) ? Math.max(0, Math.floor(noticeCount)) : 0
+  const normalizedPrivateCount = Number.isFinite(privateCount) ? Math.max(0, Math.floor(privateCount)) : 0
+  return normalizedNoticeCount + normalizedPrivateCount
+}
 
 const fullTabs = [
   {
@@ -33,13 +47,22 @@ Component({
   data: {
     selected: 0,
     hidden: false,
+    darkMode: getCampusTheme() === 'dark',
+    unreadCount: getStoredUnreadCount(),
+    publishSection: 'community',
     qualification,
     list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
   },
 
   lifetimes: {
     attached() {
+      this.unsubscribeCampusTheme = subscribeCampusTheme((theme) => {
+        this.setData({ darkMode: theme === 'dark' })
+      })
       this.syncSelected()
+    },
+    detached() {
+      if (this.unsubscribeCampusTheme) this.unsubscribeCampusTheme()
     }
   },
 
@@ -59,9 +82,21 @@ Component({
         ? pages[pages.length - 1].route.replace(/^\//, '')
         : ''
       const selected = this.data.list.findIndex(item => item.pagePath === route)
+      const darkMode = getCampusTheme() === 'dark'
+      const nextData = {}
 
       if (selected >= 0 && selected !== this.data.selected) {
-        this.setData({ selected })
+        nextData.selected = selected
+      }
+      if (darkMode !== this.data.darkMode) {
+        nextData.darkMode = darkMode
+      }
+      const unreadCount = getStoredUnreadCount()
+      if (unreadCount !== this.data.unreadCount) {
+        nextData.unreadCount = unreadCount
+      }
+      if (Object.keys(nextData).length > 0) {
+        this.setData(nextData)
       }
     },
 
@@ -69,7 +104,14 @@ Component({
       const index = Number(event.currentTarget.dataset.index)
       const item = this.data.list[index]
 
-      if (!item || index === this.data.selected) return
+      if (!item) return
+
+      if (index === this.data.selected) {
+        if (item.pagePath === 'pages/community/index') {
+          wx.pageScrollTo({ scrollTop: 0, duration: 240 })
+        }
+        return
+      }
 
       if (item.pagePath === 'pages/community/index') {
         requestWechatSubscriptionForModule('community')
@@ -81,8 +123,13 @@ Component({
 
     publish() {
       if (qualification) return
-      requestWechatSubscriptionForModule('community')
-      wx.navigateTo({ url: '/pages/publish/index' })
+      const publishSection = ['community', 'errands', 'market', 'carpool'].includes(
+        this.data.publishSection
+      )
+        ? this.data.publishSection
+        : 'community'
+      requestWechatSubscriptionForPublishSection(publishSection)
+      wx.navigateTo({ url: `/pages/publish/index?section=${publishSection}` })
     }
   }
 })

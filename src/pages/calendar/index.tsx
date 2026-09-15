@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import { ScrollView, Text, View } from '@tarojs/components'
 import type {
@@ -21,6 +21,7 @@ import {
   resolveAcademicCalendarState,
   resolveAcademicCalendarTerm,
 } from '../../features/calendar/utils'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 type EventFilter = 'all' | 'exam' | 'holiday' | 'makeup'
@@ -71,11 +72,12 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(!result.calendar)
   const [filter, setFilter] = useState<EventFilter>('all')
   const [selectedTermID, setSelectedTermID] = useState('')
+  const forceLevelRefresh = useRef<AcademicEducationLevel | null>(null)
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options: { force?: boolean } = {}) => {
     setLoading(true)
     try {
-      setResult(await loadAcademicCalendar(level))
+      setResult(await loadAcademicCalendar(level, options))
     } finally {
       setLoading(false)
     }
@@ -84,11 +86,13 @@ export default function CalendarPage() {
   useEffect(() => {
     setResult(getCachedAcademicCalendar(level))
     setSelectedTermID('')
-    void refresh()
+    const force = forceLevelRefresh.current === level
+    if (force) forceLevelRefresh.current = null
+    void refresh({ force })
   }, [level, refresh])
 
   usePullDownRefresh(async () => {
-    await refresh()
+    await refresh({ force: true })
     Taro.stopPullDownRefresh()
   })
 
@@ -104,6 +108,10 @@ export default function CalendarPage() {
     () => resolveAcademicCalendarTerm(result.calendar, selectedTermID),
     [result.calendar, selectedTermID],
   )
+  useCampusShare(() => ({
+    title: `${level === 'graduate' ? '研究生' : '本科生'}校历｜OUSea`,
+    path: '/pages/calendar/index',
+  }))
   const state = useMemo(() => (
     activeTerm && result.calendar
       ? resolveAcademicCalendarState({
@@ -131,6 +139,7 @@ export default function CalendarPage() {
     saveCalendarEducationLevel(next)
     setFilter('all')
     setSelectedTermID('')
+    forceLevelRefresh.current = next
     setLevel(next)
   }
 
@@ -151,6 +160,8 @@ export default function CalendarPage() {
             <View
               key={value}
               className={level === value ? 'calendar-level-switch__active' : ''}
+              role='button'
+              ariaLabel={`切换至${label}校历`}
               onClick={() => chooseLevel(value)}
             >
               {label}
@@ -171,6 +182,8 @@ export default function CalendarPage() {
                 className={activeTerm?.id === term.id
                   ? 'calendar-term-switch__active'
                   : ''}
+                role='button'
+                ariaLabel={`查看${term.label}`}
                 onClick={() => chooseTerm(term.id)}
               >
                 <Text>{term.short_label}</Text>
@@ -307,6 +320,8 @@ export default function CalendarPage() {
             <View
               key={value}
               className={filter === value ? 'calendar-filters__active' : ''}
+              role='button'
+              ariaLabel={`筛选${label}安排`}
               onClick={() => setFilter(value)}
             >
               {label}

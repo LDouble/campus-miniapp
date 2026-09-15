@@ -1,8 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Picker, ScrollView, Text, View } from '@tarojs/components'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Image, Picker, ScrollView, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
+import {
+  getRecentRouteValues,
+  rememberRoutePair,
+  ROUTE_SHORTCUTS,
+  type RouteHistoryKind,
+} from '../route-history'
 import FilterSheet from './filter-sheet'
 import './filters.scss'
+
+const icons = {
+  chevron: require('../../../assets/community/topbar-chevron.svg'),
+  filter: require('../../../assets/community/topbar-filter.svg'),
+}
 
 export type CarpoolFilterValue = {
   origin?: string
@@ -13,6 +24,7 @@ export type CarpoolFilterValue = {
 
 type Props = {
   value: CarpoolFilterValue
+  campusControl: ReactNode
   onChange: (value: CarpoolFilterValue) => void
 }
 
@@ -25,21 +37,82 @@ const localDate = (offset = 0) => {
   return `${year}-${month}-${day}`
 }
 
-const activeFilterCount = (value: CarpoolFilterValue) => (
+const advancedFilterCount = (value: CarpoolFilterValue) => (
   [
     value.origin,
     value.destination,
-    value.departureDate,
     value.seatsNeeded,
   ].filter((item) => item !== undefined && item !== '').length
 )
 
-export default function CarpoolFilters({ value, onChange }: Props) {
+const RouteFilterSuggestions = ({
+  kind,
+  value,
+  onSelect,
+}: {
+  kind: RouteHistoryKind
+  value?: string
+  onSelect: (value: string) => void
+}) => {
+  const recent = getRecentRouteValues(kind).filter(
+    (item) => !ROUTE_SHORTCUTS.some((shortcut) => shortcut === item),
+  )
+  const options = [...ROUTE_SHORTCUTS, ...recent]
+
+  return (
+    <View className='route-filter-suggestions'>
+      <Text>{kind === 'origin' ? '起点常用' : '终点常用'}</Text>
+      <ScrollView
+        className='route-filter-suggestions__scroll'
+        scrollX
+        enhanced
+        showScrollbar={false}
+      >
+        <View className='route-filter-suggestions__row'>
+          {options.map((item) => (
+            <View
+              key={item}
+              className={value === item
+                ? 'route-filter-suggestion route-filter-suggestion--active'
+                : 'route-filter-suggestion'}
+              ariaRole='button'
+              ariaLabel={`将${kind === 'origin' ? '起点' : '终点'}设为${item}`}
+              onClick={() => onSelect(item)}
+            >
+              {item}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  )
+}
+
+export default function CarpoolFilters({ value, campusControl, onChange }: Props) {
   const [sheetVisible, setSheetVisible] = useState(false)
   const [draft, setDraft] = useState<CarpoolFilterValue>(value)
   const today = useMemo(() => localDate(0), [])
   const tomorrow = useMemo(() => localDate(1), [])
-  const count = activeFilterCount(value)
+  const customDateActive = Boolean(
+    value.departureDate
+    && value.departureDate !== today
+    && value.departureDate !== tomorrow,
+  )
+  const count = advancedFilterCount(value) + (customDateActive ? 1 : 0)
+  const dateLabel = !value.departureDate
+    ? '全部日期'
+    : value.departureDate === today
+      ? '今天'
+      : value.departureDate === tomorrow
+        ? '明天'
+        : value.departureDate.slice(5).replace('-', '.')
+  const routeLabel = value.origin && value.destination
+    ? `${value.origin} - ${value.destination}`
+    : value.origin
+      ? `从 ${value.origin}`
+      : value.destination
+        ? `到 ${value.destination}`
+        : '全部路线'
 
   useEffect(() => {
     if (sheetVisible) {
@@ -58,89 +131,60 @@ export default function CarpoolFilters({ value, onChange }: Props) {
     value.seatsNeeded,
   ])
 
-  const summaries = [
-    value.origin ? { key: 'origin', label: `从 ${value.origin}` } : null,
-    value.destination ? { key: 'destination', label: `到 ${value.destination}` } : null,
-    value.departureDate ? { key: 'departureDate', label: value.departureDate } : null,
-    value.seatsNeeded ? { key: 'seatsNeeded', label: `${value.seatsNeeded} 人同行` } : null,
-  ].filter(Boolean) as Array<{ key: keyof CarpoolFilterValue; label: string }>
-
   return (
     <>
-      <ScrollView className='filter-quick-scroll' scrollX enhanced showScrollbar={false}>
-        <View className='filter-quick-row'>
-          <View
-            className={`filter-chip ${
-              !value.departureDate ? 'filter-chip--carpool-active' : ''
-            }`}
-            hoverClass='filter-chip--pressed'
-            onClick={() => onChange({ ...value, departureDate: undefined })}
-          >
-            不限日期
-          </View>
-          <View
-            className={`filter-chip ${
-              value.departureDate === today ? 'filter-chip--carpool-active' : ''
-            }`}
-            hoverClass='filter-chip--pressed'
-            onClick={() => onChange({ ...value, departureDate: today })}
-          >
-            今天
-          </View>
-          <View
-            className={`filter-chip ${
-              value.departureDate === tomorrow ? 'filter-chip--carpool-active' : ''
-            }`}
-            hoverClass='filter-chip--pressed'
-            onClick={() => onChange({ ...value, departureDate: tomorrow })}
-          >
-            明天
-          </View>
-          <View
-            className={`filter-chip filter-chip--more ${
-              count > 0 ? 'filter-chip--carpool-active' : ''
-            }`}
-            hoverClass='filter-chip--pressed'
-            onClick={() => setSheetVisible(true)}
-          >
-            筛选{count > 0 ? ` ${count}` : ''}
-          </View>
+      <View className='carpool-filter-toolbar life-service-filter-toolbar'>
+        <View
+          className='life-service-filter-chip'
+          ariaRole='button'
+          ariaLabel={`日期筛选，当前${dateLabel}`}
+          onClick={() => setSheetVisible(true)}
+        >
+          <Text>{dateLabel}</Text>
+          <Image className='life-service-filter-chip__chevron' src={icons.chevron} mode='aspectFit' />
         </View>
-      </ScrollView>
+        <View
+          className='life-service-filter-chip life-service-filter-chip--route'
+          ariaRole='button'
+          ariaLabel={`路线筛选，当前${routeLabel}`}
+          onClick={() => setSheetVisible(true)}
+        >
+          <Text>{routeLabel}</Text>
+          <Image className='life-service-filter-chip__chevron' src={icons.chevron} mode='aspectFit' />
+        </View>
 
-      {summaries.length > 0 && (
-        <ScrollView className='filter-applied-scroll' scrollX enhanced showScrollbar={false}>
-          <View className='filter-applied filter-applied--carpool'>
-            <Text>已筛选</Text>
-            {summaries.map((item) => (
-              <View key={item.key}>
-                <Text>{item.label}</Text>
-                <Text
-                  onClick={() => onChange({ ...value, [item.key]: undefined })}
-                >
-                  移除
-                </Text>
-              </View>
-            ))}
-            <Text className='filter-applied__clear' onClick={() => onChange({})}>
-              清除全部
-            </Text>
+        {campusControl}
+
+        <View className='life-service-filter-toolbar__divider' />
+        <View
+          className={count > 0
+            ? 'life-service-filter-more life-service-filter-more--active'
+            : 'life-service-filter-more'}
+          ariaRole='button'
+          ariaLabel={`更多筛选${count > 0 ? `，已选择 ${count} 项` : ''}`}
+          onClick={() => setSheetVisible(true)}
+        >
+          <Image src={icons.filter} mode='aspectFit' />
+          {count > 0 && <Text>{count}</Text>}
           </View>
-        </ScrollView>
-      )}
+      </View>
 
       <FilterSheet
         visible={sheetVisible}
-        title='筛选拼车'
+        title='筛选同行计划'
+        expanded
         onClose={() => setSheetVisible(false)}
         onReset={() => {
           onChange({})
           setSheetVisible(false)
         }}
         onApply={() => {
+          const origin = draft.origin?.trim() || ''
+          const destination = draft.destination?.trim() || ''
+          rememberRoutePair(origin, destination)
           onChange({
-            origin: draft.origin?.trim() || undefined,
-            destination: draft.destination?.trim() || undefined,
+            origin: origin || undefined,
+            destination: destination || undefined,
             departureDate: draft.departureDate,
             seatsNeeded: draft.seatsNeeded,
           })
@@ -163,7 +207,11 @@ export default function CarpoolFilters({ value, onChange }: Props) {
                 }))}
               />
             </View>
-            <View className='route-filter-rail' />
+            <RouteFilterSuggestions
+              kind='origin'
+              value={draft.origin}
+              onSelect={(origin) => setDraft((current) => ({ ...current, origin }))}
+            />
             <View className='route-filter-field route-filter-field--destination'>
               <Text>终</Text>
               <KeyboardSafeInput
@@ -176,6 +224,11 @@ export default function CarpoolFilters({ value, onChange }: Props) {
                 }))}
               />
             </View>
+            <RouteFilterSuggestions
+              kind='destination'
+              value={draft.destination}
+              onSelect={(destination) => setDraft((current) => ({ ...current, destination }))}
+            />
           </View>
         </View>
 
@@ -209,7 +262,7 @@ export default function CarpoolFilters({ value, onChange }: Props) {
         </View>
 
         <View className='filter-section'>
-          <Text className='filter-section__title'>需要座位</Text>
+          <Text className='filter-section__title'>同行人数</Text>
           <View className='seat-filter-options'>
             {[
               { label: '不限', value: undefined },
@@ -224,6 +277,8 @@ export default function CarpoolFilters({ value, onChange }: Props) {
                     ? 'seat-filter-option seat-filter-option--active'
                     : 'seat-filter-option'
                 }
+                ariaRole='button'
+                ariaLabel={`${draft.seatsNeeded === option.value ? '已选择，' : ''}${option.label}`}
                 onClick={() => setDraft((current) => ({
                   ...current,
                   seatsNeeded: option.value,

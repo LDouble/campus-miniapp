@@ -1,0 +1,91 @@
+.academic-load-state {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  padding: 28rpx;
+  margin: 20rpx 0;
+  align-items: stretch;
+  flex-direction: column;
+  color: var(--campus-text-body, #3a4759);
+  text-align: left;
+  background: var(--campus-surface, #fff);
+  border: 1rpx solid var(--campus-border, #e8edf4);
+  border-radius: var(--ousea-radius-card, 32rpx);
+  box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(29, 95, 214, .08));
+
+  &__heading {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 16rpx;
+  }
+
+  &__mark {
+    display: flex;
+    width: 72rpx;
+    height: 72rpx;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    color: var(--campus-primary-strong, #1d5fd6);
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-bold, 700);
+    line-height: var(--ousea-line-height-ui, 1.4);
+    background: var(--campus-surface-primary, #f2f7fe);
+    border: 1rpx solid var(--campus-border-strong, #e3effe);
+    border-radius: 50%;
+  }
+
+  &__heading-copy {
+    min-width: 0;
+    flex: 1;
+    padding-top: 2rpx;
+  }
+
+  &__title {
+    display: block;
+    color: var(--campus-text-heading, #1a2333);
+    font-size: var(--ousea-font-size-title, 33rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__copy {
+    display: block;
+    margin-top: 8rpx;
+    color: var(--campus-text-secondary, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: var(--ousea-line-height-comment, 1.65);
+  }
+
+  &__action {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 88rpx;
+    padding: 0 24rpx;
+    margin-top: 24rpx;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+    background: var(--campus-primary, #2b7aef);
+    border: 0;
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+    box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(29, 95, 214, .08));
+    transition: opacity 160ms ease;
+
+    &:active { opacity: .82; }
+
+    &--disabled {
+      opacity: .58;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .academic-load-state__action { transition: none; }
+}

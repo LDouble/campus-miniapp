@@ -1,0 +1,120 @@
+.detail-author-header {
+  display: flex;
+  min-width: 0;
+  min-height: 112rpx;
+  padding: var(--ousea-space-1, 16rpx) 0;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ousea-space-1, 16rpx);
+}
+
+.detail-author-header__identity {
+  display: flex;
+  min-width: 0;
+  min-height: 88rpx;
+  flex: 1;
+  align-items: center;
+}
+
+.detail-author-header__identity--disabled { pointer-events: none; }
+
+.detail-author-header__avatar {
+  width: 80rpx;
+  height: 80rpx;
+  flex: none;
+  border: 0;
+  background: var(--ousea-ocean-50, #f2f7fe);
+  color: var(--ousea-ocean-600, #1d5fd6);
+  font-size: var(--ousea-font-size-label, 27rpx);
+  font-weight: var(--ousea-font-weight-medium, 500);
+  box-shadow: none;
+}
+
+.detail-author-header__avatar-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ousea-ocean-50, #f2f7fe);
+}
+
+.detail-author-header__copy {
+  display: flex;
+  min-width: 0;
+  margin-left: var(--ousea-space-1, 16rpx);
+  flex: 1;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.detail-author-header__name-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.detail-author-header__name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ousea-ocean-600, #1d5fd6);
+  font-size: var(--ousea-font-size-comment, 30rpx);
+  font-weight: var(--ousea-font-weight-medium, 500);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-author-header__name-row .community-level-badge {
+  min-height: 32rpx;
+  margin-left: 12rpx;
+  flex: none;
+}
+
+.detail-author-header__meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10rpx;
+  overflow: hidden;
+  color: var(--campus-text-muted, #a6b2c2);
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-weight: var(--ousea-font-weight-regular, 400);
+  line-height: var(--ousea-line-height-ui, 1.4);
+  white-space: nowrap;
+}
+
+.detail-author-header__meta > text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-author-header__meta > text + text {
+  padding-left: 10rpx;
+  border-left: 1rpx solid var(--ousea-bg-line, #e8edf4);
+  color: var(--campus-text-secondary, #6b7a90);
+}
+
+.detail-author-header__action {
+  display: flex;
+  min-width: 0;
+  flex: none;
+  align-items: center;
+  gap: var(--ousea-space-1, 16rpx);
+}
+
+.campus-theme--dark {
+  .detail-author-header__avatar,
+  .detail-author-header__avatar-image {
+    background: var(--campus-surface-primary, #172554);
+  }
+
+  .detail-author-header__name { color: var(--campus-primary, #60a5fa); }
+  .detail-author-header__meta { color: var(--campus-text-muted, #8494aa); }
+  .detail-author-header__meta > text + text {
+    border-color: var(--campus-border, #243244);
+    color: var(--campus-text-secondary, #aab8ca);
+  }
+}

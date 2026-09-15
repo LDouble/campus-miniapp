@@ -7,16 +7,67 @@ import {
 
 export const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
+/** 将 JavaScript 的星期值转换为教务课表使用的周一至周日 1-7。 */
+export const getAcademicWeekday = (date = new Date()) => {
+  const day = date.getDay()
+  return day === 0 ? 7 : day
+}
+
 export const courseColors = [
   'aqua', 'blue', 'mint', 'lilac', 'sand', 'sky',
   'rose', 'peach', 'lemon', 'sage', 'indigo', 'coral',
 ]
+
+export const courseColorForClass = (classNum: string | number) => {
+  const normalized = String(classNum).trim()
+  const hash = [...normalized].reduce((value, character) => (
+    ((value * 31) + character.charCodeAt(0)) >>> 0
+  ), 0)
+  return courseColors[hash % courseColors.length]
+}
 
 export const pad = (value: number) => String(value).padStart(2, '0')
 
 export const parseDate = (value: string) => new Date(value.replace(/-/g, '/'))
 
 export const formatMonthDay = (date: Date) => `${pad(date.getMonth() + 1)}.${pad(date.getDate())}`
+
+export const formatCourseWeeks = (weeks: readonly number[]) => {
+  const normalizedWeeks = [...new Set(weeks.filter((week) => (
+    Number.isInteger(week) && week > 0
+  )))].sort((left, right) => left - right)
+  if (!normalizedWeeks.length) return '未设置'
+
+  const ranges: string[] = []
+  let index = 0
+  while (index < normalizedWeeks.length) {
+    const start = normalizedWeeks[index]
+    const next = normalizedWeeks[index + 1]
+    const step = next - start === 1 ? 1 : next - start === 2 ? 2 : 0
+    let end = start
+
+    if (step) {
+      while (
+        index + 1 < normalizedWeeks.length
+        && normalizedWeeks[index + 1] - normalizedWeeks[index] === step
+      ) {
+        index += 1
+        end = normalizedWeeks[index]
+      }
+    }
+
+    if (end === start) {
+      ranges.push(`${start} 周`)
+    } else if (step === 1) {
+      ranges.push(`${start}-${end} 周`)
+    } else {
+      ranges.push(`${start}-${end} 周（${start % 2 === 1 ? '单' : '双'}）`)
+    }
+    index += 1
+  }
+
+  return `第 ${ranges.join('、')}`
+}
 
 export const formatDateLabel = (date: Date) => `${date.getMonth() + 1}月${date.getDate()}日`
 
@@ -29,9 +80,41 @@ export const formatExamTime = (startAt: string, endAt: string) => (
   `${startAt.slice(-5)} - ${endAt.slice(-5)}`
 )
 
+export const formatCourseTimeRange = (startTime: string, endTime: string) => {
+  const start = startTime.trim()
+  const end = endTime.trim()
+  return start && end ? `${start} -> ${end}` : ''
+}
+
 export const getPeriodLabel = (periods: AcademicPeriod[], id: string) => (
-  periods.find((period) => period.id === id)?.shortLabel || '选择学期'
+  periods.find((period) => period.id === id)?.label || '选择学期'
 )
+
+const periodStartTime = (period: AcademicPeriod) => {
+  const timestamp = parseDate(period.startDate).getTime()
+  return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY
+}
+
+/** 默认优先服务端标记的当前学期，校历没有当前标记时回退到最近开始的学期。 */
+export const resolveDefaultPeriodId = (periods: AcademicPeriod[]) => {
+  const current = periods.find((period) => period.isCurrent)
+  if (current) return current.id
+  return [...periods].sort((left, right) => (
+    periodStartTime(right) - periodStartTime(left)
+  ))[0]?.id || ''
+}
+
+/** 模拟选课默认选择当前学期的下一学期，无法前进时保留现有默认学期。 */
+export const resolveNextPeriodId = (periods: AcademicPeriod[]) => {
+  const currentId = resolveDefaultPeriodId(periods)
+  if (!currentId) return ''
+
+  const orderedPeriods = [...periods].sort((left, right) => (
+    periodStartTime(right) - periodStartTime(left)
+  ))
+  const currentIndex = orderedPeriods.findIndex((period) => period.id === currentId)
+  return orderedPeriods[currentIndex - 1]?.id || currentId
+}
 
 export const resolvePeriodId = (periods: AcademicPeriod[], preferredId: string) => {
   if (periods.some((period) => period.id === preferredId)) return preferredId
@@ -83,8 +166,8 @@ export const deriveGradePeriods = (grades: GradeRecord[]): GradePeriod[] => {
 }
 
 export const getGradePeriodLabel = (periods: GradePeriod[], id: string) => (
-  periods.find((period) => period.id === id)?.shortLabel
-  || formatGradePeriod(id).shortLabel
+  periods.find((period) => period.id === id)?.label
+  || formatGradePeriod(id).label
 )
 
 export const getWeekDates = (period: AcademicPeriod | undefined, week: number) => {
@@ -96,6 +179,51 @@ export const getWeekDates = (period: AcademicPeriod | undefined, week: number) =
     date.setDate(start.getDate() + index)
     return date
   })
+}
+
+export const resolveHorizontalSwipeWeek = (
+  currentWeek: number,
+  totalWeeks: number,
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) => {
+  const deltaX = end.x - start.x
+  const deltaY = end.y - start.y
+  const boundedTotalWeeks = Math.max(1, totalWeeks)
+
+  if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+    return currentWeek
+  }
+
+  const nextWeek = currentWeek + (deltaX < 0 ? 1 : -1)
+  return Math.max(1, Math.min(boundedTotalWeeks, nextWeek))
+}
+
+export const resolveHorizontalSwipeDay = (
+  currentWeek: number,
+  currentWeekday: number,
+  totalWeeks: number,
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) => {
+  const deltaX = end.x - start.x
+  const deltaY = end.y - start.y
+  const boundedTotalWeeks = Math.max(1, totalWeeks)
+  const boundedWeek = Math.max(1, Math.min(boundedTotalWeeks, currentWeek))
+  const boundedWeekday = Math.max(1, Math.min(7, currentWeekday))
+
+  if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+    return { week: boundedWeek, weekday: boundedWeekday }
+  }
+
+  const currentDay = (boundedWeek - 1) * 7 + boundedWeekday - 1
+  const targetDay = currentDay + (deltaX < 0 ? 1 : -1)
+  const lastDay = boundedTotalWeeks * 7 - 1
+  const nextDay = Math.max(0, Math.min(lastDay, targetDay))
+  return {
+    week: Math.floor(nextDay / 7) + 1,
+    weekday: nextDay % 7 + 1,
+  }
 }
 
 const localDateOrdinal = (date: Date) => Date.UTC(
@@ -222,8 +350,19 @@ export const isSameDay = (left: Date, right: Date) => (
   && left.getDate() === right.getDate()
 )
 
-export const getExamStatus = (exam: ExamRecord) => {
-  const now = Date.now()
+const EXAM_HOUR_MS = 60 * 60 * 1000
+
+/** 按小时向上取整，跨天时同时展示完整天数和剩余小时。 */
+export const formatExamCountdown = (diffMs: number) => {
+  const hours = Math.max(1, Math.ceil(diffMs / EXAM_HOUR_MS))
+  if (hours < 24) return `${hours} 小时后`
+
+  const days = Math.floor(hours / 24)
+  const remainingHours = hours % 24
+  return remainingHours ? `${days} 天 ${remainingHours} 小时后` : `${days} 天后`
+}
+
+export const getExamStatus = (exam: ExamRecord, now = Date.now()) => {
   const start = parseDate(exam.startAt).getTime()
   const end = parseDate(exam.endAt).getTime()
   if (now < start) return 'upcoming'
@@ -231,10 +370,9 @@ export const getExamStatus = (exam: ExamRecord) => {
   return 'finished'
 }
 
-export const getExamStatusLabel = (exam: ExamRecord) => {
-  const status = getExamStatus(exam)
+export const getExamStatusLabel = (exam: ExamRecord, now = Date.now()) => {
+  const status = getExamStatus(exam, now)
   if (status === 'ongoing') return '进行中'
   if (status === 'finished') return '已结束'
-  const days = Math.max(1, Math.ceil((parseDate(exam.startAt).getTime() - Date.now()) / 86400000))
-  return `${days} 天后`
+  return formatExamCountdown(parseDate(exam.startAt).getTime() - now)
 }

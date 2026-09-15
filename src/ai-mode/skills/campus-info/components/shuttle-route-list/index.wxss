@@ -164,44 +164,42 @@
   text-overflow: ellipsis;
 }
 
-@media (prefers-color-scheme: dark) {
-  .shuttle-card {
+.shuttle-card.shuttle-card--dark {
     color: rgba(255, 255, 255, 0.9);
     background-color: #242424;
     border-color: #3d4548;
-  }
+}
 
-  .shuttle-card__title,
-  .shuttle-card__route,
-  .shuttle-card__status,
-  .shuttle-card__next,
-  .shuttle-card__times,
-  .shuttle-card__empty-title {
+.shuttle-card--dark .shuttle-card__title,
+.shuttle-card--dark .shuttle-card__route,
+.shuttle-card--dark .shuttle-card__status,
+.shuttle-card--dark .shuttle-card__next,
+.shuttle-card--dark .shuttle-card__times,
+.shuttle-card--dark .shuttle-card__empty-title {
     color: rgba(255, 255, 255, 0.9);
-  }
+}
 
-  .shuttle-card__count,
-  .shuttle-card__direction,
-  .shuttle-card__empty-description {
+.shuttle-card--dark .shuttle-card__count,
+.shuttle-card--dark .shuttle-card__direction,
+.shuttle-card--dark .shuttle-card__empty-description {
     color: rgba(255, 255, 255, 0.45);
-  }
+}
 
-  .shuttle-card__date,
-  .shuttle-card__note,
-  .shuttle-card__more,
-  .shuttle-card__muted {
+.shuttle-card--dark .shuttle-card__date,
+.shuttle-card--dark .shuttle-card__note,
+.shuttle-card--dark .shuttle-card__more,
+.shuttle-card--dark .shuttle-card__muted {
     color: rgba(255, 255, 255, 0.3);
-  }
+}
 
-  .shuttle-card__type {
+.shuttle-card--dark .shuttle-card__type {
     color: #9ccfd2;
-  }
+}
 
-  .shuttle-card__handoff {
+.shuttle-card--dark .shuttle-card__handoff {
     color: #9ccfd2;
-  }
+}
 
-  .shuttle-card__item {
+.shuttle-card--dark .shuttle-card__item {
     border-bottom-color: #3d4548;
-  }
 }

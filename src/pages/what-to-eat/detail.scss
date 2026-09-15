@@ -1,0 +1,691 @@
+.food-detail-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: calc(112rpx + env(safe-area-inset-bottom));
+  color: var(--campus-text-body, var(--ousea-ink-700));
+  background: var(--campus-page, var(--ousea-bg-page));
+}
+
+.food-detail-cover {
+  position: relative;
+  width: 100%;
+  height: 360rpx;
+  overflow: hidden;
+  background: var(--campus-surface-subtle, #f7f7f7);
+}
+
+.food-detail-cover__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.food-detail-cover__image {
+  background: #ececec;
+}
+
+.food-detail-cover__shade {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 42%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .5) 100%);
+}
+
+.food-detail-cover__tags,
+.food-detail-cover__count {
+  position: absolute;
+  bottom: 24rpx;
+  z-index: 1;
+}
+
+.food-detail-cover__tags {
+  left: 32rpx;
+  display: flex;
+  max-width: 64%;
+  gap: 12rpx;
+  overflow: hidden;
+}
+
+.food-detail-cover__tag {
+  max-width: 180rpx;
+  padding: 6rpx 14rpx;
+  overflow: hidden;
+  color: #fff;
+  background: rgba(28, 27, 27, .64);
+  border: 2rpx solid rgba(255, 255, 255, .28);
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.food-detail-cover__tag--promoted {
+  background: var(--campus-primary, var(--ousea-ocean-500));
+  border-color: var(--campus-primary, var(--ousea-ocean-500));
+}
+
+.food-detail-cover__count {
+  right: 32rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 14rpx;
+  color: #fff;
+  background: rgba(28, 27, 27, .64);
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  line-height: 1.35;
+}
+
+.food-detail-cover__count image {
+  width: 26rpx;
+  height: 26rpx;
+  filter: brightness(0) invert(1);
+}
+
+.food-detail-content {
+  padding: 0 32rpx calc(152rpx + env(safe-area-inset-bottom));
+}
+
+.food-detail-content--without-cover {
+  padding-top: 24rpx;
+}
+
+.food-detail-info,
+.food-detail-card,
+.food-detail-review-section {
+  border: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+  background: var(--campus-surface, #fff);
+}
+
+.food-detail-info {
+  position: relative;
+  z-index: 2;
+  margin: -24rpx 0 20rpx;
+  padding: 32rpx;
+  border-radius: 32rpx;
+}
+
+.food-detail-content--without-cover .food-detail-info {
+  margin-top: 0;
+}
+
+.food-detail-info__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.food-detail-info__name {
+  display: block;
+  color: var(--campus-text-heading, #1c1b1b);
+  min-width: 0;
+  font-size: 38rpx;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.food-detail-info__rating-row {
+  display: flex;
+  min-height: 56rpx;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 16rpx;
+  padding: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.food-detail-info__rating {
+  color: var(--campus-primary, var(--ousea-ocean-500));
+  font-size: 38rpx;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.food-detail-info__rating-count {
+  color: var(--campus-text-muted, #999);
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.food-detail-info__category {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40rpx;
+  box-sizing: border-box;
+  flex: none;
+  padding: 5rpx 12rpx;
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  background: var(--campus-surface-primary, var(--ousea-ocean-50));
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  line-height: 1.35;
+}
+
+.food-detail-info__rating-row--pressed {
+  opacity: .72;
+  transform: scale(.99);
+}
+
+.food-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+  padding: 32rpx;
+  border-radius: 32rpx;
+}
+
+.food-detail-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  color: var(--campus-text-heading, #1c1b1b);
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.food-detail-card__heading-icon {
+  width: 34rpx;
+  height: 34rpx;
+}
+
+.food-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.food-detail-tag {
+  padding: 8rpx 16rpx;
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  background: var(--campus-surface-primary, var(--ousea-ocean-50));
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  line-height: 1.35;
+}
+
+.food-detail-reasons {
+  padding: 0;
+}
+
+.food-detail-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+}
+
+.food-detail-reason__dot {
+  width: 12rpx;
+  height: 12rpx;
+  flex: none;
+  margin-top: 13rpx;
+  background: var(--campus-primary, var(--ousea-ocean-500));
+  border-radius: 50%;
+}
+
+.food-detail-card__body {
+  display: -webkit-box;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--campus-text-body, #555);
+  font-size: 27rpx;
+  line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.food-detail-review-section {
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  border-radius: 32rpx;
+}
+
+.food-detail-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 32rpx 32rpx 22rpx;
+}
+
+.food-detail-section-head > view {
+  min-width: 0;
+}
+
+.food-detail-section-head > view > text {
+  color: var(--campus-text-heading, #1c1b1b);
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.food-detail-section-head__more {
+  flex: none;
+  color: var(--campus-text-muted, #999);
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.food-detail-reviews {
+  display: flex;
+  flex-direction: column;
+  padding: 0 32rpx;
+}
+
+.food-detail-review-card {
+  padding: 24rpx 0 28rpx;
+  border-bottom: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+}
+
+.food-detail-review-card:first-child {
+  padding-top: 8rpx;
+}
+
+.food-detail-review-card:last-child {
+  border-bottom: 0;
+}
+
+.food-detail-review-card__head {
+  display: flex;
+  align-items: flex-start;
+}
+
+.food-detail-review-card__author-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.food-detail-review-card__avatar {
+  display: flex;
+  width: 72rpx;
+  height: 72rpx;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  background: var(--campus-surface-primary, var(--ousea-ocean-50));
+  border-radius: 50%;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.food-detail-review-card__author-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.food-detail-review-card__author {
+  color: var(--campus-text-body, #333);
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.food-detail-review-card__date {
+  color: var(--campus-text-muted, #999);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.food-detail-review-card__comment {
+  display: block;
+  margin-top: 16rpx;
+  color: var(--campus-text-body, #444);
+  font-size: 28rpx;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.food-detail-review-card__images {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 20rpx;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.food-detail-review-card__images image {
+  display: block;
+  width: 220rpx;
+  height: 160rpx;
+  flex: none;
+  background: #f2f2f2;
+  border-radius: 12rpx;
+}
+
+.food-detail-empty-review,
+.food-detail-state {
+  color: var(--campus-text-muted, #999);
+  font-size: 27rpx;
+  line-height: 1.65;
+  text-align: center;
+}
+
+.food-detail-empty-review {
+  padding: 36rpx 32rpx 44rpx;
+}
+
+.food-detail-state {
+  padding: 64rpx 32rpx;
+}
+
+.food-detail-comment-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  box-sizing: border-box;
+  padding: 12rpx 32rpx calc(12rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+  background: var(--campus-surface, #fff);
+}
+
+.food-detail-comment-bar__trigger {
+  display: flex;
+  min-height: 80rpx;
+  align-items: center;
+  padding: 0 24rpx;
+  color: var(--campus-text-muted, #999);
+  background: var(--campus-surface-subtle, var(--ousea-bg-page));
+  border: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  line-height: 1.4;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.food-detail-comment-bar__trigger--pressed {
+  opacity: .76;
+  transform: scale(.98);
+}
+
+.food-detail-review-sheet__content {
+  padding: 12rpx 28rpx 40rpx;
+}
+
+.food-detail-review-sheet__listing {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 8rpx 4rpx 16rpx;
+}
+
+.food-detail-review-sheet__listing-label {
+  flex: none;
+  color: var(--campus-text-muted, #999);
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.food-detail-review-sheet__listing-name {
+  overflow: hidden;
+  color: var(--campus-text-heading, #1c1b1b);
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.food-detail-review-sheet__rating {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 20rpx 0 28rpx;
+}
+
+.food-detail-review-sheet__rating-eyebrow {
+  color: var(--campus-text-heading, #1c1b1b);
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.food-detail-review-sheet__rating-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12rpx;
+}
+
+.food-detail-review-sheet__rating-picker .star-rating--interactive {
+  width: 100%;
+  justify-content: center;
+  gap: 2rpx;
+}
+
+.food-detail-review-sheet__rating-picker .star-rating--interactive .star-rating__item {
+  width: 104rpx;
+  height: 96rpx;
+}
+
+.food-detail-review-sheet__rating-result {
+  min-height: 34rpx;
+  margin-top: 2rpx;
+  color: var(--campus-text-muted, var(--ousea-ink-300));
+  font-size: 23rpx;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.food-detail-review-sheet__rating-result--active {
+  color: var(--campus-primary-strong, var(--ousea-ocean-600));
+  font-weight: 600;
+}
+
+.food-detail-review-sheet__comment {
+  margin-top: 4rpx;
+  padding: 22rpx 24rpx 12rpx;
+  background: var(--campus-surface-subtle, var(--ousea-bg-page));
+  border: 0;
+  border-radius: 20rpx;
+}
+
+.food-detail-review-sheet__field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.food-detail-review-sheet__field-head > text:first-child {
+  color: var(--campus-text-heading, #1c1b1b);
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.food-detail-review-sheet__field-head > text:last-child {
+  color: var(--campus-text-muted, #999);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.food-detail-review-sheet__textarea {
+  width: 100%;
+  min-height: 152rpx;
+  box-sizing: border-box;
+  margin-top: 14rpx;
+  padding: 0;
+  color: var(--campus-text-body, #444);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 28rpx;
+  line-height: 1.65;
+}
+
+.food-detail-review-sheet__toolbar {
+  display: flex;
+  min-height: 72rpx;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  border-top: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+}
+
+.food-detail-review-sheet__add-image {
+  display: flex;
+  min-width: 88rpx;
+  min-height: 72rpx;
+  align-items: center;
+  gap: 8rpx;
+  color: var(--campus-primary, var(--ousea-ocean-500));
+  font-size: 24rpx;
+  line-height: 1.4;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.food-detail-review-sheet__add-image image {
+  width: 36rpx;
+  height: 36rpx;
+  opacity: .68;
+  filter: grayscale(1);
+}
+
+.food-detail-review-sheet__add-image--pressed {
+  opacity: .76;
+  transform: scale(.98);
+}
+
+.food-detail-review-sheet__counter {
+  color: var(--campus-text-muted, #999);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.food-detail-review-sheet__footer {
+  padding: 16rpx 28rpx calc(16rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid var(--campus-border, var(--ousea-bg-line));
+  background: var(--campus-surface, #fff);
+}
+
+.food-detail-review-sheet__submit {
+  width: 100%;
+  height: 80rpx;
+  margin: 0;
+  color: #fff;
+  background: var(--campus-primary, var(--ousea-ocean-500));
+  border: 0;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 80rpx;
+}
+
+.food-detail-review-sheet__submit::after {
+  border: 0;
+}
+
+.food-detail-review-sheet__submit:active,
+.food-detail-review-sheet__submit--pressed {
+  background: var(--campus-primary-strong, var(--ousea-ocean-600));
+}
+
+.food-detail-review-sheet__submit[disabled] {
+  color: rgba(255, 255, 255, .86);
+  background: #d8d8d8;
+}
+
+.campus-theme--dark .food-detail-page {
+  color: var(--campus-text-body);
+  background: var(--campus-page);
+}
+
+.campus-theme--dark .food-detail-cover {
+  background: var(--campus-surface-primary);
+}
+
+.campus-theme--dark .food-detail-info,
+.campus-theme--dark .food-detail-card,
+.campus-theme--dark .food-detail-review-section,
+.campus-theme--dark .food-detail-comment-bar,
+.campus-theme--dark .food-detail-review-sheet__footer {
+  border-color: var(--campus-border);
+  background: var(--campus-surface);
+}
+
+.campus-theme--dark .food-detail-cover__image,
+.campus-theme--dark .food-detail-review-card__images image,
+.campus-theme--dark .food-detail-review-sheet__textarea,
+.campus-theme--dark .food-detail-comment-bar__trigger {
+  background: var(--campus-surface-subtle);
+}
+
+.campus-theme--dark .food-detail-review-card,
+.campus-theme--dark .food-detail-review-sheet__comment,
+.campus-theme--dark .food-detail-review-sheet__toolbar {
+  border-color: var(--campus-border);
+}
+
+.campus-theme--dark .food-detail-info__category,
+.campus-theme--dark .food-detail-review-card__avatar,
+.campus-theme--dark .food-detail-tag {
+  color: var(--campus-text-body);
+  background: var(--campus-surface-primary);
+  border-color: var(--campus-border-strong);
+}
+
+.campus-theme--dark .food-detail-review-sheet__comment {
+  background: var(--campus-surface-subtle);
+}
+
+.campus-theme--dark .food-detail-review-sheet__submit { background: var(--campus-primary); }
+
+@media (max-width: 340px) {
+  .food-detail-content {
+    padding-right: 24rpx;
+    padding-left: 24rpx;
+  }
+
+  .food-detail-info,
+  .food-detail-card,
+  .food-detail-review-section {
+    padding-right: 24rpx;
+    padding-left: 24rpx;
+  }
+
+  .food-detail-review-section {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .food-detail-section-head,
+  .food-detail-reviews {
+    padding-right: 24rpx;
+    padding-left: 24rpx;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .food-detail-info__rating-row,
+  .food-detail-comment-bar__trigger,
+  .food-detail-review-sheet__add-image {
+    transition: none;
+  }
+
+  .food-detail-info__rating-row--pressed,
+  .food-detail-comment-bar__trigger--pressed,
+  .food-detail-review-sheet__add-image--pressed {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -12,14 +12,14 @@ assert.deepEqual(
 )
 
 assert.deepEqual(normalizeMigrationGuideCopy({
-  target_name: ' 海大校园 2.0 ',
+  target_name: ' OUSea 2.0 ',
   title: ' 服务入口已调整 ',
   entry_button_text: ' 查看新入口 ',
 }), {
   ...DEFAULT_MIGRATION_GUIDE_COPY,
-  target_name: '海大校园 2.0',
+  target_name: 'OUSea 2.0',
   title: '服务入口已调整',
-  description: '校园社区、闲置互助、课程资料与社团服务，现已在「海大校园 2.0」提供。',
+  description: '校园社区、闲置互助、课程资料与社团服务，现已在「OUSea 2.0」提供。',
   entry_button_text: '查看新入口',
 })
 

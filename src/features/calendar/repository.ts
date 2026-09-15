@@ -20,6 +20,11 @@ type StoredCalendar = {
 
 const STORAGE_PREFIX = 'campus.academicCalendar.v1.'
 const LEVEL_KEY = 'campus.academicCalendar.educationLevel.v1'
+export const ACADEMIC_CALENDAR_FRESH_MS = 30 * 60 * 1000
+
+export type CalendarLoadOptions = {
+  force?: boolean
+}
 
 const isEducationLevel = (value: unknown): value is AcademicEducationLevel => (
   value === 'undergraduate' || value === 'graduate'
@@ -65,10 +70,11 @@ const readStored = (level: AcademicEducationLevel): StoredCalendar | null => {
 const writeStored = (
   level: AcademicEducationLevel,
   calendar: AcademicCalendar,
+  updatedAt = Date.now(),
 ) => {
   const stored: StoredCalendar = {
     version: 1,
-    updatedAt: Date.now(),
+    updatedAt,
     value: calendar,
   }
   try {
@@ -107,28 +113,75 @@ export const getCachedAcademicCalendar = (
   return { calendar: null, source: 'unavailable', updatedAt: 0 }
 }
 
-const pendingRequests = new Map<AcademicEducationLevel, Promise<CalendarLoadResult>>()
+type PendingCalendarRequest = {
+  generation: number
+  promise: Promise<CalendarLoadResult>
+}
+
+const pendingRequests = new Map<AcademicEducationLevel, PendingCalendarRequest>()
+const cacheGenerations = new Map<AcademicEducationLevel, number>()
+const invalidatedLevels = new Set<AcademicEducationLevel>()
+
+const cacheGeneration = (level: AcademicEducationLevel) => (
+  cacheGenerations.get(level) || 0
+)
+
+const isFresh = (updatedAt: number) => (
+  Date.now() - updatedAt < ACADEMIC_CALENDAR_FRESH_MS
+)
+
+/**
+ * 使指定校历在下一次读取时重新请求网络。
+ *
+ * 保留持久化数据作为弱网回退；已开始的旧请求不会写回新的 freshness。
+ */
+export const invalidateAcademicCalendar = (level?: AcademicEducationLevel) => {
+  const levels: AcademicEducationLevel[] = level
+    ? [level]
+    : ['undergraduate', 'graduate']
+  levels.forEach((item) => {
+    cacheGenerations.set(item, cacheGeneration(item) + 1)
+    invalidatedLevels.add(item)
+    pendingRequests.delete(item)
+  })
+}
 
 export const loadAcademicCalendar = (
   level = getCalendarEducationLevel(),
+  options: CalendarLoadOptions = {},
 ): Promise<CalendarLoadResult> => {
   const existing = pendingRequests.get(level)
-  if (existing) return existing
+  if (existing && existing.generation === cacheGeneration(level)) return existing.promise
 
+  const stored = readStored(level)
+  if (!options.force && !invalidatedLevels.has(level) && stored && isFresh(stored.updatedAt)) {
+    return Promise.resolve({
+      calendar: stored.value,
+      source: 'cache',
+      updatedAt: stored.updatedAt,
+    })
+  }
+
+  const generation = cacheGeneration(level)
   let tracked: Promise<CalendarLoadResult>
   tracked = getAcademicCalendar(level)
     .then((calendar) => {
       const normalized = normalizeAcademicCalendar(calendar)
+      const updatedAt = Date.now()
+      if (cacheGeneration(level) === generation) {
+        writeStored(level, normalized, updatedAt)
+        invalidatedLevels.delete(level)
+      }
       return {
         calendar: normalized,
         source: 'network' as const,
-        updatedAt: writeStored(level, normalized),
+        updatedAt,
       }
     })
     .catch(() => getCachedAcademicCalendar(level))
     .finally(() => {
-      if (pendingRequests.get(level) === tracked) pendingRequests.delete(level)
+      if (pendingRequests.get(level)?.promise === tracked) pendingRequests.delete(level)
     })
-  pendingRequests.set(level, tracked)
+  pendingRequests.set(level, { generation, promise: tracked })
   return tracked
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Taro, { useLoad, useShareAppMessage } from '@tarojs/taro'
+import Taro, { useLoad } from '@tarojs/taro'
 import { Button, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { isApiError } from '../../api/client'
@@ -12,6 +12,7 @@ import {
 } from '../../features/official-notices/types'
 import type { OfficialNotice } from '../../features/official-notices/types'
 import { normalizeWebViewUrl } from '../../features/webview/url'
+import { useCampusShare } from '../../features/share'
 import './detail.scss'
 
 type DocumentFileType = 'doc' | 'docx' | 'xls' | 'xlsx' | 'ppt' | 'pptx' | 'pdf'
@@ -61,9 +62,10 @@ export default function OfficialNoticeDetailPage() {
     void load(id)
   })
 
-  useShareAppMessage(() => ({
+  useCampusShare(() => ({
     title: notice?.title || '全校通知',
-    path: notice ? `/pages/official-notices/detail?id=${notice.id}` : '/pages/official-notices/index',
+    path: notice ? '/pages/official-notices/detail' : '/pages/official-notices/index',
+    query: notice ? { id: notice.id } : undefined,
   }))
 
   const copyAttachmentUrl = async (target: string, title: string) => {
@@ -128,7 +130,7 @@ export default function OfficialNoticeDetailPage() {
       {!loading && error && (
         <View className='official-notice-detail-state'>
           <Text>{error}</Text>
-          {!!noticeId && <View onClick={() => void load(noticeId)}>重新加载</View>}
+          {!!noticeId && <View className='official-notice-detail-state__retry' ariaRole='button' ariaLabel='重新加载通知' onClick={() => void load(noticeId)}>重新加载</View>}
         </View>
       )}
       {!loading && notice && (
@@ -138,12 +140,14 @@ export default function OfficialNoticeDetailPage() {
             <Text>{officialNoticeCategoryLabels[notice.category]}</Text>
             {notice.priority === 'important' && <Text className='is-important'>重要</Text>}
           </View>
-          <Text className='official-notice-detail__title'>{notice.title}</Text>
+          <Text selectable className='official-notice-detail__title'>{notice.title}</Text>
           <View className='official-notice-detail__meta'>
             <Text>{notice.publisher}</Text>
             <Text>{formatOfficialNoticeDate(notice.source_published_at)}</Text>
           </View>
-          <View className='official-notice-detail__summary'>{notice.summary}</View>
+          <View className='official-notice-detail__summary'>
+            <Text selectable>{notice.summary}</Text>
+          </View>
           <View className='official-notice-markdown'>
             {blocks.map((block) => block.kind === 'separator'
               ? <View key={block.id} className='official-notice-markdown__separator' />
@@ -151,6 +155,7 @@ export default function OfficialNoticeDetailPage() {
                 <Text
                   key={block.id}
                   className={`official-notice-markdown__${block.kind} ${block.level ? `is-level-${block.level}` : ''}`}
+                  selectable
                 >
                   {block.kind === 'list' ? '• ' : block.kind === 'ordered-list' ? '◦ ' : ''}{block.text}
                 </Text>
@@ -161,7 +166,12 @@ export default function OfficialNoticeDetailPage() {
             <View className='official-notice-attachments'>
               <Text className='official-notice-attachments__title'>附件下载</Text>
               {notice.attachments.map((attachment, index) => (
-                <View key={`${attachment.url}-${index}`} onClick={() => void openAttachment(attachment)}>
+                <View
+                  key={`${attachment.url}-${index}`}
+                  ariaRole='button'
+                  ariaLabel={`预览附件：${attachment.name}`}
+                  onClick={() => void openAttachment(attachment)}
+                >
                   <View>附</View>
                   <Text>{attachment.name}</Text>
                   <Text>预览 ›</Text>
@@ -173,9 +183,13 @@ export default function OfficialNoticeDetailPage() {
 
           <View className='official-notice-detail__actions'>
             {!!notice.original_url && (
-              <View onClick={() => void copyOriginalUrl(notice.original_url || '')}>复制原文地址</View>
+              <View
+                ariaRole='button'
+                ariaLabel='复制原文地址'
+                onClick={() => void copyOriginalUrl(notice.original_url || '')}
+              >复制原文地址</View>
             )}
-            <Button openType='share'>分享给同学</Button>
+            <Button hoverClass='none' openType='share'>分享给同学</Button>
           </View>
           <Text className='official-notice-detail__disclaimer'>内容由管理端人工整理，具体安排以学校原文为准</Text>
         </View>

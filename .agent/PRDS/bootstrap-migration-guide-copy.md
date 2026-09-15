@@ -1,4 +1,4 @@
-# 海大校园小程序：Bootstrap 配置资格版迁移引导文案
+# OUSea小程序：Bootstrap 配置资格版迁移引导文案
 
 **Priority:** High
 **Status:** Done
@@ -19,9 +19,9 @@
 ```json
 {
   "migration_guide": {
-    "target_name": "海大校园新版",
+    "target_name": "OUSea新版",
     "title": "校园生活服务已迁移",
-    "description": "校园社区、闲置互助、课程资料与社团服务，现已在「海大校园新版」提供。",
+    "description": "校园社区、闲置互助、课程资料与社团服务，现已在「OUSea新版」提供。",
     "entry_button_text": "查看新版服务",
     "open_button_text": "打开新版小程序",
     "hint": "将在微信中打开另一小程序"

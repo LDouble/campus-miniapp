@@ -1,194 +1,336 @@
-# Design System Master File
+# 校园小程序视觉规范
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+> 版本：3.1（Ousea / Global）
+>
+> 更新日期：2026-08-22
+>
+> 适用范围：微信小程序全部页面、公共组件与业务模块
 
----
+本规范以 Figma `Ousea / Global` 为唯一基础视觉源。设计稿用于校准视觉感、图标表现和信息层级，不要求为了复刻单个画板而改变既有业务架构。
 
-**Project:** Campus Miniapp
-**Generated:** 2026-07-26 11:13:54
-**Category:** General
+页面存在专属规则时，先读取 `pages/<page-name>.md`；页面规则只覆盖明确列出的差异，其余规则继续遵循本文件。设计 Token 源文件为 [`ousea-design-tokens.json`](./ousea-design-tokens.json)，运行时变量定义在 [`src/app.scss`](../../src/app.scss)，Sass 映射定义在 [`src/styles/_tokens.scss`](../../src/styles/_tokens.scss)。三处值必须同步。
 
----
+本轮页面实现已沉淀为以下覆盖文档：[`pages/home.md`](./pages/home.md)、[`pages/academic.md`](./pages/academic.md)、[`pages/academic-verification.md`](./pages/academic-verification.md)、[`pages/profile.md`](./pages/profile.md)、[`pages/messages.md`](./pages/messages.md)。社区、跑腿、二手和找同行继续使用 [`pages/life-hub.md`](./pages/life-hub.md)。
 
-## Global Rules
+### 0.1 Token 使用约束
 
-### Color Palette
+- 新页面、新组件和视觉重构必须消费 `--ousea-*` 原始 Token 或 `$ousea-*` Sass Token，不得新建 `--home-*`、`--community-*` 等同义基础 Token。
+- `--campus-*` / `$color-*` 是现存页面的语义兼容层，必须映射到 Ousea / Global；可以用于暗色模式和业务语义，但不得拥有另一套浅色基础值。
+- Ousea 未覆盖的业务色（跑腿、二手、找同行、成功态）可以保留，使用面积仅限业务识别和状态反馈。
+- 修改 Token 时必须同步 JSON、全局 CSS 变量、Sass 映射、本文档与对应 smoke test。
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#2563EB` | `--color-primary` |
-| Secondary | `#3B82F6` | `--color-secondary` |
-| CTA/Accent | `#F97316` | `--color-cta` |
-| Background | `#F8FAFC` | `--color-background` |
-| Text | `#1E293B` | `--color-text` |
+## 1. 设计原则
 
-### Typography
+抽奖详情按用户于 2026-09-12 指定的最新 Figma 3750:2 执行暖灰底、白卡与橙黄渐变覆盖，详见 [抽奖详情](pages/lottery.md)。lottery accent/page/warm/golden 原始令牌已同步 JSON、CSS、Sass 与测试；不影响其他页面。
 
-- **Heading Font:** Inter
-- **Body Font:** Inter
-- **Mood:** Professional + Hierarchy
+1. **清爽、明亮、克制**：使用蓝灰白作为基础视觉，不使用大面积暖色、黑蓝或重玻璃拟态。
+2. **内容优先**：通过字号、间距、留白和浅底分组建立层级，不依赖厚重阴影与复杂装饰。
+3. **交互明确**：实色主按钮必须使用白字；浅色按钮使用同色系深色文字，禁止蓝底黑字。
+4. **业务可识别**：社区、跑腿、二手、找同行可以有各自的强调色，但正文、背景和组件结构保持统一。
+5. **小程序优先**：所有布局以窄屏、触控、微信胶囊、安全区和键盘场景为第一约束。
+6. **稳定胜过炫技**：反馈动画短而轻，不引发跳动、重排或内容闪烁。
 
-### Spacing Variables
+## 2. 颜色系统
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
+猫图鉴增加 `cat.sage #637B65` 用作小面积植物与辅助强调，不作为页面底色。
 
-### Shadow Depths
+猫猫图鉴沿用已确认 Figma 首页与详情的影集视觉：`cat.cream #FFFBEB`、`paper #FAF7F2`、`sand #F4E7D6`、`line #F5F5F4`、`cocoa #292524`、`muted #847971`、`caramel #C86230`。纸面仅用于猫图鉴页面，白卡复用全局 surface；其他模块不变。二级页导航为 24rpx 中等字重，页面卡片可使用与详情一致的 48rpx 圆角。详见 `pages/cat-atlas.md`。
 
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+### 2.1 基础颜色
 
----
+| 令牌 | 色值 | 用途 |
+| --- | --- | --- |
+| `ocean-50` | `#F2F7FE` | 浅蓝底、信息条 |
+| `ocean-100` | `#E3EFFE` | 徽章底、计数胶囊、浅描边 |
+| `ocean-400` | `#4C96F5` | 聚焦描边 |
+| `ocean-500` | `#2B7AEF` | 主操作、当前 Tab、链接 |
+| `ocean-600` | `#1D5FD6` | 按压态、高对比品牌文字 |
+| `wave-400` | `#38BDF8` | 品牌渐变终点 |
+| `page` | `#F5F8FC` | 页面背景 |
+| `surface` | `#FFFFFF` | 卡片、导航、底部操作栏、浮层 |
+| `ink-900` | `#1A2333` | 主标题与主文字，禁止纯黑 |
+| `ink-700` | `#3A4759` | 次级标题与正文 |
+| `ink-500` | `#6B7A90` | 次文字、昵称 |
+| `ink-300` | `#A6B2C2` | 时间戳、占位符、弱提示 |
+| `line` | `#E8EDF4` | 常规分隔线与浅边框 |
+| `danger-500` | `#E5484D` | 删除、撤回和危险反馈 |
+| `danger-50` | `#FDECEC` | 危险操作浅底 |
+| `like-500` | `#F04E6B` | 点赞激活态 |
+| `success` | `#00BBA7` | 成功、可用与找同行业务强调 |
 
-## Component Specs
+正文颜色不得浅于 `text-body`；只有时间、占位符、统计等非关键内容可以使用 `text-muted`。
 
-### Buttons
+### 2.2 业务识别色
 
-```css
-/* Primary Button */
-.btn-primary {
-  background: #F97316;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+| 模块 | 主色 | 渐变/辅助色 | 浅底 |
+| --- | --- | --- | --- |
+| 社区 | `#2B7AEF` | `#38BDF8` | `#F2F7FE` |
+| 跑腿 | `#FF6900` | `#FFB900` | `#FFF7ED` |
+| 二手 | `#AD46FF` | `#ED6AFF` | `#FAF5FF` |
+| 找同行 | `#00BBA7` | `#00D492` | `#F0FDFA` |
 
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
+业务色主要用于入口图标、状态标签、关键数字和主行为。一个页面最多使用一个业务主色；危险操作始终使用 `danger`，不要被业务色覆盖。
 
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #2563EB;
-  border: 2px solid #2563EB;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+### 2.3 颜色搭配约束
+
+- `ocean-500` 或业务实色背景：文字、图标统一为 `#FFFFFF`。
+- 浅色背景：文字使用对应主色或 `text-heading`，不得使用纯黑。
+- 普通卡片默认白底；浅灰蓝底只用于卡片内部的信息分区。
+- 价格沿用二手业务价格色；删除、警示统一使用 `danger-500`，不混用点赞色。
+- 路线起点使用绿色 `#00D492`，终点使用粉红 `#FF637E`，同时保留起点/终点文字，不能只靠颜色区分。
+- 不新增 `#000000` 正文、暖米色页面背景或多色玻璃渐变。
+
+### 2.4 暗色模式
+
+小程序默认跟随微信与系统主题，不在业务页面各自保存主题状态。原生导航、窗口和 TabBar 通过 [`src/theme.json`](../../src/theme.json) 切换；业务页面通过全局主题 class 与语义色令牌切换。主题读取和原生背景同步必须在 App 模块加载阶段执行，并在 App `onLaunch` 阶段预热下一个 WebView；构建阶段还必须为每个页面首节点注入与用户偏好同步的 `page-meta` 作为最终校准。禁止等页面挂载后再异步换色，也禁止用淡入遮罩掩盖白闪。
+
+| 令牌 | 暗色色值 | 用途 |
+| --- | --- | --- |
+| `page` | `#0B1220` | 页面最底层背景 |
+| `surface` | `#111827` | 卡片、导航、浮层 |
+| `surface-subtle` | `#172033` | 卡片内分区与输入区 |
+| `surface-primary` | `#172554` | 蓝色浅层选中态 |
+| `text-heading` | `#F8FAFC` | 标题和重要信息 |
+| `text-body` | `#D7E0EC` | 正文和表单内容 |
+| `text-secondary` | `#AAB8CA` | 辅助信息 |
+| `text-muted` | `#8494AA` | 时间和占位信息 |
+| `border` | `#243244` | 常规边框与分隔线 |
+| `primary` | `#60A5FA` | 暗色模式主操作与链接 |
+
+- 暗色模式不是亮色页面的颜色反转。图片、头像、品牌图和业务图片保持原样。
+- 功能 SVG 若自带固定深色描边，暗色模式必须使用高亮描边或定向滤镜；禁止对页面内所有 `image` 统一反色。
+- 图标底板在暗色模式使用同色相的低明度色块，例如橙色 `#3A291A`、紫色 `#2E254C`、青色 `#12343D`，不得继续显示浅色底板。
+- 卡片与页面背景至少保持一个明度层级差，不能全部压成同一种黑色。
+- 蓝色、橙色、紫色和青绿色业务色在暗色模式中适当提高亮度，但不扩大使用面积。
+- 白色始终作为实色按钮和强调背景上的 `on-accent` 文字，不随 `surface` 令牌变暗。
+- 课表的多种课程色使用低亮度底色和高亮度文字，继续表达分类，但避免浅色块在夜间刺眼。
+- 遮罩加深至约 `68%` 黑色透明度；浮层本体仍使用 `surface`，不能与遮罩融为一体。
+- 新增基础色必须先进入 Ousea / Global Token 源，再同步全局变量和 Sass 映射；页面不得维护同义暗色色值。
+
+## 3. 字体与信息层级
+
+字体栈统一为：
+
+```scss
+'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif
 ```
 
-### Cards
+| 层级 | 字号 | 字重 | 建议行高 | 场景 |
+| --- | --- | --- | --- | --- |
+| `badge` | `20rpx` | `400–700` | `1.4` | 徽章、角标 |
+| `caption` | `24rpx` | `400–600` | `1.4` | 时间与辅助信息 |
+| `label` | `27rpx` | `400–600` | `1.4` | 昵称、操作按钮 |
+| `comment` | `30rpx` | `400` | `1.65` | 评论和信息流摘要 |
+| `body` | `32rpx` | `400` | `1.85` | 帖子正文 |
+| `title` | `33rpx` | `500–600` | `1.4` | 模块标题 |
 
-```css
-.card {
-  background: #F8FAFC;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+- 跑腿与找同行的标题、描述默认不加粗，重要价格、时间、人数放在信息卡内突出。
+- 中文正文不使用全大写；英文 Eyebrow 可以使用大写并增加轻微字距。
+- 禁止用字重代替所有层级。先使用字号、颜色和间距，再决定是否加粗。
+- 用户生成内容必须允许换行；单行元信息使用省略号，卡片摘要最多两行。
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
+## 4. 间距、网格与尺寸
 
-### Inputs
+Ousea / Global 的间距值按 375px 设计宽度换算，`1px = 2rpx`。
 
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
+| 令牌 | 值 | 常见用途 |
+| --- | --- | --- |
+| `space-1` | `16rpx` | 图标与文字 |
+| `space-2` | `24rpx` | 卡片内边距 |
+| `space-3` | `32rpx` | 模块间距 |
+| `space-4` | `40rpx` | 页面左右边距 |
+| `space-5` | `64rpx` | 大区块分隔 |
 
-.input:focus {
-  border-color: #2563EB;
-  outline: none;
-  box-shadow: 0 0 0 3px #2563EB20;
-}
-```
+- 页面水平边距优先使用 `28rpx` 或 `32rpx`，同一页面不得混用多套主边距。
+- 列表卡片间距使用 `16–20rpx`；常用服务宫格应保持紧凑，不为填满高度强行拉大行距。
+- 相邻触控目标之间至少保留 `16rpx`。
+- 所有固定底栏使用 `calc(<基础值> + env(safe-area-inset-bottom))` 预留安全区。
 
-### Modals
+## 5. 圆角、边框与阴影
 
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
+| 组件 | 圆角 |
+| --- | --- |
+| `card-sm` 小卡片、缩略图 | `24rpx` |
+| `card` 信息流卡片 | `32rpx` |
+| `card-lg` 页面级卡片 | `36rpx` |
+| `sheet` 底部动作面板顶部 | `44rpx` |
+| 胶囊按钮 | `999rpx` |
+| 头像、圆形图标按钮 | `50%` |
 
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
+- `pill / 999rpx` 只用于短标签、状态徽章、计数和少量单一快捷操作；不得作为普通按钮、表单字段、分段控件、筛选栏或页面主操作的默认圆角。
+- 两项及以上的分段选择使用 `12–20rpx` 小圆角矩形，通过背景、文字和描边表达选中态；不得把整组与每个选项同时做成胶囊。
+- 表单内的二元选择优先使用文字选项与短下划线指示，不增加整组背景底板；普通选中态不得使用大面积高饱和填充。
+- 多项分类优先使用等宽网格、连续列表或底部单选 Sheet。网格选项使用 `12–20rpx` 小圆角、浅色选中底和清晰描边，不按文字长度生成大小不一的胶囊。
+- 同一首屏最多保留一组承担明确语义的胶囊选项。若页面已经存在顶部 Tab、分段导航或多个标签，应优先使用文字、下划线、连续信息行或小圆角矩形，避免重复“药丸”轮廓。
+- 常规边框：`1–2rpx solid #E8EDF4`。
+- 重点选中边框：`1–2rpx solid #E3EFFE`，聚焦描边使用 `#4C96F5`。
+- 普通卡片优先用边框区分，不默认使用阴影。
+- 需要悬浮时使用轻阴影：`0 8rpx 24rpx rgba(29, 95, 214, 0.08)`。
+- 浮层可使用：`0 -8rpx 32rpx rgba(0, 0, 0, 0.05)`。
+- 禁止高透明玻璃卡、重模糊、双向拟物阴影和大面积灰黑投影。
 
----
+## 6. 图标规范
 
-## Style Guidelines
+- 使用同一套线性或面性 SVG/PNG 图标，不使用 Emoji 充当功能图标。
+- 同一区块内图标视觉尺寸一致；常用服务图标建议 `40–48rpx`，操作图标建议 `32–40rpx`。
+- 常用服务使用统一线性图标，控制在 `学业蓝 / 校园青 / 生活琥珀 / 社区珊瑚` 四组低饱和语义色内；颜色只辅助扫视，图标形状与文字承担主识别，避免纯灰图标墙和逐项彩虹配色。
+- 图标底板使用对应的 `--campus-icon-surface-*` 语义 Token；暗色模式切换为同色相低明度底板，不得用 CSS `filter` 给 `<image>` 重着色。
+- 实色圆形或方形图标底板上的图标必须为白色。
+- 图标点击区域不得小于 `88rpx × 88rpx`，即使图形本身更小。
+- 纯图标按钮需要提供可访问名称；装饰图标不应抢占可访问焦点。
 
-**Style:** Glassmorphism
+## 7. 核心组件
 
-**Keywords:** Frosted glass, transparent, blurred background, layered, vibrant background, light source, depth, multi-layer
+### 7.1 导航与 Tab
 
-**Best For:** Modern SaaS, financial dashboards, high-end corporate, lifestyle apps, modal overlays, navigation
+- 自定义导航栏必须避开微信胶囊，标题与操作在可用空间内居中。
+- 吸顶 Tab 的顶部间距由导航栏实际高度计算，禁止使用只适配单一机型的固定值。
+- 当前 Tab 使用蓝色渐变或实蓝底配白字；未选中项使用白底或透明底配 `text-body`。
+- 二级筛选与主 Tab 视觉强度应有差异，不能出现两排同权重按钮。
 
-**Key Effects:** Backdrop blur (10-20px), subtle border (1px solid rgba white 0.2), light reflection, Z-depth
+### 7.2 搜索框与筛选
 
-### Page Pattern
+- 搜索框为白底、浅边框，输入态使用蓝色边框或轻焦点环。
+- 点击搜索不得改变整体高度或造成内容位移。
+- 已选筛选条件必须可见、可单项删除，并提供清空入口。
+- 日期筛选允许自定义日期，不局限于“今天 / 明天”。路线筛选可在本地基于出发地和目的地完成。
 
-**Pattern Name:** Hero + Features + CTA
+### 7.3 卡片与列表
 
-- **CTA Placement:** Above fold
-- **Section Order:** Hero > Features > CTA
+- 卡片先确定第一视觉焦点：社区看内容，二手看图片与价格，跑腿看路线与报酬，找同行看路线与时间。
+- 卡片内只放支持用户决策的信息；没有标签时不创建占位标签。
+- 双列 Feed 保持同列独立排布，避免固定等高造成大量留白。
+- 二手价格紧邻标题或图片后的内容区，用户信息固定在底部，不让价格独占过高区域。
+- 长标题最多两行；用户名、学校、时间等弱信息单行省略。
 
----
+### 7.4 按钮
 
-## Anti-Patterns (Do NOT Use)
+- 主按钮：蓝色或业务色实底、白字，最小高度 `80rpx`，推荐 `88rpx`。
+- 次按钮：浅色底、对应主色文字；不要用浅灰底配接近黑色的“伪主按钮”。
+- 文字按钮：透明背景，使用 `primary` 或 `text-secondary`。
+- 危险按钮：浅红底红字；只有最终确认操作可以使用红色实底白字。
+- 异步提交时禁用重复点击，并保持按钮宽高不变。
 
-- ❌ Excessive animation
-- ❌ Dark mode by default
+### 7.5 表单与键盘
 
-### Additional Forbidden Patterns
+- 输入框使用 `surface-subtle` 或白底，文字使用 `text-body`，占位符使用 `text-muted`。
+- 密码输入支持显示/隐藏；输入过程中可短暂显示最后输入字符，但不得泄露完整密码。
+- 输入框必须通过 `KeyboardSafeInput` 或等价机制避开键盘，并在聚焦后滚动到可见区域。
+- 多行内容使用可自动增高的 `Textarea`，设置最大高度后转为内部滚动。
+- 错误提示就近展示，不仅通过红色边框表达错误。
 
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
+### 7.6 浮层与底部 Sheet
 
----
+- Sheet 使用白底，上圆角 `32–40rpx`，高度由内容决定并设置最大高度。
+- 默认最大高度不超过可用视口的 `76%`；长内容采用“标题固定、主体滚动、操作栏固定”。
+- 必须避开微信胶囊、状态栏、键盘和底部安全区。
+- 点击遮罩关闭；点击 Sheet 内部不得误关闭。
+- 选项文字使用 flex 双轴居中，避免周次等短文字视觉偏移。
 
-## Pre-Delivery Checklist
+### 7.7 评论与详情底栏
 
-Before delivering any UI code, verify:
+- 四类详情页复用统一评论组件，业务色只影响发布按钮与主行为。
+- 输入评论时隐藏右侧业务行为，只显示向上箭头发布按钮；退出输入态后恢复行为按钮。
+- 点击可评论内容拉起输入框和系统键盘；点击评论组件外区域关闭输入态。
+- 回复采用平铺线程，不按楼层逐级缩进；文案使用“用户名 @ 用户名”，被引用内容需要截断。
+- 发布、回复和删除均在本地合并并使用轻量动效，不通过整页重新请求制造闪烁或抖动。
+- 底栏行为只依据服务端 `available_actions` 展示，不截断可用操作；主行为位于右侧，撤回、离开等危险操作仍需可达。
 
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+### 7.8 教务入口、学期选择与课表提示
+
+- 学期入口属于页面头部信息，不做厚重胶囊或矩形边框；当前选项完整展示，只有实际宽度不足时才省略，禁止为了省空间主动改成简称。
+- 学期文字、向下箭头和右侧状态胶囊使用同一行的 flex 双轴居中；通过头部实际导航指标计算顶部位置，不使用机型专属的 `top` 偏移制造视觉对齐。
+- 成绩、考试、选课结果和课表共用紧凑的单选 Sheet：关闭 X 为独立图标按钮，不带矩形外围；主体高度随内容适配，长列表只在主体内滚动，标题和操作保持可见。
+- 课程操作卡和课程详情浮层不预留无数据区域。通过率、备注等可选字段缺失时直接隐藏，卡片和 Sheet 高度跟随实际内容收缩。
+- 课表全局 `note` 使用紧凑的单行提示条；文本过长时采用自定义、线性、低干扰的跑马灯，内容可完整阅读。系统开启减少动态效果时退化为静态滚动容器或静态文本，不依赖第三方 NoticeBar。
+
+### 7.9 认证登录页
+
+- 认证页采用原生登录页式的低密度布局：保留明确的顶部留白、标题、说明、分组和细分隔线，不堆叠多层卡片、装饰光晕或大面积渐变。
+- 身份选择只表达“本科生 / 研究生”，初始状态不默认选中；两个选项在窄屏仍保持横向等宽，选中态靠背景、描边和文字同时表达。
+- 认证方式不再单独显示“选择认证方式 / 任选一种”。“信息门户认证”作为推荐方案，推荐角标贴近标签的右上区域并带浅色背景，不独占一行。
+- 表单标签使用“学号”“密码”；密码使用原生 password 输入，右侧提供显示/隐藏明文的 SVG 图标按钮。密码错误在输入框附近以浅红反馈块呈现，必要时用指向该反馈的 coach mark 辅助说明。
+- 密码说明按短段落分组：信息门户密码；错误提示通常意味着密码本身错误并检查大小写、全角/半角；仍无法登录时添加 `xmxjouc` 求助。说明应可读、可滚动，不与主按钮争夺视觉焦点。
+- 认证页的输入、选择器和键盘遵循同一套安全区策略；选择图片或切换密码显示时，不应无故关闭键盘或使输入框失焦。
+
+### 7.10 首页、我的与消息入口
+
+- 首页和“我的”采用统一的 `32rpx` 内容左右留白；页面级卡片使用白色表面、`card-lg` 圆角和轻边框，卡片内部继续保留紧凑内边距，不用无边界的漂浮胶囊替代分组。
+- 区块标题复用“短竖向标记 + 标题 + 可选提示/操作”的结构。服务宫格优先使用三列、统一图标底板和紧凑行距；列表分组保持白底、细分隔线和右侧箭头。
+- 移动端不设计 hover 状态。列表、卡片和图标按钮使用按压态的透明度或轻微缩放反馈，反馈不改变布局，并支持 `prefers-reduced-motion`。
+- 首页顶部不重复放置消息通知图标；未读消息统一由自定义 TabBar 的数字角标表达，`0` 不显示，超过 `99` 显示 `99+`。
+- 未读数在应用 `onShow` 时重新请求并同步到当前 TabBar；冷启动、页面切换和延迟渲染场景都要兼容本地缓存、当前页面实例与下一帧同步，不能只依赖首页接口。
+
+## 8. 页面与业务约定
+
+- 用户侧统一使用“找同行”，不得出现“拼车”“顺风车”等旧文案。
+- 跑腿和找同行详情采用“出发地 → 目的地”的横向路线表达。
+- 跑腿、找同行的重要价格、具体时间、人数放入信息卡；卡片外展示普通字重的标题或描述。
+- 时间展示具体日期与时刻，不使用“1 小时”“1 天”等模糊相对时间替代业务时间。
+- 二手、跑腿、找同行列表提供“我的”入口，使用轻量文字操作，不做突兀的彩色胶囊。
+- 举报属于内容操作，与分享、点赞、评论同一区域；不使用右上角三点替代现有能力。
+
+## 9. 动效与状态反馈
+
+| 类型 | 时长 | 建议实现 |
+| --- | --- | --- |
+| 点击反馈 | `120ms` | `opacity` + `scale(0.98)` |
+| 颜色/边框切换 | `160ms` | `color`、`background-color`、`border-color` |
+| 内容进入 | `240ms` | `opacity` + `translateY` |
+| Sheet 进出 | `200–280ms` | `opacity` + `transform` |
+
+- 单个视图最多强调 1–2 个动画元素。
+- 只动画 `opacity` 和 `transform` 等合成属性，避免动画宽高引发重排。
+- 为 `prefers-reduced-motion: reduce` 提供无动画降级。
+- 异步内容预留空间或使用骨架屏，避免加载前后页面跳动。
+
+## 10. 响应式、溢出与安全区
+
+- 以 `320px`、`360px`、`375px` 宽度至少各验证一次，不允许横向溢出。
+- flex 子项涉及省略时必须设置 `min-width: 0`。
+- 所有“当前选项”都优先展示真实完整文案；只有可用宽度确实不足时才省略，不得在展示空间足够时提前生成省略号或使用未约定的简写。
+- 服务端没有返回的数据不创建空的视觉槽位：统计、通过率、备注、人数等可选模块直接隐藏，容器高度随内容自适应。
+- 不对用户生成内容盲目使用 `overflow: hidden`；只在明确的单行或多行摘要中截断。
+- 长英文、学号、URL 使用 `overflow-wrap: anywhere`。
+- 图片容器预留尺寸并保持固定宽高比，加载失败显示稳定占位，不改变卡片高度。
+- 固定导航、TabBar、评论栏和提交栏都必须为主体内容预留等量空间。
+
+## 11. 可访问性
+
+- 主要触控区域不小于 `88rpx × 88rpx`，相邻触控目标间距不小于 `16rpx`。
+- 正文对比度至少 `4.5:1`，大字号文字至少 `3:1`。
+- 状态不能只靠颜色区分，需同时提供文字、图形或位置差异。
+- 图片提供有意义的替代文本；纯装饰图片不重复朗读。
+- 使用 Taro/微信支持的语义属性，不向组件传递平台不支持的 Web ARIA 属性。
+
+## 12. 禁止模式
+
+- 蓝色实底配黑字或深灰字。
+- 大面积黑蓝、暖米黄或多彩径向渐变作为页面背景。
+- 为了“丰富”而在同一页面混用多个高饱和主色。
+- 玻璃拟态、重阴影、内外双阴影叠加。
+- 使用 Emoji 作为功能图标。
+- 固定卡片高度导致长文溢出或短内容大量留白。
+- 在手机页面依赖 hover 作为主要反馈，或为 hover 保留额外布局空间。
+- 数据缺失时保留空白指标卡、假数字或大面积占位区域。
+- 通过整页刷新完成评论、删除、点赞等局部状态更新。
+- 把主行为藏在三点菜单，或用数组截断导致操作不可达。
+
+## 13. 交付检查清单
+
+- [ ] 页面背景、卡片、文字和边框均使用规范色值。
+- [ ] 微信开发者工具的浅色、深色模式均已检查，原生导航与页面同步切换。
+- [ ] 所有蓝色/业务色实底按钮均为白字白图标。
+- [ ] 主标题、正文、辅助文字的层级清晰且数量克制。
+- [ ] 320–375px 窄屏无横向溢出，长文本有合理换行或截断。
+- [ ] 微信胶囊、吸顶区、键盘和安全区不会遮挡内容。
+- [ ] 触控目标至少 `88rpx`，点击态不引发布局位移。
+- [ ] 移动端没有依赖 hover 的操作反馈；按压态在减少动态效果设置下仍可用。
+- [ ] 缺失的统计、通过率、备注和角标不会留下空白区域或伪造数据。
+- [ ] Sheet 的关闭按钮、滚动主体和操作栏在窄屏、键盘和长内容场景下均可达。
+- [ ] 选项入口在空间足够时展示完整文案，箭头与文字、右侧状态在视觉上双轴居中。
+- [ ] 消息未读数能在冷启动与应用回到前台时刷新，TabBar 角标与页面状态一致。
+- [ ] 异步操作有加载、防重复提交和失败反馈。
+- [ ] 动效时长为 `120–280ms`，并支持减少动态效果。
+- [ ] 用户文案统一使用“找同行”等当前产品术语。
+- [ ] 新增页面先复用公共组件与令牌，再添加页面级覆盖。

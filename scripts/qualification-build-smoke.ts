@@ -8,6 +8,7 @@ const projectConfigPath = join(outputRoot, 'project.config.json')
 const forbiddenPages = [
   'pages/community/index',
   'pages/community/detail',
+  'pages/community/topic/index',
   'pages/errands/detail',
   'pages/marketplace/detail',
   'pages/carpool/detail',
@@ -15,6 +16,8 @@ const forbiddenPages = [
   'pages/publish/index',
   'pages/materials/index',
   'pages/content-report/index',
+  'pages/direct-messages/index',
+  'pages/direct-messages/chat',
   'pages/clubs/index',
   'pages/clubs/detail',
   'pages/clubs/edit',
@@ -27,7 +30,7 @@ const forbiddenBundleNeedles = [
   '/api/v1/clubs/media/upload-target',
   '/api/v1/carpool/trips',
   '/api/v1/errands',
-  '/api/v1/marketplace'
+  '/api/v1/marketplace',
 ]
 
 const readJson = <T>(filePath: string): T => JSON.parse(readFileSync(filePath, 'utf8')) as T
@@ -48,15 +51,22 @@ if (!existsSync(appJsonPath) || !existsSync(projectConfigPath)) {
 
 const appConfig = readJson<{
   pages?: string[]
+  subPackages?: Array<{ root: string; pages?: string[] }>
   tabBar?: { list?: Array<{ pagePath?: string }> }
   navigateToMiniProgramAppIdList?: string[]
 }>(appJsonPath)
 const projectConfig = readJson<{ appid?: string }>(projectConfigPath)
 const pages = appConfig.pages || []
+const registeredPages = [
+  ...pages,
+  ...(appConfig.subPackages || []).flatMap(({ root, pages: packagePages = [] }) => (
+    packagePages.map((page) => `${root.replace(/\/$/u, '')}/${page}`)
+  )),
+]
 const tabPagePaths = (appConfig.tabBar?.list || []).map((item) => item.pagePath)
 
 for (const page of forbiddenPages) {
-  if (pages.includes(page)) {
+  if (registeredPages.includes(page)) {
     fail(`资格版 app.json 仍注册受限页面：${page}`)
   }
 }

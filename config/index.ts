@@ -1,3 +1,4 @@
+import path from 'path'
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
@@ -72,6 +73,15 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     process.env,
     process.env.NODE_ENV === 'production',
   )
+  const buildApiEndpoints = process.env.NODE_ENV === 'production'
+    ? {
+        review: apiEndpoints.production,
+        production: apiEndpoints.production,
+      }
+    : {
+        review: apiEndpoints.review,
+        production: apiEndpoints.production,
+      }
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'campus-miniapp',
     date: '2026-7-25',
@@ -84,10 +94,13 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     },
     sourceRoot: 'src',
     outputRoot,
-    plugins: ['@tarojs/plugin-html'],
+    plugins: [
+      '@tarojs/plugin-html',
+      path.resolve(__dirname, 'plugins/weapp-compat.js'),
+    ],
     defineConstants: {
-      __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(apiEndpoints.review),
-      __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(apiEndpoints.production),
+      __CAMPUS_REVIEW_API_BASE_URL__: JSON.stringify(buildApiEndpoints.review),
+      __CAMPUS_PRODUCTION_API_BASE_URL__: JSON.stringify(buildApiEndpoints.production),
       __CAMPUS_WECHAT_APP_ID__: JSON.stringify(currentWechatAppId),
       __CAMPUS_APP_RELEASE__: JSON.stringify(
         process.env.TARO_APP_RELEASE || process.env.npm_package_version || 'development',
@@ -121,6 +134,9 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       enable: false // Webpack 持久化缓存配置，建议开启。默认配置请参考：https://docs.taro.zone/docs/config-detail#cache
     },
     mini: {
+      optimizeMainPackage: {
+        enable: true,
+      },
       imageUrlLoaderOption: {
         // TabBar 等高频组件使用独立静态文件，避免 Base64 随每个组件实例重复解析。
         limit: true,

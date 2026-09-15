@@ -1,16 +1,24 @@
-import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import type { CarpoolTripView } from '../../../api/types'
+import UserAvatar from '../../../components/user-avatar'
+import StickerContent from '../../../components/sticker-content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
+import BusinessRoute from './business-route'
+import { campusLabel } from '../campus'
+import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
+import { navigateToWithGuard } from '../../../utils/navigation'
 import {
   formatDateTime,
   formatStatus,
   remainingSeats,
 } from '../format'
 
-const openDetail = (id: number) => {
+const moreIcon = require('../../../assets/icons/more-horizontal.svg')
+
+const openDetail = (item: CarpoolTripView) => {
   requestWechatSubscriptionForModule('carpool')
-  Taro.navigateTo({ url: `/pages/carpool/detail?id=${id}` })
+  saveBusinessDetailSnapshot('carpool', item)
+  void navigateToWithGuard(`/pages/carpool/detail?id=${item.id}&snapshot=1`)
 }
 
 const timeParts = (value: string) => {
@@ -25,46 +33,53 @@ const timeParts = (value: string) => {
 export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
   const seats = remainingSeats(item.total_seats, item.occupied_seats)
   const departure = timeParts(item.departure_at)
+  const authorName = item.author_nickname?.trim() || `发起人 #${item.organizer_id}`
+  const authorInitial = authorName.trim().slice(0, 1) || '同'
 
   return (
     <View
       id={`carpool-card-${item.id}`}
       className='carpool-card'
-      hoverClass='business-card--pressed'
-      onClick={() => openDetail(item.id)}
+      onClick={() => openDetail(item)}
     >
-      <View className='carpool-card__top'>
-        <View className='carpool-departure'>
-          <Text>{departure.time}</Text>
-          <Text>{departure.date} 出发</Text>
+      <View className='business-card-header'>
+        <UserAvatar
+          src={item.author_avatar_url}
+          className='business-card-avatar business-card-avatar--carpool'
+          imageClassName='business-card-avatar__image'
+          fallback={authorInitial}
+          userId={item.organizer_id}
+          lazyLoad
+        />
+        <View className='business-card-identity'>
+          <View>
+            <Text>{authorName}</Text>
+            <Text className='business-status business-status--carpool'>
+              {formatStatus(item.status, item.review_status)}
+            </Text>
+          </View>
+          <Text>{departure.date} {departure.time}</Text>
         </View>
-        <View className='carpool-seat'>
-          <Text>{seats}</Text>
-          <Text>个余座</Text>
-        </View>
+        <Image className='business-card-more' src={moreIcon} mode='aspectFit' />
       </View>
 
-      <View className='carpool-route'>
-        <View className='carpool-route__place'>
-          <Text>起点</Text>
-          <Text>{item.origin}</Text>
-        </View>
-        <View className='carpool-route__track'>
-          <View />
-          <View />
-          <View />
-        </View>
-        <View className='carpool-route__place carpool-route__place--destination'>
-          <Text>终点</Text>
-          <Text>{item.destination}</Text>
-        </View>
-      </View>
+      {item.description && (
+        <StickerContent
+          content={item.description}
+          className='carpool-card__description'
+          stickerClassName='business-card__sticker'
+        />
+      )}
+      <BusinessRoute
+        startLabel='出发地'
+        start={item.origin}
+        endLabel='目的地'
+        end={item.destination}
+      />
 
-      {item.description && <Text className='carpool-card__description'>{item.description}</Text>}
       <View className='carpool-card__footer'>
-        <Text>{formatStatus(item.status, item.review_status)}</Text>
-        <Text>{item.occupied_seats}/{item.total_seats} 人已加入</Text>
-        <Text>详情 ›</Text>
+        <Text>{campusLabel(item.campus)} · {departure.date} {departure.time}</Text>
+        <Text>{seats} 人可同行</Text>
       </View>
     </View>
   )

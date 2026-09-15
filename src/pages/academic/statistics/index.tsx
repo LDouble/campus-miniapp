@@ -9,10 +9,28 @@ import {
   getInstructorStatisticsTrend,
   InstructorPassRate,
 } from '../../../features/academic-statistics/repository'
+import {
+  academicStatisticsTermKey,
+  formatAcademicStatisticsTerm,
+} from '../../../features/academic-statistics/term-label'
 import type { AcademicPassRateTrend } from '../../../api/types'
+import { getSystemState } from '../../../state/system'
+import {
+  academicBindingGuidance,
+  isAcademicBindingRequiredError,
+  openAcademicCredentialBinding,
+} from '../../../features/academic-verification/binding-guidance'
+import AcademicLoadStateCard from '../../../features/academic-verification/academic-load-state'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
+import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import './index.scss'
 
 type TrendMetric = 'pass_rate' | 'average_score'
+
+const formatPublishedDate = (value: string) => {
+  const parts = apiDateTimeCampusParts(value)
+  return parts ? `${parts.year}/${parts.month}/${parts.day}` : '时间待确认'
+}
 
 const confidenceText = {
   sample_limited: '样本较少',
@@ -30,13 +48,6 @@ const decodeParam = (value?: string) => {
 }
 
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`
-
-const formatTerm = (termCode: string) => {
-  const parts = termCode.split('-')
-  if (parts.length !== 3) return termCode
-  const season = parts[2] === '1' ? '秋' : parts[2] === '2' ? '春' : parts[2]
-  return `${parts[0].slice(-2)}-${parts[1].slice(-2)} ${season}`
-}
 
 const normalizeTeacher = (value: string) => value.replace(/\s+/g, '')
 
@@ -84,8 +95,8 @@ const drawTrend = (
 ) => {
   const points = trend.points
   if (points.length < 2) return
-  const system = Taro.getSystemInfoSync()
-  const width = Math.max(280, Math.floor(system.windowWidth * (1 - 112 / 750)))
+  const { windowWidth } = getSystemState().windowInfo
+  const width = Math.max(280, Math.floor(windowWidth * (1 - 112 / 750)))
   const height = 176
   const padding = { top: 18, right: 16, bottom: 16, left: 16 }
   const plotWidth = width - padding.left - padding.right
@@ -142,7 +153,7 @@ export default function AcademicStatisticsPage() {
   const currentTeacherName = decodeParam(router.params.teacher_name).trim()
   const [statistics, setStatistics] = useState<CourseStatistics | null>(null)
   const [loading, setLoading] = useState(true)
-  const [errorText, setErrorText] = useState('')
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [fromCache, setFromCache] = useState(false)
   const [metric, setMetric] = useState<TrendMetric>('pass_rate')
   const [selectedPoint, setSelectedPoint] = useState(0)
@@ -152,19 +163,19 @@ export default function AcademicStatisticsPage() {
 
   const load = useCallback(async () => {
     if (!courseCode) {
-      setErrorText('缺少课程编号，暂时无法查询')
+      setLoadError(new Error('缺少课程编号，暂时无法查询'))
       setLoading(false)
       return
     }
     setLoading(true)
-    setErrorText('')
+    setLoadError(null)
     try {
       const result = await getCourseStatistics(courseCode)
       setStatistics(result.data)
       setFromCache(result.fromCache)
       setSelectedPoint(Math.max(0, result.data.trend.points.length - 1))
     } catch (error) {
-      setErrorText(error instanceof Error ? error.message : '课程参考加载失败')
+      setLoadError(error)
     } finally {
       setLoading(false)
     }
@@ -173,6 +184,15 @@ export default function AcademicStatisticsPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  Taro.useDidShow(() => {
+    if (consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/statistics/index',
+    )) {
+      void load()
+    }
+  })
 
   Taro.usePullDownRefresh(() => {
     load().finally(() => Taro.stopPullDownRefresh())
@@ -193,12 +213,12 @@ export default function AcademicStatisticsPage() {
   const activePoint = points[selectedPoint] || null
 
   useEffect(() => {
-    if (!statistics || statistics.trend.points.length < 2) return
+    if (selectedTeacher || !statistics || statistics.trend.points.length < 2) return
     const timer = setTimeout(() => {
       drawTrend(statistics.trend, metric, selectedPoint)
     }, 80)
     return () => clearTimeout(timer)
-  }, [metric, selectedPoint, statistics])
+  }, [metric, selectedPoint, selectedTeacher, statistics])
 
   const openTeacher = (teacher: InstructorPassRate) => {
     setSelectedTeacher(teacher)
@@ -212,6 +232,12 @@ export default function AcademicStatisticsPage() {
 
   const title = statistics?.overview.course_name || courseName || '课程参考'
   const distributions = statistics ? distributionRows(statistics) : []
+  const bindingRequired = isAcademicBindingRequiredError(loadError)
+  const errorMessage = bindingRequired
+    ? academicBindingGuidance.message
+    : loadError instanceof Error
+      ? loadError.message
+      : '课程参考加载失败'
 
   return (
     <View className={`statistics-page ${selectedTeacher ? 'statistics-page--locked' : ''}`}>
@@ -225,15 +251,29 @@ export default function AcademicStatisticsPage() {
             <Text>正在整理历史数据…</Text>
           </View>
         )}
-        {!loading && errorText && (
-          <View className='statistics-empty'>
-            <View className='statistics-empty__art'><View /><View /></View>
-            <Text className='statistics-empty__title'>暂时没有可展示的数据</Text>
-            <Text className='statistics-empty__copy'>{errorText}</Text>
-            <View className='statistics-empty__action' onClick={load}>重新加载</View>
-          </View>
+        {!loading && Boolean(loadError) && (
+          bindingRequired ? (
+            <AcademicLoadStateCard
+              title={academicBindingGuidance.title}
+              message={errorMessage}
+              actionLabel={academicBindingGuidance.actionLabel}
+              onAction={() => { void openAcademicCredentialBinding() }}
+            />
+          ) : (
+            <View className='statistics-empty'>
+              <View className='statistics-empty__art'><View /><View /></View>
+              <Text className='statistics-empty__title'>暂时没有可展示的数据</Text>
+              <Text className='statistics-empty__copy'>{errorMessage}</Text>
+              <View
+                className='statistics-empty__action'
+                ariaRole='button'
+                ariaLabel='重新加载课程统计'
+                onClick={() => { void load() }}
+              >重新加载</View>
+            </View>
+          )
         )}
-        {!loading && statistics && (
+        {!loading && statistics && !loadError && (
           <>
             <View className='statistics-hero'>
               <Text className='statistics-hero__course'>{title}</Text>
@@ -293,10 +333,14 @@ export default function AcademicStatisticsPage() {
                 <View className='trend-switch'>
                   <View
                     className={metric === 'pass_rate' ? 'trend-switch__item--active' : ''}
+                    ariaRole='button'
+                    ariaLabel='查看通过率趋势'
                     onClick={() => setMetric('pass_rate')}
                   >通过率</View>
                   <View
                     className={metric === 'average_score' ? 'trend-switch__item--active' : ''}
+                    ariaRole='button'
+                    ariaLabel='查看平均分趋势'
                     onClick={() => setMetric('average_score')}
                   >平均分</View>
                 </View>
@@ -304,24 +348,29 @@ export default function AcademicStatisticsPage() {
               <View className='trend-card'>
                 {points.length >= 2 ? (
                   <>
-                    <View className='trend-chart'>
-                      <Canvas
-                        className='trend-chart__canvas'
-                        canvasId='academic-pass-rate-chart'
-                      />
-                      <View className='trend-chart__touches'>
-                        {points.map((point, index) => (
-                          <View key={point.term_code} onClick={() => setSelectedPoint(index)} />
-                        ))}
+                    {!selectedTeacher && (
+                      <View className='trend-chart'>
+                        <Canvas
+                          className='trend-chart__canvas'
+                          canvasId='academic-pass-rate-chart'
+                        />
+                        <View className='trend-chart__touches'>
+                          {points.map((point, index) => (
+                            <View
+                              key={academicStatisticsTermKey(point)}
+                              onClick={() => setSelectedPoint(index)}
+                            />
+                          ))}
+                        </View>
                       </View>
-                    </View>
+                    )}
                     <View className='trend-labels'>
                       {points.map((point, index) => (
                         <Text
-                          key={point.term_code}
+                          key={academicStatisticsTermKey(point)}
                           className={index === selectedPoint ? 'trend-labels__active' : ''}
                         >
-                          {formatTerm(point.term_code)}
+                          {formatAcademicStatisticsTerm(point)}
                         </Text>
                       ))}
                     </View>
@@ -332,7 +381,7 @@ export default function AcademicStatisticsPage() {
                 {activePoint && (
                   <View className='trend-detail'>
                     <View>
-                      <Text>{formatTerm(activePoint.term_code)}</Text>
+                      <Text>{formatAcademicStatisticsTerm(activePoint)}</Text>
                       <Text>{activePoint.valid_count} 份有效成绩</Text>
                     </View>
                     <View>
@@ -367,7 +416,8 @@ export default function AcademicStatisticsPage() {
                     <View
                       key={teacher.teacher_key}
                       className={`instructor-card ${isCurrent ? 'instructor-card--current' : ''}`}
-                      hoverClass='instructor-card--pressed'
+                      ariaRole='button'
+                      ariaLabel={`查看${teacher.teacher_name}的历史统计`}
                       onClick={() => openTeacher(teacher)}
                     >
                       <View className='instructor-card__identity'>
@@ -398,7 +448,7 @@ export default function AcademicStatisticsPage() {
             <View className='statistics-privacy'>
               <Text>数据说明</Text>
               <Text>数据来自历史成绩的匿名聚合，仅供选课和复习参考，不代表教师教学质量。平均分仅统计百分制成绩。</Text>
-              <Text>统计更新于 {new Date(statistics.publishedAt).toLocaleDateString()}</Text>
+              <Text>统计更新于 {formatPublishedDate(statistics.publishedAt)}</Text>
             </View>
           </>
         )}
@@ -408,7 +458,12 @@ export default function AcademicStatisticsPage() {
         <View className='statistics-overlay' onClick={() => setSelectedTeacher(null)}>
           <View className='statistics-sheet' onClick={requestWechatSubscriptionAndStopPropagation}>
             <View className='statistics-sheet__handle' />
-            <View className='statistics-sheet__close' onClick={() => setSelectedTeacher(null)}>×</View>
+            <View
+              className='statistics-sheet__close'
+              ariaRole='button'
+              ariaLabel='关闭教师统计详情'
+              onClick={() => setSelectedTeacher(null)}
+            >×</View>
             <Text className='statistics-sheet__title'>{selectedTeacher.teacher_name}</Text>
             <Text className='statistics-sheet__subtitle'>{title} · 历史聚合数据</Text>
             <View className='teacher-summary'>
@@ -421,8 +476,8 @@ export default function AcademicStatisticsPage() {
             {!teacherTrendLoading && teacherTrend && teacherTrend.points.length > 0 && (
               <View className='teacher-trend-list'>
                 {teacherTrend.points.map((point) => (
-                  <View key={point.term_code}>
-                    <Text>{formatTerm(point.term_code)}</Text>
+                  <View key={academicStatisticsTermKey(point)}>
+                    <Text>{formatAcademicStatisticsTerm(point)}</Text>
                     <Text>{formatPercent(point.pass_rate)}</Text>
                     <Text>{point.average_score === undefined ? '等级制' : `${point.average_score.toFixed(1)} 分`}</Text>
                     <Text>{point.valid_count} 份</Text>

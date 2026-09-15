@@ -1,5 +1,6 @@
 import {
   listAcademicCourses,
+  listAcademicCourseSelectionSchedule,
   listAcademicCourseSelections,
   listAcademicExams,
   listAcademicGrades,
@@ -11,7 +12,10 @@ import type {
   AcademicExam,
   AcademicGrade,
   AcademicPeriod as AcademicPeriodDTO,
+  PersonalTimetableItemView,
 } from '../../api/types'
+import type { AcademicQueryResult } from '../../api/academic'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 import {
   AcademicPeriod,
   Course,
@@ -19,20 +23,27 @@ import {
   ExamRecord,
   GradeRecord,
 } from './types'
-import { courseColors, pad } from './utils'
+import { courseColorForClass, pad } from './utils'
 
-const stableColor = (id: string) => {
-  const hash = [...id].reduce((value, character) => (
-    ((value * 31) + character.charCodeAt(0)) >>> 0
-  ), 0)
-  return courseColors[hash % courseColors.length]
+type AcademicCourseWithClassNumber = AcademicCourse & {
+  class_num?: string | number | null
+  classNum?: string | number | null
+}
+
+const getCourseClassNumber = (
+  course: AcademicCourse,
+) => {
+  const raw = course as AcademicCourseWithClassNumber
+  const candidate = [raw.class_num, raw.classNum]
+    .find((value) => value !== null && value !== undefined && String(value).trim())
+  return candidate === undefined ? undefined : String(candidate).trim()
 }
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  const parts = apiDateTimeCampusParts(value)
+  if (!parts) return value
+  return `${parts.year}/${pad(parts.month)}/${pad(parts.day)} ${pad(parts.hour)}:${pad(parts.minute)}`
 }
 
 const mapPeriod = (period: AcademicPeriodDTO): AcademicPeriod => ({
@@ -44,21 +55,59 @@ const mapPeriod = (period: AcademicPeriodDTO): AcademicPeriod => ({
   isCurrent: period.is_current,
 })
 
-const mapCourse = (course: AcademicCourse): Course => ({
-  id: course.id,
-  periodId: course.period_id,
-  courseCode: course.course_code,
-  name: course.name,
-  teacher: course.teacher,
-  location: course.location,
-  campus: course.campus,
-  weekday: course.weekday,
-  startSection: course.start_section,
-  endSection: course.end_section,
-  weeks: [...course.weeks],
-  color: stableColor(course.id),
-  source: 'official',
-})
+const mapCourse = (course: AcademicCourse, index = 0): Course => {
+  const classNum = getCourseClassNumber(course)
+  return {
+    id: course.id,
+    periodId: course.period_id,
+    courseCode: course.course_code,
+    ...(classNum ? { classNum } : {}),
+    name: course.name,
+    note: course.note,
+    teacher: course.teacher,
+    location: course.location,
+    campus: course.campus,
+    weekday: course.weekday,
+    startSection: course.start_section,
+    endSection: course.end_section,
+    weeks: [...course.weeks],
+    color: courseColorForClass(classNum || course.id || `course-${index + 1}`),
+    source: 'official',
+  }
+}
+
+const formatCatalogSlotLocation = (
+  slot: PersonalTimetableItemView['slots'][number],
+  fallback?: string | null,
+) => (
+  [slot.building, slot.room].filter((value): value is string => Boolean(value?.trim())).join(' ')
+  || slot.raw_location?.trim()
+  || fallback?.trim()
+  || ''
+)
+
+/** 将服务端保存的蹭课快照拆成课表可渲染的时间块。 */
+export const mapPersonalTimetableItemCourses = (
+  item: PersonalTimetableItemView,
+): Course[] => item.slots.map((slot) => ({
+  id: `audit-${item.id}-${slot.source_schedule_slot_id}`,
+  periodId: item.period_id,
+  courseCode: item.course_code ?? undefined,
+  classNum: item.class_name ?? item.offering_id,
+  name: item.course_name,
+  teacher: item.teachers.join('、'),
+  location: formatCatalogSlotLocation(slot, item.location_text),
+  campus: slot.campus || item.campus || undefined,
+  weekday: slot.weekday,
+  startSection: slot.start_section,
+  endSection: slot.end_section,
+  weeks: [...slot.weeks],
+  color: courseColorForClass(item.offering_id),
+  source: 'audit',
+  auditItemId: item.id,
+  auditItemVersion: item.version,
+  auditStatus: item.source_status,
+}))
 
 const mapGrade = (grade: AcademicGrade): GradeRecord => ({
   id: grade.id,
@@ -109,20 +158,30 @@ const mapCourseSelection = (
 })
 
 export interface AcademicRepository {
-  getPeriods: () => Promise<AcademicPeriod[]>
-  getCourses: (periodId: string) => Promise<Course[]>
-  getGrades: () => Promise<GradeRecord[]>
-  getExams: (periodId: string) => Promise<ExamRecord[]>
-  getCourseSelections: (periodId: string) => Promise<CourseSelectionRecord[]>
+  getPeriods: (options?: { force?: boolean }) => Promise<AcademicPeriod[]>
+  getCourses: (periodId: string) => Promise<AcademicQueryResult<Course>>
+  getCourseSelectionSchedule: (periodId: string) => Promise<AcademicQueryResult<Course>>
+  getGrades: () => Promise<AcademicQueryResult<GradeRecord>>
+  getExams: (periodId: string) => Promise<AcademicQueryResult<ExamRecord>>
+  getCourseSelections: (periodId: string) => Promise<AcademicQueryResult<CourseSelectionRecord>>
 }
 
-let pendingGradeRequest: Promise<GradeRecord[]> | null = null
+const mapQueryResult = <Source, Target>(
+  result: AcademicQueryResult<Source>,
+  map: (record: Source) => Target,
+): AcademicQueryResult<Target> => ({
+  records: result.records.map(map),
+  ...(result.cache ? { cache: result.cache } : {}),
+  ...(result.scheduleNote !== undefined ? { scheduleNote: result.scheduleNote } : {}),
+})
+
+let pendingGradeRequest: Promise<AcademicQueryResult<GradeRecord>> | null = null
 
 const getGrades = () => {
   if (pendingGradeRequest) return pendingGradeRequest
-  let tracked: Promise<GradeRecord[]>
+  let tracked: Promise<AcademicQueryResult<GradeRecord>>
   tracked = listAcademicGrades()
-    .then((records) => records.map(mapGrade))
+    .then((result) => mapQueryResult(result, mapGrade))
     .finally(() => {
       if (pendingGradeRequest === tracked) pendingGradeRequest = null
     })
@@ -131,11 +190,16 @@ const getGrades = () => {
 }
 
 export const academicRepository: AcademicRepository = {
-  getPeriods: async () => (await listAcademicPeriods()).map(mapPeriod),
-  getCourses: async (periodId) => (await listAcademicCourses(periodId)).map(mapCourse),
+  getPeriods: async (options) => (await listAcademicPeriods(options)).map(mapPeriod),
+  getCourses: async (periodId) => mapQueryResult(await listAcademicCourses(periodId), mapCourse),
+  getCourseSelectionSchedule: async (periodId) => mapQueryResult(
+    await listAcademicCourseSelectionSchedule(periodId),
+    mapCourse,
+  ),
   getGrades,
-  getExams: async (periodId) => (await listAcademicExams(periodId)).map(mapExam),
-  getCourseSelections: async (periodId) => (
-    await listAcademicCourseSelections(periodId)
-  ).map(mapCourseSelection),
+  getExams: async (periodId) => mapQueryResult(await listAcademicExams(periodId), mapExam),
+  getCourseSelections: async (periodId) => mapQueryResult(
+    await listAcademicCourseSelections(periodId),
+    mapCourseSelection,
+  ),
 }

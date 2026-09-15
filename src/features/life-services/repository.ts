@@ -13,14 +13,21 @@ import type {
   ErrandOrderResult,
   ErrandView,
   ErrandViewPage,
+  HomeFeedPage,
   MarketplaceListingView,
   MarketplaceListingViewPage,
   MarketplaceTradeOrder,
+  MentionCandidatePage,
+  PublicUserProfile,
+  ReactionResourceType,
+  ReactionState,
   TradeOrderView,
   TradeOrderViewPage,
   CommentView,
   CommentViewPage,
+  CommentThread,
 } from '../../api/types'
+import type { CampusName } from './campus'
 
 type CreateErrandBody = operations['CreateErrand']['requestBody']['content']['application/json']
 type UpdateErrandBody = operations['UpdateErrand']['requestBody']['content']['application/json']
@@ -40,6 +47,7 @@ export type PagingQuery = {
 
 export type ErrandSearch = PagingQuery & {
   keyword?: string
+  campus?: CampusName
 }
 
 export type MyErrandSearch = PagingQuery & {
@@ -50,6 +58,7 @@ export type MyErrandSearch = PagingQuery & {
 
 export type MarketplaceSearch = PagingQuery & {
   keyword?: string
+  campus?: CampusName
   intent?: 'sell' | 'wanted'
   category?: 'general' | 'course_material'
   minPriceCents?: number
@@ -58,6 +67,7 @@ export type MarketplaceSearch = PagingQuery & {
 
 export type CarpoolSearch = PagingQuery & {
   keyword?: string
+  campus?: CampusName
   origin?: string
   destination?: string
   departureDate?: string
@@ -76,6 +86,8 @@ export type TradeOrderSearch = PagingQuery & {
   orderType?: 'marketplace' | 'errand'
   tradeStatus?: 'confirmed' | 'completed' | 'cancelled' | 'expired'
   fulfillmentStatus?: 'not_started' | 'in_progress' | 'delivered'
+  statusGroup?: 'all' | 'action_required' | 'in_progress' | 'ended'
+  keyword?: string
 }
 
 export type CampusCircleSearch = PagingQuery & {
@@ -88,6 +100,7 @@ export type CampusCircleSearch = PagingQuery & {
 
 export type CampusCircleTopicSearch = PagingQuery & {
   kind?: 'topic' | 'campaign'
+  keyword?: string
 }
 
 const versionAction = <T>(path: string, version: number, scope: string) => (
@@ -100,6 +113,52 @@ const versionAction = <T>(path: string, version: number, scope: string) => (
 )
 
 export const lifeServicesRepository = {
+  searchMentionCandidates(keyword: string) {
+    return apiRequest<MentionCandidatePage>({
+      path: '/api/v1/users/mention-candidates',
+      query: { keyword: keyword.trim(), limit: 10 },
+    })
+  },
+
+  listHomeFeed(search: PagingQuery = {}) {
+    return apiRequest<HomeFeedPage>({
+      path: '/api/v1/home/feed',
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  getUserProfile(userId: number) {
+    return apiRequest<PublicUserProfile>({ path: `/api/v1/users/${userId}/profile` })
+  },
+
+  listUserCampusCirclePosts(userId: number, search: PagingQuery = {}) {
+    return apiRequest<CampusCirclePostViewPage>({
+      path: `/api/v1/users/${userId}/campus-circle/posts`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  listUserErrands(userId: number, search: PagingQuery = {}) {
+    return apiRequest<ErrandViewPage>({
+      path: `/api/v1/users/${userId}/errands`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  listUserMarketplaceListings(userId: number, search: PagingQuery = {}) {
+    return apiRequest<MarketplaceListingViewPage>({
+      path: `/api/v1/users/${userId}/marketplace/listings`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
+  listUserCarpoolTrips(userId: number, search: PagingQuery = {}) {
+    return apiRequest<CarpoolTripViewPage>({
+      path: `/api/v1/users/${userId}/carpool/trips`,
+      query: { page: search.page || 1, page_size: search.pageSize || 20 },
+    })
+  },
+
   createContentReport(input: CreateContentReportBody) {
     return apiRequest<operations['CreateContentReport']['responses'][201]['content']['application/json']['data']>({
       path: '/api/v1/content-reports',
@@ -124,7 +183,12 @@ export const lifeServicesRepository = {
   listCampusCircleTopics(search: CampusCircleTopicSearch = {}) {
     return apiRequest<CampusCircleTopicPage>({
       path: '/api/v1/campus-circle/topics',
-      query: { kind: search.kind, page: search.page || 1, page_size: search.pageSize || 20 },
+      query: {
+        kind: search.kind,
+        keyword: search.keyword,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
     })
   },
 
@@ -183,6 +247,14 @@ export const lifeServicesRepository = {
     })
   },
 
+  withdrawCampusCirclePost(id: number, version: number) {
+    return versionAction<CampusCirclePostView>(
+      `/api/v1/campus-circle/posts/${id}/withdraw`,
+      version,
+      `campus-circle:${id}:withdraw`,
+    )
+  },
+
   likeCampusCirclePost(id: number) {
     return apiRequest<CampusCirclePostView>({
       path: `/api/v1/campus-circle/posts/${id}/like`,
@@ -194,6 +266,22 @@ export const lifeServicesRepository = {
     return apiRequest<CampusCirclePostView>({
       path: `/api/v1/campus-circle/posts/${id}/like`,
       method: 'DELETE',
+    })
+  },
+
+  likeResource(id: number, resourceType: ReactionResourceType) {
+    return apiRequest<ReactionState>({
+      path: `/api/v1/likes/${id}`,
+      method: 'PUT',
+      query: { resource_type: resourceType },
+    })
+  },
+
+  unlikeResource(id: number, resourceType: ReactionResourceType) {
+    return apiRequest<ReactionState>({
+      path: `/api/v1/likes/${id}`,
+      method: 'DELETE',
+      query: { resource_type: resourceType },
     })
   },
 
@@ -218,10 +306,24 @@ export const lifeServicesRepository = {
       path: '/api/v1/comments',
       method: 'POST',
       idempotencyKey: createIdempotencyKey(
-        `comment:${input.target_type}:${input.target_id}:create`,
+        `comment:${input.target_type}:${input.target_id}:${input.parent_id ? `reply:${input.parent_id}` : 'create'}`,
       ),
       data: input,
     })
+  },
+
+  getCommentThread(id: number) {
+    return apiRequest<CommentThread>({
+      path: `/api/v1/comments/${id}/thread`,
+    })
+  },
+
+  withdrawComment(id: number, version: number) {
+    return versionAction<CommentView>(
+      `/api/v1/comments/${id}/withdraw`,
+      version,
+      `comment:${id}:withdraw`,
+    )
   },
 
   listErrands(search: ErrandSearch = {}) {
@@ -229,6 +331,7 @@ export const lifeServicesRepository = {
       path: '/api/v1/errands',
       query: {
         keyword: search.keyword,
+        campus: search.campus,
         page: search.page || 1,
         page_size: search.pageSize || 20,
       },
@@ -323,6 +426,7 @@ export const lifeServicesRepository = {
       path: '/api/v1/marketplace/listings',
       query: {
         keyword: search.keyword,
+        campus: search.campus,
         intent: search.intent,
         category: search.category,
         min_price_cents: search.minPriceCents,
@@ -397,6 +501,7 @@ export const lifeServicesRepository = {
       path: '/api/v1/carpool/trips',
       query: {
         keyword: search.keyword,
+        campus: search.campus,
         origin: search.origin,
         destination: search.destination,
         departure_date: search.departureDate,
@@ -485,6 +590,8 @@ export const lifeServicesRepository = {
         order_type: search.orderType,
         trade_status: search.tradeStatus,
         fulfillment_status: search.fulfillmentStatus,
+        status_group: search.statusGroup,
+        keyword: search.keyword?.trim() || undefined,
         page: search.page || 1,
         page_size: search.pageSize || 20,
       },

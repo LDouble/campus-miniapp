@@ -1,5 +1,5 @@
 export default definePageConfig({
   navigationStyle: 'custom',
-  backgroundColor: '#f3f8f9',
+  backgroundColor: '@backgroundColor',
   enablePullDownRefresh: false,
 })

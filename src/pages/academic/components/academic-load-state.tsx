@@ -1,7 +1,14 @@
-import Taro from '@tarojs/taro'
+import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
-import { AcademicCredentialMissingError } from '../../../api/academic-credential'
 import { isApiError } from '../../../api/client'
+import type { AcademicCacheMetadata } from '../../../api/types'
+import {
+  academicBindingGuidance,
+  isAcademicBindingRequiredError,
+  openAcademicCredentialBinding,
+} from '../../../features/academic-verification/binding-guidance'
+import AcademicLoadStateCard from '../../../features/academic-verification/academic-load-state'
+import { resolveAcademicCacheNotice } from './academic-cache-notice'
 
 interface AcademicLoadStateProps {
   title?: string
@@ -12,18 +19,14 @@ interface AcademicLoadStateProps {
 }
 
 interface AcademicCacheNoticeProps {
-  updatedAt: number
-  error?: unknown
-}
-
-const formatCacheTime = (timestamp: number) => {
-  const date = new Date(timestamp)
-  if (!timestamp || Number.isNaN(date.getTime())) return ''
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  cache?: AcademicCacheMetadata | null
+  updatedAt?: number
+  localUpdatedAt?: number
+  localFallback?: boolean
 }
 
 type AcademicLoadAction = 'retry' | 'rebind'
+const UPDATED_NOTICE_DURATION = 5000
 
 export interface AcademicLoadErrorState {
   title: string
@@ -40,12 +43,12 @@ const retryState = (message = '可以稍后再试，已有数据不会受影响'
 })
 
 export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState => {
-  if (error instanceof AcademicCredentialMissingError) {
+  if (isAcademicBindingRequiredError(error)) {
     return {
-      title: '本机没有可用教务账号',
-      message: '请重新绑定教务账号后再查询。',
+      title: academicBindingGuidance.title,
+      message: academicBindingGuidance.message,
       action: 'rebind',
-      actionLabel: '绑定教务账号',
+      actionLabel: academicBindingGuidance.actionLabel,
     }
   }
   if (!isApiError(error)) {
@@ -55,16 +58,23 @@ export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState
     case 'invalid_academic_credentials':
       return {
         title: '教务账号或密码错误',
-        message: '本机保存的教务凭据已被校方拒绝，请确认账号密码后更新。',
+        message: '请访问信息门户 my.ouc.edu.cn 确认或修改密码，再回来更新本机密码。',
         action: 'rebind',
         actionLabel: '更新教务账号',
       }
     case 'academic_password_expired':
       return {
         title: '统一认证密码已过期',
-        message: '请先在校方统一身份认证系统修改密码，再回来更新本机保存的密码。',
+        message: '请访问信息门户 my.ouc.edu.cn 修改密码，再回来更新本机保存的密码。',
         action: 'rebind',
         actionLabel: '更新本机密码',
+      }
+    case 'academic_account_restricted':
+      return {
+        title: '校方账号已锁定或冻结',
+        message: '请访问信息门户 my.ouc.edu.cn 处理账号状态并修改密码，再回来更新本机密码。',
+        action: 'rebind',
+        actionLabel: '解锁后重新绑定',
       }
     case 'academic_challenge_required':
       return {
@@ -82,6 +92,8 @@ export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState
       }
     case 'academic_provider_busy':
       return retryState('当前查询人数较多，请稍后再试。')
+    case 'academic_retryable':
+      return retryState('教务暂时繁忙，请下拉重试刷新。')
     default:
       return retryState(error.message || undefined)
   }
@@ -102,37 +114,68 @@ export function AcademicLoadState({
       onRetry()
       return
     }
-    Taro.navigateTo({ url: '/pages/academic-verification/index?rebind=1' })
-      .catch(() => Taro.showToast({ title: '暂时无法打开账号更新页', icon: 'none' }))
+    void openAcademicCredentialBinding()
   }
   return (
-    <View className='academic-load-state'>
-      <View className='academic-load-state__mark'>!</View>
-      <Text className='academic-load-state__title'>{resolvedTitle}</Text>
-      <Text className='academic-load-state__copy'>{resolvedMessage}</Text>
-      <View
-        className={`academic-load-state__action ${retrying ? 'academic-load-state__action--disabled' : ''}`}
-        hoverClass={retrying ? 'none' : 'academic-load-state__action--pressed'}
-        onClick={() => {
-          if (!retrying) handleAction()
-        }}
-      >
-        {retrying ? '正在重试…' : state.actionLabel}
-      </View>
-    </View>
+    <AcademicLoadStateCard
+      title={resolvedTitle}
+      message={resolvedMessage}
+      actionLabel={retrying ? '正在重试…' : state.actionLabel}
+      actionDisabled={retrying}
+      onAction={handleAction}
+    />
   )
 }
 
-export function AcademicCacheNotice({ updatedAt, error }: AcademicCacheNoticeProps) {
-  const label = formatCacheTime(updatedAt)
-  if (!label) return null
-  const errorState = error ? resolveAcademicLoadError(error) : null
+export function AcademicCacheNotice({
+  cache,
+  updatedAt = 0,
+  localUpdatedAt = 0,
+  localFallback = false,
+}: AcademicCacheNoticeProps) {
+  const [now, setNow] = useState(Date.now)
+  const notice = resolveAcademicCacheNotice({
+    cache,
+    updatedAt,
+    localUpdatedAt,
+    localFallback,
+    now,
+  })
+  const hasNotice = Boolean(notice)
+  const noticeSourceKey = [
+    cache?.state || '',
+    cache?.cached_at || '',
+    cache?.fresh_until || '',
+    updatedAt,
+    localUpdatedAt,
+    localFallback ? 'fallback' : '',
+  ].join('|')
+  const [isNoticeVisible, setIsNoticeVisible] = useState(hasNotice)
+  const refreshAt = notice?.kind === 'fresh' ? notice.refreshAt : undefined
+
+  useEffect(() => {
+    if (!refreshAt) return undefined
+    const timer = setTimeout(() => setNow(Date.now()), Math.max(refreshAt - Date.now(), 0))
+    return () => clearTimeout(timer)
+  }, [refreshAt])
+
+  useEffect(() => {
+    if (!hasNotice) {
+      setIsNoticeVisible(false)
+      return undefined
+    }
+    setIsNoticeVisible(true)
+    const timer = setTimeout(() => {
+      setIsNoticeVisible(false)
+    }, UPDATED_NOTICE_DURATION)
+    return () => clearTimeout(timer)
+  }, [hasNotice, noticeSourceKey])
+
+  if (!notice || !isNoticeVisible) return null
   return (
-    <View className='academic-cache-notice'>
+    <View className={`academic-cache-notice academic-cache-notice--${notice.kind}`}>
       <View />
-      <Text>
-        {errorState ? `${errorState.title} · ` : ''}已展示上次数据 · {label}
-      </Text>
+      <Text>{notice.message}</Text>
     </View>
   )
 }

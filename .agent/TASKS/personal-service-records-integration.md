@@ -1,7 +1,7 @@
 ## Task: 个人服务记录与订单联调闭环
 
 **ID:** personal-service-records-integration
-**Label:** 海大校园小程序：我的接单、我的订单与我的拼车
+**Label:** OUSea小程序：我的接单、我的订单与我的拼车
 **Description:** 补齐个人中心到跑腿接单、交易订单、拼车发起/参与记录的真实后端数据链路，并完成状态操作、刷新、分页和联调验收。
 **Type:** Feature
 **Status:** Done

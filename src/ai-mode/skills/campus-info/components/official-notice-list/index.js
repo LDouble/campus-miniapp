@@ -1,5 +1,8 @@
+const { getCampusTheme, subscribeCampusTheme } = require('../../utils/theme')
+
 Component({
   data: {
+    darkMode: getCampusTheme() === 'dark',
     visibleItems: [],
     totalCount: 0,
     omittedCount: 0,
@@ -74,6 +77,12 @@ Component({
 
     attached() {
       console.info('[ai-mode] official-notice-list attached')
+      this.unsubscribeCampusTheme = subscribeCampusTheme((theme) => {
+        this.setData({ darkMode: theme === 'dark' })
+      })
+    },
+    detached() {
+      if (this.unsubscribeCampusTheme) this.unsubscribeCampusTheme()
     }
   }
 })

@@ -104,7 +104,6 @@ export default function ContentReportPage() {
                     ? 'content-report__option content-report__option--active'
                     : 'content-report__option'
                 }
-                hoverClass='content-report__option--pressed'
                 onClick={() => setCategory(item.value)}
               >
                 <Text>{item.label}</Text>
@@ -145,7 +144,6 @@ export default function ContentReportPage() {
               ? 'content-report__submit'
               : 'content-report__submit content-report__submit--disabled'
           }
-          hoverClass={canSubmit ? 'content-report__submit--pressed' : 'none'}
           onClick={() => void submit()}
         >
           {submitting ? '正在提交' : '提交举报'}

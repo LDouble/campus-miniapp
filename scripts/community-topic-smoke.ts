@@ -1,6 +1,8 @@
 import { strict as assert } from 'node:assert'
 import {
   communityTopicPublisherUrl,
+  communityTopicUrl,
+  extractCommunityTopicNames,
   parsePositiveId,
   topicPeriodLabel,
 } from '../src/features/community/topic'
@@ -12,6 +14,13 @@ assert.equal(
   communityTopicPublisherUrl(23),
   '/pages/publish/index?section=community&community_topic_id=23',
 )
+assert.equal(communityTopicUrl(23), '/pages/community/topic/index?id=23')
+assert.equal(communityTopicUrl(0), '')
+assert.deepEqual(
+  extractCommunityTopicNames('聊聊 #选课专区 和 #OUSea_2026，也不要重复 #选课专区'),
+  ['选课专区', 'OUSea_2026'],
+)
+assert.deepEqual(extractCommunityTopicNames('https://example.com/#not-a-topic'), [])
 assert.equal(topicPeriodLabel({ kind: 'topic', starts_at: null, ends_at: null }), '')
 assert.equal(
   topicPeriodLabel({

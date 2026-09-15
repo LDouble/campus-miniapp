@@ -22,7 +22,7 @@ export const migratedFeatureMeta: Record<MigratedFeatureModule, MigratedFeatureM
     path: 'pages/community/index?section=errands',
   },
   carpool: {
-    label: '校园拼车',
+    label: '校园找同行',
     path: 'pages/community/index?section=carpool',
   },
   course_materials: {

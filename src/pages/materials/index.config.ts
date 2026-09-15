@@ -1,4 +1,6 @@
 export default definePageConfig({
+  enableShareAppMessage: true,
+  enableShareTimeline: true,
   navigationStyle: 'custom',
-  backgroundColor: '#f5faf8',
+  backgroundColor: '@backgroundColor',
 })

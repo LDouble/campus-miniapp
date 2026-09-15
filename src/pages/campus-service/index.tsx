@@ -9,6 +9,10 @@ export default function CampusServicePage() {
   const [type, setType] = useState<CampusServiceType>('study')
   const [activeFilter, setActiveFilter] = useState(0)
   useLoad((options) => {
+    if (options.type === 'campus-card') {
+      Taro.redirectTo({ url: '/pages/services/index' })
+      return
+    }
     if (options.type === 'calendar') {
       Taro.redirectTo({ url: '/pages/calendar/index' })
       return
@@ -56,7 +60,7 @@ export default function CampusServicePage() {
         {data.filters.map((filter, index) => <View key={filter} className={activeFilter === index ? 'campus-service-filters__active' : ''} onClick={() => setActiveFilter(index)}>{filter}</View>)}
       </View>
       <View className='campus-service-heading'><Text>服务信息</Text><Text>{visibleItems.length} 条</Text></View>
-      {visibleItems.map((item) => <View key={item.id} className='campus-service-card' hoverClass='campus-service-card--pressed' onClick={() => Taro.navigateTo({ url: `/pages/campus-service/detail?type=${type}&id=${item.id}` })}>
+      {visibleItems.map((item) => <View key={item.id} className='campus-service-card' onClick={() => Taro.navigateTo({ url: `/pages/campus-service/detail?type=${type}&id=${item.id}` })}>
         <View className='campus-service-card__top'><Text>{item.title}</Text><Text>{item.badge}</Text></View>
         <Text className='campus-service-card__summary'>{item.summary}</Text>
         <View className='campus-service-card__bottom'><Text>{item.meta}</Text><Text>查看详情 ›</Text></View>

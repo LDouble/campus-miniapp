@@ -9,7 +9,7 @@ export type ApiEndpoints = {
   production: string
 }
 
-const localApiBaseUrl = 'http://127.0.0.1:18080'
+const localApiBaseUrl = 'http://127.0.0.1:8080'
 export const defaultReviewApiBaseUrl = 'https://review.weouc.com'
 export const defaultProductionApiBaseUrl = 'https://product.weouc.com'
 
@@ -47,7 +47,7 @@ export const loadApiEndpoints = (
     ),
     production: normalizeUrl(
       environment.TARO_APP_PRODUCTION_API_BASE_URL
-      || (requireIsolation ? defaultProductionApiBaseUrl : legacy),
+      || defaultProductionApiBaseUrl,
     ),
   }
 

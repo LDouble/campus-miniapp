@@ -1,7 +1,7 @@
 ## Task: 社区与生活服务去标题字段迁移
 
 **ID:** remove-resource-title-fields
-**Label:** 海大校园平台：删除社区、跑腿、二手、拼车资源标题字段
+**Label:** OUSea平台：删除社区、跑腿、二手、拼车资源标题字段
 **Description:** 从小程序、OpenAPI、Go 领域模型和数据库中删除四类资源的独立 title 字段，改用正文、描述、路线等结构化业务字段完成列表、详情和发布。
 **Type:** Migration
 **Status:** Done

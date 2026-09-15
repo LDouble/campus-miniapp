@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useLoad, useShareAppMessage } from '@tarojs/taro'
+import { useLoad } from '@tarojs/taro'
 import { Button, Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import { isApiError } from '../../api/client'
 import { publicShareImage } from '../../features/clubs/model'
 import { clubsRepository } from '../../features/clubs/repository'
 import type { ClubDetail } from '../../features/clubs/types'
+import { useCampusShare } from '../../features/share'
 import './detail.scss'
 
 const validClubId = (value?: string) => {
@@ -45,11 +46,12 @@ export default function ClubDetailPage() {
     void load(id)
   })
 
-  useShareAppMessage(() => {
+  useCampusShare(() => {
     const imageUrl = club ? publicShareImage(club) : ''
     return {
       title: club ? `${club.name}｜海大社团` : '海大社团广场',
-      path: club ? `/pages/clubs/detail?id=${club.id}` : '/pages/clubs/index',
+      path: club ? '/pages/clubs/detail' : '/pages/clubs/index',
+      query: club ? { id: club.id } : undefined,
       imageUrl: imageUrl || require('../../assets/tabbar/community.png'),
     }
   })
@@ -82,7 +84,7 @@ export default function ClubDetailPage() {
           <View className='club-detail-state__icon'><Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' /></View>
           <Text className='club-detail-state__title'>暂时无法查看这个社团</Text>
           <Text className='club-detail-state__text'>{error}</Text>
-          {!!clubId && <View className='club-detail-state__action' onClick={() => void load(clubId)}>重新加载</View>}
+          {!!clubId && <View className='club-detail-state__action' ariaRole='button' ariaLabel='重新加载社团详情' onClick={() => void load(clubId)}>重新加载</View>}
         </View>
       )}
 
@@ -110,7 +112,7 @@ export default function ClubDetailPage() {
 
           <View className='club-detail__share-row'>
             <Text>把喜欢的社团分享给同学</Text>
-            <Button className='club-detail__share' openType='share'>分享主页</Button>
+            <Button className='club-detail__share' hoverClass='none' openType='share'>分享主页</Button>
           </View>
 
           <View className='club-detail-section club-detail-section--intro'>
@@ -184,7 +186,6 @@ export default function ClubDetailPage() {
               className='club-viewer__close'
               ariaRole='button'
               ariaLabel='关闭图片预览'
-              hoverClass='club-viewer__close--pressed'
               onClick={() => setViewerIndex(null)}
             ><View /><View /></View>
             <Text>{viewerIndex + 1} / {club.gallery.length}</Text>

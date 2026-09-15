@@ -14,7 +14,7 @@ const uploadErrorMessage = (error: unknown) => {
       ? error.message
       : String(error || '')
   if (message.includes('url not in domain list')) {
-    return 'COS 上传域名未加入微信 uploadFile 合法域名'
+    return '对象存储上传域名未加入微信 uploadFile 合法域名'
   }
   if (message.includes('timeout')) return '文件上传超时，请检查网络后重试'
   return message || '文件上传失败'
@@ -29,7 +29,7 @@ export const uploadFileToObjectStorage = (
   filePath: string,
   onProgress?: (progress: number) => void,
 ) => {
-  console.info('[COS直传] 开始上传', {
+  console.info('[对象存储直传] 开始上传', {
     host: uploadHost(target.upload_url),
     fileField: target.file_field,
   })
@@ -44,15 +44,15 @@ export const uploadFileToObjectStorage = (
   if (onProgress) task.progress((event) => onProgress(event.progress))
   return task.then((result) => {
     if (result.statusCode < 200 || result.statusCode >= 300) {
-      throw new Error(`COS 文件上传失败（HTTP ${result.statusCode}）`)
+      throw new Error(`对象存储文件上传失败（HTTP ${result.statusCode}）`)
     }
-    console.info('[COS直传] 上传完成', {
+    console.info('[对象存储直传] 上传完成', {
       host: uploadHost(target.upload_url),
       statusCode: result.statusCode,
     })
   }).catch((error: unknown) => {
     const message = uploadErrorMessage(error)
-    console.error('[COS直传] 上传失败', {
+    console.error('[对象存储直传] 上传失败', {
       host: uploadHost(target.upload_url),
       message,
     })

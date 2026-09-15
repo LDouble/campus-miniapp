@@ -14,6 +14,7 @@ import type {
   ClubDirectoryItem,
   ClubSummary,
 } from '../../features/clubs/types'
+import { useCampusShare } from '../../features/share'
 import './index.scss'
 
 const PAGE_SIZE = 12
@@ -41,6 +42,11 @@ const mergeClubs = <T extends { id: number }>(current: T[], incoming: T[]) => {
 }
 
 export default function ClubsPage() {
+  useCampusShare(() => ({
+    title: '海大社团广场｜发现喜欢的校园社团',
+    path: '/pages/clubs/index',
+  }))
+
   const [categories, setCategories] = useState<ClubCategory[]>([])
   const [clubs, setClubs] = useState<ClubSummary[]>([])
   const [query, setQuery] = useState('')
@@ -312,7 +318,7 @@ export default function ClubsPage() {
           <Text className='clubs-hero__subtitle'>浏览校园社团的故事、文化与精彩瞬间</Text>
         </View>
         <View className='clubs-hero__mark'>
-          <Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' />
+          <Image src={require('../../assets/icons/clubs-white.svg')} mode='aspectFit' />
         </View>
       </View>
 
@@ -333,7 +339,6 @@ export default function ClubsPage() {
               className='clubs-search__clear'
               ariaRole='button'
               ariaLabel='清空搜索内容'
-              hoverClass='clubs-search__clear--pressed'
               onClick={() => {
                 setQuery('')
                 setKeyword('')
@@ -370,7 +375,6 @@ export default function ClubsPage() {
           className='clubs-workspace__mine'
           ariaRole='button'
           ariaLabel='查看我的社团资料和审核进度'
-          hoverClass='clubs-workspace__mine--pressed'
           onClick={() => Taro.navigateTo({ url: '/pages/clubs/mine' })}
         >
           <Text>我的社团资料</Text>
@@ -380,7 +384,6 @@ export default function ClubsPage() {
           className='clubs-workspace__create'
           ariaRole='button'
           ariaLabel='创建社团主页'
-          hoverClass='clubs-workspace__create--pressed'
           onClick={() => void createClub()}
         ><Text>＋</Text> 创建主页</View>
       </View>
@@ -453,7 +456,6 @@ export default function ClubsPage() {
             key={club.id}
             id={`club-card-${club.id}`}
             className='club-card'
-            hoverClass='club-card--pressed'
             ariaRole='button'
             ariaLabel={`查看${club.name}`}
             onClick={() => Taro.navigateTo({ url: `/pages/clubs/detail?id=${club.id}` })}
@@ -467,8 +469,8 @@ export default function ClubsPage() {
               <View className='club-card__visual-meta'>
                 <View className='club-card__logo'>
                   {club.logo?.url
-                    ? <Image src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
-                    : <Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
+                    ? <Image className='club-card__logo-image' src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
+                    : <Image className='club-card__logo-placeholder' src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
                 </View>
                 <Text className='club-card__category'>{club.category.name}</Text>
               </View>
@@ -534,13 +536,12 @@ export default function ClubsPage() {
                         className='club-directory-row'
                         ariaRole='button'
                         ariaLabel={`查看${club.name}`}
-                        hoverClass='club-directory-row--pressed'
                         onClick={() => Taro.navigateTo({ url: `/pages/clubs/detail?id=${club.id}` })}
                       >
                         <View className='club-directory-row__logo'>
                           {club.logo?.url
-                            ? <Image src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
-                            : <Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
+                            ? <Image className='club-directory-row__logo-image' src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
+                            : <Image className='club-directory-row__logo-placeholder' src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
                         </View>
                         <View className='club-directory-row__copy'>
                           <Text className='club-directory-row__name'>{club.name}</Text>

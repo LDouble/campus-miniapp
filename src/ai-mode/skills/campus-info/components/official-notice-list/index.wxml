@@ -1,4 +1,4 @@
-<view class="official-notice-list-card">
+<view class="official-notice-list-card {{darkMode ? 'official-notice-list-card--dark' : ''}}">
   <view class="official-notice-list-header">
     <view class="official-notice-list-title">官方通知</view>
     <view wx:if="{{totalCount > 0}}" class="official-notice-list-count">共 {{totalCount}} 条</view>

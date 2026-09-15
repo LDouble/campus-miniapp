@@ -1,7 +1,10 @@
 export default definePageConfig({
+  enableShareAppMessage: true,
+  enableShareTimeline: true,
   navigationStyle: 'custom',
-  backgroundColor: '#faf7f2',
+  backgroundColor: '@backgroundColor',
   enablePullDownRefresh: true,
-  backgroundTextStyle: 'dark',
+  onReachBottomDistance: 160,
+  backgroundTextStyle: '@backgroundTextStyle' as 'dark',
   usingComponents: {},
 })

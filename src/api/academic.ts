@@ -1,8 +1,6 @@
-import Taro from '@tarojs/taro'
-import { apiRequest, isApiError } from './client'
+import { apiRequest, apiRequestEnvelope, isApiError } from './client'
 import { getCurrentIdentity } from './account'
 import {
-  AcademicCredentialMissingError,
   clearAcademicCredential,
   loadAcademicCredential,
 } from './academic-credential'
@@ -14,7 +12,9 @@ import type {
   AcademicExam,
   AcademicGrade,
   AcademicPeriod,
+  AcademicCacheMetadata,
 } from './types'
+import { createSharedResource } from '../state/shared-resource'
 
 export const getAcademicCalendar = (educationLevel: AcademicEducationLevel) => (
   apiRequest<AcademicCalendar>({
@@ -32,80 +32,87 @@ type AcademicRequestBody = {
 
 const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBody> => {
   const currentUser = await getCurrentIdentity()
+  const credential = loadAcademicCredential(currentUser.user_id)
+  return {
+    student_no: credential.studentNo,
+    password: credential.password,
+    ...(periodId ? { period_id: periodId } : {}),
+  }
+}
+
+export type AcademicQueryResult<T> = {
+  records: T[]
+  cache?: AcademicCacheMetadata
+  scheduleNote?: string
+}
+
+const academicPost = async <T>(path: string, periodId?: string): Promise<AcademicQueryResult<T>> => {
+  const data = await academicRequestBody(periodId)
   try {
-    const credential = loadAcademicCredential(currentUser.user_id)
+    const response = await apiRequestEnvelope<T[]>({ path, method: 'POST', data })
     return {
-      student_no: credential.studentNo,
-      password: credential.password,
-      ...(periodId ? { period_id: periodId } : {}),
+      records: response.data,
+      ...(response.cache ? { cache: response.cache } : {}),
+      ...(response.scheduleNote !== undefined ? { scheduleNote: response.scheduleNote } : {}),
     }
   } catch (error) {
-    if (error instanceof AcademicCredentialMissingError) {
-      try {
-        await Taro.navigateTo({
-          url: '/pages/academic-verification/index?rebind=1',
-        })
-      } catch {
-        // 导航失败时仍抛出明确的凭据错误。
-      }
+    if (
+      isApiError(error)
+      && [
+        'invalid_academic_credentials',
+        'academic_password_expired',
+        'academic_account_restricted',
+      ].includes(error.code)
+    ) {
+      clearAcademicCredential()
     }
     throw error
   }
 }
 
-const wait = (milliseconds: number) => new Promise<void>((resolve) => {
-  setTimeout(resolve, milliseconds)
+export const ACADEMIC_PERIODS_FRESH_MS = 30 * 60 * 1000
+
+const academicPeriodsResource = createSharedResource<AcademicPeriod[]>({
+  maxAgeMs: ACADEMIC_PERIODS_FRESH_MS,
+  group: 'academic',
 })
 
-const retryDelay = (error: unknown) => {
-  if (isApiError(error)) {
-    if (error.code !== 'academic_provider_busy' || error.statusCode !== 429) return 0
-    return (error.retryAfterMs || 3000) + Math.floor(Math.random() * 1000)
-  }
-  return 700 + Math.floor(Math.random() * 500)
+export const listAcademicPeriods = (options: { force?: boolean } = {}) => (
+  academicPeriodsResource.ensure(() => apiRequest<AcademicPeriod[]>({
+    path: '/api/v1/academic/periods',
+    method: 'POST',
+  }), options)
+)
+
+export const invalidateAcademicPeriods = () => {
+  academicPeriodsResource.invalidate()
 }
 
-const academicPost = async <T>(path: string, periodId?: string) => {
-  const data = await academicRequestBody(periodId)
-  const request = () => apiRequest<T>({ path, method: 'POST', data })
-  try {
-    return await request()
-  } catch (error) {
-    if (
-      isApiError(error)
-      && ['invalid_academic_credentials', 'academic_password_expired'].includes(error.code)
-    ) {
-      clearAcademicCredential()
-    }
-    const delay = retryDelay(error)
-    if (!delay) throw error
-    await wait(delay)
-    return request()
-  }
-}
-
-export const listAcademicPeriods = () => apiRequest<AcademicPeriod[]>({
-  path: '/api/v1/academic/periods',
-  method: 'POST',
-})
-
-export const listAcademicCourses = (periodId: string) => academicPost<AcademicCourse[]>(
+export const listAcademicCourses = (periodId: string) => academicPost<AcademicCourse>(
   '/api/v1/academic/courses',
   periodId,
 )
 
-export const listAcademicGrades = () => academicPost<AcademicGrade[]>(
+export const listAcademicGrades = () => academicPost<AcademicGrade>(
   '/api/v1/academic/grades',
 )
 
-export const listAcademicExams = (periodId: string) => academicPost<AcademicExam[]>(
+export const listAcademicExams = (periodId: string) => academicPost<AcademicExam>(
   '/api/v1/academic/exams',
   periodId,
 )
 
 export const listAcademicCourseSelections = (periodId: string) => (
-  academicPost<AcademicCourseSelection[]>(
+  academicPost<AcademicCourseSelection>(
     '/api/v1/academic/course-selections',
+    periodId,
+  )
+)
+
+/** 获取教务系统已选课程的结构化课表；不会修改本地模拟选课草稿。 */
+export const listAcademicCourseSelectionSchedule = (periodId: string) => (
+  academicPost<AcademicCourse>(
+    '/api/v1/academic/course-selection-schedule',
     periodId,
   )
 )

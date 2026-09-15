@@ -1,4 +1,5 @@
 import type { MaterialCourseView, MaterialUploadFileInput } from '../../api/types'
+import { apiDateTimeTimestamp } from '../../utils/date-time'
 import type {
   MaterialCourseSuggestion,
   MaterialUploadBatch,
@@ -9,6 +10,12 @@ import type {
 export const supportedMaterialExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx'] as const
 export const MAX_MATERIAL_FILES = 5
 export const MAX_MATERIAL_FILE_SIZE = 50 * 1024 * 1024
+
+export interface SelectedMaterialFile {
+  name: string
+  path: string
+  size: number
+}
 
 const normalizedCourseText = (value: string) => (
   value.toLowerCase().replace(/[\s()（）_\-—–·.]/g, '')
@@ -23,6 +30,26 @@ export const isSupportedMaterialFile = (filename: string) => (
     materialExtension(filename) as typeof supportedMaterialExtensions[number],
   )
 )
+
+export const selectSupportedMaterialFiles = (files: unknown): SelectedMaterialFile[] => {
+  if (!Array.isArray(files)) return []
+  return files.flatMap((value) => {
+    if (!value || typeof value !== 'object') return []
+    const file = value as Partial<SelectedMaterialFile>
+    if (
+      typeof file.name !== 'string'
+      || !file.name.trim()
+      || typeof file.path !== 'string'
+      || !file.path
+      || typeof file.size !== 'number'
+      || !Number.isFinite(file.size)
+      || file.size <= 0
+      || file.size > MAX_MATERIAL_FILE_SIZE
+      || !isSupportedMaterialFile(file.name)
+    ) return []
+    return [{ name: file.name, path: file.path, size: file.size }]
+  }).slice(0, MAX_MATERIAL_FILES)
+}
 
 export const validateMaterialDrafts = (
   drafts: MaterialUploadDraft[],
@@ -48,7 +75,7 @@ export const isMaterialUploadSessionReusable = (
   !!batch.sessionId
   && batch.sessionVersion !== undefined
   && !!batch.sessionExpiresAt
-  && Date.parse(batch.sessionExpiresAt) > now + 5_000
+  && apiDateTimeTimestamp(batch.sessionExpiresAt) > now + 5_000
   && drafts.every((draft) => (
     !!draft.uploadTarget
     && !!draft.fileId

@@ -1,4 +1,4 @@
-# 海大校园：Guest 教务认证门槛与双路径绑定
+# OUSea：Guest 教务认证门槛与双路径绑定
 
 **Priority:** High
 **Status:** Done

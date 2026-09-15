@@ -179,58 +179,56 @@
   -webkit-line-clamp: 2;
 }
 
-@media (prefers-color-scheme: dark) {
-  .official-notice-list-card {
+.official-notice-list-card.official-notice-list-card--dark {
     background-color: #1f2926;
-  }
+}
 
-  .official-notice-list-title {
+.official-notice-list-card--dark .official-notice-list-title {
     color: #e0ece7;
-  }
+}
 
-  .official-notice-list-count {
+.official-notice-list-card--dark .official-notice-list-count {
     color: #9bacA6;
-  }
+}
 
-  .official-notice-list-item {
+.official-notice-list-card--dark .official-notice-list-item {
     background-color: #293734;
     border-left-color: #78aa99;
-  }
+}
 
-  .official-notice-list-source {
+.official-notice-list-card--dark .official-notice-list-source {
     color: #96c8b8;
-  }
+}
 
-  .official-notice-list-category {
+.official-notice-list-card--dark .official-notice-list-category {
     color: #a6d3c5;
     background-color: #344943;
-  }
+}
 
-  .official-notice-list-date {
+.official-notice-list-card--dark .official-notice-list-date {
     color: #9baca6;
-  }
+}
 
-  .official-notice-list-item-title {
+.official-notice-list-card--dark .official-notice-list-item-title {
     color: #e0ece7;
-  }
+}
 
-  .official-notice-list-summary {
+.official-notice-list-card--dark .official-notice-list-summary {
     color: #a9b9b3;
-  }
+}
 
-  .official-notice-list-more {
+.official-notice-list-card--dark .official-notice-list-more {
     color: #a9b9b3;
-  }
+}
 
-  .official-notice-list-handoff {
+.official-notice-list-card--dark .official-notice-list-handoff {
     color: #96c8b8;
-  }
+}
 
-  .official-notice-list-empty-title {
+.official-notice-list-card--dark .official-notice-list-empty-title {
     color: #e0ece7;
-  }
+}
 
-  .official-notice-list-empty-subtitle {
+.official-notice-list-card--dark .official-notice-list-empty-subtitle {
     color: #a9b9b3;
-  }
 }

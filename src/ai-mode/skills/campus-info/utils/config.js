@@ -1,4 +1,3 @@
-const REVIEW_API_BASE_URL = 'https://review.weouc.com'
 const PRODUCTION_API_BASE_URL = 'https://product.weouc.com'
 
 const miniProgramInfo = () => {
@@ -10,10 +9,7 @@ const miniProgramInfo = () => {
 }
 
 const apiBaseUrl = () => {
-  const { envVersion } = miniProgramInfo()
-  return envVersion === 'trial' || envVersion === 'release'
-    ? PRODUCTION_API_BASE_URL
-    : REVIEW_API_BASE_URL
+  return PRODUCTION_API_BASE_URL
 }
 
 const wechatAppId = () => {

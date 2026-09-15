@@ -1,4 +1,5 @@
 import type { components } from '../../api/generated/schema'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 
 export type OfficialNotice = components['schemas']['OfficialNoticeView']
 export type OfficialNoticePage = components['schemas']['OfficialNoticePage']
@@ -23,9 +24,18 @@ export const officialNoticeCategoryLabels: Record<OfficialNoticeCategory, string
 }
 
 export const formatOfficialNoticeDate = (value: string) => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  const now = new Date()
-  const sameYear = date.getFullYear() === now.getFullYear()
-  return `${sameYear ? '' : `${date.getFullYear()}年`}${date.getMonth() + 1}月${date.getDate()}日`
+  const parts = apiDateTimeCampusParts(value)
+  const now = apiDateTimeCampusParts(new Date().toISOString())
+  if (!parts || !now) return ''
+  const sameYear = parts.year === now.year
+  return `${sameYear ? '' : `${parts.year}年`}${parts.month}月${parts.day}日`
+}
+
+export const formatOfficialNoticeCompactDate = (value: string) => {
+  const parts = apiDateTimeCampusParts(value)
+  const now = apiDateTimeCampusParts(new Date().toISOString())
+  if (!parts || !now) return ''
+  const month = String(parts.month).padStart(2, '0')
+  const day = String(parts.day).padStart(2, '0')
+  return parts.year === now.year ? `${month}/${day}` : `${parts.year}/${month}/${day}`
 }

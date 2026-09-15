@@ -1,5 +1,9 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../app-edition'
+import {
+  markAcademicRefreshAfterVerification,
+  resolveAcademicRefreshReturnRoute,
+} from './refresh-signal'
 
 const VERIFICATION_PAGE = '/pages/academic-verification/index'
 const RETURN_TARGET_KEY = 'campus.academicVerification.returnTarget.v1'
@@ -32,6 +36,9 @@ const SAFE_PAGES = new Set([
   '/pages/academic/exams/index',
   '/pages/academic/selection/index',
   '/pages/services/index',
+  '/pages/lottery/detail',
+  '/pages/lottery/codes/index',
+  '/pages/lottery/win/index',
   '/pages/feature-migrated/index',
 ])
 
@@ -136,11 +143,21 @@ export const handleAcademicVerificationRequired = () => (
   openAcademicVerification({ prompt: true })
 )
 
-export const finishAcademicVerification = async (replacedCurrentPage = false) => {
+export const finishAcademicVerification = async (
+  replacedCurrentPage = false,
+  refreshAcademicPage = false,
+) => {
   const target = readReturnTarget()
   Taro.removeStorageSync(RETURN_TARGET_KEY)
   const pages = Taro.getCurrentPages()
   if (!replacedCurrentPage && pages.length > 1) {
+    const previousRoute = pages[pages.length - 2]?.route
+    if (refreshAcademicPage) {
+      markAcademicRefreshAfterVerification(
+        Taro,
+        resolveAcademicRefreshReturnRoute(target?.url, previousRoute),
+      )
+    }
     await Taro.navigateBack()
     return
   }
@@ -149,6 +166,12 @@ export const finishAcademicVerification = async (replacedCurrentPage = false) =>
     return
   }
   const path = target.url.split('?')[0]
+  if (refreshAcademicPage) {
+    markAcademicRefreshAfterVerification(
+      Taro,
+      resolveAcademicRefreshReturnRoute(target.url),
+    )
+  }
   if (TAB_PAGES.has(path)) {
     await Taro.switchTab({ url: path })
     return

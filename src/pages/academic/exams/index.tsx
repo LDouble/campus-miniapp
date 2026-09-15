@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
+import { isQualificationEdition } from '../../../features/app-edition'
+import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
+import { openCourseMaterials } from '../../../features/course-materials/navigation'
+import { openCourseMarketplacePublisher } from '../../../features/life-services/marketplace-prefill'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
+import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
@@ -19,16 +26,18 @@ import {
   getExamStatusLabel,
   getPeriodLabel,
   parseDate,
-  resolvePeriodId,
+  resolveDefaultPeriodId,
 } from '../utils'
 import '../index.scss'
 
-const DEFAULT_PERIOD_ID = '2025-2026-2'
+const LEGACY_DEFAULT_PERIOD_ID = '2025-2026-2'
+const ACADEMIC_CHEVRON = require('../../../assets/icons/academic-chevron-down.svg')
+
 const defaultPreferences: AcademicPreferences = {
   section: 'exams',
-  schedulePeriodId: DEFAULT_PERIOD_ID,
-  gradePeriodId: DEFAULT_PERIOD_ID,
-  examPeriodId: DEFAULT_PERIOD_ID,
+  schedulePeriodId: LEGACY_DEFAULT_PERIOD_ID,
+  gradePeriodId: LEGACY_DEFAULT_PERIOD_ID,
+  examPeriodId: '',
   week: 6,
   selectedWeekday: 1,
   scheduleView: 'week',
@@ -43,10 +52,15 @@ export default function ExamsPage() {
   const [initialRecordsCache] = useState(() => (
     academicStorage.getRecordsCache(academicUserId)
   ))
-  const [preferences, setPreferences] = useState<AcademicPreferences>({
-    ...defaultPreferences,
-    ...academicStorage.getPreferences(defaultPreferences),
-    section: 'exams',
+  const [preferences, setPreferences] = useState<AcademicPreferences>(() => {
+    const stored = academicStorage.getPreferences(defaultPreferences)
+    return {
+      ...defaultPreferences,
+      ...stored,
+      section: 'exams',
+      // 考试学期不沿用历史选择，首次进入也只从缓存中的当前学期开始。
+      examPeriodId: resolveDefaultPeriodId(initialScheduleCache?.periods || []),
+    }
   })
   const initialExams = initialRecordsCache?.examsByPeriod[preferences.examPeriodId]
   const initialUpdatedAt = initialRecordsCache
@@ -58,10 +72,13 @@ export default function ExamsPage() {
   const [loading, setLoading] = useState(!initialUpdatedAt)
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
-  const [usingCache, setUsingCache] = useState(false)
+  const [usingCache, setUsingCache] = useState(Boolean(initialUpdatedAt))
+  const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(initialUpdatedAt)
   const [sheet, setSheet] = useState<ExamSheet>(null)
   const [activeExam, setActiveExam] = useState<ExamRecord | null>(null)
+  const examsRequestRef = useRef(0)
+  const firstPageShowRef = useRef(true)
 
   const visibleExams = useMemo(() => exams
     .sort((left, right) => {
@@ -78,15 +95,18 @@ export default function ExamsPage() {
   const hasSelectedPeriod = periods.some((period) => period.id === preferences.examPeriodId)
 
   useEffect(() => {
-    academicRepository.getPeriods()
+    academicRepository.getPeriods({ force: true })
       .then((records) => {
         setPeriods(records)
         if (!records.length) setLoading(false)
         setPreferences((current) => {
-          const examPeriodId = resolvePeriodId(records, current.examPeriodId)
-          return examPeriodId === current.examPeriodId
+          const periodId = resolveDefaultPeriodId(records)
+          return periodId === current.examPeriodId
             ? current
-            : { ...current, examPeriodId }
+            : {
+              ...current,
+              examPeriodId: periodId,
+            }
         })
       })
       .catch((error) => {
@@ -104,23 +124,28 @@ export default function ExamsPage() {
     manual = false,
     periodId = preferences.examPeriodId,
   ) => {
+    const requestId = ++examsRequestRef.current
     const cache = academicStorage.getRecordsCache(academicUserId)
     const cached = cache?.examsByPeriod[periodId]
     const updatedAt = cache?.examsUpdatedAtByPeriod[periodId] || 0
-    if (cached && !manual) {
-      setExams(cached)
-      setCacheUpdatedAt(updatedAt)
-    }
+    setExams(cached || [])
+    setCacheUpdatedAt(updatedAt)
+    setUsingCache(Boolean(cached))
+    setServerCache(null)
     if (!updatedAt) setLoading(true)
     if (manual) setRetrying(true)
     setLoadError(null)
     try {
-      const records = await academicRepository.getExams(periodId)
+      const result = await academicRepository.getExams(periodId)
+      if (examsRequestRef.current !== requestId) return
+      const records = result.records
       academicStorage.setExamRecords(academicUserId, periodId, records)
       setExams(records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
+      setServerCache(result.cache || null)
     } catch (error) {
+      if (examsRequestRef.current !== requestId) return
       if (updatedAt) {
         setUsingCache(true)
         setLoadError(error)
@@ -129,20 +154,66 @@ export default function ExamsPage() {
         setLoadError(error)
       }
     } finally {
-      setLoading(false)
-      setRetrying(false)
+      if (examsRequestRef.current === requestId) {
+        setLoading(false)
+        setRetrying(false)
+      }
     }
   }, [academicUserId, preferences.examPeriodId])
+
+  const resetToCurrentPeriod = useCallback(async () => {
+    const records = await academicRepository.getPeriods({ force: true })
+    setPeriods(records)
+    const periodId = resolveDefaultPeriodId(records)
+    setPreferences((current) => current.examPeriodId === periodId
+      ? current
+      : { ...current, examPeriodId: periodId })
+    return periodId
+  }, [])
+
+  Taro.useDidShow(() => {
+    const shouldRefresh = consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/exams/index',
+    )
+    if (firstPageShowRef.current) {
+      firstPageShowRef.current = false
+      return
+    }
+    const selectedPeriodId = preferences.examPeriodId
+    void resetToCurrentPeriod()
+      .then((periodId) => {
+        // 重新进入后如果本来就在 current，仅在认证返回等场景刷新考试数据；
+        // 如果学期发生切换，下面的学期状态更新会触发统一的数据加载。
+        if (shouldRefresh && periodId && periodId === selectedPeriodId) {
+          void refreshExams(false, periodId)
+        }
+      })
+      .catch(() => {
+        // 服务端不可用时，至少用已有校历缓存恢复到缓存中的当前学期。
+        const cachedCurrentPeriodId = resolveDefaultPeriodId(periods)
+        if (!cachedCurrentPeriodId) return
+        setPreferences((current) => current.examPeriodId === cachedCurrentPeriodId
+          ? current
+          : { ...current, examPeriodId: cachedCurrentPeriodId })
+        if (shouldRefresh && cachedCurrentPeriodId === selectedPeriodId) {
+          void refreshExams(false, cachedCurrentPeriodId)
+        }
+      })
+  })
 
   const retryPage = useCallback(async () => {
     setRetrying(true)
     setLoadError(null)
     try {
-      const records = await academicRepository.getPeriods()
-      const periodId = resolvePeriodId(records, preferences.examPeriodId)
+      const records = await academicRepository.getPeriods({ force: true })
+      const periodId = resolveDefaultPeriodId(records)
       if (!periodId) throw new Error('academic period unavailable')
       setPeriods(records)
-      setPreferences((current) => ({ ...current, examPeriodId: periodId }))
+      setPreferences((current) => ({
+        ...current,
+        examPeriodId: periodId,
+      }))
       if (hasSelectedPeriod && periodId === preferences.examPeriodId) {
         await refreshExams(false, periodId)
       } else {
@@ -154,30 +225,77 @@ export default function ExamsPage() {
       setRetrying(false)
       setLoading(false)
     }
-  }, [hasSelectedPeriod, preferences.examPeriodId, refreshExams])
+  }, [
+    hasSelectedPeriod,
+    preferences.examPeriodId,
+    refreshExams,
+  ])
 
   useEffect(() => {
     if (!hasSelectedPeriod) return
     void refreshExams()
   }, [hasSelectedPeriod, refreshExams])
 
-  useEffect(() => academicStorage.setPreferences(preferences), [preferences])
+  useEffect(() => {
+    // 学期选择只在本次页面会话内生效，避免下次进入继续停留在历史学期。
+    academicStorage.setPreferences({
+      ...preferences,
+      examPeriodId: '',
+    })
+  }, [preferences])
 
   Taro.usePullDownRefresh(() => {
     refreshExams(true).finally(() => Taro.stopPullDownRefresh())
   })
 
-  const updatePreferences = (patch: Partial<AcademicPreferences>) => {
-    setPreferences((current) => ({ ...current, ...patch, section: 'exams' }))
+  const selectExamPeriod = (periodId: string) => {
+    setPreferences((current) => ({
+      ...current,
+      examPeriodId: periodId,
+      section: 'exams',
+    }))
+  }
+
+  const openExamMaterials = () => {
+    if (!activeExam) return
+    setSheet(null)
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'course_materials' })
+      return
+    }
+    void openCourseMaterials({
+      courseName: activeExam.courseName,
+      periodId: activeExam.periodId,
+      periodLabel: getPeriodLabel(periods, activeExam.periodId),
+      source: 'exams',
+    })
+  }
+
+  const openExamTextbookPublisher = () => {
+    if (!activeExam) return
+    const courseName = activeExam.courseName.trim()
+    setSheet(null)
+    if (isQualificationEdition) {
+      void openMigratedFeaturePage({ module: 'marketplace' })
+      return
+    }
+    void openCourseMarketplacePublisher({
+      intent: 'sell',
+      description: `出售《${courseName}》课程使用过的课本，版本和成色可沟通。`,
+      courseName,
+      courseCode: '',
+      academicPeriodId: activeExam.periodId,
+      academicPeriodLabel: getPeriodLabel(periods, activeExam.periodId),
+      source: 'schedule',
+    })
   }
 
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
       <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
-        <Text className='academic-toolbar__label'>考试学期</Text>
         <View>
           <Text>{getPeriodLabel(periods, preferences.examPeriodId)}</Text>
-          <Text className='academic-toolbar__chevron'>⌄</Text>
+          <Image className='academic-toolbar__chevron' src={ACADEMIC_CHEVRON} mode='aspectFit' />
         </View>
       </View>
       <View className='academic-toolbar__hint'>
@@ -204,7 +322,7 @@ export default function ExamsPage() {
                     key={period.id}
                     className={`period-options__item ${preferences.examPeriodId === period.id ? 'period-options__item--active' : ''}`}
                     onClick={() => {
-                      updatePreferences({ examPeriodId: period.id })
+                      selectExamPeriod(period.id)
                       setSheet(null)
                     }}
                   >
@@ -230,7 +348,7 @@ export default function ExamsPage() {
               <View className='detail-list'>
                 <View><Text>考试校区</Text><Text>{activeExam.campus}</Text></View>
                 <View><Text>考试地点</Text><Text>{activeExam.location}</Text></View>
-                <View><Text>座位信息</Text><Text>{activeExam.seat}</Text></View>
+                <View><Text>座位号</Text><Text>{activeExam.seat}</Text></View>
                 <View><Text>考试阶段</Text><Text>{activeExam.phase}</Text></View>
                 <View><Text>考试方式</Text><Text>{activeExam.method}</Text></View>
                 <View><Text>携带材料</Text><Text>{activeExam.materials}</Text></View>
@@ -238,6 +356,20 @@ export default function ExamsPage() {
               <View className='academic-notice'>
                 <Text>考场提醒</Text>
                 <Text>{activeExam.notice}</Text>
+              </View>
+              <View className='course-resource-actions course-resource-actions--standalone'>
+                <View className='course-resource-actions__primary' onClick={openExamMaterials}>
+                  <View>
+                    <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
+                    <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '发现这门课的笔记、真题和复习资料'}</Text>
+                  </View>
+                  <Text>去发现 ›</Text>
+                </View>
+                {!isQualificationEdition && (
+                  <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
+                    <View onClick={openExamTextbookPublisher}>出售课本</View>
+                  </View>
+                )}
               </View>
               <View className='academic-button academic-button--full' onClick={() => setSheet(null)}>知道了</View>
             </View>
@@ -257,11 +389,19 @@ export default function ExamsPage() {
             <View className='academic-state__loader' />
             <Text>正在整理考试安排…</Text>
           </View>
-        ) : loadError && !usingCache ? (
+        ) : (
+          isAcademicBindingRequiredError(loadError)
+          || (loadError && !usingCache)
+        ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : (
           <>
-            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
+            <AcademicCacheNotice
+              cache={serverCache}
+              updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}
+              localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
+              localFallback={Boolean(loadError)}
+            />
             <View className='exam-hero'>
               <View>
                 <Text className='exam-hero__eyebrow'>考试日程</Text>
@@ -283,7 +423,6 @@ export default function ExamsPage() {
                     <View
                       key={exam.id}
                       className={`exam-card exam-card--${status}`}
-                      hoverClass='exam-card--pressed'
                       onClick={() => {
                         setActiveExam(exam)
                         setSheet('exam-detail')
@@ -297,7 +436,11 @@ export default function ExamsPage() {
                       </View>
                       <View className='exam-card__line'>
                         <Text className='exam-card__label'>考场</Text>
-                        <Text>{exam.location} · {exam.seat}</Text>
+                        <Text>{exam.location}</Text>
+                      </View>
+                      <View className='exam-card__line'>
+                        <Text className='exam-card__label'>座位号</Text>
+                        <Text>{exam.seat}</Text>
                       </View>
                       <View className='exam-card__footer'>
                         <Text>{exam.phase} · {exam.method}</Text>

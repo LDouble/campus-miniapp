@@ -3,7 +3,7 @@
   overflow: hidden;
   border: 2rpx solid #e7eaf0;
   border-radius: 24rpx;
-  background: #fff;
+  background: var(--campus-surface, #fff);
   transition: opacity 150ms ease, transform 150ms ease;
   white-space: normal;
 }
@@ -130,7 +130,7 @@
   left: 20rpx;
   display: block;
   color: rgba(64, 103, 94, 0.58);
-  font-size: 17rpx;
+  font-size: 19rpx;
   font-weight: 760;
   letter-spacing: 2rpx;
 }
@@ -153,7 +153,7 @@
   border-radius: 999rpx;
   background: rgba(217, 109, 88, 0.92);
   color: #fff;
-  font-size: 19rpx;
+  font-size: 21rpx;
   font-weight: 700;
   backdrop-filter: blur(8rpx);
 }
@@ -164,6 +164,19 @@
 
 .marketplace-card--wanted .marketplace-card__intent {
   background: rgba(78, 142, 132, 0.92);
+}
+
+.marketplace-card__reviewing {
+  position: absolute;
+  z-index: 1;
+  right: 12rpx;
+  bottom: 12rpx;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(26, 38, 45, 0.72);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 650;
 }
 
 .marketplace-card__body {
@@ -192,6 +205,11 @@
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.marketplace-card__sticker {
+  width: 44rpx;
+  height: 44rpx;
 }
 
 .marketplace-card--compact .marketplace-card__description {
@@ -241,7 +259,7 @@
   overflow: hidden;
   margin: 2rpx 0 8rpx;
   color: #7d8f8a;
-  font-size: 19rpx;
+  font-size: 21rpx;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -252,7 +270,44 @@
   align-items: flex-end;
   justify-content: space-between;
   color: #8a929d;
+  font-size: 21rpx;
+}
+
+.marketplace-card__author {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.marketplace-card__avatar {
+  display: flex;
+  width: 34rpx;
+  height: 34rpx;
+  margin-right: 8rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
   font-size: 19rpx;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.marketplace-card__avatar-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.marketplace-card__author > text {
+  max-width: 150rpx;
+  overflow: hidden;
+  color: var(--campus-text-secondary, #62748e);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .marketplace-card--compact .marketplace-card__footer {
@@ -260,22 +315,22 @@
   align-items: center;
   margin-top: auto;
   color: #687d77;
-  font-size: 19rpx;
+  font-size: 21rpx;
 }
 
-.marketplace-card--compact .marketplace-card__footer text {
-  max-width: 150rpx;
+.marketplace-card--compact .marketplace-card__footer > text {
+  max-width: 120rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.marketplace-card--compact .marketplace-card__footer text:last-child {
+.marketplace-card--compact .marketplace-card__footer > text:last-child {
   color: #7d8f8a;
   font-weight: 600;
 }
 
-.marketplace-card__footer text:last-child {
+.marketplace-card__footer > text:last-child {
   color: #b65b4f;
   font-weight: 680;
 }
@@ -285,3 +340,36 @@
     transition: none;
   }
 }
+
+/* Figma 2026-08 闲置卡片视觉覆盖 */
+.marketplace-card {
+  border: 0;
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.03);
+}
+
+.marketplace-card__cover,
+.marketplace-card__cover--placeholder { height: 288rpx; }
+
+.marketplace-card__intent {
+  top: 16rpx;
+  right: auto;
+  left: 16rpx;
+  min-height: 34rpx;
+  padding: 0 14rpx;
+  border: 0;
+  background: rgba(0, 0, 0, 0.5);
+  font-size: 19rpx;
+  backdrop-filter: blur(8rpx);
+}
+
+.marketplace-card--wanted .marketplace-card__intent { background: rgba(0, 0, 0, 0.45); }
+
+.marketplace-card__body { padding: 24rpx 24rpx 16rpx; }
+.marketplace-card__description { min-height: 72rpx; color: var(--campus-text-heading, #1d293d); font-size: 26rpx; font-weight: 700; }
+.marketplace-card__price-line { min-height: 56rpx; margin-top: 4rpx; }
+.marketplace-card__price,
+.marketplace-card--wanted .marketplace-card__price { color: var(--campus-danger, #ff2056); font-size: 35rpx; }
+.marketplace-card__course { color: var(--campus-text-secondary, #62748e); }
+.marketplace-card__footer { padding-top: 12rpx; border-top: 1rpx solid var(--campus-surface-subtle, #f8fafc); color: var(--campus-text-muted, #90a1b9); }
+.marketplace-card__footer > text:last-child { color: var(--campus-text-muted, #90a1b9); }

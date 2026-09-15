@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   inferCourseSuggestion,
   inferMaterialKind,
@@ -9,10 +11,12 @@ import {
   buildCourseMaterialQuery,
 } from '../src/features/course-materials/route'
 import type { MaterialUploadDraft } from '../src/features/course-materials/types'
+import { getSelectedTempFiles } from '../src/utils/file-selection'
 import {
   MAX_MATERIAL_FILE_SIZE,
   isMaterialUploadSessionReusable,
   resolveMaterialCourse,
+  selectSupportedMaterialFiles,
   validateMaterialDrafts,
 } from '../src/features/course-materials/validation'
 
@@ -100,5 +104,50 @@ assert.equal(isMaterialUploadSessionReusable({
   sessionVersion: 1,
   sessionExpiresAt: new Date(Date.now() - 1_000).toISOString(),
 }, [draft]), false)
+
+assert.deepEqual(selectSupportedMaterialFiles(undefined), [])
+assert.deepEqual(selectSupportedMaterialFiles(null), [])
+assert.deepEqual(selectSupportedMaterialFiles({ tempFiles: [] }), [])
+assert.deepEqual(selectSupportedMaterialFiles([]), [])
+
+const selectedFiles = selectSupportedMaterialFiles([
+  { name: '复习资料.pdf', path: 'wxfile://review.pdf', size: 1024 },
+  { name: '课堂笔记.docx', path: 'wxfile://notes.docx', size: 2048 },
+  { name: '课程课件.pptx', path: 'wxfile://slides.pptx', size: 4096 },
+  { name: '', path: 'wxfile://missing-name.pdf', size: 1024 },
+  { name: 'missing-path.pdf', size: 1024 },
+  { name: 'invalid-size.pdf', path: 'wxfile://invalid-size.pdf', size: 0 },
+  { name: 'too-large.pdf', path: 'wxfile://too-large.pdf', size: MAX_MATERIAL_FILE_SIZE + 1 },
+  { name: 'image.png', path: 'wxfile://image.png', size: 1024 },
+])
+assert.deepEqual(selectedFiles.map((file) => file.name), [
+  '复习资料.pdf',
+  '课堂笔记.docx',
+  '课程课件.pptx',
+])
+assert.equal(selectSupportedMaterialFiles(Array.from(
+  { length: 7 },
+  (_, index) => ({
+    name: `资料-${index}.pdf`,
+    path: `wxfile://material-${index}.pdf`,
+    size: 1024,
+  }),
+)).length, 5)
+
+assert.deepEqual(getSelectedTempFiles(undefined), [])
+assert.deepEqual(getSelectedTempFiles(null), [])
+assert.deepEqual(getSelectedTempFiles({}), [])
+assert.deepEqual(getSelectedTempFiles({ tempFiles: undefined }), [])
+assert.deepEqual(getSelectedTempFiles({ tempFiles: [{ path: 'wxfile://safe.pdf' }] }), [
+  { path: 'wxfile://safe.pdf' },
+])
+
+const materialsStyle = readFileSync(
+  resolve(__dirname, '../src/pages/materials/index.scss'),
+  'utf8',
+)
+assert.match(materialsStyle, /\.materials-sheet--filter \{[^}]*max-height: 72vh;/u)
+assert.match(materialsStyle, /\.materials-sheet--filter[\s\S]*?\.materials-sheet__body \{[^}]*overflow-y: auto;/u)
+assert.match(materialsStyle, /\.materials-sheet--upload-course \{[^}]*height: 76vh;[^}]*max-height: 76vh;/u)
 
 process.stdout.write('course-materials semantic smoke: ok\n')

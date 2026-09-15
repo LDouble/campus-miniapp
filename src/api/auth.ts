@@ -1,12 +1,15 @@
 import Taro from '@tarojs/taro'
 import type { ApiErrorEnvelope, ApiSuccessEnvelope, TokenPair } from './types'
 import { resolveApiBaseUrl } from './environment'
+import { invalidateSharedResourceGroup } from '../state/shared-resource'
+import { getLotteryShareAttributionToken } from './lottery-share-attribution'
+import { clearAllPendingLotteryDrawKeys } from '../features/lottery/draw-request'
 
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
 const TOKEN_EXPIRES_AT_KEY = 'campus.auth.expiresAt.v1'
 const ACCOUNT_CANCELLED_KEY = 'campus.auth.accountCancelled.v1'
-const miniProgramEnvVersion = () => {
+export const getMiniProgramEnvVersion = () => {
   try {
     return Taro.getAccountInfoSync().miniProgram.envVersion
   } catch {
@@ -15,10 +18,16 @@ const miniProgramEnvVersion = () => {
   }
 }
 
-export const API_BASE_URL = resolveApiBaseUrl(miniProgramEnvVersion(), {
+export const API_BASE_URL = resolveApiBaseUrl(getMiniProgramEnvVersion(), {
   review: __CAMPUS_REVIEW_API_BASE_URL__,
   production: __CAMPUS_PRODUCTION_API_BASE_URL__,
 })
+
+// Keep presentation decisions aligned with the same runtime source used for
+// review/production API selection. Only the develop build uses the
+// notice-only UI; trial and release keep the normal private-message shape.
+// Do not infer the environment from a URL.
+export const isDevelopmentEnvironment = () => getMiniProgramEnvVersion() === 'develop'
 
 export const apiUrl = (path: string) => {
   const baseEndsWithSlash = API_BASE_URL.endsWith('/')
@@ -52,6 +61,10 @@ export const clearSession = () => {
   Taro.removeStorageSync(ACCESS_TOKEN_KEY)
   Taro.removeStorageSync(REFRESH_TOKEN_KEY)
   Taro.removeStorageSync(TOKEN_EXPIRES_AT_KEY)
+  clearAllPendingLotteryDrawKeys()
+  invalidateSharedResourceGroup('session')
+  invalidateSharedResourceGroup('verification')
+  invalidateSharedResourceGroup('academic')
 }
 
 export class AccountCancelledError extends Error {
@@ -101,6 +114,8 @@ const wechatLogin = async () => {
     data: {
       app_id: WECHAT_APP_ID,
       code: loginResult.code,
+      // 新用户首次微信登录时携带入口 token，后端仅在创建账号的事务中固定来源。
+      ...(getCurrentLotteryShareToken() ? { lottery_share_token: getCurrentLotteryShareToken() } : {}),
     },
     header: {
       Accept: 'application/json',
@@ -108,6 +123,18 @@ const wechatLogin = async () => {
     },
   })
   return parseTokenResponse(response.statusCode, response.data)
+}
+
+const getCurrentLotteryShareToken = () => {
+  const pages = Taro.getCurrentPages()
+  const current = pages[pages.length - 1] as unknown as { route?: string; options?: Record<string, unknown> } | undefined
+  const campaignId = current?.route === 'pages/lottery/detail'
+    ? String(current.options?.id || '')
+    : ''
+  // 生命周期函数尚未执行时，也要优先从原始分享参数读取，确保首次微信登录能关联新用户来源。
+  const queryToken = String(current?.options?.share_token || '')
+  if (queryToken && queryToken.length <= 128) return queryToken
+  return getLotteryShareAttributionToken(campaignId)
 }
 
 export const login = () => {
@@ -120,6 +147,7 @@ export const login = () => {
 }
 
 export const resumeAfterAccountCancellation = async () => {
+  clearSession()
   Taro.removeStorageSync(ACCOUNT_CANCELLED_KEY)
   try {
     return await login()
@@ -133,7 +161,10 @@ export const refreshAccessToken = () => {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       const refreshToken = getRefreshToken()
-      if (!refreshToken) return login()
+      if (!refreshToken) {
+        clearSession()
+        return login()
+      }
 
       const response = await Taro.request<ApiSuccessEnvelope<TokenPair> | ApiErrorEnvelope>({
         url: apiUrl('/api/v1/auth/refresh'),

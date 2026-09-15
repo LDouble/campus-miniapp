@@ -20,6 +20,8 @@ import type {
   OfficialNoticeSource,
 } from '../../features/official-notices/types'
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
+import { useCampusShare } from '../../features/share'
+import { showActionSheetSelection } from '../../utils/action-sheet'
 import './index.scss'
 
 const PAGE_SIZE = 15
@@ -67,6 +69,11 @@ const handoffTimeIndex = (value?: string) => {
 }
 
 export default function OfficialNoticesPage() {
+  useCampusShare(() => ({
+    title: '全校通知｜OUSea',
+    path: '/pages/official-notices/index',
+  }))
+
   const [items, setItems] = useState<OfficialNotice[]>([])
   const [query, setQuery] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -182,15 +189,16 @@ export default function OfficialNoticesPage() {
   }
 
   const chooseCategory = async () => {
-    const result = await Taro.showActionSheet({ itemList: categoryOptions.map((item) => item.label) })
-    const next = categoryOptions[result.tapIndex]?.value
+    const tapIndex = await showActionSheetSelection(categoryOptions.map((item) => item.label))
+    if (tapIndex === null) return
+    const next = categoryOptions[tapIndex]?.value
     setCategory(next)
     void load(true, keyword, source, next)
   }
 
   const chooseTime = async () => {
-    const result = await Taro.showActionSheet({ itemList: timeOptions.map((item) => item.label) })
-    const next = result.tapIndex
+    const next = await showActionSheetSelection(timeOptions.map((item) => item.label))
+    if (next === null) return
     setTimeIndex(next)
     void load(true, keyword, source, category, next)
   }
@@ -208,6 +216,7 @@ export default function OfficialNoticesPage() {
           value={query}
           placeholder='搜索通知标题、摘要或发布单位'
           confirmType='search'
+          maxlength={100}
           onInput={(event) => setQuery(event.detail.value)}
           onConfirm={() => {
             const nextKeyword = query.trim()
@@ -215,7 +224,14 @@ export default function OfficialNoticesPage() {
             void load(true, nextKeyword)
           }}
         />
-        {!!query && <Text onClick={() => setQuery('')}>清除</Text>}
+        {!!query && (
+          <View
+            className='official-notices-search__clear'
+            ariaRole='button'
+            ariaLabel='清除搜索内容'
+            onClick={() => setQuery('')}
+          >清除</View>
+        )}
       </View>
 
       <ScrollView className='official-notices-sources' scrollX enhanced showScrollbar={false}>
@@ -224,6 +240,8 @@ export default function OfficialNoticesPage() {
             <View
               key={item.value || 'all'}
               className={source === item.value ? 'is-active' : ''}
+              ariaRole='button'
+              ariaLabel={`筛选${item.label}通知来源`}
               onClick={() => chooseSource(item.value)}
             >{item.label}</View>
           ))}
@@ -231,10 +249,10 @@ export default function OfficialNoticesPage() {
       </ScrollView>
 
       <View className='official-notices-filters'>
-        <View onClick={() => void chooseCategory()}>
+        <View className='official-notices-filters__button' ariaRole='button' ariaLabel='选择通知分类' onClick={() => void chooseCategory()}>
           {category ? officialNoticeCategoryLabels[category] : '全部分类'} <Text>⌄</Text>
         </View>
-        <View onClick={() => void chooseTime()}>
+        <View className='official-notices-filters__button' ariaRole='button' ariaLabel='选择通知时间范围' onClick={() => void chooseTime()}>
           {timeOptions[timeIndex].label} <Text>⌄</Text>
         </View>
         <Text>{hasMore ? `已加载 ${items.length} 条` : `${items.length} 条通知`}</Text>
@@ -246,7 +264,7 @@ export default function OfficialNoticesPage() {
       {!loading && error && (
         <View className='official-notices-state'>
           <Text>{error}</Text>
-          <View onClick={() => void load(true)}>重新加载</View>
+          <View className='official-notices-state__retry' ariaRole='button' ariaLabel='重新加载通知' onClick={() => void load(true)}>重新加载</View>
         </View>
       )}
       {!loading && !error && items.length === 0 && (
@@ -259,7 +277,8 @@ export default function OfficialNoticesPage() {
         <View
           key={item.id}
           className={`official-notice-card ${item.priority === 'important' ? 'official-notice-card--important' : ''}`}
-          hoverClass='official-notice-card--pressed'
+          ariaRole='button'
+          ariaLabel={`查看通知：${item.title}`}
           onClick={() => openDetail(item)}
         >
           <View className='official-notice-card__meta'>

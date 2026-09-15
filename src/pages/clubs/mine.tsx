@@ -93,7 +93,6 @@ export default function MyClubsPage() {
           className='my-clubs-intro__action'
           ariaRole='button'
           ariaLabel='创建社团主页'
-          hoverClass='my-clubs-intro__action--pressed'
           onClick={() => void createClub()}
         ><Text>＋</Text> 创建</View>
       </View>
@@ -170,7 +169,6 @@ export default function MyClubsPage() {
                   <View
                     ariaRole='button'
                     ariaLabel={`查看${club.name}公开主页`}
-                    hoverClass='my-club-card__action--pressed'
                     onClick={() => Taro.navigateTo({ url: `/pages/clubs/detail?id=${club.id}` })}
                   >查看主页</View>
                 )}
@@ -178,7 +176,6 @@ export default function MyClubsPage() {
                   <View
                     ariaRole='button'
                     ariaLabel={`${revision?.status === 'rejected' ? '修改' : '继续编辑'}${club.name}资料`}
-                    hoverClass='my-club-card__action--pressed'
                     onClick={() => void editClub(club)}
                   >{revision?.status === 'rejected' ? '修改资料' : '继续编辑'}</View>
                 )}
@@ -187,7 +184,6 @@ export default function MyClubsPage() {
                     className={`my-club-card__primary ${submittingId ? 'my-club-card__primary--disabled' : ''}`}
                     ariaRole='button'
                     ariaLabel={`提交${club.name}资料审核`}
-                    hoverClass={submittingId ? 'none' : 'my-club-card__primary--pressed'}
                     onClick={() => submittingId ? undefined : void submitReview(club)}
                   >{submittingId === club.id ? '提交中…' : '提交审核'}</View>
                 )}

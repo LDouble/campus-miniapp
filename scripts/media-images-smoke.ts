@@ -1,0 +1,136 @@
+import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import {
+  AVATAR_IMAGE_MAX_DIMENSION,
+  AVATAR_IMAGE_QUALITY,
+  MAX_MEDIA_IMAGE_BYTES,
+  mediaImageMimeFromType,
+  mediaImageValidationError,
+  moveMediaImage,
+  normalizedSquareCropDimensions,
+  serverMediaImageDraft,
+  scaledMediaImageDimensions,
+  validateMediaImage,
+} from '../src/features/media/images'
+
+assert.equal(AVATAR_IMAGE_MAX_DIMENSION, 512)
+assert.equal(AVATAR_IMAGE_QUALITY, 80)
+assert.equal(scaledMediaImageDimensions({ width: 256, height: 256, maxDimension: 512 }), null)
+assert.equal(scaledMediaImageDimensions({ width: 512, height: 512, maxDimension: 512 }), null)
+assert.deepEqual(
+  scaledMediaImageDimensions({ width: 2000, height: 2000, maxDimension: 512 }),
+  { width: 512, height: 512 },
+)
+assert.deepEqual(
+  scaledMediaImageDimensions({ width: 1024, height: 768, maxDimension: 512 }),
+  { width: 512, height: 384 },
+)
+assert.deepEqual(
+  normalizedSquareCropDimensions({ width: 1080, height: 1079, maxDimension: 512 }),
+  { width: 512, height: 512 },
+)
+assert.deepEqual(
+  normalizedSquareCropDimensions({ width: 480, height: 479, maxDimension: 512 }),
+  { width: 479, height: 479 },
+)
+assert.equal(
+  normalizedSquareCropDimensions({ width: 1920, height: 1080, maxDimension: 512 }),
+  null,
+)
+
+assert.equal(mediaImageMimeFromType('JPG'), 'image/jpeg')
+assert.equal(mediaImageMimeFromType('webp'), null)
+assert.equal(mediaImageMimeFromType('gif'), null)
+assert.match(validateMediaImage({ mimeType: 'image/gif', sizeBytes: 100 }), /仅支持/)
+assert.match(validateMediaImage({ mimeType: 'image/webp', sizeBytes: 100 }), /仅支持/)
+assert.match(validateMediaImage({
+  mimeType: 'image/png',
+  sizeBytes: MAX_MEDIA_IMAGE_BYTES + 1,
+}), /5 MiB/)
+
+const images = ['one', 'two', 'three'].map((url) => serverMediaImageDraft({ url }))
+assert.deepEqual(moveMediaImage(images, 1, -1).map((item) => item.legacyUrl), [
+  'two',
+  'one',
+  'three',
+])
+assert.deepEqual(moveMediaImage(images, 0, -1), images)
+assert.equal(mediaImageValidationError(images), '')
+const persistedMedia = serverMediaImageDraft({ url: 'signed-preview', mediaId: 42 })
+assert.equal(persistedMedia.mediaId, 42)
+assert.equal(persistedMedia.legacyUrl, '')
+assert.match(mediaImageValidationError([
+  { ...images[0], status: 'failed', error: 'timeout' },
+]), /重试或删除/)
+assert.match(mediaImageValidationError([
+  { ...images[0], status: 'uploading', progress: 25 },
+]), /上传/)
+assert.match(mediaImageValidationError([
+  images[0],
+  persistedMedia,
+]), /不能混用/)
+
+const mediaApiSource = readFileSync(resolve(__dirname, '../src/api/media.ts'), 'utf8')
+assert.ok(mediaApiSource.includes("path: '/api/v1/media/upload-target'"))
+assert.ok(mediaApiSource.includes('uploadFileToObjectStorage(target'))
+assert.ok(mediaApiSource.includes('expected_version: target.version'))
+assert.ok(mediaApiSource.includes("media.status !== 'ready'"))
+
+const publishSource = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
+assert.ok(publishSource.includes('<MediaImageEditor'))
+assert.ok(publishSource.includes("form.images.length > 0 && ("))
+assert.ok(publishSource.includes('form.images.length >= MAX_PUBLISH_IMAGES'))
+assert.ok(publishSource.includes("require('../../assets/icons/image.svg')"))
+assert.ok(!publishSource.includes('<Text>▧</Text>'))
+assert.ok(publishSource.includes('media_ids: form.images.flatMap'))
+assert.ok(publishSource.includes('image_urls: form.images.flatMap'))
+assert.ok(publishSource.includes("purpose = section === 'market' ? 'marketplace' : 'community'"))
+assert.ok(publishSource.includes("LEGACY_DRAFT_KEY = 'lifePublisher.drafts.v3'"))
+assert.ok(publishSource.includes('Taro.removeStorageSync(LEGACY_DRAFT_KEY)'))
+assert.ok(publishSource.includes("title: '替换原图片'"))
+
+const mediaEditorSource = readFileSync(resolve(__dirname, '../src/components/media-image-editor/index.tsx'), 'utf8')
+assert.ok(mediaEditorSource.includes('if (images.length === 0) return null'))
+assert.ok(mediaEditorSource.includes('images.length < maxCount'))
+assert.ok(mediaEditorSource.includes('上传失败 · 重试'))
+assert.ok(!mediaEditorSource.includes('WebP'))
+
+const profileSource = readFileSync(resolve(__dirname, '../src/pages/profile/index.tsx'), 'utf8')
+assert.ok(profileSource.includes('cropSquare: true'))
+assert.ok(profileSource.includes('maxDimension: AVATAR_IMAGE_MAX_DIMENSION'))
+assert.ok(profileSource.includes('quality: AVATAR_IMAGE_QUALITY'))
+assert.ok(profileSource.includes("purpose: 'avatar'"))
+assert.ok(profileSource.includes('updateCurrentAvatar(mediaId)'))
+const accountSource = readFileSync(resolve(__dirname, '../src/api/account.ts'), 'utf8')
+assert.ok(accountSource.includes('avatar_media_id: mediaId'))
+
+const selectionSource = readFileSync(resolve(__dirname, '../src/features/media/selection.ts'), 'utf8')
+assert.ok(selectionSource.includes('compressedWidth: dimensions.width'))
+assert.ok(selectionSource.includes('compressedHeight: dimensions.height'))
+assert.ok(selectionSource.includes('normalizedSquareCropDimensions'))
+assert.ok(selectionSource.includes('Number(info.width) !== Number(info.height)'))
+
+const communityDetailSource = readFileSync(resolve(__dirname, '../src/pages/community/detail.tsx'), 'utf8')
+const imageGridSource = readFileSync(resolve(__dirname, '../src/features/community/components/content-image-grid.tsx'), 'utf8')
+const imageGridStyleSource = readFileSync(resolve(__dirname, '../src/features/community/components/content-image-grid.scss'), 'utf8')
+const imagePreviewSource = readFileSync(resolve(__dirname, '../src/features/community/content-image-preview.ts'), 'utf8')
+assert.match(communityDetailSource, /<ContentImageGrid[\s\S]*?images=\{post\.images\}/u)
+assert.ok(imageGridSource.includes("mode='aspectFill'"))
+assert.match(imageGridSource, /ariaLabel=\{canPreview \? `预览第 \$\{index \+ 1\} 张图片，共 \$\{visibleImages\.length\} 张` : undefined\}/u)
+assert.match(communityDetailSource, /<ContentImageGrid[\s\S]*?preview/u)
+assert.match(imagePreviewSource, /Taro\.getImageInfo\(\{ src: url \}\)/u)
+assert.match(imagePreviewSource, /localImagePaths\.get\(url\) \|\| url/u)
+assert.match(imagePreviewSource, /Taro\.previewImage\(\{ current: previewCurrent, urls: previewUrls \}\)/u)
+assert.match(imageGridSource, /onLoad=\{\(\) => \{[\s\S]*?warmContentImagePreview\(\[url\]\)/u)
+assert.match(imageGridStyleSource, /\.content-image-grid \{[\s\S]*?grid-template-columns: repeat\(3, 152rpx\);/u)
+assert.match(imageGridStyleSource, /\.content-image-grid--1 \{[\s\S]*?width: 424rpx;[\s\S]*?height: 212rpx;/u)
+assert.match(imageGridStyleSource, /\.content-image-grid--2 \{[\s\S]*?grid-template-columns: repeat\(2, 220rpx\);/u)
+assert.match(imageGridStyleSource, /\.content-image-grid__reviewing--overlay \{[\s\S]*?inset: 0;[\s\S]*?background: rgba\(26, 35, 51, 0\.45\);/u)
+assert.match(imageGridSource, /onError=\{\(\) => setFailedImages/u)
+assert.match(imageGridSource, /!pendingReview && !imageAvailable/u)
+assert.match(imageGridSource, /const canPreview = Boolean\(imageAvailable && preview\)/u)
+assert.doesNotMatch(imageGridSource, /canPreview = Boolean\([^)]*!pendingReview/u)
+assert.match(imageGridStyleSource, /\.content-image-grid__reviewing--overlay \{[\s\S]*?pointer-events: none;/u)
+
+process.stdout.write('media images semantic smoke: ok\n')

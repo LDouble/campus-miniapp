@@ -8,18 +8,29 @@ import {
   GradeRecord,
   GradeSimulation,
 } from './types'
+import { sanitizeCoursesByPeriod } from './schedule-courses'
 
 const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
 const PREFERENCES_KEY = 'academic.preferences.v1'
 const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
+const SCHEDULE_REFRESH_GUIDE_KEY = 'academic.scheduleRefreshGuide.v2'
+const SCHEDULE_SELECTION_GUIDE_KEY = 'academic.scheduleSelectionGuide.v1'
+const COURSE_CATALOG_FLOAT_GUIDE_KEY = 'academic.courseCatalogFloatGuide.v1'
+const COURSE_CATALOG_DISCLAIMER_SEEN_KEY = 'academic.courseCatalogDisclaimerSeen.v1'
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
+const SELECTION_DRAFT_KEY = 'academic.selectionDraft.v1'
+const SELECTION_SCHEDULE_CACHE_KEY_PREFIX = 'academic.courseSelectionScheduleCache.v1.'
 
 export interface AcademicScheduleCache {
   version: 1
   platformUserId: number
   periods: AcademicPeriod[]
   coursesByPeriod: Record<string, Course[]>
+  coursesUpdatedAtByPeriod: Record<string, number>
+  /** 每个学期最近一次课表接口返回的全局提示。 */
+  scheduleNotesByPeriod?: Record<string, string>
+  /** 旧版本的全局课程更新时间，仅用于读取迁移。 */
   updatedAt?: number
 }
 
@@ -50,6 +61,12 @@ const safeWrite = <T>(key: string, value: T) => {
   }
 }
 
+const getLocalDayKey = (date = new Date()) => [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, '0'),
+  String(date.getDate()).padStart(2, '0'),
+].join('-')
+
 const validPeriod = (value: unknown): value is AcademicPeriod => {
   if (!value || typeof value !== 'object') return false
   const period = value as AcademicPeriod
@@ -74,6 +91,8 @@ const validCourse = (value: unknown): value is Course => {
     && typeof course.name === 'string'
     && typeof course.teacher === 'string'
     && typeof course.location === 'string'
+    && (course.classNum === undefined || typeof course.classNum === 'string')
+    && (course.note === undefined || typeof course.note === 'string')
     && (course.campus === undefined || typeof course.campus === 'string')
     && Number.isInteger(course.weekday)
     && Number.isInteger(course.startSection)
@@ -149,6 +168,10 @@ const recordsCacheKey = (platformUserId: number) => (
   `${RECORDS_CACHE_KEY_PREFIX}${platformUserId}`
 )
 
+const selectionScheduleCacheKey = (platformUserId: number) => (
+  `${SELECTION_SCHEDULE_CACHE_KEY_PREFIX}${platformUserId}`
+)
+
 const validRecordMap = <T>(
   value: unknown,
   validator: (record: unknown) => record is T,
@@ -164,6 +187,12 @@ const validTimestampMap = (value: unknown): value is Record<string, number> => (
   !!value
   && typeof value === 'object'
   && Object.values(value).every(validFiniteNumber)
+)
+
+const validStringMap = (value: unknown): value is Record<string, string> => (
+  !!value
+  && typeof value === 'object'
+  && Object.values(value).every(validString)
 )
 
 const validRecordsCache = (
@@ -210,10 +239,89 @@ const validScheduleCache = (
     && Object.values(cache.coursesByPeriod).every((courses) => (
       Array.isArray(courses) && courses.every(validCourse)
     ))
+    && (
+      validTimestampMap(cache.coursesUpdatedAtByPeriod)
+      || (
+        cache.coursesUpdatedAtByPeriod === undefined
+        && (cache.updatedAt === undefined || validFiniteNumber(cache.updatedAt))
+      )
+    )
+    && (
+      cache.scheduleNotesByPeriod === undefined
+      || validStringMap(cache.scheduleNotesByPeriod)
+    )
+  )
+}
+
+const scheduleUpdatedAtByPeriod = (
+  cache: AcademicScheduleCache,
+  coursesByPeriod: Record<string, Course[]>,
+) => {
+  if (validTimestampMap(cache.coursesUpdatedAtByPeriod)) {
+    return Object.fromEntries(
+      Object.entries(cache.coursesUpdatedAtByPeriod)
+        .filter(([periodId, timestamp]) => (
+          Object.prototype.hasOwnProperty.call(coursesByPeriod, periodId)
+          && validFiniteNumber(timestamp)
+        )),
+    )
+  }
+  if (!validFiniteNumber(cache.updatedAt)) return {}
+  return Object.fromEntries(
+    Object.keys(coursesByPeriod).map((periodId) => [periodId, cache.updatedAt as number]),
   )
 }
 
 export const academicStorage = {
+  getSelectionDraftCourses: (): Course[] => safeRead<Course[]>(SELECTION_DRAFT_KEY, []).filter((course) => course.source === 'simulation'),
+  setSelectionDraftCourses: (courses: Course[]) => safeWrite(SELECTION_DRAFT_KEY, courses),
+  getCourseSelectionScheduleCourses: (platformUserId: number): Course[] => (
+    safeRead<Course[]>(selectionScheduleCacheKey(platformUserId), [])
+      .filter(validCourse)
+  ),
+  setCourseSelectionScheduleCourses: (platformUserId: number, courses: Course[]) => (
+    safeWrite(selectionScheduleCacheKey(platformUserId), courses)
+  ),
+  hasSeenScheduleRefreshGuideToday: () => (
+    safeRead<string>(SCHEDULE_REFRESH_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markScheduleRefreshGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(SCHEDULE_REFRESH_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenScheduleSelectionGuideToday: () => (
+    safeRead<string>(SCHEDULE_SELECTION_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markScheduleSelectionGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(SCHEDULE_SELECTION_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenCourseCatalogFloatGuideToday: () => (
+    safeRead<string>(COURSE_CATALOG_FLOAT_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markCourseCatalogFloatGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(COURSE_CATALOG_FLOAT_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenCourseCatalogDisclaimer: () => (
+    safeRead<boolean>(COURSE_CATALOG_DISCLAIMER_SEEN_KEY, false)
+  ),
+  markCourseCatalogDisclaimerSeen: () => {
+    try {
+      Taro.setStorageSync(COURSE_CATALOG_DISCLAIMER_SEEN_KEY, true)
+    } catch (error) {
+      // 说明状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
   getCustomCourses: () => safeRead<Course[]>(CUSTOM_COURSES_KEY, []),
   setCustomCourses: (courses: Course[]) => safeWrite(CUSTOM_COURSES_KEY, courses),
   getPreferences: (fallback: AcademicPreferences) => (
@@ -231,20 +339,43 @@ export const academicStorage = {
   getScheduleCache: (platformUserId: number) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
     const value = safeRead<unknown>(scheduleCacheKey(platformUserId), null)
-    return validScheduleCache(value, platformUserId) ? value : null
+    if (!validScheduleCache(value, platformUserId)) return null
+    const coursesByPeriod = sanitizeCoursesByPeriod(value.coursesByPeriod)
+    return {
+      ...value,
+      coursesByPeriod,
+      coursesUpdatedAtByPeriod: scheduleUpdatedAtByPeriod(value, coursesByPeriod),
+      scheduleNotesByPeriod: validStringMap(value.scheduleNotesByPeriod)
+        ? value.scheduleNotesByPeriod
+        : {},
+    }
   },
   setScheduleCache: (
     platformUserId: number,
     periods: AcademicPeriod[],
     coursesByPeriod: Record<string, Course[]>,
+    coursesUpdatedAtByPeriod: Record<string, number>,
+    scheduleNotesByPeriod: Record<string, string> = {},
   ) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return
+    const sanitizedCourses = sanitizeCoursesByPeriod(coursesByPeriod)
+    const periodIds = new Set(periods.map((period) => period.id))
     safeWrite<AcademicScheduleCache>(scheduleCacheKey(platformUserId), {
       version: 1,
       platformUserId,
       periods,
-      coursesByPeriod,
-      updatedAt: Date.now(),
+      coursesByPeriod: sanitizedCourses,
+      coursesUpdatedAtByPeriod: Object.fromEntries(
+        Object.entries(coursesUpdatedAtByPeriod)
+          .filter(([periodId, timestamp]) => (
+            Object.prototype.hasOwnProperty.call(sanitizedCourses, periodId)
+          && validFiniteNumber(timestamp)
+        )),
+      ),
+      scheduleNotesByPeriod: Object.fromEntries(
+        Object.entries(scheduleNotesByPeriod)
+          .filter(([periodId, note]) => periodIds.has(periodId) && validString(note)),
+      ),
     })
   },
   getRecordsCache: (platformUserId: number) => {

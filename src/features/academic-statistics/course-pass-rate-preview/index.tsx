@@ -1,10 +1,6 @@
-import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
 import { openCourseStatistics } from '../navigation'
-import {
-  CoursePassRate,
-  getCoursePassRatePreview,
-} from '../repository'
+import { useCoursePassRatePreview } from './state'
 import './index.scss'
 
 type Props = {
@@ -24,41 +20,20 @@ export default function CoursePassRatePreview({
   courseName,
   teacherName = '',
 }: Props) {
-  const [data, setData] = useState<CoursePassRate | null>(null)
-  const [loading, setLoading] = useState(Boolean(courseCode.trim()))
-  const [empty, setEmpty] = useState(false)
-  const [fromCache, setFromCache] = useState(false)
+  const {
+    bindingRequired,
+    data,
+    fromCache,
+    loading,
+  } = useCoursePassRatePreview(courseCode)
 
-  useEffect(() => {
-    const normalized = courseCode.trim()
-    if (!normalized) {
-      setLoading(false)
-      setEmpty(true)
-      return
-    }
-    let active = true
-    setLoading(true)
-    setEmpty(false)
-    getCoursePassRatePreview(normalized)
-      .then((result) => {
-        if (!active) return
-        setData(result.data)
-        setFromCache(result.fromCache)
-        setEmpty(!result.data)
-      })
-      .catch(() => {
-        if (!active) return
-        setEmpty(true)
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-    return () => {
-      active = false
-    }
-  }, [courseCode])
-
-  if (!courseCode.trim()) return null
+  if (
+    !courseCode.trim()
+    || loading
+    || !data
+    || !Number.isFinite(data.pass_rate)
+    || bindingRequired
+  ) return null
 
   const openDetails = () => {
     void openCourseStatistics({ courseCode, courseName, teacherName })
@@ -66,12 +41,9 @@ export default function CoursePassRatePreview({
 
   return (
     <View
-      className={[
-        'course-reference',
-        loading ? 'course-reference--loading' : '',
-        empty ? 'course-reference--empty' : '',
-      ].filter(Boolean).join(' ')}
-      hoverClass='course-reference--pressed'
+      className='course-reference'
+      ariaRole='button'
+      ariaLabel={`查看${courseName}课程参考数据`}
       onClick={openDetails}
     >
       <View className='course-reference__heading'>
@@ -83,31 +55,20 @@ export default function CoursePassRatePreview({
         </View>
         <Text className='course-reference__arrow'>›</Text>
       </View>
-      {loading && (
-        <View className='course-reference__skeleton'>
-          <View />
-          <View />
+      <View className='course-reference__metrics'>
+        <View>
+          <Text>{Math.round(data.pass_rate * 100)}%</Text>
+          <Text>历史通过率</Text>
         </View>
-      )}
-      {!loading && data && (
-        <View className='course-reference__metrics'>
-          <View>
-            <Text>{Math.round(data.pass_rate * 100)}%</Text>
-            <Text>历史通过率</Text>
-          </View>
-          <View>
-            <Text>{data.average_score === undefined ? '—' : data.average_score.toFixed(1)}</Text>
-            <Text>百分制平均分</Text>
-          </View>
-          <View>
-            <Text>{data.valid_count}</Text>
-            <Text>{confidenceText[data.confidence]}</Text>
-          </View>
+        <View>
+          <Text>{data.average_score === undefined ? '—' : data.average_score.toFixed(1)}</Text>
+          <Text>百分制平均分</Text>
         </View>
-      )}
-      {!loading && empty && (
-        <Text className='course-reference__empty'>暂未积累到足够的历史样本</Text>
-      )}
+        <View>
+          <Text>{data.valid_count}</Text>
+          <Text>{confidenceText[data.confidence]}</Text>
+        </View>
+      </View>
     </View>
   )
 }

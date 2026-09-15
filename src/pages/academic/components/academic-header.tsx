@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import Taro from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import CustomNavbar, { getNavbarMetrics } from '../../../components/custom-navbar'
+import { getSystemState } from '../../../state/system'
 
 interface AcademicHeaderProps {
   title: string
@@ -12,7 +12,7 @@ interface AcademicHeaderProps {
 export default function AcademicHeader({ title, toolbar, variant = 'default' }: AcademicHeaderProps) {
   const metrics = getNavbarMetrics()
   const navbarHeight = metrics.statusBarHeight + metrics.navigationBarHeight
-  const panelHeight = 110 * (Taro.getWindowInfo().windowWidth || 375) / 750
+  const panelHeight = 110 * getSystemState().windowInfo.windowWidth / 750
 
   if (variant === 'schedule') {
     return (

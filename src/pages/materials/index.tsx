@@ -24,6 +24,8 @@ import {
 import { getCurrentIdentity } from '../../api/account'
 import { createIdempotencyKey } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
+import { getSelectedTempFiles } from '../../utils/file-selection'
+import { useCampusShare } from '../../features/share'
 import type {
   CourseMaterialView,
   MaterialCourseView,
@@ -58,9 +60,9 @@ import {
   isMaterialUploadSessionReusable,
   materialExtension,
   MAX_MATERIAL_FILES,
-  MAX_MATERIAL_FILE_SIZE,
   mimeTypes,
   resolveMaterialCourse,
+  selectSupportedMaterialFiles,
   supportedMaterialExtensions,
   validateMaterialDrafts,
 } from '../../features/course-materials/validation'
@@ -90,6 +92,7 @@ string
   schedule: '从课表进入',
   grades: '从成绩进入',
   selection: '从选课结果进入',
+  exams: '从考试安排进入',
 }
 
 const decodeRouteValue = (value?: string) => {
@@ -191,6 +194,20 @@ export default function MaterialsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>(
     routeContext.view === 'mine' ? 'mine' : 'browse',
   )
+  useCampusShare(() => ({
+    title: routeContext.courseName
+      ? `${routeContext.courseName}｜海大课程资料`
+      : '海大课程资料库',
+    path: '/pages/materials/index',
+    query: viewMode === 'browse'
+      ? {
+          courseName: routeContext.courseName,
+          courseCode: routeContext.courseCode,
+          periodId: routeContext.periodId,
+          periodLabel: routeContext.periodLabel,
+        }
+      : undefined,
+  }))
   const [sheet, setSheet] = useState<Sheet>(
     routeContext.action === 'upload' ? 'upload' : null,
   )
@@ -579,16 +596,10 @@ export default function MaterialsPage() {
         type: 'file',
         extension: [...supportedMaterialExtensions],
       })
-      const selected = result.tempFiles
-        .filter((file) => (
-          file.size > 0
-          && file.size <= MAX_MATERIAL_FILE_SIZE
-          && supportedMaterialExtensions.includes(
-            materialExtension(file.name) as typeof supportedMaterialExtensions[number],
-          )
-        ))
-        .slice(0, MAX_MATERIAL_FILES)
-      if (selected.length < result.tempFiles.length) {
+      const returnedFiles = getSelectedTempFiles(result)
+      if (!returnedFiles.length) return
+      const selected = selectSupportedMaterialFiles(returnedFiles)
+      if (selected.length < returnedFiles.length) {
         Taro.showToast({ title: '已跳过格式不支持或超过 50MB 的文件', icon: 'none' })
       }
       if (!selected.length) return
@@ -645,9 +656,13 @@ export default function MaterialsPage() {
         Taro.showToast({ title: '存储空间不足，退出后需重新选择部分文件', icon: 'none' })
       }
     } catch (error) {
-      if (error instanceof Error) {
-        Taro.showToast({ title: error.message, icon: 'none' })
-      }
+      const message = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error && 'errMsg' in error
+          ? String(error.errMsg)
+          : ''
+      if (/cancel/i.test(message)) return
+      Taro.showToast({ title: '文件选择失败，请重试', icon: 'none' })
     }
   }
 
@@ -781,14 +796,14 @@ export default function MaterialsPage() {
         if (!draft.fileId) throw new Error('上传任务无效，请重新上传')
         return { file_id: draft.fileId }
       })
-      console.info('[COS直传] 课程资料开始完成确认')
+      console.info('[对象存储直传] 课程资料开始完成确认')
       const completed = await completeMaterialUploadSession(
         workingBatch.sessionId,
         workingBatch.sessionVersion,
         completedFiles,
         workingBatch.completeIdempotencyKey,
       )
-      console.info('[COS直传] 课程资料完成确认成功')
+      console.info('[对象存储直传] 课程资料完成确认成功')
       await removePersistedMaterialFiles(workingDrafts)
       setDrafts([])
       setMetadata(createUploadMetadata(routeContext))
@@ -912,9 +927,9 @@ export default function MaterialsPage() {
       <CustomNavbar title='课程资料' subtitle='中国海洋大学' showBack />
       <View className='materials-page__content'>
         <View className='materials-view-tabs'>
-          <View className={viewMode === 'browse' ? 'materials-view-tabs__active' : ''} onClick={() => setViewMode('browse')}>资料库</View>
-          <View className={viewMode === 'mine' ? 'materials-view-tabs__active' : ''} onClick={() => setViewMode('mine')}>我的资料{drafts.length ? <Text>{drafts.length}</Text> : null}</View>
-          <View className={viewMode === 'feedbacks' ? 'materials-view-tabs__active' : ''} onClick={() => setViewMode('feedbacks')}>我的反馈</View>
+          <View className={viewMode === 'browse' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看课程资料库' onClick={() => setViewMode('browse')}>资料库</View>
+          <View className={viewMode === 'mine' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看我的资料' onClick={() => setViewMode('mine')}>我的资料{drafts.length ? <Text>{drafts.length}</Text> : null}</View>
+          <View className={viewMode === 'feedbacks' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看我的反馈' onClick={() => setViewMode('feedbacks')}>我的反馈</View>
         </View>
         {viewMode !== 'feedbacks' && <View className='materials-search'>
           <Image src={icons.search} mode='aspectFit' />
@@ -948,17 +963,17 @@ export default function MaterialsPage() {
           </View>
         )}
         {viewMode !== 'feedbacks' && <View className='materials-actions'>
-          <View className={`materials-filter-button ${filtersActive ? 'materials-filter-button--active' : ''}`} onClick={() => setSheet('filter')}><Text>筛选</Text>{filtersActive && <View />}</View>
+          <View className={`materials-filter-button ${filtersActive ? 'materials-filter-button--active' : ''}`} ariaRole='button' ariaLabel='筛选课程资料' onClick={() => setSheet('filter')}><Text>筛选</Text>{filtersActive && <View />}</View>
           <ScrollView scrollX showScrollbar={false} className='materials-course-scroll'>
-            <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
+            <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} ariaRole='button' ariaLabel={`筛选课程：${item}`} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
           </ScrollView>
-          <View className='materials-upload-button' onClick={openUpload}>分享资料</View>
+          <View className='materials-upload-button' ariaRole='button' ariaLabel='分享课程资料' onClick={openUpload}>分享资料</View>
         </View>}
 
         {viewMode === 'browse' && <>
           <View className='materials-heading'><View><Text>课程资料</Text><Text>{limitToSourcePeriod && routeContext.periodId ? `${sourcePeriodLabel} · 仅展示已审核内容` : '全部学期 · 仅展示已审核内容'}</Text></View><Text>{materialsTotal} 份</Text></View>
           {loading && !materials.length ? <View className='materials-empty'><View /><Text>正在加载资料</Text><Text>请稍候</Text></View> : <View className='materials-list'>
-            {materials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
+            {materials.map((item) => <View key={item.id} className='material-card' onClick={() => openMaterialDetail(item)}>
               <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
               <View className='material-card__main'>
                 <Text className='material-card__title'>{item.title}</Text>
@@ -993,7 +1008,7 @@ export default function MaterialsPage() {
               </View>
               <Text className='material-card__arrow'>›</Text>
             </View>}
-            {visibleMyMaterials.map((item) => <View key={item.id} className='material-card' hoverClass='material-card--pressed' onClick={() => openMaterialDetail(item)}>
+            {visibleMyMaterials.map((item) => <View key={item.id} className='material-card' onClick={() => openMaterialDetail(item)}>
               <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
               <View className='material-card__main'>
                 <Text className='material-card__title'>{item.title}</Text>
@@ -1025,16 +1040,16 @@ export default function MaterialsPage() {
 
       {sheet && <View className='materials-overlay' onClick={closeSheet}>
         <View
-          className={`materials-sheet materials-sheet--${sheet}`}
+          className={`materials-sheet materials-sheet--${sheet} ${sheet === 'upload' && drafts.length ? 'materials-sheet--upload-filled' : ''}`}
           style={keyboardHeight ? {
             bottom: `${keyboardHeight}px`,
-            maxHeight: `calc(100vh - ${keyboardHeight}px - 20px)`,
+            maxHeight: `calc(100vh - ${keyboardHeight}px - 92px)`,
           } : undefined}
           onClick={requestWechatSubscriptionAndStopPropagation}
         >
           <View className='materials-sheet__handle' />
           {sheet !== 'upload-course' && (
-            <View className='materials-sheet__close' onClick={closeSheet}>×</View>
+          <View className='materials-sheet__close' ariaRole='button' ariaLabel='关闭弹层' onClick={closeSheet}>×</View>
           )}
 
           {sheet === 'filter' && <View className='materials-sheet__body'>
@@ -1050,7 +1065,7 @@ export default function MaterialsPage() {
             <View className='materials-secondary' onClick={() => { selectBrowseCourse('全部课程'); setKind('all') }}>清除筛选</View>
           </View>}
 
-          {sheet === 'upload' && <View className='materials-sheet__body'>
+          {sheet === 'upload' && <View className='materials-sheet__body materials-upload-sheet__body'>
             <Text className='materials-sheet__title'>分享课程资料</Text>
             <Text className='materials-sheet__subtitle'>一份资料最多包含 5 个 PDF、Word 或 PPT 文件</Text>
             {!drafts.length ? (
@@ -1114,7 +1129,6 @@ export default function MaterialsPage() {
                         <View
                           key={`${item.id || 'candidate'}-${item.name}`}
                           className={`materials-course-picker__option ${selected ? 'materials-course-picker__option--active' : ''}`}
-                          hoverClass='materials-course-picker__option--pressed'
                           onClick={() => updateMetadata({
                             courseName: item.name,
                             courseId: item.id,
@@ -1166,9 +1180,12 @@ export default function MaterialsPage() {
                 </View>)}
               </View>
               {!uploading && <View className='materials-file-add' onClick={chooseFiles}>重新选择文件</View>}
-              <View className={`materials-primary ${uploading ? 'materials-primary--disabled' : ''}`} onClick={submitDrafts}>{uploading ? '正在上传…' : drafts.some((draft) => draft.status === 'failed') ? '重试上传' : '上传并提交审核'}</View>
-              <Text className='materials-upload-notice'>上传即表示确认资料不包含隐私、侵权或违规内容</Text>
             </>}
+          </View>}
+
+          {sheet === 'upload' && !!drafts.length && <View className='materials-upload-sheet__footer'>
+            <View className={`materials-primary ${uploading ? 'materials-primary--disabled' : ''}`} onClick={submitDrafts}>{uploading ? '正在上传…' : drafts.some((draft) => draft.status === 'failed') ? '重试上传' : '上传并提交审核'}</View>
+            <Text className='materials-upload-notice'>上传即表示确认资料不包含隐私、侵权或违规内容</Text>
           </View>}
 
           {sheet === 'upload-course' && (
@@ -1209,7 +1226,6 @@ export default function MaterialsPage() {
                     <View
                       key={`${item.id || 'candidate'}-${item.name}`}
                       className={`materials-course-browser__option ${selected ? 'materials-course-browser__option--active' : ''}`}
-                      hoverClass='materials-course-browser__option--pressed'
                       onClick={() => selectUploadCourseOption(item)}
                     >
                       <View>

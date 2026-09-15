@@ -1,19 +1,30 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Image, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import {
   openCourseMarketplacePublisher,
-  openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { getActiveAcademicUserId } from '../../../api/academic-credential'
+import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
-import { calculateGradeSummary, getGradeDisplay, getGradePoint, getGradeScore, gradeLevelScores } from '../calculations'
+import {
+  calculateGradeSummary,
+  fiveLevelOptions,
+  getCanonicalGradeLevel,
+  getGradeDisplay,
+  getGradeLevelRule,
+  getGradePoint,
+  getGradePointForGrade,
+  getGradeScore,
+  isTwoLevelGrade,
+  twoLevelOptions,
+} from '../calculations'
 import { academicRepository } from '../repository'
 import { academicStorage } from '../storage'
 import {
@@ -26,15 +37,16 @@ import {
   deriveGradePeriods,
   getGradePeriodLabel,
 } from '../utils'
-import {
-  openCourseMaterials,
-  shareCourseMaterials,
-} from '../../../features/course-materials/navigation'
+import { shareCourseMaterials } from '../../../features/course-materials/navigation'
 import { rememberCourseSuggestions } from '../../../features/course-materials/storage'
+import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
+import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
 const ALL_PERIOD_ID = 'all'
+const ACADEMIC_CHEVRON = require('../../../assets/icons/academic-chevron-down.svg')
+
 const defaultPreferences: AcademicPreferences = {
   section: 'grades',
   schedulePeriodId: DEFAULT_PERIOD_ID,
@@ -47,8 +59,14 @@ const defaultPreferences: AcademicPreferences = {
 
 type GradeSheet = 'period' | 'grade-edit' | 'course-services' | null
 
-const formatGradePoint = (score?: number) => (
-  score === undefined ? '—' : getGradePoint(score).toFixed(1)
+const formatGradePoint = (gradePoint?: number) => (
+  gradePoint === undefined
+    ? '—'
+    : Number.isInteger(gradePoint * 10) ? gradePoint.toFixed(1) : String(gradePoint)
+)
+
+const formatCredits = (credits: number) => (
+  Number.isInteger(credits) ? credits.toFixed(1) : String(credits)
 )
 
 export default function GradesPage() {
@@ -72,7 +90,8 @@ export default function GradesPage() {
   const [retrying, setRetrying] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [hasSnapshot, setHasSnapshot] = useState(hasInitialSnapshot)
-  const [usingCache, setUsingCache] = useState(false)
+  const [usingCache, setUsingCache] = useState(hasInitialSnapshot)
+  const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialRecordsCache?.gradesUpdatedAt || 0,
   )
@@ -81,8 +100,61 @@ export default function GradesPage() {
   const [editingGrade, setEditingGrade] = useState<GradeRecord | null>(null)
   const [activeGrade, setActiveGrade] = useState<GradeRecord | null>(null)
   const [gradeScore, setGradeScore] = useState('')
+  const [gradePoint, setGradePoint] = useState('')
   const [gradeCredit, setGradeCredit] = useState('')
   const [gradeLevel, setGradeLevel] = useState<GradeLevel>('优秀')
+  const pageScrollTopRef = useRef(0)
+  const sheetScrollTopRef = useRef(0)
+  const sheetActiveRef = useRef(false)
+  const sheetTransitionRef = useRef(0)
+  const gradesRequestRef = useRef(0)
+  const firstPageShowRef = useRef(true)
+
+  Taro.usePageScroll(({ scrollTop }) => {
+    if (!sheetActiveRef.current && Number.isFinite(scrollTop)) {
+      pageScrollTopRef.current = scrollTop
+    }
+  })
+
+  const openSheet = (nextSheet: Exclude<GradeSheet, null>) => {
+    sheetTransitionRef.current += 1
+    sheetScrollTopRef.current = pageScrollTopRef.current
+    sheetActiveRef.current = true
+    setSheet(nextSheet)
+  }
+
+  const closeSheet = useCallback(() => {
+    const scrollTop = sheetScrollTopRef.current
+    const transition = sheetTransitionRef.current + 1
+    sheetTransitionRef.current = transition
+    setSheet(null)
+
+    return new Promise<boolean>((resolve) => {
+      Taro.nextTick(() => {
+        if (sheetTransitionRef.current !== transition) {
+          resolve(false)
+          return
+        }
+        void Taro.pageScrollTo({ scrollTop, duration: 0 })
+          .catch(() => undefined)
+          .then(() => {
+            if (sheetTransitionRef.current === transition) {
+              pageScrollTopRef.current = scrollTop
+              sheetActiveRef.current = false
+            }
+            resolve(true)
+          })
+      })
+    })
+  }, [])
+
+  const runAfterClosingSheet = useCallback((action: () => unknown) => {
+    if (!sheetActiveRef.current) {
+      void action()
+      return
+    }
+    void closeSheet().then((closed) => closed ? action() : undefined)
+  }, [closeSheet])
 
   const periods = useMemo(() => deriveGradePeriods(allGrades), [allGrades])
   const grades = useMemo(() => (
@@ -123,6 +195,12 @@ export default function GradesPage() {
   )
   const allSelected = grades.length > 0
     && grades.every((grade) => currentSimulation.selectedIds.includes(grade.id))
+  const editingGradeLevel = editingGrade
+    ? currentSimulation.overrides[editingGrade.id]?.gradeLevel || editingGrade.gradeLevel
+    : undefined
+  const gradeLevelOptions = isTwoLevelGrade(editingGradeLevel)
+    ? twoLevelOptions
+    : fiveLevelOptions
 
   useEffect(() => {
     rememberCourseSuggestions(allGrades.map((grade) => ({
@@ -133,15 +211,20 @@ export default function GradesPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
+    const requestId = ++gradesRequestRef.current
+    setLoading(!hasInitialSnapshot)
+    setUsingCache(hasInitialSnapshot)
+    setServerCache(null)
     academicRepository.getGrades()
-      .then((records) => {
-        if (cancelled) return
+      .then((result) => {
+        if (cancelled || gradesRequestRef.current !== requestId) return
+        const records = result.records
         academicStorage.setGradeRecords(academicUserId, records)
         setAllGrades(records)
         setCacheUpdatedAt(Date.now())
         setHasSnapshot(true)
         setUsingCache(false)
+        setServerCache(result.cache || null)
         setLoadError(null)
         setPreferences((current) => {
           if (
@@ -152,7 +235,7 @@ export default function GradesPage() {
         })
       })
       .catch((error) => {
-        if (cancelled) return
+        if (cancelled || gradesRequestRef.current !== requestId) return
         if (hasInitialSnapshot) {
           setUsingCache(true)
           setLoadError(error)
@@ -162,7 +245,7 @@ export default function GradesPage() {
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (!cancelled && gradesRequestRef.current === requestId) setLoading(false)
       })
     return () => {
       cancelled = true
@@ -170,16 +253,23 @@ export default function GradesPage() {
   }, [academicUserId, hasInitialSnapshot])
 
   const refreshGrades = useCallback(async () => {
+    const requestId = ++gradesRequestRef.current
     setRetrying(true)
     setLoadError(null)
+    setUsingCache(hasSnapshot)
+    setServerCache(null)
     try {
-      const records = await academicRepository.getGrades()
+      const result = await academicRepository.getGrades()
+      if (gradesRequestRef.current !== requestId) return
+      const records = result.records
       academicStorage.setGradeRecords(academicUserId, records)
       setAllGrades(records)
       setCacheUpdatedAt(Date.now())
       setHasSnapshot(true)
       setUsingCache(false)
+      setServerCache(result.cache || null)
     } catch (error) {
+      if (gradesRequestRef.current !== requestId) return
       if (hasSnapshot) {
         setUsingCache(true)
         setLoadError(error)
@@ -188,10 +278,24 @@ export default function GradesPage() {
         setLoadError(error)
       }
     } finally {
-      setRetrying(false)
-      setLoading(false)
+      if (gradesRequestRef.current === requestId) {
+        setRetrying(false)
+        setLoading(false)
+      }
     }
   }, [academicUserId, hasSnapshot])
+
+  Taro.useDidShow(() => {
+    const shouldRefresh = consumeAcademicRefreshAfterVerification(
+      Taro,
+      '/pages/academic/grades/index',
+    )
+    if (firstPageShowRef.current) {
+      firstPageShowRef.current = false
+      return
+    }
+    if (shouldRefresh) void refreshGrades()
+  })
 
   Taro.usePullDownRefresh(() => {
     refreshGrades().finally(() => Taro.stopPullDownRefresh())
@@ -255,74 +359,84 @@ export default function GradesPage() {
     if (!simulationMode) return
     const override = currentSimulation.overrides[grade.id]
     const score = getGradeScore(grade, override)
+    const point = getGradePointForGrade(grade, override)
     setEditingGrade(grade)
     setGradeScore(score === undefined ? '' : String(score))
-    setGradeLevel(override?.gradeLevel || grade.gradeLevel || '优秀')
+    setGradePoint(point === undefined ? '' : String(point))
+    setGradeLevel(getCanonicalGradeLevel(override?.gradeLevel || grade.gradeLevel) || '优秀')
     setGradeCredit(String(override?.credit ?? grade.credit))
-    setSheet('grade-edit')
+    openSheet('grade-edit')
+  }
+
+  const updateGradeLevel = (level: GradeLevel) => {
+    const rule = getGradeLevelRule(level)
+    setGradeLevel(level)
+    setGradeScore(rule ? String(rule.score) : '')
+    setGradePoint(rule ? String(rule.gradePoint) : '')
+  }
+
+  const updateGradeScore = (value: string) => {
+    setGradeScore(value)
+    const score = Number(value)
+    setGradePoint(value !== '' && Number.isFinite(score) ? String(getGradePoint(score)) : '')
   }
 
   const openGradeServices = (grade: GradeRecord) => {
     if (simulationMode) return
     setActiveGrade(grade)
-    setSheet('course-services')
+    openSheet('course-services')
   }
 
-  const openGradeMaterials = (grade: GradeRecord, action?: 'upload') => {
-    setSheet(null)
-    if (isQualificationEdition) {
-      void openMigratedFeaturePage({ module: 'course_materials' })
-      return
-    }
-    const context = {
-      courseName: grade.courseName,
-      courseCode: grade.courseCode,
-      periodId: grade.periodId,
-      periodLabel: getGradePeriodLabel(periods, grade.periodId),
-      source: 'grades' as const,
-    }
-    void (action === 'upload'
-      ? shareCourseMaterials(context)
-      : openCourseMaterials(context))
+  const shareGradeMaterials = (grade: GradeRecord) => {
+    runAfterClosingSheet(() => {
+      if (isQualificationEdition) {
+        return openMigratedFeaturePage({ module: 'course_materials' })
+      }
+      const context = {
+        courseName: grade.courseName,
+        courseCode: grade.courseCode,
+        periodId: grade.periodId,
+        periodLabel: getGradePeriodLabel(periods, grade.periodId),
+        source: 'grades' as const,
+      }
+      return shareCourseMaterials(context)
+    })
   }
 
-  const openCourseTrade = (intent: 'sell' | 'wanted') => {
+  const openCourseTrade = () => {
     if (!activeGrade) return
     if (isQualificationEdition) {
-      setSheet(null)
-      void openMigratedFeaturePage({ module: 'marketplace' })
+      runAfterClosingSheet(() => openMigratedFeaturePage({ module: 'marketplace' }))
       return
     }
     const courseName = activeGrade.courseName.trim()
-    setSheet(null)
     const prefill = {
-      intent,
-      description: intent === 'wanted'
-        ? `求购与《${courseName}》相关的教材、笔记或复习资料，版本和成色可沟通。`
-        : `出售与《${courseName}》相关的教材、笔记或复习资料，具体版本和成色可沟通。`,
+      intent: 'sell',
+      description: `出售《${courseName}》课程使用过的课本，版本、笔记与成色可沟通。`,
       courseName,
       courseCode: activeGrade.courseCode || '',
       academicPeriodId: activeGrade.periodId,
       academicPeriodLabel: getGradePeriodLabel(periods, activeGrade.periodId),
       source: 'grade',
     } as const
-    if (intent === 'wanted') {
-      void openCourseMarketplaceSearch(prefill)
-      return
-    }
-    void openCourseMarketplacePublisher(prefill)
+    runAfterClosingSheet(() => openCourseMarketplacePublisher(prefill))
   }
 
   const saveOverride = () => {
     if (!editingGrade) return
     const credit = Number(gradeCredit)
     const score = Number(gradeScore)
-    if (!Number.isFinite(score) || score < 0 || score > 100) {
+    const point = Number(gradePoint)
+    if (gradeScore.trim() === '' || !Number.isFinite(score) || score < 0 || score > 100) {
       Taro.showToast({ title: '成绩请输入 0 至 100', icon: 'none' })
       return
     }
-    if (!Number.isFinite(credit) || credit < 0.5 || credit > 20) {
-      Taro.showToast({ title: '学分请输入 0.5 至 20', icon: 'none' })
+    if (gradePoint.trim() === '' || !Number.isFinite(point) || point < 0 || point > 4) {
+      Taro.showToast({ title: '绩点请输入 0 至 4', icon: 'none' })
+      return
+    }
+    if (!Number.isFinite(credit) || credit <= 0) {
+      Taro.showToast({ title: '学分请输入大于 0 的数值', icon: 'none' })
       return
     }
     updateSimulation((simulation) => ({
@@ -331,10 +445,12 @@ export default function GradesPage() {
         : [...simulation.selectedIds, editingGrade.id],
       overrides: {
         ...simulation.overrides,
-        [editingGrade.id]: editingGrade.gradeType === 'level' ? { gradeLevel, score, credit } : { score, credit },
+        [editingGrade.id]: editingGrade.gradeType === 'level'
+          ? { gradeLevel, score, gradePoint: point, credit }
+          : { score, gradePoint: point, credit },
       },
     }))
-    setSheet(null)
+    void closeSheet()
     Taro.showToast({ title: '模拟成绩已保存', icon: 'success' })
   }
 
@@ -357,11 +473,10 @@ export default function GradesPage() {
 
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
-      <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
-        <Text className='academic-toolbar__label'>成绩范围</Text>
+      <View className='academic-toolbar__period' onClick={() => openSheet('period')}>
         <View>
           <Text>{preferences.gradePeriodId === ALL_PERIOD_ID ? '全部学期' : getGradePeriodLabel(periods, preferences.gradePeriodId)}</Text>
-          <Text className='academic-toolbar__chevron'>⌄</Text>
+          <Image className='academic-toolbar__chevron' src={ACADEMIC_CHEVRON} mode='aspectFit' />
         </View>
       </View>
       {simulationMode ? (
@@ -370,7 +485,7 @@ export default function GradesPage() {
           <View onClick={resetSimulation}>重置模拟</View>
         </View>
       ) : (
-        <View className='academic-toolbar__reset academic-toolbar__reset--simulate' onClick={enterSimulation}>模拟计算</View>
+        <View className='academic-toolbar__reset academic-toolbar__reset--simulate' onClick={enterSimulation}><Text>模拟计算</Text></View>
       )}
     </View>
   )
@@ -378,10 +493,10 @@ export default function GradesPage() {
   const renderSheet = () => {
     if (!sheet) return null
     return (
-      <View className='academic-overlay' onClick={() => setSheet(null)}>
+      <View className='academic-overlay' onClick={() => void closeSheet()}>
         <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
-          <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+          <View className='academic-sheet__close' onClick={() => void closeSheet()}>×</View>
           {sheet === 'period' && (
             <View className='academic-sheet__body'>
               <Text className='academic-sheet__title'>选择成绩学期</Text>
@@ -391,7 +506,7 @@ export default function GradesPage() {
                   className={`period-options__item ${preferences.gradePeriodId === ALL_PERIOD_ID ? 'period-options__item--active' : ''}`}
                   onClick={() => {
                     updatePreferences({ gradePeriodId: ALL_PERIOD_ID })
-                    setSheet(null)
+                    void closeSheet()
                   }}
                 >
                   <View>
@@ -408,7 +523,7 @@ export default function GradesPage() {
                     className={`period-options__item ${preferences.gradePeriodId === period.id ? 'period-options__item--active' : ''}`}
                     onClick={() => {
                       updatePreferences({ gradePeriodId: period.id })
-                      setSheet(null)
+                      void closeSheet()
                     }}
                   >
                     <View>
@@ -442,7 +557,7 @@ export default function GradesPage() {
                 <View><Text>原始学分</Text><Text>{editingGrade.credit}</Text></View>
                 <View>
                   <Text>原始绩点</Text>
-                  <Text>{formatGradePoint(getGradeScore(editingGrade))}</Text>
+                  <Text>{formatGradePoint(getGradePointForGrade(editingGrade))}</Text>
                 </View>
               </View>
               {editingGrade.gradeType === 'level' ? (
@@ -450,11 +565,11 @@ export default function GradesPage() {
                   <View className='academic-field'>
                     <Text className='academic-field__label'>模拟等级</Text>
                     <View className='grade-level-options'>
-                      {(Object.keys(gradeLevelScores) as GradeLevel[]).map((level) => (
+                      {gradeLevelOptions.map((level) => (
                         <View
                           key={level}
                           className={gradeLevel === level ? 'grade-level-options__item--active' : ''}
-                          onClick={() => setGradeLevel(level)}
+                          onClick={() => updateGradeLevel(level)}
                         >
                           {level}
                         </View>
@@ -466,8 +581,8 @@ export default function GradesPage() {
                     <KeyboardSafeInput
                       type='digit'
                       value={gradeScore}
-                      placeholder='例如：优秀折算为 95'
-                      onInput={(event) => setGradeScore(event.detail.value)}
+                      placeholder='例如：优秀折算为 90'
+                      onInput={(event) => updateGradeScore(event.detail.value)}
                     />
                   </View>
                 </>
@@ -478,12 +593,21 @@ export default function GradesPage() {
                     type='digit'
                     value={gradeScore}
                     placeholder='请输入模拟成绩'
-                    onInput={(event) => setGradeScore(event.detail.value)}
+                    onInput={(event) => updateGradeScore(event.detail.value)}
                   />
                 </View>
               )}
               <View className='academic-field'>
-                <Text className='academic-field__label'>模拟学分（0.5–20）</Text>
+                <Text className='academic-field__label'>模拟绩点（0–4）</Text>
+                <KeyboardSafeInput
+                  type='digit'
+                  value={gradePoint}
+                  placeholder='按成绩自动映射，也可手动修改'
+                  onInput={(event) => setGradePoint(event.detail.value)}
+                />
+              </View>
+              <View className='academic-field'>
+                <Text className='academic-field__label'>模拟学分（大于 0）</Text>
                 <KeyboardSafeInput
                   type='digit'
                   value={gradeCredit}
@@ -509,18 +633,16 @@ export default function GradesPage() {
               <View className='course-resource-actions course-resource-actions--standalone'>
                 <View
                   className='course-resource-actions__primary'
-                  onClick={() => openGradeMaterials(activeGrade)}
+                  onClick={() => shareGradeMaterials(activeGrade)}
                 >
                   <View>
-                    <Text>{isQualificationEdition ? '新版课程服务' : '查看课程资料'}</Text>
-                    <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '只带入课程和学期，不会带入成绩'}</Text>
+                    <Text>{isQualificationEdition ? '新版课程服务' : '分享资料'}</Text>
+                    <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '分享笔记、课件或复习资料'}</Text>
                   </View>
-                  <Text>查看 ›</Text>
+                  <Text>去分享 ›</Text>
                 </View>
-                {!isQualificationEdition && <View className='course-resource-actions__secondary'>
-                  <View onClick={() => openGradeMaterials(activeGrade, 'upload')}>分享资料</View>
-                  <View onClick={() => openCourseTrade('wanted')}>求购教材</View>
-                  <View onClick={() => openCourseTrade('sell')}>出售相关资料</View>
+                {!isQualificationEdition && <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
+                  <View onClick={openCourseTrade}>出售课本</View>
                 </View>}
               </View>
             </View>
@@ -540,20 +662,28 @@ export default function GradesPage() {
             <View className='academic-state__loader' />
             <Text>正在整理成绩…</Text>
           </View>
-        ) : loadError && !usingCache ? (
+        ) : (
+          isAcademicBindingRequiredError(loadError)
+          || (loadError && !usingCache)
+        ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshGrades} />
         ) : (
           <>
-            {usingCache && <AcademicCacheNotice updatedAt={cacheUpdatedAt} error={loadError} />}
+            <AcademicCacheNotice
+              cache={serverCache}
+              updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}
+              localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
+              localFallback={Boolean(loadError)}
+            />
             <View className={`grade-summary ${simulationMode ? 'grade-summary--simulation' : 'grade-summary--original'}`}>
               <View className='grade-summary__lead'>
                 <Text className='grade-summary__eyebrow'>{simulationMode ? '模拟计算结果' : '原始成绩统计'}</Text>
-                <Text className='grade-summary__score'>{summary.weightedScore.toFixed(2)}</Text>
+                <Text className='grade-summary__score'>{summary.weightedScore.toFixed(3)}</Text>
                 <Text className='grade-summary__caption'>学分加权平均分</Text>
               </View>
               <View className='grade-summary__stats'>
-                <View><Text>{summary.gpa.toFixed(2)}</Text><Text>平均 GPA</Text></View>
-                <View><Text>{summary.credits.toFixed(1)}</Text><Text>已选学分</Text></View>
+                <View><Text>{summary.gpa.toFixed(3)}</Text><Text>平均 GPA</Text></View>
+                <View><Text>{formatCredits(summary.credits)}</Text><Text>已修学分</Text></View>
                 <View><Text>{summary.selectedCount}</Text><Text>门课程</Text></View>
               </View>
             </View>
@@ -561,7 +691,7 @@ export default function GradesPage() {
               <>
                 <View className='grade-simulation-tip'>
                   <Text>模拟模式</Text>
-                  <Text>可勾选课程参与计算，点击课程修改成绩或学分。</Text>
+                  <Text>可勾选课程参与计算，点击课程修改成绩、绩点或学分。</Text>
                 </View>
                 <View className='grade-list-heading'>
                   <View
@@ -577,7 +707,7 @@ export default function GradesPage() {
             ) : (
               <View className='grade-list-heading grade-list-heading--original'>
                 <Text>课程成绩</Text>
-                <Text>点击课程查看更多学习服务</Text>
+                <Text>点击课程分享资料或出售课本</Text>
               </View>
             )}
             <View className='grade-list'>
@@ -593,12 +723,12 @@ export default function GradesPage() {
                     const selected = displayedSimulation.selectedIds.includes(grade.id)
                     const override = simulationMode ? currentSimulation.overrides[grade.id] : undefined
                     const score = getGradeScore(grade, override)
+                    const point = getGradePointForGrade(grade, override)
                     const credit = override?.credit ?? grade.credit
                     return (
                       <View
                         key={grade.id}
                         className={`grade-card ${simulationMode ? 'grade-card--simulation' : 'grade-card--original'} ${selected ? 'grade-card--selected' : ''}`}
-                        hoverClass='grade-card--pressed'
                         onClick={() => simulationMode ? openEditor(grade) : openGradeServices(grade)}
                       >
                         {simulationMode && (
@@ -626,20 +756,24 @@ export default function GradesPage() {
                           {grade.gradeType === 'level' && score === undefined && (
                             <Text className='grade-card__converted'>文字成绩仅展示，不参与加权平均</Text>
                           )}
-                          {override && <Text className='grade-card__original'>原始：{getGradeDisplay(grade)} · {grade.credit} 学分</Text>}
+                          {override && (
+                            <Text className='grade-card__original'>
+                              原始：{getGradeDisplay(grade)} · 绩点 {formatGradePoint(getGradePointForGrade(grade))} · {grade.credit} 学分
+                            </Text>
+                          )}
                           {!simulationMode && <Text
                             className='grade-card__materials'
                             onClick={(event) => {
                               requestWechatSubscriptionAndStopPropagation(event)
-                              openGradeMaterials(grade)
+                              shareGradeMaterials(grade)
                             }}
                           >
-                            查看课程资料 ›
+                            分享资料 ›
                           </Text>}
                         </View>
                         <View className='grade-card__result'>
                           <Text>{getGradeDisplay(grade, override)}</Text>
-                          <Text>绩点 {formatGradePoint(score)}</Text>
+                          <Text>绩点 {formatGradePoint(point)}</Text>
                         </View>
                       </View>
                     )

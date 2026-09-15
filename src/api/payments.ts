@@ -5,7 +5,12 @@ import type {
   PaymentStatusView,
   SettlementPayablePage,
   WechatPayParams,
+  ErrandPaymentPolicy,
 } from './types'
+
+export const getErrandPaymentPolicy = () => apiRequest<ErrandPaymentPolicy>({
+  path: '/api/v1/errands/payment-policy',
+})
 
 export class WechatPaymentCancelledError extends Error {
   constructor() {
@@ -52,7 +57,7 @@ export const payTradeOrder = async (orderId: number) => {
       timeStamp: params.time_stamp,
       nonceStr: params.nonce_str,
       package: params.package,
-      signType: params.sign_type,
+      signType: params.sign_type as never,
       paySign: params.pay_sign,
     })
   } catch (error) {

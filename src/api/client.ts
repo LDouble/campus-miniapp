@@ -5,9 +5,14 @@ import {
   ensureAccessToken,
   refreshAccessToken,
 } from './auth'
-import type { ApiErrorEnvelope, ApiSuccessEnvelope } from './types'
+import type {
+  AcademicCacheMetadata,
+  ApiErrorEnvelope,
+  ApiSuccessEnvelope,
+} from './types'
 import { handleAcademicVerificationRequired } from '../features/academic-verification/guard'
 import { reportClientError } from '../features/error-reporting'
+import { invalidateSharedResourceGroup } from '../state/shared-resource'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -20,6 +25,13 @@ type RequestOptions = {
   anonymous?: boolean
   retryAfterRefresh?: boolean
   skipAcademicVerificationGuard?: boolean
+}
+
+export type ApiSuccessResponse<T> = {
+  data: T
+  requestId: string
+  cache?: AcademicCacheMetadata
+  scheduleNote?: string
 }
 
 export class ApiError extends Error {
@@ -122,6 +134,7 @@ const throwApiError = async (error: ApiError, options: RequestOptions): Promise<
     error.code === 'academic_verification_required'
     && !options.skipAcademicVerificationGuard
   ) {
+    invalidateSharedResourceGroup('verification', { clearData: false })
     try {
       await handleAcademicVerificationRequired()
     } catch {
@@ -136,7 +149,7 @@ export const createIdempotencyKey = (scope: string) => {
   return `${scope}:${Date.now().toString(36)}:${random}`.slice(0, 128)
 }
 
-export async function apiRequest<T>(options: RequestOptions): Promise<T> {
+export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<ApiSuccessResponse<T>> {
   const method = options.method || 'GET'
   const token = options.anonymous ? '' : await ensureAccessToken()
   let response: Taro.request.SuccessCallbackResult<ApiSuccessEnvelope<T> | ApiErrorEnvelope>
@@ -193,7 +206,7 @@ export async function apiRequest<T>(options: RequestOptions): Promise<T> {
       clearSession()
       return throwApiError(responseError, options)
     }
-    return apiRequest<T>({ ...options, retryAfterRefresh: false })
+    return apiRequestEnvelope<T>({ ...options, retryAfterRefresh: false })
   }
 
   if (responseError) {
@@ -208,7 +221,19 @@ export async function apiRequest<T>(options: RequestOptions): Promise<T> {
     })
     throw new ApiError(response.statusCode, 'invalid_response', '校园服务返回了无效数据')
   }
-  return response.data.data
+  return {
+    data: response.data.data,
+    requestId: String(response.data.request_id || ''),
+    ...(response.data.cache ? { cache: response.data.cache } : {}),
+    ...(typeof response.data.schedule_note === 'string'
+      ? { scheduleNote: response.data.schedule_note }
+      : {}),
+  }
+}
+
+export async function apiRequest<T>(options: RequestOptions): Promise<T> {
+  const response = await apiRequestEnvelope<T>(options)
+  return response.data
 }
 
 export const isApiError = (error: unknown): error is ApiError => error instanceof ApiError

@@ -12,9 +12,12 @@ PARENT_CONTENT="$PARENT_MARKER 父模块真实 UI 发布、审核与聚合列表
 CHILD_CONTENT="$CHILD_MARKER 子模块真实 UI 发布、驳回、撤销与列表隔离验证"
 CHILD_EDITED_CONTENT="$CHILD_MARKER 子模块驳回后通过真实 UI 编辑并重新送审"
 COMMENT_CONTENT="$RUN_ID-COMMENT"
+REPLY_CONTENT="$RUN_ID-REPLY"
+CANCELLED_REPLY_CONTENT="$RUN_ID-CANCELLED-REPLY"
 SCREENSHOT_DIR="$MINIAPP_DIR/.local/e2e-community"
 PARENT_SCREENSHOT="$SCREENSHOT_DIR/parent-list.png"
 COMMENT_SCREENSHOT="$SCREENSHOT_DIR/comment-approved.png"
+REPLY_SCREENSHOT="$SCREENSHOT_DIR/comment-reply-pending.png"
 PAGINATION_SCREENSHOT="$SCREENSHOT_DIR/pagination.png"
 NETWORK_EVIDENCE=''
 
@@ -459,8 +462,11 @@ wechat simulator_open_page \
   --project "$MINIAPP_DIR" \
   --page pages/community/detail \
   --query "id=$CHILD_POST_ID&mode=post" >/dev/null
-assert_present '#community-detail-edit'
-tap '#community-detail-edit'
+assert_present '#community-detail-more'
+wechat simulator_open_page \
+  --project "$MINIAPP_DIR" \
+  --page pages/publish/index \
+  --query "section=community&mode=edit&id=$CHILD_POST_ID" >/dev/null
 assert_present '#publisher-content'
 assert_absent '#publisher-title'
 input_text '#publisher-content' "$CHILD_EDITED_CONTENT"
@@ -529,8 +535,8 @@ assert_absent "#community-post-$CHILD_POST_ID"
 step "评价待审核可见性与审核计数"
 tap "#community-section-$CHILD_ID"
 tap "#community-post-$CHILD_POST_ID .api-post__body"
-input_text '#community-comment-input' "$COMMENT_CONTENT"
-tap '#community-comment-submit'
+input_text "#business-comment-campus_circle_post-$CHILD_POST_ID" "$COMMENT_CONTENT"
+tap "#business-comment-submit-campus_circle_post-$CHILD_POST_ID"
 
 COMMENT_ID="$(mysql_query "SELECT id FROM comments WHERE content = '$COMMENT_CONTENT' ORDER BY id DESC LIMIT 1;")"
 comment_row="$(mysql_query "SELECT CONCAT(target_id, ':', status, ':', version) FROM comments WHERE id = $COMMENT_ID;")"
@@ -539,8 +545,8 @@ if [[ "$comment_row" != "$CHILD_POST_ID:pending_review:1" ]]; then
   exit 1
 fi
 capture_network POST /api/v1/comments 201
-assert_present "#community-comment-$COMMENT_ID.community-comment--pending_review"
-if [[ "$(element_text '.community-detail-comments__heading')" != *"0 条已发布"* ]]; then
+assert_present "#detail-comment-$COMMENT_ID.business-detail-comment--pending_review"
+if [[ "$(element_text '.business-detail-comments__heading')" != *"评论 0"* ]]; then
   echo "待审核评价不应提前增加公开计数。" >&2
   exit 1
 fi
@@ -572,15 +578,45 @@ wechat simulator_open_page \
   --project "$MINIAPP_DIR" \
   --page pages/community/detail \
   --query "id=$CHILD_POST_ID&mode=post" >/dev/null
-assert_present "#community-comment-$COMMENT_ID.community-comment--approved"
-if [[ "$(element_text '.community-detail-comments__heading')" != *"1 条已发布"* ]]; then
+assert_present "#detail-comment-$COMMENT_ID.business-detail-comment--approved"
+if [[ "$(element_text '.business-detail-comments__heading')" != *"评论 1"* ]]; then
   echo "评价审核通过后公开计数不是 1。" >&2
   exit 1
 fi
 wechat simulator_screenshot \
   --project "$MINIAPP_DIR" \
   --path "$COMMENT_SCREENSHOT" \
-  --wait-for-selector "#community-comment-$COMMENT_ID" >/dev/null
+  --wait-for-selector "#detail-comment-$COMMENT_ID" >/dev/null
+
+# 回复：取消回复会清空目标；重新回复时请求携带直接父评论 ID，待审核内容本地可见。
+step "评论回复目标、取消状态与待审核线程"
+tap "#detail-comment-reply-$COMMENT_ID"
+assert_present "#business-comment-replying-$COMMENT_ID"
+input_text "#business-comment-campus_circle_post-$CHILD_POST_ID" "$CANCELLED_REPLY_CONTENT"
+tap "#business-comment-cancel-reply-$COMMENT_ID"
+assert_absent "#business-comment-replying-$COMMENT_ID"
+cancelled_reply_count="$(mysql_query "SELECT COUNT(*) FROM comments WHERE content = '$CANCELLED_REPLY_CONTENT';")"
+if [[ "$cancelled_reply_count" != "0" ]]; then
+  echo "取消回复后不应把回复草稿误发为根评论。" >&2
+  exit 1
+fi
+
+tap "#detail-comment-reply-$COMMENT_ID"
+input_text "#business-comment-campus_circle_post-$CHILD_POST_ID" "$REPLY_CONTENT"
+tap "#business-comment-submit-campus_circle_post-$CHILD_POST_ID"
+
+REPLY_ID="$(mysql_query "SELECT id FROM comments WHERE content = '$REPLY_CONTENT' ORDER BY id DESC LIMIT 1;")"
+reply_row="$(mysql_query "SELECT CONCAT(parent_id, ':', root_id, ':', status, ':', version) FROM comments WHERE id = $REPLY_ID;")"
+if [[ "$reply_row" != "$COMMENT_ID:$COMMENT_ID:pending_review:1" ]]; then
+  echo "评论回复的父级、根节点或审核状态错误：$reply_row" >&2
+  exit 1
+fi
+capture_network POST /api/v1/comments 201
+assert_present "#detail-comment-$REPLY_ID.business-detail-comment__reply--pending_review"
+wechat simulator_screenshot \
+  --project "$MINIAPP_DIR" \
+  --path "$REPLY_SCREENSHOT" \
+  --wait-for-selector "#detail-comment-$REPLY_ID" >/dev/null
 
 # 列表分页与搜索使用隔离夹具，业务板块仍来自服务端。
 step "列表分页与搜索"
@@ -613,10 +649,13 @@ if [[ "$first_page_count" != "20" ]]; then
   echo "社区第一页应为 20 条，实际为 ${first_page_count}。" >&2
   exit 1
 fi
-tap '#community-load-more'
+wechat automation_viewport_action \
+  --project "$MINIAPP_DIR" \
+  --action pageScrollTo \
+  --scroll-top 100000 >/dev/null
 loaded_count="$(query_count '.api-post' 3)"
 if (( loaded_count <= 20 )); then
-  echo "点击查看更多后列表没有追加数据。" >&2
+  echo "上滑触底后列表没有自动追加数据。" >&2
   exit 1
 fi
 wechat simulator_screenshot \
@@ -674,4 +713,5 @@ echo "社区上线级 E2E 通过：动态板块、父/子模块发帖、审核�
 echo "取证截图："
 echo "- $PARENT_SCREENSHOT"
 echo "- $COMMENT_SCREENSHOT"
+echo "- $REPLY_SCREENSHOT"
 echo "- $PAGINATION_SCREENSHOT"

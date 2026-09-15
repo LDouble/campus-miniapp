@@ -1,0 +1,100 @@
+.content-image-grid {
+  display: grid;
+  width: 472rpx;
+  max-width: 100%;
+  height: auto;
+  margin-top: 12rpx;
+  overflow: visible;
+  grid-template-columns: repeat(3, 152rpx);
+  gap: 8rpx;
+  background: transparent;
+}
+
+.content-image-grid__frame {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 10rpx;
+  background: var(--campus-surface-primary, #f2f7fe);
+}
+
+.content-image-grid__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--campus-surface-primary, #f2f7fe);
+}
+
+.content-image-grid--1 {
+  width: 424rpx;
+  height: 212rpx;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.content-image-grid--1 .content-image-grid__frame {
+  height: 212rpx;
+  aspect-ratio: auto;
+}
+
+.content-image-grid--2 {
+  width: 448rpx;
+  grid-template-columns: repeat(2, 220rpx);
+}
+
+.content-image-grid__reviewing {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 152rpx;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: var(--campus-surface-subtle, #f5f8fc);
+  color: var(--campus-text-muted, #6b7a90);
+  font-size: var(--ousea-font-size-caption, 24rpx);
+  font-weight: var(--ousea-font-weight-medium, 500);
+  text-align: center;
+}
+
+.content-image-grid__unavailable {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 152rpx;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: var(--campus-surface-subtle, #f5f8fc);
+  color: var(--campus-text-muted, #6b7a90);
+  font-size: var(--ousea-font-size-caption, 24rpx);
+}
+
+.content-image-grid__reviewing--overlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: inherit;
+  background: rgba(26, 35, 51, 0.45);
+  color: #fff;
+  pointer-events: none;
+}
+
+.campus-theme--dark {
+  .content-image-grid__frame,
+  .content-image-grid__image,
+  .content-image-grid__reviewing,
+  .content-image-grid__unavailable {
+    background: var(--campus-surface-subtle, #172033);
+  }
+
+  .content-image-grid__reviewing,
+  .content-image-grid__unavailable { color: var(--campus-text-secondary, #aab8ca); }
+  .content-image-grid__reviewing--overlay {
+    color: #fff;
+    background: rgba(26, 35, 51, 0.45);
+  }
+}

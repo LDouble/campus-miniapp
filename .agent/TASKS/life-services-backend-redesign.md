@@ -1,7 +1,7 @@
 ## Task: 校园生活服务后端联动重构
 
 **ID:** life-services-backend-redesign
-**Label:** 海大校园小程序：跑腿、拼车、二手与发布器重构
+**Label:** OUSea小程序：跑腿、拼车、二手与发布器重构
 **Description:** 基于现有 Campus Platform 后端契约，重新设计并实现跑腿、拼车、二手交易、统一发布器、我的服务与消息闭环。
 **Type:** Feature
 **Status:** To Do

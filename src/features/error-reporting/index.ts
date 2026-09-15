@@ -108,4 +108,16 @@ export const installGlobalErrorReporting = () => {
     const details = errorDetails(event.reason)
     void reportClientError({ kind: 'unhandled_rejection', ...details })
   })
+  Taro.onPageNotFound((event) => {
+    const path = String(event.path || '/')
+    void reportClientError({
+      kind: 'js_error',
+      route: path,
+      message: `page_not_found entry=${Boolean(event.isEntryPage)} path=${path}`,
+    })
+    void Taro.reLaunch({ url: '/pages/index/index' }).then(
+      () => Taro.showToast({ title: '页面已失效，已返回首页', icon: 'none' }),
+      () => undefined,
+    )
+  })
 }

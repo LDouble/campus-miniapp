@@ -98,7 +98,6 @@ export default function UserLevelPage() {
 
             <View
               className='user-level-checkin'
-              hoverClass='user-level-checkin--pressed'
               ariaRole='button'
               ariaLabel={checkinStatus?.checked_in ? '今日已签到，查看签到日历' : '前往每日签到'}
               onClick={() => Taro.navigateTo({ url: '/pages/daily-checkin/index' })}

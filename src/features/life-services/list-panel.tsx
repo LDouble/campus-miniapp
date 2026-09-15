@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type {
   CarpoolTripView,
@@ -7,6 +8,8 @@ import type {
 } from '../../api/types'
 import { isApiError } from '../../api/client'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
+import { useLoadMoreSignal } from '../../hooks/use-load-more-signal'
+import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { lifeBusinessThemes } from './business-theme'
 import type { LifeHubSection } from './business-theme'
 import {
@@ -20,14 +23,11 @@ import {
   markLifeHubSectionFresh,
 } from './refresh-policy'
 import CarpoolCard from './components/carpool-card'
-import CarpoolFilters, {
-  type CarpoolFilterValue,
-} from './components/carpool-filters'
+import type { CarpoolFilterValue } from './components/carpool-filters'
 import ErrandCard from './components/errand-card'
 import MarketplaceCard from './components/marketplace-card'
-import MarketplaceFilters, {
-  type MarketplaceFilterValue,
-} from './components/marketplace-filters'
+import type { MarketplaceFilterValue } from './components/marketplace-filters'
+import type { CampusName } from './campus'
 import './list-panel.scss'
 
 export type LifeServiceSection = Exclude<LifeHubSection, 'community'>
@@ -55,7 +55,14 @@ type Props = {
   section: LifeServiceSection
   refreshSignal?: number
   searchFocusSignal?: number
+  loadMoreSignal?: number
+  campus: CampusName | ''
+  marketFilters: MarketplaceFilterValue
+  carpoolFilters: CarpoolFilterValue
   marketplaceSearchPrefill?: MarketplaceSearchPrefill | null
+  onCampusChange: (value: CampusName | '') => void
+  onMarketFiltersChange: (value: MarketplaceFilterValue) => void
+  onCarpoolFiltersChange: (value: CarpoolFilterValue) => void
   onMarketplaceSearchPrefillConsumed?: () => void
 }
 
@@ -67,12 +74,8 @@ const mergeUniqueItems = (current: ServiceItem[], incoming: ServiceItem[]) => {
 
 const dateKey = (value?: string | null) => {
   if (!value) return 'unknown'
-  const parsed = new Date(value.replace(/-/g, '/'))
-  if (Number.isNaN(parsed.getTime())) return value.slice(0, 10)
-  const year = parsed.getFullYear()
-  const month = String(parsed.getMonth() + 1).padStart(2, '0')
-  const day = String(parsed.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  const parts = apiDateTimeCampusParts(value)
+  return parts ? parts.date : value.slice(0, 10)
 }
 
 const dateGroupLabel = (key: string) => {
@@ -98,22 +101,39 @@ const emptyCopy: Record<LifeServiceSection, { title: string; subtitle: string }>
     subtitle: '试试调整关键词或价格范围',
   },
   carpool: {
-    title: '没有匹配的拼车行程',
+    title: '没有匹配的同行计划',
     subtitle: '调整日期、路线或人数后再试试',
   },
+}
+
+const myServicesRoutes: Record<LifeServiceSection, string> = {
+  errands: '/pages/my-services/index?section=errands&relation=all',
+  market: '/pages/my-services/index?section=market',
+  carpool: '/pages/my-services/index?section=carpool&relation=all',
+}
+
+const myServicesLabels: Record<LifeServiceSection, string> = {
+  errands: '我的跑腿',
+  market: '我的二手',
+  carpool: '我的同行',
 }
 
 export default function LifeServiceListPanel({
   section,
   refreshSignal = 0,
   searchFocusSignal = 0,
+  loadMoreSignal = 0,
+  campus,
+  marketFilters,
+  carpoolFilters,
   marketplaceSearchPrefill = null,
+  onCampusChange,
+  onMarketFiltersChange,
+  onCarpoolFiltersChange,
   onMarketplaceSearchPrefillConsumed,
 }: Props) {
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
-  const [marketFilters, setMarketFilters] = useState<MarketplaceFilterValue>({})
-  const [carpoolFilters, setCarpoolFilters] = useState<CarpoolFilterValue>({})
   const [items, setItems] = useState<ServiceItem[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -123,24 +143,33 @@ export default function LifeServiceListPanel({
   const [searchFocused, setSearchFocused] = useState(false)
   const [courseSearch, setCourseSearch] = useState<MarketplaceSearchPrefill | null>(null)
   const requestSequence = useRef(0)
+  const loadingMoreRef = useRef(false)
   const copy = lifeBusinessThemes[section]
   const queryKey = useMemo(() => JSON.stringify({
     section,
     keyword,
     marketFilters,
     carpoolFilters,
-  }), [carpoolFilters, keyword, marketFilters, section])
+    campus,
+  }), [campus, carpoolFilters, keyword, marketFilters, section])
 
   const load = useCallback(async (nextPage = 1, append = false) => {
+    if (append && loadingMoreRef.current) return
+    if (append) loadingMoreRef.current = true
     const requestId = ++requestSequence.current
     append ? setLoadingMore(true) : setLoading(true)
     setError('')
     try {
       const result = section === 'errands'
-        ? await lifeServicesRepository.listErrands({ keyword, page: nextPage })
+        ? await lifeServicesRepository.listErrands({
+          keyword,
+          campus: campus || undefined,
+          page: nextPage,
+        })
         : section === 'market'
           ? await lifeServicesRepository.listMarketplace({
             keyword,
+            campus: campus || undefined,
             intent: marketFilters.intent,
             category: marketFilters.category,
             minPriceCents: marketFilters.minPriceCents,
@@ -149,6 +178,7 @@ export default function LifeServiceListPanel({
           })
           : await lifeServicesRepository.listCarpool({
             keyword,
+            campus: campus || undefined,
             origin: carpoolFilters.origin,
             destination: carpoolFilters.destination,
             departureDate: carpoolFilters.departureDate,
@@ -180,12 +210,14 @@ export default function LifeServiceListPanel({
         ? loadError.message
         : '没有连接到校园服务，请稍后重试')
     } finally {
+      if (append) loadingMoreRef.current = false
       if (requestId === requestSequence.current) {
         setLoading(false)
         setLoadingMore(false)
       }
     }
   }, [
+    campus,
     carpoolFilters.departureDate,
     carpoolFilters.destination,
     carpoolFilters.origin,
@@ -235,7 +267,7 @@ export default function LifeServiceListPanel({
     setCourseSearch(marketplaceSearchPrefill)
     setDraftKeyword(marketplaceSearchPrefill.courseName)
     setKeyword(marketplaceSearchPrefill.courseName)
-    setMarketFilters({
+    onMarketFiltersChange({
       intent: 'sell',
       category: 'course_material',
     })
@@ -243,12 +275,22 @@ export default function LifeServiceListPanel({
     onMarketplaceSearchPrefillConsumed?.()
   }, [
     marketplaceSearchPrefill,
+    onMarketFiltersChange,
     onMarketplaceSearchPrefillConsumed,
     section,
   ])
 
   const canLoadMore = items.length < total
-  const hasStructuredFilters = section === 'market'
+  const loadNextPage = useCallback(() => {
+    void load(page + 1, true)
+  }, [load, page])
+
+  useLoadMoreSignal({
+    signal: loadMoreSignal,
+    enabled: !loading && !loadingMore && !error && canLoadMore,
+    onLoadMore: loadNextPage,
+  })
+  const hasSectionFilters = section === 'market'
     ? marketFilters.intent !== undefined
       || marketFilters.category !== undefined
       || marketFilters.minPriceCents !== undefined
@@ -258,6 +300,7 @@ export default function LifeServiceListPanel({
         (value) => value !== undefined && value !== '',
       )
       : false
+  const hasStructuredFilters = Boolean(campus) || hasSectionFilters
 
   const resultTitle = courseSearch
     ? `《${courseSearch.courseName}》相关资料`
@@ -267,7 +310,7 @@ export default function LifeServiceListPanel({
       ? '全校待接任务'
       : section === 'market'
         ? marketFilters.intent === 'wanted' ? '最新求购' : marketFilters.intent === 'sell' ? '最新出售' : '最新交易'
-        : '近期行程'
+        : '近期同行'
 
   const carpoolGroups = useMemo(() => {
     if (section !== 'carpool') return []
@@ -294,13 +337,21 @@ export default function LifeServiceListPanel({
     setCourseSearch(null)
     setDraftKeyword('')
     setKeyword('')
-    if (section === 'market') setMarketFilters({})
-    if (section === 'carpool') setCarpoolFilters({})
+    if (section === 'market') onMarketFiltersChange({})
+    if (section === 'carpool') onCarpoolFiltersChange({})
+    onCampusChange('')
   }
 
   return (
     <View className={`life-panel life-panel--${section}`}>
-      <View className={`life-search life-search--${section}`}>
+      <View
+        className={[
+          'life-search',
+          `life-search--${section}`,
+          searchFocused ? 'life-search--focused' : '',
+          draftKeyword || keyword ? 'life-search--active' : '',
+        ].filter(Boolean).join(' ')}
+      >
         <View className='life-search__icon' />
         <KeyboardSafeInput
           id={`life-search-input-${section}`}
@@ -312,6 +363,7 @@ export default function LifeServiceListPanel({
           placeholderClass='life-search__placeholder'
           onInput={(event) => setDraftKeyword(event.detail.value)}
           onConfirm={submitSearch}
+          onFocus={() => setSearchFocused(true)}
           onBlur={() => setSearchFocused(false)}
         />
         {draftKeyword ? (
@@ -331,38 +383,43 @@ export default function LifeServiceListPanel({
         <View
           id={`life-search-submit-${section}`}
           className='life-search__submit'
-          hoverClass='life-search__submit--pressed'
+          ariaRole='button'
+          ariaLabel='搜索校园内容'
           onClick={submitSearch}
         >
           搜索
         </View>
       </View>
 
-      {section === 'errands' && (
-        <View className='errand-scope'>
-          <View className='errand-scope__signal'><View /></View>
-          <View>
-            <Text>当前展示全校待接任务</Text>
-            <Text>公开任务按发布时间排列</Text>
-          </View>
-          <Text>{loading ? '—' : `${total} 条`}</Text>
-        </View>
-      )}
-      {section === 'market' && (
-        <MarketplaceFilters value={marketFilters} onChange={setMarketFilters} />
-      )}
-      {section === 'carpool' && (
-        <CarpoolFilters value={carpoolFilters} onChange={setCarpoolFilters} />
-      )}
-
       <View className='life-panel__heading'>
-        <View>
-          <Text>{resultTitle}</Text>
-          <Text>{loading ? '正在连接校园服务' : `${total} 条结果`}</Text>
+        <View className='life-panel__heading-summary'>
+          <Text className='life-panel__heading-title'>{resultTitle}</Text>
+          <Text className='life-panel__heading-separator'>·</Text>
+          <Text className='life-panel__heading-total'>
+            {loading ? '加载中' : `${total} 条`}
+          </Text>
         </View>
-        {(keyword || hasStructuredFilters) && (
-          <View onClick={clearAll}>清除条件</View>
-        )}
+        <View className='life-panel__heading-actions'>
+          {(keyword || hasStructuredFilters) && (
+            <View
+              className='life-panel__clear'
+              ariaRole='button'
+              ariaLabel='清除当前筛选条件'
+              onClick={clearAll}
+            >
+              清除条件
+            </View>
+          )}
+          <View
+            className='life-panel__mine'
+            ariaRole='button'
+            ariaLabel={`查看${myServicesLabels[section]}`}
+            onClick={() => void Taro.navigateTo({ url: myServicesRoutes[section] })}
+          >
+            <Text>我的记录</Text>
+            <Text>›</Text>
+          </View>
+        </View>
       </View>
 
       {loading && (
@@ -390,8 +447,14 @@ export default function LifeServiceListPanel({
 
       {!loading && !error && section === 'market' && (
         <View className='marketplace-grid'>
-          {(items as MarketplaceListingView[]).map((item) => (
-            <MarketplaceCard key={item.id} item={item} />
+          {[0, 1].map((columnIndex) => (
+            <View key={columnIndex} className='marketplace-grid__column'>
+              {(items as MarketplaceListingView[])
+                .filter((_, itemIndex) => itemIndex % 2 === columnIndex)
+                .map((item) => (
+                  <MarketplaceCard key={item.id} item={item} />
+                ))}
+            </View>
           ))}
         </View>
       )}
@@ -402,7 +465,7 @@ export default function LifeServiceListPanel({
             <View key={group.key} className='carpool-group'>
               <View className='carpool-group__heading'>
                 <Text>{group.label}</Text>
-                <Text>{group.trips.length} 个行程</Text>
+                <Text>{group.trips.length} 个计划</Text>
               </View>
               <View className='carpool-list'>
                 {group.trips.map((item) => (
@@ -434,7 +497,6 @@ export default function LifeServiceListPanel({
             <View className='course-market-empty__actions'>
               <View
                 className='course-market-empty__primary'
-                hoverClass='course-market-empty__button--pressed'
                 onClick={() => void openCourseMarketplacePublisher({
                   ...courseSearch,
                   intent: 'wanted',
@@ -444,7 +506,6 @@ export default function LifeServiceListPanel({
               </View>
               <View
                 className='course-market-empty__secondary'
-                hoverClass='course-market-empty__button--pressed'
                 onClick={clearAll}
               >
                 查看全部资料
@@ -460,9 +521,13 @@ export default function LifeServiceListPanel({
         <View
           className='life-load-more'
           id={`life-load-more-${section}`}
-          onClick={() => !loadingMore && void load(page + 1, true)}
         >
-          {loadingMore ? '正在加载' : '查看更多'}
+          {loadingMore ? '正在加载更多…' : '继续上滑加载更多'}
+        </View>
+      )}
+      {!loading && !error && items.length > 0 && !canLoadMore && (
+        <View className='life-load-more life-load-more--end' ariaRole='status'>
+          没有更多了
         </View>
       )}
     </View>

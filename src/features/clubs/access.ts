@@ -2,7 +2,7 @@ import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { openAcademicVerification } from '../academic-verification/guard'
 
 export const hasVerifiedAcademicIdentity = async () => {
-  const status = await getAcademicVerificationStatus()
+  const status = await getAcademicVerificationStatus({ force: true })
   return status.identity?.status === 'verified'
 }
 

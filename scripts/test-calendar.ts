@@ -2,10 +2,12 @@ import { strict as assert } from 'node:assert'
 import type { AcademicCalendar } from '../src/api/types'
 import {
   calendarEventsForTerm,
+  academicWeekdayToDate,
   normalizeAcademicCalendar,
   orderedAcademicCalendarTerms,
   resolveAcademicCalendarState,
   resolveAcademicCalendarTerm,
+  resolveAcademicWeekday,
 } from '../src/features/calendar/utils'
 
 const calendar: AcademicCalendar = {
@@ -50,6 +52,23 @@ const current = resolveAcademicCalendarState(
 assert.equal(current.kind, 'current')
 assert.equal(current.term.id, 'autumn')
 assert.equal(current.week, 3)
+
+assert.equal(academicWeekdayToDate(calendar.terms[1], 1, 1), '2026-08-31')
+assert.equal(academicWeekdayToDate(calendar.terms[1], 3, 1), '2026-09-14')
+assert.equal(academicWeekdayToDate(calendar.terms[1], 20, 7), '2027-01-17')
+assert.equal(academicWeekdayToDate(calendar.terms[1], 0, 1), null)
+assert.equal(academicWeekdayToDate(calendar.terms[1], 21, 1), null)
+assert.equal(academicWeekdayToDate(calendar.terms[1], 1, 8), null)
+assert.equal(academicWeekdayToDate({ ...calendar.terms[1], end_date: '2027-01-10' }, 20, 7), null)
+assert.equal(academicWeekdayToDate({ ...calendar.terms[1], start_date: '2026-09-01' }, 1, 1), null)
+assert.deepEqual(resolveAcademicWeekday(calendar, '2026-09-14'), {
+  term: calendar.terms[1], week: 3, weekday: 1, date: '2026-09-14',
+})
+assert.deepEqual(resolveAcademicWeekday(calendar, '2027-01-17'), {
+  term: calendar.terms[1], week: 20, weekday: 7, date: '2027-01-17',
+})
+assert.equal(resolveAcademicWeekday(calendar, '2027-01-18'), null)
+assert.equal(resolveAcademicWeekday(calendar, '2026-02-30'), null)
 
 const finished = resolveAcademicCalendarState(
   calendar,
