@@ -70,14 +70,13 @@ export const payTradeOrder = async (orderId: number) => {
   try {
     status = await queryTradeOrderPayment(orderId)
   } catch {
-    if (cancelled) throw new WechatPaymentCancelledError()
     throw new Error('支付结果确认中，请稍后刷新订单，请勿重复支付')
   }
   if (status.status === 'succeeded') {
     paymentAttempts.delete(orderId)
     return params.intent_no
   }
-  if (cancelled) throw new WechatPaymentCancelledError()
+  if (cancelled && status.status === 'pending') throw new WechatPaymentCancelledError()
   throw new Error('支付结果确认中，请稍后刷新订单，请勿重复支付')
 }
 

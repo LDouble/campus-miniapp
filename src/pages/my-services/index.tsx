@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Taro, {
   useDidShow,
   useLoad,
@@ -39,6 +39,12 @@ import { saveCommunityDetailSnapshot } from '../../features/community/detail-sna
 import { saveBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
 import { directMessageChatUrl } from '../../features/direct-messages/navigation'
 import { privateMessagesRepository } from '../../features/direct-messages/repository'
+import { plainStickerContent } from '../../features/stickers/content'
+import {
+  cancellationProgressCopy,
+  primaryOrderAction,
+  usesServerOrderSearch,
+} from '../../features/life-services/payment-order-state'
 import './index.scss'
 
 type Section = 'published' | 'errands' | 'orders' | 'carpool'
@@ -82,7 +88,6 @@ const PAGE_SIZE = 20
 
 const sections: Array<{ key: Section; label: string }> = [
   { key: 'published', label: '发布' },
-  { key: 'errands', label: '接单' },
   { key: 'orders', label: '订单' },
   { key: 'carpool', label: '同行' },
 ]
@@ -110,6 +115,18 @@ const relationOptions: Record<Exclude<Section, 'published'>, Array<{ key: string
     { key: 'all', label: '全部相关' },
   ],
 }
+
+const recordSearchText = (item: RecordItem) => ('pickup_location' in item
+  ? `${item.description} ${item.pickup_location} ${item.dropoff_location}`
+  : 'price_cents' in item ? item.description
+    : 'departure_at' in item ? `${item.description || ''} ${item.origin} ${item.destination}`
+      : 'content' in item ? item.content || '' : '')
+
+const orderRoleOptions = (orderType: ViewQuery['orderType']) => orderType === 'errand'
+  ? [{ key: 'all', label: '全部角色' }, { key: 'buyer', label: '我发布的' }, { key: 'seller', label: '我接的' }]
+  : orderType === 'marketplace'
+    ? [{ key: 'all', label: '全部角色' }, { key: 'buyer', label: '我买到的' }, { key: 'seller', label: '我卖出的' }]
+    : [{ key: 'all', label: '全部角色' }]
 
 const orderTypes = [
   { key: 'all', label: '全部类型' },
@@ -206,6 +223,19 @@ const orderSnapshotImage = (order: TradeOrderView) => {
   ]
   return candidates.find((value): value is string => typeof value === 'string' && /^https:\/\//u.test(value.trim()))?.trim() || ''
 }
+
+const orderRoute = (order: TradeOrderView) => {
+  if (order.order_type !== 'errand' || !order.resource_snapshot || typeof order.resource_snapshot !== 'object') return null
+  const snapshot = order.resource_snapshot as Record<string, unknown>
+  const pickup = typeof snapshot.pickup_location === 'string' ? snapshot.pickup_location : ''
+  const dropoff = typeof snapshot.dropoff_location === 'string' ? snapshot.dropoff_location : ''
+  return pickup && dropoff ? `${pickup} → ${dropoff}` : null
+}
+
+const orderStateText = (order: TradeOrderView) => cancellationProgressCopy(
+  order.cancellation_status,
+  order.payment_status,
+) || formatOrderStatus(order.trade_status, order.fulfillment_status)
 
 const openBusinessRecord = (item: RecordItem) => {
   let url = ''
@@ -387,7 +417,11 @@ export default function MyServicesPage() {
   })
 
   // 订单关键字必须由服务端筛选，以便覆盖尚未加载的分页数据。
-  const visible = items
+  const visible = useMemo(() => {
+    if (usesServerOrderSearch(view.section) || !keyword.trim()) return items
+    const normalized = keyword.trim().toLowerCase()
+    return items.filter((item) => plainStickerContent(recordSearchText(item)).toLowerCase().includes(normalized))
+  }, [items, keyword, view.section])
 
   const selectSection = (section: Section) => {
     changeView({
@@ -438,7 +472,7 @@ export default function MyServicesPage() {
       } catch (paymentError) {
         Taro.showToast({
           title: isWechatPaymentCancelled(paymentError)
-            ? '已取消支付'
+            ? '已关闭支付弹窗'
             : paymentError instanceof Error ? paymentError.message : '支付结果确认中，请稍后刷新',
           icon: 'none',
         })
@@ -479,14 +513,14 @@ export default function MyServicesPage() {
       const updated = action === 'cancel'
         ? await lifeServicesRepository.cancelTradeOrder(order.id, order.version)
         : await lifeServicesRepository.completeTradeOrder(order.id, order.version)
-      setItems((current) => current.map((item) => (
-        'order_no' in item && item.id === updated.id ? updated : item
-      )))
-      markLifeHubSectionDirty('market')
-      const cancellationProcessing = action === 'cancel' && updated.cancellation_status === 'processing'
+      markLifeHubSectionDirty(updated.order_type === 'errand' ? 'errands' : 'market')
+      await load(viewRef.current, true)
+      const cancellationProgress = action === 'cancel'
+        ? cancellationProgressCopy(updated.cancellation_status, updated.payment_status)
+        : ''
       Taro.showToast({
-        title: cancellationProcessing ? '退款处理中，请稍后刷新' : action === 'cancel' ? '订单已取消' : '订单已完成',
-        icon: cancellationProcessing ? 'none' : 'success',
+        title: cancellationProgress ? `${cancellationProgress}，请稍后刷新` : action === 'cancel' ? '订单已取消' : '订单已完成',
+        icon: cancellationProgress ? 'none' : 'success',
       })
     } catch (actionError) {
       Taro.showToast({
@@ -583,7 +617,7 @@ export default function MyServicesPage() {
           />
         )}
 
-        {view.section !== 'published' && (
+        {view.section !== 'published' && view.section !== 'orders' && (
           <FilterStrip
             label='记录关系'
             options={relationOptions[view.section]}
@@ -594,36 +628,44 @@ export default function MyServicesPage() {
 
         {view.section === 'orders' && (
           <FilterStrip
-            label='订单类型'
-            options={orderTypes}
-            value={view.orderType}
-            secondary
-            onChange={(orderType) => changeView({ ...viewRef.current, orderType })}
+            label='订单状态'
+            options={orderStatusGroups}
+            value={view.orderStatusGroup}
+            onChange={(orderStatusGroup) => changeView({ ...viewRef.current, orderStatusGroup })}
           />
         )}
 
         {view.section === 'orders' && (
           <FilterStrip
-            label='订单状态'
-            options={orderStatusGroups}
-            value={view.orderStatusGroup}
+            label='订单类型'
+            options={orderTypes}
+            value={view.orderType}
             secondary
-            onChange={(orderStatusGroup) => changeView({ ...viewRef.current, orderStatusGroup })}
+            onChange={(orderType) => changeView({ ...viewRef.current, orderType, relation: 'all' })}
           />
         )}
 
-        {view.section === 'orders' && <View className='my-services-search'>
+        {view.section === 'orders' && view.orderType !== 'all' && (
+          <FilterStrip
+            label='订单角色'
+            options={orderRoleOptions(view.orderType)}
+            value={view.relation as 'all' | 'buyer' | 'seller'}
+            secondary
+            onChange={(relation) => changeView({ ...viewRef.current, relation })}
+          />
+        )}
+
+        <View className='my-services-search'>
           <View className='my-services-search__icon' />
           <KeyboardSafeInput
             value={keyword}
             confirmType='search'
             maxlength={40}
-            placeholder='搜索订单号、任务或商品'
-            ariaLabel='搜索订单号、任务或商品'
+            placeholder={view.section === 'orders' ? '搜索订单号、任务或商品' : '搜索当前已加载记录'}
+            ariaLabel={view.section === 'orders' ? '搜索订单号、任务或商品' : '搜索当前已加载记录'}
             onInput={(event) => setKeyword(event.detail.value)}
             onConfirm={(event) => {
-              keywordRef.current = event.detail.value.trim()
-              void load(viewRef.current, true)
+              if (usesServerOrderSearch(view.section)) { keywordRef.current = event.detail.value.trim(); void load(viewRef.current, true) }
             }}
           />
           {keyword && (
@@ -634,13 +676,13 @@ export default function MyServicesPage() {
               onClick={() => {
                 setKeyword('')
                 keywordRef.current = ''
-                void load(viewRef.current, true)
+                if (usesServerOrderSearch(view.section)) void load(viewRef.current, true)
               }}
             >
               清除
             </View>
           )}
-        </View>}
+        </View>
 
         {loading && <View className='my-services-state'>正在加载真实服务记录</View>}
         {!loading && error && (
@@ -655,6 +697,8 @@ export default function MyServicesPage() {
             const order = item as TradeOrderView
             const orderActions = order.available_actions as string[]
             const snapshotImage = orderSnapshotImage(order)
+            const route = orderRoute(order)
+            const primaryAction = primaryOrderAction(orderActions)
             return (
               <View
                 key={`order:${order.id}`}
@@ -665,7 +709,7 @@ export default function MyServicesPage() {
               >
                 <View className='my-record-card__top'>
                   <Text className='my-record-card__kind'>{order.order_type === 'marketplace' ? `二手 · ${order.viewer_relation === 'buyer' ? '我买到的' : '我卖出的'}` : `跑腿 · ${order.viewer_relation === 'buyer' ? '我发布的' : '我接的'}`}</Text>
-                  <Text className='my-record-card__status'>{formatOrderStatus(order.trade_status, order.fulfillment_status)}</Text>
+                  <Text className='my-record-card__status'>{orderStateText(order)}</Text>
                 </View>
                 <View className={`my-record-order-summary ${snapshotImage ? 'my-record-order-summary--with-image' : ''}`}>
                   {snapshotImage && <Image className='my-record-order-summary__image' src={snapshotImage} mode='aspectFill' />}
@@ -674,26 +718,30 @@ export default function MyServicesPage() {
                     <Text className='my-record-card__title'>{order.title_snapshot}</Text>
                   </View>
                 </View>
+                {route && <Text className='my-record-card__body'>{route}</Text>}
                 <Text className='my-record-card__body'>
-                  {order.payment_mode === 'wechat' ? '微信支付' : '线下结算'} · {order.order_no}
+                  {cancellationProgressCopy(order.cancellation_status, order.payment_status)
+                    ? `${cancellationProgressCopy(order.cancellation_status, order.payment_status)}，请稍后刷新`
+                    : order.payment_mode === 'wechat' && order.payment_status === 'pending' && order.payment_deadline_at
+                      ? `待付款 · ${formatDateTime(order.payment_deadline_at)} 前完成`
+                      : order.payment_mode === 'wechat' ? '微信支付' : '线下结算'}
                 </Text>
                 <View className='my-record-card__footer'>
-                  <Text>{formatDateTime(order.updated_at)}</Text>
-                  <Text>查看业务详情 ›</Text>
+                  <Text>查看详情 ›</Text>
                 </View>
-                {(canContact(order) || orderActions.includes('pay') || orderActions.includes('pickup') || orderActions.includes('deliver') || orderActions.includes('cancel') || orderActions.includes('complete')) && (
+                {(canContact(order) || primaryAction) && (
                   <View className='my-record-actions'>
-                    {orderActions.includes('pay') && (
+                    {primaryAction === 'pay' && (
                       <View className='my-record-actions__primary' ariaRole='button' ariaLabel='微信支付' onClick={(event) => { event.stopPropagation(); void runOrderAction(order, 'pay') }}>
                         {actionOrderId === order.id ? '处理中' : '去微信支付'}
                       </View>
                     )}
-                    {orderActions.includes('pickup') && (
+                    {primaryAction === 'pickup' && (
                       <View className='my-record-actions__primary' ariaRole='button' ariaLabel='确认取件' onClick={(event) => { event.stopPropagation(); void runOrderAction(order, 'pickup') }}>
                         {actionOrderId === order.id ? '处理中' : '确认取件'}
                       </View>
                     )}
-                    {orderActions.includes('deliver') && (
+                    {primaryAction === 'deliver' && (
                       <View className='my-record-actions__primary' ariaRole='button' ariaLabel='确认送达' onClick={(event) => { event.stopPropagation(); void runOrderAction(order, 'deliver') }}>
                         {actionOrderId === order.id ? '处理中' : '确认送达'}
                       </View>
@@ -711,20 +759,7 @@ export default function MyServicesPage() {
                         {contactUserId === contactUserIdFor(order) ? '正在打开' : '联系对方'}
                       </View>
                     )}
-                    {order.available_actions.includes('cancel') && (
-                      <View
-                        className='my-record-actions__secondary'
-                        ariaRole='button'
-                        ariaLabel='取消订单'
-                        onClick={(event) => {
-                          requestWechatSubscriptionAndStopPropagation(event)
-                          void runOrderAction(order, 'cancel')
-                        }}
-                      >
-                        {actionOrderId === order.id ? '处理中' : '取消订单'}
-                      </View>
-                    )}
-                    {order.available_actions.includes('complete') && (
+                    {primaryAction === 'complete' && (
                       <View
                         className='my-record-actions__primary'
                         ariaRole='button'

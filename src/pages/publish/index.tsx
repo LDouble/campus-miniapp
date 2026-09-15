@@ -470,6 +470,7 @@ export default function PublishPage() {
     default_payment_mode: 'offline',
     payment_timeout_minutes: 15,
   })
+  const [paymentPolicyResolved, setPaymentPolicyResolved] = useState(false)
   const [sections, setSections] = useState<CampusCircleSectionView[]>([])
   const [sectionsReady, setSectionsReady] = useState(false)
   const [topics, setTopics] = useState<CampusCircleTopicView[]>([])
@@ -494,6 +495,7 @@ export default function PublishPage() {
   const identityUserIdRef = useRef(0)
   const rememberedContactRef = useRef<PublisherContact | null>(null)
   const topicSearchRequestRef = useRef(0)
+  const paymentModeTouchedRef = useRef(false)
   const {
     keyboardHeight,
     onKeyboardVisibilityChange,
@@ -507,12 +509,21 @@ export default function PublishPage() {
     void getErrandPaymentPolicy()
       .then((policy) => {
         setErrandPaymentPolicy(policy)
+        setPaymentPolicyResolved(true)
       })
-      .catch(() => undefined)
+      .catch(() => setPaymentPolicyResolved(true))
   }, [])
+
+  useEffect(() => {
+    if (!paymentPolicyResolved || mode !== 'create' || paymentModeTouchedRef.current) return
+    setForm((draft) => draft.version === 0
+      ? { ...draft, paymentMode: errandPaymentPolicy.default_payment_mode }
+      : draft)
+  }, [errandPaymentPolicy.default_payment_mode, mode, paymentPolicyResolved])
 
   const loadingForm = loadingEdit || restoringCreateDefaults
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
+    if (key === 'paymentMode') paymentModeTouchedRef.current = true
     setForm((draft) => ({ ...draft, [key]: value }))
   }
 
@@ -762,6 +773,7 @@ export default function PublishPage() {
   }
 
   useLoad((options) => {
+    paymentModeTouchedRef.current = false
     const initialSection = isSection(options.section) ? options.section : 'community'
     const initialIntent: MarketplaceIntent = options.intent === 'wanted' ? 'wanted' : 'sell'
     const initialMode: PublishMode = options.mode === 'edit'
@@ -1614,7 +1626,11 @@ export default function PublishPage() {
                       <Text>微信支付</Text><Text>接单后由发布者付款</Text>
                     </View>}
                   </View>
-                  <Text className='publisher-payment-mode__hint'>微信支付在接单后 {errandPaymentPolicy.payment_timeout_minutes} 分钟内完成；确认完成后平台向跑腿员结算。线下结算不经过平台。</Text>
+                  <Text className='publisher-payment-mode__hint'>
+                    {errandPaymentPolicy.enabled_payment_modes.includes('wechat')
+                      ? `微信支付在接单后 ${errandPaymentPolicy.payment_timeout_minutes} 分钟内完成；确认完成后平台向跑腿员结算。线下结算不经过平台。`
+                      : '当前仅支持线下结算，平台不代收款。'}
+                  </Text>
                 </View>
               </View>
             )}
