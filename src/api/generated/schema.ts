@@ -7789,7 +7789,7 @@ export interface components {
             module: components["schemas"]["AccountCancellationBlockerModule"];
         };
         /** @enum {string} */
-        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool";
+        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool" | "settlement" | "withdrawal";
         AccountCancellationInput: {
             app_id: string;
             code: string;

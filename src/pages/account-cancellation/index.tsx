@@ -24,6 +24,7 @@ const icons = {
   arrow: require('../../assets/icons/arrow.svg'),
   identity: require('../../assets/icons/academic.svg'),
   market: require('../../assets/icons/market.svg'),
+  earnings: require('../../assets/icons/result.svg'),
   errands: require('../../assets/icons/errands.svg'),
   carpool: require('../../assets/icons/shuttle.svg'),
 }
@@ -60,11 +61,22 @@ const blockerMeta: Record<BlockerModule, {
     route: '/pages/my-services/index?section=carpool&relation=all',
     icon: icons.carpool,
   },
+  settlement: {
+    label: '未结算的收益',
+    route: '/pages/earnings/index',
+    icon: icons.earnings,
+  },
+  withdrawal: {
+    label: '未完成的提现申请',
+    route: '/pages/earnings/index',
+    icon: icons.earnings,
+  },
 }
 
-const qualificationBlockerRoute = (module: BlockerModule) => featureMigratedUrl({
-  module: module === 'trade_order' ? 'marketplace' : module,
-})
+const qualificationBlockerRoute = (module: BlockerModule) => {
+  if (module === 'settlement' || module === 'withdrawal') return '/pages/earnings/index'
+  return featureMigratedUrl({ module: module === 'trade_order' ? 'marketplace' : module })
+}
 
 const preflightFromError = (error: ApiError) => {
   const details = error.details
