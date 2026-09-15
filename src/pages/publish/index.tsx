@@ -507,11 +507,6 @@ export default function PublishPage() {
     void getErrandPaymentPolicy()
       .then((policy) => {
         setErrandPaymentPolicy(policy)
-        setForm((current) => current.paymentMode === 'offline'
-          && policy.default_payment_mode === 'wechat'
-          && policy.enabled_payment_modes.includes('wechat')
-          ? { ...current, paymentMode: 'wechat' }
-          : current)
       })
       .catch(() => undefined)
   }, [])

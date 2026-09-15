@@ -157,6 +157,7 @@ export default function ErrandDetailPage() {
     let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
     let participationItem: ErrandView | null = null
     let participationContact: ParticipationContact | null = null
+    let cancellationProcessing = false
     try {
       if (action === 'accept') {
         const response = await lifeServicesRepository.acceptErrand(item.id, item.version)
@@ -188,6 +189,7 @@ export default function ErrandDetailPage() {
         await applyItem(response.errand)
       } else if (action === 'cancel') {
         const response = await lifeServicesRepository.cancelErrand(item.id, item.version)
+        cancellationProcessing = response.errand.cancellation_status === 'processing'
         await applyItem(response.errand)
       } else if (action === 'submit_review') {
         await applyItem(await lifeServicesRepository.submitErrandReview(item.id, item.version))
@@ -202,7 +204,10 @@ export default function ErrandDetailPage() {
           confirmColor: '#3f8f83',
         })
       } else {
-        Taro.showToast({ title: '状态已更新', icon: 'success' })
+        Taro.showToast({
+          title: action === 'cancel' && cancellationProcessing ? '退款处理中，请稍后刷新' : '状态已更新',
+          icon: cancellationProcessing ? 'none' : 'success',
+        })
       }
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return

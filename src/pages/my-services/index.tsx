@@ -5,7 +5,7 @@ import Taro, {
   usePullDownRefresh,
   useReachBottom,
 } from '@tarojs/taro'
-import { ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type {
   CampusCirclePostView,
   CarpoolTripView,
@@ -184,13 +184,27 @@ const parseInitialView = (options: Record<string, string | undefined>): ViewQuer
   const relation = options.relation && allowedRelations.includes(options.relation)
     ? options.relation
     : defaultRelation(section)
+  const orderType = options.order_type === 'errand' || options.order_type === 'marketplace'
+    ? options.order_type
+    : 'all'
   return {
     section,
     relation,
     publishedType: requested === 'errands' ? 'errands' : 'community',
-    orderType: 'all',
+    orderType,
     orderStatusGroup: 'all',
   }
+}
+
+const orderSnapshotImage = (order: TradeOrderView) => {
+  if (order.order_type !== 'marketplace' || !order.resource_snapshot || typeof order.resource_snapshot !== 'object') return ''
+  const snapshot = order.resource_snapshot as Record<string, unknown>
+  const candidates = [
+    ...(Array.isArray(snapshot.image_urls) ? snapshot.image_urls : []),
+    snapshot.image_url,
+    snapshot.cover_url,
+  ]
+  return candidates.find((value): value is string => typeof value === 'string' && /^https:\/\//u.test(value.trim()))?.trim() || ''
 }
 
 const openBusinessRecord = (item: RecordItem) => {
@@ -469,7 +483,11 @@ export default function MyServicesPage() {
         'order_no' in item && item.id === updated.id ? updated : item
       )))
       markLifeHubSectionDirty('market')
-      Taro.showToast({ title: action === 'cancel' ? '订单已取消' : '订单已完成', icon: 'success' })
+      const cancellationProcessing = action === 'cancel' && updated.cancellation_status === 'processing'
+      Taro.showToast({
+        title: cancellationProcessing ? '退款处理中，请稍后刷新' : action === 'cancel' ? '订单已取消' : '订单已完成',
+        icon: cancellationProcessing ? 'none' : 'success',
+      })
     } catch (actionError) {
       Taro.showToast({
         title: isApiError(actionError) ? actionError.message : '订单操作失败',
@@ -636,6 +654,7 @@ export default function MyServicesPage() {
           if ('order_no' in item) {
             const order = item as TradeOrderView
             const orderActions = order.available_actions as string[]
+            const snapshotImage = orderSnapshotImage(order)
             return (
               <View
                 key={`order:${order.id}`}
@@ -648,8 +667,13 @@ export default function MyServicesPage() {
                   <Text className='my-record-card__kind'>{order.order_type === 'marketplace' ? `二手 · ${order.viewer_relation === 'buyer' ? '我买到的' : '我卖出的'}` : `跑腿 · ${order.viewer_relation === 'buyer' ? '我发布的' : '我接的'}`}</Text>
                   <Text className='my-record-card__status'>{formatOrderStatus(order.trade_status, order.fulfillment_status)}</Text>
                 </View>
-                <View className='my-record-card__amount'>{formatMoney(order.amount_cents)}</View>
-                <Text className='my-record-card__title'>{order.title_snapshot}</Text>
+                <View className={`my-record-order-summary ${snapshotImage ? 'my-record-order-summary--with-image' : ''}`}>
+                  {snapshotImage && <Image className='my-record-order-summary__image' src={snapshotImage} mode='aspectFill' />}
+                  <View className='my-record-order-summary__content'>
+                    <View className='my-record-card__amount'>{formatMoney(order.amount_cents)}</View>
+                    <Text className='my-record-card__title'>{order.title_snapshot}</Text>
+                  </View>
+                </View>
                 <Text className='my-record-card__body'>
                   {order.payment_mode === 'wechat' ? '微信支付' : '线下结算'} · {order.order_no}
                 </Text>
