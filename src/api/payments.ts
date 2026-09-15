@@ -1,9 +1,11 @@
 import Taro from '@tarojs/taro'
 import { apiRequest, createIdempotencyKey } from './client'
 import type {
-  MerchantTransferView,
   PaymentStatusView,
   SettlementPayablePage,
+  WithdrawalPage,
+  WithdrawalSummary,
+  WithdrawalView,
   WechatPayParams,
   ErrandPaymentPolicy,
 } from './types'
@@ -89,11 +91,34 @@ export const listMySettlementPayables = (
   query: { status, page, page_size: pageSize },
 })
 
-export const transferSettlementPayable = (id: number, expectedVersion: number) => (
-  apiRequest<MerchantTransferView>({
-    path: `/api/v1/settlements/${id}/transfer`,
-    method: 'POST',
-    idempotencyKey: createIdempotencyKey(`settlement:${id}:transfer`),
-    data: { expected_version: expectedVersion },
-  })
-)
+export const getMyWithdrawalSummary = () => apiRequest<WithdrawalSummary>({
+  path: '/api/v1/withdrawals/summary',
+})
+
+export const listMyWithdrawals = (
+  status?: WithdrawalView['status'],
+  page = 1,
+  pageSize = 20,
+) => apiRequest<WithdrawalPage>({
+  path: '/api/v1/withdrawals/mine',
+  query: { status, page, page_size: pageSize },
+})
+
+export const getMyWithdrawal = (id: number) => apiRequest<WithdrawalView>({
+  path: `/api/v1/withdrawals/${id}`,
+})
+
+export const createWithdrawal = (
+  sceneKey: WithdrawalView['scene_key'],
+  expectedAmountCents: number,
+  expectedPayableCount: number,
+) => apiRequest<WithdrawalView>({
+  path: '/api/v1/withdrawals',
+  method: 'POST',
+  idempotencyKey: createIdempotencyKey(`withdrawal:${sceneKey}`),
+  data: {
+    scene_key: sceneKey,
+    expected_amount_cents: expectedAmountCents,
+    expected_payable_count: expectedPayableCount,
+  },
+})

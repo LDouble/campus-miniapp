@@ -5328,6 +5328,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListAdminWithdrawals */
+        get: operations["ListAdminWithdrawals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetAdminWithdrawal */
+        get: operations["GetAdminWithdrawal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** ReviewWithdrawal */
+        post: operations["ReviewWithdrawal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders/{id}/wechat-pay": {
         parameters: {
             query?: never;
@@ -5441,6 +5492,74 @@ export interface paths {
         put?: never;
         /** 将本人可提现收益发起微信商家转账 */
         post: operations["CreateMerchantTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** CreateWithdrawal */
+        post: operations["CreateWithdrawal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListMyWithdrawals */
+        get: operations["ListMyWithdrawals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetMyWithdrawalSummary */
+        get: operations["GetMyWithdrawalSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetMyWithdrawal */
+        get: operations["GetMyWithdrawal"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11022,7 +11141,7 @@ export interface components {
             /** @enum {string} */
             source_type: "errand" | "marketplace";
             /** @enum {string} */
-            status: "available" | "transferring" | "paid" | "blocked";
+            status: "available" | "reserved" | "transferring" | "paid" | "blocked";
             /** Format: uint64 */
             version: number;
         };
@@ -11043,6 +11162,76 @@ export interface components {
         WechatPayResponseBody: {
             data: components["schemas"]["WechatPayParams"];
             request_id: string;
+        };
+        WithdrawalItemView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: uint64 */
+            order_id: number;
+            /** Format: uint64 */
+            payable_id: number;
+        };
+        WithdrawalPage: {
+            items: components["schemas"]["WithdrawalView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        WithdrawalPageResponseBody: {
+            data: components["schemas"]["WithdrawalPage"];
+            request_id: string;
+        };
+        WithdrawalResponseBody: {
+            data: components["schemas"]["WithdrawalView"];
+            request_id: string;
+        };
+        WithdrawalSceneSummary: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: int64 */
+            payable_count: number;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+        };
+        WithdrawalSummary: {
+            /** Format: int64 */
+            available_amount_cents: number;
+            /** Format: int64 */
+            paid_amount_cents: number;
+            /** Format: int64 */
+            reserved_amount_cents: number;
+            scenes: components["schemas"]["WithdrawalSceneSummary"][];
+        };
+        WithdrawalSummaryResponseBody: {
+            data: components["schemas"]["WithdrawalSummary"];
+            request_id: string;
+        };
+        WithdrawalView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: uint64 */
+            beneficiary_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            items?: components["schemas"]["WithdrawalItemView"][];
+            /** Format: int64 */
+            payable_count: number;
+            review_reason?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewer_id?: number | null;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+            /** @enum {string} */
+            status: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+            transfer?: components["schemas"]["MerchantTransferView"];
+            /** Format: uint64 */
+            version: number;
+            withdrawal_no: string;
         };
         PersonalTimetableItemList: {
             items: components["schemas"]["PersonalTimetableItemView"][];
@@ -13362,6 +13551,33 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["WechatPayResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalPageResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalSummaryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalSummaryResponseBody"];
             };
         };
         /** @description 我的蹭课条目列表 */
@@ -20951,6 +21167,65 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    ListAdminWithdrawals: {
+        parameters: {
+            query?: {
+                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminWithdrawal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ReviewWithdrawal: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** @enum {string} */
+                    decision: "approve" | "reject";
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
     CreateWechatPay: {
         parameters: {
             query?: never;
@@ -21033,7 +21308,7 @@ export interface operations {
     ListMySettlementPayables: {
         parameters: {
             query?: {
-                status?: "available" | "transferring" | "paid" | "blocked";
+                status?: "available" | "reserved" | "transferring" | "paid" | "blocked";
                 page?: number;
                 page_size?: number;
             };
@@ -21069,6 +21344,77 @@ export interface operations {
             201: components["responses"]["MerchantTransferResponse"];
             409: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    CreateWithdrawal: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    scene_key: "commission" | "purchase" | "secondhand_recycle";
+                    /** Format: int64 */
+                    expected_amount_cents: number;
+                    /** Format: int64 */
+                    expected_payable_count: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListMyWithdrawals: {
+        parameters: {
+            query?: {
+                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetMyWithdrawalSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalSummaryResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetMyWithdrawal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
         };
     };
     ListMyPersonalTimetableItems: {
