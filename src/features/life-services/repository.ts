@@ -37,6 +37,7 @@ type CreateCarpoolBody = operations['CreateCarpoolTrip']['requestBody']['content
 type UpdateCarpoolBody = operations['UpdateCarpoolTrip']['requestBody']['content']['application/json']
 type CreateCampusPostBody = operations['CreateCampusCirclePost']['requestBody']['content']['application/json']
 type UpdateCampusPostBody = operations['UpdateCampusCirclePost']['requestBody']['content']['application/json']
+type UpdateCampusPostPinBody = operations['UpdateCampusCirclePostPin']['requestBody']['content']['application/json']
 type AdminWithdrawCampusCirclePostBody = operations['AdminWithdrawCampusCirclePost']['requestBody']['content']['application/json']
 type CreateCommentBody = operations['CreateComment']['requestBody']['content']['application/json']
 type CreateContentReportBody = operations['CreateContentReport']['requestBody']['content']['application/json']
@@ -95,6 +96,11 @@ export type CampusCircleSearch = PagingQuery & {
   parentSectionId?: number
   topicId?: number
   sort?: NonNullable<operations['ListCampusCirclePosts']['parameters']['query']>['sort']
+}
+
+export type UpdateCampusCirclePostPinInput = {
+  expectedVersion: number
+  pinned: boolean
 }
 
 export type CampusCircleTopicSearch = PagingQuery & {
@@ -252,6 +258,21 @@ export const lifeServicesRepository = {
       version,
       `campus-circle:${id}:withdraw`,
     )
+  },
+
+  updateCampusCirclePostPin(id: number, input: UpdateCampusCirclePostPinInput) {
+    const data: UpdateCampusPostPinBody = {
+      expected_version: input.expectedVersion,
+      pinned: input.pinned,
+    }
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/campus-circle/posts/${id}/pin`,
+      method: 'PATCH',
+      idempotencyKey: createIdempotencyKey(
+        `campus-circle:${id}:pin:${input.pinned ? 'on' : 'off'}:${input.expectedVersion}`,
+      ),
+      data,
+    })
   },
 
   adminWithdrawCampusCirclePost(id: number, input: AdminWithdrawCampusCirclePostBody) {

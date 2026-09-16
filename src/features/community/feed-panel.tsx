@@ -22,6 +22,11 @@ import { saveCommunityDetailSnapshot } from './detail-snapshot'
 import CommunityPostCard, { type CommunityPostCommentPreview } from './post-card'
 import WhatToEatFeedCard, { openWhatToEatDetail } from './what-to-eat-feed-card'
 import { navigateToWithGuard } from '../../utils/navigation'
+import {
+  communityPinActionLabel,
+  confirmCommunityPinAction,
+  getCommunityPinAction,
+} from './pin-action'
 import './feed-panel.scss'
 
 type Props = {
@@ -198,6 +203,7 @@ export default function CommunityFeedPanel({
     activeSectionId,
     activeParentSectionId,
     keyword,
+    sort: 'latest',
   }), [activeParentSectionId, activeSectionId, keyword])
   const load = useCallback(async (nextPage = 1, append = false) => {
     if (!activeSectionId) return
@@ -212,6 +218,7 @@ export default function CommunityFeedPanel({
         sectionId: isRoot ? undefined : activeSectionId,
         parentSectionId: isRoot ? activeSectionId : undefined,
         keyword,
+        sort: 'latest',
         page: nextPage,
       })
       if (requestId !== requestSequence.current) return
@@ -300,6 +307,41 @@ export default function CommunityFeedPanel({
       })
     }
   }, [])
+
+  const runPinAction = useCallback(async (post: CampusCirclePostView) => {
+    const action = getCommunityPinAction(post)
+    if (!action) return
+    const sectionName = sectionNames.get(post.section_id) || '当前'
+    if (!await confirmCommunityPinAction(action, sectionName)) return
+    try {
+      const updated = await lifeServicesRepository.updateCampusCirclePostPin(post.id, {
+        expectedVersion: post.version,
+        pinned: action === 'pin',
+      })
+      setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: `${communityPinActionLabel(action)}成功`, icon: 'success' })
+      await load(1, false)
+    } catch (actionError) {
+      if (isApiError(actionError) && (actionError.statusCode === 403 || actionError.statusCode === 409)) {
+        try {
+          const latest = await lifeServicesRepository.getCampusCirclePost(post.id)
+          setPosts((current) => current.map((item) => item.id === latest.id ? latest : item))
+        } catch {
+          // 列表刷新仍会获取服务端的最新权限和状态。
+        }
+        await load(1, false)
+      }
+      Taro.showToast({
+        title: isApiError(actionError)
+          ? actionError.statusCode === 409
+            ? '状态已变化，已刷新最新内容'
+            : actionError.message
+          : '操作失败，请稍后重试',
+        icon: 'none',
+      })
+    }
+  }, [load, sectionNames])
 
   const openPost = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
@@ -525,6 +567,7 @@ export default function CommunityFeedPanel({
                 onToggleActions={toggleActions}
                 onCloseActions={closeActions}
                 onToggleLike={toggleLike}
+                onPinAction={runPinAction}
                 onOpen={openPost}
                 onOpenComments={openComments}
                 onReplyComment={openCommentReply}

@@ -15,6 +15,10 @@ import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
 import { communityPostTopics, communityTopicUrl } from './topic'
+import {
+  communityPinActionLabel,
+  getCommunityPinAction,
+} from './pin-action'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -62,6 +66,7 @@ type Props = {
   motionDelay?: number
   timeFormatter?: (value?: string | null) => string
   onToggleLike?: (post: CampusCirclePostView) => void | Promise<void>
+  onPinAction?: (post: CampusCirclePostView) => void | Promise<void>
   onOpen: (post: CampusCirclePostView) => void
   onOpenComments?: (post: CampusCirclePostView) => void
   actionsOpen?: boolean
@@ -97,6 +102,7 @@ function CommunityPostCard({
   motionDelay = 0,
   timeFormatter,
   onToggleLike,
+  onPinAction,
   onOpen,
   onOpenComments,
   actionsOpen = false,
@@ -111,6 +117,7 @@ function CommunityPostCard({
   onReplyComment,
 }: Props) {
   const [likePending, setLikePending] = useState(false)
+  const [pinPending, setPinPending] = useState(false)
   const authorName = communityAuthorName(post)
   const cardId = instanceKey || String(post.id)
   const authorInitial = communityAuthorInitial(post)
@@ -139,6 +146,7 @@ function CommunityPostCard({
     post.is_recommended && '推荐',
     topicLinks.some((topic) => topic.kind === 'campaign') && '活动',
   ].filter(Boolean) as string[]
+  const pinAction = getCommunityPinAction(post)
   const onlyStickers = contentParts.length > 0 && contentParts.every((part) => (
     part.type === 'sticker' || part.text.trim().length === 0
   ))
@@ -147,7 +155,9 @@ function CommunityPostCard({
     && !businessPreview
     && operationBadges.length === 0
     && (onlyStickers || readableContent.trim().length <= 20)
-  const canShowActionMenu = actionsOpen && Boolean(onCloseActions) && Boolean(onToggleLike || onOpenComments)
+  const canShowActionMenu = actionsOpen
+    && Boolean(onCloseActions)
+    && Boolean(onToggleLike || onOpenComments || (pinAction && onPinAction))
   const openAuthorOrPost = () => (
     !post.author_deleted && onOpenAuthor ? onOpenAuthor(post) : onOpen(post)
   )
@@ -387,6 +397,27 @@ function CommunityPostCard({
                     <Image src={communityIcons.comment} mode='aspectFit' />
                     <Text>评论</Text>
                   </View>
+                )}
+                {pinAction && onPinAction && (
+                  <>
+                    {onOpenComments && <View className='community-post__social-divider' />}
+                    <View
+                      className='community-post__comments-summary'
+                      ariaRole='button'
+                      ariaLabel={pinPending ? `${communityPinActionLabel(pinAction)}处理中` : communityPinActionLabel(pinAction)}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (pinPending) return
+                        setPinPending(true)
+                        onCloseActions?.()
+                        void Promise.resolve(onPinAction(post))
+                          .catch(() => undefined)
+                          .finally(() => setPinPending(false))
+                      }}
+                    >
+                      <Text>{pinPending ? '处理中…' : communityPinActionLabel(pinAction)}</Text>
+                    </View>
+                  </>
                 )}
               </View>
             )}
