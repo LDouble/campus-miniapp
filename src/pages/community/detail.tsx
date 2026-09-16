@@ -18,6 +18,7 @@ import {
   communityAuthorName,
 } from '../../features/community/author'
 import { consumeCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import { saveTodayHotDetailReturn } from '../../features/today-hot/detail-return'
 import {
   reportCommunityPostView,
   flushCommunityPostViews,
@@ -83,6 +84,7 @@ export default function CommunityDetailPage() {
   const [adminWithdrawReason, setAdminWithdrawReason] = useState('')
   const [error, setError] = useState('')
   const viewReportAttemptedPostIdsRef = useRef(new Set<number>())
+  const todayHotReturnRef = useRef(false)
 
   const mergePost = useCallback((nextPost: CampusCirclePostView) => {
     setPost((current) => {
@@ -141,6 +143,7 @@ export default function CommunityDetailPage() {
       return
     }
     setPostId(id)
+    todayHotReturnRef.current = Boolean(options.today_hot_snapshot)
     const normalizedCommentId = Number.isFinite(commentId) && commentId > 0 ? commentId : 0
     const snapshot = options.snapshot === '1'
       ? consumeCommunityDetailSnapshot(id)
@@ -174,6 +177,7 @@ export default function CommunityDetailPage() {
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
         : await lifeServicesRepository.likeCampusCirclePost(post.id)
       mergePost(result)
+      if (todayHotReturnRef.current) saveTodayHotDetailReturn(result.id, { post: result })
       markLifeHubSectionDirty('community')
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
@@ -504,11 +508,19 @@ export default function CommunityDetailPage() {
               showHeading={false}
               placeholder='友善交流，分享你的想法'
               tone='community'
-              onApprovedDelta={(delta) => setPost((current) => current
-                ? { ...current, comment_count: Math.max(0, current.comment_count + delta) }
-                : current)}
-              onMutation={() => {
+              onApprovedDelta={(delta) => {
+                setPost((current) => current
+                  ? { ...current, comment_count: Math.max(0, current.comment_count + delta) }
+                  : current)
+                if (todayHotReturnRef.current && post) {
+                  saveTodayHotDetailReturn(post.id, { approvedCommentDelta: delta })
+                }
+              }}
+              onMutation={(mutation) => {
                 markLifeHubSectionDirty('community')
+                if (mutation.type === 'create' && todayHotReturnRef.current && post) {
+                  saveTodayHotDetailReturn(post.id, { comment: mutation.comment })
+                }
               }}
             />
 

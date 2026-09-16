@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Taro, { useLoad, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
+import Taro, { useDidShow, useLoad, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CommentView } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
 import CommunityCommentSheet from '../../features/community/comment-sheet'
 import { mergePublicCommentPreview } from '../../features/community/comments'
+import { consumeTodayHotDetailReturn } from '../../features/today-hot/detail-return'
 import { saveCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
 import CommunityPostCard from '../../features/community/post-card'
 import { usePostExposure } from '../../features/community/use-post-exposure'
@@ -49,6 +50,7 @@ export default function TodayHotPage() {
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [loadMoreError, setLoadMoreError] = useState(false)
   const [error, setError] = useState('')
   const [contextUnavailable, setContextUnavailable] = useState(false)
   const [reloadSignal, setReloadSignal] = useState(0)
@@ -79,10 +81,12 @@ export default function TodayHotPage() {
     if (more) {
       loadingMoreRef.current = true
       setLoadingMore(true)
+      setLoadMoreError(false)
     }
     else {
       loadingMoreRef.current = false
       setLoadingMore(false)
+      setLoadMoreError(false)
       setLoading(true)
       setError('')
     }
@@ -112,6 +116,10 @@ export default function TodayHotPage() {
       }
     } catch (loadError) {
       if (currentRequest !== requestId.current) return
+      if (more) {
+        setLoadMoreError(true)
+        return
+      }
       setError(isApiError(loadError) && loadError.code === 'today_hot_snapshot_expired'
         ? '本轮精选已更新，下拉刷新获取最新内容'
         : '加载失败，请稍后重试')
@@ -161,6 +169,20 @@ export default function TodayHotPage() {
   }, [])
   usePullDownRefresh(() => { void refreshSnapshot() })
   useReachBottom(() => { void load(false, true) })
+  useDidShow(() => {
+    setPosts((current) => current.map((post) => {
+      const returned = consumeTodayHotDetailReturn(post.id)
+      if (!returned) return post
+      const latest = returned.post ? { ...returned.post, view_count: Math.max(post.view_count, returned.post.view_count) } : post
+      return {
+        ...latest,
+        comment_count: Math.max(0, latest.comment_count + (returned.approvedCommentDelta || 0)),
+        comment_previews: returned.comment
+          ? mergePublicCommentPreview(latest.comment_previews, returned.comment)
+          : latest.comment_previews,
+      }
+    }))
+  })
 
   const updatePost = useCallback((post: CampusCirclePostView) => {
     setPosts((current) => current.map((item) => item.id === post.id ? post : item))
@@ -255,6 +277,11 @@ export default function TodayHotPage() {
         </View>
       )}
       {loadingMore && <View className='today-hot-page__load-more'>正在加载更多…</View>}
+      {!loadingMore && loadMoreError && posts.length > 0 && (
+        <View className='today-hot-page__load-more today-hot-page__load-more--retry' onClick={() => void load(false, true)}>
+          加载失败，点击重试
+        </View>
+      )}
       {showEnd && (
         <View className='today-hot-page__end'>
           <Text className='today-hot-page__end-title'>今天的热门就到这里</Text>
