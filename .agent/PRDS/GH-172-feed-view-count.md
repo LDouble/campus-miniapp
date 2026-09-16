@@ -60,3 +60,13 @@
 - 小程序 `yarn lint`、`yarn typecheck`、`yarn test:community-detail-navigation`（包含上报/曝光/Hook 测试）、`yarn test:community-list-figma`、`yarn test:community-detail-figma`、`yarn test:community-topic`、`yarn test:community-what-to-eat` 均通过。
 - `yarn test:design-tokens`、`yarn test:typography`、`yarn test:dark-mode` 通过；`yarn build:weapp` 通过，保留现有 common.js 体积提醒（254 KiB）。
 - 依赖声明、锁文件及 Yarn 版本与主仓库一致，已将 Feature 的 node_modules 改为主仓库绝对路径软连接，并在本地 Git exclude 中忽略。
+
+## 模拟器回归修复（2026-09-16）
+
+用户反馈列表没有上报后，在真实微信模拟器确认原生 IntersectionObserver 返回 intersectionRatio=1，但 boundingClientRect 的坐标及尺寸字段均为 undefined。此前依赖该对象判定可见性，导致首次布局计时被随后的回调取消。
+
+- 观察器回调改为原生 intersectionRatio 与动态阈值比较；1 秒到期仍通过 SelectorQuery 复核实际可见区域。
+- 后台异步挂载卡片不提前绑定其他页面；首次回到前台时补取 Page 上下文。
+- 增加原生空矩形、后台挂载后恢复的 Hook 回归用例；上报/曝光/Hook 测试、lint、typecheck 和微信构建通过。
+- 已刷新 Feature 模拟器，在其现有 API 环境 product.weouc.com 中确认真实 POST /campus-circle/posts/{id}/views 返回 200、counted=true、view_count=1，卡片显示“1 浏览”。另观察到 counted=false 的正常去重返回。
+- 本次未部署后端服务；验证使用模拟器现有接口配置，并非本地 Release 联调。

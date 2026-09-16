@@ -46,14 +46,14 @@ export const usePostExposure = ({
   const restartRef = useRef<() => void>(() => undefined)
   const stopRef = useRef<() => void>(() => undefined)
   const initializedEnabledEffectRef = useRef(false)
-  const pageRef = useRef(getCurrentInstance().page)
+  const pageRef = useRef(enabled ? getCurrentInstance().page : null)
   const controllerRef = useRef<ReturnType<typeof createPostExposureController>>()
 
   onExposureRef.current = onExposure
   enabledRef.current = enabled
 
   useEffect(() => {
-    const page = pageRef.current
+    let page = pageRef.current
     let active = true
     let generation = 0
     let observerThreshold: number | null = null
@@ -115,7 +115,11 @@ export const usePostExposure = ({
 
     start = () => {
       stop()
-      if (!active || hiddenRef.current || !enabledRef.current || !page) return
+      if (!active || hiddenRef.current || !enabledRef.current) return
+      // 后台异步加载的卡片可能尚未拿到所属 Page，回到前台后再绑定。
+      page = page || getCurrentInstance().page
+      if (!page) return
+      pageRef.current = page
       const run = generation
       Taro.nextTick(() => {
         if (!active || hiddenRef.current || !enabledRef.current || run !== generation) return
@@ -137,7 +141,10 @@ export const usePostExposure = ({
           })
           observer.observe(selector, (result) => {
             if (!active || hiddenRef.current || !enabledRef.current || run !== generation) return
-            controller.updateVisible(isPostExposed(asRect(result.boundingClientRect), viewport))
+            // 部分微信基础库的 boundingClientRect 是空对象，不能据此判定不可见。
+            // 原生相交比例已经包含 relativeToViewport 的遮挡边界；到期仍用 selector query 复核。
+            const ratio = result.intersectionRatio
+            controller.updateVisible(typeof ratio === 'number' && Number.isFinite(ratio) && ratio >= threshold)
           })
           controller.updateVisible(isPostExposed(card, viewport))
         }).catch(() => {
@@ -148,10 +155,6 @@ export const usePostExposure = ({
 
     restartRef.current = start
     stopRef.current = stop
-    if (!page) {
-      controller.updateVisible(false)
-      return () => controller.dispose()
-    }
     start()
     const onResize = () => start()
     Taro.onWindowResize?.(onResize)

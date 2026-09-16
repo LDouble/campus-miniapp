@@ -16,10 +16,11 @@ let resize = () => undefined
 const ticks: Array<() => void> = []
 const queries: Array<() => void> = []
 const page = {}
+let currentPage: object | null = page
 let card = { top: 100, bottom: 300, left: 0, right: 300, width: 300, height: 200 }
 const observers: Array<{ disconnected: boolean; callback?: (result: unknown) => void }> = []
 const taro = {
-  getCurrentInstance: () => ({ page }),
+  getCurrentInstance: () => ({ page: currentPage }),
   getWindowInfo: () => ({ windowHeight: 600, windowWidth: 375 }),
   useDidHide: (callback: typeof hide) => { hide = callback },
   useDidShow: (callback: typeof show) => { show = callback },
@@ -110,6 +111,7 @@ void (async () => {
     render(true)
     await flushBridge()
     assert.equal(observers.length, 1, 'mount must not leak a second observer')
+    observers[0].callback?.({ boundingClientRect: {}, intersectionRatio: 1 })
     await advance(999)
     assert.equal(reports, 0)
     hide()
@@ -117,8 +119,9 @@ void (async () => {
     assert.equal(reports, 0, 'hiding just before the deadline must cancel the read')
     show()
     await flushBridge()
+    observers[observers.length - 1].callback?.({ boundingClientRect: {}, intersectionRatio: 1 })
     await advance(1_000)
-    assert.equal(reports, 1)
+    assert.equal(reports, 1, 'native empty bounding rect must not cancel a visible exposure')
     resize()
     await flushBridge()
     await advance(900)
@@ -144,7 +147,7 @@ void (async () => {
     await flushBridge()
     const lastObserver = observers[observers.length - 1]
     card = { ...card, top: 590, bottom: 790 }
-    lastObserver.callback?.({ boundingClientRect: card })
+    lastObserver.callback?.({ boundingClientRect: {}, intersectionRatio: 0.05 })
     await advance(1_000)
     assert.equal(reports, 2, 'quickly scrolled-out card must not count')
     effects.forEach((effect) => effect.cleanup?.())
@@ -152,6 +155,21 @@ void (async () => {
     await advance(1_000)
     assert.equal(reports, 2)
     assert.ok(observers.every((observer) => observer.disconnected), 'unmount must disconnect every observer')
+    // 后台加载完成时没有 Current.page，回到前台应能恢复绑定。
+    refs.length = 0
+    effects.length = 0
+    currentPage = null
+    card = { ...card, top: 100, bottom: 300 }
+    render(false)
+    await flushBridge()
+    currentPage = page
+    render(true)
+    show()
+    await flushBridge()
+    observers[observers.length - 1].callback?.({ boundingClientRect: {}, intersectionRatio: 1 })
+    await advance(1_000)
+    assert.equal(reports, 3, 'background-loaded card must bind its page after returning')
+    effects.forEach((effect) => effect.cleanup?.())
     process.stdout.write('community post exposure hook smoke: ok\n')
   } finally {
     Date.now = originalNow
