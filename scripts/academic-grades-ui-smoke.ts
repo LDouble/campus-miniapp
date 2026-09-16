@@ -113,6 +113,41 @@ assert.match(
   /resolveNextPeriodId\(result\)\s*\|\|\s*resolvePeriodId/u,
   '选课结果刷新学期时没有未来学期应回退到当前学期',
 )
+assert.match(
+  selectionPage,
+  /COURSE_TRADE_GUIDE_DURATION_MS\s*=\s*3000[\s\S]*?setPageShowCount[\s\S]*?setCourseTradeGuideVisible\(true\)[\s\S]*?setTimeout\([\s\S]*?COURSE_TRADE_GUIDE_DURATION_MS/u,
+  '每次进入选课结果页时应重新展示 3 秒二手教材引导',
+)
+assert.match(
+  selectionPage,
+  /selection-card__book-action[\s\S]*?event\.stopPropagation\(\)[\s\S]*?openCourseTrade\(record\)[\s\S]*?selection-card__book-guide'>去闲置找二手书<\/Text>/u,
+  '已选课程卡片应提供不会误开详情的求购课本入口及引导',
+)
+assert.match(
+  selectionPage,
+  /selectedRecords\.map\(\(record, index\)[\s\S]*?record\.courseName[\s\S]*?record\.courseCode/u,
+  '一键求购应将本学期全部已选课程名称和课程代码生成清单',
+)
+assert.match(
+  selectionPage,
+  /openCourseMarketplacePublisher\(\{[\s\S]*?求购\$\{periodLabel\}以下课程使用的教材[\s\S]*?courseName:\s*`\$\{periodLabel\}教材（\$\{selectedRecords\.length\}门）`/u,
+  '一键求购应将合并课程清单带入现有求购发布表单',
+)
+assert.match(
+  selectionPage,
+  /className='selection-bulk-purchase'[\s\S]*?一键求购本学期教材[\s\S]*?已带入 \{selectedRecords\.length\} 门已选课程，确认预算后发布/u,
+  '选课结果页应提供明确的一键求购教材入口和提交前确认说明',
+)
+assert.match(
+  academicStyle,
+  /\.selection-card__book-guide\s*\{[\s\S]*?animation:\s*selection-book-guide-life 3000ms ease both/u,
+  '二手教材引导应在 3 秒内完成出现、停留与淡出',
+)
+assert.match(
+  academicStyle,
+  /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.selection-card__book-guide\s*\{[\s\S]*?animation:\s*none/u,
+  '减少动态效果模式下应禁用二手教材引导动效',
+)
 for (const [pageSource, pageName] of [
   [gradePage, '成绩'],
   [examPage, '考试'],

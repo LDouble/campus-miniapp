@@ -99,7 +99,14 @@ const sharePages = execFileSync(
   .split('\n')
   .filter(Boolean)
 
-assert.equal(sharePages.length, 20, '朋友圈配置检查应覆盖全部现有分享页面')
+assert.equal(sharePages.length, 22, '朋友圈配置检查应覆盖全部现有分享页面')
+assert.equal(
+  buildCampusShareMessage({
+    path: '/pages/lottery/detail',
+    query: { id: 1, share_token: 'test-attribution-token' },
+  }).path,
+  '/pages/lottery/detail?id=1&share_token=test-attribution-token',
+)
 for (const pagePath of sharePages) {
   const configPath = pagePath.replace(/\.tsx$/u, '.config.ts')
   const configSource = readFileSync(resolve(__dirname, '..', configPath), 'utf8')

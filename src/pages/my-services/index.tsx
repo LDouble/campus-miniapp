@@ -26,6 +26,7 @@ import StickerContent from '../../components/sticker-content'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import {
   formatDateTime,
+  formatErrandStatus,
   formatMoney,
   formatOrderStatus,
   formatStatus,
@@ -656,7 +657,7 @@ export default function MyServicesPage() {
               <View key={`errand:${errand.id}`} className='my-record-card my-record-card--errand' ariaRole='button' ariaLabel='查看跑腿详情' onClick={() => openBusinessRecord(errand)}>
                 <View className='my-record-card__top'>
                   <Text className='my-record-card__kind'>{errand.viewer_relation === 'runner' ? '我的接单' : '我发布的跑腿'}</Text>
-                  <Text className='my-record-card__status'>{formatStatus(errand.status, errand.review_status)}</Text>
+                  <Text className='my-record-card__status'>{formatErrandStatus(errand)}</Text>
                 </View>
                 <View className='my-record-card__amount'>{formatMoney(errand.reward_cents)}</View>
                 <StickerContent content={errand.description} className='my-record-card__body' stickerClassName='my-record-card__sticker' />
