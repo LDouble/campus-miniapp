@@ -1,5 +1,6 @@
 import { View } from '@tarojs/components'
 import type { CampusName } from './campus'
+import type { MarketplaceCategory } from '../runtime-config'
 import type { LifeHubSection } from './business-theme'
 import CampusSelector from './components/campus-selector'
 import CarpoolFilters, {
@@ -16,6 +17,7 @@ type Props = {
   section: LifeServiceFilterSection
   campus: CampusName | ''
   marketFilters: MarketplaceFilterValue
+  marketplaceCategories: MarketplaceCategory[]
   carpoolFilters: CarpoolFilterValue
   onCampusChange: (value: CampusName | '') => void
   onMarketFiltersChange: (value: MarketplaceFilterValue) => void
@@ -39,6 +41,7 @@ export default function LifeServiceTopFilters({
   section,
   campus,
   marketFilters,
+  marketplaceCategories,
   carpoolFilters,
   onCampusChange,
   onMarketFiltersChange,
@@ -48,6 +51,7 @@ export default function LifeServiceTopFilters({
     return (
       <MarketplaceFilters
         value={marketFilters}
+        categories={marketplaceCategories}
         campusControl={campusControl(campus, onCampusChange)}
         onChange={onMarketFiltersChange}
       />

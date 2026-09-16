@@ -28,7 +28,7 @@ const homeFeedBusinessPreview = (item: HomeFeedItemView) => {
   if (item.source_type === 'errand') {
     const reward = typeof item.amount_cents === 'number' ? formatMoney(item.amount_cents) : '报酬面议'
     return {
-      title: '跑腿',
+      title: '跑腿 · 待接单',
       meta: [`报酬 ${reward}`, deadlineLimit(item.deadline, item.feed_time)].filter(Boolean).join(' · '),
     }
   }
