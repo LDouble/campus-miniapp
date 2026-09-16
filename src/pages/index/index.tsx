@@ -13,6 +13,7 @@ import {
   Text,
   View,
 } from '@tarojs/components'
+import { useViewPageVisible } from '../../features/community/use-view-page-visible'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
@@ -418,6 +419,7 @@ const loadHomeAcademic = async (
 }
 
 function Index() {
+  const viewPageVisible = useViewPageVisible()
   useCampusShare((event) => {
     const target = event.target as {
       dataset?: Record<string, string | number>
@@ -1500,6 +1502,9 @@ function Index() {
                 key={`${key}-${item.version}`}
                 post={post}
                 instanceKey={key}
+                showViewCount={item.source_type === 'campus_circle_post'}
+                viewExposureSurface='home'
+                viewTrackingEnabled={viewPageVisible && !homeCommentItem && !showNotificationGuide}
                 variant={variant}
                 businessPreview={homeFeedBusinessPreview(item) || undefined}
                 motionDelay={index + 1}

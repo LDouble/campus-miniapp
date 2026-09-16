@@ -1923,7 +1923,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 上报一次校园圈帖子详情阅读并按读者和帖子去重 */
+        /** 上报一次校园圈帖子列表有效曝光或详情阅读；同一读者和帖子在 30 分钟内去重 */
         post: operations["RecordCampusCirclePostView"];
         delete?: never;
         options?: never;
@@ -4124,23 +4124,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/errands/payment-policy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询跑腿发布支付能力 */
-        get: operations["GetErrandPaymentPolicy"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/errands/{id}": {
         parameters: {
             query?: never;
@@ -5320,244 +5303,6 @@ export interface paths {
         };
         /** 查看已发布全校通知 */
         get: operations["GetOfficialNotice"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/withdrawals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** ListAdminWithdrawals */
-        get: operations["ListAdminWithdrawals"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/withdrawals/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GetAdminWithdrawal */
-        get: operations["GetAdminWithdrawal"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/withdrawals/{id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** ReviewWithdrawal */
-        post: operations["ReviewWithdrawal"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/orders/{id}/wechat-pay": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 为本人待支付订单创建微信小程序支付 */
-        post: operations["CreateWechatPay"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/orders/{id}/wechat-pay/query": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 主动查询并同步本人订单的微信支付状态 */
-        post: operations["QueryWechatPay"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments/wechat/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 接收微信支付结果通知 */
-        post: operations["HandleWechatPayCallback"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments/wechat/refund-callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 接收微信原路退款结果通知 */
-        post: operations["HandleWechatRefundCallback"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments/wechat/transfer-callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 接收微信商家转账结果通知 */
-        post: operations["HandleWechatTransferCallback"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/settlements/mine": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询本人可提现收益 */
-        get: operations["ListMySettlementPayables"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/settlements/{id}/transfer": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 将本人可提现收益发起微信商家转账 */
-        post: operations["CreateMerchantTransfer"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/withdrawals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** CreateWithdrawal */
-        post: operations["CreateWithdrawal"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/withdrawals/mine": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** ListMyWithdrawals */
-        get: operations["ListMyWithdrawals"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/withdrawals/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GetMyWithdrawalSummary */
-        get: operations["GetMyWithdrawalSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/withdrawals/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GetMyWithdrawal */
-        get: operations["GetMyWithdrawal"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7789,7 +7534,7 @@ export interface components {
             module: components["schemas"]["AccountCancellationBlockerModule"];
         };
         /** @enum {string} */
-        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool" | "settlement" | "withdrawal";
+        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool";
         AccountCancellationInput: {
             app_id: string;
             code: string;
@@ -8056,7 +7801,7 @@ export interface components {
             version: number;
             /**
              * Format: int64
-             * @description 去重后的帖子详情阅读次数
+             * @description 列表有效曝光或详情阅读产生的去重浏览次数；同一读者对同一帖子在 30 分钟内最多计一次
              */
             view_count: number;
             viewer_relation: components["schemas"]["CampusCircleViewerRelation"];
@@ -10093,16 +9838,6 @@ export interface components {
             data: components["schemas"]["ErrandViewPage"];
             request_id: string;
         };
-        ErrandPaymentPolicy: {
-            /** @enum {string} */
-            default_payment_mode: "offline" | "wechat";
-            enabled_payment_modes: ("offline" | "wechat")[];
-            payment_timeout_minutes: number;
-        };
-        ErrandPaymentPolicyResponseBody: {
-            data: components["schemas"]["ErrandPaymentPolicy"];
-            request_id: string;
-        };
         ErrandResponseBody: {
             data: components["schemas"]["ErrandView"];
             request_id: string;
@@ -10149,8 +9884,6 @@ export interface components {
             author_nickname: string;
             available_actions: components["schemas"]["ErrandViewerAction"][];
             campus: string | null;
-            /** @enum {string} */
-            cancellation_status?: "none" | "processing" | "succeeded" | "failed";
             /** Format: date-time */
             cancelled_at: string | null;
             category: string;
@@ -10175,15 +9908,6 @@ export interface components {
             /** Format: int64 */
             like_count: number;
             liked_by_nicknames: string[];
-            /** Format: date-time */
-            payment_deadline_at?: string | null;
-            /** @enum {string} */
-            payment_mode: "offline" | "wechat";
-            /**
-             * @description 仅参与者可见，线下为 none
-             * @enum {string}
-             */
-            payment_status?: "none" | "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
             /** Format: date-time */
             picked_up_at: string | null;
             pickup_location: string;
@@ -11081,158 +10805,6 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
-        MerchantTransferResponseBody: {
-            data: components["schemas"]["MerchantTransferView"];
-            request_id: string;
-        };
-        MerchantTransferView: {
-            /** Format: int64 */
-            amount_cents: number;
-            app_id: string | null;
-            confirmation_package: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: uint64 */
-            id: number;
-            merchant_id: string | null;
-            /** Format: uint64 */
-            payable_id: number;
-            /** @enum {string} */
-            status: "processing" | "awaiting_user_confirmation" | "succeeded" | "failed";
-            transfer_no: string;
-            /** Format: uint64 */
-            version: number;
-        };
-        PaymentStatusResponseBody: {
-            data: components["schemas"]["PaymentStatusView"];
-            request_id: string;
-        };
-        PaymentStatusView: {
-            /** Format: date-time */
-            paid_at?: string | null;
-            /** @enum {string} */
-            status: "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
-        };
-        SettlementPayablePage: {
-            items: components["schemas"]["SettlementPayableView"][];
-            page: number;
-            page_size: number;
-            /** Format: int64 */
-            total: number;
-        };
-        SettlementPayablePageResponseBody: {
-            data: components["schemas"]["SettlementPayablePage"];
-            request_id: string;
-        };
-        SettlementPayableView: {
-            /** Format: int64 */
-            amount_cents: number;
-            /** Format: date-time */
-            available_at: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: uint64 */
-            id: number;
-            /** Format: uint64 */
-            order_id: number;
-            payable_no: string;
-            /** @enum {string} */
-            scene_key: "commission" | "purchase" | "secondhand_recycle";
-            /** @enum {string} */
-            source_type: "errand" | "marketplace";
-            /** @enum {string} */
-            status: "available" | "reserved" | "transferring" | "paid" | "blocked";
-            /** Format: uint64 */
-            version: number;
-        };
-        WechatCallbackAck: {
-            /** @enum {string} */
-            code: "SUCCESS";
-            message: string;
-        };
-        WechatPayParams: {
-            intent_no: string;
-            nonce_str: string;
-            package: string;
-            pay_sign: string;
-            /** @enum {string} */
-            sign_type: "RSA";
-            time_stamp: string;
-        };
-        WechatPayResponseBody: {
-            data: components["schemas"]["WechatPayParams"];
-            request_id: string;
-        };
-        WithdrawalItemView: {
-            /** Format: int64 */
-            amount_cents: number;
-            /** Format: uint64 */
-            order_id: number;
-            /** Format: uint64 */
-            payable_id: number;
-        };
-        WithdrawalPage: {
-            items: components["schemas"]["WithdrawalView"][];
-            page: number;
-            page_size: number;
-            /** Format: int64 */
-            total: number;
-        };
-        WithdrawalPageResponseBody: {
-            data: components["schemas"]["WithdrawalPage"];
-            request_id: string;
-        };
-        WithdrawalResponseBody: {
-            data: components["schemas"]["WithdrawalView"];
-            request_id: string;
-        };
-        WithdrawalSceneSummary: {
-            /** Format: int64 */
-            amount_cents: number;
-            /** Format: int64 */
-            payable_count: number;
-            /** @enum {string} */
-            scene_key: "commission" | "purchase" | "secondhand_recycle";
-        };
-        WithdrawalSummary: {
-            /** Format: int64 */
-            available_amount_cents: number;
-            /** Format: int64 */
-            paid_amount_cents: number;
-            /** Format: int64 */
-            reserved_amount_cents: number;
-            scenes: components["schemas"]["WithdrawalSceneSummary"][];
-        };
-        WithdrawalSummaryResponseBody: {
-            data: components["schemas"]["WithdrawalSummary"];
-            request_id: string;
-        };
-        WithdrawalView: {
-            /** Format: int64 */
-            amount_cents: number;
-            /** Format: uint64 */
-            beneficiary_id: number;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: uint64 */
-            id: number;
-            items?: components["schemas"]["WithdrawalItemView"][];
-            /** Format: int64 */
-            payable_count: number;
-            review_reason?: string | null;
-            /** Format: date-time */
-            reviewed_at?: string | null;
-            /** Format: uint64 */
-            reviewer_id?: number | null;
-            /** @enum {string} */
-            scene_key: "commission" | "purchase" | "secondhand_recycle";
-            /** @enum {string} */
-            status: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
-            transfer?: components["schemas"]["MerchantTransferView"];
-            /** Format: uint64 */
-            version: number;
-            withdrawal_no: string;
-        };
         PersonalTimetableItemList: {
             items: components["schemas"]["PersonalTimetableItemView"][];
         };
@@ -11566,8 +11138,6 @@ export interface components {
             /** Format: int64 */
             amount_cents: number;
             available_actions: components["schemas"]["TradeOrderViewerAction"][];
-            /** @enum {string} */
-            cancellation_status: "none" | "processing" | "succeeded" | "failed";
             /** Format: date-time */
             cancelled_at: string | null;
             /** Format: date-time */
@@ -11580,9 +11150,6 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             currency: string;
-            errand_status: string | null;
-            /** Format: uint64 */
-            errand_version: number | null;
             /** Format: date-time */
             expires_at: string | null;
             /** @enum {string} */
@@ -11592,14 +11159,7 @@ export interface components {
             order_no: string;
             /** @enum {string} */
             order_type: "marketplace" | "errand";
-            /** Format: date-time */
-            paid_at: string | null;
-            /** Format: date-time */
-            payment_deadline_at: string | null;
-            /** @enum {string} */
-            payment_mode: "offline" | "wechat";
-            /** @enum {string} */
-            payment_status: "none" | "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
+            payment_mode: string;
             /** Format: uint64 */
             resource_id: number;
             resource_snapshot: {
@@ -11609,7 +11169,7 @@ export interface components {
             resource_type: "marketplace_listing" | "errand_task";
             title_snapshot: string;
             /** @enum {string} */
-            trade_status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
+            trade_status: "confirmed" | "completed" | "cancelled" | "expired";
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -11624,7 +11184,7 @@ export interface components {
             total: number;
         };
         /** @enum {string} */
-        TradeOrderViewerAction: "view_resource" | "pay" | "pickup" | "deliver" | "cancel" | "complete" | "verify_academic";
+        TradeOrderViewerAction: "view_resource" | "cancel" | "complete" | "verify_academic";
         /** @enum {string} */
         TradeOrderViewerRelation: "buyer" | "seller";
         DailyCheckinHistory: {
@@ -12581,7 +12141,7 @@ export interface components {
                 "application/json": components["schemas"]["CampusCirclePostResponseBody"];
             };
         };
-        /** @description 校园圈帖子阅读量上报结果 */
+        /** @description 校园圈帖子浏览量上报结果 */
         CampusCirclePostViewRecordResponse: {
             headers: {
                 [name: string]: unknown;
@@ -13229,15 +12789,6 @@ export interface components {
                 "application/json": components["schemas"]["ErrandPageResponseBody"];
             };
         };
-        /** @description 跑腿支付能力 */
-        ErrandPaymentPolicyResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["ErrandPaymentPolicyResponseBody"];
-            };
-        };
         /** @description 跑腿任务 */
         ErrandResponse: {
             headers: {
@@ -13506,78 +13057,6 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeResponseBody"];
-            };
-        };
-        /** @description 商家转账结果 */
-        MerchantTransferResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["MerchantTransferResponseBody"];
-            };
-        };
-        /** @description 微信支付权威状态 */
-        PaymentStatusResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["PaymentStatusResponseBody"];
-            };
-        };
-        /** @description 我的待结算收益 */
-        SettlementPayablePageResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["SettlementPayablePageResponseBody"];
-            };
-        };
-        /** @description 微信支付回调确认 */
-        WechatCallbackResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["WechatCallbackAck"];
-            };
-        };
-        /** @description 微信小程序支付参数 */
-        WechatPayResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["WechatPayResponseBody"];
-            };
-        };
-        /** @description 提现申请及审批结果 */
-        WithdrawalPageResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["WithdrawalPageResponseBody"];
-            };
-        };
-        /** @description 提现申请及审批结果 */
-        WithdrawalResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["WithdrawalResponseBody"];
-            };
-        };
-        /** @description 提现申请及审批结果 */
-        WithdrawalSummaryResponse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["WithdrawalSummaryResponseBody"];
             };
         };
         /** @description 我的蹭课条目列表 */
@@ -19498,8 +18977,6 @@ export interface operations {
                 "application/json": {
                     category?: string;
                     description: string;
-                    /** @enum {string} */
-                    payment_mode?: "offline" | "wechat";
                     /** Format: int64 */
                     reward_cents: number;
                     pickup_location: string;
@@ -19536,18 +19013,6 @@ export interface operations {
             200: components["responses"]["ErrandPageResponse"];
         };
     };
-    GetErrandPaymentPolicy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["ErrandPaymentPolicyResponse"];
-        };
-    };
     GetErrand: {
         parameters: {
             query?: never;
@@ -19579,8 +19044,6 @@ export interface operations {
                 "application/json": {
                     category?: string;
                     description: string;
-                    /** @enum {string} */
-                    payment_mode?: "offline" | "wechat";
                     /** Format: int64 */
                     reward_cents: number;
                     pickup_location: string;
@@ -21167,256 +20630,6 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
-    ListAdminWithdrawals: {
-        parameters: {
-            query?: {
-                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WithdrawalPageResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
-    GetAdminWithdrawal: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WithdrawalResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
-    ReviewWithdrawal: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** Format: uint64 */
-                    expected_version: number;
-                    /** @enum {string} */
-                    decision: "approve" | "reject";
-                    reason?: string;
-                };
-            };
-        };
-        responses: {
-            200: components["responses"]["WithdrawalResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
-    CreateWechatPay: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: components["responses"]["WechatPayResponse"];
-            409: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    QueryWechatPay: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["PaymentStatusResponse"];
-            404: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    HandleWechatPayCallback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WechatCallbackResponse"];
-            400: components["responses"]["Error"];
-            429: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    HandleWechatRefundCallback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WechatCallbackResponse"];
-            400: components["responses"]["Error"];
-            429: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    HandleWechatTransferCallback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WechatCallbackResponse"];
-            400: components["responses"]["Error"];
-            429: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    ListMySettlementPayables: {
-        parameters: {
-            query?: {
-                status?: "available" | "reserved" | "transferring" | "paid" | "blocked";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["SettlementPayablePageResponse"];
-        };
-    };
-    CreateMerchantTransfer: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** Format: uint64 */
-                    expected_version: number;
-                };
-            };
-        };
-        responses: {
-            201: components["responses"]["MerchantTransferResponse"];
-            409: components["responses"]["Error"];
-            503: components["responses"]["Error"];
-        };
-    };
-    CreateWithdrawal: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    scene_key: "commission" | "purchase" | "secondhand_recycle";
-                    /** Format: int64 */
-                    expected_amount_cents: number;
-                    /** Format: int64 */
-                    expected_payable_count: number;
-                };
-            };
-        };
-        responses: {
-            201: components["responses"]["WithdrawalResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
-    ListMyWithdrawals: {
-        parameters: {
-            query?: {
-                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WithdrawalPageResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
-    GetMyWithdrawalSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WithdrawalSummaryResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
-    GetMyWithdrawal: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["WithdrawalResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
     ListMyPersonalTimetableItems: {
         parameters: {
             query: {
@@ -21827,10 +21040,8 @@ export interface operations {
         parameters: {
             query?: {
                 relation?: "all" | "buyer" | "seller";
-                status_group?: "all" | "action_required" | "in_progress" | "ended";
-                keyword?: string;
                 order_type?: "marketplace" | "errand";
-                trade_status?: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
+                trade_status?: "confirmed" | "completed" | "cancelled" | "expired";
                 fulfillment_status?: "not_started" | "in_progress" | "delivered";
                 page?: number;
                 page_size?: number;

@@ -1,3 +1,5 @@
+import { createCommunityPostViewDispatcher } from './post-view-dispatcher'
+
 export type ReaderTokenStorage = {
   get: () => unknown
   set: (value: string) => void
@@ -11,6 +13,11 @@ export type RecordPostView = (
 const READER_TOKEN_LENGTH = 32
 const MIN_READER_TOKEN_LENGTH = 16
 const MAX_READER_TOKEN_LENGTH = 128
+
+// Some embedded runtimes can read requests but reject storage writes (for
+// example, during a temporary storage quota error). Keep that visitor stable
+// for the lifetime of the runtime so those reports still share a reader id.
+let runtimeReaderToken: string | null = null
 
 const isReaderToken = (value: unknown): value is string => (
   typeof value === 'string'
@@ -31,16 +38,21 @@ const createReaderToken = () => {
 export const getReaderToken = (storage: ReaderTokenStorage) => {
   try {
     const stored = storage.get()
-    if (isReaderToken(stored)) return stored
+    if (isReaderToken(stored)) {
+      runtimeReaderToken = stored
+      return stored
+    }
   } catch {
     // 读取失败时继续生成临时 token，阅读上报不应影响详情页展示。
   }
 
-  const token = createReaderToken()
+  const token = runtimeReaderToken || createReaderToken()
+  runtimeReaderToken = token
   try {
     storage.set(token)
   } catch {
-    // 存储失败不阻塞本次上报；下次进入详情时会重新生成。
+    runtimeReaderToken = runtimeReaderToken || token
+    return runtimeReaderToken
   }
   return token
 }
@@ -53,17 +65,12 @@ export const reportPostView = async (
   record: RecordPostView,
   storage: ReaderTokenStorage,
 ) => {
-  if (!Number.isInteger(postId) || postId <= 0) return null
-
-  const readerToken = getReaderToken(storage)
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      return await record(postId, readerToken)
-    } catch {
-      // 详情页已经可以正常展示，阅读量属于弱一致元数据，失败时保持静默。
-    }
-  }
-  return null
+  const dispatcher = createCommunityPostViewDispatcher({
+    record,
+    getReaderToken: () => getReaderToken(storage),
+    getIdentity: (readerToken) => readerToken,
+  })
+  return dispatcher.report(postId)
 }
 
 export const formatCommunityViewCount = (value: number | null | undefined) => {

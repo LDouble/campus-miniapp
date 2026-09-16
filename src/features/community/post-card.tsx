@@ -15,6 +15,10 @@ import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
 import { formatCommunityViewCount } from './post-view-utils'
+import { reportCommunityPostView } from './post-view'
+import { useCommunityViewCount } from './use-view-count'
+import { usePostExposure } from './use-post-exposure'
+import { useViewExposureInsets, type ViewExposureSurface } from './view-exposure-insets'
 import { communityPostTopics, communityTopicUrl } from './topic'
 import {
   communityPinActionLabel,
@@ -81,6 +85,8 @@ type Props = {
   trailingAction?: ReactNode
   onReplyComment?: (post: CampusCirclePostView, comment: CommunityPostCommentPreview) => void
   showViewCount?: boolean
+  viewTrackingEnabled?: boolean
+  viewExposureSurface?: ViewExposureSurface
 }
 
 export type CommunityPostCommentPreview = {
@@ -118,11 +124,22 @@ function CommunityPostCard({
   trailingAction,
   onReplyComment,
   showViewCount = false,
+  viewTrackingEnabled = true,
+  viewExposureSurface = 'profile',
 }: Props) {
   const [likePending, setLikePending] = useState(false)
   const [pinPending, setPinPending] = useState(false)
   const authorName = communityAuthorName(post)
   const cardId = instanceKey || String(post.id)
+  const tracksCommunityPost = showViewCount && variant === 'community'
+  const viewCount = useCommunityViewCount(tracksCommunityPost ? post.id : 0, post.view_count)
+  const exposureInsets = useViewExposureInsets(viewExposureSurface)
+  usePostExposure({
+    selector: `#community-post-${cardId}`,
+    enabled: tracksCommunityPost && viewTrackingEnabled && post.status === 'approved',
+    onExposure: () => reportCommunityPostView(post.id).then(() => undefined),
+    ...exposureInsets,
+  })
   const authorInitial = communityAuthorInitial(post)
   const authorAvatarUrl = communityAuthorAvatarUrl(post)
   const visibleImages = post.images.slice(0, MAX_POST_IMAGES)
@@ -307,8 +324,8 @@ function CommunityPostCard({
         <View className='community-post__meta'>
           <View className='community-post__meta-copy'>
             <Text className='community-post__time'>{publishedAt}</Text>
-            {showViewCount && (
-              <Text className='community-post__view-count'>· {formatCommunityViewCount(post.view_count)} 浏览</Text>
+            {showViewCount && viewCount > 0 && (
+              <Text className='community-post__view-count'>· {formatCommunityViewCount(viewCount)} 浏览</Text>
             )}
             {reviewStatus && (
               <Text className={`community-post__review-status community-post__review-status--${reviewStatus.tone}`}>

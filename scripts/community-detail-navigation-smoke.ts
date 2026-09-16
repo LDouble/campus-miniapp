@@ -29,7 +29,7 @@ assert.match(detailSource, /const load = async[\s\S]*?getCampusCirclePost\(id\)/
 assert.match(detailSource, /viewReportAttemptedPostIdsRef = useRef\(new Set<number>\(\)\)/u)
 assert.match(detailSource, /useEffect\(\(\) => \{[\s\S]*?post\.status !== 'approved'[\s\S]*?reportView\(post\.id\)/u)
 assert.match(detailSource, /reportCommunityPostView\(id\)/u)
-assert.match(detailSource, /formatCommunityViewCount\(post\.view_count\)/u)
+assert.match(detailSource, /formatCommunityViewCount\(viewCount\)/u)
 assert.match(detailSource, /CommunityLevelBadge/u)
 assert.match(detailSource, /id='community-detail-comment'/u)
 assert.match(detailSource, /post\.liked \? communityDetailIcons\.heartActive : communityDetailIcons\.heart/u)

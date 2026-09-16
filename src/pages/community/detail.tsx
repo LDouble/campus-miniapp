@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
   useLoad,
+  useDidHide,
+  useDidShow,
   usePullDownRefresh,
 } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
@@ -20,6 +22,7 @@ import {
   reportCommunityPostView,
 } from '../../features/community/post-view'
 import { communityPostTopics, communityTopicUrl } from '../../features/community/topic'
+import { useCommunityViewCount } from '../../features/community/use-view-count'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import { openContentReport } from '../../features/content-report'
 import FavoriteToggle from '../../features/favorites/favorite-toggle'
@@ -64,7 +67,11 @@ const formatDetailDateTime = (value?: string | null) => (
 
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
+  const [pageVisible, setPageVisible] = useState(true)
+  useDidHide(() => setPageVisible(false))
+  useDidShow(() => setPageVisible(true))
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
+  const viewCount = useCommunityViewCount(postId, post?.view_count)
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [loading, setLoading] = useState(true)
   const [deletingPost, setDeletingPost] = useState(false)
@@ -114,9 +121,13 @@ export default function CommunityDetailPage() {
   }
 
   useEffect(() => {
-    if (!post || post.id !== postId || post.status !== 'approved') return
-    reportView(post.id)
-  }, [post, postId, reportView])
+    if (!pageVisible || !post || post.id !== postId || post.status !== 'approved') return
+    let cancelled = false
+    Taro.nextTick(() => {
+      if (!cancelled) reportView(post.id)
+    })
+    return () => { cancelled = true }
+  }, [pageVisible, post, postId, reportView])
 
   useLoad((options) => {
     const id = Number(options.id)
@@ -376,7 +387,7 @@ export default function CommunityDetailPage() {
                 meta={(
                   <>
                     <Text>{formatDetailDateTime(post.published_at || post.created_at)}</Text>
-                    <Text className='community-detail__view-count'>· {formatCommunityViewCount(post.view_count)} 浏览</Text>
+                    {viewCount > 0 && <Text className='community-detail__view-count'>· {formatCommunityViewCount(viewCount)} 浏览</Text>}
                     {post.status !== 'approved' && (
                       <Text className={`community-detail__review-status community-detail__review-status--${post.status}`}>
                         {formatStatus(post.status)}

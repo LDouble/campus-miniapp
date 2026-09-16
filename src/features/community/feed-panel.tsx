@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
+import { useViewPageVisible } from './use-view-page-visible'
 import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
 import { pickRandomFood, type FoodListing } from '../../api/what-to-eat'
 import { getMiniappRuntimeConfig, getSelectedCampus } from '../runtime-config'
@@ -115,6 +116,7 @@ export default function CommunityFeedPanel({
   onOverlayVisibilityChange,
   onSelectSection,
 }: Props) {
+  const viewPageVisible = useViewPageVisible()
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
   const [posts, setPosts] = useState<CampusCirclePostView[]>([])
@@ -562,6 +564,8 @@ export default function CommunityFeedPanel({
               <CommunityPostCard
                 post={post}
                 showViewCount
+                viewExposureSurface='community'
+                viewTrackingEnabled={viewPageVisible && !commentPost}
                 motionDelay={index < 4 ? index + 1 : undefined}
                 sectionName={sectionNameForPost(post, '未知板块')}
                 actionsOpen={openActionPostId === post.id}
