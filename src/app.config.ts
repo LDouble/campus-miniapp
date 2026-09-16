@@ -92,6 +92,7 @@ const socialMainPages = [
 ]
 
 const packageDefinitions = [
+  { root: 'packages/social', sourceRoot: 'pages', pages: socialMainPages.map((page) => page.replace(/^pages\//, '')) },
   {
     root: 'pages/academic',
     sourceRoot: 'pages/academic',

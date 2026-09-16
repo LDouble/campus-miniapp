@@ -155,7 +155,8 @@ for (const pagePath of [
   )
   assert.ok(
     page.includes('localUpdatedAt={usingCache ? cacheUpdatedAt : 0}')
-      && page.includes('localFallback={Boolean(loadError)}'),
+      && (page.includes('localFallback={Boolean(loadError)}')
+        || page.includes('localFallback={usingCache && Boolean(loadError)}')),
     `${pagePath} 应仅在请求失败回退时展示本机快照时间`,
   )
 }

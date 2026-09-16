@@ -1,3 +1,4 @@
+import { singleContentImageLayout } from '../src/features/community/content-image-layout'
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -218,3 +219,8 @@ for (const forbiddenSample of ['蘑儿轻俏', '海风轻轻吹', '橘子汽水'
 }
 
 process.stdout.write('community list figma smoke: ok\n')
+
+assert.deepEqual(singleContentImageLayout(900, 1200), { width: 320, height: 320 * 1200 / 900, long: false })
+assert.deepEqual(singleContentImageLayout(1000, 10000), { width: 320, height: 560, long: true })
+assert.deepEqual(singleContentImageLayout(1600, 800), { width: 424, height: 212, long: false })
+assert.deepEqual(singleContentImageLayout(0, 100), { width: 424, height: 212, long: false })
