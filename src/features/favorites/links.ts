@@ -15,6 +15,8 @@ export const favoriteDetailURL = (item: Pick<FavoriteItem, 'resource_id' | 'reso
       return `/pages/errands/detail?id=${id}`
     case 'carpool':
       return `/pages/carpool/detail?id=${id}`
+    case 'cat':
+      return `/pages/cat-atlas/detail?id=${id}`
     default:
       return ''
   }

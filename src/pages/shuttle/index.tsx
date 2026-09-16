@@ -22,6 +22,8 @@ import {
 import { takeWechatAiHandoffQuery } from '../../features/wechat-ai/handoff'
 import { useCampusShare } from '../../features/share'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
+import OriginalDocumentLink from '../../components/original-document-link'
+import shuttleIcon from '../../assets/icons/shuttle.svg'
 import './index.scss'
 
 type ServiceFilter = 'all' | 'campus_loop' | 'intercampus'
@@ -87,6 +89,7 @@ const validServiceFilter = (value?: string): ServiceFilter | undefined => (
 
 export default function ShuttlePage() {
   const bootstrap = getMiniappRuntimeConfig()
+  const [originalUrl, setOriginalUrl] = useState(bootstrap.shuttle)
   const [campuses, setCampuses] = useState(() => enabledCampuses(bootstrap))
   const [campus, setCampus] = useState(() => getSelectedCampus(bootstrap))
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all')
@@ -149,6 +152,7 @@ export default function ShuttlePage() {
 
   useEffect(() => {
     loadMiniappRuntimeConfig().then((config) => {
+      setOriginalUrl(config.shuttle)
       const available = enabledCampuses(config)
       const requestedCampus = handoffCampus.current
       setCampuses(available)
@@ -168,7 +172,10 @@ export default function ShuttlePage() {
   }, [refresh])
 
   usePullDownRefresh(async () => {
-    await refresh()
+    await Promise.all([
+      refresh(),
+      loadMiniappRuntimeConfig({ force: true }).then((config) => setOriginalUrl(config.shuttle)),
+    ])
     Taro.stopPullDownRefresh()
   })
 
@@ -260,6 +267,7 @@ export default function ShuttlePage() {
       <CustomNavbar title='校园校车' subtitle='静态班次查询' showBack />
 
       <View className='shuttle-page__content'>
+        <OriginalDocumentLink url={originalUrl} icon={shuttleIcon} title='校车时刻表' description='查看完整图片版班次安排' action='查看图片版' />
         <View className='shuttle-hero'>
           <View className='shuttle-hero__eyebrow'>
             <View />

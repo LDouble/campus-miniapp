@@ -22,6 +22,10 @@ import {
   resolveAcademicCalendarTerm,
 } from '../../features/calendar/utils'
 import { useCampusShare } from '../../features/share'
+import { getMiniappRuntimeConfig, loadMiniappRuntimeConfig } from '../../features/runtime-config'
+import { normalizeWebViewUrl } from '../../features/webview/url'
+import originalIcon from '../../assets/calendar/original.svg'
+import OriginalDocumentLink from '../../components/original-document-link'
 import './index.scss'
 
 type EventFilter = 'all' | 'exam' | 'holiday' | 'makeup'
@@ -65,6 +69,7 @@ const weekWindow = (current: number, total: number) => {
 }
 
 export default function CalendarPage() {
+  const [originalUrl, setOriginalUrl] = useState(() => normalizeWebViewUrl(getMiniappRuntimeConfig().calender))
   const [level, setLevel] = useState(getCalendarEducationLevel)
   const [result, setResult] = useState<CalendarLoadResult>(() => (
     getCachedAcademicCalendar(level)
@@ -91,8 +96,19 @@ export default function CalendarPage() {
     void refresh({ force })
   }, [level, refresh])
 
+  useEffect(() => {
+    let active = true
+    void loadMiniappRuntimeConfig().then((config) => {
+      if (active) setOriginalUrl(normalizeWebViewUrl(config.calender))
+    })
+    return () => { active = false }
+  }, [])
+
   usePullDownRefresh(async () => {
-    await refresh({ force: true })
+    await Promise.all([
+      refresh({ force: true }),
+      loadMiniappRuntimeConfig({ force: true }).then((config) => setOriginalUrl(normalizeWebViewUrl(config.calender))),
+    ])
     Taro.stopPullDownRefresh()
   })
 
@@ -155,6 +171,7 @@ export default function CalendarPage() {
       <CustomNavbar title='校历' subtitle='教学周次与校园安排' showBack />
 
       <View className='calendar-page__content'>
+        <OriginalDocumentLink url={originalUrl} icon={originalIcon} title='原版校历' description='查看完整校历原件' />
         <View className='calendar-level-switch'>
           {levelOptions.map(([value, label]) => (
             <View
