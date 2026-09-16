@@ -28,6 +28,7 @@ import ErrandCard from './components/errand-card'
 import MarketplaceCard from './components/marketplace-card'
 import type { MarketplaceFilterValue } from './components/marketplace-filters'
 import type { CampusName } from './campus'
+import type { MarketplaceCategory } from '../runtime-config'
 import './list-panel.scss'
 
 export type LifeServiceSection = Exclude<LifeHubSection, 'community'>
@@ -58,6 +59,7 @@ type Props = {
   loadMoreSignal?: number
   campus: CampusName | ''
   marketFilters: MarketplaceFilterValue
+  marketplaceCategories: MarketplaceCategory[]
   carpoolFilters: CarpoolFilterValue
   marketplaceSearchPrefill?: MarketplaceSearchPrefill | null
   onCampusChange: (value: CampusName | '') => void
@@ -125,6 +127,7 @@ export default function LifeServiceListPanel({
   loadMoreSignal = 0,
   campus,
   marketFilters,
+  marketplaceCategories,
   carpoolFilters,
   marketplaceSearchPrefill = null,
   onCampusChange,
@@ -144,6 +147,7 @@ export default function LifeServiceListPanel({
   const [courseSearch, setCourseSearch] = useState<MarketplaceSearchPrefill | null>(null)
   const requestSequence = useRef(0)
   const loadingMoreRef = useRef(false)
+  const previousMarketplaceCategory = useRef(marketFilters.category)
   const copy = lifeBusinessThemes[section]
   const queryKey = useMemo(() => JSON.stringify({
     section,
@@ -232,6 +236,16 @@ export default function LifeServiceListPanel({
   ])
 
   useEffect(() => {
+    if (previousMarketplaceCategory.current === marketFilters.category) return
+    previousMarketplaceCategory.current = marketFilters.category
+    requestSequence.current += 1
+    loadingMoreRef.current = false
+    setItems([])
+    setPage(1)
+    setTotal(0)
+  }, [marketFilters.category])
+
+  useEffect(() => {
     setDraftKeyword('')
     setKeyword('')
     setItems([])
@@ -301,6 +315,9 @@ export default function LifeServiceListPanel({
       )
       : false
   const hasStructuredFilters = Boolean(campus) || hasSectionFilters
+  const selectedMarketplaceCategory = marketplaceCategories.find(
+    (category) => category.id === marketFilters.category,
+  )
 
   const resultTitle = courseSearch
     ? `《${courseSearch.courseName}》相关资料`
@@ -421,6 +438,25 @@ export default function LifeServiceListPanel({
           </View>
         </View>
       </View>
+
+      {section === 'market' && selectedMarketplaceCategory && (
+        <View className='filter-applied' ariaLabel='已选筛选条件'>
+          <View className='filter-applied__item'>
+            <Text>{selectedMarketplaceCategory.name}</Text>
+            <View
+              className='filter-applied__remove'
+              ariaRole='button'
+              ariaLabel={`清除${selectedMarketplaceCategory.name}分类筛选`}
+              onClick={() => onMarketFiltersChange({
+                ...marketFilters,
+                category: undefined,
+              })}
+            >
+              ×
+            </View>
+          </View>
+        </View>
+      )}
 
       {loading && (
         <View className={`business-skeleton business-skeleton--${section}`}>
