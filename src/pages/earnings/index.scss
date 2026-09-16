@@ -31,7 +31,35 @@
 .earnings-state, .earnings-empty-inline { margin-top: 16rpx; padding: 48rpx 28rpx; color: var(--campus-text-secondary); text-align: center; font-size: 27rpx; line-height: 1.65; }
 .earnings-state text { display: block; }
 .earnings-state view { margin-top: 18rpx; color: var(--campus-primary); }
-.earnings-state--error { color: var(--campus-danger); }
+.earnings-state--error {
+  margin-top: var(--ousea-space-3);
+  padding: var(--ousea-space-5) var(--ousea-space-3);
+  color: var(--campus-text-secondary);
+}
+.earnings-state__title {
+  color: var(--campus-text-primary);
+  font-size: var(--ousea-font-size-title);
+  font-weight: var(--ousea-font-weight-semibold);
+}
+.earnings-state__description {
+  margin-top: var(--ousea-space-2);
+  font-size: var(--ousea-font-size-label);
+}
+.earnings-state__retry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--ousea-space-3) auto 0;
+  min-height: 88rpx;
+  padding: 0 var(--ousea-space-4);
+  width: fit-content;
+  border-radius: var(--ousea-radius-card-sm);
+  background: var(--campus-surface-primary);
+  color: var(--campus-primary);
+  font-size: var(--ousea-font-size-label);
+  font-weight: var(--ousea-font-weight-medium);
+  &::after { border: 0; }
+}
 
 @media (prefers-color-scheme: dark) {
   .earnings-summary { background: var(--campus-surface-primary); }

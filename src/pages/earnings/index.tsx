@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { Button, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import { isApiError } from '../../api/client'
 import { createWithdrawal, getMyWithdrawal, getMyWithdrawalSummary, listMySettlementPayables, listMyWithdrawals } from '../../api/payments'
@@ -51,6 +51,7 @@ export default function EarningsPage() {
 
   const load = async () => {
     setError('')
+    setLoading(true)
     try {
       const [nextSummary, nextWithdrawals, nextPayables] = await Promise.all([
         getMyWithdrawalSummary(),
@@ -61,7 +62,9 @@ export default function EarningsPage() {
       setWithdrawals(nextWithdrawals)
       setPayables(nextPayables)
     } catch (loadError) {
-      setError(isApiError(loadError) ? loadError.message : '收益记录加载失败')
+      setError(isApiError(loadError) && loadError.statusCode === 403
+        ? '当前账号暂无收益查看权限，请联系管理员确认。'
+        : '暂时无法获取收益信息，请稍后重试。')
     } finally {
       setLoading(false)
       Taro.stopPullDownRefresh()
@@ -106,16 +109,16 @@ export default function EarningsPage() {
   }
 
   return <View className='earnings-page'>
-    <CustomNavbar title='我的收益' subtitle='跑腿与二手交易结算' showBack />
+    <CustomNavbar title='我的收益' showBack />
     <View className='earnings-page__content'>
-      <View className='earnings-summary'>
+      {!loading && !error && summary && <View className='earnings-summary'>
         <Text className='earnings-summary__label'>可提现收益</Text>
         <Text className='earnings-summary__amount'>{formatMoney(summary?.available_amount_cents || 0)}</Text>
-        <Text className='earnings-summary__hint'>按收益场景合并申请；提现中的金额会锁定，新收益可继续单独申请。</Text>
+        <Text className='earnings-summary__hint'>同类收益合并提现，审核通过后打款。</Text>
         <View className='earnings-summary__totals'><Text>提现中 {formatMoney(summary?.reserved_amount_cents || 0)}</Text><Text>已到账 {formatMoney(summary?.paid_amount_cents || 0)}</Text></View>
-      </View>
+      </View>}
       {loading && <View className='earnings-state'>正在加载收益记录</View>}
-      {!loading && error && <View className='earnings-state earnings-state--error'><Text>{error}</Text><View onClick={() => void load()}>重新加载</View></View>}
+      {!loading && error && <View className='earnings-state earnings-state--error'><Text className='earnings-state__title'>暂时无法查看收益</Text><Text className='earnings-state__description'>{error}</Text><Button className='earnings-state__retry' onClick={() => void load()}>重新加载</Button></View>}
       {!loading && !error && <>
         <View className='earnings-section-head'><Text>全部提现</Text><Text>按场景分别合并</Text></View>
         {scenes.length === 0 && <View className='earnings-state'><Text>暂无可提现收益</Text><Text>完成跑腿或二手交易后会显示在这里</Text></View>}
