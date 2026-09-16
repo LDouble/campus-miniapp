@@ -125,7 +125,7 @@ const menus = [
     name: '接单',
     iconKey: 'accepted' as ProfileMenuIconKey,
     tone: 'sand',
-    route: '/pages/my-services/index?section=errands&relation=accepted',
+    route: '/pages/my-services/index?section=orders&relation=seller&order_type=errand',
   },
   {
     key: 'orders',
@@ -133,6 +133,13 @@ const menus = [
     iconKey: 'orders' as ProfileMenuIconKey,
     tone: 'pink',
     route: '/pages/my-services/index?section=orders&relation=all',
+  },
+  {
+    key: 'earnings',
+    name: '收益',
+    iconKey: 'orders' as ProfileMenuIconKey,
+    tone: 'blue',
+    route: '/pages/earnings/index',
   },
   {
     key: 'carpool',

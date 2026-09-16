@@ -426,6 +426,56 @@ page {
   }
 }
 
+.publisher-payment-mode {
+  padding: 24rpx 0 4rpx;
+  border-top: 2rpx solid token.$color-border;
+}
+
+.publisher-payment-mode__label {
+  display: block;
+  color: var(--campus-text-heading);
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.publisher-payment-mode__choices {
+  display: flex;
+  margin-top: 18rpx;
+  gap: 16rpx;
+}
+
+.publisher-payment-mode__choice {
+  min-height: 112rpx;
+  padding: 18rpx;
+  flex: 1;
+  box-sizing: border-box;
+  border: 2rpx solid var(--campus-border);
+  border-radius: token.$ousea-radius-card-sm;
+  background: var(--campus-surface);
+  color: var(--campus-text-secondary);
+  transition: border-color 160ms ease, background-color 160ms ease, opacity 160ms ease;
+
+  text { display: block; }
+  text:first-child { color: var(--campus-text-heading); font-size: 26rpx; font-weight: 650; }
+  text:last-child { margin-top: 7rpx; font-size: 22rpx; line-height: 1.35; }
+}
+
+.publisher-payment-mode__choice--active {
+  border-color: var(--campus-primary);
+  background: var(--campus-surface-primary);
+}
+
+.publisher-payment-mode__choice--wechat { border-color: var(--campus-primary); }
+.publisher-payment-mode__choice--pressed { opacity: .65; }
+
+.publisher-payment-mode__hint {
+  display: block;
+  margin-top: 14rpx;
+  color: var(--campus-text-muted);
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
 .publisher-field--seats .publisher-input {
   width: 148rpx;
 }

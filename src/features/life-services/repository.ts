@@ -86,6 +86,8 @@ export type TradeOrderSearch = PagingQuery & {
   orderType?: 'marketplace' | 'errand'
   tradeStatus?: 'confirmed' | 'completed' | 'cancelled' | 'expired'
   fulfillmentStatus?: 'not_started' | 'in_progress' | 'delivered'
+  statusGroup?: 'all' | 'action_required' | 'in_progress' | 'ended'
+  keyword?: string
 }
 
 export type CampusCircleSearch = PagingQuery & {
@@ -588,6 +590,8 @@ export const lifeServicesRepository = {
         order_type: search.orderType,
         trade_status: search.tradeStatus,
         fulfillment_status: search.fulfillmentStatus,
+        status_group: search.statusGroup,
+        keyword: search.keyword?.trim() || undefined,
         page: search.page || 1,
         page_size: search.pageSize || 20,
       },

@@ -99,6 +99,7 @@ export const formatErrandStatus = (item: ErrandStatusDisplay) => {
 }
 
 const orderStatusLabels: Record<string, string> = {
+  pending_payment: '待支付',
   confirmed: '进行中',
   completed: '已完成',
   cancelled: '已取消',

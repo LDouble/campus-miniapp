@@ -4,6 +4,7 @@ import { Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import type { ErrandView } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { isWechatPaymentCancelled, payTradeOrder } from '../../api/payments'
 import { getCurrentIdentity } from '../../api/account'
 import { lifeServicesRepository } from '../../features/life-services/repository'
 import { consumeBusinessDetailSnapshot } from '../../features/life-services/business-detail-snapshot'
@@ -41,6 +42,7 @@ import {
   restoreParticipationContact,
   visibleParticipationContact,
 } from '../../features/life-services/participation-contact-storage'
+import { cancellationProgressCopy } from '../../features/life-services/payment-order-state'
 import '../../features/life-services/detail.scss'
 
 const actionLabels: Record<string, string> = {
@@ -59,6 +61,7 @@ export default function ErrandDetailPage() {
   const [item, setItem] = useState<ErrandView | null>(null)
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
+  const [paymentWorking, setPaymentWorking] = useState(false)
   const [commentRefreshKey, setCommentRefreshKey] = useState(0)
   const [error, setError] = useState('')
   const [persistedContact, setPersistedContact] = useState<ParticipationContact | null>(null)
@@ -157,6 +160,7 @@ export default function ErrandDetailPage() {
     let contactCommentStatus: 'none' | 'created' | 'failed' = 'none'
     let participationItem: ErrandView | null = null
     let participationContact: ParticipationContact | null = null
+    let cancellationProgress = ''
     try {
       if (action === 'accept') {
         const response = await lifeServicesRepository.acceptErrand(item.id, item.version)
@@ -188,6 +192,10 @@ export default function ErrandDetailPage() {
         await applyItem(response.errand)
       } else if (action === 'cancel') {
         const response = await lifeServicesRepository.cancelErrand(item.id, item.version)
+        cancellationProgress = cancellationProgressCopy(
+          response.errand.cancellation_status,
+          response.errand.payment_status,
+        )
         await applyItem(response.errand)
       } else if (action === 'submit_review') {
         await applyItem(await lifeServicesRepository.submitErrandReview(item.id, item.version))
@@ -202,7 +210,10 @@ export default function ErrandDetailPage() {
           confirmColor: '#3f8f83',
         })
       } else {
-        Taro.showToast({ title: '状态已更新', icon: 'success' })
+        Taro.showToast({
+          title: action === 'cancel' && cancellationProgress ? `${cancellationProgress}，请稍后刷新` : '状态已更新',
+          icon: cancellationProgress ? 'none' : 'success',
+        })
       }
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return
@@ -221,6 +232,29 @@ export default function ErrandDetailPage() {
     item?.contact,
     persistedContact,
   )
+  const paymentMode = item?.payment_mode || 'offline'
+  const paymentCopy = paymentMode === 'wechat'
+    ? '接单后由发布者通过微信支付；付款成功后跑腿员才可取件，确认完成后平台结算。'
+    : '报酬为线下结算，平台不代收款，请双方当面核对。'
+  const paymentStateCopy = cancellationProgressCopy(item?.cancellation_status, item?.payment_status)
+    || (item?.payment_status === 'pending' && item.payment_deadline_at
+      ? `待付款，${formatDateTime(item.payment_deadline_at)} 前完成`
+      : item?.payment_status === 'succeeded' ? '已付款'
+        : item?.payment_status === 'refunding' ? '退款处理中'
+          : '')
+  const payForErrand = async () => {
+    if (!item?.trade_order_id || paymentWorking) return
+    setPaymentWorking(true)
+    try {
+      await payTradeOrder(item.trade_order_id)
+      await load(item.id, true)
+      Taro.showToast({ title: '支付成功', icon: 'success' })
+    } catch (paymentError) {
+      Taro.showToast({ title: isWechatPaymentCancelled(paymentError) ? '已关闭支付弹窗' : paymentError instanceof Error ? paymentError.message : '支付结果确认中，请稍后刷新', icon: 'none' })
+    } finally {
+      setPaymentWorking(false)
+    }
+  }
 
   const copyContact = () => {
     if (!displayedContact) {
@@ -306,7 +340,7 @@ export default function ErrandDetailPage() {
                 <View className='detail-important-card__topline'>
                   <View>
                     <Text>任务报酬</Text>
-                    <Text>{item.currency === 'CNY' ? '线下结算' : item.currency}</Text>
+                    <Text>{item.currency === 'CNY' ? paymentMode === 'wechat' ? '微信支付' : '线下结算' : item.currency}</Text>
                   </View>
                   <Text>{formatMoney(item.reward_cents)}</Text>
                 </View>
@@ -338,8 +372,17 @@ export default function ErrandDetailPage() {
                 <View className='detail-fact'><Text>当前关系</Text><Text>{item.viewer_relation === 'publisher' ? '我发布的' : item.viewer_relation === 'runner' ? '我接的任务' : '未参与'}</Text></View>
                 <View className='detail-fact'><Text>任务状态</Text><Text>{formatErrandStatus(item)}</Text></View>
                 <View className='detail-fact'><Text>审核状态</Text><Text>{formatStatus(item.review_status)}</Text></View>
+                {paymentMode === 'wechat' && paymentStateCopy && <View className='detail-fact'><Text>付款状态</Text><Text>{paymentStateCopy}</Text></View>}
               </View>
             </View>
+
+            {paymentMode === 'wechat' && item.viewer_relation === 'publisher' && item.payment_status === 'pending' && item.trade_order_id && (
+              <View className='detail-action-bar'>
+                <View className='detail-action detail-action--primary' onClick={() => void payForErrand()}>
+                  {paymentWorking ? '正在确认支付' : '去微信支付'}
+                </View>
+              </View>
+            )}
 
             <View className='detail-section detail-contact' onClick={copyContact}>
               <View className='detail-section__heading'><Text>联系方式</Text><Text>点击复制</Text></View>
@@ -355,8 +398,8 @@ export default function ErrandDetailPage() {
             </View>
 
             <View className='detail-section'>
-              <View className='detail-section__heading'><Text>安全提示</Text><Text>线下互助</Text></View>
-              <Text className='detail-safety'>取送前请核对物品和地点，不代收验证码、不垫付高额费用。报酬为线下结算，平台不代收款。</Text>
+              <View className='detail-section__heading'><Text>安全提示</Text><Text>{paymentMode === 'wechat' ? '平台支付' : '线下互助'}</Text></View>
+              <Text className='detail-safety'>取送前请核对物品和地点，不代收验证码、不垫付高额费用。{paymentCopy}</Text>
             </View>
 
             <DetailComments

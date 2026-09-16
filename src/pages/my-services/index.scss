@@ -352,6 +352,26 @@ page {
   color: #4f46e5;
 }
 
+.my-record-order-summary {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.my-record-order-summary__image {
+  width: 112rpx;
+  height: 112rpx;
+  flex: none;
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+  background: var(--campus-surface-primary, #eff6ff);
+}
+
+.my-record-order-summary__content {
+  min-width: 0;
+  flex: 1;
+}
+
 .my-record-card__title,
 .my-record-card__body {
   display: -webkit-box;

@@ -10,6 +10,7 @@ import {
 } from '../../components/keyboard-safe-input'
 import StickerPicker from '../../components/sticker-picker'
 import { isApiError } from '../../api/client'
+import { getErrandPaymentPolicy } from '../../api/payments'
 import { uploadMediaImage } from '../../api/media'
 import { getCurrentIdentity } from '../../api/account'
 import type {
@@ -18,6 +19,7 @@ import type {
   CampusCircleSectionView,
   CampusCircleTopicView,
   ErrandView,
+  ErrandPaymentPolicy,
   MentionCandidate,
   MarketplaceListingView,
 } from '../../api/types'
@@ -92,6 +94,7 @@ type PublisherForm = {
   pickupLocation: string
   dropoffLocation: string
   rewardYuan: string
+  paymentMode: 'offline' | 'wechat'
   deadlineDate: string
   deadlineTime: string
   priceYuan: string
@@ -152,6 +155,7 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   pickupLocation: '',
   dropoffLocation: '',
   rewardYuan: '',
+  paymentMode: 'offline',
   deadlineDate: tomorrow(),
   deadlineTime: '18:00',
   priceYuan: '',
@@ -461,6 +465,12 @@ export default function PublishPage() {
   const [mode, setMode] = useState<PublishMode>('create')
   const [resourceId, setResourceId] = useState(0)
   const [form, setForm] = useState<PublisherForm>(emptyForm)
+  const [errandPaymentPolicy, setErrandPaymentPolicy] = useState<ErrandPaymentPolicy>({
+    enabled_payment_modes: ['offline'],
+    default_payment_mode: 'offline',
+    payment_timeout_minutes: 15,
+  })
+  const [paymentPolicyResolved, setPaymentPolicyResolved] = useState(false)
   const [sections, setSections] = useState<CampusCircleSectionView[]>([])
   const [sectionsReady, setSectionsReady] = useState(false)
   const [topics, setTopics] = useState<CampusCircleTopicView[]>([])
@@ -485,6 +495,7 @@ export default function PublishPage() {
   const identityUserIdRef = useRef(0)
   const rememberedContactRef = useRef<PublisherContact | null>(null)
   const topicSearchRequestRef = useRef(0)
+  const paymentModeTouchedRef = useRef(false)
   const {
     keyboardHeight,
     onKeyboardVisibilityChange,
@@ -494,8 +505,25 @@ export default function PublishPage() {
     if (keyboardHeight > 0) setStickerPickerOpen(false)
   }, [keyboardHeight])
 
+  useEffect(() => {
+    void getErrandPaymentPolicy()
+      .then((policy) => {
+        setErrandPaymentPolicy(policy)
+        setPaymentPolicyResolved(true)
+      })
+      .catch(() => setPaymentPolicyResolved(true))
+  }, [])
+
+  useEffect(() => {
+    if (!paymentPolicyResolved || mode !== 'create' || paymentModeTouchedRef.current) return
+    setForm((draft) => draft.version === 0
+      ? { ...draft, paymentMode: errandPaymentPolicy.default_payment_mode }
+      : draft)
+  }, [errandPaymentPolicy.default_payment_mode, mode, paymentPolicyResolved])
+
   const loadingForm = loadingEdit || restoringCreateDefaults
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
+    if (key === 'paymentMode') paymentModeTouchedRef.current = true
     setForm((draft) => ({ ...draft, [key]: value }))
   }
 
@@ -659,6 +687,7 @@ export default function PublishPage() {
       pickupLocation: item.pickup_location,
       dropoffLocation: item.dropoff_location,
       rewardYuan: yuanValue(item.reward_cents),
+      paymentMode: item.payment_mode || 'offline',
       deadlineDate: deadline ? deadline.date : item.deadline.slice(0, 10),
       deadlineTime: deadline ? deadline.time : item.deadline.slice(11, 16),
       contactType: (item.contact_type || 'wechat') as PublisherForm['contactType'],
@@ -744,6 +773,7 @@ export default function PublishPage() {
   }
 
   useLoad((options) => {
+    paymentModeTouchedRef.current = false
     const initialSection = isSection(options.section) ? options.section : 'community'
     const initialIntent: MarketplaceIntent = options.intent === 'wanted' ? 'wanted' : 'sell'
     const initialMode: PublishMode = options.mode === 'edit'
@@ -1156,6 +1186,7 @@ export default function PublishPage() {
           deadline: toIso(form.deadlineDate, form.deadlineTime),
           contact_type: form.contactType,
           contact: form.contact.trim(),
+          payment_mode: form.paymentMode,
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createErrand(input)).id
@@ -1574,6 +1605,32 @@ export default function PublishPage() {
                     </View>
                   </View>
                   <InputField className='publisher-field--inline publisher-field--amount' inputId='publisher-reward-yuan' label='任务报酬' value={form.rewardYuan} type='digit' maxlength={8} placeholder='0.00' suffix='元' onKeyboardVisibilityChange={onKeyboardVisibilityChange} onFocus={() => setStickerPickerOpen(false)} onInput={(value) => update('rewardYuan', value)} />
+                </View>
+                <View className='publisher-payment-mode'>
+                  <Text className='publisher-payment-mode__label'>结算方式</Text>
+                  <View className='publisher-payment-mode__choices'>
+                    <View
+                      className={`publisher-payment-mode__choice ${form.paymentMode === 'offline' ? 'publisher-payment-mode__choice--active' : ''}`}
+                      ariaRole='button'
+                      ariaLabel='选择线下结算'
+                      onClick={() => update('paymentMode', 'offline')}
+                    >
+                      <Text>线下结算</Text><Text>双方当面核对款项</Text>
+                    </View>
+                    {errandPaymentPolicy.enabled_payment_modes.includes('wechat') && <View
+                      className={`publisher-payment-mode__choice ${form.paymentMode === 'wechat' ? 'publisher-payment-mode__choice--active publisher-payment-mode__choice--wechat' : ''}`}
+                      ariaRole='button'
+                      ariaLabel='选择微信支付'
+                      onClick={() => update('paymentMode', 'wechat')}
+                    >
+                      <Text>微信支付</Text><Text>接单后由发布者付款</Text>
+                    </View>}
+                  </View>
+                  <Text className='publisher-payment-mode__hint'>
+                    {errandPaymentPolicy.enabled_payment_modes.includes('wechat')
+                      ? `微信支付在接单后 ${errandPaymentPolicy.payment_timeout_minutes} 分钟内完成；确认完成后平台向跑腿员结算。线下结算不经过平台。`
+                      : '当前仅支持线下结算，平台不代收款。'}
+                  </Text>
                 </View>
               </View>
             )}
