@@ -60,7 +60,7 @@ export type MarketplaceSearch = PagingQuery & {
   keyword?: string
   campus?: CampusName
   intent?: 'sell' | 'wanted'
-  category?: 'general' | 'course_material'
+  category?: string
   minPriceCents?: number
   maxPriceCents?: number
 }
