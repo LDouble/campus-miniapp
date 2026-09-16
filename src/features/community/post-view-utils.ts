@@ -8,7 +8,18 @@ export type ReaderTokenStorage = {
 export type RecordPostView = (
   postId: number,
   readerToken: string,
-) => Promise<{ counted: boolean; view_count: number }>
+) => Promise<{ counted: boolean; view_count?: number }>
+
+export type BatchPostViewItem = {
+  post_id: number
+  counted: boolean
+  view_count?: number
+}
+
+export type RecordPostViews = (
+  postIds: number[],
+  readerToken: string,
+) => Promise<{ items: BatchPostViewItem[] }>
 
 const READER_TOKEN_LENGTH = 32
 const MIN_READER_TOKEN_LENGTH = 16

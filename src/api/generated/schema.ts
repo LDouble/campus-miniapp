@@ -1809,6 +1809,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campus-circle/post-views/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量上报最多 20 条有效曝光，与单条接口共享 30 分钟去重；不可见帖子不返回计数 */
+        post: operations["RecordCampusCirclePostViews"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campus-circle/posts": {
         parameters: {
             query?: never;
@@ -7683,6 +7700,13 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        CampusCircleBatchViewRecord: {
+            counted: boolean;
+            /** Format: uint64 */
+            post_id: number;
+            /** Format: int64 */
+            view_count?: number;
+        };
         CampusCircleCurationInput: {
             /** Format: uint64 */
             expected_version: number;
@@ -7814,6 +7838,17 @@ export interface components {
         CampusCirclePostViewRecordResponseBody: {
             data: components["schemas"]["CampusCirclePostViewRecord"];
             request_id: string;
+        };
+        CampusCirclePostViewsRequest: {
+            post_ids: number[];
+            reader_token: string;
+        };
+        CampusCirclePostViewsResponseBody: {
+            data: components["schemas"]["CampusCirclePostViewsResult"];
+            request_id: string;
+        };
+        CampusCirclePostViewsResult: {
+            items: components["schemas"]["CampusCircleBatchViewRecord"][];
         };
         CampusCircleSectionResponseBody: {
             data: components["schemas"]["CampusCircleSectionView"];
@@ -12150,6 +12185,15 @@ export interface components {
                 "application/json": components["schemas"]["CampusCirclePostViewRecordResponseBody"];
             };
         };
+        /** @description 校园圈帖子批量浏览上报结果 */
+        CampusCirclePostViewsResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCirclePostViewsResponseBody"];
+            };
+        };
         /** @description 校园圈子模块 */
         CampusCircleSectionResponse: {
             headers: {
@@ -15834,6 +15878,25 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CampusCircleHomeResponse"];
+        };
+    };
+    RecordCampusCirclePostViews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCirclePostViewsRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostViewsResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     ListCampusCirclePosts: {

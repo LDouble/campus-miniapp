@@ -1,6 +1,7 @@
-import type { RecordPostView } from './post-view-utils'
+import type { RecordPostView, RecordPostViews } from './post-view-utils'
 
 export type CommunityViewResult = { counted: boolean; view_count: number }
+type RemoteViewResult = { counted: boolean; view_count?: number }
 export type CommunityViewCountListener = (count: number) => void
 
 type PendingView = {
@@ -12,6 +13,7 @@ type PendingView = {
 
 export type CommunityPostViewDispatcherOptions = {
   record: RecordPostView
+  recordBatch?: RecordPostViews
   getIdentity: (readerToken: string) => string
   getReaderToken: () => string
   now?: () => number
@@ -22,6 +24,10 @@ export type CommunityPostViewDispatcherOptions = {
   failureCooldownMs?: number
   rateLimitCooldownMs?: number
   maxCachedCounts?: number
+  batchDelayMs?: number
+  batchSize?: number
+  setTimeout?: (callback: () => void, delay: number) => ReturnType<typeof setTimeout>
+  clearTimeout?: (timer: ReturnType<typeof setTimeout>) => void
 }
 
 const isValidPostId = (postId: number) => Number.isInteger(postId) && postId > 0
@@ -38,6 +44,11 @@ const retryable = (error: unknown) => {
   return status === undefined || status >= 500
 }
 
+const isBatchUnavailable = (error: unknown) => {
+  const status = statusOf(error)
+  return status === 404 || status === 405
+}
+
 /**
  * A small, framework-independent scheduler. Keeping it independent from Taro
  * makes its coalescing, retry and identity behaviour testable without a page.
@@ -51,6 +62,10 @@ export const createCommunityPostViewDispatcher = (options: CommunityPostViewDisp
   const failureCooldownMs = options.failureCooldownMs || 15 * 1000
   const rateLimitCooldownMs = options.rateLimitCooldownMs || 15 * 1000
   const maxCachedCounts = options.maxCachedCounts || 300
+  const batchDelayMs = options.batchDelayMs || 3_000
+  const batchSize = options.batchSize || 20
+  const scheduleTimeout = options.setTimeout || setTimeout
+  const cancelTimeout = options.clearTimeout || clearTimeout
   const queue: PendingView[] = []
   const pending = new Map<string, Promise<CommunityViewResult | null>>()
   const suppressUntil = new Map<string, number>()
@@ -59,6 +74,9 @@ export const createCommunityPostViewDispatcher = (options: CommunityPostViewDisp
   const listeners = new Map<number, Set<CommunityViewCountListener>>()
   let active = 0
   let globalRateLimitUntil = 0
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let flushRequested = false
+  let batchUnavailable = !options.recordBatch
 
   const keyFor = (identity: string, postId: number) => `${identity}\u0000${postId}`
   const trim = <T>(map: Map<unknown, T>, limit: number) => {
@@ -99,59 +117,123 @@ export const createCommunityPostViewDispatcher = (options: CommunityPostViewDisp
       }
     })
   }
-  const run = async (task: PendingView) => {
+  const finish = (task: PendingView, result: RemoteViewResult | null, requestStartedAt: number) => {
     const key = keyFor(task.identity, task.postId)
+    if (result) {
+      setSuppressUntil(key, requestStartedAt + (result.counted ? successSuppressMs : falseSuppressMs))
+      if (Number.isFinite(result.view_count) && (result.view_count as number) >= 0) publishCount(task.postId, result.view_count as number)
+    } else {
+      setSuppressUntil(key, now() + failureCooldownMs)
+    }
+    pending.delete(key)
+    task.resolve(result && Number.isFinite(result.view_count) && (result.view_count as number) >= 0
+      ? { counted: result.counted, view_count: result.view_count as number }
+      : null)
+  }
+  const valid = (task: PendingView) => (
+    options.getIdentity(task.readerToken) === task.identity && !isRateLimited(task.identity, now())
+  )
+  const recordOne = async (task: PendingView): Promise<RemoteViewResult | null> => {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        if (!valid(task)) return null
+        return await options.record(task.postId, task.readerToken)
+      } catch (error) {
+        if (statusOf(error) === 429) {
+          const until = now() + rateLimitCooldownMs
+          globalRateLimitUntil = until
+          setRateLimitUntil(task.identity, until)
+        }
+        if (attempt || !retryable(error)) return null
+      }
+    }
+    return null
+  }
+  const runSingles = async (tasks: PendingView[], requestStartedAt: number) => {
+    for (const task of tasks) finish(task, await recordOne(task), requestStartedAt)
+  }
+  const run = async (tasks: PendingView[]) => {
+    const requestStartedAt = now()
     try {
-      let result: CommunityViewResult | null = null
-      let requestStartedAt = now()
+      if (batchUnavailable || !options.recordBatch) {
+        await runSingles(tasks, requestStartedAt)
+        return
+      }
+      let response: Awaited<ReturnType<RecordPostViews>> | null = null
       for (let attempt = 0; attempt < 2; attempt += 1) {
         try {
-          // A session can change while this item waits or while a prior request
-          // is in flight. Do not submit a previous user's event after it does.
-          if (options.getIdentity(task.readerToken) !== task.identity) {
-            task.resolve(null)
+          const validTasks = tasks.filter(valid)
+          if (!validTasks.length) {
+            tasks.forEach((task) => finish(task, null, requestStartedAt))
             return
           }
-          if (isRateLimited(task.identity, now())) {
-            task.resolve(null)
+          // A changed identity invalidates the whole batch; never submit a
+          // former account's impressions under the current account.
+          if (validTasks.length !== tasks.length) {
+            tasks.forEach((task) => finish(task, null, requestStartedAt))
             return
           }
-          if (attempt === 0) requestStartedAt = now()
-          result = await options.record(task.postId, task.readerToken)
+          response = await options.recordBatch(tasks.map((task) => task.postId), tasks[0].readerToken)
           break
         } catch (error) {
+          if (isBatchUnavailable(error)) {
+            batchUnavailable = true
+            await runSingles(tasks, requestStartedAt)
+            return
+          }
           if (statusOf(error) === 429) {
             const until = now() + rateLimitCooldownMs
             globalRateLimitUntil = until
-            setRateLimitUntil(task.identity, until)
+            setRateLimitUntil(tasks[0].identity, until)
           }
           if (attempt || !retryable(error)) break
         }
       }
-      if (result) {
-        setSuppressUntil(key, requestStartedAt + (result.counted ? successSuppressMs : falseSuppressMs))
-        if (Number.isFinite(result.view_count) && result.view_count >= 0) publishCount(task.postId, result.view_count)
-        task.resolve(result)
-      } else {
-        setSuppressUntil(key, now() + failureCooldownMs)
-        task.resolve(null)
+      if (!response) {
+        tasks.forEach((task) => finish(task, null, requestStartedAt))
+        return
       }
+      const byPostId = new Map(response.items.map((item) => [item.post_id, item]))
+      tasks.forEach((task) => {
+        const item = byPostId.get(task.postId)
+        finish(task, item ? { counted: item.counted, view_count: item.view_count } : null, requestStartedAt)
+      })
     } catch {
-      setSuppressUntil(key, now() + failureCooldownMs)
-      task.resolve(null)
+      tasks.forEach((task) => finish(task, null, requestStartedAt))
     } finally {
-      pending.delete(key)
       active -= 1
       pump()
     }
   }
-  const pump = () => {
-    while (active < maxConcurrent && queue.length) {
-      const task = queue.shift()
-      if (!task) return
-      active += 1
-      void run(task)
+  const takeBatch = () => {
+    const first = queue.shift()
+    if (!first) return []
+    const tasks = [first]
+    for (let index = 0; index < queue.length && tasks.length < batchSize;) {
+      if (queue[index].identity === first.identity && queue[index].readerToken === first.readerToken) {
+        tasks.push(queue[index])
+        queue.splice(index, 1)
+      } else index += 1
     }
+    return tasks
+  }
+  const schedule = () => {
+    if (timer || !queue.length || batchUnavailable) return
+    timer = scheduleTimeout(() => {
+      timer = undefined
+      flushRequested = true
+      pump()
+    }, batchDelayMs)
+  }
+  const pump = () => {
+    while (active < maxConcurrent && queue.length && (batchUnavailable || flushRequested || queue.length >= batchSize)) {
+      const tasks = takeBatch()
+      if (!tasks.length) return
+      active += 1
+      void run(tasks)
+    }
+    if (!queue.length) flushRequested = false
+    if (queue.length && !flushRequested && !batchUnavailable && queue.length < batchSize) schedule()
   }
   const report = (postId: number): Promise<CommunityViewResult | null> => {
     if (!isValidPostId(postId)) return Promise.resolve(null)
@@ -174,7 +256,8 @@ export const createCommunityPostViewDispatcher = (options: CommunityPostViewDisp
     const taskPromise = new Promise<CommunityViewResult | null>((resolve) => { resolveTask = resolve })
     pending.set(key, taskPromise)
     queue.push({ postId, readerToken, identity, resolve: resolveTask })
-    pump()
+    if (batchUnavailable || queue.length >= batchSize) pump()
+    else schedule()
     return taskPromise
   }
   const subscribe = (postId: number, listener: CommunityViewCountListener) => {
@@ -191,7 +274,15 @@ export const createCommunityPostViewDispatcher = (options: CommunityPostViewDisp
   const observeCount = (postId: number, count: number) => {
     if (isValidPostId(postId) && Number.isFinite(count) && count >= 0) publishCount(postId, count)
   }
-  return { report, subscribe, observeCount, getCount: (postId: number) => counts.get(postId) }
+  const flush = () => {
+    if (timer) {
+      cancelTimeout(timer)
+      timer = undefined
+    }
+    flushRequested = true
+    pump()
+  }
+  return { report, flush, subscribe, observeCount, getCount: (postId: number) => counts.get(postId) }
 }
 
 export type CommunityPostViewDispatcher = ReturnType<typeof createCommunityPostViewDispatcher>

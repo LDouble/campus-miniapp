@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
   useLoad,
+  useUnload,
   useDidHide,
   useDidShow,
   usePullDownRefresh,
@@ -20,6 +21,7 @@ import { consumeCommunityDetailSnapshot } from '../../features/community/detail-
 import {
   formatCommunityViewCount,
   reportCommunityPostView,
+  flushCommunityPostViews,
 } from '../../features/community/post-view'
 import { communityPostTopics, communityTopicUrl } from '../../features/community/topic'
 import { useCommunityViewCount } from '../../features/community/use-view-count'
@@ -68,7 +70,11 @@ const formatDetailDateTime = (value?: string | null) => (
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
   const [pageVisible, setPageVisible] = useState(true)
-  useDidHide(() => setPageVisible(false))
+  useUnload(flushCommunityPostViews)
+  useDidHide(() => {
+    setPageVisible(false)
+    flushCommunityPostViews()
+  })
   useDidShow(() => setPageVisible(true))
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
   const viewCount = useCommunityViewCount(postId, post?.view_count)

@@ -236,6 +236,18 @@ export const lifeServicesRepository = {
     })
   },
 
+  recordCampusCirclePostViews(postIds: number[], readerToken: string) {
+    const data: operations['RecordCampusCirclePostViews']['requestBody']['content']['application/json'] = {
+      post_ids: postIds,
+      reader_token: readerToken,
+    }
+    return apiRequest<operations['RecordCampusCirclePostViews']['responses'][200]['content']['application/json']['data']>({
+      path: '/api/v1/campus-circle/post-views/batch',
+      method: 'POST',
+      data,
+    })
+  },
+
   recordCampusCirclePostView(id: number, readerToken: string) {
     const data: RecordCampusCirclePostViewBody = { reader_token: readerToken }
     return apiRequest<RecordCampusCirclePostViewResult>({
