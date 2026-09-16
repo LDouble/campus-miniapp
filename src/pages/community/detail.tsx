@@ -6,6 +6,7 @@ import Taro, {
 import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
 import CustomNavbar from '../../components/custom-navbar'
 import MentionContent from '../../components/mention-content'
 import {
@@ -44,6 +45,8 @@ const actionLabels: Record<string, string> = {
   withdraw: '删除动态',
 }
 
+const ADMIN_WITHDRAW_ACTION = 'admin_withdraw'
+
 const formatDetailDateTime = (value?: string | null) => (
   formatDateTime(value).replace(/^(\d{2})月(\d{2})日/u, '$1-$2')
 )
@@ -54,6 +57,8 @@ export default function CommunityDetailPage() {
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [loading, setLoading] = useState(true)
   const [deletingPost, setDeletingPost] = useState(false)
+  const [adminWithdrawVisible, setAdminWithdrawVisible] = useState(false)
+  const [adminWithdrawReason, setAdminWithdrawReason] = useState('')
   const [error, setError] = useState('')
 
   const load = async (id: number, commentId = 0) => {
@@ -159,6 +164,65 @@ export default function CommunityDetailPage() {
     }
   }
 
+  const canOpenAdminWithdraw = Boolean(
+    post
+    && post.available_actions.includes(ADMIN_WITHDRAW_ACTION),
+  )
+
+  const closeAdminWithdraw = () => {
+    if (deletingPost) return
+    setAdminWithdrawVisible(false)
+    setAdminWithdrawReason('')
+  }
+
+  const openAdminWithdraw = () => {
+    if (!canOpenAdminWithdraw || deletingPost) return
+    setAdminWithdrawReason('')
+    setAdminWithdrawVisible(true)
+  }
+
+  const adminWithdrawPost = async () => {
+    if (!post || deletingPost) return
+    const reason = adminWithdrawReason.trim()
+    if (!reason) {
+      Taro.showToast({ title: '请填写撤销原因', icon: 'none' })
+      return
+    }
+    if (reason.length > 500) {
+      Taro.showToast({ title: '撤销原因不能超过 500 字', icon: 'none' })
+      return
+    }
+
+    setDeletingPost(true)
+    try {
+      await lifeServicesRepository.adminWithdrawCampusCirclePost(post.id, {
+        expected_version: post.version,
+        reason,
+      })
+      setAdminWithdrawVisible(false)
+      setAdminWithdrawReason('')
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: '帖子已撤销', icon: 'success' })
+      void Taro.switchTab({ url: '/pages/community/index' })
+    } catch (actionError) {
+      if (isApiError(actionError) && actionError.statusCode === 403) {
+        Taro.showToast({ title: '权限不足，无法撤销帖子', icon: 'none' })
+        return
+      }
+      if (isApiError(actionError) && actionError.statusCode === 409) {
+        await load(post.id)
+        Taro.showToast({ title: '帖子状态已变化，已刷新最新详情', icon: 'none' })
+        return
+      }
+      Taro.showToast({
+        title: isApiError(actionError) ? actionError.message : '撤销失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setDeletingPost(false)
+    }
+  }
+
   const canReportPost = Boolean(
     post
     && post.viewer_relation !== 'owner'
@@ -189,6 +253,7 @@ export default function CommunityDetailPage() {
       run: action.onClick,
     })),
     ...(canReportPost ? [{ label: '举报', run: reportPost }] : []),
+    ...(canOpenAdminWithdraw ? [{ label: '撤销帖子', run: openAdminWithdraw }] : []),
   ]
 
   const openPostMenu = async () => {
@@ -355,6 +420,50 @@ export default function CommunityDetailPage() {
                 markLifeHubSectionDirty('community')
               }}
             />
+
+            {adminWithdrawVisible && (
+              <View className='community-detail__admin-withdraw-mask' onClick={closeAdminWithdraw}>
+                <View
+                  className='community-detail__admin-withdraw-sheet'
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <Text className='community-detail__admin-withdraw-title'>撤销帖子</Text>
+                  <Text className='community-detail__admin-withdraw-description'>
+                    撤销后帖子和评论将不再公开展示，且无法恢复。请填写撤销原因。
+                  </Text>
+                  <View className='community-detail__admin-withdraw-field'>
+                    <KeyboardSafeTextarea
+                      id='community-admin-withdraw-reason'
+                      className='community-detail__admin-withdraw-textarea'
+                      value={adminWithdrawReason}
+                      maxlength={500}
+                      autoHeight={false}
+                      cursorSpacing={24}
+                      placeholder='填写撤销原因（必填）'
+                      disabled={deletingPost}
+                      onInput={(event) => setAdminWithdrawReason(event.detail.value)}
+                    />
+                    <Text>{adminWithdrawReason.length}/500</Text>
+                  </View>
+                  <View className='community-detail__admin-withdraw-actions'>
+                    <View
+                      className='community-detail__admin-withdraw-cancel'
+                      ariaRole='button'
+                      ariaLabel='取消撤销帖子'
+                      onClick={closeAdminWithdraw}
+                    >取消</View>
+                    <View
+                      className={adminWithdrawReason.trim() && !deletingPost
+                        ? 'community-detail__admin-withdraw-confirm'
+                        : 'community-detail__admin-withdraw-confirm community-detail__admin-withdraw-confirm--disabled'}
+                      ariaRole='button'
+                      ariaLabel='确认撤销帖子'
+                      onClick={() => void adminWithdrawPost()}
+                    >{deletingPost ? '正在撤销' : '确认撤销'}</View>
+                  </View>
+                </View>
+              </View>
+            )}
           </>
         )}
       </View>
