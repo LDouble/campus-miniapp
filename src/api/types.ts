@@ -61,6 +61,9 @@ export type CampusCircleSectionView = components['schemas']['CampusCircleSection
 export type CampusCirclePostView = components['schemas']['CampusCirclePostView']
 export type CampusCirclePostViewPage = components['schemas']['CampusCirclePostPage']
 export type CampusCircleHome = components['schemas']['CampusCircleHome']
+export type CampusCircleTodayHotCarousel = components['schemas']['CampusCircleTodayHotCarousel']
+export type CampusCircleTodayHotItem = components['schemas']['CampusCircleTodayHotItem']
+export type CampusCircleTodayHotPage = components['schemas']['CampusCircleTodayHotPage']
 export type CampusCircleTopicView = components['schemas']['CampusCircleTopicView']
 export type CampusCircleTopicPage = components['schemas']['CampusCircleTopicPage']
 

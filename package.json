@@ -60,6 +60,7 @@
     "test:community-detail-figma": "ts-node --transpile-only scripts/community-detail-figma-smoke.ts",
     "test:community-detail-navigation": "ts-node --transpile-only scripts/community-detail-navigation-smoke.ts && yarn test:community-post-view",
     "test:community-post-view": "ts-node --transpile-only scripts/community-post-view-smoke.ts && ts-node --transpile-only scripts/community-post-view-batch-smoke.ts && ts-node --transpile-only scripts/community-post-exposure-smoke.ts && ts-node --transpile-only scripts/community-post-exposure-hook-smoke.ts",
+    "test:today-hot": "ts-node --transpile-only scripts/today-hot-smoke.ts",
     "test:community-admin-withdraw": "ts-node --transpile-only scripts/community-admin-withdraw-smoke.ts",
     "test:business-detail-navigation": "ts-node --transpile-only scripts/business-detail-navigation-smoke.ts",
     "test:detail-author-header": "ts-node --transpile-only scripts/detail-author-header-smoke.ts",

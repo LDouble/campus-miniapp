@@ -1602,6 +1602,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/posts/{id}/today-hot-override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 创建或更新今日上头推荐或排除项；排除优先于推荐 */
+        put: operations["UpsertAdminCampusCircleTodayHotOverride"];
+        post?: never;
+        /** 删除今日上头运营项并记录审计 */
+        delete: operations["DeleteAdminCampusCircleTodayHotOverride"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/posts/{id}/withdraw": {
         parameters: {
             query?: never;
@@ -1682,6 +1700,92 @@ export interface paths {
         put?: never;
         /** 归档校园圈子模块 */
         post: operations["ArchiveCampusCircleSection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询今日上头配置、运营项和刷新操作审计 */
+        get: operations["ListAdminCampusCircleTodayHotAudits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取今日上头配置 */
+        get: operations["GetAdminCampusCircleTodayHotConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 更新今日上头配置并记录审计 */
+        patch: operations["UpdateAdminCampusCircleTodayHotConfig"];
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询今日上头推荐和排除运营项 */
+        get: operations["ListAdminCampusCircleTodayHotOverrides"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 请求异步刷新今日上头；重复请求合并到同一任务 */
+        post: operations["RefreshAdminCampusCircleTodayHot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取今日上头任务和当前快照状态 */
+        get: operations["GetAdminCampusCircleTodayHotStatus"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1974,6 +2078,40 @@ export interface paths {
         };
         /** 查询服务端配置的启用校园圈板块树 */
         get: operations["ListCampusCircleSections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/today-hot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取首页今日上头轮播；功能关闭、无有效或过期快照时返回禁用且不返回内容 */
+        get: operations["GetCampusCircleTodayHot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/today-hot/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 基于固定快照分页读取今日上头帖子，并在读取时重新检查公开可见性 */
+        get: operations["ListCampusCircleTodayHotPosts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4141,6 +4279,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/errands/payment-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询跑腿发布支付能力 */
+        get: operations["GetErrandPaymentPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/errands/{id}": {
         parameters: {
             query?: never;
@@ -5320,6 +5475,244 @@ export interface paths {
         };
         /** 查看已发布全校通知 */
         get: operations["GetOfficialNotice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListAdminWithdrawals */
+        get: operations["ListAdminWithdrawals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetAdminWithdrawal */
+        get: operations["GetAdminWithdrawal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** ReviewWithdrawal */
+        post: operations["ReviewWithdrawal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/wechat-pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 为本人待支付订单创建微信小程序支付 */
+        post: operations["CreateWechatPay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/wechat-pay/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 主动查询并同步本人订单的微信支付状态 */
+        post: operations["QueryWechatPay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信支付结果通知 */
+        post: operations["HandleWechatPayCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/refund-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信原路退款结果通知 */
+        post: operations["HandleWechatRefundCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/transfer-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信商家转账结果通知 */
+        post: operations["HandleWechatTransferCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settlements/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人可提现收益 */
+        get: operations["ListMySettlementPayables"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settlements/{id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 将本人可提现收益发起微信商家转账 */
+        post: operations["CreateMerchantTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** CreateWithdrawal */
+        post: operations["CreateWithdrawal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListMyWithdrawals */
+        get: operations["ListMyWithdrawals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetMyWithdrawalSummary */
+        get: operations["GetMyWithdrawalSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetMyWithdrawal */
+        get: operations["GetMyWithdrawal"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7551,7 +7944,7 @@ export interface components {
             module: components["schemas"]["AccountCancellationBlockerModule"];
         };
         /** @enum {string} */
-        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool";
+        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool" | "settlement" | "withdrawal";
         AccountCancellationInput: {
             app_id: string;
             code: string;
@@ -7884,6 +8277,161 @@ export interface components {
             updated_at: string;
             /** Format: uint64 */
             version: number;
+        };
+        CampusCircleTodayHotAudit: {
+            action: string;
+            /** Format: uint64 */
+            actor_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            payload?: string | null;
+            /** Format: uint64 */
+            post_id?: number | null;
+        };
+        CampusCircleTodayHotAuditPage: {
+            items: components["schemas"]["CampusCircleTodayHotAudit"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTodayHotAuditPageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotAuditPage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotCarousel: {
+            carousel_interval_seconds: number;
+            enabled: boolean;
+            /** Format: date-time */
+            generated_at?: string | null;
+            items: components["schemas"]["CampusCircleTodayHotItem"][];
+            /** Format: uint64 */
+            snapshot_id?: number | null;
+        };
+        CampusCircleTodayHotCarouselResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotCarousel"];
+            request_id: string;
+        };
+        CampusCircleTodayHotConfig: {
+            candidate_window_hours: number;
+            carousel_interval_seconds: number;
+            carousel_limit: number;
+            /** Format: double */
+            comment_weight: number;
+            enabled: boolean;
+            exploration_ratio_basis_points: number;
+            /** Format: double */
+            like_weight: number;
+            signal_window_hours: number;
+            snapshot_limit: number;
+            /** Format: uint64 */
+            version: number;
+            /** Format: double */
+            view_weight: number;
+        };
+        CampusCircleTodayHotConfigInput: {
+            candidate_window_hours: number;
+            carousel_interval_seconds: number;
+            carousel_limit: number;
+            /** Format: double */
+            comment_weight: number;
+            enabled: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+            exploration_ratio_basis_points: number;
+            /** Format: double */
+            like_weight: number;
+            signal_window_hours: number;
+            snapshot_limit: number;
+            /** Format: double */
+            view_weight: number;
+        };
+        CampusCircleTodayHotConfigResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotConfig"];
+            request_id: string;
+        };
+        CampusCircleTodayHotItem: {
+            content: string;
+            images: string[];
+            /** Format: uint64 */
+            post_id: number;
+            section_name: string;
+        };
+        CampusCircleTodayHotOverride: {
+            /** Format: date-time */
+            ends_at?: string | null;
+            kind: components["schemas"]["CampusCircleTodayHotOverrideKind"];
+            /** Format: uint64 */
+            post_id: number;
+            reason: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: uint64 */
+            updated_by: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        CampusCircleTodayHotOverrideInput: {
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** Format: uint64 */
+            expected_version: number;
+            kind: components["schemas"]["CampusCircleTodayHotOverrideKind"];
+            reason: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+        };
+        /** @enum {string} */
+        CampusCircleTodayHotOverrideKind: "recommend" | "exclude";
+        CampusCircleTodayHotOverridePage: {
+            items: components["schemas"]["CampusCircleTodayHotOverride"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTodayHotOverridePageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotOverridePage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotOverrideResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotOverride"];
+            request_id: string;
+        };
+        CampusCircleTodayHotPage: {
+            context_unavailable: boolean;
+            /** Format: date-time */
+            generated_at: string;
+            has_more: boolean;
+            items: components["schemas"]["CampusCirclePostView"][];
+            next_cursor?: string | null;
+            /** Format: uint64 */
+            snapshot_id: number;
+        };
+        CampusCircleTodayHotPageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotPage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotStatus: {
+            /** Format: int64 */
+            candidate_count: number;
+            /** Format: uint64 */
+            current_snapshot_id: number | null;
+            enabled: boolean;
+            failure_reason?: string | null;
+            /** Format: date-time */
+            last_failure_at?: string | null;
+            /** Format: date-time */
+            last_success_at: string | null;
+            refresh_queued: boolean;
+            stale: boolean;
+            warmup: boolean;
+        };
+        CampusCircleTodayHotStatusResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotStatus"];
+            request_id: string;
         };
         CampusCircleTopicAuditPage: {
             items: components["schemas"]["CampusCircleTopicAuditView"][];
@@ -9873,6 +10421,16 @@ export interface components {
             data: components["schemas"]["ErrandViewPage"];
             request_id: string;
         };
+        ErrandPaymentPolicy: {
+            /** @enum {string} */
+            default_payment_mode: "offline" | "wechat";
+            enabled_payment_modes: ("offline" | "wechat")[];
+            payment_timeout_minutes: number;
+        };
+        ErrandPaymentPolicyResponseBody: {
+            data: components["schemas"]["ErrandPaymentPolicy"];
+            request_id: string;
+        };
         ErrandResponseBody: {
             data: components["schemas"]["ErrandView"];
             request_id: string;
@@ -9919,6 +10477,8 @@ export interface components {
             author_nickname: string;
             available_actions: components["schemas"]["ErrandViewerAction"][];
             campus: string | null;
+            /** @enum {string} */
+            cancellation_status?: "none" | "processing" | "succeeded" | "failed";
             /** Format: date-time */
             cancelled_at: string | null;
             category: string;
@@ -9943,6 +10503,15 @@ export interface components {
             /** Format: int64 */
             like_count: number;
             liked_by_nicknames: string[];
+            /** Format: date-time */
+            payment_deadline_at?: string | null;
+            /** @enum {string} */
+            payment_mode: "offline" | "wechat";
+            /**
+             * @description 仅参与者可见，线下为 none
+             * @enum {string}
+             */
+            payment_status?: "none" | "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
             /** Format: date-time */
             picked_up_at: string | null;
             pickup_location: string;
@@ -10840,6 +11409,158 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        MerchantTransferResponseBody: {
+            data: components["schemas"]["MerchantTransferView"];
+            request_id: string;
+        };
+        MerchantTransferView: {
+            /** Format: int64 */
+            amount_cents: number;
+            app_id: string | null;
+            confirmation_package: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            merchant_id: string | null;
+            /** Format: uint64 */
+            payable_id: number;
+            /** @enum {string} */
+            status: "processing" | "awaiting_user_confirmation" | "succeeded" | "failed";
+            transfer_no: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        PaymentStatusResponseBody: {
+            data: components["schemas"]["PaymentStatusView"];
+            request_id: string;
+        };
+        PaymentStatusView: {
+            /** Format: date-time */
+            paid_at?: string | null;
+            /** @enum {string} */
+            status: "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
+        };
+        SettlementPayablePage: {
+            items: components["schemas"]["SettlementPayableView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SettlementPayablePageResponseBody: {
+            data: components["schemas"]["SettlementPayablePage"];
+            request_id: string;
+        };
+        SettlementPayableView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: date-time */
+            available_at: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            order_id: number;
+            payable_no: string;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+            /** @enum {string} */
+            source_type: "errand" | "marketplace";
+            /** @enum {string} */
+            status: "available" | "reserved" | "transferring" | "paid" | "blocked";
+            /** Format: uint64 */
+            version: number;
+        };
+        WechatCallbackAck: {
+            /** @enum {string} */
+            code: "SUCCESS";
+            message: string;
+        };
+        WechatPayParams: {
+            intent_no: string;
+            nonce_str: string;
+            package: string;
+            pay_sign: string;
+            /** @enum {string} */
+            sign_type: "RSA";
+            time_stamp: string;
+        };
+        WechatPayResponseBody: {
+            data: components["schemas"]["WechatPayParams"];
+            request_id: string;
+        };
+        WithdrawalItemView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: uint64 */
+            order_id: number;
+            /** Format: uint64 */
+            payable_id: number;
+        };
+        WithdrawalPage: {
+            items: components["schemas"]["WithdrawalView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        WithdrawalPageResponseBody: {
+            data: components["schemas"]["WithdrawalPage"];
+            request_id: string;
+        };
+        WithdrawalResponseBody: {
+            data: components["schemas"]["WithdrawalView"];
+            request_id: string;
+        };
+        WithdrawalSceneSummary: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: int64 */
+            payable_count: number;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+        };
+        WithdrawalSummary: {
+            /** Format: int64 */
+            available_amount_cents: number;
+            /** Format: int64 */
+            paid_amount_cents: number;
+            /** Format: int64 */
+            reserved_amount_cents: number;
+            scenes: components["schemas"]["WithdrawalSceneSummary"][];
+        };
+        WithdrawalSummaryResponseBody: {
+            data: components["schemas"]["WithdrawalSummary"];
+            request_id: string;
+        };
+        WithdrawalView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: uint64 */
+            beneficiary_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            items?: components["schemas"]["WithdrawalItemView"][];
+            /** Format: int64 */
+            payable_count: number;
+            review_reason?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewer_id?: number | null;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+            /** @enum {string} */
+            status: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+            transfer?: components["schemas"]["MerchantTransferView"];
+            /** Format: uint64 */
+            version: number;
+            withdrawal_no: string;
+        };
         PersonalTimetableItemList: {
             items: components["schemas"]["PersonalTimetableItemView"][];
         };
@@ -11173,6 +11894,8 @@ export interface components {
             /** Format: int64 */
             amount_cents: number;
             available_actions: components["schemas"]["TradeOrderViewerAction"][];
+            /** @enum {string} */
+            cancellation_status: "none" | "processing" | "succeeded" | "failed";
             /** Format: date-time */
             cancelled_at: string | null;
             /** Format: date-time */
@@ -11185,6 +11908,9 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             currency: string;
+            errand_status: string | null;
+            /** Format: uint64 */
+            errand_version: number | null;
             /** Format: date-time */
             expires_at: string | null;
             /** @enum {string} */
@@ -11194,7 +11920,14 @@ export interface components {
             order_no: string;
             /** @enum {string} */
             order_type: "marketplace" | "errand";
-            payment_mode: string;
+            /** Format: date-time */
+            paid_at: string | null;
+            /** Format: date-time */
+            payment_deadline_at: string | null;
+            /** @enum {string} */
+            payment_mode: "offline" | "wechat";
+            /** @enum {string} */
+            payment_status: "none" | "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
             /** Format: uint64 */
             resource_id: number;
             resource_snapshot: {
@@ -11204,7 +11937,7 @@ export interface components {
             resource_type: "marketplace_listing" | "errand_task";
             title_snapshot: string;
             /** @enum {string} */
-            trade_status: "confirmed" | "completed" | "cancelled" | "expired";
+            trade_status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -11219,7 +11952,7 @@ export interface components {
             total: number;
         };
         /** @enum {string} */
-        TradeOrderViewerAction: "view_resource" | "cancel" | "complete" | "verify_academic";
+        TradeOrderViewerAction: "view_resource" | "pay" | "pickup" | "deliver" | "cancel" | "complete" | "verify_academic";
         /** @enum {string} */
         TradeOrderViewerRelation: "buyer" | "seller";
         DailyCheckinHistory: {
@@ -12212,6 +12945,69 @@ export interface components {
                 "application/json": components["schemas"]["CampusCircleSectionTreeResponseBody"];
             };
         };
+        /** @description 今日上头运营审计分页 */
+        CampusCircleTodayHotAuditPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotAuditPageResponseBody"];
+            };
+        };
+        /** @description 首页今日上头轮播数据 */
+        CampusCircleTodayHotCarouselResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotCarouselResponseBody"];
+            };
+        };
+        /** @description 今日上头运营配置 */
+        CampusCircleTodayHotConfigResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotConfigResponseBody"];
+            };
+        };
+        /** @description 今日上头运营覆盖项分页 */
+        CampusCircleTodayHotOverridePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverridePageResponseBody"];
+            };
+        };
+        /** @description 今日上头运营覆盖项 */
+        CampusCircleTodayHotOverrideResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverrideResponseBody"];
+            };
+        };
+        /** @description 固定快照的今日上头帖子页 */
+        CampusCircleTodayHotPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotPageResponseBody"];
+            };
+        };
+        /** @description 今日上头任务运行状态 */
+        CampusCircleTodayHotStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotStatusResponseBody"];
+            };
+        };
         /** @description 校园圈话题自动关联审计记录 */
         CampusCircleTopicAuditPageResponse: {
             headers: {
@@ -12833,6 +13629,15 @@ export interface components {
                 "application/json": components["schemas"]["ErrandPageResponseBody"];
             };
         };
+        /** @description 跑腿支付能力 */
+        ErrandPaymentPolicyResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrandPaymentPolicyResponseBody"];
+            };
+        };
         /** @description 跑腿任务 */
         ErrandResponse: {
             headers: {
@@ -13101,6 +13906,78 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeResponseBody"];
+            };
+        };
+        /** @description 商家转账结果 */
+        MerchantTransferResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MerchantTransferResponseBody"];
+            };
+        };
+        /** @description 微信支付权威状态 */
+        PaymentStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PaymentStatusResponseBody"];
+            };
+        };
+        /** @description 我的待结算收益 */
+        SettlementPayablePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SettlementPayablePageResponseBody"];
+            };
+        };
+        /** @description 微信支付回调确认 */
+        WechatCallbackResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatCallbackAck"];
+            };
+        };
+        /** @description 微信小程序支付参数 */
+        WechatPayResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatPayResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalPageResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalSummaryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalSummaryResponseBody"];
             };
         };
         /** @description 我的蹭课条目列表 */
@@ -15555,6 +16432,53 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    UpsertAdminCampusCircleTodayHotOverride: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverrideInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotOverrideResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DeleteAdminCampusCircleTodayHotOverride: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            204: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     AdminWithdrawCampusCirclePost: {
         parameters: {
             query?: never;
@@ -15702,6 +16626,93 @@ export interface operations {
         responses: {
             200: components["responses"]["CampusCircleSectionResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCampusCircleTodayHotAudits: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotAuditPageResponse"];
+        };
+    };
+    GetAdminCampusCircleTodayHotConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotConfigResponse"];
+        };
+    };
+    UpdateAdminCampusCircleTodayHotConfig: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotConfigInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotConfigResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCampusCircleTodayHotOverrides: {
+        parameters: {
+            query?: {
+                kind?: "recommend" | "exclude";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotOverridePageResponse"];
+        };
+    };
+    RefreshAdminCampusCircleTodayHot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: components["responses"]["CampusCircleTodayHotStatusResponse"];
+        };
+    };
+    GetAdminCampusCircleTodayHotStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotStatusResponse"];
         };
     };
     ListAdminCampusCircleTopics: {
@@ -16155,6 +17166,39 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CampusCircleSectionTreeResponse"];
+        };
+    };
+    GetCampusCircleTodayHot: {
+        parameters: {
+            query?: {
+                window?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotCarouselResponse"];
+        };
+    };
+    ListCampusCircleTodayHotPosts: {
+        parameters: {
+            query?: {
+                snapshot_id?: number;
+                cursor?: string;
+                context_post_id?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotPageResponse"];
+            404: components["responses"]["Error"];
+            410: components["responses"]["Error"];
         };
     };
     ListCampusCircleTopics: {
@@ -19040,6 +20084,8 @@ export interface operations {
                 "application/json": {
                     category?: string;
                     description: string;
+                    /** @enum {string} */
+                    payment_mode?: "offline" | "wechat";
                     /** Format: int64 */
                     reward_cents: number;
                     pickup_location: string;
@@ -19076,6 +20122,18 @@ export interface operations {
             200: components["responses"]["ErrandPageResponse"];
         };
     };
+    GetErrandPaymentPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ErrandPaymentPolicyResponse"];
+        };
+    };
     GetErrand: {
         parameters: {
             query?: never;
@@ -19107,6 +20165,8 @@ export interface operations {
                 "application/json": {
                     category?: string;
                     description: string;
+                    /** @enum {string} */
+                    payment_mode?: "offline" | "wechat";
                     /** Format: int64 */
                     reward_cents: number;
                     pickup_location: string;
@@ -20693,6 +21753,256 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    ListAdminWithdrawals: {
+        parameters: {
+            query?: {
+                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminWithdrawal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ReviewWithdrawal: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** @enum {string} */
+                    decision: "approve" | "reject";
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateWechatPay: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: components["responses"]["WechatPayResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    QueryWechatPay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PaymentStatusResponse"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatPayCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatRefundCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatTransferCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListMySettlementPayables: {
+        parameters: {
+            query?: {
+                status?: "available" | "reserved" | "transferring" | "paid" | "blocked";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SettlementPayablePageResponse"];
+        };
+    };
+    CreateMerchantTransfer: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["MerchantTransferResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateWithdrawal: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    scene_key: "commission" | "purchase" | "secondhand_recycle";
+                    /** Format: int64 */
+                    expected_amount_cents: number;
+                    /** Format: int64 */
+                    expected_payable_count: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListMyWithdrawals: {
+        parameters: {
+            query?: {
+                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetMyWithdrawalSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalSummaryResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetMyWithdrawal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListMyPersonalTimetableItems: {
         parameters: {
             query: {
@@ -21103,8 +22413,10 @@ export interface operations {
         parameters: {
             query?: {
                 relation?: "all" | "buyer" | "seller";
+                status_group?: "all" | "action_required" | "in_progress" | "ended";
+                keyword?: string;
                 order_type?: "marketplace" | "errand";
-                trade_status?: "confirmed" | "completed" | "cancelled" | "expired";
+                trade_status?: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
                 fulfillment_status?: "not_started" | "in_progress" | "delivered";
                 page?: number;
                 page_size?: number;

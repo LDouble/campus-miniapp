@@ -14,6 +14,7 @@ import {
   View,
 } from '@tarojs/components'
 import { useViewPageVisible } from '../../features/community/use-view-page-visible'
+import TodayHotHomeEntry from '../../features/today-hot/home-entry'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
@@ -1244,6 +1245,8 @@ function Index() {
           </View>
         )}
       </View>
+
+      {!isQualificationEdition && <TodayHotHomeEntry pageVisible={viewPageVisible} />}
 
       {homeFeatureFlags.todayTask && todayTask && (
         <View
