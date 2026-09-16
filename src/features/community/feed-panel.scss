@@ -423,7 +423,8 @@
   white-space: nowrap;
 }
 
-.community-post__time {
+.community-post__time,
+.community-post__view-count {
   flex: none;
   color: var(--campus-text-muted, #a6b2c2);
 }

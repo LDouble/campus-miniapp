@@ -8,6 +8,7 @@ import type {
   MarketplaceListingView,
   PublicUserProfile,
 } from '../../api/types'
+import { useViewPageVisible } from '../../features/community/use-view-page-visible'
 import { isApiError } from '../../api/client'
 import { isDevelopmentEnvironment } from '../../api/auth'
 import CustomNavbar from '../../components/custom-navbar'
@@ -102,6 +103,7 @@ const requestTab = async (tab: ProfileTab, id: number, page: number) => {
 }
 
 export default function PublicProfilePage() {
+  const viewPageVisible = useViewPageVisible()
   const developmentPresentation = isDevelopmentEnvironment()
   const [userId, setUserId] = useState(0)
   const [profile, setProfile] = useState<PublicUserProfile | null>(null)
@@ -375,6 +377,9 @@ export default function PublicProfilePage() {
             <CommunityPostCard
               key={post.id}
               post={post}
+              trackViews
+              viewExposureSurface='profile'
+              viewTrackingEnabled={viewPageVisible && !commentPost}
               sectionName='校园社区'
               actionsOpen={openActionPostId === post.id}
               onToggleActions={toggleCommunityActions}

@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
   useLoad,
+  useUnload,
+  useDidHide,
+  useDidShow,
   usePullDownRefresh,
 } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
@@ -15,6 +18,10 @@ import {
   communityAuthorName,
 } from '../../features/community/author'
 import { consumeCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
+import {
+  reportCommunityPostView,
+  flushCommunityPostViews,
+} from '../../features/community/post-view'
 import { communityPostTopics, communityTopicUrl } from '../../features/community/topic'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import { openContentReport } from '../../features/content-report'
@@ -60,6 +67,13 @@ const formatDetailDateTime = (value?: string | null) => (
 
 export default function CommunityDetailPage() {
   const [postId, setPostId] = useState(0)
+  const [pageVisible, setPageVisible] = useState(true)
+  useUnload(flushCommunityPostViews)
+  useDidHide(() => {
+    setPageVisible(false)
+    flushCommunityPostViews()
+  })
+  useDidShow(() => setPageVisible(true))
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -68,12 +82,38 @@ export default function CommunityDetailPage() {
   const [adminWithdrawVisible, setAdminWithdrawVisible] = useState(false)
   const [adminWithdrawReason, setAdminWithdrawReason] = useState('')
   const [error, setError] = useState('')
+  const viewReportAttemptedPostIdsRef = useRef(new Set<number>())
+
+  const mergePost = useCallback((nextPost: CampusCirclePostView) => {
+    setPost((current) => {
+      if (!current || current.id !== nextPost.id) return nextPost
+      return {
+        ...nextPost,
+        view_count: Math.max(current.view_count, nextPost.view_count),
+      }
+    })
+  }, [])
+
+  const reportView = useCallback((id: number) => {
+    if (viewReportAttemptedPostIdsRef.current.has(id)) return
+    viewReportAttemptedPostIdsRef.current.add(id)
+    void reportCommunityPostView(id).then((result) => {
+      if (!result) return
+      setPost((current) => {
+        if (!current || current.id !== id) return current
+        return {
+          ...current,
+          view_count: Math.max(current.view_count, result.view_count),
+        }
+      })
+    })
+  }, [])
 
   const load = async (id: number, commentId = 0) => {
     setLoading(true)
     setError('')
     try {
-      setPost(await lifeServicesRepository.getCampusCirclePost(id))
+      mergePost(await lifeServicesRepository.getCampusCirclePost(id))
       setFocusedCommentId(commentId)
     } catch (loadError) {
       setError(isApiError(loadError) ? loadError.message : '动态加载失败，请稍后重试')
@@ -82,6 +122,15 @@ export default function CommunityDetailPage() {
       Taro.stopPullDownRefresh()
     }
   }
+
+  useEffect(() => {
+    if (!pageVisible || !post || post.id !== postId || post.status !== 'approved') return
+    let cancelled = false
+    Taro.nextTick(() => {
+      if (!cancelled) reportView(post.id)
+    })
+    return () => { cancelled = true }
+  }, [pageVisible, post, postId, reportView])
 
   useLoad((options) => {
     const id = Number(options.id)
@@ -97,7 +146,7 @@ export default function CommunityDetailPage() {
       ? consumeCommunityDetailSnapshot(id)
       : null
     if (snapshot) {
-      setPost(snapshot)
+      mergePost(snapshot)
       setFocusedCommentId(normalizedCommentId)
       setError('')
       setLoading(false)
@@ -124,7 +173,7 @@ export default function CommunityDetailPage() {
       const result = post.liked
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
         : await lifeServicesRepository.likeCampusCirclePost(post.id)
-      setPost(result)
+      mergePost(result)
       markLifeHubSectionDirty('community')
     } catch (actionError) {
       if (isApiError(actionError) && actionError.code === 'academic_verification_required') return

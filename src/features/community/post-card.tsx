@@ -14,6 +14,9 @@ import { parseStickerContent, plainStickerContent } from '../stickers/content'
 import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
+import { reportCommunityPostView } from './post-view'
+import { usePostExposure } from './use-post-exposure'
+import { useViewExposureInsets, type ViewExposureSurface } from './view-exposure-insets'
 import { communityPostTopics, communityTopicUrl } from './topic'
 import {
   communityPinActionLabel,
@@ -79,6 +82,9 @@ type Props = {
   businessPreview?: { title: string; meta: string }
   trailingAction?: ReactNode
   onReplyComment?: (post: CampusCirclePostView, comment: CommunityPostCommentPreview) => void
+  trackViews?: boolean
+  viewTrackingEnabled?: boolean
+  viewExposureSurface?: ViewExposureSurface
 }
 
 export type CommunityPostCommentPreview = {
@@ -115,11 +121,22 @@ function CommunityPostCard({
   businessPreview,
   trailingAction,
   onReplyComment,
+  trackViews = false,
+  viewTrackingEnabled = true,
+  viewExposureSurface = 'profile',
 }: Props) {
   const [likePending, setLikePending] = useState(false)
   const [pinPending, setPinPending] = useState(false)
   const authorName = communityAuthorName(post)
   const cardId = instanceKey || String(post.id)
+  const tracksCommunityPost = trackViews && variant === 'community'
+  const exposureInsets = useViewExposureInsets(viewExposureSurface)
+  usePostExposure({
+    selector: `#community-post-${cardId}`,
+    enabled: tracksCommunityPost && viewTrackingEnabled && post.status === 'approved',
+    onExposure: () => reportCommunityPostView(post.id).then(() => undefined),
+    ...exposureInsets,
+  })
   const authorInitial = communityAuthorInitial(post)
   const authorAvatarUrl = communityAuthorAvatarUrl(post)
   const visibleImages = post.images.slice(0, MAX_POST_IMAGES)

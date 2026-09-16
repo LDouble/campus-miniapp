@@ -1,0 +1,72 @@
+# 校园圈列表有效浏览统计
+
+## 背景与目标
+
+在 Issue #172、尚未合并的 PR #177 基础上补充列表阅读统计。现有详情上报漏掉用户在信息流直接读完短帖的场景；目标是让真实阅读得到完整呈现，并减少冷启动阶段零值展示造成的冷清感。
+
+## 统计规则
+
+- 社区信息流、话题页、个人主页中的公开帖子卡片，以及首页校园圈帖子卡片，进入有效可视区域至少 50% 并连续停留 1 秒后，静默上报。
+- 超高卡片的阈值以卡片高度和有效视口高度的较小值为基准，避免长帖永远无法达标。固定导航、底部栏和非当前标签页不计为有效可视区域。
+- 卡片离开可视区、页面隐藏、切换标签页或卸载时取消未完成计时；重新可见重新计时。列表加载成功、预加载和快速划过不计数。
+- 详情阅读继续保留，列表和详情复用同一接口、读者身份和服务端 30 分钟去重窗口；列表进入详情不重复计数。
+- 登录作者自看、不公开帖子不计数；游客继续采用现有安装级 reader_token。存储异常时，同一运行会话复用临时 token。
+- 客户端合并同帖并发请求、限制并发与失败重试，防止列表滚动造成请求洪峰。429 不立即重试，其他失败保持静默，不阻塞阅读与互动。
+- 计数采用服务端返回值，不在客户端自行加一。上报成功同步同帖已展示的计数，旧快照不得覆盖新值。
+
+## 展示
+
+- 统一使用“浏览”，不标注“人在看”，因为该数是累计次数而非实时人数或独立人数。
+- 0 或未知值隐藏浏览量及其分隔符；正数按 PR #177 现有格式展示。
+- 不增加模拟初始浏览量、倍数或随机增长。
+
+## 范围与契约
+
+- 小程序复用当前 feature/GH-172-campus-circle-view-count 分支和 PR #177。
+- 原 Issue 明确排除列表曝光，实施时须同步更新其范围、验收标准，以及后端源契约中“详情阅读”的语义说明；后端原 PR 若已合并则从最新默认分支另建 Feature worktree。
+- 请求和响应结构、MySQL 累加、Redis 去重、作者排除保持兼容；不新增数据库迁移。
+- 首页适配器目前将 view_count 初始化为 0，必须核对首页数据契约：优先使用真实字段，上报响应可回填；缺失数据保持未知，不能据此伪造累计量。
+- 本期不增加来源分析、UV、在线人数、热榜、管理端图表或 Flutter 接入。
+
+## 验收标准
+
+1. 列表停留达标才上报，快速滑过、隐藏页面、非当前标签页均不上报。
+2. 普通卡片和超高卡片均能正确触发，分页与列表刷新不遗留观察器或计时器。
+3. 同帖多入口、并发、重试及列表进入详情，在服务端窗口内最多计一次；窗口过后再次有效浏览可计数。
+4. 作者自看及不可见帖子不增加；上报失败不弹窗、不影响阅读。
+5. 真实服务端计数能回填卡片与详情，旧请求不会导致数字倒退；零值隐藏，正数正确格式化。
+6. 验证登录身份切换、游客 token 存储失败、429 与断网场景。
+7. 运行目标统计逻辑测试、lint、typecheck、design-tokens、typography、dark-mode、community-list-figma 和微信构建，并执行 git diff --check；真机或开发者工具核对滚动与页面生命周期。
+
+## 当前状态
+
+已实现并完成自动化验证。模拟器滚动联调因微信开发者工具未配置 MCP Token 暂未完成；未发布服务或上传小程序。
+
+## 后端契约与兼容生成
+
+- 后端分支：`feature/GH-172-feed-view-count`，提交：`69b74a2`；仅修改统计语义，不改变接口结构或存储逻辑。
+- 小程序现有兼容契约基线：后端 `72531b4`。它生成的 TypeScript 与小程序 `origin/master` 完全一致。后端最新 master 另有支付能力扩展，本次不将其引入小程序。
+- 复现：在后端 Feature 的 `.local/compatible-miniapp-contract` 中解包 `git archive 72531b4`；应用 `git diff 72531b4 69b74a2 -- schemas/campus_circle.yaml` 的源契约补丁；运行 `make generate`、`make generate-check`、`make migration-check`；在小程序执行 `openapi-typescript <兼容产物>/api/openapi.yaml -o src/api/generated/schema.ts`。
+- 验证生成类型相对原主分支仅改变 3 条浏览量说明，没有接口删除或支付字段变化。
+- 首页 API 暂无浏览量字段，保留现有适配器的零占位并隐藏该值；首次有效曝光响应回填真实计数，不额外逐帖 GET。
+
+## 验证记录
+
+- 上报调度测试：同帖请求合并、有限并发、身份切换、429 新请求及队列冷却、存储失败、计数单调合并。
+- 曝光测试：1 秒边界、快速离屏、超高卡、横向裁剪、旧异步复核、隐藏/销毁。
+- Hook 桥接测试：只建一个观察器、隐藏前 999ms 取消、延迟测量、resize 重计时、禁用列表、卸载后回调。
+- 后端生成漂移、迁移检查和目标 Go 测试通过。
+
+- 小程序 `yarn lint`、`yarn typecheck`、`yarn test:community-detail-navigation`（包含上报/曝光/Hook 测试）、`yarn test:community-list-figma`、`yarn test:community-detail-figma`、`yarn test:community-topic`、`yarn test:community-what-to-eat` 均通过。
+- `yarn test:design-tokens`、`yarn test:typography`、`yarn test:dark-mode` 通过；`yarn build:weapp` 通过，保留现有 common.js 体积提醒（254 KiB）。
+- 依赖声明、锁文件及 Yarn 版本与主仓库一致，已将 Feature 的 node_modules 改为主仓库绝对路径软连接，并在本地 Git exclude 中忽略。
+
+## 模拟器回归修复（2026-09-16）
+
+用户反馈列表没有上报后，在真实微信模拟器确认原生 IntersectionObserver 返回 intersectionRatio=1，但 boundingClientRect 的坐标及尺寸字段均为 undefined。此前依赖该对象判定可见性，导致首次布局计时被随后的回调取消。
+
+- 观察器回调改为原生 intersectionRatio 与动态阈值比较；1 秒到期仍通过 SelectorQuery 复核实际可见区域。
+- 后台异步挂载卡片不提前绑定其他页面；首次回到前台时补取 Page 上下文。
+- 增加原生空矩形、后台挂载后恢复的 Hook 回归用例；上报/曝光/Hook 测试、lint、typecheck 和微信构建通过。
+- 已刷新 Feature 模拟器，在其现有 API 环境 product.weouc.com 中确认真实 POST /campus-circle/posts/{id}/views 返回 200、counted=true、view_count=1，卡片显示“1 浏览”。另观察到 counted=false 的正常去重返回。
+- 本次未部署后端服务；验证使用模拟器现有接口配置，并非本地 Release 联调。

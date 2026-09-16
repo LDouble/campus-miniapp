@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
+import { useViewPageVisible } from '../../../features/community/use-view-page-visible'
 import type { CampusCirclePostView, CampusCircleTopicView } from '../../../api/types'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
@@ -34,6 +35,7 @@ const mergeUniquePosts = (
 }
 
 export default function CommunityTopicPage() {
+  const viewPageVisible = useViewPageVisible()
   const [topic, setTopic] = useState<CampusCircleTopicView | null>(null)
   const [posts, setPosts] = useState<CampusCirclePostView[]>([])
   const [loading, setLoading] = useState(true)
@@ -249,6 +251,9 @@ export default function CommunityTopicPage() {
         <CommunityPostCard
           key={post.id}
           post={post}
+          trackViews
+          viewExposureSurface='topic'
+          viewTrackingEnabled={viewPageVisible && !commentPost}
           sectionName='校园社区'
           actionsOpen={openActionPostId === post.id}
           onToggleActions={toggleActions}
