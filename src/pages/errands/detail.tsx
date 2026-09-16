@@ -15,6 +15,7 @@ import { requestWechatSubscriptionForModule } from '../../features/wechat-subscr
 import { useCampusShare } from '../../features/share'
 import {
   formatDateTime,
+  formatErrandStatus,
   formatMoney,
   formatStatus,
 } from '../../features/life-services/format'
@@ -297,7 +298,7 @@ export default function ErrandDetailPage() {
               badges={[
                 '跑腿',
                 campusLabel(item.campus),
-                formatStatus(item.status, item.review_status),
+                formatErrandStatus(item),
               ]}
               title={item.description}
             >
@@ -334,8 +335,8 @@ export default function ErrandDetailPage() {
               <View className='detail-section__heading'><Text>任务信息</Text><Text>实时状态</Text></View>
               <View className='detail-facts'>
                 <View className='detail-fact'><Text>截止时间</Text><Text>{formatDateTime(item.deadline)}</Text></View>
-                <View className='detail-fact'><Text>当前关系</Text><Text>{item.viewer_relation === 'publisher' ? '我发布的' : item.viewer_relation === 'runner' ? '我接的任务' : '可参与'}</Text></View>
-                <View className='detail-fact'><Text>任务状态</Text><Text>{formatStatus(item.status)}</Text></View>
+                <View className='detail-fact'><Text>当前关系</Text><Text>{item.viewer_relation === 'publisher' ? '我发布的' : item.viewer_relation === 'runner' ? '我接的任务' : '未参与'}</Text></View>
+                <View className='detail-fact'><Text>任务状态</Text><Text>{formatErrandStatus(item)}</Text></View>
                 <View className='detail-fact'><Text>审核状态</Text><Text>{formatStatus(item.review_status)}</Text></View>
               </View>
             </View>

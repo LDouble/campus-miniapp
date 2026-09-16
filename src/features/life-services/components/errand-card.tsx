@@ -9,8 +9,9 @@ import { campusLabel } from '../campus'
 import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
 import { navigateToWithGuard } from '../../../utils/navigation'
 import {
+  formatErrandStatus,
   formatMoney,
-  formatStatus,
+  isErrandAcceptable,
   relativeDeadline,
 } from '../format'
 
@@ -30,7 +31,13 @@ const isUrgent = (deadline?: string | null) => {
 }
 
 export default function ErrandCard({ item }: { item: ErrandView }) {
-  const urgent = isUrgent(item.deadline)
+  const acceptable = isErrandAcceptable(item)
+  const urgent = acceptable && isUrgent(item.deadline)
+  const statusTone = acceptable ? 'available'
+    : item.review_status === 'rejected' ? 'rejected'
+    : item.review_status === 'pending_review' || item.status === 'delivered' ? 'pending'
+    : item.status === 'accepted' || item.status === 'picked_up' ? 'active'
+    : 'muted'
   const authorName = item.author_nickname?.trim() || `发布者 #${item.requester_id}`
   const authorInitial = authorName.slice(0, 1) || '同'
 
@@ -52,8 +59,8 @@ export default function ErrandCard({ item }: { item: ErrandView }) {
         <View className='business-card-identity'>
           <View>
             <Text>{authorName}</Text>
-            <Text className='business-status business-status--errand'>
-              {formatStatus(item.status, item.review_status)}
+            <Text className={`business-status business-status--errand business-status--errand-${statusTone}`}>
+              {formatErrandStatus(item)}
             </Text>
           </View>
           <Text>{relativeDeadline(item.deadline)}</Text>

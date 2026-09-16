@@ -4,6 +4,91 @@
  */
 
 export interface paths {
+    "/api/jw/bind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端教务绑定 */
+        post: operations["LegacyWeoucBind"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/kb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端课表查询 */
+        post: operations["LegacyWeoucCourses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端成绩查询 */
+        post: operations["LegacyWeoucGrades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端当前学期考试查询 */
+        post: operations["LegacyWeoucExams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/xk_result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端选课查询，优先下一学期、不存在则当前学期 */
+        post: operations["LegacyWeoucSelections"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/live": {
         parameters: {
             query?: never;
@@ -1517,6 +1602,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/posts/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理员撤销校园圈帖子 */
+        post: operations["AdminWithdrawCampusCirclePost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/sections": {
         parameters: {
             query?: never;
@@ -2095,6 +2197,313 @@ export interface paths {
         };
         /** 查询用户主页中公开可见的拼车发布 */
         get: operations["ListUserCarpoolTrips"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-profile-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询猫咪档案补充建议 */
+        get: operations["ListAdminCatProfileSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-profile-suggestions/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核猫咪档案补充建议 */
+        post: operations["ReviewAdminCatProfileSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询猫咪目击审核队列 */
+        get: operations["ListAdminCatSightings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-sightings/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核猫咪目击动态 */
+        post: operations["ReviewAdminCatSighting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-sightings/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 下线或恢复已审核通过的目击动态 */
+        put: operations["UpdateAdminCatSightingStatus"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询新猫投稿 */
+        get: operations["ListAdminCatSubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-submissions/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核新猫投稿 */
+        post: operations["ReviewAdminCatSubmission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询猫咪档案 */
+        get: operations["ListAdminCats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 管理端更新猫咪档案 */
+        put: operations["UpdateAdminCat"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 下线或恢复猫咪档案（保留其余信息） */
+        put: operations["UpdateAdminCatStatus"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cat-sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询全校公开猫咪目击动态 */
+        get: operations["ListGlobalCatSightings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cat-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 投稿发现的新猫 */
+        post: operations["SubmitCat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开猫咪图鉴 */
+        get: operations["ListCats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开猫咪详情 */
+        get: operations["GetCat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/hotspots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询猫咪区域级出没热点 */
+        get: operations["ListCatHotspots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/profile-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交猫咪基础档案补充建议 */
+        post: operations["CreateCatProfileSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询猫咪目击动态 */
+        get: operations["ListCatSightings"];
+        put?: never;
+        /** 发布目击打卡 */
+        post: operations["CreateCatSighting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cat-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的猫咪图鉴 */
+        get: operations["GetMyCatCatalog"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3973,6 +4382,366 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/lottery/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询抽奖活动 */
+        get: operations["ListAdminLotteryCampaigns"];
+        put?: never;
+        /** 管理端创建抽奖活动草稿 */
+        post: operations["CreateAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看抽奖活动草稿 */
+        get: operations["GetAdminLotteryCampaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端修改抽奖活动草稿 */
+        patch: operations["UpdateAdminLotteryCampaign"];
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消未开奖抽奖活动 */
+        post: operations["CancelAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布抽奖活动 */
+        post: operations["PublishAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/sponsors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 独立更新活动赞助商宣传资料不修改抽奖规则 */
+        put: operations["UpdateAdminLotteryCampaignSponsors"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停止抽奖活动后续参与 */
+        post: operations["StopAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询抽奖码 */
+        get: operations["ListAdminLotteryCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/draw-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询到期开奖批次 */
+        get: operations["ListAdminLotteryDrawBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/draw-batches/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 恢复失败的到期开奖批次 */
+        post: operations["RetryAdminLotteryDrawBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/share-attributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询分享归因 */
+        get: operations["ListAdminLotteryShareAttributions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/wins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询中奖履约记录 */
+        get: operations["ListAdminLotteryWins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/wins/{id}/fulfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登记中奖奖品已发放 */
+        post: operations["FulfillAdminLotteryWin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询抽奖活动 */
+        get: operations["ListLotteryCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看抽奖活动详情 */
+        get: operations["GetLotteryCampaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的抽奖码 */
+        get: operations["ListMyLotteryCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/draws": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的抽奖结果 */
+        get: operations["ListMyLotteryDraws"];
+        put?: never;
+        /** 即时抽奖并消耗一枚抽奖码 */
+        post: operations["DrawLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/participations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 参与活动并领取基础抽奖码 */
+        post: operations["JoinLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开中奖结果 */
+        get: operations["ListLotteryCampaignResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/share-attributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登录或注册后提交分享归因 */
+        post: operations["SubmitLotteryShareAttribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/share-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建抽奖分享入口 */
+        post: operations["CreateLotteryShareToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/wins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看我的中奖履约详情 */
+        get: operations["GetLotteryWin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/marketplace/listings": {
         parameters: {
             query?: never;
@@ -5320,6 +6089,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description 学年 xn 和学期 xq 必须同时提供，或同时省略以查询当前学期。 */
+        LegacyWeoucCoursesForm: components["schemas"]["LegacyWeoucForm"] & (unknown | unknown);
+        LegacyWeoucForm: components["schemas"]["LegacyWeoucFields"] & Record<string, never>;
+        /** @description 有微信 code 的正常绑定必须提供学号和密码；缺少 code 或 Kingo 登录保留旧短路提示。 */
+        LegacyWeoucBindForm: components["schemas"]["LegacyWeoucFields"] & (unknown | {
+            login_code: string;
+        } | {
+            loginType: string;
+        } | unknown);
+        LegacyWeoucFields: {
+            xh?: string;
+            password?: string;
+            loginType?: string;
+            login_code?: string;
+            type?: string;
+            xn?: number;
+            xq?: number;
+            ks_type?: number;
+            /** @description 保留旧参数，不改变 provider 缓存策略 */
+            pull?: string;
+        };
+        LegacyWeoucEnvelope: {
+            status: number;
+            message: string;
+            msg: string;
+            data?: unknown;
+            error?: string;
+            from_cache?: boolean;
+        };
         TokenPair: {
             access_token: string;
             refresh_token: string;
@@ -5438,6 +6236,7 @@ export interface components {
         WechatLoginRequest: {
             app_id: string;
             code: string;
+            lottery_share_token?: string;
         };
         AcceptNoticeSubscriptionsRequest: {
             template_ids: string[];
@@ -7169,7 +7968,7 @@ export interface components {
             version: number;
         };
         /** @enum {string} */
-        CampusCircleViewerAction: "edit" | "withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic" | "pin" | "unpin";
+        CampusCircleViewerAction: "edit" | "withdraw" | "admin_withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic" | "pin" | "unpin";
         /** @enum {string} */
         CampusCircleViewerRelation: "anonymous" | "owner" | "other" | "admin";
         CarpoolTripPageResponseBody: {
@@ -7235,6 +8034,272 @@ export interface components {
         };
         /** @enum {string} */
         CarpoolViewerAction: "edit" | "submit_review" | "cancel" | "join" | "leave" | "verify_academic";
+        AdminSightingPage: {
+            items: components["schemas"]["AdminSightingView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AdminSightingPageResponseBody: {
+            data: components["schemas"]["AdminSightingPage"];
+            request_id: string;
+        };
+        AdminSightingResponseBody: {
+            data: components["schemas"]["AdminSightingView"];
+            request_id: string;
+        };
+        AdminSightingView: {
+            activity: string;
+            area: string;
+            cat_cover_url?: string | null;
+            /** Format: uint64 */
+            cat_id: number;
+            cat_name: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
+            note?: string | null;
+            photo_url?: string | null;
+            rejection_reason?: string | null;
+            reporter_avatar_url?: string | null;
+            reporter_name: string;
+            status: components["schemas"]["SightingStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
+        CatHotspot: {
+            area: string;
+            /** Format: date-time */
+            last_seen_at: string;
+            /** Format: int64 */
+            sighting_count: number;
+        };
+        CatHotspotResponseBody: {
+            data: components["schemas"]["CatHotspot"][];
+            request_id: string;
+        };
+        CatInput: {
+            aliases: string[];
+            campus: string;
+            coat: string;
+            /** Format: uint64 */
+            cover_media_id?: number;
+            /** Format: uint64 */
+            expected_version?: number;
+            /** Format: date-time */
+            first_recorded_at: string;
+            gender: string;
+            name: string;
+            resident_area: string;
+            status?: components["schemas"]["CatStatus"];
+            traits: string[];
+        };
+        CatPage: {
+            items: components["schemas"]["CatView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CatPageResponseBody: {
+            data: components["schemas"]["CatPage"];
+            request_id: string;
+        };
+        CatResponseBody: {
+            data: components["schemas"]["CatView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CatStatus: "published" | "hidden";
+        CatStatusInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            status: components["schemas"]["CatStatus"];
+        };
+        CatView: {
+            aliases: string[];
+            campus: string;
+            coat: string;
+            cover_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            favorited: boolean;
+            /** Format: date-time */
+            first_recorded_at: string;
+            gender: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            last_seen_at?: string | null;
+            /** @description 显示名：正式名字优先；未命名时取首个非空已采纳别名，不修改原始档案名字 */
+            name: string;
+            resident_area: string;
+            /** Format: int64 */
+            sighting_count: number;
+            status: components["schemas"]["CatStatus"];
+            traits: string[];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CatalogResponseBody: {
+            data: components["schemas"]["CatalogView"];
+            request_id: string;
+        };
+        CatalogView: {
+            seen_cats: components["schemas"]["CatView"][];
+            /** Format: int64 */
+            seen_count: number;
+            /** Format: int64 */
+            total_count: number;
+            unseen_cats: components["schemas"]["CatView"][];
+        };
+        /** @enum {string} */
+        ProfileSuggestionField: "aliases" | "gender" | "coat" | "traits" | "resident_area";
+        ProfileSuggestionInput: {
+            field: components["schemas"]["ProfileSuggestionField"];
+            note?: string;
+            proposed_value: string;
+        };
+        ProfileSuggestionPage: {
+            items: components["schemas"]["ProfileSuggestionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ProfileSuggestionPageResponseBody: {
+            data: components["schemas"]["ProfileSuggestionPage"];
+            request_id: string;
+        };
+        ProfileSuggestionResponseBody: {
+            data: components["schemas"]["ProfileSuggestionView"];
+            request_id: string;
+        };
+        ProfileSuggestionView: {
+            /** @description 仅管理端返回关联猫咪封面 */
+            cat_cover_url?: string | null;
+            /** Format: uint64 */
+            cat_id: number;
+            /** @description 仅管理端返回关联猫咪的当前显示名 */
+            cat_name?: string;
+            /**
+             * Format: uint64
+             * @description 当前档案版本，不替代建议本身的审核版本
+             */
+            cat_version?: number;
+            /** Format: date-time */
+            created_at: string;
+            /** @description 仅管理端返回字段当前值，不是提交时的历史快照；标签以顿号连接 */
+            current_value?: string;
+            field: components["schemas"]["ProfileSuggestionField"];
+            /** Format: uint64 */
+            id: number;
+            note?: string | null;
+            proposed_value: string;
+            rejection_reason?: string | null;
+            status: components["schemas"]["SubmissionStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
+        SightingInput: {
+            activity: string;
+            area: string;
+            note?: string;
+            /** Format: uint64 */
+            photo_media_id?: number;
+        };
+        SightingPage: {
+            items: components["schemas"]["SightingView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SightingPageResponseBody: {
+            data: components["schemas"]["SightingPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        SightingStatus: "pending" | "approved" | "rejected" | "hidden";
+        SightingStatusInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            /** @enum {string} */
+            status: "approved" | "hidden";
+        };
+        SightingView: {
+            activity: string;
+            area: string;
+            cat_cover_url?: string | null;
+            /** Format: uint64 */
+            cat_id: number;
+            cat_name: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
+            note?: string | null;
+            photo_url?: string | null;
+            reporter_avatar_url?: string | null;
+            reporter_name: string;
+        };
+        SubmissionInput: {
+            area: string;
+            campus: string;
+            description?: string;
+            /** Format: uint64 */
+            photo_media_id: number;
+            proposed_name?: string;
+        };
+        SubmissionPage: {
+            items: components["schemas"]["SubmissionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SubmissionPageResponseBody: {
+            data: components["schemas"]["SubmissionPage"];
+            request_id: string;
+        };
+        SubmissionResponseBody: {
+            data: components["schemas"]["SubmissionView"];
+            request_id: string;
+        };
+        SubmissionReviewInput: {
+            /** @enum {string} */
+            decision: "approved" | "rejected";
+            /** Format: uint64 */
+            expected_version: number;
+            rejection_reason?: string;
+        };
+        /** @enum {string} */
+        SubmissionStatus: "pending" | "approved" | "rejected";
+        SubmissionView: {
+            area: string;
+            campus: string;
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: uint64 */
+            id: number;
+            photo_url?: string | null;
+            proposed_name?: string | null;
+            rejection_reason?: string | null;
+            status: components["schemas"]["SubmissionStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
         /** @enum {string} */
         ClubAvailableAction: "edit" | "submit_review" | "verify_academic";
         ClubCategory: {
@@ -7732,7 +8797,7 @@ export interface components {
             trace_id: string;
         };
         /** @enum {string} */
-        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
+        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing" | "cat_submission" | "cat_sighting" | "cat_profile_suggestion";
         ContentSecurityReviewPage: {
             items: components["schemas"]["ContentSecurityReviewView"][];
             page: number;
@@ -9031,7 +10096,7 @@ export interface components {
             total_seats?: number | null;
         };
         /** @enum {string} */
-        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
         FavoriteState: {
             favorited: boolean;
             /** Format: uint64 */
@@ -9131,6 +10196,343 @@ export interface components {
             reply_to_nickname: string | null;
             /** Format: uint64 */
             root_id: number;
+        };
+        LotteryCampaignInput: {
+            cover_url?: string;
+            description: string;
+            draw_mode: components["schemas"]["LotteryDrawMode"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: int64 */
+            max_wins: number;
+            prizes: components["schemas"]["LotteryPrizeInput"][];
+            /** Format: int64 */
+            share_attribution_ttl_seconds: number;
+            /** Format: int64 */
+            share_daily_code_limit: number;
+            share_enabled: boolean;
+            share_new_user_only: boolean;
+            /** Format: int64 */
+            share_reward_code_count: number;
+            /** Format: int64 */
+            share_total_code_limit: number;
+            /** @description 省略时编辑保留原赞助商，空数组清空 */
+            sponsors?: components["schemas"]["LotterySponsor"][];
+            /** Format: date-time */
+            start_at: string;
+            title: string;
+        };
+        LotteryCampaignPageResponseBody: {
+            data: components["schemas"]["LotteryPage"];
+            request_id: string;
+        };
+        LotteryCampaignResponseBody: {
+            data: components["schemas"]["LotteryCampaignView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryCampaignStatus: "draft" | "published" | "closed" | "completed" | "cancelled";
+        LotteryCampaignUpdateInput: components["schemas"]["LotteryCampaignInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        LotteryCampaignView: {
+            cover_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            description: string;
+            draw_mode: components["schemas"]["LotteryDrawMode"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: uint64 */
+            id: number;
+            joined: boolean;
+            /** Format: int64 */
+            max_wins: number;
+            /** Format: int64 */
+            my_available_code_count: number;
+            /** Format: int64 */
+            my_code_count: number;
+            /** Format: int64 */
+            my_win_count: number;
+            prizes: components["schemas"]["LotteryPrizeView"][];
+            /** Format: date-time */
+            server_time: string;
+            /** Format: int64 */
+            share_attribution_ttl_seconds: number;
+            /** Format: int64 */
+            share_daily_code_limit: number;
+            share_enabled: boolean;
+            share_new_user_only: boolean;
+            /** Format: int64 */
+            share_reward_code_count: number;
+            /** Format: int64 */
+            share_total_code_limit: number;
+            sponsors?: components["schemas"]["LotterySponsor"][];
+            /** Format: date-time */
+            start_at: string;
+            status: components["schemas"]["LotteryCampaignStatus"];
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            verified: boolean;
+            /** Format: uint64 */
+            version: number;
+        };
+        LotteryCodePage: {
+            items: components["schemas"]["LotteryCodeView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryCodePageResponseBody: {
+            data: components["schemas"]["LotteryCodePage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryCodeStatus: "available" | "entered" | "won" | "lost" | "excluded" | "expired" | "void";
+        LotteryCodeView: {
+            code: string;
+            /** Format: date-time */
+            created_at: string;
+            exclusion_reason?: string | null;
+            /** Format: uint64 */
+            id: number;
+            source: string;
+            status: components["schemas"]["LotteryCodeStatus"];
+            /** Format: uint64 */
+            user_id?: number | null;
+        };
+        LotteryDrawBatchPage: {
+            items: components["schemas"]["LotteryDrawBatchView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryDrawBatchPageResponseBody: {
+            data: components["schemas"]["LotteryDrawBatchPage"];
+            request_id: string;
+        };
+        LotteryDrawBatchView: {
+            /** Format: int64 */
+            attempt_count: number;
+            /** Format: uint64 */
+            campaign_id: number;
+            /** Format: uint64 */
+            config_version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            last_error?: string | null;
+            status: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        LotteryDrawMode: "scheduled" | "instant";
+        LotteryDrawPage: {
+            items: components["schemas"]["LotteryDrawView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryDrawPageResponseBody: {
+            data: components["schemas"]["LotteryDrawPage"];
+            request_id: string;
+        };
+        LotteryDrawResponseBody: {
+            data: components["schemas"]["LotteryDrawView"];
+            request_id: string;
+        };
+        LotteryDrawView: {
+            /** Format: uint64 */
+            campaign_id: number;
+            /** Format: uint64 */
+            code_id: number;
+            /** Format: date-time */
+            drawn_at: string;
+            /** Format: uint64 */
+            id: number;
+            prize?: components["schemas"]["LotteryPrizeView"];
+            /** @enum {string} */
+            result: "won" | "lost";
+            /** Format: uint64 */
+            win_id?: number | null;
+        };
+        LotteryFulfillWinInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            fulfillment_note: string;
+        };
+        LotteryPage: {
+            items: components["schemas"]["LotteryCampaignView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryPrizeInput: {
+            /** Format: date-time */
+            claim_deadline_at: string;
+            claim_method: string;
+            description?: string;
+            /** Format: int64 */
+            display_order: number;
+            image_url?: string;
+            /** Format: int64 */
+            instant_probability_bps: number;
+            name: string;
+            /** Format: int64 */
+            scheduled_draw_order: number;
+            /** Format: int64 */
+            total_quantity: number;
+        };
+        LotteryPrizeView: {
+            /** Format: int64 */
+            allocated_quantity: number;
+            /** Format: date-time */
+            claim_deadline_at: string;
+            claim_method: string;
+            description?: string | null;
+            /** Format: int64 */
+            display_order: number;
+            /** Format: uint64 */
+            id: number;
+            image_url?: string | null;
+            /** Format: int64 */
+            instant_probability_bps: number;
+            name: string;
+            /** Format: int64 */
+            scheduled_draw_order: number;
+            /** Format: int64 */
+            total_quantity: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        LotteryPublicResultView: {
+            /** Format: uint64 */
+            draw_id: number;
+            /** Format: date-time */
+            drawn_at: string;
+            masked_code: string;
+            masked_user: string;
+            /** Format: uint64 */
+            prize_id: number;
+            prize_name: string;
+        };
+        LotteryResultPage: {
+            items: components["schemas"]["LotteryPublicResultView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryResultPageResponseBody: {
+            data: components["schemas"]["LotteryResultPage"];
+            request_id: string;
+        };
+        LotteryShareAttributionPage: {
+            items: components["schemas"]["LotteryShareAttributionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryShareAttributionPageResponseBody: {
+            data: components["schemas"]["LotteryShareAttributionPage"];
+            request_id: string;
+        };
+        LotteryShareAttributionResponseBody: {
+            data: components["schemas"]["LotteryShareAttributionSubmitView"];
+            request_id: string;
+        };
+        LotteryShareAttributionSubmitView: {
+            reason?: string | null;
+            /** Format: int64 */
+            rewarded_code_count: number;
+            status: string;
+        };
+        LotteryShareAttributionView: {
+            reason?: string | null;
+            /** Format: int64 */
+            rewarded_code_count: number;
+            /** Format: uint64 */
+            sharer_user_id?: number | null;
+            status: string;
+            /** Format: uint64 */
+            visitor_user_id?: number | null;
+        };
+        LotteryShareTokenResponseBody: {
+            data: components["schemas"]["LotteryShareTokenView"];
+            request_id: string;
+        };
+        LotteryShareTokenView: {
+            /** Format: date-time */
+            expires_at: string;
+            token: string;
+        };
+        LotterySponsor: {
+            description: string;
+            /** Format: int64 */
+            display_order: number;
+            /** @description 可选 HTTPS 宣传图片 */
+            image_url?: string;
+            name: string;
+            /** @description 用户主动复制的公开微信号 */
+            wechat_id: string;
+        };
+        LotterySponsorsUpdateInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            sponsors: components["schemas"]["LotterySponsor"][];
+        };
+        LotteryVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        LotteryWinPage: {
+            items: components["schemas"]["LotteryWinView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryWinPageResponseBody: {
+            data: components["schemas"]["LotteryWinPage"];
+            request_id: string;
+        };
+        LotteryWinResponseBody: {
+            data: components["schemas"]["LotteryWinView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryWinStatus: "pending" | "fulfilled" | "expired";
+        LotteryWinView: {
+            /** Format: uint64 */
+            campaign_id: number;
+            campaign_title: string;
+            code: string;
+            /** Format: uint64 */
+            code_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            fulfilled_at?: string | null;
+            fulfillment_note?: string | null;
+            /** Format: uint64 */
+            id: number;
+            prize: components["schemas"]["LotteryPrizeView"];
+            status: components["schemas"]["LotteryWinStatus"];
+            /** Format: uint64 */
+            user_id: number;
+            /** Format: uint64 */
+            version: number;
         };
         MarketplaceListingImageView: {
             /** Format: uint64 */
@@ -9256,7 +10658,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat" | "cat_atlas";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -9588,7 +10990,7 @@ export interface components {
             message_id: number;
         };
         /** @enum {string} */
-        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
         ReactionState: {
             /** Format: int64 */
             like_count: number;
@@ -10098,6 +11500,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description 旧业务 envelope；参数及业务失败通过 status 表示 */
+        LegacyWeoucResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LegacyWeoucEnvelope"];
+            };
+        };
         /** @description Successful response */
         Success: {
             headers: {
@@ -10802,6 +12213,105 @@ export interface components {
                 "application/json": components["schemas"]["CarpoolTripResponseBody"];
             };
         };
+        /** @description 管理端猫咪目击审核分页列表 */
+        AdminSightingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminSightingPageResponseBody"];
+            };
+        };
+        /** @description 管理端猫咪目击审核记录 */
+        AdminSightingResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminSightingResponseBody"];
+            };
+        };
+        /** @description 猫咪区域级出没热点 */
+        CatHotspotResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatHotspotResponseBody"];
+            };
+        };
+        /** @description 猫咪分页列表 */
+        CatPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatPageResponseBody"];
+            };
+        };
+        /** @description 猫咪档案 */
+        CatResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatResponseBody"];
+            };
+        };
+        /** @description 我的图鉴 */
+        CatalogResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatalogResponseBody"];
+            };
+        };
+        /** @description 猫咪档案补充建议分页列表 */
+        ProfileSuggestionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ProfileSuggestionPageResponseBody"];
+            };
+        };
+        /** @description 猫咪档案补充建议 */
+        ProfileSuggestionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ProfileSuggestionResponseBody"];
+            };
+        };
+        /** @description 目击动态分页列表 */
+        SightingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SightingPageResponseBody"];
+            };
+        };
+        /** @description 新猫投稿分页列表 */
+        SubmissionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SubmissionPageResponseBody"];
+            };
+        };
+        /** @description 新猫投稿 */
+        SubmissionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SubmissionResponseBody"];
+            };
+        };
         /** @description 社团分类列表 */
         ClubCategoryListResponse: {
             headers: {
@@ -11342,6 +12852,114 @@ export interface components {
                 "application/json": components["schemas"]["HomeFeedPageResponseBody"];
             };
         };
+        /** @description 抽奖活动分页 */
+        LotteryCampaignPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignPageResponseBody"];
+            };
+        };
+        /** @description 抽奖活动 */
+        LotteryCampaignResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignResponseBody"];
+            };
+        };
+        /** @description 我的抽奖码分页 */
+        LotteryCodePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCodePageResponseBody"];
+            };
+        };
+        /** @description 到期开奖批次分页 */
+        LotteryDrawBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawBatchPageResponseBody"];
+            };
+        };
+        /** @description 抽奖结果分页 */
+        LotteryDrawPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawPageResponseBody"];
+            };
+        };
+        /** @description 抽奖结果 */
+        LotteryDrawResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawResponseBody"];
+            };
+        };
+        /** @description 公开开奖结果分页 */
+        LotteryResultPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryResultPageResponseBody"];
+            };
+        };
+        /** @description 分享归因分页 */
+        LotteryShareAttributionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareAttributionPageResponseBody"];
+            };
+        };
+        /** @description 分享归因提交结果 */
+        LotteryShareAttributionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareAttributionResponseBody"];
+            };
+        };
+        /** @description 分享入口 */
+        LotteryShareTokenResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareTokenResponseBody"];
+            };
+        };
+        /** @description 中奖履约分页 */
+        LotteryWinPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryWinPageResponseBody"];
+            };
+        };
+        /** @description 中奖履约详情 */
+        LotteryWinResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryWinResponseBody"];
+            };
+        };
         /** @description 二手商品分页 */
         MarketplaceListingPageResponse: {
             headers: {
@@ -11670,6 +13288,21 @@ export interface components {
         ExpectedVersion: number;
     };
     requestBodies: {
+        LegacyWeoucCoursesForm: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["LegacyWeoucCoursesForm"];
+            };
+        };
+        LegacyWeoucBindForm: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["LegacyWeoucBindForm"];
+            };
+        };
+        LegacyWeoucForm: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["LegacyWeoucForm"];
+            };
+        };
         Login: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
@@ -11711,6 +13344,71 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    LegacyWeoucBind: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucBindForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucCourses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucCoursesForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucGrades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucExams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucSelections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
     Live: {
         parameters: {
             query?: never;
@@ -13813,6 +15511,32 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    AdminWithdrawCampusCirclePost: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListAdminCampusCircleSections: {
         parameters: {
             query?: never;
@@ -14720,6 +16444,343 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    ListAdminCatProfileSuggestions: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ProfileSuggestionPageResponse"];
+        };
+    };
+    ReviewAdminCatProfileSuggestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ProfileSuggestionResponse"];
+        };
+    };
+    ListAdminCatSightings: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminSightingPageResponse"];
+        };
+    };
+    ReviewAdminCatSighting: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminSightingResponse"];
+        };
+    };
+    UpdateAdminCatSightingStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SightingStatusInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminSightingResponse"];
+        };
+    };
+    ListAdminCatSubmissions: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SubmissionPageResponse"];
+        };
+    };
+    ReviewAdminCatSubmission: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["SubmissionResponse"];
+        };
+    };
+    ListAdminCats: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatPageResponse"];
+        };
+    };
+    UpdateAdminCat: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CatResponse"];
+        };
+    };
+    UpdateAdminCatStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatStatusInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CatResponse"];
+        };
+    };
+    ListGlobalCatSightings: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SightingPageResponse"];
+        };
+    };
+    SubmitCat: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["SubmissionResponse"];
+        };
+    };
+    ListCats: {
+        parameters: {
+            query?: {
+                area?: string;
+                keyword?: string;
+                sort?: "newest" | "latest_seen" | "popular";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatPageResponse"];
+        };
+    };
+    GetCat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListCatHotspots: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatHotspotResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CreateCatProfileSuggestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSuggestionInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ProfileSuggestionResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListCatSightings: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SightingPageResponse"];
+        };
+    };
+    CreateCatSighting: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SightingInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["SightingPageResponse"];
+        };
+    };
+    GetMyCatCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatalogResponse"];
+        };
+    };
     ListAdminClubCategories: {
         parameters: {
             query?: never;
@@ -15511,7 +17572,7 @@ export interface operations {
     ListAdminContentSecurityReviews: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
+                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing" | "cat_submission" | "cat_sighting" | "cat_profile_suggestion";
                 suggestion?: "pass" | "review" | "risky";
                 status?: "auto_approved" | "pending_manual" | "manual_approved" | "manual_rejected";
                 page?: number;
@@ -17243,7 +19304,7 @@ export interface operations {
     ListMyFavorites: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
                 page?: number;
                 page_size?: number;
             };
@@ -17260,7 +19321,7 @@ export interface operations {
     GetFavoriteState: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -17277,7 +19338,7 @@ export interface operations {
     AddFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -17295,7 +19356,7 @@ export interface operations {
     RemoveFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -17323,6 +19384,442 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["HomeFeedPageResponse"];
+        };
+    };
+    ListAdminLotteryCampaigns: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignPageResponse"];
+        };
+    };
+    CreateAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["LotteryCampaignResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CancelAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminLotteryCampaignSponsors: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotterySponsorsUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    StopAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminLotteryCodes: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCodePageResponse"];
+        };
+    };
+    ListAdminLotteryDrawBatches: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawBatchPageResponse"];
+        };
+    };
+    RetryAdminLotteryDrawBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["LotteryDrawBatchPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminLotteryShareAttributions: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryShareAttributionPageResponse"];
+        };
+    };
+    ListAdminLotteryWins: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryWinPageResponse"];
+        };
+    };
+    FulfillAdminLotteryWin: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryFulfillWinInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryWinResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListLotteryCampaigns: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignPageResponse"];
+        };
+    };
+    GetLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListMyLotteryCodes: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCodePageResponse"];
+        };
+    };
+    ListMyLotteryDraws: {
+        parameters: {
+            query?: {
+                request_key?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawPageResponse"];
+        };
+    };
+    DrawLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    JoinLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListLotteryCampaignResults: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryResultPageResponse"];
+        };
+    };
+    SubmitLotteryShareAttribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryShareAttributionResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateLotteryShareToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: components["responses"]["LotteryShareTokenResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetLotteryWin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryWinResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminMarketplaceListings: {
@@ -18345,7 +20842,7 @@ export interface operations {
     LikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {
@@ -18363,7 +20860,7 @@ export interface operations {
     UnlikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {

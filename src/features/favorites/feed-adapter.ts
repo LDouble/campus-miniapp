@@ -1,6 +1,6 @@
 import type { FavoriteItem, FavoriteResourceType, HomeFeedItemView } from '../../api/types'
 
-const sourceTypeMap: Record<FavoriteResourceType, HomeFeedItemView['source_type']> = {
+const sourceTypeMap: Partial<Record<FavoriteResourceType, HomeFeedItemView['source_type']>> = {
   campus_circle_post: 'campus_circle_post',
   marketplace: 'marketplace_listing',
   errand: 'errand',
@@ -33,6 +33,8 @@ const favoriteContent = (item: FavoriteItem) => {
 export const favoriteItemToHomeFeedItem = (item: FavoriteItem): HomeFeedItemView | null => {
   const preview = item.preview
   if (item.availability !== 'available' || !preview) return null
+  const sourceType = sourceTypeMap[item.resource_type]
+  if (!sourceType) return null
 
   const feedTime = preview.published_at || preview.created_at || item.favorited_at
   return {
@@ -65,7 +67,7 @@ export const favoriteItemToHomeFeedItem = (item: FavoriteItem): HomeFeedItemView
     pickup_location: preview.pickup_location,
     section_id: null,
     source_id: item.resource_id,
-    source_type: sourceTypeMap[item.resource_type],
+    source_type: sourceType,
     total_seats: preview.total_seats,
     version: 1,
   }

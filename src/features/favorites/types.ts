@@ -13,6 +13,7 @@ export const favoriteResourceLabels: Record<FavoriteResourceType, string> = {
   marketplace: '二手',
   errand: '跑腿',
   carpool: '找同行',
+  cat: '猫猫图鉴',
 }
 
 export type FavoriteFeedVariant = 'community' | 'marketplace' | 'errand' | 'carpool'
@@ -22,6 +23,7 @@ export const favoriteResourceClassNames: Record<FavoriteResourceType, FavoriteFe
   marketplace: 'marketplace',
   errand: 'errand',
   carpool: 'carpool',
+  cat: 'community',
 }
 
 export const favoritePreviewImage = (preview?: FavoriteResourcePreview) => (
@@ -42,6 +44,8 @@ export const favoritePreviewTitle = (
       return preview.intent === 'wanted' ? '校园求购' : '校园闲置'
     case 'errand':
       return '校园跑腿任务'
+    case 'cat':
+      return '校园猫猫档案'
     default:
       return '校园动态'
   }
