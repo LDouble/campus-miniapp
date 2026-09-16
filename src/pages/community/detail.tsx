@@ -19,12 +19,10 @@ import {
 } from '../../features/community/author'
 import { consumeCommunityDetailSnapshot } from '../../features/community/detail-snapshot'
 import {
-  formatCommunityViewCount,
   reportCommunityPostView,
   flushCommunityPostViews,
 } from '../../features/community/post-view'
 import { communityPostTopics, communityTopicUrl } from '../../features/community/topic'
-import { useCommunityViewCount } from '../../features/community/use-view-count'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import { openContentReport } from '../../features/content-report'
 import FavoriteToggle from '../../features/favorites/favorite-toggle'
@@ -77,7 +75,6 @@ export default function CommunityDetailPage() {
   })
   useDidShow(() => setPageVisible(true))
   const [post, setPost] = useState<CampusCirclePostView | null>(null)
-  const viewCount = useCommunityViewCount(postId, post?.view_count)
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [loading, setLoading] = useState(true)
   const [deletingPost, setDeletingPost] = useState(false)
@@ -393,7 +390,6 @@ export default function CommunityDetailPage() {
                 meta={(
                   <>
                     <Text>{formatDetailDateTime(post.published_at || post.created_at)}</Text>
-                    {viewCount > 0 && <Text className='community-detail__view-count'>· {formatCommunityViewCount(viewCount)} 浏览</Text>}
                     {post.status !== 'approved' && (
                       <Text className={`community-detail__review-status community-detail__review-status--${post.status}`}>
                         {formatStatus(post.status)}

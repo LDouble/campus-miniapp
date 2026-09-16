@@ -1502,7 +1502,7 @@ function Index() {
                 key={`${key}-${item.version}`}
                 post={post}
                 instanceKey={key}
-                showViewCount={item.source_type === 'campus_circle_post'}
+                trackViews={item.source_type === 'campus_circle_post'}
                 viewExposureSurface='home'
                 viewTrackingEnabled={viewPageVisible && !homeCommentItem && !showNotificationGuide}
                 variant={variant}

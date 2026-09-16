@@ -377,7 +377,7 @@ export default function PublicProfilePage() {
             <CommunityPostCard
               key={post.id}
               post={post}
-              showViewCount
+              trackViews
               viewExposureSurface='profile'
               viewTrackingEnabled={viewPageVisible && !commentPost}
               sectionName='校园社区'

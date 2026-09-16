@@ -251,7 +251,7 @@ export default function CommunityTopicPage() {
         <CommunityPostCard
           key={post.id}
           post={post}
-          showViewCount
+          trackViews
           viewExposureSurface='topic'
           viewTrackingEnabled={viewPageVisible && !commentPost}
           sectionName='校园社区'

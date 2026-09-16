@@ -14,9 +14,7 @@ import { parseStickerContent, plainStickerContent } from '../stickers/content'
 import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
-import { formatCommunityViewCount } from './post-view-utils'
 import { reportCommunityPostView } from './post-view'
-import { useCommunityViewCount } from './use-view-count'
 import { usePostExposure } from './use-post-exposure'
 import { useViewExposureInsets, type ViewExposureSurface } from './view-exposure-insets'
 import { communityPostTopics, communityTopicUrl } from './topic'
@@ -84,7 +82,7 @@ type Props = {
   businessPreview?: { title: string; meta: string }
   trailingAction?: ReactNode
   onReplyComment?: (post: CampusCirclePostView, comment: CommunityPostCommentPreview) => void
-  showViewCount?: boolean
+  trackViews?: boolean
   viewTrackingEnabled?: boolean
   viewExposureSurface?: ViewExposureSurface
 }
@@ -123,7 +121,7 @@ function CommunityPostCard({
   businessPreview,
   trailingAction,
   onReplyComment,
-  showViewCount = false,
+  trackViews = false,
   viewTrackingEnabled = true,
   viewExposureSurface = 'profile',
 }: Props) {
@@ -131,8 +129,7 @@ function CommunityPostCard({
   const [pinPending, setPinPending] = useState(false)
   const authorName = communityAuthorName(post)
   const cardId = instanceKey || String(post.id)
-  const tracksCommunityPost = showViewCount && variant === 'community'
-  const viewCount = useCommunityViewCount(tracksCommunityPost ? post.id : 0, post.view_count)
+  const tracksCommunityPost = trackViews && variant === 'community'
   const exposureInsets = useViewExposureInsets(viewExposureSurface)
   usePostExposure({
     selector: `#community-post-${cardId}`,
@@ -324,9 +321,6 @@ function CommunityPostCard({
         <View className='community-post__meta'>
           <View className='community-post__meta-copy'>
             <Text className='community-post__time'>{publishedAt}</Text>
-            {showViewCount && viewCount > 0 && (
-              <Text className='community-post__view-count'>· {formatCommunityViewCount(viewCount)} 浏览</Text>
-            )}
             {reviewStatus && (
               <Text className={`community-post__review-status community-post__review-status--${reviewStatus.tone}`}>
                 {reviewStatus.label}

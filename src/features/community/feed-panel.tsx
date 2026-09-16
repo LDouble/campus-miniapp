@@ -563,7 +563,7 @@ export default function CommunityFeedPanel({
               )}
               <CommunityPostCard
                 post={post}
-                showViewCount
+                trackViews
                 viewExposureSurface='community'
                 viewTrackingEnabled={viewPageVisible && !commentPost}
                 motionDelay={index < 4 ? index + 1 : undefined}
