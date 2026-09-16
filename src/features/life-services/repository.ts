@@ -38,6 +38,7 @@ type UpdateCarpoolBody = operations['UpdateCarpoolTrip']['requestBody']['content
 type CreateCampusPostBody = operations['CreateCampusCirclePost']['requestBody']['content']['application/json']
 type UpdateCampusPostBody = operations['UpdateCampusCirclePost']['requestBody']['content']['application/json']
 type UpdateCampusPostPinBody = operations['UpdateCampusCirclePostPin']['requestBody']['content']['application/json']
+type AdminWithdrawCampusCirclePostBody = operations['AdminWithdrawCampusCirclePost']['requestBody']['content']['application/json']
 type CreateCommentBody = operations['CreateComment']['requestBody']['content']['application/json']
 type CreateContentReportBody = operations['CreateContentReport']['requestBody']['content']['application/json']
 
@@ -271,6 +272,15 @@ export const lifeServicesRepository = {
         `campus-circle:${id}:pin:${input.pinned ? 'on' : 'off'}:${input.expectedVersion}`,
       ),
       data,
+    })
+  },
+
+  adminWithdrawCampusCirclePost(id: number, input: AdminWithdrawCampusCirclePostBody) {
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/admin/campus-circle/posts/${id}/withdraw`,
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey(`campus-circle:${id}:admin-withdraw`),
+      data: input,
     })
   },
 
