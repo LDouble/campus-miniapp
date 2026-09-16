@@ -34,7 +34,7 @@
 }
 
 .content-image-grid--1 .content-image-grid__frame {
-  height: 212rpx;
+  height: 100%;
   aspect-ratio: auto;
 }
 
@@ -97,4 +97,20 @@
     color: #fff;
     background: rgba(26, 35, 51, 0.45);
   }
+}
+
+.content-image-grid--1 .content-image-grid__image {
+  height: auto;
+  min-height: 0;
+}
+.content-image-grid__long-label {
+  position: absolute;
+  right: 12rpx;
+  bottom: 12rpx;
+  padding: 4rpx 12rpx;
+  border-radius: var(--ousea-radius-card-sm);
+  background: var(--campus-surface);
+  color: var(--campus-text-heading);
+  font-size: var(--ousea-font-size-caption);
+  pointer-events: none;
 }

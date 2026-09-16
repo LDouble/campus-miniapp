@@ -166,6 +166,7 @@ const homeServiceIcons = {
     errands: require('../../assets/icons/home-service-errands.svg'),
     clubs: require('../../assets/icons/home-service-clubs.svg'),
     whatToEat: require('../../assets/icons/home-service-what-to-eat.svg'),
+    catAtlas: require('../../assets/icons/home-service-cat-atlas.svg'),
   },
   dark: {
     academic: require('../../assets/icons/home-service-academic-dark.svg'),
@@ -183,6 +184,7 @@ const homeServiceIcons = {
     errands: require('../../assets/icons/home-service-errands-dark.svg'),
     clubs: require('../../assets/icons/home-service-clubs-dark.svg'),
     whatToEat: require('../../assets/icons/home-service-what-to-eat-dark.svg'),
+    catAtlas: require('../../assets/icons/home-service-cat-atlas-dark.svg'),
   },
 }
 type HomeServiceIconKey = keyof typeof homeServiceIcons.light
@@ -217,6 +219,7 @@ const quickServices = [
     route: '/pages/academic/exams/index',
   },
   { key: 'result', name: '选课结果', iconKey: 'result' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/selection/index' },
+  { key: 'simulation', name: '模拟选课', iconKey: 'schedule' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/schedule/index?mode=simulation' },
   { key: 'pass-rate', name: '通过率', iconKey: 'passRate' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/statistics/courses' },
   { key: 'materials', name: '资料', iconKey: 'materials' as HomeServiceIconKey, tone: 'cyan', route: '/pages/materials/index' },
   { key: 'calendar', name: '校历', iconKey: 'calendar' as HomeServiceIconKey, tone: 'pink', route: '/pages/calendar/index' },
@@ -224,10 +227,12 @@ const quickServices = [
   { key: 'community', name: '社区', iconKey: 'community' as HomeServiceIconKey, tone: 'cyan', tab: '/pages/community/index' },
   { key: 'market', name: '二手', iconKey: 'market' as HomeServiceIconKey, tone: 'pink', module: 'market' },
   { key: 'errands', name: '跑腿', iconKey: 'errands' as HomeServiceIconKey, tone: 'sand', module: 'errands' },
-  { key: 'carpool', name: '找同行', iconKey: 'carpool' as HomeServiceIconKey, tone: 'cyan', module: 'carpool' },
+  { key: 'course-audit', name: '课程查询', iconKey: 'academic' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/course-catalog/index' },
+  { key: 'general-education', name: '通识查询', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/general-education/index' },
   { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
   { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
   { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },
+  { key: 'cat-atlas', name: '猫猫图鉴', iconKey: 'catAtlas' as HomeServiceIconKey, tone: 'sand', route: '/pages/cat-atlas/index' },
 ]
 
 const migratedHomeServiceKeys = new Set([
@@ -243,6 +248,7 @@ const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
   grades: 'academic_grades',
   exams: 'academic_exams',
   result: 'academic_selection',
+  simulation: 'academic_schedule',
   'pass-rate': 'academic_statistics',
   materials: 'course_materials',
   calendar: 'calendar',
@@ -877,7 +883,7 @@ function Index() {
   const visibleHomeServices = quickServices.filter((service) => {
     if (isQualificationEdition && migratedHomeServiceKeys.has(service.key)) return false
     const moduleKey = serviceModuleKeys[service.key]
-    if (!moduleKey) return false
+    if (!moduleKey) return 'route' in service && Boolean(service.route)
     return resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)

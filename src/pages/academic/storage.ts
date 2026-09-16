@@ -14,8 +14,13 @@ const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
 const PREFERENCES_KEY = 'academic.preferences.v1'
 const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
 const SCHEDULE_REFRESH_GUIDE_KEY = 'academic.scheduleRefreshGuide.v2'
+const SCHEDULE_SELECTION_GUIDE_KEY = 'academic.scheduleSelectionGuide.v1'
+const COURSE_CATALOG_FLOAT_GUIDE_KEY = 'academic.courseCatalogFloatGuide.v1'
+const COURSE_CATALOG_DISCLAIMER_SEEN_KEY = 'academic.courseCatalogDisclaimerSeen.v1'
 const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
+const SELECTION_DRAFT_KEY = 'academic.selectionDraft.v1'
+const SELECTION_SCHEDULE_CACHE_KEY_PREFIX = 'academic.courseSelectionScheduleCache.v1.'
 
 export interface AcademicScheduleCache {
   version: 1
@@ -86,6 +91,7 @@ const validCourse = (value: unknown): value is Course => {
     && typeof course.name === 'string'
     && typeof course.teacher === 'string'
     && typeof course.location === 'string'
+    && (course.classNum === undefined || typeof course.classNum === 'string')
     && (course.note === undefined || typeof course.note === 'string')
     && (course.campus === undefined || typeof course.campus === 'string')
     && Number.isInteger(course.weekday)
@@ -160,6 +166,10 @@ const scheduleCacheKey = (platformUserId: number) => (
 
 const recordsCacheKey = (platformUserId: number) => (
   `${RECORDS_CACHE_KEY_PREFIX}${platformUserId}`
+)
+
+const selectionScheduleCacheKey = (platformUserId: number) => (
+  `${SELECTION_SCHEDULE_CACHE_KEY_PREFIX}${platformUserId}`
 )
 
 const validRecordMap = <T>(
@@ -263,6 +273,15 @@ const scheduleUpdatedAtByPeriod = (
 }
 
 export const academicStorage = {
+  getSelectionDraftCourses: (): Course[] => safeRead<Course[]>(SELECTION_DRAFT_KEY, []).filter((course) => course.source === 'simulation'),
+  setSelectionDraftCourses: (courses: Course[]) => safeWrite(SELECTION_DRAFT_KEY, courses),
+  getCourseSelectionScheduleCourses: (platformUserId: number): Course[] => (
+    safeRead<Course[]>(selectionScheduleCacheKey(platformUserId), [])
+      .filter(validCourse)
+  ),
+  setCourseSelectionScheduleCourses: (platformUserId: number, courses: Course[]) => (
+    safeWrite(selectionScheduleCacheKey(platformUserId), courses)
+  ),
   hasSeenScheduleRefreshGuideToday: () => (
     safeRead<string>(SCHEDULE_REFRESH_GUIDE_KEY, '') === getLocalDayKey()
   ),
@@ -272,6 +291,46 @@ export const academicStorage = {
     } catch (error) {
       // 引导状态不是关键数据，保存失败时无需打扰用户。
     }
+  },
+  hasSeenScheduleSelectionGuideToday: () => (
+    safeRead<string>(SCHEDULE_SELECTION_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markScheduleSelectionGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(SCHEDULE_SELECTION_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenCourseCatalogFloatGuideToday: () => (
+    safeRead<string>(COURSE_CATALOG_FLOAT_GUIDE_KEY, '') === getLocalDayKey()
+  ),
+  markCourseCatalogFloatGuideSeenToday: () => {
+    try {
+      Taro.setStorageSync(COURSE_CATALOG_FLOAT_GUIDE_KEY, getLocalDayKey())
+    } catch (error) {
+      // 引导状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  hasSeenCourseCatalogDisclaimer: () => (
+    safeRead<boolean>(COURSE_CATALOG_DISCLAIMER_SEEN_KEY, false)
+  ),
+  markCourseCatalogDisclaimerSeen: () => {
+    try {
+      Taro.setStorageSync(COURSE_CATALOG_DISCLAIMER_SEEN_KEY, true)
+    } catch (error) {
+      // 说明状态不是关键数据，保存失败时无需打扰用户。
+    }
+  },
+  getPersonalCourses: (userId: number, level: string, periodId: string): Course[] => {
+    const value = safeRead<unknown>(`academic.personalCourses.v1.${userId}.${level}.${periodId}`, [])
+    return Array.isArray(value) ? value.filter((course): course is Course => (
+      Boolean(course) && course.source === 'audit'
+      && validCourse({ ...course, source: 'official' }) && course.periodId === periodId
+    )) : []
+  },
+  setPersonalCourses: (userId: number, level: string, periodId: string, courses: Course[]) => {
+    safeWrite(`academic.personalCourses.v1.${userId}.${level}.${periodId}`, courses)
   },
   getCustomCourses: () => safeRead<Course[]>(CUSTOM_COURSES_KEY, []),
   setCustomCourses: (courses: Course[]) => safeWrite(CUSTOM_COURSES_KEY, courses),

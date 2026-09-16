@@ -7,6 +7,7 @@ import { getCurrentIdentity, getCurrentUser } from '../../api/account'
 import { uploadMediaImage } from '../../api/media'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
+import { openPublicProfile } from '../../features/profile/public-profile'
 import StickerContent from '../../components/sticker-content'
 import StickerPicker from '../../components/sticker-picker'
 import {
@@ -680,6 +681,16 @@ export default function DirectMessageChatPage() {
     void loadInitial(conversationIdRef.current)
   }
 
+  const openChatProfile = (userId: number, deleted = false) => {
+    if (deleted) {
+      void Taro.showToast({ title: '该用户已注销', icon: 'none' })
+      return
+    }
+    void openPublicProfile(userId).catch(() => {
+      void Taro.showToast({ title: '打开个人主页失败，请重试', icon: 'none' })
+    })
+  }
+
   const peerName = conversation?.peer.deleted
     ? '已注销用户'
     : conversation?.peer.nickname || '私信'
@@ -788,6 +799,9 @@ export default function DirectMessageChatPage() {
                           className='direct-chat-message__avatar'
                           fallback={avatarName}
                           shape='rounded'
+                          ariaRole='button'
+                          ariaLabel='查看对方个人主页'
+                          onClick={() => openChatProfile(conversation?.peer.id || 0, conversation?.peer.deleted)}
                           userId={conversation?.peer.id}
                         />
                       )}
@@ -867,6 +881,9 @@ export default function DirectMessageChatPage() {
                           className='direct-chat-message__avatar'
                           fallback={avatarName}
                           shape='rounded'
+                          ariaRole='button'
+                          ariaLabel='查看我的个人主页'
+                          onClick={() => openChatProfile(currentUserId)}
                           userId={currentUserId}
                         />
                       )}
@@ -939,6 +956,9 @@ export default function DirectMessageChatPage() {
                       className='direct-chat-message__avatar'
                       fallback={avatarFallback(currentUserName)}
                       shape='rounded'
+                      ariaRole='button'
+                      ariaLabel='查看我的个人主页'
+                      onClick={() => openChatProfile(currentUserId)}
                       userId={currentUserId}
                     />
                   </View>

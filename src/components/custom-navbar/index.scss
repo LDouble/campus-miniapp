@@ -4,6 +4,14 @@
   width: 100%;
   color: var(--campus-text-heading, #1d293d);
 
+  &--fixed {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 50;
+  }
+
   &__fixed {
     position: fixed;
     top: 0;
@@ -165,6 +173,15 @@
       background: var(--campus-surface-primary, #eff6ff);
       opacity: 0.55;
     }
+  }
+
+  &__right-content {
+    position: absolute;
+    top: 50%;
+    right: 32rpx;
+    display: flex;
+    align-items: center;
+    transform: translateY(-50%);
   }
 }
 

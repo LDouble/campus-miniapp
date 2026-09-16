@@ -26,6 +26,7 @@ const fullPages = [
   'pages/academic/selection/index',
   'pages/academic/statistics/courses',
   'pages/academic/statistics/index',
+  'pages/academic/general-education/index',
   'pages/calendar/index',
   'pages/materials/index',
   'pages/empty-classroom/index',
@@ -40,7 +41,11 @@ const fullPages = [
   'pages/clubs/edit',
   'pages/clubs/mine',
   'pages/direct-messages/index',
-  'pages/direct-messages/chat'
+  'pages/direct-messages/chat',
+  'pages/lottery/index',
+  'pages/lottery/detail',
+  'pages/lottery/codes/index',
+  'pages/lottery/win/index',
 ]
 
 const qualificationExcludedPages = new Set([
@@ -87,10 +92,11 @@ const socialMainPages = [
 ]
 
 const packageDefinitions = [
+  { root: 'packages/social', sourceRoot: 'pages', pages: socialMainPages.map((page) => page.replace(/^pages\//, '')) },
   {
     root: 'pages/academic',
     sourceRoot: 'pages/academic',
-    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index'],
+    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index', 'course-catalog/index', 'general-education/index'],
   },
   { root: 'pages/clubs', sourceRoot: 'pages/clubs', pages: ['index', 'detail', 'edit', 'mine'] },
   { root: 'pages/shuttle', sourceRoot: 'pages/shuttle', pages: ['index', 'detail'] },
@@ -101,6 +107,7 @@ const packageDefinitions = [
   { root: 'pages/calendar', sourceRoot: 'pages/calendar', pages: ['index'] },
   { root: 'pages/services', sourceRoot: 'pages/services', pages: ['index'] },
   { root: 'pages/what-to-eat', sourceRoot: 'pages/what-to-eat', pages: ['index', 'submit', 'detail'] },
+  { root: 'pages/cat-atlas', sourceRoot: 'pages/cat-atlas', pages: ['index', 'list', 'detail', 'sightings', 'my-catalog', 'report', 'map', 'profile-suggestion'] },
   { root: 'pages/campus-service', sourceRoot: 'pages/campus-service', pages: ['index', 'detail'] },
   { root: 'pages/public-profile', sourceRoot: 'pages/public-profile', pages: ['index'] },
   { root: 'pages/user-level', sourceRoot: 'pages/user-level', pages: ['index'] },
@@ -109,6 +116,7 @@ const packageDefinitions = [
   { root: 'pages/favorites', sourceRoot: 'pages/favorites', pages: ['index'] },
   { root: 'pages/webview', sourceRoot: 'pages/webview', pages: ['index'] },
   { root: 'pages/feature-unavailable', sourceRoot: 'pages/feature-unavailable', pages: ['index'] },
+  { root: 'pages/lottery', sourceRoot: 'pages/lottery', pages: ['index', 'detail', 'codes/index', 'win/index'] },
 ]
 
 const subPackages = packageDefinitions.flatMap(({ root, sourceRoot, pages }) => {
@@ -202,6 +210,12 @@ export default defineAppConfig({
     navigationBarTextStyle: '@navigationBarTextStyle' as 'black',
     backgroundColor: '@backgroundColor'
   },
+  permission: {
+    'scope.userLocation': {
+      desc: '用于记录你遇到猫咪的地点'
+    }
+  },
+  requiredPrivateInfos: ['choosePoi', 'getLocation'],
   usingComponents: {},
   tabBar: {
     custom: true,

@@ -37,6 +37,8 @@ type CreateCarpoolBody = operations['CreateCarpoolTrip']['requestBody']['content
 type UpdateCarpoolBody = operations['UpdateCarpoolTrip']['requestBody']['content']['application/json']
 type CreateCampusPostBody = operations['CreateCampusCirclePost']['requestBody']['content']['application/json']
 type UpdateCampusPostBody = operations['UpdateCampusCirclePost']['requestBody']['content']['application/json']
+type UpdateCampusPostPinBody = operations['UpdateCampusCirclePostPin']['requestBody']['content']['application/json']
+type AdminWithdrawCampusCirclePostBody = operations['AdminWithdrawCampusCirclePost']['requestBody']['content']['application/json']
 type CreateCommentBody = operations['CreateComment']['requestBody']['content']['application/json']
 type CreateContentReportBody = operations['CreateContentReport']['requestBody']['content']['application/json']
 type RecordCampusCirclePostViewBody = operations['RecordCampusCirclePostView']['requestBody']['content']['application/json']
@@ -62,7 +64,7 @@ export type MarketplaceSearch = PagingQuery & {
   keyword?: string
   campus?: CampusName
   intent?: 'sell' | 'wanted'
-  category?: 'general' | 'course_material'
+  category?: string
   minPriceCents?: number
   maxPriceCents?: number
 }
@@ -98,8 +100,14 @@ export type CampusCircleSearch = PagingQuery & {
   sort?: NonNullable<operations['ListCampusCirclePosts']['parameters']['query']>['sort']
 }
 
+export type UpdateCampusCirclePostPinInput = {
+  expectedVersion: number
+  pinned: boolean
+}
+
 export type CampusCircleTopicSearch = PagingQuery & {
   kind?: 'topic' | 'campaign'
+  keyword?: string
 }
 
 const versionAction = <T>(path: string, version: number, scope: string) => (
@@ -182,7 +190,12 @@ export const lifeServicesRepository = {
   listCampusCircleTopics(search: CampusCircleTopicSearch = {}) {
     return apiRequest<CampusCircleTopicPage>({
       path: '/api/v1/campus-circle/topics',
-      query: { kind: search.kind, page: search.page || 1, page_size: search.pageSize || 20 },
+      query: {
+        kind: search.kind,
+        keyword: search.keyword,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
     })
   },
 
@@ -256,6 +269,30 @@ export const lifeServicesRepository = {
       version,
       `campus-circle:${id}:withdraw`,
     )
+  },
+
+  updateCampusCirclePostPin(id: number, input: UpdateCampusCirclePostPinInput) {
+    const data: UpdateCampusPostPinBody = {
+      expected_version: input.expectedVersion,
+      pinned: input.pinned,
+    }
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/campus-circle/posts/${id}/pin`,
+      method: 'PATCH',
+      idempotencyKey: createIdempotencyKey(
+        `campus-circle:${id}:pin:${input.pinned ? 'on' : 'off'}:${input.expectedVersion}`,
+      ),
+      data,
+    })
+  },
+
+  adminWithdrawCampusCirclePost(id: number, input: AdminWithdrawCampusCirclePostBody) {
+    return apiRequest<CampusCirclePostView>({
+      path: `/api/v1/admin/campus-circle/posts/${id}/withdraw`,
+      method: 'POST',
+      idempotencyKey: createIdempotencyKey(`campus-circle:${id}:admin-withdraw`),
+      data: input,
+    })
   },
 
   likeCampusCirclePost(id: number) {

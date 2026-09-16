@@ -7,6 +7,12 @@ import {
 
 export const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
+/** 将 JavaScript 的星期值转换为教务课表使用的周一至周日 1-7。 */
+export const getAcademicWeekday = (date = new Date()) => {
+  const day = date.getDay()
+  return day === 0 ? 7 : day
+}
+
 export const courseColors = [
   'aqua', 'blue', 'mint', 'lilac', 'sand', 'sky',
   'rose', 'peach', 'lemon', 'sage', 'indigo', 'coral',
@@ -83,6 +89,32 @@ export const formatCourseTimeRange = (startTime: string, endTime: string) => {
 export const getPeriodLabel = (periods: AcademicPeriod[], id: string) => (
   periods.find((period) => period.id === id)?.label || '选择学期'
 )
+
+const periodStartTime = (period: AcademicPeriod) => {
+  const timestamp = parseDate(period.startDate).getTime()
+  return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY
+}
+
+/** 默认优先服务端标记的当前学期，校历没有当前标记时回退到最近开始的学期。 */
+export const resolveDefaultPeriodId = (periods: AcademicPeriod[]) => {
+  const current = periods.find((period) => period.isCurrent)
+  if (current) return current.id
+  return [...periods].sort((left, right) => (
+    periodStartTime(right) - periodStartTime(left)
+  ))[0]?.id || ''
+}
+
+/** 模拟选课默认选择当前学期的下一学期，无法前进时保留现有默认学期。 */
+export const resolveNextPeriodId = (periods: AcademicPeriod[]) => {
+  const currentId = resolveDefaultPeriodId(periods)
+  if (!currentId) return ''
+
+  const orderedPeriods = [...periods].sort((left, right) => (
+    periodStartTime(right) - periodStartTime(left)
+  ))
+  const currentIndex = orderedPeriods.findIndex((period) => period.id === currentId)
+  return orderedPeriods[currentIndex - 1]?.id || currentId
+}
 
 export const resolvePeriodId = (periods: AcademicPeriod[], preferredId: string) => {
   if (periods.some((period) => period.id === preferredId)) return preferredId
@@ -318,8 +350,19 @@ export const isSameDay = (left: Date, right: Date) => (
   && left.getDate() === right.getDate()
 )
 
-export const getExamStatus = (exam: ExamRecord) => {
-  const now = Date.now()
+const EXAM_HOUR_MS = 60 * 60 * 1000
+
+/** 按小时向上取整，跨天时同时展示完整天数和剩余小时。 */
+export const formatExamCountdown = (diffMs: number) => {
+  const hours = Math.max(1, Math.ceil(diffMs / EXAM_HOUR_MS))
+  if (hours < 24) return `${hours} 小时后`
+
+  const days = Math.floor(hours / 24)
+  const remainingHours = hours % 24
+  return remainingHours ? `${days} 天 ${remainingHours} 小时后` : `${days} 天后`
+}
+
+export const getExamStatus = (exam: ExamRecord, now = Date.now()) => {
   const start = parseDate(exam.startAt).getTime()
   const end = parseDate(exam.endAt).getTime()
   if (now < start) return 'upcoming'
@@ -327,10 +370,9 @@ export const getExamStatus = (exam: ExamRecord) => {
   return 'finished'
 }
 
-export const getExamStatusLabel = (exam: ExamRecord) => {
-  const status = getExamStatus(exam)
+export const getExamStatusLabel = (exam: ExamRecord, now = Date.now()) => {
+  const status = getExamStatus(exam, now)
   if (status === 'ongoing') return '进行中'
   if (status === 'finished') return '已结束'
-  const days = Math.max(1, Math.ceil((parseDate(exam.startAt).getTime() - Date.now()) / 86400000))
-  return `${days} 天后`
+  return formatExamCountdown(parseDate(exam.startAt).getTime() - now)
 }

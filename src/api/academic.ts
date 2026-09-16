@@ -108,3 +108,11 @@ export const listAcademicCourseSelections = (periodId: string) => (
     periodId,
   )
 )
+
+/** 获取教务系统已选课程的结构化课表；不会修改本地模拟选课草稿。 */
+export const listAcademicCourseSelectionSchedule = (periodId: string) => (
+  academicPost<AcademicCourse>(
+    '/api/v1/academic/course-selection-schedule',
+    periodId,
+  )
+)

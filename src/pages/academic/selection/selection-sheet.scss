@@ -1,0 +1,37 @@
+// 选课结果局部 Sheet：不锁定页面高度，避免关闭浮层时页面重新排版并跳动。
+.selection-sheet-overlay {
+  overscroll-behavior: contain;
+  backdrop-filter: none;
+}
+
+.selection-sheet {
+  max-height: 76vh;
+  min-height: 0;
+  padding-bottom: 0;
+
+  &__scroll {
+    min-height: 0;
+    flex: 1;
+    height: calc(76vh - 80rpx - env(safe-area-inset-bottom));
+  }
+
+  &__scroll-content {
+    box-sizing: border-box;
+    min-height: 100%;
+    padding: 0 5rpx calc(20rpx + env(safe-area-inset-bottom));
+  }
+
+  .academic-sheet__body:not(.academic-sheet__body--form) {
+    flex: 0 0 auto;
+    min-height: auto;
+    padding: 0;
+    overflow-y: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-sheet-overlay,
+  .selection-sheet {
+    animation: none;
+  }
+}

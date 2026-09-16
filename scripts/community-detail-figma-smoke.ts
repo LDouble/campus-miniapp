@@ -38,9 +38,11 @@ for (const fragment of [
   assert.ok(detailSource.includes(fragment), `社区详情缺少 Figma 主体元素：${fragment}`)
 }
 assert.match(detailSource, /<ContentImageGrid[\s\S]*?images=\{post\.images\}[\s\S]*?preview/u)
-assert.match(imageGridSource, /mode='aspectFill'/u)
+assert.match(imageGridSource, /mode=\{layoutCount === 1 \? 'widthFix' : 'aspectFill'\}/u)
 assert.match(detailSource, /<DetailAuthorHeader/u, '帖子详情必须复用正文级作者头部')
-assert.match(detailSource, /post\.topic\?\.name/u, '校园标签必须由真实话题数据驱动')
+assert.match(detailSource, /communityPostTopics\(post\)/u, '校园标签必须由真实话题数据驱动')
+assert.match(detailSource, /<MentionContent[\s\S]*?trailing=\{topicLinks\.map/u, '话题标签应尾随正文展示')
+assert.doesNotMatch(detailSource, /community-detail__topics/u, '话题标签不得单独占用一行')
 assert.match(detailSource, /post\.liked/u)
 assert.match(detailSource, /likeCampusCirclePost/u)
 assert.match(detailSource, /unlikeCampusCirclePost/u)

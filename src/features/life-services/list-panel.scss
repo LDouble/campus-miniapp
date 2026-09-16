@@ -868,6 +868,7 @@
 }
 
 .business-card-identity > view { display: flex; align-items: center; gap: 10rpx; }
+.errand-card .business-card-identity > view { flex-wrap: wrap; }
 .business-card-identity > view > text:first-child { color: var(--campus-text-heading, #1d293d); font-size: 26rpx; font-weight: 700; }
 .business-card-identity > text { margin-top: 3rpx; color: var(--campus-text-muted, #90a1b9); font-size: 22rpx; }
 
@@ -886,7 +887,30 @@
   font-size: 19rpx;
 }
 
-.business-status--errand { background: #ffedd4; color: #f54900; }
+.business-status--errand {
+  background: var(--campus-surface-subtle, #f5f8fc);
+  color: var(--campus-text-secondary, #6b7a90);
+}
+
+.business-status--errand-available {
+  background: var(--campus-icon-surface-green, #e9f8f3);
+  color: var(--campus-success, #00bba7);
+}
+.business-status--errand-active {
+  background: var(--campus-surface-primary);
+  color: var(--campus-primary);
+}
+
+.business-status--errand-pending {
+  background: var(--campus-surface-errand);
+  color: var(--campus-errand);
+}
+
+.business-status--errand-rejected {
+  background: var(--campus-surface-danger);
+  color: var(--campus-danger);
+}
+
 .business-status--carpool { background: #cbfbf1; color: #009689; }
 
 .errand-card__title,

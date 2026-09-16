@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
-import { Image, Picker, Text, View } from '@tarojs/components'
+import { Image, Picker, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import MediaImageEditor from '../../components/media-image-editor'
 import {
@@ -67,6 +67,10 @@ import {
   stickerTokenForId,
 } from '../../features/stickers/content'
 import {
+  communityPostTopics,
+  extractCommunityTopicNames,
+} from '../../features/community/topic'
+import {
   apiDateTimeCampusParts,
   campusDateTimeToISOString,
 } from '../../utils/date-time'
@@ -101,6 +105,9 @@ type PublisherForm = {
   images: MediaImageDraft[]
   communitySectionId: number
   communityTopicId: number
+  communityTopicIds: number[]
+  // 选择器中新增、但尚未随帖子提交到服务端的话题名称。
+  communityTopicNames: string[]
   mentionCandidates: MentionCandidate[]
   version: number
 }
@@ -158,6 +165,8 @@ const emptyForm = (marketIntent: MarketplaceIntent = 'sell'): PublisherForm => (
   images: [],
   communitySectionId: 0,
   communityTopicId: 0,
+  communityTopicIds: [],
+  communityTopicNames: [],
   mentionCandidates: [],
   version: 0,
 })
@@ -189,6 +198,41 @@ type LegacyPublisherForm = Omit<PublisherForm, 'images'> & {
   stickerIds?: unknown
 }
 
+const normalizeTopicIds = (value: unknown) => (
+  Array.isArray(value)
+    ? [...new Set(value.map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0))].slice(0, 3)
+    : []
+)
+
+const normalizeTopicName = (value: unknown) => (
+  typeof value === 'string'
+    ? value.trim().replace(/^#+/u, '').trim()
+    : ''
+)
+
+const topicNameKey = (name: string) => normalizeTopicName(name).toLocaleLowerCase()
+
+const normalizeTopicNames = (value: unknown) => {
+  if (!Array.isArray(value)) return []
+  const result: string[] = []
+  const seen = new Set<string>()
+  for (const item of value) {
+    const name = normalizeTopicName(item)
+    const key = topicNameKey(name)
+    if (!name || seen.has(key)) continue
+    seen.add(key)
+    result.push(name)
+    if (result.length >= 3) break
+  }
+  return result
+}
+
+const isCreatableTopicName = (value: string) => (
+  value.length > 0
+    && value.length <= 64
+    && /^[A-Za-z0-9_\u4e00-\u9fff]+$/u.test(value)
+)
+
 const restoreLegacyDraftContent = (content: unknown, stickerIds: unknown) => {
   const text = typeof content === 'string' ? content : ''
   const legacyIds = Array.isArray(stickerIds)
@@ -202,9 +246,21 @@ const restoreLegacyDraftContent = (content: unknown, stickerIds: unknown) => {
 
 const normalizeStoredDraft = (value: StoredPublisherForm): PublisherForm => {
   const { stickerIds, ...storedForm } = value
+  const legacyPrimaryTopicId = Number(storedForm.communityTopicId || 0)
+  const communityTopicIds = normalizeTopicIds(storedForm.communityTopicIds)
+  const communityTopicNames = normalizeTopicNames(storedForm.communityTopicNames)
+  if (communityTopicIds.length === 0 && legacyPrimaryTopicId > 0) {
+    communityTopicIds.push(legacyPrimaryTopicId)
+  }
+  const primaryTopicId = communityTopicIds.includes(legacyPrimaryTopicId)
+    ? legacyPrimaryTopicId
+    : communityTopicIds[0] || 0
   return {
     ...emptyForm(storedForm.marketIntent),
     ...storedForm,
+    communityTopicId: primaryTopicId,
+    communityTopicIds,
+    communityTopicNames,
     content: restoreLegacyDraftContent(storedForm.content, stickerIds),
   }
 }
@@ -223,11 +279,22 @@ const storedDrafts = () => {
   const migrated = Object.fromEntries(Object.entries(legacy).map(([key, value]) => {
     if (!value) return [key, value]
     const { imageUrls, stickerIds, ...form } = value
+    const legacyPrimaryTopicId = Number(form.communityTopicId || 0)
+    const communityTopicIds = normalizeTopicIds(form.communityTopicIds)
+    const communityTopicNames = normalizeTopicNames(form.communityTopicNames)
+    if (communityTopicIds.length === 0 && legacyPrimaryTopicId > 0) {
+      communityTopicIds.push(legacyPrimaryTopicId)
+    }
     return [key, {
       ...form,
       content: restoreLegacyDraftContent(form.content, stickerIds),
       campus: isCampusName(form.campus) ? form.campus : preferredCampus(),
       images: (imageUrls || []).map((url) => serverMediaImageDraft({ url })),
+      communityTopicId: communityTopicIds.includes(legacyPrimaryTopicId)
+        ? legacyPrimaryTopicId
+        : communityTopicIds[0] || 0,
+      communityTopicIds,
+      communityTopicNames,
     } satisfies PublisherForm]
   })) as Partial<Record<string, PublisherForm>>
   if (Object.keys(migrated).length > 0) {
@@ -397,6 +464,10 @@ export default function PublishPage() {
   const [sections, setSections] = useState<CampusCircleSectionView[]>([])
   const [sectionsReady, setSectionsReady] = useState(false)
   const [topics, setTopics] = useState<CampusCircleTopicView[]>([])
+  const [topicPickerOpen, setTopicPickerOpen] = useState(false)
+  const [topicKeyword, setTopicKeyword] = useState('')
+  const [topicSearchLoading, setTopicSearchLoading] = useState(false)
+  const [topicSearchError, setTopicSearchError] = useState(false)
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
@@ -413,6 +484,7 @@ export default function PublishPage() {
   > | null>(null)
   const identityUserIdRef = useRef(0)
   const rememberedContactRef = useRef<PublisherContact | null>(null)
+  const topicSearchRequestRef = useRef(0)
   const {
     keyboardHeight,
     onKeyboardVisibilityChange,
@@ -425,6 +497,84 @@ export default function PublishPage() {
   const loadingForm = loadingEdit || restoringCreateDefaults
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
     setForm((draft) => ({ ...draft, [key]: value }))
+  }
+
+  const selectedTopicCount = form.communityTopicIds.length + form.communityTopicNames.length
+
+  const changeTopicPickerOpen = (open: boolean) => {
+    if (open) {
+      contentFocusRequestRef.current += 1
+      setContentInputFocused(false)
+      setMentionPickerOpen(false)
+      changeStickerPickerOpen(false)
+      setTopicSearchError(false)
+      setTopicPickerOpen(true)
+      return
+    }
+    setTopicPickerOpen(false)
+    setTopicKeyword('')
+    setTopicSearchError(false)
+    void Taro.hideKeyboard()
+  }
+
+  const toggleCommunityTopic = (topicId: number) => {
+    if (!Number.isInteger(topicId) || topicId <= 0) return
+    const selected = form.communityTopicIds.includes(topicId)
+    if (!selected && selectedTopicCount >= 3) {
+      Taro.showToast({ title: '最多关联 3 个话题', icon: 'none' })
+      return
+    }
+    setForm((current) => {
+      const nextTopicIds = selected
+        ? current.communityTopicIds.filter((id) => id !== topicId)
+        : [...current.communityTopicIds, topicId]
+      const nextPrimaryTopicId = nextTopicIds.length === 0
+        ? 0
+        : selected && current.communityTopicId === topicId
+          ? nextTopicIds[0]
+          : nextTopicIds.includes(current.communityTopicId)
+            ? current.communityTopicId
+            : nextTopicIds[0]
+      return {
+        ...current,
+        communityTopicId: nextPrimaryTopicId,
+        communityTopicIds: nextTopicIds,
+      }
+    })
+  }
+
+  const addCommunityTopicName = () => {
+    const name = normalizeTopicName(topicKeyword)
+    if (!isCreatableTopicName(name)) {
+      Taro.showToast({ title: '话题仅支持中文、字母、数字或下划线', icon: 'none' })
+      return
+    }
+    const matched = topics.find((item) => topicNameKey(item.name) === topicNameKey(name))
+    if (matched) {
+      toggleCommunityTopic(matched.id)
+      changeTopicPickerOpen(false)
+      return
+    }
+    if (form.communityTopicNames.some((item) => topicNameKey(item) === topicNameKey(name))) return
+    if (selectedTopicCount >= 3) {
+      Taro.showToast({ title: '最多关联 3 个话题', icon: 'none' })
+      return
+    }
+    setForm((current) => ({
+      ...current,
+      communityTopicNames: [...current.communityTopicNames, name],
+    }))
+    setTopicKeyword('')
+    changeTopicPickerOpen(false)
+  }
+
+  const removeCommunityTopicName = (name: string) => {
+    setForm((current) => ({
+      ...current,
+      communityTopicNames: current.communityTopicNames.filter(
+        (item) => topicNameKey(item) !== topicNameKey(name),
+      ),
+    }))
   }
 
   const removeMentionFromContent = (candidate: MentionCandidate) => {
@@ -565,6 +715,9 @@ export default function PublishPage() {
         setForm(mapCarpool(await lifeServicesRepository.getCarpoolTrip(id)))
       } else {
         const post = await lifeServicesRepository.getCampusCirclePost(id)
+        const postTopics = communityPostTopics(post)
+        const postTopicIds = postTopics.map((topic) => topic.id).slice(0, 3)
+        const primaryTopicId = post.primary_topic?.id || post.topic?.id || postTopicIds[0] || 0
         setForm({
           ...emptyForm(),
           content: restoreStickerContent(post.content),
@@ -574,7 +727,8 @@ export default function PublishPage() {
             mediaId: image.media_id || undefined,
           })),
           communitySectionId: post.section_id,
-          communityTopicId: post.topic?.id || 0,
+          communityTopicId: primaryTopicId,
+          communityTopicIds: postTopicIds.length > 0 ? postTopicIds : primaryTopicId > 0 ? [primaryTopicId] : [],
           version: post.version,
         })
       }
@@ -642,6 +796,9 @@ export default function PublishPage() {
             communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
               ? initialCommunityTopicId
               : nextForm.communityTopicId,
+            communityTopicIds: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
+              ? [initialCommunityTopicId]
+              : nextForm.communityTopicIds,
           }
           : nextForm)
       }).finally(() => setRestoringCreateDefaults(false))
@@ -655,10 +812,79 @@ export default function PublishPage() {
       .catch(() => setTopics([]))
   })
 
+  const normalizedTopicKeyword = normalizeTopicName(topicKeyword)
+
+  useEffect(() => {
+    if (!topicPickerOpen) return
+    const requestId = ++topicSearchRequestRef.current
+    const keyword = normalizedTopicKeyword
+    const timer = setTimeout(() => {
+      setTopicSearchLoading(true)
+      setTopicSearchError(false)
+      void lifeServicesRepository.listCampusCircleTopics({
+        keyword: keyword || undefined,
+        pageSize: 50,
+      })
+        .then((result) => {
+          if (requestId !== topicSearchRequestRef.current) return
+          const activeTopics = result.items.filter((item) => item.status === 'active')
+          setTopics((current) => {
+            const selected = current.filter((item) => form.communityTopicIds.includes(item.id))
+            const selectedIds = new Set(selected.map((item) => item.id))
+            return [
+              ...selected,
+              ...activeTopics.filter((item) => !selectedIds.has(item.id)),
+            ]
+          })
+        })
+        .catch(() => {
+          if (requestId === topicSearchRequestRef.current) setTopicSearchError(true)
+        })
+        .finally(() => {
+          if (requestId === topicSearchRequestRef.current) setTopicSearchLoading(false)
+        })
+    }, keyword ? 220 : 0)
+    return () => {
+      clearTimeout(timer)
+      if (requestId === topicSearchRequestRef.current) topicSearchRequestRef.current += 1
+    }
+  }, [form.communityTopicIds, normalizedTopicKeyword, topicPickerOpen])
+
   const communitySectionOptions = useMemo(
     () => flattenSections(sections).filter((item) => item.status === 'active'),
     [sections],
   )
+
+  const filteredTopics = useMemo(() => {
+    const keyword = normalizedTopicKeyword.toLocaleLowerCase()
+    if (!keyword) return topics
+    return topics.filter((topic) => topic.name.toLocaleLowerCase().includes(keyword))
+  }, [normalizedTopicKeyword, topics])
+
+  const topicNameExists = useMemo(() => (
+    Boolean(normalizedTopicKeyword) && topics.some(
+      (topic) => topicNameKey(topic.name) === topicNameKey(normalizedTopicKeyword),
+    )
+  ), [normalizedTopicKeyword, topics])
+
+  const selectedTopicEntries = useMemo(() => {
+    const selectedIds = form.communityTopicIds.map((id) => {
+      const topic = topics.find((item) => item.id === id)
+      return {
+        id,
+        key: `id:${id}`,
+        name: topic?.name || '已选话题',
+        pending: false,
+      }
+    })
+    const pendingNames = form.communityTopicNames.map((name) => ({
+      id: 0,
+      key: `name:${topicNameKey(name)}`,
+      name,
+      pending: true,
+    }))
+    return [...selectedIds, ...pendingNames]
+  }, [form.communityTopicIds, form.communityTopicNames, topics])
 
   useEffect(() => {
     if (section !== 'community' || mode !== 'create' || !sectionsReady) return
@@ -905,6 +1131,12 @@ export default function PublishPage() {
           image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
           mention_user_ids: form.mentionCandidates.map((candidate) => candidate.id),
           topic_id: form.communityTopicId || undefined,
+          topic_ids: form.communityTopicIds.length > 0 ? form.communityTopicIds : undefined,
+          primary_topic_id: form.communityTopicId || undefined,
+          topic_names: normalizeTopicNames([
+            ...form.communityTopicNames,
+            ...extractCommunityTopicNames(form.content),
+          ]),
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createCampusCirclePost(input)).id
@@ -1179,8 +1411,44 @@ export default function PublishPage() {
                       )
                     }}
                   />
+                  {section === 'community' && selectedTopicEntries.length > 0 && (
+                    <View className='publisher-composer-topics' ariaLabel='已关联话题'>
+                      {selectedTopicEntries.map((topic) => (
+                        <View
+                          key={topic.key}
+                          className='publisher-composer-topic'
+                          ariaRole='button'
+                          ariaLabel={`移除话题${topic.name}`}
+                          onClick={() => {
+                            if (topic.pending) removeCommunityTopicName(topic.name)
+                            else toggleCommunityTopic(topic.id)
+                          }}
+                        >
+                          <Text>#{topic.name}</Text>
+                          <Text>×</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
                   <View className='publisher-composer-toolbar'>
                     <View className='publisher-composer-toolbar__tools'>
+                      {section === 'community' && (
+                        <View
+                          id='publisher-topic-trigger'
+                          className={topicPickerOpen
+                            ? 'publisher-composer-tool publisher-composer-tool--active'
+                            : 'publisher-composer-tool'}
+                          ariaRole='button'
+                          ariaLabel={topicPickerOpen ? '收起话题选择器' : '添加话题'}
+                          onClick={() => changeTopicPickerOpen(!topicPickerOpen)}
+                        >
+                          <Image
+                            className='publisher-composer-tool__icon publisher-composer-tool__icon--topic'
+                            src={require('../../assets/community/topic.svg')}
+                            mode='aspectFit'
+                          />
+                        </View>
+                      )}
                       {section === 'community' && (
                         <View
                           className={mentionPickerOpen
@@ -1387,32 +1655,6 @@ export default function PublishPage() {
                     ))}
                   </View>
                 )}
-                {topics.length > 0 && (
-                  <>
-                    <SectionHeading title='关联话题（可选）' />
-                    <View className='publisher-community-sections'>
-                      <View
-                        className={`publisher-community-section ${form.communityTopicId === 0 ? 'publisher-community-section--active' : ''}`}
-                        ariaRole='button'
-                        ariaLabel={`${form.communityTopicId === 0 ? '已选择，' : ''}不关联话题`}
-                        onClick={() => update('communityTopicId', 0)}
-                      >
-                        <Text>不关联话题</Text>
-                      </View>
-                      {topics.map((item) => (
-                        <View
-                          key={item.id}
-                          className={`publisher-community-section ${form.communityTopicId === item.id ? 'publisher-community-section--active' : ''}`}
-                          ariaRole='button'
-                          ariaLabel={`${form.communityTopicId === item.id ? '已选择，' : ''}关联话题${item.name}`}
-                          onClick={() => update('communityTopicId', item.id)}
-                        >
-                          <Text>#{item.name}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
               </View>
             )}
 
@@ -1458,6 +1700,105 @@ export default function PublishPage() {
           </View>
         )}
       </View>
+
+      {section === 'community' && topicPickerOpen && (
+        <View className='publisher-topic-overlay'>
+          <View
+            className='publisher-topic-overlay__mask'
+            style={keyboardHeight > 0 ? `bottom: ${keyboardHeight}px;` : undefined}
+            ariaRole='button'
+            ariaLabel='关闭话题选择器'
+            onClick={() => changeTopicPickerOpen(false)}
+          />
+          <View
+            className='publisher-topic-sheet'
+            style={keyboardHeight > 0
+              ? `bottom: ${keyboardHeight}px; height: calc(100vh - ${keyboardHeight}px - 24rpx); max-height: calc(100vh - ${keyboardHeight}px - 24rpx);`
+              : undefined}
+            ariaRole='dialog'
+            ariaLabel='添加话题'
+          >
+            <View className='publisher-topic-sheet__header'>
+              <Text className='publisher-topic-sheet__title'>添加话题</Text>
+              <View
+                className='publisher-topic-sheet__cancel'
+                ariaRole='button'
+                ariaLabel='关闭话题选择器'
+                onClick={() => changeTopicPickerOpen(false)}
+              >
+                取消
+              </View>
+            </View>
+
+            <View className='publisher-topic-sheet__search'>
+              <Text>#</Text>
+              <KeyboardSafeInput
+                id='publisher-topic-search'
+                focus={topicPickerOpen}
+                value={topicKeyword}
+                maxlength={64}
+                placeholder='搜索话题'
+                placeholderClass='publisher-placeholder'
+                confirmType='done'
+                keepVisibleOnKeyboard={false}
+                onKeyboardVisibilityChange={onKeyboardVisibilityChange}
+                onFocus={() => setStickerPickerOpen(false)}
+                onInput={(event) => setTopicKeyword(event.detail.value.replace(/^#+/u, ''))}
+                onConfirm={() => {
+                  if (!topicNameExists && isCreatableTopicName(normalizedTopicKeyword)) {
+                    addCommunityTopicName()
+                  }
+                }}
+              />
+            </View>
+
+            <ScrollView className='publisher-topic-sheet__results' scrollY enhanced showScrollbar={false}>
+              {topicSearchLoading && <Text className='publisher-topic-sheet__state'>正在搜索</Text>}
+              {!topicSearchLoading && topicSearchError && (
+                <Text className='publisher-topic-sheet__state'>暂时无法加载话题</Text>
+              )}
+              {!topicSearchLoading && !topicSearchError && normalizedTopicKeyword && !topicNameExists && isCreatableTopicName(normalizedTopicKeyword) && (
+                <View
+                  className='publisher-topic-result publisher-topic-result--create'
+                  ariaRole='button'
+                  ariaLabel={`添加新话题${normalizedTopicKeyword}`}
+                  onClick={addCommunityTopicName}
+                >
+                  <View className='publisher-topic-result__copy'>
+                    <Text className='publisher-topic-result__name'>#{normalizedTopicKeyword}</Text>
+                    <Text className='publisher-topic-result__hint'>创建为新话题</Text>
+                  </View>
+                  <Text className='publisher-topic-result__action'>添加</Text>
+                </View>
+              )}
+              {!topicSearchLoading && !topicSearchError && filteredTopics.map((item) => {
+                const selected = form.communityTopicIds.includes(item.id)
+                return (
+                  <View
+                    key={item.id}
+                    className={`publisher-topic-result ${selected ? 'publisher-topic-result--selected' : ''}`}
+                    ariaRole='button'
+                    ariaLabel={`${selected ? '移除' : '添加'}话题${item.name}`}
+                    onClick={() => {
+                      toggleCommunityTopic(item.id)
+                      changeTopicPickerOpen(false)
+                    }}
+                  >
+                    <Text className='publisher-topic-result__name'>#{item.name}</Text>
+                    <Text className='publisher-topic-result__meta'>{item.post_count} 条动态</Text>
+                  </View>
+                )
+              })}
+              {!topicSearchLoading && !topicSearchError && filteredTopics.length === 0 && !normalizedTopicKeyword && (
+                <Text className='publisher-topic-sheet__state'>暂无可选话题</Text>
+              )}
+              {!topicSearchLoading && !topicSearchError && normalizedTopicKeyword && !isCreatableTopicName(normalizedTopicKeyword) && (
+                <Text className='publisher-topic-sheet__state'>话题仅支持中文、字母、数字或下划线</Text>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      )}
 
       {!loadingForm && (
         <View className={`publisher-actions ${keyboardHeight > 0 ? 'publisher-actions--keyboard' : ''}`}>

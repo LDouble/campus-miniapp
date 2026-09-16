@@ -3,8 +3,16 @@ import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { ITouchEvent } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
-import { getActiveAcademicUserId } from '../../../api/academic-credential'
-import type { AcademicCacheMetadata } from '../../../api/types'
+import {
+  getActiveAcademicUserId,
+  loadAcademicCredential,
+  type AcademicEducationLevel,
+} from '../../../api/academic-credential'
+import type { AcademicCacheMetadata, AcademicCalendar } from '../../../api/types'
+import {
+  listPersonalTimetableItems,
+  removePersonalTimetableItem,
+} from '../../../api/personal-timetable'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { isQualificationEdition } from '../../../features/app-edition'
 import { openMigratedFeaturePage } from '../../../features/app-edition/navigation'
@@ -21,20 +29,25 @@ import {
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
-import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
+import { loadAcademicCalendar } from '../../../features/calendar/repository'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { findCourseConflicts } from '../calculations'
-import { academicRepository } from '../repository'
+import {
+  academicRepository,
+  mapPersonalTimetableItemCourses,
+} from '../repository'
 import {
   CoursesByPeriod,
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
+  mergeSimulationCourses,
   requireCoursesForPeriod,
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
 } from '../schedule-courses'
+import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import { academicStorage } from '../storage'
 import {
   AcademicPeriod,
@@ -48,10 +61,12 @@ import {
   formatCourseWeeks,
   formatPeriodStartDate,
   formatMonthDay,
+  getAcademicWeekday,
   getCurrentTeachingWeek,
   getWeekDates,
   isSameDay,
   resolveHorizontalSwipeDay,
+  resolveNextPeriodId,
   resolvePeriodId,
   resolveHorizontalSwipeWeek,
   resolveScheduleAnchor,
@@ -62,6 +77,7 @@ import '../index.scss'
 const DEFAULT_PERIOD_ID = '2025-2026-2'
 const icons = {
   semester: require('../../../assets/icons/calendar.svg'),
+  sync: require('../../../assets/icons/sync.svg'),
 }
 
 const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
@@ -119,11 +135,16 @@ const defaultPreferences: AcademicPreferences = {
   gradePeriodId: DEFAULT_PERIOD_ID,
   examPeriodId: DEFAULT_PERIOD_ID,
   week: 1,
-  selectedWeekday: 1,
+  selectedWeekday: getAcademicWeekday(),
   scheduleView: 'week',
 }
 
-type ScheduleSheet = 'period' | 'week' | 'course-detail' | 'course-form' | null
+type ScheduleSheet = 'period' | 'week' | 'course-detail' | 'course-form' | 'time-slot-actions' | null
+
+interface ScheduleTimeSlot {
+  weekday: number
+  section: number
+}
 
 const emptyDraft = (periodId: string): CustomCourseDraft => ({
   periodId,
@@ -137,10 +158,55 @@ const emptyDraft = (periodId: string): CustomCourseDraft => ({
   color: 'aqua',
 })
 
+const mapCalendarPeriods = (calendar: AcademicCalendar | null): AcademicPeriod[] => (
+  (calendar?.terms || []).map((term) => ({
+    id: term.id,
+    label: term.label,
+    shortLabel: term.short_label,
+    startDate: term.start_date,
+    weeks: term.week_count,
+    isCurrent: term.is_current,
+  }))
+)
+
+const fallbackSimulationPeriods = (courses: Course[]): AcademicPeriod[] => {
+  const coursesByPeriod = new Map<string, Course[]>()
+  courses.forEach((course) => {
+    const periodId = course.periodId.trim()
+    if (!periodId) return
+    coursesByPeriod.set(periodId, [
+      ...(coursesByPeriod.get(periodId) || []),
+      course,
+    ])
+  })
+
+  const now = new Date()
+  const weekday = now.getDay() || 7
+  now.setDate(now.getDate() - weekday + 1)
+  const startDate = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
+  return Array.from(coursesByPeriod.entries()).map(([id, periodCourses], index) => ({
+    id,
+    label: id,
+    shortLabel: id,
+    startDate,
+    weeks: Math.max(20, ...periodCourses.flatMap((course) => course.weeks)),
+    isCurrent: index === 0,
+  }))
+}
+
+const getDefaultEducationLevel = (): AcademicEducationLevel => {
+  try {
+    return loadAcademicCredential(getActiveAcademicUserId()).educationLevel
+  } catch {
+    return 'undergraduate'
+  }
+}
+
 interface CourseDetailCardProps {
   course: Course
   currentWeek: number
   timeRange: string
+  simulationMode?: boolean
   onEdit?: () => void
   onDelete?: () => void
   onWanted: () => void
@@ -148,11 +214,39 @@ interface CourseDetailCardProps {
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
+const isRemovableCourse = (course: Course) => ['custom', 'audit', 'simulation'].includes(course.source)
+const simulationCourseKey = (course: Course) => course.id.slice(0, course.id.lastIndexOf(':') + 1)
+const courseSourceLabel = (course: Course) => (
+  course.source === 'custom'
+    ? '自定义课程'
+    : course.source === 'audit'
+      ? '蹭课课表'
+      : course.source === 'simulation'
+        ? '模拟选课'
+        : '教务课程'
+)
+
+type SimulationSelectionState = 'selected' | 'not-selected'
+
+const getSimulationSelectionState = (
+  course: Course,
+): SimulationSelectionState | null => (
+  course.source === 'official'
+    ? 'selected'
+    : course.source === 'simulation'
+      ? 'not-selected'
+      : null
+)
+
+const getSimulationSelectionLabel = (state: SimulationSelectionState) => (
+  state === 'not-selected' ? '教务处未选' : ''
+)
 
 function CourseDetailCard({
   course,
   currentWeek,
   timeRange,
+  simulationMode = false,
   onEdit,
   onDelete,
   onWanted,
@@ -160,6 +254,8 @@ function CourseDetailCard({
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   const courseNote = course.note?.trim() || ''
+  const classNum = course.classNum?.trim() || ''
+  const selectionState = simulationMode ? getSimulationSelectionState(course) : null
   return (
     <View className={[
       'course-conflict-card',
@@ -180,28 +276,47 @@ function CourseDetailCard({
         </View>
         <View className='course-conflict-card__details'>
           <View><Text>时间</Text><Text>{timeRange || `第 ${course.startSection}-${course.endSection} 节`}</Text></View>
-          <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
+          {simulationMode ? (
+            <View><Text>选课号</Text><Text>{classNum || '暂无选课号'}</Text></View>
+          ) : (
+            <View><Text>地点</Text><Text>{course.location || '未填写'}</Text></View>
+          )}
           <View><Text>教师</Text><Text>{course.teacher || '未填写'}</Text></View>
           <View><Text>周次</Text><Text>{formatCourseWeeks(course.weeks)}</Text></View>
-          <View><Text>来源</Text><Text>{course.source === 'custom' ? '自定义课程' : '教务课程'}</Text></View>
+          <View><Text>来源</Text><Text>{courseSourceLabel(course)}</Text></View>
+          {selectionState === 'not-selected' && (
+            <View className={`course-conflict-card__selection-status course-conflict-card__selection-status--${selectionState}`}>
+              <Text>教务状态</Text>
+              <Text>{getSimulationSelectionLabel(selectionState)}</Text>
+            </View>
+          )}
         </View>
+        {course.source === 'audit' && course.auditStatus && course.auditStatus !== 'current' && (
+          <View className='course-conflict-card__note'>
+            <Text className='course-conflict-card__note-label'>排课提示</Text>
+            <Text className='course-conflict-card__note-copy'>
+              {course.auditStatus === 'withdrawn'
+                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“蹭课检索”。'
+                : '课程目录已有更新，请到“蹭课检索”同步最新安排。'}
+            </Text>
+          </View>
+        )}
         {courseNote && (
           <View className='course-conflict-card__note'>
             <Text className='course-conflict-card__note-label'>课程备注</Text>
             <Text className='course-conflict-card__note-copy'>{courseNote}</Text>
           </View>
         )}
-        {course.source === 'official' && course.courseCode && (
+        {(course.source === 'official' || course.source === 'simulation') && course.courseCode && (
           <CoursePassRatePreview
             courseCode={course.courseCode}
             courseName={course.name}
             teacherName={course.teacher}
           />
         )}
-        {course.source === 'custom' && onEdit && onDelete && (
+        {course.source === 'custom' && onEdit && (
           <View className='course-conflict-card__actions'>
-            <View onClick={onDelete}>删除</View>
-            <View onClick={onEdit}>编辑</View>
+            <View onClick={onEdit}>编辑课程</View>
           </View>
         )}
         <View className='course-resource-actions course-resource-actions--course-card'>
@@ -216,12 +331,18 @@ function CourseDetailCard({
             <View onClick={onWanted}>求购课本</View>
           </View>}
         </View>
+        {isRemovableCourse(course) && onDelete && (
+          <View className='course-conflict-card__danger-action' onClick={onDelete}>
+            <Text>{course.source === 'audit' ? '删除蹭课安排' : course.source === 'simulation' ? '移除模拟选课' : '删除课程'}</Text>
+          </View>
+        )}
       </View>
     </View>
   )
 }
 
 export default function SchedulePage() {
+  const isSimulation = Taro.useRouter().params.mode === 'simulation'
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
@@ -230,14 +351,20 @@ export default function SchedulePage() {
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
   ))
-  const [preferences, setPreferences] = useState<AcademicPreferences>({
-    ...defaultPreferences,
-    ...academicStorage.getPreferences(defaultPreferences),
-    section: 'schedule',
-  })
-  const [periods, setPeriods] = useState<AcademicPeriod[]>(
-    initialScheduleCache ? initialScheduleCache.periods : [],
+  const storedPreferences = useMemo(
+    () => academicStorage.getPreferences(defaultPreferences),
+    [],
   )
+  const [preferences, setPreferences] = useState<AcademicPreferences>(() => ({
+    ...defaultPreferences,
+    ...storedPreferences,
+    section: 'schedule',
+    selectedWeekday: getAcademicWeekday(),
+    scheduleView: isSimulation ? 'week' : storedPreferences.scheduleView,
+  }))
+  const [periods, setPeriods] = useState<AcademicPeriod[]>(() => (
+    isSimulation ? [] : (initialScheduleCache ? initialScheduleCache.periods : [])
+  ))
   const initialCoursesByPeriod = sanitizeCoursesByPeriod(
     initialScheduleCache?.coursesByPeriod || {},
   )
@@ -249,13 +376,23 @@ export default function SchedulePage() {
     initialCoursesByPeriod,
   )
   const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
-  const [loading, setLoading] = useState(!hasInitialCourses)
+  const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
+  const [personalCourses, setPersonalCourses] = useState<Course[]>(() => academicStorage.getPersonalCourses(academicUserId, educationLevel, preferences.schedulePeriodId))
+  const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
+  const [selectedScheduleCourses, setSelectedScheduleCourses] = useState<Course[]>(() => (
+    academicStorage.getCourseSelectionScheduleCourses(academicUserId)
+  ))
+  const [loading, setLoading] = useState(isSimulation || !hasInitialCourses)
   const [retrying, setRetrying] = useState(false)
+  const [syncingSelectedCourses, setSyncingSelectedCourses] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
   const [usingCache, setUsingCache] = useState(hasInitialCourses)
   const [serverCache, setServerCache] = useState<AcademicCacheMetadata | null>(null)
   const [showRefreshGuide, setShowRefreshGuide] = useState(() => (
     !academicStorage.hasSeenScheduleRefreshGuideToday()
+  ))
+  const [showSelectionGuide, setShowSelectionGuide] = useState(() => (
+    isSimulation || !academicStorage.hasSeenScheduleSelectionGuideToday()
   ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache
@@ -268,13 +405,22 @@ export default function SchedulePage() {
   const [sheet, setSheet] = useState<ScheduleSheet>(null)
   const [activeCourse, setActiveCourse] = useState<Course | null>(null)
   const [activeSlotCourses, setActiveSlotCourses] = useState<Course[]>([])
+  const [activeTimeSlot, setActiveTimeSlot] = useState<ScheduleTimeSlot | null>(null)
   const [courseDraft, setCourseDraft] = useState<CustomCourseDraft>(
     emptyDraft(preferences.schedulePeriodId),
   )
   const scheduleRequestRef = useRef(0)
+  const simulationPeriodsRequestRef = useRef(0)
+  const personalTimetableRequestRef = useRef(0)
+  const courseMutationRef = useRef(false)
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
   const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  const dismissSelectionGuide = () => {
+    setShowSelectionGuide(false)
+    if (!isSimulation) academicStorage.markScheduleSelectionGuideSeenToday()
+  }
 
   const schedulePeriod = periods.find((period) => period.id === preferences.schedulePeriodId)
   const sectionTimes = Array.from({ length: 12 }, (_, index) => ({
@@ -298,10 +444,14 @@ export default function SchedulePage() {
     officialCoursesByPeriod,
     preferences.schedulePeriodId,
   )
-  const allCourses = useMemo(() => [
+  const allCourses = useMemo(() => isSimulation ? mergeSimulationCourses(
+    simulationCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
+    selectedScheduleCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
+  ) : [
     ...officialCourses,
+    ...personalCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
     ...customCourses.filter((course) => course.periodId === preferences.schedulePeriodId),
-  ], [customCourses, officialCourses, preferences.schedulePeriodId])
+  ], [customCourses, isSimulation, officialCourses, personalCourses, preferences.schedulePeriodId, selectedScheduleCourses, simulationCourses])
   const weekCourses = useMemo(
     () => getCoursesForWeek(allCourses, preferences.week),
     [allCourses, preferences.week],
@@ -316,6 +466,27 @@ export default function SchedulePage() {
     [preferences.selectedWeekday, weekCourses],
   )
 
+  const loadPersonalCourses = useCallback(async (
+    nextPeriodId = preferences.schedulePeriodId,
+  ) => {
+    if (!nextPeriodId) {
+      setPersonalCourses([])
+      return
+    }
+    const requestId = personalTimetableRequestRef.current + 1
+    personalTimetableRequestRef.current = requestId
+    setPersonalCourses(academicStorage.getPersonalCourses(academicUserId, educationLevel, nextPeriodId))
+    try {
+      const result = await listPersonalTimetableItems(educationLevel, nextPeriodId)
+      if (personalTimetableRequestRef.current !== requestId) return
+      const courses = result.items.flatMap(mapPersonalTimetableItemCourses)
+      academicStorage.setPersonalCourses(academicUserId, educationLevel, nextPeriodId, courses)
+      setPersonalCourses(courses)
+    } catch {
+      // 请求失败保留当前用户、学历和学期的本地蹭课缓存。
+    }
+  }, [academicUserId, educationLevel, preferences.schedulePeriodId])
+
   useEffect(() => {
     let active = true
     loadMiniappRuntimeConfig().then((config) => {
@@ -328,21 +499,77 @@ export default function SchedulePage() {
     }
   }, [])
 
+  const loadSimulationPeriods = useCallback(async (
+    preferredPeriodId = '',
+    force = false,
+  ) => {
+    const requestId = ++simulationPeriodsRequestRef.current
+    setLoading(true)
+    setLoadError(null)
+    setServerCache(null)
+    setCacheUpdatedAt(0)
+    setScheduleNote('')
+    if (force) setRetrying(true)
+    try {
+      const result = await loadAcademicCalendar(educationLevel, { force })
+      if (simulationPeriodsRequestRef.current !== requestId) return
+      const calendarPeriods = mapCalendarPeriods(result.calendar)
+      const nextPeriods = calendarPeriods.length
+        ? calendarPeriods
+        : fallbackSimulationPeriods(academicStorage.getSelectionDraftCourses())
+      const nextPeriodId = preferredPeriodId && nextPeriods.some((period) => (
+        period.id === preferredPeriodId
+      ))
+        ? preferredPeriodId
+        : resolveNextPeriodId(nextPeriods)
+      const nextPeriod = nextPeriods.find((period) => period.id === nextPeriodId)
+      setPeriods(nextPeriods)
+      setPreferences((current) => ({
+        ...current,
+        schedulePeriodId: nextPeriodId,
+        week: nextPeriod?.isCurrent ? getCurrentTeachingWeek(nextPeriod) : 1,
+        selectedWeekday: getAcademicWeekday(),
+      }))
+      setUsingCache(result.source !== 'network' || !calendarPeriods.length)
+      setInitialized(true)
+      if (!nextPeriods.length) {
+        setLoadError(new Error('学期数据暂不可用'))
+      }
+    } catch (error) {
+      if (simulationPeriodsRequestRef.current !== requestId) return
+      setInitialized(true)
+      setLoadError(error)
+    } finally {
+      if (simulationPeriodsRequestRef.current === requestId) {
+        setLoading(false)
+        setRetrying(false)
+      }
+    }
+  }, [educationLevel])
+
   useEffect(() => {
+    if (isSimulation) {
+      void loadSimulationPeriods()
+      return () => {
+        simulationPeriodsRequestRef.current += 1
+      }
+    }
     const applyPeriods = (records: AcademicPeriod[]) => {
       setPeriods(records)
       if (!records.length) setLoading(false)
+      const todayWeekday = getAcademicWeekday()
       setPreferences((current) => {
         const { periodId: schedulePeriodId, week } = resolveScheduleAnchor(records)
         if (
           schedulePeriodId === current.schedulePeriodId
           && week === current.week
+          && todayWeekday === current.selectedWeekday
         ) return current
         return {
           ...current,
           schedulePeriodId,
           week,
-          selectedWeekday: 1,
+          selectedWeekday: todayWeekday,
         }
       })
       setInitialized(true)
@@ -378,10 +605,10 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [academicUserId, initialScheduleCache])
+  }, [academicUserId, initialScheduleCache, isSimulation, loadSimulationPeriods])
 
   useEffect(() => {
-    if (!initialized) return
+    if (!initialized || isSimulation) return
     const periodId = preferences.schedulePeriodId
     if (!periods.some((period) => period.id === periodId)) return
     const cache = academicStorage.getScheduleCache(academicUserId)
@@ -456,9 +683,18 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [academicUserId, initialized, periods, preferences.schedulePeriodId])
+  }, [academicUserId, initialized, isSimulation, periods, preferences.schedulePeriodId])
 
-  useEffect(() => academicStorage.setPreferences(preferences), [preferences])
+  useEffect(() => {
+    if (isSimulation) return
+    void loadPersonalCourses()
+  }, [initialized, isSimulation, loadPersonalCourses])
+
+  useEffect(() => {
+    academicStorage.setPreferences(isSimulation
+      ? { ...preferences, scheduleView: storedPreferences.scheduleView }
+      : preferences)
+  }, [isSimulation, preferences, storedPreferences])
   useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
 
   useEffect(() => {
@@ -470,8 +706,28 @@ export default function SchedulePage() {
     return () => clearTimeout(timer)
   }, [loading, sheet, showRefreshGuide])
 
+  useEffect(() => {
+    if (
+      !showSelectionGuide
+      || showRefreshGuide
+      || loading
+      || sheet
+      || (loadError && !usingCache)
+    ) return undefined
+    const timer = setTimeout(() => {
+      setShowSelectionGuide(false)
+      if (!isSimulation) academicStorage.markScheduleSelectionGuideSeenToday()
+    }, isSimulation ? 3000 : 5200)
+    return () => clearTimeout(timer)
+  }, [isSimulation, loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
+
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
-    setPreferences((current) => ({ ...current, ...patch, section: 'schedule' }))
+    setPreferences((current) => ({
+      ...current,
+      ...patch,
+      scheduleView: isSimulation ? 'week' : (patch.scheduleView || current.scheduleView),
+      section: 'schedule',
+    }))
   }
 
   const handleWeekTouchStart = (event: ITouchEvent) => {
@@ -530,7 +786,37 @@ export default function SchedulePage() {
     dayTouchStartRef.current = null
   }
 
+  const syncCourseSelectionSchedule = async () => {
+    const periodId = preferences.schedulePeriodId
+    if (!periodId || syncingSelectedCourses) return
+    setSyncingSelectedCourses(true)
+    try {
+      const result = await academicRepository.getCourseSelectionSchedule(periodId)
+      const courses = requireCoursesForPeriod(result.records, periodId)
+      const cachedCourses = academicStorage.getCourseSelectionScheduleCourses(academicUserId)
+      const nextCourses = [
+        ...cachedCourses.filter((course) => course.periodId !== periodId),
+        ...courses,
+      ]
+      academicStorage.setCourseSelectionScheduleCourses(academicUserId, nextCourses)
+      setSelectedScheduleCourses(nextCourses)
+      Taro.showToast({
+        title: courses.length ? `已同步 ${courses.length} 个课表时段` : '未同步到已选课程',
+        icon: 'none',
+      })
+    } catch {
+      // 失败时保留上次已成功同步的教务课表和全部本地模拟草稿。
+      Taro.showToast({ title: '同步失败，已保留当前模拟课表', icon: 'none' })
+    } finally {
+      setSyncingSelectedCourses(false)
+    }
+  }
+
   const refreshSchedule = useCallback(async () => {
+    if (isSimulation) {
+      await loadSimulationPeriods(preferences.schedulePeriodId, true)
+      return
+    }
     const requestId = ++scheduleRequestRef.current
     const cache = academicStorage.getScheduleCache(academicUserId)
     const hasCachedCourses = Boolean(
@@ -599,7 +885,7 @@ export default function SchedulePage() {
         week: resolvedPeriod && resolvedPeriod.isCurrent
           ? getCurrentTeachingWeek(resolvedPeriod)
           : 1,
-        selectedWeekday: 1,
+        selectedWeekday: getAcademicWeekday(),
       }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
     } catch (error) {
@@ -617,9 +903,17 @@ export default function SchedulePage() {
         setRetrying(false)
       }
     }
-  }, [academicUserId, preferences.schedulePeriodId])
+  }, [academicUserId, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
+    if (isSimulation) {
+      setSimulationCourses(academicStorage.getSelectionDraftCourses())
+      setShowSelectionGuide(true)
+    }
+    const todayWeekday = getAcademicWeekday()
+    setPreferences((current) => current.selectedWeekday === todayWeekday
+      ? current
+      : { ...current, selectedWeekday: todayWeekday })
     const shouldRefresh = consumeAcademicRefreshAfterVerification(
       Taro,
       '/pages/academic/schedule/index',
@@ -628,12 +922,14 @@ export default function SchedulePage() {
       firstPageShowRef.current = false
       return
     }
+    if (!isSimulation) void loadPersonalCourses()
     if (shouldRefresh) void refreshSchedule()
   })
 
   Taro.usePullDownRefresh(() => {
     setShowRefreshGuide(false)
     academicStorage.markScheduleRefreshGuideSeenToday()
+    dismissSelectionGuide()
     refreshSchedule().finally(() => Taro.stopPullDownRefresh())
   })
 
@@ -663,6 +959,20 @@ export default function SchedulePage() {
     setActiveCourse(slotCourses[0])
     setActiveSlotCourses(slotCourses)
     setSheet('course-detail')
+  }
+
+  const openTimeSlotActions = (weekday: number, section: number) => {
+    dismissSelectionGuide()
+    setActiveTimeSlot({ weekday, section })
+    setSheet('time-slot-actions')
+  }
+
+  const openCourseCatalogAtTimeSlot = (slot: ScheduleTimeSlot) => {
+    setSheet(null)
+    setActiveTimeSlot(null)
+    void Taro.navigateTo({
+      url: `/pages/academic/course-catalog/index?weekday=${slot.weekday}&section=${slot.section}&periodId=${encodeURIComponent(preferences.schedulePeriodId)}`,
+    })
   }
 
   const closeCourseFloat = () => {
@@ -770,22 +1080,133 @@ export default function SchedulePage() {
   }
 
   const deleteCourse = async (course = activeCourse) => {
-    if (!course || course.source !== 'custom') return
+    if (!course || !isRemovableCourse(course) || courseMutationRef.current) return
+    const isAuditCourse = course.source === 'audit'
+    const isSimulationCourse = course.source === 'simulation'
     const result = await Taro.showModal({
-      title: '删除自定义课程',
-      content: `确定删除“${course.name}”吗？`,
+      title: isSimulationCourse ? '移除模拟选课' : isAuditCourse ? '删除蹭课课程' : '删除自定义课程',
+      content: isSimulationCourse
+        ? `确定从模拟选课中移除“${course.name}”吗？真实课表不会受影响。`
+        : isAuditCourse
+        ? `确定删除“${course.name}”的全部蹭课安排吗？`
+        : `确定删除“${course.name}”吗？`,
       confirmColor: '#c56f73',
     })
     if (!result.confirm) return
-    setCustomCourses((current) => current.filter((item) => item.id !== course.id))
-    const remainingCourses = activeSlotCourses.filter((item) => item.id !== course.id)
-    if (!remainingCourses.length) {
-      closeCourseFloat()
-    } else {
-      setActiveSlotCourses(remainingCourses)
-      setActiveCourse(remainingCourses[0])
+    courseMutationRef.current = true
+    try {
+      if (isSimulationCourse) {
+        const courseKey = simulationCourseKey(course)
+        const next = academicStorage.getSelectionDraftCourses().filter((item) => !item.id.startsWith(courseKey))
+        academicStorage.setSelectionDraftCourses(next)
+        setSimulationCourses(next)
+      } else if (isAuditCourse) {
+        if (!course.auditItemId || course.auditItemVersion === undefined) {
+          Taro.showToast({ title: '课程信息不完整，请刷新后重试', icon: 'none' })
+          return
+        }
+        await removePersonalTimetableItem(course.auditItemId, course.auditItemVersion)
+        personalTimetableRequestRef.current += 1
+        setPersonalCourses((current) => {
+          const next = current.filter((item) => item.auditItemId !== course.auditItemId)
+          academicStorage.setPersonalCourses(academicUserId, educationLevel, course.periodId, next)
+          return next
+        })
+      } else {
+        setCustomCourses((current) => current.filter((item) => item.id !== course.id))
+      }
+      const remainingCourses = activeSlotCourses.filter((item) => (
+        isAuditCourse
+          ? item.auditItemId !== course.auditItemId
+          : isSimulationCourse
+            ? !item.id.startsWith(simulationCourseKey(course))
+            : item.id !== course.id
+      ))
+      if (!remainingCourses.length) {
+        closeCourseFloat()
+      } else {
+        setActiveSlotCourses(remainingCourses)
+        setActiveCourse(remainingCourses[0])
+      }
+      Taro.showToast({ title: '课程已删除', icon: 'success' })
+    } catch {
+      Taro.showToast({ title: '删除失败，请稍后重试', icon: 'none' })
+    } finally {
+      courseMutationRef.current = false
     }
-    Taro.showToast({ title: '课程已删除', icon: 'success' })
+  }
+
+  const clearRemovableCourses = async () => {
+    if (courseMutationRef.current) return
+    if (isSimulation) {
+      const count = simulationCourses.filter((course) => course.periodId === preferences.schedulePeriodId).length
+      if (!count) {
+        Taro.showToast({ title: '本学期没有模拟选课', icon: 'none' })
+        return
+      }
+      const result = await Taro.showModal({
+        title: '清空模拟选课',
+        content: `将清空本学期 ${count} 门模拟课程，不会影响真实课表。`,
+        confirmText: '确认清空',
+        confirmColor: '#c56f73',
+      })
+      if (!result.confirm) return
+      const next = academicStorage.getSelectionDraftCourses().filter((course) => course.periodId !== preferences.schedulePeriodId)
+      academicStorage.setSelectionDraftCourses(next)
+      setSimulationCourses(next)
+      closeCourseFloat()
+      Taro.showToast({ title: '模拟选课已清空', icon: 'success' })
+      return
+    }
+    const customCourseIds = customCourses
+      .filter((course) => course.periodId === preferences.schedulePeriodId)
+      .map((course) => course.id)
+    const auditItems = Array.from(new Map(
+      personalCourses
+        .filter((course) => course.periodId === preferences.schedulePeriodId)
+        .filter((course) => course.auditItemId && course.auditItemVersion !== undefined)
+        .map((course) => [course.auditItemId as number, course.auditItemVersion as number]),
+    ).entries())
+    const count = customCourseIds.length + auditItems.length
+    if (!count) {
+      Taro.showToast({ title: '本学期没有可清除的课程', icon: 'none' })
+      return
+    }
+    const result = await Taro.showModal({
+      title: '一键清除课程',
+      content: `将清除本学期 ${count} 门自定义或蹭课课程，教务课程不会受影响。`,
+      confirmText: '确认清除',
+      confirmColor: '#c56f73',
+    })
+    if (!result.confirm) return
+    courseMutationRef.current = true
+    try {
+      const settled = await Promise.allSettled(auditItems.map(([itemId, version]) => (
+        removePersonalTimetableItem(itemId, version)
+      )))
+      const removedAuditItemIds = new Set(auditItems
+        .filter((_, index) => settled[index].status === 'fulfilled')
+        .map(([itemId]) => itemId))
+      setCustomCourses((current) => current.filter((course) => (
+        course.periodId !== preferences.schedulePeriodId || course.source !== 'custom'
+      )))
+      setPersonalCourses((current) => current.filter((course) => (
+        course.periodId !== preferences.schedulePeriodId || !removedAuditItemIds.has(course.auditItemId || 0)
+      )))
+      closeCourseFloat()
+      const failedAuditCount = auditItems.length - removedAuditItemIds.size
+      Taro.showToast({
+        title: failedAuditCount ? `已清除，${failedAuditCount} 门蹭课未删除` : '课程已清除',
+        icon: failedAuditCount ? 'none' : 'success',
+      })
+    } finally {
+      courseMutationRef.current = false
+    }
+  }
+
+  const openScheduleActions = async () => {
+    const result = await Taro.showActionSheet({ itemList: [isSimulation ? '清空本学期模拟选课' : '一键清除自定义与蹭课课程'] })
+    if (result.tapIndex === 0) await clearRemovableCourses()
   }
 
   const toolbar = (
@@ -821,15 +1242,17 @@ export default function SchedulePage() {
           onClick={() => updatePreferences({ week: Math.min(schedulePeriod?.weeks || 20, preferences.week + 1) })}
         />
       </View>
-      <View
-        className={`academic-view-toggle academic-view-toggle--${preferences.scheduleView}`}
-        ariaRole='button'
-        ariaLabel={`当前${preferences.scheduleView === 'week' ? '周' : '日'}视图，点击切换`}
-        onClick={() => updatePreferences({ scheduleView: preferences.scheduleView === 'week' ? 'day' : 'week' })}
-      >
-        <View className='academic-view-toggle__icon' />
-        <Text>{preferences.scheduleView === 'week' ? '周' : '日'}</Text>
-      </View>
+      {!isSimulation && (
+        <View
+          className={`academic-view-toggle academic-view-toggle--${preferences.scheduleView}`}
+          ariaRole='button'
+          ariaLabel={`当前${preferences.scheduleView === 'week' ? '周' : '日'}视图，点击切换`}
+          onClick={() => updatePreferences({ scheduleView: preferences.scheduleView === 'week' ? 'day' : 'week' })}
+        >
+          <View className='academic-view-toggle__icon' />
+          <Text>{preferences.scheduleView === 'week' ? '周' : '日'}</Text>
+        </View>
+      )}
     </View>
   )
 
@@ -840,6 +1263,7 @@ export default function SchedulePage() {
       onTouchStart={handleWeekTouchStart}
       onTouchEnd={handleWeekTouchEnd}
       onTouchCancel={handleWeekTouchCancel}
+      onLongPress={() => void openScheduleActions()}
     >
       <View className='timetable__header'>
         <View className='timetable__corner'>节次</View>
@@ -888,6 +1312,10 @@ export default function SchedulePage() {
                 gridRow: String(section),
               }}
               onClick={() => openTimeSlot(weekday, section)}
+              onLongPress={(event) => {
+                event.stopPropagation()
+                openTimeSlotActions(weekday, section)
+              }}
             />
           )
         })}
@@ -922,6 +1350,9 @@ export default function SchedulePage() {
             ...course.weeks.filter((week) => week > preferences.week),
             Number.POSITIVE_INFINITY,
           )
+          const selectionState = isSimulation
+            ? getSimulationSelectionState(course)
+            : null
           return (
             <View
               key={getCourseScheduleKey(course)}
@@ -944,6 +1375,10 @@ export default function SchedulePage() {
                   ? `${course.name}，同一时段另有 ${relatedCount} 门其他周次课程`
                   : `${course.name}，第 ${course.startSection} 到 ${course.endSection} 节`}
               onClick={() => openCourse(course)}
+              onLongPress={(event) => {
+                event.stopPropagation()
+                openTimeSlotActions(course.weekday, course.startSection)
+              }}
             >
               {hasConflict ? (
                 <>
@@ -957,6 +1392,11 @@ export default function SchedulePage() {
               ) : (
                 <>
                   <View className='timetable-course__preview-head'>
+                    {selectionState === 'not-selected' && (
+                      <Text className={`timetable-course__selection-status timetable-course__selection-status--${selectionState}`}>
+                        待教务选
+                      </Text>
+                    )}
                     {!isCurrentWeek && Number.isFinite(nextCourseWeek) ? (
                       <Text className='timetable-course__status'>
                         第{nextCourseWeek}周
@@ -967,9 +1407,15 @@ export default function SchedulePage() {
                     ) : null}
                   </View>
                   <Text className='timetable-course__name'>{course.name}</Text>
-                  <Text className='timetable-course__location'>
-                    {isCurrentWeek ? course.location : formatCourseWeeks(course.weeks)}
-                  </Text>
+                  {isSimulation ? (
+                    <Text className='timetable-course__class-num'>
+                      选课号 {course.classNum || '暂无选课号'}
+                    </Text>
+                  ) : (
+                    <Text className='timetable-course__location'>
+                      {isCurrentWeek ? course.location : formatCourseWeeks(course.weeks)}
+                    </Text>
+                  )}
                 </>
               )}
             </View>
@@ -986,6 +1432,7 @@ export default function SchedulePage() {
       onTouchStart={handleDayTouchStart}
       onTouchEnd={handleDayTouchEnd}
       onTouchCancel={handleDayTouchCancel}
+      onLongPress={() => void openScheduleActions()}
     >
       <ScrollView className='day-strip' scrollX showScrollbar={false}>
         <View className='day-strip__inner'>
@@ -1005,11 +1452,18 @@ export default function SchedulePage() {
       {dayCourses.length ? (
         <View className='day-course-list'>
           {dayCourses.map((course) => {
+            const selectionState = isSimulation
+              ? getSimulationSelectionState(course)
+              : null
             return (
               <View
                 key={getCourseScheduleKey(course)}
                 className='day-course'
                 onClick={() => openCourse(course)}
+                onLongPress={(event) => {
+                  event.stopPropagation()
+                  openTimeSlotActions(course.weekday, course.startSection)
+                }}
               >
                 <View className={`day-course__tone day-course__tone--${course.color}`} />
                 <View className='day-course__sections'>
@@ -1018,9 +1472,19 @@ export default function SchedulePage() {
                 <View className='day-course__main'>
                   <View className='day-course__title-line'>
                     <Text className='day-course__name'>{course.name}</Text>
+                    {selectionState === 'not-selected' && (
+                      <Text className={`day-course__status day-course__status--${selectionState}`}>
+                        待教务选
+                      </Text>
+                    )}
                   </View>
                   <Text className='day-course__meta'>
-                    {[course.location, course.teacher].filter(Boolean).join(' · ') || '自定义课程'}
+                    {[
+                      isSimulation
+                        ? `选课号 ${course.classNum || '暂无选课号'}`
+                        : course.location,
+                      course.teacher,
+                    ].filter(Boolean).join(' · ') || '自定义课程'}
                   </Text>
                 </View>
                 <Text className='academic-chevron'>›</Text>
@@ -1101,7 +1565,11 @@ export default function SchedulePage() {
                             ? '本周'
                             : formatCourseWeeks(course.weeks)}
                           {' · '}第 {course.startSection}-{course.endSection} 节
-                          {course.location ? ` · ${course.location}` : ''}
+                          {isSimulation
+                            ? ` · 选课号 ${course.classNum || '暂无选课号'}`
+                            : course.location
+                              ? ` · ${course.location}`
+                              : ''}
                         </Text>
                       </View>
                     )
@@ -1116,6 +1584,7 @@ export default function SchedulePage() {
                   course={activeCourse}
                   currentWeek={preferences.week}
                   timeRange={getCourseTimeRange(activeCourse)}
+                  simulationMode={isSimulation}
                   onDelete={() => deleteCourse(activeCourse)}
                   onEdit={() => openCourseForm(activeCourse)}
                   onWanted={() => openCourseTrade(activeCourse)}
@@ -1128,10 +1597,42 @@ export default function SchedulePage() {
       )
     }
     return (
-      <View className='academic-overlay' onClick={() => setSheet(null)}>
+      <View
+        className='academic-overlay'
+        onClick={() => {
+          setSheet(null)
+          setActiveTimeSlot(null)
+        }}
+      >
         <View className={`academic-sheet academic-sheet--${sheet}`} onClick={requestWechatSubscriptionAndStopPropagation}>
           <View className='academic-sheet__handle' />
-          <View className='academic-sheet__close' onClick={() => setSheet(null)}>×</View>
+          <View
+            className='academic-sheet__close'
+            onClick={() => {
+              setSheet(null)
+              setActiveTimeSlot(null)
+            }}
+          >×</View>
+          {sheet === 'time-slot-actions' && activeTimeSlot && (
+            <View className='academic-sheet__body academic-sheet__body--time-slot-actions'>
+              <Text className='academic-sheet__title'>
+                {isSimulation ? '为这个时段选课' : '为这个时段蹭课'}
+              </Text>
+              <Text className='academic-sheet__subtitle'>
+                {weekdays[activeTimeSlot.weekday - 1] || `星期${activeTimeSlot.weekday}`} · 第 {activeTimeSlot.section} 节
+              </Text>
+              <View className='academic-sheet__actions'>
+                <View
+                  className='academic-button academic-button--full'
+                  ariaRole='button'
+                  ariaLabel={isSimulation ? '选课' : '蹭课'}
+                  onClick={() => openCourseCatalogAtTimeSlot(activeTimeSlot)}
+                >
+                  {isSimulation ? '选课' : '蹭课'}
+                </View>
+              </View>
+            </View>
+          )}
           {sheet === 'period' && (
             <View className='academic-sheet__body'>
               <Text className='academic-sheet__title'>选择学年学期</Text>
@@ -1145,7 +1646,7 @@ export default function SchedulePage() {
                       updatePreferences({
                         schedulePeriodId: period.id,
                         week: period.isCurrent ? getCurrentTeachingWeek(period) : 1,
-                        selectedWeekday: 1,
+                        selectedWeekday: getAcademicWeekday(),
                       })
                       setSheet(null)
                     }}
@@ -1287,7 +1788,7 @@ export default function SchedulePage() {
   return (
     <View className={`academic-page academic-page--schedule academic-page--schedule-${preferences.scheduleView} ${sheet ? 'academic-page--locked' : ''}`}>
       <View className='academic-page__glow academic-page__glow--one' />
-      <AcademicHeader title='课程表' toolbar={toolbar} variant='schedule' />
+      <AcademicHeader title={isSimulation ? '模拟选课' : '课程表'} toolbar={toolbar} variant='schedule' />
       <View
         key={preferences.schedulePeriodId}
         className={[
@@ -1311,40 +1812,101 @@ export default function SchedulePage() {
             <Text>下拉更新课表</Text>
           </View>
         )}
-        {loading ? (
+        {loading && !allCourses.length ? (
           <View className='academic-state'>
             <View className='academic-state__loader' />
             <Text>正在整理课程表…</Text>
           </View>
         ) : (
-          isAcademicBindingRequiredError(loadError)
-          || (loadError && !usingCache)
+          (isAcademicBindingRequiredError(loadError) || (loadError && !usingCache))
+          && !allCourses.length
         ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />
         ) : (
           <>
+            {Boolean(loadError) && (
+              <View className='schedule-note' ariaRole='status' onClick={refreshSchedule}>
+                <Text className='schedule-note__label'>课表查询失败</Text>
+                <Text className='schedule-note__copy'>已保留可用课程和蹭课数据，点击重试。</Text>
+              </View>
+            )}
+            {isSimulation && (
+              <View className='schedule-note' ariaRole='status'>
+                <Text className='schedule-note__label'>模拟选课</Text>
+                <Text className='schedule-note__copy'>仅用于排课参考，真实选课请在教务系统操作。</Text>
+              </View>
+            )}
             <AcademicCacheNotice
               cache={serverCache}
               updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}
               localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
-              localFallback={Boolean(loadError)}
+              localFallback={usingCache && Boolean(loadError)}
             />
             {scheduleNote.trim() && (
               <ScheduleNoteMarquee content={scheduleNote} />
             )}
-            {preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
+            {showSelectionGuide && !showRefreshGuide && !sheet && (
+              <View
+                className={`schedule-selection-guide schedule-selection-guide--${isSimulation ? 'simulation' : 'audit'}`}
+                ariaRole='status'
+                ariaLabel={isSimulation
+                  ? '长按课表空白时段进入模拟选课'
+                  : '长按课表空白时段进入蹭课'}
+              >
+                <View className='schedule-selection-guide__pointer'>
+                  <View className='schedule-selection-guide__halo' />
+                  <View className='schedule-selection-guide__hand'>
+                    <View className='schedule-selection-guide__hand-shape'>
+                      <View className='schedule-selection-guide__hand-tip' />
+                      <View className='schedule-selection-guide__hand-palm' />
+                      <View className='schedule-selection-guide__hand-thumb' />
+                    </View>
+                  </View>
+                </View>
+                <View className='schedule-selection-guide__copy'>
+                  <Text className='schedule-selection-guide__eyebrow'>
+                    {isSimulation ? '模拟选课入口' : '蹭课入口'}
+                  </Text>
+                  <Text className='schedule-selection-guide__title'>
+                    长按空白时段，{isSimulation ? '继续选课' : '快速蹭课'}
+                  </Text>
+                </View>
+                <View
+                  className='schedule-selection-guide__close'
+                  role='button'
+                  ariaLabel='关闭操作引导'
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    dismissSelectionGuide()
+                  }}
+                >×</View>
+              </View>
+            )}
+            {isSimulation || preferences.scheduleView === 'week' ? renderWeekSchedule() : renderDaySchedule()}
           </>
         )}
       </View>
-      <View
-        className='academic-fab'
-        ariaRole='button'
-        ariaLabel='添加自定义课程'
-        onClick={() => openCourseForm()}
-      >
-        <Text className='academic-fab__plus'>＋</Text>
-        <Text>自定义课程</Text>
-      </View>
+      {isSimulation ? (
+        <View
+          className={`academic-fab academic-fab--selection-sync ${syncingSelectedCourses ? 'academic-fab--busy' : ''}`}
+          ariaRole='button'
+          ariaLabel='同步教务系统已选课程'
+          onClick={() => void syncCourseSelectionSchedule()}
+        >
+          <Image src={icons.sync} className='academic-fab__sync-icon' mode='aspectFit' />
+          <Text>{syncingSelectedCourses ? '同步中…' : '同步已选'}</Text>
+        </View>
+      ) : (
+        <View
+          className='academic-fab'
+          ariaRole='button'
+          ariaLabel='添加自定义课程'
+          onClick={() => openCourseForm()}
+        >
+          <Text className='academic-fab__plus'>＋</Text>
+          <Text>自定义课程</Text>
+        </View>
+      )}
       {renderSheet()}
     </View>
   )

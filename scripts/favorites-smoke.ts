@@ -74,6 +74,12 @@ assert.equal(
 )
 
 const api = source('../src/api/favorites.ts')
+const toggle = source('../src/features/favorites/favorite-toggle.tsx')
+const errors = source('../src/features/favorites/errors.ts')
+assert.match(errors, /export const isUnavailableFavoriteError/u, '收藏切换必须识别不可用资源错误')
+assert.match(toggle, /isUnavailableFavoriteError/u, '收藏切换必须使用不可用资源错误判断')
+assert.match(errors, /error\.statusCode === 404/u, '仅收藏接口 404 作为不可用资源处理')
+assert.match(toggle, /if \(isUnavailableFavoriteError\(error\)\) return/u, '不可用资源错误不应弹 toast')
 assert.match(api, /path: '\/api\/v1\/favorites'/u, '收藏列表使用后端收藏协议')
 assert.match(api, /resource_type: query\.resourceType/u, '收藏列表支持类型筛选')
 assert.match(api, /page_size: normalizePageSize\(query\.pageSize\)/u, '收藏列表规范化分页大小')

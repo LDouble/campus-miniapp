@@ -8,6 +8,7 @@ import {
   removeFavorite,
 } from '../../api/favorites'
 import { isApiError } from '../../api/client'
+import { isUnavailableFavoriteError } from './errors'
 import './favorite-toggle.scss'
 
 const bookmarkIcon = require('../../assets/community/bookmark.svg')
@@ -74,6 +75,7 @@ export default function FavoriteToggle({
     }).catch((error) => {
       if (!active) return
       setFavorited(false)
+      if (isUnavailableFavoriteError(error)) return
       Taro.showToast({
         title: isApiError(error) ? error.message : '收藏状态加载失败',
         icon: 'none',
@@ -97,6 +99,7 @@ export default function FavoriteToggle({
       onChange?.(state.favorited)
       Taro.showToast({ title: state.favorited ? '已收藏' : '已取消收藏', icon: 'success' })
     } catch (error) {
+      if (isUnavailableFavoriteError(error)) return
       Taro.showToast({
         title: isApiError(error) ? error.message : '操作失败，请稍后重试',
         icon: 'none',

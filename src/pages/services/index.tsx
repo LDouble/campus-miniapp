@@ -1,6 +1,6 @@
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
@@ -13,6 +13,7 @@ import {
   type MiniappModuleKey,
 } from '../../features/runtime-config'
 import { useCampusShare } from '../../features/share'
+import { getCampusTheme, subscribeCampusTheme } from '../../features/theme-preference'
 import './index.scss'
 
 const icons = {
@@ -29,6 +30,7 @@ const icons = {
   academic: require('../../assets/icons/academic.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
   whatToEat: require('../../assets/icons/what-to-eat.svg'),
+  catAtlas: require('../../assets/icons/home-service-cat-atlas.svg'),
 }
 
 type ServiceItem = {
@@ -43,6 +45,7 @@ type ServiceItem = {
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
   schedule: 'academic_schedule',
+  simulation: 'academic_schedule',
   grades: 'academic_grades',
   exams: 'academic_exams',
   result: 'academic_selection',
@@ -78,6 +81,9 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'exams', name: '考试安排', icon: icons.exam, route: '/pages/academic/exams/index' },
       { key: 'result', name: '选课结果', icon: icons.result, route: '/pages/academic/selection/index' },
       { key: 'pass-rate', name: '课程通过率', icon: icons.passRate, route: '/pages/academic/statistics/courses' },
+      { key: 'course-audit', name: '蹭课检索', icon: icons.academic, route: '/pages/academic/course-catalog/index' },
+      { key: 'general-education', name: '通识查询', icon: icons.academic, route: '/pages/academic/general-education/index' },
+      { key: 'simulation', name: '模拟选课', icon: icons.academic, route: '/pages/academic/schedule/index?mode=simulation' },
       { key: 'calendar', name: '校历', icon: icons.calendar, route: '/pages/calendar/index' },
     ],
   },
@@ -99,12 +105,16 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
       { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
       { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
       { key: 'clubs', name: '社团广场', icon: icons.clubs, route: '/pages/clubs/index' },
+      { key: 'lottery', name: '校园抽奖', icon: icons.result, route: '/pages/lottery/index' },
       { key: 'what-to-eat', name: '今天吃什么', icon: icons.whatToEat, route: '/pages/what-to-eat/index' },
+      { key: 'cat-atlas', name: '猫猫图鉴', icon: icons.catAtlas, route: '/pages/cat-atlas/index' },
     ],
   },
 ]
 
 export default function Services() {
+  const [campusTheme, setCampusTheme] = useState(getCampusTheme)
+  useEffect(() => subscribeCampusTheme(setCampusTheme), [])
   useCampusShare(() => ({
     title: 'OUSea服务｜学业、出行与校园生活',
     path: '/pages/services/index',
@@ -195,8 +205,8 @@ export default function Services() {
                   ariaLabel={`打开${item.name}`}
                   onClick={() => openService(item)}
                 >
-                  <View className='services-group__icon'>
-                    <Image src={item.icon} mode='aspectFit' />
+                  <View className='services-group__icon' style={item.key === 'cat-atlas' ? { background: 'var(--campus-icon-surface-orange)' } : undefined}>
+                    <Image src={item.key === 'cat-atlas' && campusTheme === 'dark' ? require('../../assets/icons/home-service-cat-atlas-dark.svg') : item.icon} mode='aspectFit' />
                   </View>
                   <Text>{item.name}</Text>
                 </View>

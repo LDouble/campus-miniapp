@@ -9,6 +9,13 @@ import {
   type MigrationGuideCopy,
 } from '../app-edition/migration-copy'
 import { navigateToWithGuard } from '../../utils/navigation'
+import {
+  DEFAULT_MARKETPLACE_CATEGORIES,
+  normalizeMarketplaceCategories,
+  type MarketplaceCategory,
+} from './marketplace-categories'
+
+export type { MarketplaceCategory } from './marketplace-categories'
 
 export type CampusSection = {
   start: string
@@ -75,6 +82,8 @@ export type MiniappModuleConfig = {
 
 export type MiniappRuntimeConfig = {
   schema_version: 1
+  calender?: string
+  shuttle?: string
   title: string
   effective_since: string
   default_campus: string
@@ -87,6 +96,7 @@ export type MiniappRuntimeConfig = {
   slogans: RuntimeSlogan[]
   banners: RuntimeBanner[]
   migration_guide: MigrationGuideCopy
+  marketplace_categories: MarketplaceCategory[]
 }
 
 type RuntimeConfigView = components['schemas']['RuntimeConfig']
@@ -141,6 +151,8 @@ const conservativeModules: Record<MiniappModuleKey, MiniappModuleConfig> = {
 
 export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
   schema_version: 1,
+  calender: '',
+  shuttle: '',
   title: '中国海洋大学上课时间表',
   effective_since: '2022秋季学期',
   default_campus: '崂山校区',
@@ -219,6 +231,7 @@ export const DEFAULT_MINIAPP_RUNTIME_CONFIG: MiniappRuntimeConfig = {
     },
   ],
   migration_guide: DEFAULT_MIGRATION_GUIDE_COPY,
+  marketplace_categories: DEFAULT_MARKETPLACE_CATEGORIES,
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -325,6 +338,8 @@ const isRuntimeConfig = (value: unknown): value is MiniappRuntimeConfig => {
   if (!isRecord(value)) return false
   if (
     value.schema_version !== 1
+    || (value.calender !== undefined && typeof value.calender !== 'string')
+    || (value.shuttle !== undefined && typeof value.shuttle !== 'string')
     || typeof value.title !== 'string'
     || typeof value.effective_since !== 'string'
     || typeof value.default_campus !== 'string'
@@ -361,9 +376,12 @@ const normalizeRuntimeConfig = (
   value: MiniappRuntimeConfig,
 ): MiniappRuntimeConfig => ({
   ...value,
+  calender: typeof value.calender === 'string' ? value.calender.trim() : '',
+  shuttle: typeof value.shuttle === 'string' ? value.shuttle.trim() : '',
   modules: normalizeMiniappModules(value.modules),
   subscription_templates: normalizeSubscriptionTemplates(value.subscription_templates),
   migration_guide: normalizeMigrationGuideCopy(value.migration_guide),
+  marketplace_categories: normalizeMarketplaceCategories(value.marketplace_categories),
 })
 
 export const getMigrationGuideCopy = (

@@ -40,7 +40,7 @@ assert.match(
   /<DetailAuthorHeader[\s\S]*?profileEnabled=\{!post\.author_deleted\}[\s\S]*?badge=\{<CommunityLevelBadge/u,
   '帖子详情必须保留作者删除态和等级徽章',
 )
-assert.match(detailSources.community, /<DetailAuthorHeader[\s\S]*?<View className='community-detail__topic'/u)
+assert.match(detailSources.community, /<MentionContent[\s\S]*?trailing=\{topicLinks\.map[\s\S]*?className='community-detail__topic'/u)
 assert.match(detailSources.errands, /<DetailAuthorHeader[\s\S]*?<DetailBusinessIntro[\s\S]*?title=\{item\.description\}/u)
 assert.match(detailSources.carpool, /<DetailAuthorHeader[\s\S]*?<DetailBusinessIntro[\s\S]*?title=\{item\.description\}/u)
 assert.doesNotMatch(detailSources.carpool, /<DetailBusinessIntro[\s\S]*?description=\{item\.description\}/u)

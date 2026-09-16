@@ -48,8 +48,8 @@ assert.throws(() => loadApiEndpoints({
 const buildConfigSource = readFileSync(resolve(__dirname, '../config/index.ts'), 'utf8')
 assert.match(
   buildConfigSource,
-  /const buildApiEndpoints = \{\s*review: apiEndpoints\.production,\s*production: apiEndpoints\.production,?\s*\}/u,
-  '小程序各构建环境必须统一注入 product 域名',
+  /const buildApiEndpoints = process\.env\.NODE_ENV === 'production'[\s\S]*review: apiEndpoints\.production[\s\S]*production: apiEndpoints\.production[\s\S]*review: apiEndpoints\.review/u,
+  '开发构建应保留本地 review 地址，生产构建统一注入 product 域名',
 )
 
 console.log('api environment smoke checks passed')

@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
+import { pickRandomFood, type FoodListing } from '../../api/what-to-eat'
+import { getMiniappRuntimeConfig, getSelectedCampus } from '../runtime-config'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -18,7 +20,13 @@ import CommunityCommentSheet from './comment-sheet'
 import { mergePublicCommentPreview } from './comments'
 import { saveCommunityDetailSnapshot } from './detail-snapshot'
 import CommunityPostCard, { type CommunityPostCommentPreview } from './post-card'
+import WhatToEatFeedCard, { openWhatToEatDetail } from './what-to-eat-feed-card'
 import { navigateToWithGuard } from '../../utils/navigation'
+import {
+  communityPinActionLabel,
+  confirmCommunityPinAction,
+  getCommunityPinAction,
+} from './pin-action'
 import './feed-panel.scss'
 
 type Props = {
@@ -46,6 +54,31 @@ type CommunityFeedCacheEntry = {
 
 const communityFeedCache = new Map<string, CommunityFeedCacheEntry>()
 const COMMUNITY_FEED_CACHE_LIMIT = 20
+const WHAT_TO_EAT_CACHE_KEY = 'community.what-to-eat-feed.v1'
+
+type WhatToEatCache = { date: string; campus: string; item: FoodListing }
+
+const todayKey = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+const readWhatToEatCache = (campus: string) => {
+  try {
+    const cached = Taro.getStorageSync<WhatToEatCache>(WHAT_TO_EAT_CACHE_KEY)
+    return cached?.date === todayKey() && cached.campus === campus ? cached.item : null
+  } catch {
+    return null
+  }
+}
+
+const saveWhatToEatCache = (campus: string, item: FoodListing) => {
+  try {
+    Taro.setStorageSync(WHAT_TO_EAT_CACHE_KEY, { date: todayKey(), campus, item })
+  } catch {
+    // 缓存失败不影响 Feed 展示。
+  }
+}
 
 const saveCommunityFeedCache = (key: string, entry: CommunityFeedCacheEntry) => {
   communityFeedCache.delete(key)
@@ -96,11 +129,41 @@ export default function CommunityFeedPanel({
   const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+  const [whatToEatItem, setWhatToEatItem] = useState<FoodListing | null>(null)
+  const [whatToEatPicking, setWhatToEatPicking] = useState(false)
+  const [whatToEatCampus, setWhatToEatCampus] = useState('')
   const requestSequence = useRef(0)
   const loadingMoreRef = useRef(false)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
   const loadedQueryKeyRef = useRef<string | null>(null)
   const lastOverlayDismissSignalRef = useRef(overlayDismissSignal)
+
+  const pickWhatToEat = useCallback(async (force = false) => {
+    const campus = getSelectedCampus(getMiniappRuntimeConfig())
+    if (!campus) return
+    setWhatToEatCampus(campus)
+    if (!force) {
+      const cached = readWhatToEatCache(campus)
+      if (cached) {
+        setWhatToEatItem(cached)
+        return
+      }
+    }
+    setWhatToEatPicking(true)
+    try {
+      const item = await pickRandomFood(campus)
+      setWhatToEatItem(item)
+      saveWhatToEatCache(campus, item)
+    } catch {
+      setWhatToEatItem(null)
+    } finally {
+      setWhatToEatPicking(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void pickWhatToEat()
+  }, [pickWhatToEat])
 
   useEffect(() => {
     pendingPinnedPost.current = pinnedPost
@@ -140,6 +203,7 @@ export default function CommunityFeedPanel({
     activeSectionId,
     activeParentSectionId,
     keyword,
+    sort: 'latest',
   }), [activeParentSectionId, activeSectionId, keyword])
   const load = useCallback(async (nextPage = 1, append = false) => {
     if (!activeSectionId) return
@@ -154,6 +218,7 @@ export default function CommunityFeedPanel({
         sectionId: isRoot ? undefined : activeSectionId,
         parentSectionId: isRoot ? activeSectionId : undefined,
         keyword,
+        sort: 'latest',
         page: nextPage,
       })
       if (requestId !== requestSequence.current) return
@@ -242,6 +307,41 @@ export default function CommunityFeedPanel({
       })
     }
   }, [])
+
+  const runPinAction = useCallback(async (post: CampusCirclePostView) => {
+    const action = getCommunityPinAction(post)
+    if (!action) return
+    const sectionName = sectionNames.get(post.section_id) || '当前'
+    if (!await confirmCommunityPinAction(action, sectionName)) return
+    try {
+      const updated = await lifeServicesRepository.updateCampusCirclePostPin(post.id, {
+        expectedVersion: post.version,
+        pinned: action === 'pin',
+      })
+      setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: `${communityPinActionLabel(action)}成功`, icon: 'success' })
+      await load(1, false)
+    } catch (actionError) {
+      if (isApiError(actionError) && (actionError.statusCode === 403 || actionError.statusCode === 409)) {
+        try {
+          const latest = await lifeServicesRepository.getCampusCirclePost(post.id)
+          setPosts((current) => current.map((item) => item.id === latest.id ? latest : item))
+        } catch {
+          // 列表刷新仍会获取服务端的最新权限和状态。
+        }
+        await load(1, false)
+      }
+      Taro.showToast({
+        title: isApiError(actionError)
+          ? actionError.statusCode === 409
+            ? '状态已变化，已刷新最新内容'
+            : actionError.message
+          : '操作失败，请稍后重试',
+        icon: 'none',
+      })
+    }
+  }, [load, sectionNames])
 
   const openPost = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
@@ -353,6 +453,7 @@ export default function CommunityFeedPanel({
 
   const isCurrentQueryLoaded = loadedQueryKeyRef.current === queryKey
   const hasCurrentPosts = isCurrentQueryLoaded && posts.length > 0
+  const whatToEatInsertIndex = posts.length > 0 ? Math.min(3, posts.length - 1) : -1
   // 已有内容刷新时采用 stale-while-revalidate，避免返回详情页后先闪出骨架屏。
   const shouldRenderPostList = isCurrentQueryLoaded
     && (posts.length > 0 || (!loading && !error))
@@ -449,22 +550,32 @@ export default function CommunityFeedPanel({
       {sectionsReady && !sectionsError && activeSection && shouldRenderPostList && (
         <View className='community-post-list'>
           {posts.map((post, index) => (
-            <CommunityPostCard
-              key={post.id}
-              post={post}
-              showViewCount
-              motionDelay={index < 4 ? index + 1 : undefined}
-              sectionName={sectionNameForPost(post, '未知板块')}
-              actionsOpen={openActionPostId === post.id}
-              onToggleActions={toggleActions}
-              onCloseActions={closeActions}
-              onToggleLike={toggleLike}
-              onOpen={openPost}
-              onOpenComments={openComments}
-              onReplyComment={openCommentReply}
-              onOpenAuthor={openAuthor}
-              onSelectSection={onSelectSection}
-            />
+            <Fragment key={post.id}>
+              {index === whatToEatInsertIndex && whatToEatItem && whatToEatCampus && (
+                <WhatToEatFeedCard
+                  item={whatToEatItem}
+                  picking={whatToEatPicking}
+                  onPick={() => void pickWhatToEat(true)}
+                  onOpen={() => openWhatToEatDetail(whatToEatItem)}
+                />
+              )}
+              <CommunityPostCard
+                post={post}
+                showViewCount
+                motionDelay={index < 4 ? index + 1 : undefined}
+                sectionName={sectionNameForPost(post, '未知板块')}
+                actionsOpen={openActionPostId === post.id}
+                onToggleActions={toggleActions}
+                onCloseActions={closeActions}
+                onToggleLike={toggleLike}
+                onPinAction={runPinAction}
+                onOpen={openPost}
+                onOpenComments={openComments}
+                onReplyComment={openCommentReply}
+                onOpenAuthor={openAuthor}
+                onSelectSection={onSelectSection}
+              />
+            </Fragment>
           ))}
         </View>
       )}

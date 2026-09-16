@@ -1,3 +1,4 @@
+import { legacySocialPages, legacySocialTargetUrl, normalizeLegacySocialPath } from '../src/features/legacy-social-routes'
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -402,3 +403,15 @@ assert.ok(appSource.includes('privateMessageUnreadPollingGeneration.current'), '
 assert.ok(unreadSource.includes("resolveMiniappModule(getMiniappRuntimeConfig(), 'private_message').state !== 'enabled'"), '未启用私信模块不得请求未读接口')
 
 console.log('direct messages smoke: ok')
+
+assert.equal(isPrivateMessageNoticeAction('/packages/social/direct-messages/chat?id=19'), true)
+assert.equal(noticeActionRoute('/packages/social/direct-messages/chat?id=19'), '/pages/direct-messages/chat?id=19')
+assert.equal(noticeActionRoute('/packages/social/direct-messages/chat?id=19', { allowPrivateMessages: false }), '')
+assert.equal(noticeActionRoute('/packages/social/direct-messages/chat?id=0'), '')
+
+for (const page of legacySocialPages) {
+  assert.equal(normalizeLegacySocialPath(`/packages/social/${page}?id=19&mode=post`), `/pages/${page}?id=19&mode=post`)
+  assert.equal(noticeActionRoute(`/packages/social/${page}?id=19`), `/pages/${page}?id=19`)
+}
+assert.equal(normalizeLegacySocialPath('/packages/social/unknown?id=19'), '/packages/social/unknown?id=19')
+assert.equal(legacySocialTargetUrl('community/detail', { id: '19', keyword: '课程 & 交流', missing: undefined }), '/pages/community/detail?id=19&keyword=%E8%AF%BE%E7%A8%8B%20%26%20%E4%BA%A4%E6%B5%81')

@@ -5,15 +5,18 @@ import {
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
+  mergeSimulationCourses,
   requireCoursesForPeriod,
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
 } from '../src/pages/academic/schedule-courses'
-import { Course } from '../src/pages/academic/types'
+import { AcademicPeriod, Course } from '../src/pages/academic/types'
 import {
   courseColorForClass,
   formatCourseTimeRange,
   formatCourseWeeks,
+  getAcademicWeekday,
+  resolveNextPeriodId,
   resolveHorizontalSwipeDay,
   resolveHorizontalSwipeWeek,
 } from '../src/pages/academic/utils'
@@ -30,6 +33,15 @@ const course = (id: string, periodId: string): Course => ({
   weeks: [1],
   color: 'aqua',
   source: 'official',
+})
+
+const period = (id: string, startDate: string, isCurrent = false): AcademicPeriod => ({
+  id,
+  label: id,
+  shortLabel: id,
+  startDate,
+  weeks: 20,
+  isCurrent,
 })
 
 const academicRepositorySource = readFileSync(
@@ -69,6 +81,81 @@ assert.match(
 )
 assert.match(academicRepositorySource, /note:\s*course\.note/u, '课程映射必须保留课程备注')
 assert.match(academicRepositorySource, /class_num/u, '课程颜色映射必须优先读取 class_num')
+assert.match(
+  academicRepositorySource,
+  /getCourseSelectionSchedule[\s\S]*?listAcademicCourseSelectionSchedule/u,
+  '课表仓储必须提供已选课程课表同步能力',
+)
+assert.match(
+  schedulePageSource,
+  /syncCourseSelectionSchedule[\s\S]*?getCourseSelectionSchedule/u,
+  '模拟选课必须调用独立的已选课程课表接口',
+)
+assert.match(
+  schedulePageSource,
+  /academic-fab--selection-sync[\s\S]*?syncCourseSelectionSchedule/u,
+  '模拟选课必须通过浮动按钮同步教务系统已选课程',
+)
+assert.match(
+  schedulePageSource,
+  /CourseDetailCardProps[\s\S]*?simulationMode\?: boolean/u,
+  '模拟选课详情卡片必须区分当前页面模式',
+)
+assert.match(
+  schedulePageSource,
+  /simulationMode \? \([\s\S]*?<View><Text>选课号<\/Text><Text>\{classNum \|\| '暂无选课号'\}<\/Text><\/View>[\s\S]*?\) : \([\s\S]*?<View><Text>地点<\/Text>/u,
+  '模拟选课详情卡片必须展示选课号',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \? \([\s\S]*?timetable-course__class-num[\s\S]*?选课号 \{course\.classNum \|\| '暂无选课号'\}[\s\S]*?\) : \([\s\S]*?timetable-course__location/u,
+  '模拟选课周视图卡片应直接展示选课号而不是地点',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation[\s\S]*?`选课号 \$\{course\.classNum \|\| '暂无选课号'\}`[\s\S]*?: course\.location/u,
+  '模拟选课日视图卡片应直接展示选课号而不是地点',
+)
+assert.match(
+  schedulePageSource,
+  /selectionState === 'not-selected'[\s\S]*?待教务选/u,
+  '模拟选课卡片仅应为教务处未记录课程展示待教务选标签',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /selectionState === 'selected' &&/u,
+  '教务处已有课程不应展示选课状态标签',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /教务处已选|教务已选/u,
+  '模拟选课页面不应出现容易误解为最终选中的文案',
+)
+assert.match(
+  academicStyleSource,
+  /\.timetable-course\s*\{[\s\S]*?&__selection-status[\s\S]*?\.course-conflict-card\s*\{[\s\S]*?&__selection-status/u,
+  '模拟选课卡片的选课状态必须有独立视觉样式',
+)
+assert.match(
+  academicStyleSource,
+  /&__class-num\s*\{[\s\S]*?-webkit-line-clamp:\s*3[\s\S]*?white-space:\s*normal/u,
+  '模拟选课卡片的选课号应允许换行并最多展示三行',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /academic-toolbar__selection-sync/u,
+  '同步已选课程不能占用课表工具栏',
+)
+assert.match(
+  schedulePageSource,
+  /同步失败，已保留当前模拟课表/u,
+  '已选课程同步失败时必须保留现有展示',
+)
+assert.match(
+  academicStorageSource,
+  /courseSelectionScheduleCache/u,
+  '已选课程课表必须按教务用户缓存，避免同步失败时丢失旧数据',
+)
 assert.doesNotMatch(
   academicRepositorySource,
   /stableColor\(course\.id\)/u,
@@ -83,6 +170,26 @@ assert.match(
   academicStorageSource,
   /scheduleNotesByPeriod/u,
   '课表缓存必须按学期保存全局课表备注',
+)
+assert.match(
+  academicStorageSource,
+  /hasSeenScheduleSelectionGuideToday[\s\S]*markScheduleSelectionGuideSeenToday/u,
+  '课表选课引导必须按天记录展示状态',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \|\| !academicStorage\.hasSeenScheduleSelectionGuideToday\(\)/u,
+  '模拟选课引导每次进入都应显示，不受按天记录限制',
+)
+assert.match(
+  schedulePageSource,
+  /setShowSelectionGuide\(true\)/u,
+  '模拟选课页面重新显示时应重新展示长按引导',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \? 3000 : 5200/u,
+  '模拟选课长按引导应在 3 秒后自动消失',
 )
 assert.match(
   schedulePageSource,
@@ -100,6 +207,64 @@ assert.match(schedulePageSource, /className='timetable__time-start'/u, '左侧�
 assert.match(schedulePageSource, /className='timetable__time-section'/u, '左侧节次栏必须展示节次')
 assert.match(schedulePageSource, /className='timetable__time-end'/u, '左侧节次栏必须展示结束时间')
 assert.doesNotMatch(schedulePageSource, /className='timetable__time-range'/u, '左侧节次栏不应展示箭头时间区间')
+assert.match(schedulePageSource, /schedule-selection-guide/u, '课表应提供进入蹭课或模拟选课的操作引导')
+assert.match(schedulePageSource, /长按空白时段，\{isSimulation \? '继续选课' : '快速蹭课'\}/u, '课表引导文案必须匹配当前模式')
+assert.match(schedulePageSource, /loadAcademicCalendar\(educationLevel, \{ force \}\)/u, '模拟选课应读取当前学历的完整校历学期')
+assert.match(schedulePageSource, /mapCalendarPeriods\(result\.calendar\)/u, '模拟选课学期应映射校历返回的全部学期')
+assert.match(schedulePageSource, /resolveNextPeriodId\(nextPeriods\)/u, '模拟选课首次进入应默认选择当前学期的下一学期')
+assert.match(
+  schedulePageSource,
+  /scheduleView:\s*isSimulation \? 'week' : storedPreferences\.scheduleView/u,
+  '模拟选课进入时必须固定为周视图',
+)
+assert.match(
+  schedulePageSource,
+  /scheduleView:\s*isSimulation \? 'week' : \(patch\.scheduleView \|\| current\.scheduleView\)/u,
+  '模拟选课更新偏好时必须拒绝切换到日视图',
+)
+assert.match(
+  schedulePageSource,
+  /\{!isSimulation && \([\s\S]*?academic-view-toggle/u,
+  '模拟选课不应展示日周视图切换入口',
+)
+assert.match(
+  schedulePageSource,
+  /isSimulation \|\| preferences\.scheduleView === 'week' \? renderWeekSchedule\(\) : renderDaySchedule\(\)/u,
+  '模拟选课即使读取到异常视图状态也必须渲染周视图',
+)
+assert.doesNotMatch(schedulePageSource, /simulationPeriodId = academicStorage\.getSelectionDraftCourses\(\)\[0\]/u, '模拟选课不应再用第一门课程伪造唯一学期')
+assert.equal(
+  resolveNextPeriodId([
+    period('2026-2027-1', '2026-09-20'),
+    period('2026-2027-3', '2026-08-24', true),
+    period('2025-2026-3', '2026-03-09'),
+  ]),
+  '2026-2027-1',
+  '当前学期为夏季时应选择同学年的秋季学期',
+)
+assert.equal(
+  resolveNextPeriodId([
+    period('2025-2026-1', '2025-09-01'),
+    period('2025-2026-2', '2026-02-23', true),
+    period('2025-2026-3', '2026-03-09'),
+  ]),
+  '2025-2026-3',
+  '当前学期为春季时应选择同学年的夏季学期',
+)
+assert.equal(
+  resolveNextPeriodId([period('2026-2027-3', '2026-08-24', true)]),
+  '2026-2027-3',
+  '只有当前学期时应安全回退到当前学期',
+)
+assert.equal(
+  resolveNextPeriodId([
+    period('2025-2026-1', '2025-09-01'),
+    period('2025-2026-2', '2026-02-23'),
+    period('2025-2026-3', '2026-03-09'),
+  ]),
+  '2025-2026-3',
+  '没有当前标记时应按时间顺序选择最近学期的下一学期回退项',
+)
 assert.match(runtimeConfigSource, /export const getSectionEndTime/u, '运行时配置必须提供节次结束时间')
 assert.equal(
   formatCourseTimeRange('08:00', '09:40'),
@@ -111,6 +276,31 @@ assert.equal(
   '',
   '缺少任一端时间时应安全回退',
 )
+assert.equal(
+  getAcademicWeekday(new Date(2026, 8, 7)),
+  1,
+  '周一应映射为课表第 1 天',
+)
+assert.equal(
+  getAcademicWeekday(new Date(2026, 8, 6)),
+  7,
+  '周日应映射为课表第 7 天',
+)
+assert.match(
+  schedulePageSource,
+  /selectedWeekday:\s*getAcademicWeekday\(\)/u,
+  '课表初始化不能恢复本地保存的历史星期',
+)
+assert.match(
+  schedulePageSource,
+  /Taro\.useDidShow\(\(\) => \{[\s\S]*?setPreferences\(\(current\) => current\.selectedWeekday === todayWeekday/u,
+  '课表重新进入时必须重新定位到今天',
+)
+assert.doesNotMatch(
+  schedulePageSource,
+  /selectedWeekday:\s*1/u,
+  '课表页面的进入和刷新逻辑不应写死为星期一',
+)
 const primaryClassColor = courseColorForClass('class-101')
 const differentClassNumber = ['class-102', 'class-103', 'class-104']
   .find((classNumber) => courseColorForClass(classNumber) !== primaryClassColor)
@@ -119,6 +309,33 @@ assert.equal(
   courseColorForClass('class-101'),
   primaryClassColor,
   '同一 class_num 必须保持稳定课程颜色',
+)
+const localSimulationCourse = {
+  ...course('local-simulation', '2026-2027-1'),
+  classNum: 'XK-1001',
+  source: 'simulation' as const,
+}
+const duplicateWithoutClassNum = {
+  ...course('local-no-class-num', '2026-2027-1'),
+  source: 'simulation' as const,
+}
+const selectedCourseFirstSlot = {
+  ...course('selected-slot-1', '2026-2027-1'),
+  classNum: 'XK-1001',
+}
+const selectedCourseSecondSlot = {
+  ...course('selected-slot-2', '2026-2027-1'),
+  classNum: 'XK-1001',
+  weekday: 3,
+}
+const mergedSimulationCourses = mergeSimulationCourses(
+  [localSimulationCourse, duplicateWithoutClassNum],
+  [selectedCourseFirstSlot, selectedCourseSecondSlot],
+)
+assert.deepEqual(
+  mergedSimulationCourses.map((item) => item.id),
+  ['selected-slot-1', 'selected-slot-2', 'local-no-class-num'],
+  '同步课表应保留同一选课号的全部真实时段，仅隐藏选课号相同的本地草稿',
 )
 assert.match(
   academicStyleSource,
@@ -129,6 +346,11 @@ assert.match(
   academicStyleSource,
   /\.course-resource-actions--course-card\s*\{[\s\S]*?border-radius:\s*var\(--ousea-radius-card-sm/u,
   '课程操作入口应使用紧凑的 Ousea 卡片容器',
+)
+assert.match(
+  academicStyleSource,
+  /@keyframes schedule-selection-guide-enter[\s\S]*?schedule-selection-guide-halo/u,
+  '课表选课引导应包含进入和呼吸光圈动画',
 )
 assert.match(
   academicStyleSource,
@@ -286,3 +508,23 @@ assert.match(
 )
 
 process.stdout.write('academic schedule isolation smoke: ok\n')
+
+// 模拟小程序持久化存储，验证离线蹭课不会跨账号、学历、学期串用。
+const localValues = new Map<string, unknown>()
+const taroPath = require.resolve('@tarojs/taro')
+const previousTaro = require.cache[taroPath]
+require.cache[taroPath] = { exports: { default: {
+  getStorageSync: (key: string) => localValues.get(key),
+  setStorageSync: (key: string, value: unknown) => localValues.set(key, value),
+} } } as NodeModule
+const { academicStorage } = require('../src/pages/academic/storage')
+const auditCourse = { ...course('audit-1', 'A'), source: 'audit' }
+academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [auditCourse])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [auditCourse])
+assert.deepEqual(academicStorage.getPersonalCourses(2, 'undergraduate', 'A'), [])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'graduate', 'A'), [])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'B'), [])
+academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [], '移除后不恢复旧缓存')
+if (previousTaro) require.cache[taroPath] = previousTaro
+else delete require.cache[taroPath]

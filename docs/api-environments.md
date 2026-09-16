@@ -1,10 +1,10 @@
 # API 环境分流
 
-小程序在同一份提审代码内固化两个 API 地址，并在运行时根据微信 `envVersion` 选择：
+小程序在构建时注入两个 API 地址，并在运行时根据微信 `envVersion` 选择：
 
 | `envVersion` | API 环境 |
 | --- | --- |
-| `develop` 或未知值 | production |
+| `develop` 或未知值 | review（开发构建默认是本地 API） |
 | `trial` | production |
 | `release` | production |
 
@@ -15,7 +15,9 @@
 - review（仅保留为隔离配置）：`https://review.weouc.com`
 - production：`https://product.weouc.com`
 
-开发、预览和生产构建的运行时请求统一使用 `https://product.weouc.com`；review 地址仅保留为隔离配置，不会被小程序运行时选用。生产构建仍可以通过环境变量覆盖：
+生产构建的 review 和 production 地址都会固化为 `https://product.weouc.com`。开发构建的
+`develop` 运行时使用 review 地址，默认是 `http://127.0.0.1:8080`，也可以通过
+`TARO_APP_API_BASE_URL` 覆盖；trial/release 仍使用 product：
 
 ```bash
 TARO_APP_REVIEW_API_BASE_URL=https://review.weouc.com \

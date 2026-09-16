@@ -1,4 +1,5 @@
 import { memo, useState, type ReactNode } from 'react'
+import Taro from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView, PublicCommentPreview } from '../../api/types'
 import { apiDateTimeCampusParts, apiDateTimeTimestamp } from '../../utils/date-time'
@@ -14,6 +15,11 @@ import { orderPublicCommentPreviews } from './comments'
 import CommentImage from './components/comment-image'
 import ContentImageGrid from './components/content-image-grid'
 import { formatCommunityViewCount } from './post-view-utils'
+import { communityPostTopics, communityTopicUrl } from './topic'
+import {
+  communityPinActionLabel,
+  getCommunityPinAction,
+} from './pin-action'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -61,6 +67,7 @@ type Props = {
   motionDelay?: number
   timeFormatter?: (value?: string | null) => string
   onToggleLike?: (post: CampusCirclePostView) => void | Promise<void>
+  onPinAction?: (post: CampusCirclePostView) => void | Promise<void>
   onOpen: (post: CampusCirclePostView) => void
   onOpenComments?: (post: CampusCirclePostView) => void
   actionsOpen?: boolean
@@ -97,6 +104,7 @@ function CommunityPostCard({
   motionDelay = 0,
   timeFormatter,
   onToggleLike,
+  onPinAction,
   onOpen,
   onOpenComments,
   actionsOpen = false,
@@ -112,6 +120,7 @@ function CommunityPostCard({
   showViewCount = false,
 }: Props) {
   const [likePending, setLikePending] = useState(false)
+  const [pinPending, setPinPending] = useState(false)
   const authorName = communityAuthorName(post)
   const cardId = instanceKey || String(post.id)
   const authorInitial = communityAuthorInitial(post)
@@ -133,12 +142,14 @@ function CommunityPostCard({
   const readableContent = plainStickerContent(post.content || '')
   const contentParts = parseStickerContent(post.content || '')
   const contentIsClamped = readableContent.length > 90
+  const topicLinks = communityPostTopics(post)
   const operationBadges = [
     post.is_pinned && '置顶',
     post.is_featured && '精选',
     post.is_recommended && '推荐',
-    post.topic?.kind === 'campaign' && '活动',
+    topicLinks.some((topic) => topic.kind === 'campaign') && '活动',
   ].filter(Boolean) as string[]
+  const pinAction = getCommunityPinAction(post)
   const onlyStickers = contentParts.length > 0 && contentParts.every((part) => (
     part.type === 'sticker' || part.text.trim().length === 0
   ))
@@ -147,7 +158,9 @@ function CommunityPostCard({
     && !businessPreview
     && operationBadges.length === 0
     && (onlyStickers || readableContent.trim().length <= 20)
-  const canShowActionMenu = actionsOpen && Boolean(onCloseActions) && Boolean(onToggleLike || onOpenComments)
+  const canShowActionMenu = actionsOpen
+    && Boolean(onCloseActions)
+    && Boolean(onToggleLike || onOpenComments || (pinAction && onPinAction))
   const openAuthorOrPost = () => (
     !post.author_deleted && onOpenAuthor ? onOpenAuthor(post) : onOpen(post)
   )
@@ -174,6 +187,10 @@ function CommunityPostCard({
       ? `${post.liked_by_nicknames.join('、')} 等 ${post.like_count} 人`
       : post.liked_by_nicknames.join('、')
     : onToggleLike && post.like_count > 0 ? `${post.like_count} 位同学` : ''
+  const openTopic = (topicId: number) => {
+    const url = communityTopicUrl(topicId)
+    if (url) void Taro.navigateTo({ url })
+  }
 
   return (
     <View
@@ -240,16 +257,30 @@ function CommunityPostCard({
               {operationBadges.map((badge) => <Text key={badge}>{badge}</Text>)}
             </View>
           )}
-          {post.content && (
+          {(post.content || topicLinks.length > 0) && (
             <View className={contentIsClamped
               ? 'community-post__content-wrap community-post__content-wrap--clamped'
               : 'community-post__content-wrap'}
             >
               <MentionContent
-                content={post.content}
+                content={post.content || ''}
                 segments={post.content_segments}
                 className='community-post__content'
                 stickerClassName='community-post__content-sticker'
+                leading={topicLinks.map((topic) => (
+                  <View
+                    key={topic.id}
+                    className='community-post__topic-link community-post__topic-link--content'
+                    ariaRole='button'
+                    ariaLabel={`查看话题：${topic.name}`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      openTopic(topic.id)
+                    }}
+                  >
+                    <Text selectable>#{topic.name}</Text>
+                  </View>
+                ))}
               />
               {contentIsClamped && <Text className='community-post__expand'>全文</Text>}
             </View>
@@ -372,6 +403,27 @@ function CommunityPostCard({
                     <Image src={communityIcons.comment} mode='aspectFit' />
                     <Text>评论</Text>
                   </View>
+                )}
+                {pinAction && onPinAction && (
+                  <>
+                    {onOpenComments && <View className='community-post__social-divider' />}
+                    <View
+                      className='community-post__comments-summary'
+                      ariaRole='button'
+                      ariaLabel={pinPending ? `${communityPinActionLabel(pinAction)}处理中` : communityPinActionLabel(pinAction)}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (pinPending) return
+                        setPinPending(true)
+                        onCloseActions?.()
+                        void Promise.resolve(onPinAction(post))
+                          .catch(() => undefined)
+                          .finally(() => setPinPending(false))
+                      }}
+                    >
+                      <Text>{pinPending ? '处理中…' : communityPinActionLabel(pinAction)}</Text>
+                    </View>
+                  </>
                 )}
               </View>
             )}

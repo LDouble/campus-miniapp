@@ -4,6 +4,91 @@
  */
 
 export interface paths {
+    "/api/jw/bind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端教务绑定 */
+        post: operations["LegacyWeoucBind"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/kb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端课表查询 */
+        post: operations["LegacyWeoucCourses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端成绩查询 */
+        post: operations["LegacyWeoucGrades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端当前学期考试查询 */
+        post: operations["LegacyWeoucExams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jw/xk_result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 兼容旧客户端选课查询，优先下一学期、不存在则当前学期 */
+        post: operations["LegacyWeoucSelections"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/live": {
         parameters: {
             query?: never;
@@ -387,6 +472,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/course-selection-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 查询本人指定学期教务选课课表 */
+        post: operations["GetAcademicCourseSelectionSchedule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/course-selections": {
         parameters: {
             query?: never;
@@ -559,6 +661,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/academic-course-catalog/general-education/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 上传本科通识课程模块关系表 */
+        post: operations["ImportAdminGeneralEducationCourseModules"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-course-catalog/general-education/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询通识模块来源通知 */
+        get: operations["ListAdminGeneralEducationSources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/academic-course-catalog/runs": {
         parameters: {
             query?: never;
@@ -627,6 +763,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/course-catalog/campuses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询当前学期开课校区 */
+        get: operations["ListMemberCourseCatalogCampuses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-catalog/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询当前学期课程类别 */
+        get: operations["ListMemberCourseCatalogCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/course-catalog/courses": {
         parameters: {
             query?: never;
@@ -636,6 +806,57 @@ export interface paths {
         };
         /** 已认证 member 搜索当前有效课程目录 */
         get: operations["ListMemberCourseCatalogCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-catalog/general-education/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询本科通识模块筛选项 */
+        get: operations["ListMemberCourseCatalogGeneralEducationModules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/general-education/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询全部本科通识课程及归属历史 */
+        get: operations["ListMemberGeneralEducationCourses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/general-education/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已认证 member 查询全部本科通识模块 */
+        get: operations["ListMemberGeneralEducationModules"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1381,6 +1602,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/posts/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理员撤销校园圈帖子 */
+        post: operations["AdminWithdrawCampusCirclePost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/sections": {
         parameters: {
             query?: never;
@@ -1520,6 +1758,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/topics/{id}/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询校园话题自动关联审计记录 */
+        get: operations["ListAdminCampusCircleTopicAudits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/topics/{id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端将一个校园话题合并到另一个话题 */
+        post: operations["MergeAdminCampusCircleTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campus-circle/home": {
         parameters: {
             query?: never;
@@ -1606,6 +1878,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/posts/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 在帖子所属版块置顶或取消置顶 */
+        patch: operations["UpdateCampusCirclePostPin"];
         trace?: never;
     };
     "/api/v1/campus-circle/posts/{id}/submit-review": {
@@ -1908,6 +2197,313 @@ export interface paths {
         };
         /** 查询用户主页中公开可见的拼车发布 */
         get: operations["ListUserCarpoolTrips"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-profile-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询猫咪档案补充建议 */
+        get: operations["ListAdminCatProfileSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-profile-suggestions/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核猫咪档案补充建议 */
+        post: operations["ReviewAdminCatProfileSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询猫咪目击审核队列 */
+        get: operations["ListAdminCatSightings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-sightings/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核猫咪目击动态 */
+        post: operations["ReviewAdminCatSighting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-sightings/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 下线或恢复已审核通过的目击动态 */
+        put: operations["UpdateAdminCatSightingStatus"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询新猫投稿 */
+        get: operations["ListAdminCatSubmissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cat-submissions/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核新猫投稿 */
+        post: operations["ReviewAdminCatSubmission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询猫咪档案 */
+        get: operations["ListAdminCats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 管理端更新猫咪档案 */
+        put: operations["UpdateAdminCat"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cats/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 下线或恢复猫咪档案（保留其余信息） */
+        put: operations["UpdateAdminCatStatus"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cat-sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询全校公开猫咪目击动态 */
+        get: operations["ListGlobalCatSightings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cat-submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 投稿发现的新猫 */
+        post: operations["SubmitCat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开猫咪图鉴 */
+        get: operations["ListCats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开猫咪详情 */
+        get: operations["GetCat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/hotspots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询猫咪区域级出没热点 */
+        get: operations["ListCatHotspots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/profile-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交猫咪基础档案补充建议 */
+        post: operations["CreateCatProfileSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cats/{id}/sightings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询猫咪目击动态 */
+        get: operations["ListCatSightings"];
+        put?: never;
+        /** 发布目击打卡 */
+        post: operations["CreateCatSighting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cat-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的猫咪图鉴 */
+        get: operations["GetMyCatCatalog"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2541,6 +3137,279 @@ export interface paths {
         };
         /** 管理端查看微信内容安全审核记录 */
         get: operations["GetAdminContentSecurityReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/contributions/{id}/moderate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端隐藏或恢复学生贡献 */
+        post: operations["ModerateAdminCourseIntelligenceContribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/course-aliases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询课程别名映射 */
+        get: operations["ListAdminCourseIntelligenceAliases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/course-aliases/{id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端批量确认课程别名映射 */
+        post: operations["DecideAdminCourseIntelligenceAliasMappings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/course-aliases/{id}/rematch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端重新匹配课程别名 */
+        post: operations["RematchAdminCourseIntelligenceAlias"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/import-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询情报导入批次 */
+        get: operations["ListAdminCourseIntelligenceImportBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询情报审核队列 */
+        get: operations["ListAdminCourseIntelligenceQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/reports/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端处理情报举报 */
+        post: operations["ResolveAdminCourseIntelligenceReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/reviews/{id}/re-extract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端重新抽取情报观点 */
+        post: operations["ReextractAdminCourseIntelligenceReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/course-intelligence/source-records/{id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端确认课程或教师绑定 */
+        post: operations["DecideAdminCourseIntelligenceBinding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-intelligence/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交选课体验 */
+        post: operations["CreateCourseIntelligenceContribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-intelligence/contributions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的选课体验 */
+        get: operations["GetCourseIntelligenceContribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 修订我的选课体验 */
+        patch: operations["UpdateCourseIntelligenceContribution"];
+        trace?: never;
+    };
+    "/api/v1/course-intelligence/courses/{course_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程选课情报概览 */
+        get: operations["GetCourseIntelligenceOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-intelligence/courses/{course_code}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课程选课情报原始观点 */
+        get: operations["ListCourseIntelligenceReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-intelligence/reviews/{id}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 反馈选课情报是否有帮助 */
+        post: operations["CreateCourseIntelligenceReaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-intelligence/reviews/{id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 举报选课情报 */
+        post: operations["CreateCourseIntelligenceReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-intelligence/teachers/{teacher_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教师选课情报 */
+        get: operations["GetCourseIntelligenceTeacher"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3255,6 +4124,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/errands/payment-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询跑腿发布支付能力 */
+        get: operations["GetErrandPaymentPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/errands/{id}": {
         parameters: {
             query?: never;
@@ -3505,6 +4391,366 @@ export interface paths {
         };
         /** 按公开时间聚合校园圈帖子、二手、跑腿和拼车内容 */
         get: operations["ListHomeFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询抽奖活动 */
+        get: operations["ListAdminLotteryCampaigns"];
+        put?: never;
+        /** 管理端创建抽奖活动草稿 */
+        post: operations["CreateAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看抽奖活动草稿 */
+        get: operations["GetAdminLotteryCampaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理端修改抽奖活动草稿 */
+        patch: operations["UpdateAdminLotteryCampaign"];
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消未开奖抽奖活动 */
+        post: operations["CancelAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布抽奖活动 */
+        post: operations["PublishAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/sponsors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 独立更新活动赞助商宣传资料不修改抽奖规则 */
+        put: operations["UpdateAdminLotteryCampaignSponsors"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/campaigns/{id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停止抽奖活动后续参与 */
+        post: operations["StopAdminLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询抽奖码 */
+        get: operations["ListAdminLotteryCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/draw-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询到期开奖批次 */
+        get: operations["ListAdminLotteryDrawBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/draw-batches/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 恢复失败的到期开奖批次 */
+        post: operations["RetryAdminLotteryDrawBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/share-attributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询分享归因 */
+        get: operations["ListAdminLotteryShareAttributions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/wins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询中奖履约记录 */
+        get: operations["ListAdminLotteryWins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lottery/wins/{id}/fulfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登记中奖奖品已发放 */
+        post: operations["FulfillAdminLotteryWin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询抽奖活动 */
+        get: operations["ListLotteryCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看抽奖活动详情 */
+        get: operations["GetLotteryCampaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的抽奖码 */
+        get: operations["ListMyLotteryCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/draws": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的抽奖结果 */
+        get: operations["ListMyLotteryDraws"];
+        put?: never;
+        /** 即时抽奖并消耗一枚抽奖码 */
+        post: operations["DrawLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/participations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 参与活动并领取基础抽奖码 */
+        post: operations["JoinLotteryCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询公开中奖结果 */
+        get: operations["ListLotteryCampaignResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/share-attributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登录或注册后提交分享归因 */
+        post: operations["SubmitLotteryShareAttribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/campaigns/{id}/share-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建抽奖分享入口 */
+        post: operations["CreateLotteryShareToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lottery/wins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看我的中奖履约详情 */
+        get: operations["GetLotteryWin"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4076,6 +5322,296 @@ export interface paths {
         get: operations["GetOfficialNotice"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListAdminWithdrawals */
+        get: operations["ListAdminWithdrawals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetAdminWithdrawal */
+        get: operations["GetAdminWithdrawal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/withdrawals/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** ReviewWithdrawal */
+        post: operations["ReviewWithdrawal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/wechat-pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 为本人待支付订单创建微信小程序支付 */
+        post: operations["CreateWechatPay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/wechat-pay/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 主动查询并同步本人订单的微信支付状态 */
+        post: operations["QueryWechatPay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信支付结果通知 */
+        post: operations["HandleWechatPayCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/refund-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信原路退款结果通知 */
+        post: operations["HandleWechatRefundCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/wechat/transfer-callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接收微信商家转账结果通知 */
+        post: operations["HandleWechatTransferCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settlements/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人可提现收益 */
+        get: operations["ListMySettlementPayables"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settlements/{id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 将本人可提现收益发起微信商家转账 */
+        post: operations["CreateMerchantTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** CreateWithdrawal */
+        post: operations["CreateWithdrawal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListMyWithdrawals */
+        get: operations["ListMyWithdrawals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetMyWithdrawalSummary */
+        get: operations["GetMyWithdrawalSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/withdrawals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetMyWithdrawal */
+        get: operations["GetMyWithdrawal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的蹭课条目 */
+        get: operations["ListMyPersonalTimetableItems"];
+        put?: never;
+        /** 将课程教学班加入我的蹭课课表 */
+        post: operations["CreatePersonalTimetableItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 移除我的蹭课条目 */
+        delete: operations["DeletePersonalTimetableItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable/items/{id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按最新课程目录刷新蹭课条目 */
+        post: operations["RefreshPersonalTimetableItem"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4808,6 +6344,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description 学年 xn 和学期 xq 必须同时提供，或同时省略以查询当前学期。 */
+        LegacyWeoucCoursesForm: components["schemas"]["LegacyWeoucForm"] & (unknown | unknown);
+        LegacyWeoucForm: components["schemas"]["LegacyWeoucFields"] & Record<string, never>;
+        /** @description 有微信 code 的正常绑定必须提供学号和密码；缺少 code 或 Kingo 登录保留旧短路提示。 */
+        LegacyWeoucBindForm: components["schemas"]["LegacyWeoucFields"] & (unknown | {
+            login_code: string;
+        } | {
+            loginType: string;
+        } | unknown);
+        LegacyWeoucFields: {
+            xh?: string;
+            password?: string;
+            loginType?: string;
+            login_code?: string;
+            type?: string;
+            xn?: number;
+            xq?: number;
+            ks_type?: number;
+            /** @description 保留旧参数，不改变 provider 缓存策略 */
+            pull?: string;
+        };
+        LegacyWeoucEnvelope: {
+            status: number;
+            message: string;
+            msg: string;
+            data?: unknown;
+            error?: string;
+            from_cache?: boolean;
+        };
         TokenPair: {
             access_token: string;
             refresh_token: string;
@@ -4926,6 +6491,7 @@ export interface components {
         WechatLoginRequest: {
             app_id: string;
             code: string;
+            lottery_share_token?: string;
         };
         AcceptNoticeSubscriptionsRequest: {
             template_ids: string[];
@@ -5309,6 +6875,8 @@ export interface components {
         };
         AcademicCourse: {
             campus: string;
+            /** @description 教务选课号，用于关联同一教学班的课表与模拟选课记录。 */
+            class_num: string;
             course_code: string;
             /** Format: int32 */
             end_section: number;
@@ -5573,6 +7141,7 @@ export interface components {
             location_text?: string | null;
             offering_id: string;
             offering_unit?: string | null;
+            opening_code?: string | null;
             /** Format: int64 */
             parsed_schedule_slot_count: number;
             period_id: string;
@@ -5752,10 +7321,71 @@ export interface components {
             start_section: number;
             teachers?: string | null;
         };
+        AdminGeneralEducationImportResponseBody: {
+            data: components["schemas"]["AdminGeneralEducationImportResult"];
+            request_id: string;
+        };
+        AdminGeneralEducationImportResult: {
+            /** Format: int64 */
+            created_course_count: number;
+            /** Format: int64 */
+            created_module_count: number;
+            /** Format: int64 */
+            created_relation_count: number;
+            /** Format: int64 */
+            duplicate_relation_count: number;
+            /** Format: int64 */
+            relation_count: number;
+            /** Format: int64 */
+            row_count: number;
+            /** Format: uint64 */
+            source_id: number;
+            source_title: string;
+        };
+        AdminGeneralEducationSource: {
+            /** Format: date-time */
+            created_at: string;
+            file_name: string;
+            /** Format: uint64 */
+            id: number;
+            notice_url?: string | null;
+            /** Format: int64 */
+            relation_count: number;
+            /** Format: int64 */
+            row_count: number;
+            title: string;
+            /** Format: uint64 */
+            uploaded_by: number;
+        };
+        AdminGeneralEducationSourcePage: {
+            items: components["schemas"]["AdminGeneralEducationSource"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AdminGeneralEducationSourcePageResponseBody: {
+            data: components["schemas"]["AdminGeneralEducationSourcePage"];
+            request_id: string;
+        };
         ArchiveAcademicCourseCatalogBatchInput: {
             /** Format: uint64 */
             expected_version: number;
             reason: string;
+        };
+        MemberCourseCatalogCampusList: {
+            items: string[];
+        };
+        MemberCourseCatalogCampusListResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogCampusList"];
+            request_id: string;
+        };
+        MemberCourseCatalogCategoryList: {
+            items: string[];
+        };
+        MemberCourseCatalogCategoryListResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogCategoryList"];
+            request_id: string;
         };
         MemberCourseCatalogCourse: {
             campus?: string | null;
@@ -5768,10 +7398,14 @@ export interface components {
             data_version: string;
             /** @enum {string} */
             education_level: "undergraduate" | "graduate";
+            general_education_modules: components["schemas"]["MemberCourseCatalogGeneralEducationModule"][];
+            /** @description 通识课程导入备注 */
+            general_education_remark?: string | null;
             instruction_language?: string | null;
             location_text?: string | null;
             offering_id: string;
             offering_unit?: string | null;
+            opening_code?: string | null;
             period_id: string;
             /** @enum {string} */
             schedule_parse_status: "no_schedule" | "parsed" | "partial" | "unparsed";
@@ -5788,6 +7422,18 @@ export interface components {
         };
         MemberCourseCatalogCoursePageResponseBody: {
             data: components["schemas"]["MemberCourseCatalogCoursePage"];
+            request_id: string;
+        };
+        MemberCourseCatalogGeneralEducationModule: {
+            /** Format: uint64 */
+            id: number;
+            name: string;
+        };
+        MemberCourseCatalogGeneralEducationModuleList: {
+            items: components["schemas"]["MemberCourseCatalogGeneralEducationModule"][];
+        };
+        MemberCourseCatalogGeneralEducationModuleListResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogGeneralEducationModuleList"];
             request_id: string;
         };
         MemberCourseCatalogScheduleSlot: {
@@ -5807,6 +7453,42 @@ export interface components {
             /** Format: int64 */
             weekday: number;
             weeks: number[];
+        };
+        MemberGeneralEducationCourse: {
+            course_code: string;
+            course_name: string;
+            modules: components["schemas"]["MemberGeneralEducationCourseModule"][];
+            offering_unit: string;
+            remark: string | null;
+        };
+        MemberGeneralEducationCourseModule: {
+            /** Format: uint64 */
+            id: number;
+            name: string;
+            sources: components["schemas"]["MemberGeneralEducationSource"][];
+        };
+        MemberGeneralEducationCoursePage: {
+            items: components["schemas"]["MemberGeneralEducationCourse"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MemberGeneralEducationCoursePageResponseBody: {
+            data: components["schemas"]["MemberGeneralEducationCoursePage"];
+            request_id: string;
+        };
+        MemberGeneralEducationModuleListResponseBody: {
+            data: components["schemas"]["MemberCourseCatalogGeneralEducationModuleList"];
+            request_id: string;
+        };
+        MemberGeneralEducationSource: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            notice_url?: string | null;
+            title: string;
         };
         AcademicCoursePassRatePage: {
             items: components["schemas"]["AcademicCoursePassRateView"][];
@@ -6107,7 +7789,7 @@ export interface components {
             module: components["schemas"]["AccountCancellationBlockerModule"];
         };
         /** @enum {string} */
-        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool";
+        AccountCancellationBlockerModule: "marketplace" | "trade_order" | "errand" | "carpool" | "settlement" | "withdrawal";
         AccountCancellationInput: {
             app_id: string;
             code: string;
@@ -6277,6 +7959,11 @@ export interface components {
             data: components["schemas"]["CampusCircleHome"];
             request_id: string;
         };
+        CampusCirclePinInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            pinned: boolean;
+        };
         CampusCirclePostImageView: {
             /** Format: uint64 */
             id: number;
@@ -6305,6 +7992,13 @@ export interface components {
         CampusCirclePostSort: "latest" | "curated" | "featured" | "recommended";
         /** @enum {string} */
         CampusCirclePostStatus: "pending_review" | "approved" | "rejected" | "withdrawn";
+        CampusCirclePostTopicView: {
+            /** Format: double */
+            confidence?: number | null;
+            role: components["schemas"]["CampusCircleTopicRole"];
+            source: components["schemas"]["CampusCircleTopicSource"];
+            topic: components["schemas"]["CampusCircleTopicSummary"];
+        };
         CampusCirclePostView: {
             author_avatar_url: string | null;
             author_deleted: boolean;
@@ -6338,6 +8032,7 @@ export interface components {
              * @description 管理端运营置顶截止时间；未置顶或公开视图不返回
              */
             pinned_until?: string | null;
+            primary_topic?: components["schemas"]["CampusCircleTopicSummary"];
             /** Format: date-time */
             published_at: string | null;
             review_reason: string | null;
@@ -6354,6 +8049,7 @@ export interface components {
             sort_order?: number | null;
             status: components["schemas"]["CampusCirclePostStatus"];
             topic?: components["schemas"]["CampusCircleTopicSummary"];
+            topics?: components["schemas"]["CampusCirclePostTopicView"][];
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -6409,7 +8105,38 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        CampusCircleTopicAuditPage: {
+            items: components["schemas"]["CampusCircleTopicAuditView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTopicAuditPageResponseBody: {
+            data: components["schemas"]["CampusCircleTopicAuditPage"];
+            request_id: string;
+        };
+        CampusCircleTopicAuditView: {
+            action: string;
+            /** Format: uint64 */
+            actor_id?: number | null;
+            /** Format: double */
+            confidence?: number | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            payload?: string | null;
+            /** Format: uint64 */
+            post_id?: number | null;
+            reason?: string | null;
+            source: components["schemas"]["CampusCircleTopicSource"];
+            /** Format: uint64 */
+            topic_id?: number | null;
+        };
         CampusCircleTopicInput: {
+            aliases?: string[];
+            auto_association_enabled?: boolean;
             cover_url: string;
             description: string;
             /** Format: date-time */
@@ -6419,6 +8146,7 @@ export interface components {
             is_hot: boolean;
             kind: components["schemas"]["CampusCircleTopicKind"];
             name: string;
+            rules?: string[];
             slug: string;
             /** Format: int64 */
             sort_order: number;
@@ -6427,6 +8155,12 @@ export interface components {
         };
         /** @enum {string} */
         CampusCircleTopicKind: "topic" | "campaign";
+        CampusCircleTopicMergeInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            /** Format: uint64 */
+            target_topic_id: number;
+        };
         CampusCircleTopicPage: {
             items: components["schemas"]["CampusCircleTopicView"][];
             page: number;
@@ -6443,6 +8177,10 @@ export interface components {
             request_id: string;
         };
         /** @enum {string} */
+        CampusCircleTopicRole: "primary" | "secondary";
+        /** @enum {string} */
+        CampusCircleTopicSource: "manual" | "hashtag" | "rule" | "ai";
+        /** @enum {string} */
         CampusCircleTopicStatus: "draft" | "active" | "archived";
         CampusCircleTopicSummary: {
             cover_url?: string | null;
@@ -6454,6 +8192,9 @@ export interface components {
             slug: string;
         } | null;
         CampusCircleTopicView: {
+            aliases?: string[];
+            auto_association_enabled?: boolean;
+            auto_created?: boolean;
             cover_url: string | null;
             /** Format: date-time */
             created_at: string;
@@ -6469,6 +8210,7 @@ export interface components {
             name: string;
             /** Format: int64 */
             post_count: number;
+            rules?: string[];
             slug: string;
             /** Format: int64 */
             sort_order: number;
@@ -6481,7 +8223,7 @@ export interface components {
             version: number;
         };
         /** @enum {string} */
-        CampusCircleViewerAction: "edit" | "withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic";
+        CampusCircleViewerAction: "edit" | "withdraw" | "admin_withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic" | "pin" | "unpin";
         /** @enum {string} */
         CampusCircleViewerRelation: "anonymous" | "owner" | "other" | "admin";
         CarpoolTripPageResponseBody: {
@@ -6547,6 +8289,272 @@ export interface components {
         };
         /** @enum {string} */
         CarpoolViewerAction: "edit" | "submit_review" | "cancel" | "join" | "leave" | "verify_academic";
+        AdminSightingPage: {
+            items: components["schemas"]["AdminSightingView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AdminSightingPageResponseBody: {
+            data: components["schemas"]["AdminSightingPage"];
+            request_id: string;
+        };
+        AdminSightingResponseBody: {
+            data: components["schemas"]["AdminSightingView"];
+            request_id: string;
+        };
+        AdminSightingView: {
+            activity: string;
+            area: string;
+            cat_cover_url?: string | null;
+            /** Format: uint64 */
+            cat_id: number;
+            cat_name: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
+            note?: string | null;
+            photo_url?: string | null;
+            rejection_reason?: string | null;
+            reporter_avatar_url?: string | null;
+            reporter_name: string;
+            status: components["schemas"]["SightingStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
+        CatHotspot: {
+            area: string;
+            /** Format: date-time */
+            last_seen_at: string;
+            /** Format: int64 */
+            sighting_count: number;
+        };
+        CatHotspotResponseBody: {
+            data: components["schemas"]["CatHotspot"][];
+            request_id: string;
+        };
+        CatInput: {
+            aliases: string[];
+            campus: string;
+            coat: string;
+            /** Format: uint64 */
+            cover_media_id?: number;
+            /** Format: uint64 */
+            expected_version?: number;
+            /** Format: date-time */
+            first_recorded_at: string;
+            gender: string;
+            name: string;
+            resident_area: string;
+            status?: components["schemas"]["CatStatus"];
+            traits: string[];
+        };
+        CatPage: {
+            items: components["schemas"]["CatView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CatPageResponseBody: {
+            data: components["schemas"]["CatPage"];
+            request_id: string;
+        };
+        CatResponseBody: {
+            data: components["schemas"]["CatView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CatStatus: "published" | "hidden";
+        CatStatusInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            status: components["schemas"]["CatStatus"];
+        };
+        CatView: {
+            aliases: string[];
+            campus: string;
+            coat: string;
+            cover_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            favorited: boolean;
+            /** Format: date-time */
+            first_recorded_at: string;
+            gender: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            last_seen_at?: string | null;
+            /** @description 显示名：正式名字优先；未命名时取首个非空已采纳别名，不修改原始档案名字 */
+            name: string;
+            resident_area: string;
+            /** Format: int64 */
+            sighting_count: number;
+            status: components["schemas"]["CatStatus"];
+            traits: string[];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CatalogResponseBody: {
+            data: components["schemas"]["CatalogView"];
+            request_id: string;
+        };
+        CatalogView: {
+            seen_cats: components["schemas"]["CatView"][];
+            /** Format: int64 */
+            seen_count: number;
+            /** Format: int64 */
+            total_count: number;
+            unseen_cats: components["schemas"]["CatView"][];
+        };
+        /** @enum {string} */
+        ProfileSuggestionField: "aliases" | "gender" | "coat" | "traits" | "resident_area";
+        ProfileSuggestionInput: {
+            field: components["schemas"]["ProfileSuggestionField"];
+            note?: string;
+            proposed_value: string;
+        };
+        ProfileSuggestionPage: {
+            items: components["schemas"]["ProfileSuggestionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ProfileSuggestionPageResponseBody: {
+            data: components["schemas"]["ProfileSuggestionPage"];
+            request_id: string;
+        };
+        ProfileSuggestionResponseBody: {
+            data: components["schemas"]["ProfileSuggestionView"];
+            request_id: string;
+        };
+        ProfileSuggestionView: {
+            /** @description 仅管理端返回关联猫咪封面 */
+            cat_cover_url?: string | null;
+            /** Format: uint64 */
+            cat_id: number;
+            /** @description 仅管理端返回关联猫咪的当前显示名 */
+            cat_name?: string;
+            /**
+             * Format: uint64
+             * @description 当前档案版本，不替代建议本身的审核版本
+             */
+            cat_version?: number;
+            /** Format: date-time */
+            created_at: string;
+            /** @description 仅管理端返回字段当前值，不是提交时的历史快照；标签以顿号连接 */
+            current_value?: string;
+            field: components["schemas"]["ProfileSuggestionField"];
+            /** Format: uint64 */
+            id: number;
+            note?: string | null;
+            proposed_value: string;
+            rejection_reason?: string | null;
+            status: components["schemas"]["SubmissionStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
+        SightingInput: {
+            activity: string;
+            area: string;
+            note?: string;
+            /** Format: uint64 */
+            photo_media_id?: number;
+        };
+        SightingPage: {
+            items: components["schemas"]["SightingView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SightingPageResponseBody: {
+            data: components["schemas"]["SightingPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        SightingStatus: "pending" | "approved" | "rejected" | "hidden";
+        SightingStatusInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            /** @enum {string} */
+            status: "approved" | "hidden";
+        };
+        SightingView: {
+            activity: string;
+            area: string;
+            cat_cover_url?: string | null;
+            /** Format: uint64 */
+            cat_id: number;
+            cat_name: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            like_count: number;
+            liked: boolean;
+            note?: string | null;
+            photo_url?: string | null;
+            reporter_avatar_url?: string | null;
+            reporter_name: string;
+        };
+        SubmissionInput: {
+            area: string;
+            campus: string;
+            description?: string;
+            /** Format: uint64 */
+            photo_media_id: number;
+            proposed_name?: string;
+        };
+        SubmissionPage: {
+            items: components["schemas"]["SubmissionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SubmissionPageResponseBody: {
+            data: components["schemas"]["SubmissionPage"];
+            request_id: string;
+        };
+        SubmissionResponseBody: {
+            data: components["schemas"]["SubmissionView"];
+            request_id: string;
+        };
+        SubmissionReviewInput: {
+            /** @enum {string} */
+            decision: "approved" | "rejected";
+            /** Format: uint64 */
+            expected_version: number;
+            rejection_reason?: string;
+        };
+        /** @enum {string} */
+        SubmissionStatus: "pending" | "approved" | "rejected";
+        SubmissionView: {
+            area: string;
+            campus: string;
+            /** Format: date-time */
+            created_at: string;
+            description?: string | null;
+            /** Format: uint64 */
+            id: number;
+            photo_url?: string | null;
+            proposed_name?: string | null;
+            rejection_reason?: string | null;
+            status: components["schemas"]["SubmissionStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
         /** @enum {string} */
         ClubAvailableAction: "edit" | "submit_review" | "verify_academic";
         ClubCategory: {
@@ -7044,7 +9052,7 @@ export interface components {
             trace_id: string;
         };
         /** @enum {string} */
-        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
+        ContentSecurityResourceType: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing" | "cat_submission" | "cat_sighting" | "cat_profile_suggestion";
         ContentSecurityReviewPage: {
             items: components["schemas"]["ContentSecurityReviewView"][];
             page: number;
@@ -7098,6 +9106,356 @@ export interface components {
         };
         /** @enum {string} */
         ContentSecuritySuggestion: "pass" | "review" | "risky";
+        CourseIntelligenceActionResponseBody: {
+            data: {
+                accepted: boolean;
+            };
+            request_id: string;
+        };
+        CourseIntelligenceAliasDecision: {
+            /** @enum {string} */
+            action: "activate" | "reject" | "revoke";
+            course_code: string;
+            course_name?: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: uint64 */
+            mapping_id?: number;
+            reason?: string;
+        };
+        CourseIntelligenceAliasDecisionInput: {
+            decisions: components["schemas"]["CourseIntelligenceAliasDecision"][];
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CourseIntelligenceAliasRematchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CourseIntelligenceChange: {
+            /** @enum {string} */
+            change_type: "new_signal" | "conflict" | "changed" | "resolved";
+            description: string;
+            dimension: components["schemas"]["CourseIntelligenceDimension"];
+            term: string;
+        };
+        CourseIntelligenceContributionInput: {
+            /** @enum {string} */
+            attended_status?: "attended" | "auditing" | "dropped" | "unknown";
+            campus?: string;
+            class_name?: string;
+            content: string;
+            context_source?: string;
+            course_code: string;
+            course_name?: string;
+            department?: string;
+            guided_answers?: {
+                [key: string]: string;
+            };
+            guided_dimensions?: components["schemas"]["CourseIntelligenceDimension"][];
+            offering_id?: string;
+            /** Format: uint64 */
+            teacher_id?: number;
+            teacher_name?: string;
+            term?: string;
+            visibility: components["schemas"]["CourseIntelligenceVisibility"];
+        };
+        CourseIntelligenceContributionResponseBody: {
+            data: components["schemas"]["CourseIntelligenceContributionView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CourseIntelligenceContributionStatus: "queued" | "processing" | "processed" | "failed";
+        CourseIntelligenceContributionUpdateInput: components["schemas"]["CourseIntelligenceContributionInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CourseIntelligenceContributionView: {
+            attended_status?: string | null;
+            campus?: string | null;
+            class_name?: string | null;
+            content: string;
+            context_source?: string;
+            course_code: string;
+            course_name?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            current_version: number;
+            department?: string | null;
+            guided_answers?: {
+                [key: string]: string;
+            };
+            /** Format: uint64 */
+            id: number;
+            moderation_status: components["schemas"]["CourseIntelligenceModerationStatus"];
+            offering_id?: string | null;
+            processing_status: components["schemas"]["CourseIntelligenceContributionStatus"];
+            /** Format: uint64 */
+            teacher_id?: number | null;
+            teacher_name?: string | null;
+            term?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            user_id: number;
+            /** Format: uint64 */
+            version: number;
+            visibility: components["schemas"]["CourseIntelligenceVisibility"];
+        };
+        CourseIntelligenceCourseAlias: {
+            alias: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            last_match_error?: string | null;
+            /** Format: date-time */
+            last_matched_at?: string | null;
+            mappings: components["schemas"]["CourseIntelligenceCourseAliasMapping"][];
+            /** @enum {string} */
+            match_status: "queued" | "processing" | "matched" | "failed";
+            normalized_alias: string;
+            /** @enum {string} */
+            status: "pending" | "active" | "disabled";
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CourseIntelligenceCourseAliasMapping: {
+            /** Format: uint64 */
+            alias_id: number;
+            /** Format: int64 */
+            confidence: number;
+            course_code: string;
+            course_name_snapshot?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            decided_at?: string | null;
+            /** Format: uint64 */
+            decided_by?: number | null;
+            decision_reason?: string | null;
+            education_level: string;
+            evidence?: string | null;
+            /** Format: uint64 */
+            id: number;
+            model_version?: string | null;
+            rationale?: string | null;
+            source: string;
+            /** @enum {string} */
+            status: "suggested" | "active" | "rejected" | "revoked";
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CourseIntelligenceCourseAliasPage: {
+            items: components["schemas"]["CourseIntelligenceCourseAlias"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CourseIntelligenceCourseAliasPageResponseBody: {
+            data: components["schemas"]["CourseIntelligenceCourseAliasPage"];
+            request_id: string;
+        };
+        CourseIntelligenceCourseAliasResponseBody: {
+            data: components["schemas"]["CourseIntelligenceCourseAlias"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CourseIntelligenceDimension: "grading" | "attendance" | "workload" | "exam" | "classroom" | "difficulty_time";
+        CourseIntelligenceDimensionSummary: {
+            /** Format: int64 */
+            confidence: number;
+            dimension: components["schemas"]["CourseIntelligenceDimension"];
+            label: string;
+            /** Format: int64 */
+            sample_count: number;
+            /** @enum {string} */
+            status: "ready" | "insufficient" | "conflicted";
+            summary?: string | null;
+        };
+        CourseIntelligenceExamInsight: {
+            claims: components["schemas"]["CourseIntelligenceReviewView"][];
+            components?: string | null;
+            difficulty?: string | null;
+            format?: string | null;
+            preparation?: string | null;
+            question_types?: string | null;
+            /** Format: int64 */
+            sample_count: number;
+            scope?: string | null;
+            /** @enum {string} */
+            status: "ready" | "insufficient" | "conflicted";
+        };
+        CourseIntelligenceImportBatch: {
+            /** Format: int64 */
+            blank_count: number;
+            /** Format: int64 */
+            comment_count: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            duplicate_count: number;
+            error_summary?: string | null;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            parsed_count: number;
+            /** Format: int64 */
+            post_count: number;
+            /** Format: int64 */
+            reply_count: number;
+            source_kind: string;
+            source_name: string;
+            source_sha256: string;
+            /** @enum {string} */
+            status: "preview" | "running" | "succeeded" | "partial" | "failed";
+            /** Format: int64 */
+            total_lines: number;
+            /** Format: int64 */
+            unresolved_count: number;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CourseIntelligenceImportBatchPage: {
+            items: components["schemas"]["CourseIntelligenceImportBatch"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CourseIntelligenceImportBatchPageResponseBody: {
+            data: components["schemas"]["CourseIntelligenceImportBatchPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CourseIntelligenceModerationStatus: "pending" | "published" | "hidden" | "restored";
+        CourseIntelligenceOverview: {
+            course_code: string;
+            course_name: string | null;
+            dimensions: components["schemas"]["CourseIntelligenceDimensionSummary"][];
+            exam: components["schemas"]["CourseIntelligenceExamInsight"];
+            recent_changes: components["schemas"]["CourseIntelligenceChange"][];
+            /** Format: int64 */
+            sample_count: number;
+            source_notes: string[];
+            teachers: components["schemas"]["CourseIntelligenceTeacherFilter"][];
+        };
+        CourseIntelligenceOverviewQuery: {
+            /** Format: uint64 */
+            teacher_id?: number;
+            term?: string;
+        };
+        CourseIntelligenceOverviewResponseBody: {
+            data: components["schemas"]["CourseIntelligenceOverview"];
+            request_id: string;
+        };
+        CourseIntelligenceQueueItem: {
+            contribution?: components["schemas"]["CourseIntelligenceContributionView"];
+            detail: string;
+            /** Format: uint64 */
+            id: number;
+            /** @enum {string} */
+            queue_type: "course_binding" | "teacher_binding" | "contribution_moderation" | "report" | "duplicate" | "privacy" | "defamation" | "inaccurate" | "other";
+            review?: components["schemas"]["CourseIntelligenceReviewView"];
+            status: string;
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CourseIntelligenceQueuePage: {
+            items: components["schemas"]["CourseIntelligenceQueueItem"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CourseIntelligenceQueuePageResponseBody: {
+            data: components["schemas"]["CourseIntelligenceQueuePage"];
+            request_id: string;
+        };
+        CourseIntelligenceReactionInput: {
+            /** @enum {string} */
+            reaction_type: "useful" | "not_useful";
+        };
+        CourseIntelligenceReportInput: {
+            description?: string;
+            /** @enum {string} */
+            reason: "privacy" | "defamation" | "duplicate" | "inaccurate" | "other";
+        };
+        CourseIntelligenceReviewPage: {
+            items: components["schemas"]["CourseIntelligenceReviewView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CourseIntelligenceReviewPageResponseBody: {
+            data: components["schemas"]["CourseIntelligenceReviewPage"];
+            request_id: string;
+        };
+        CourseIntelligenceReviewView: {
+            applicable_term: string | null;
+            claim_type?: string;
+            /** Format: int64 */
+            confidence: number;
+            content: string;
+            course_code: string;
+            course_name?: string | null;
+            dimension: components["schemas"]["CourseIntelligenceDimension"];
+            evidence_span: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: date-time */
+            published_at: string;
+            reactions?: {
+                [key: string]: number;
+            };
+            source_kind: components["schemas"]["CourseIntelligenceSourceKind"];
+            /** Format: uint64 */
+            teacher_id?: number | null;
+            teacher_name?: string | null;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        CourseIntelligenceSourceKind: "historical" | "contribution";
+        CourseIntelligenceTeacher: {
+            dimensions: components["schemas"]["CourseIntelligenceDimensionSummary"][];
+            /** Format: int64 */
+            sample_count: number;
+            /** Format: uint64 */
+            teacher_id: number;
+            teacher_name: string;
+        };
+        CourseIntelligenceTeacherFilter: {
+            /** Format: int64 */
+            sample_count: number;
+            /** Format: uint64 */
+            teacher_id: number;
+            teacher_name: string;
+        };
+        CourseIntelligenceTeacherResponseBody: {
+            data: components["schemas"]["CourseIntelligenceTeacher"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CourseIntelligenceVisibility: "public" | "anonymous";
+        ResolveAdminCourseIntelligenceReportBody: {
+            action: string;
+            /** Format: uint64 */
+            expected_version: number;
+            reason?: string;
+        };
         CompleteMaterialUploadFile: {
             /** Format: uint64 */
             file_id: number;
@@ -7735,6 +10093,16 @@ export interface components {
             data: components["schemas"]["ErrandViewPage"];
             request_id: string;
         };
+        ErrandPaymentPolicy: {
+            /** @enum {string} */
+            default_payment_mode: "offline" | "wechat";
+            enabled_payment_modes: ("offline" | "wechat")[];
+            payment_timeout_minutes: number;
+        };
+        ErrandPaymentPolicyResponseBody: {
+            data: components["schemas"]["ErrandPaymentPolicy"];
+            request_id: string;
+        };
         ErrandResponseBody: {
             data: components["schemas"]["ErrandView"];
             request_id: string;
@@ -7781,6 +10149,8 @@ export interface components {
             author_nickname: string;
             available_actions: components["schemas"]["ErrandViewerAction"][];
             campus: string | null;
+            /** @enum {string} */
+            cancellation_status?: "none" | "processing" | "succeeded" | "failed";
             /** Format: date-time */
             cancelled_at: string | null;
             category: string;
@@ -7805,6 +10175,15 @@ export interface components {
             /** Format: int64 */
             like_count: number;
             liked_by_nicknames: string[];
+            /** Format: date-time */
+            payment_deadline_at?: string | null;
+            /** @enum {string} */
+            payment_mode: "offline" | "wechat";
+            /**
+             * @description 仅参与者可见，线下为 none
+             * @enum {string}
+             */
+            payment_status?: "none" | "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
             /** Format: date-time */
             picked_up_at: string | null;
             pickup_location: string;
@@ -7993,7 +10372,7 @@ export interface components {
             total_seats?: number | null;
         };
         /** @enum {string} */
-        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+        FavoriteResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
         FavoriteState: {
             favorited: boolean;
             /** Format: uint64 */
@@ -8093,6 +10472,343 @@ export interface components {
             reply_to_nickname: string | null;
             /** Format: uint64 */
             root_id: number;
+        };
+        LotteryCampaignInput: {
+            cover_url?: string;
+            description: string;
+            draw_mode: components["schemas"]["LotteryDrawMode"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: int64 */
+            max_wins: number;
+            prizes: components["schemas"]["LotteryPrizeInput"][];
+            /** Format: int64 */
+            share_attribution_ttl_seconds: number;
+            /** Format: int64 */
+            share_daily_code_limit: number;
+            share_enabled: boolean;
+            share_new_user_only: boolean;
+            /** Format: int64 */
+            share_reward_code_count: number;
+            /** Format: int64 */
+            share_total_code_limit: number;
+            /** @description 省略时编辑保留原赞助商，空数组清空 */
+            sponsors?: components["schemas"]["LotterySponsor"][];
+            /** Format: date-time */
+            start_at: string;
+            title: string;
+        };
+        LotteryCampaignPageResponseBody: {
+            data: components["schemas"]["LotteryPage"];
+            request_id: string;
+        };
+        LotteryCampaignResponseBody: {
+            data: components["schemas"]["LotteryCampaignView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryCampaignStatus: "draft" | "published" | "closed" | "completed" | "cancelled";
+        LotteryCampaignUpdateInput: components["schemas"]["LotteryCampaignInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        LotteryCampaignView: {
+            cover_url?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            description: string;
+            draw_mode: components["schemas"]["LotteryDrawMode"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: uint64 */
+            id: number;
+            joined: boolean;
+            /** Format: int64 */
+            max_wins: number;
+            /** Format: int64 */
+            my_available_code_count: number;
+            /** Format: int64 */
+            my_code_count: number;
+            /** Format: int64 */
+            my_win_count: number;
+            prizes: components["schemas"]["LotteryPrizeView"][];
+            /** Format: date-time */
+            server_time: string;
+            /** Format: int64 */
+            share_attribution_ttl_seconds: number;
+            /** Format: int64 */
+            share_daily_code_limit: number;
+            share_enabled: boolean;
+            share_new_user_only: boolean;
+            /** Format: int64 */
+            share_reward_code_count: number;
+            /** Format: int64 */
+            share_total_code_limit: number;
+            sponsors?: components["schemas"]["LotterySponsor"][];
+            /** Format: date-time */
+            start_at: string;
+            status: components["schemas"]["LotteryCampaignStatus"];
+            title: string;
+            /** Format: date-time */
+            updated_at: string;
+            verified: boolean;
+            /** Format: uint64 */
+            version: number;
+        };
+        LotteryCodePage: {
+            items: components["schemas"]["LotteryCodeView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryCodePageResponseBody: {
+            data: components["schemas"]["LotteryCodePage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryCodeStatus: "available" | "entered" | "won" | "lost" | "excluded" | "expired" | "void";
+        LotteryCodeView: {
+            code: string;
+            /** Format: date-time */
+            created_at: string;
+            exclusion_reason?: string | null;
+            /** Format: uint64 */
+            id: number;
+            source: string;
+            status: components["schemas"]["LotteryCodeStatus"];
+            /** Format: uint64 */
+            user_id?: number | null;
+        };
+        LotteryDrawBatchPage: {
+            items: components["schemas"]["LotteryDrawBatchView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryDrawBatchPageResponseBody: {
+            data: components["schemas"]["LotteryDrawBatchPage"];
+            request_id: string;
+        };
+        LotteryDrawBatchView: {
+            /** Format: int64 */
+            attempt_count: number;
+            /** Format: uint64 */
+            campaign_id: number;
+            /** Format: uint64 */
+            config_version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            last_error?: string | null;
+            status: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        LotteryDrawMode: "scheduled" | "instant";
+        LotteryDrawPage: {
+            items: components["schemas"]["LotteryDrawView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryDrawPageResponseBody: {
+            data: components["schemas"]["LotteryDrawPage"];
+            request_id: string;
+        };
+        LotteryDrawResponseBody: {
+            data: components["schemas"]["LotteryDrawView"];
+            request_id: string;
+        };
+        LotteryDrawView: {
+            /** Format: uint64 */
+            campaign_id: number;
+            /** Format: uint64 */
+            code_id: number;
+            /** Format: date-time */
+            drawn_at: string;
+            /** Format: uint64 */
+            id: number;
+            prize?: components["schemas"]["LotteryPrizeView"];
+            /** @enum {string} */
+            result: "won" | "lost";
+            /** Format: uint64 */
+            win_id?: number | null;
+        };
+        LotteryFulfillWinInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            fulfillment_note: string;
+        };
+        LotteryPage: {
+            items: components["schemas"]["LotteryCampaignView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryPrizeInput: {
+            /** Format: date-time */
+            claim_deadline_at: string;
+            claim_method: string;
+            description?: string;
+            /** Format: int64 */
+            display_order: number;
+            image_url?: string;
+            /** Format: int64 */
+            instant_probability_bps: number;
+            name: string;
+            /** Format: int64 */
+            scheduled_draw_order: number;
+            /** Format: int64 */
+            total_quantity: number;
+        };
+        LotteryPrizeView: {
+            /** Format: int64 */
+            allocated_quantity: number;
+            /** Format: date-time */
+            claim_deadline_at: string;
+            claim_method: string;
+            description?: string | null;
+            /** Format: int64 */
+            display_order: number;
+            /** Format: uint64 */
+            id: number;
+            image_url?: string | null;
+            /** Format: int64 */
+            instant_probability_bps: number;
+            name: string;
+            /** Format: int64 */
+            scheduled_draw_order: number;
+            /** Format: int64 */
+            total_quantity: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        LotteryPublicResultView: {
+            /** Format: uint64 */
+            draw_id: number;
+            /** Format: date-time */
+            drawn_at: string;
+            masked_code: string;
+            masked_user: string;
+            /** Format: uint64 */
+            prize_id: number;
+            prize_name: string;
+        };
+        LotteryResultPage: {
+            items: components["schemas"]["LotteryPublicResultView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryResultPageResponseBody: {
+            data: components["schemas"]["LotteryResultPage"];
+            request_id: string;
+        };
+        LotteryShareAttributionPage: {
+            items: components["schemas"]["LotteryShareAttributionView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryShareAttributionPageResponseBody: {
+            data: components["schemas"]["LotteryShareAttributionPage"];
+            request_id: string;
+        };
+        LotteryShareAttributionResponseBody: {
+            data: components["schemas"]["LotteryShareAttributionSubmitView"];
+            request_id: string;
+        };
+        LotteryShareAttributionSubmitView: {
+            reason?: string | null;
+            /** Format: int64 */
+            rewarded_code_count: number;
+            status: string;
+        };
+        LotteryShareAttributionView: {
+            reason?: string | null;
+            /** Format: int64 */
+            rewarded_code_count: number;
+            /** Format: uint64 */
+            sharer_user_id?: number | null;
+            status: string;
+            /** Format: uint64 */
+            visitor_user_id?: number | null;
+        };
+        LotteryShareTokenResponseBody: {
+            data: components["schemas"]["LotteryShareTokenView"];
+            request_id: string;
+        };
+        LotteryShareTokenView: {
+            /** Format: date-time */
+            expires_at: string;
+            token: string;
+        };
+        LotterySponsor: {
+            description: string;
+            /** Format: int64 */
+            display_order: number;
+            /** @description 可选 HTTPS 宣传图片 */
+            image_url?: string;
+            name: string;
+            /** @description 用户主动复制的公开微信号 */
+            wechat_id: string;
+        };
+        LotterySponsorsUpdateInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            sponsors: components["schemas"]["LotterySponsor"][];
+        };
+        LotteryVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        LotteryWinPage: {
+            items: components["schemas"]["LotteryWinView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        LotteryWinPageResponseBody: {
+            data: components["schemas"]["LotteryWinPage"];
+            request_id: string;
+        };
+        LotteryWinResponseBody: {
+            data: components["schemas"]["LotteryWinView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        LotteryWinStatus: "pending" | "fulfilled" | "expired";
+        LotteryWinView: {
+            /** Format: uint64 */
+            campaign_id: number;
+            campaign_title: string;
+            code: string;
+            /** Format: uint64 */
+            code_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            fulfilled_at?: string | null;
+            fulfillment_note?: string | null;
+            /** Format: uint64 */
+            id: number;
+            prize: components["schemas"]["LotteryPrizeView"];
+            status: components["schemas"]["LotteryWinStatus"];
+            /** Format: uint64 */
+            user_id: number;
+            /** Format: uint64 */
+            version: number;
         };
         MarketplaceListingImageView: {
             /** Format: uint64 */
@@ -8218,7 +10934,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat" | "cat_atlas";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -8365,6 +11081,219 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        MerchantTransferResponseBody: {
+            data: components["schemas"]["MerchantTransferView"];
+            request_id: string;
+        };
+        MerchantTransferView: {
+            /** Format: int64 */
+            amount_cents: number;
+            app_id: string | null;
+            confirmation_package: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            merchant_id: string | null;
+            /** Format: uint64 */
+            payable_id: number;
+            /** @enum {string} */
+            status: "processing" | "awaiting_user_confirmation" | "succeeded" | "failed";
+            transfer_no: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        PaymentStatusResponseBody: {
+            data: components["schemas"]["PaymentStatusView"];
+            request_id: string;
+        };
+        PaymentStatusView: {
+            /** Format: date-time */
+            paid_at?: string | null;
+            /** @enum {string} */
+            status: "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
+        };
+        SettlementPayablePage: {
+            items: components["schemas"]["SettlementPayableView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        SettlementPayablePageResponseBody: {
+            data: components["schemas"]["SettlementPayablePage"];
+            request_id: string;
+        };
+        SettlementPayableView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: date-time */
+            available_at: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            order_id: number;
+            payable_no: string;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+            /** @enum {string} */
+            source_type: "errand" | "marketplace";
+            /** @enum {string} */
+            status: "available" | "reserved" | "transferring" | "paid" | "blocked";
+            /** Format: uint64 */
+            version: number;
+        };
+        WechatCallbackAck: {
+            /** @enum {string} */
+            code: "SUCCESS";
+            message: string;
+        };
+        WechatPayParams: {
+            intent_no: string;
+            nonce_str: string;
+            package: string;
+            pay_sign: string;
+            /** @enum {string} */
+            sign_type: "RSA";
+            time_stamp: string;
+        };
+        WechatPayResponseBody: {
+            data: components["schemas"]["WechatPayParams"];
+            request_id: string;
+        };
+        WithdrawalItemView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: uint64 */
+            order_id: number;
+            /** Format: uint64 */
+            payable_id: number;
+        };
+        WithdrawalPage: {
+            items: components["schemas"]["WithdrawalView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        WithdrawalPageResponseBody: {
+            data: components["schemas"]["WithdrawalPage"];
+            request_id: string;
+        };
+        WithdrawalResponseBody: {
+            data: components["schemas"]["WithdrawalView"];
+            request_id: string;
+        };
+        WithdrawalSceneSummary: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: int64 */
+            payable_count: number;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+        };
+        WithdrawalSummary: {
+            /** Format: int64 */
+            available_amount_cents: number;
+            /** Format: int64 */
+            paid_amount_cents: number;
+            /** Format: int64 */
+            reserved_amount_cents: number;
+            scenes: components["schemas"]["WithdrawalSceneSummary"][];
+        };
+        WithdrawalSummaryResponseBody: {
+            data: components["schemas"]["WithdrawalSummary"];
+            request_id: string;
+        };
+        WithdrawalView: {
+            /** Format: int64 */
+            amount_cents: number;
+            /** Format: uint64 */
+            beneficiary_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            items?: components["schemas"]["WithdrawalItemView"][];
+            /** Format: int64 */
+            payable_count: number;
+            review_reason?: string | null;
+            /** Format: date-time */
+            reviewed_at?: string | null;
+            /** Format: uint64 */
+            reviewer_id?: number | null;
+            /** @enum {string} */
+            scene_key: "commission" | "purchase" | "secondhand_recycle";
+            /** @enum {string} */
+            status: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+            transfer?: components["schemas"]["MerchantTransferView"];
+            /** Format: uint64 */
+            version: number;
+            withdrawal_no: string;
+        };
+        PersonalTimetableItemList: {
+            items: components["schemas"]["PersonalTimetableItemView"][];
+        };
+        PersonalTimetableItemListResponseBody: {
+            data: components["schemas"]["PersonalTimetableItemList"];
+            request_id: string;
+        };
+        PersonalTimetableItemResponseBody: {
+            data: components["schemas"]["PersonalTimetableItemView"];
+            request_id: string;
+        };
+        PersonalTimetableItemSlotView: {
+            building?: string | null;
+            campus?: string | null;
+            /** Format: uint64 */
+            classroom_id?: number | null;
+            /** Format: int64 */
+            end_section: number;
+            location_parsed: boolean;
+            raw_location?: string | null;
+            room?: string | null;
+            /** Format: uint64 */
+            source_schedule_slot_id: number;
+            /** Format: int64 */
+            start_section: number;
+            /** Format: int64 */
+            weekday: number;
+            weeks: number[];
+        };
+        PersonalTimetableItemView: {
+            campus?: string | null;
+            class_name?: string | null;
+            course_category?: string | null;
+            course_code?: string | null;
+            course_name: string;
+            /** Format: date-time */
+            created_at: string;
+            credits?: string | null;
+            current_data_version?: string | null;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: uint64 */
+            id: number;
+            instruction_language?: string | null;
+            location_text?: string | null;
+            offering_id: string;
+            offering_unit?: string | null;
+            opening_code?: string | null;
+            period_id: string;
+            schedule_text?: string | null;
+            slots: components["schemas"]["PersonalTimetableItemSlotView"][];
+            source_data_version: string;
+            source_status: components["schemas"]["PersonalTimetableSourceStatus"];
+            teachers: string[];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        /** @enum {string} */
+        PersonalTimetableSourceStatus: "current" | "updated" | "withdrawn";
         CreatePrivateConversationInput: {
             /** Format: uint64 */
             peer_id: number;
@@ -8489,7 +11418,7 @@ export interface components {
             message_id: number;
         };
         /** @enum {string} */
-        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+        ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
         ReactionState: {
             /** Format: int64 */
             like_count: number;
@@ -8637,6 +11566,8 @@ export interface components {
             /** Format: int64 */
             amount_cents: number;
             available_actions: components["schemas"]["TradeOrderViewerAction"][];
+            /** @enum {string} */
+            cancellation_status: "none" | "processing" | "succeeded" | "failed";
             /** Format: date-time */
             cancelled_at: string | null;
             /** Format: date-time */
@@ -8649,6 +11580,9 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             currency: string;
+            errand_status: string | null;
+            /** Format: uint64 */
+            errand_version: number | null;
             /** Format: date-time */
             expires_at: string | null;
             /** @enum {string} */
@@ -8658,7 +11592,14 @@ export interface components {
             order_no: string;
             /** @enum {string} */
             order_type: "marketplace" | "errand";
-            payment_mode: string;
+            /** Format: date-time */
+            paid_at: string | null;
+            /** Format: date-time */
+            payment_deadline_at: string | null;
+            /** @enum {string} */
+            payment_mode: "offline" | "wechat";
+            /** @enum {string} */
+            payment_status: "none" | "pending" | "succeeded" | "cancelled" | "refunding" | "refunded";
             /** Format: uint64 */
             resource_id: number;
             resource_snapshot: {
@@ -8668,7 +11609,7 @@ export interface components {
             resource_type: "marketplace_listing" | "errand_task";
             title_snapshot: string;
             /** @enum {string} */
-            trade_status: "confirmed" | "completed" | "cancelled" | "expired";
+            trade_status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -8683,7 +11624,7 @@ export interface components {
             total: number;
         };
         /** @enum {string} */
-        TradeOrderViewerAction: "view_resource" | "cancel" | "complete" | "verify_academic";
+        TradeOrderViewerAction: "view_resource" | "pay" | "pickup" | "deliver" | "cancel" | "complete" | "verify_academic";
         /** @enum {string} */
         TradeOrderViewerRelation: "buyer" | "seller";
         DailyCheckinHistory: {
@@ -8999,6 +11940,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description 旧业务 envelope；参数及业务失败通过 status 表示 */
+        LegacyWeoucResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LegacyWeoucEnvelope"];
+            };
+        };
         /** @description Successful response */
         Success: {
             headers: {
@@ -9379,6 +12329,42 @@ export interface components {
                 "application/json": components["schemas"]["AcademicCourseCatalogScheduleSlotPageResponseBody"];
             };
         };
+        /** @description 通识模块关系导入结果 */
+        AdminGeneralEducationImportResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminGeneralEducationImportResponseBody"];
+            };
+        };
+        /** @description 通识模块来源通知分页 */
+        AdminGeneralEducationSourcePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminGeneralEducationSourcePageResponseBody"];
+            };
+        };
+        /** @description 已认证 member 当前学期可用开课校区 */
+        MemberCourseCatalogCampusListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberCourseCatalogCampusListResponseBody"];
+            };
+        };
+        /** @description 已认证 member 当前学期可用课程类别 */
+        MemberCourseCatalogCategoryListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberCourseCatalogCategoryListResponseBody"];
+            };
+        };
         /** @description 已认证 member 可搜索的当前课程目录 */
         MemberCourseCatalogCoursePageResponse: {
             headers: {
@@ -9386,6 +12372,33 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MemberCourseCatalogCoursePageResponseBody"];
+            };
+        };
+        /** @description 已认证 member 查询本科通识模块筛选项 */
+        MemberCourseCatalogGeneralEducationModuleListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberCourseCatalogGeneralEducationModuleListResponseBody"];
+            };
+        };
+        /** @description 已认证 member 查询全部本科通识课程及归属历史 */
+        MemberGeneralEducationCoursePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberGeneralEducationCoursePageResponseBody"];
+            };
+        };
+        /** @description 已认证 member 查询全部本科通识模块 */
+        MemberGeneralEducationModuleListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MemberGeneralEducationModuleListResponseBody"];
             };
         };
         /** @description 课程通过率分页 */
@@ -9595,6 +12608,15 @@ export interface components {
                 "application/json": components["schemas"]["CampusCircleSectionTreeResponseBody"];
             };
         };
+        /** @description 校园圈话题自动关联审计记录 */
+        CampusCircleTopicAuditPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicAuditPageResponseBody"];
+            };
+        };
         /** @description 校园圈话题分页 */
         CampusCircleTopicPageResponse: {
             headers: {
@@ -9629,6 +12651,105 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CarpoolTripResponseBody"];
+            };
+        };
+        /** @description 管理端猫咪目击审核分页列表 */
+        AdminSightingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminSightingPageResponseBody"];
+            };
+        };
+        /** @description 管理端猫咪目击审核记录 */
+        AdminSightingResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AdminSightingResponseBody"];
+            };
+        };
+        /** @description 猫咪区域级出没热点 */
+        CatHotspotResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatHotspotResponseBody"];
+            };
+        };
+        /** @description 猫咪分页列表 */
+        CatPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatPageResponseBody"];
+            };
+        };
+        /** @description 猫咪档案 */
+        CatResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatResponseBody"];
+            };
+        };
+        /** @description 我的图鉴 */
+        CatalogResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CatalogResponseBody"];
+            };
+        };
+        /** @description 猫咪档案补充建议分页列表 */
+        ProfileSuggestionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ProfileSuggestionPageResponseBody"];
+            };
+        };
+        /** @description 猫咪档案补充建议 */
+        ProfileSuggestionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ProfileSuggestionResponseBody"];
+            };
+        };
+        /** @description 目击动态分页列表 */
+        SightingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SightingPageResponseBody"];
+            };
+        };
+        /** @description 新猫投稿分页列表 */
+        SubmissionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SubmissionPageResponseBody"];
+            };
+        };
+        /** @description 新猫投稿 */
+        SubmissionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SubmissionResponseBody"];
             };
         };
         /** @description 社团分类列表 */
@@ -9809,6 +12930,87 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ContentSecurityReviewResponseBody"];
+            };
+        };
+        /** @description 情报操作结果 */
+        CourseIntelligenceActionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceActionResponseBody"];
+            };
+        };
+        /** @description 学生贡献记录 */
+        CourseIntelligenceContributionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceContributionResponseBody"];
+            };
+        };
+        /** @description 课程别名映射分页 */
+        CourseIntelligenceCourseAliasPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceCourseAliasPageResponseBody"];
+            };
+        };
+        /** @description 课程别名映射详情 */
+        CourseIntelligenceCourseAliasResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceCourseAliasResponseBody"];
+            };
+        };
+        /** @description 历史导入批次 */
+        CourseIntelligenceImportBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceImportBatchPageResponseBody"];
+            };
+        };
+        /** @description 课程选课情报概览 */
+        CourseIntelligenceOverviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceOverviewResponseBody"];
+            };
+        };
+        /** @description 情报审核队列 */
+        CourseIntelligenceQueuePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceQueuePageResponseBody"];
+            };
+        };
+        /** @description 课程选课情报原始观点分页 */
+        CourseIntelligenceReviewPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceReviewPageResponseBody"];
+            };
+        };
+        /** @description 教师情报概览 */
+        CourseIntelligenceTeacherResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceTeacherResponseBody"];
             };
         };
         /** @description 课程资料分页 */
@@ -10027,6 +13229,15 @@ export interface components {
                 "application/json": components["schemas"]["ErrandPageResponseBody"];
             };
         };
+        /** @description 跑腿支付能力 */
+        ErrandPaymentPolicyResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrandPaymentPolicyResponseBody"];
+            };
+        };
         /** @description 跑腿任务 */
         ErrandResponse: {
             headers: {
@@ -10088,6 +13299,114 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["HomeFeedPageResponseBody"];
+            };
+        };
+        /** @description 抽奖活动分页 */
+        LotteryCampaignPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignPageResponseBody"];
+            };
+        };
+        /** @description 抽奖活动 */
+        LotteryCampaignResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignResponseBody"];
+            };
+        };
+        /** @description 我的抽奖码分页 */
+        LotteryCodePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryCodePageResponseBody"];
+            };
+        };
+        /** @description 到期开奖批次分页 */
+        LotteryDrawBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawBatchPageResponseBody"];
+            };
+        };
+        /** @description 抽奖结果分页 */
+        LotteryDrawPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawPageResponseBody"];
+            };
+        };
+        /** @description 抽奖结果 */
+        LotteryDrawResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryDrawResponseBody"];
+            };
+        };
+        /** @description 公开开奖结果分页 */
+        LotteryResultPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryResultPageResponseBody"];
+            };
+        };
+        /** @description 分享归因分页 */
+        LotteryShareAttributionPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareAttributionPageResponseBody"];
+            };
+        };
+        /** @description 分享归因提交结果 */
+        LotteryShareAttributionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareAttributionResponseBody"];
+            };
+        };
+        /** @description 分享入口 */
+        LotteryShareTokenResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryShareTokenResponseBody"];
+            };
+        };
+        /** @description 中奖履约分页 */
+        LotteryWinPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryWinPageResponseBody"];
+            };
+        };
+        /** @description 中奖履约详情 */
+        LotteryWinResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["LotteryWinResponseBody"];
             };
         };
         /** @description 二手商品分页 */
@@ -10187,6 +13506,96 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["OfficialNoticeResponseBody"];
+            };
+        };
+        /** @description 商家转账结果 */
+        MerchantTransferResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MerchantTransferResponseBody"];
+            };
+        };
+        /** @description 微信支付权威状态 */
+        PaymentStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PaymentStatusResponseBody"];
+            };
+        };
+        /** @description 我的待结算收益 */
+        SettlementPayablePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["SettlementPayablePageResponseBody"];
+            };
+        };
+        /** @description 微信支付回调确认 */
+        WechatCallbackResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatCallbackAck"];
+            };
+        };
+        /** @description 微信小程序支付参数 */
+        WechatPayResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatPayResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalPageResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalResponseBody"];
+            };
+        };
+        /** @description 提现申请及审批结果 */
+        WithdrawalSummaryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WithdrawalSummaryResponseBody"];
+            };
+        };
+        /** @description 我的蹭课条目列表 */
+        PersonalTimetableItemListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PersonalTimetableItemListResponseBody"];
+            };
+        };
+        /** @description 我的蹭课条目 */
+        PersonalTimetableItemResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PersonalTimetableItemResponseBody"];
             };
         };
         /** @description 私信会话游标列表 */
@@ -10400,6 +13809,21 @@ export interface components {
         ExpectedVersion: number;
     };
     requestBodies: {
+        LegacyWeoucCoursesForm: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["LegacyWeoucCoursesForm"];
+            };
+        };
+        LegacyWeoucBindForm: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["LegacyWeoucBindForm"];
+            };
+        };
+        LegacyWeoucForm: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["LegacyWeoucForm"];
+            };
+        };
         Login: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
@@ -10441,6 +13865,71 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    LegacyWeoucBind: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucBindForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucCourses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucCoursesForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucGrades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucExams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
+    LegacyWeoucSelections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["LegacyWeoucForm"];
+        responses: {
+            200: components["responses"]["LegacyWeoucResponse"];
+            500: components["responses"]["LegacyWeoucResponse"];
+        };
+    };
     Live: {
         parameters: {
             query?: never;
@@ -10967,6 +14456,31 @@ export interface operations {
             503: components["responses"]["Error"];
         };
     };
+    GetAcademicCourseSelectionSchedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    student_no: string;
+                    password: string;
+                    period_id: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCourseListResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     ListAcademicCourseSelections: {
         parameters: {
             query?: never;
@@ -11216,6 +14730,48 @@ export interface operations {
             200: components["responses"]["AcademicCourseCatalogEntryPageResponse"];
         };
     };
+    ImportAdminGeneralEducationCourseModules: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    notice_title: string;
+                    notice_url?: string;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["AdminGeneralEducationImportResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            413: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    ListAdminGeneralEducationSources: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminGeneralEducationSourcePageResponse"];
+        };
+    };
     TriggerAdminAcademicCourseCatalogRun: {
         parameters: {
             query?: never;
@@ -11316,6 +14872,36 @@ export interface operations {
             200: components["responses"]["AcademicCourseCatalogScheduleSlotPageResponse"];
         };
     };
+    ListMemberCourseCatalogCampuses: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberCourseCatalogCampusListResponse"];
+        };
+    };
+    ListMemberCourseCatalogCategories: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberCourseCatalogCategoryListResponse"];
+        };
+    };
     ListMemberCourseCatalogCourses: {
         parameters: {
             query: {
@@ -11326,6 +14912,8 @@ export interface operations {
                 teacher?: string;
                 offering_unit?: string;
                 campus?: string;
+                course_category?: string;
+                general_education_module_id?: number;
                 teaching_week?: number;
                 weekday?: number;
                 section?: number;
@@ -11340,6 +14928,50 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["MemberCourseCatalogCoursePageResponse"];
+        };
+    };
+    ListMemberCourseCatalogGeneralEducationModules: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberCourseCatalogGeneralEducationModuleListResponse"];
+        };
+    };
+    ListMemberGeneralEducationCourses: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                module_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberGeneralEducationCoursePageResponse"];
+        };
+    };
+    ListMemberGeneralEducationModules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MemberGeneralEducationModuleListResponse"];
         };
     };
     ListAcademicCoursePassRates: {
@@ -12400,6 +16032,32 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    AdminWithdrawCampusCirclePost: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListAdminCampusCircleSections: {
         parameters: {
             query?: never;
@@ -12646,6 +16304,47 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    ListAdminCampusCircleTopicAudits: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTopicAuditPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    MergeAdminCampusCircleTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTopicMergeInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     GetCampusCircleHome: {
         parameters: {
             query?: never;
@@ -12698,6 +16397,10 @@ export interface operations {
                     mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
+                    topic_ids?: number[];
+                    /** Format: uint64 */
+                    primary_topic_id?: number;
+                    topic_names?: string[];
                 };
             };
         };
@@ -12762,6 +16465,10 @@ export interface operations {
                     mention_user_ids?: number[];
                     /** Format: uint64 */
                     topic_id?: number;
+                    topic_ids?: number[];
+                    /** Format: uint64 */
+                    primary_topic_id?: number;
+                    topic_names?: string[];
                     /** Format: uint64 */
                     expected_version: number;
                 };
@@ -12801,6 +16508,28 @@ export interface operations {
         responses: {
             200: components["responses"]["CampusCirclePostResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    UpdateCampusCirclePostPin: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCirclePinInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCirclePostResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     SubmitCampusCirclePostReview: {
@@ -12890,6 +16619,7 @@ export interface operations {
         parameters: {
             query?: {
                 kind?: "topic" | "campaign";
+                keyword?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -13233,6 +16963,343 @@ export interface operations {
         responses: {
             200: components["responses"]["CarpoolTripPageResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    ListAdminCatProfileSuggestions: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ProfileSuggestionPageResponse"];
+        };
+    };
+    ReviewAdminCatProfileSuggestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ProfileSuggestionResponse"];
+        };
+    };
+    ListAdminCatSightings: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AdminSightingPageResponse"];
+        };
+    };
+    ReviewAdminCatSighting: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminSightingResponse"];
+        };
+    };
+    UpdateAdminCatSightingStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SightingStatusInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AdminSightingResponse"];
+        };
+    };
+    ListAdminCatSubmissions: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SubmissionPageResponse"];
+        };
+    };
+    ReviewAdminCatSubmission: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["SubmissionResponse"];
+        };
+    };
+    ListAdminCats: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatPageResponse"];
+        };
+    };
+    UpdateAdminCat: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CatResponse"];
+        };
+    };
+    UpdateAdminCatStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatStatusInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CatResponse"];
+        };
+    };
+    ListGlobalCatSightings: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SightingPageResponse"];
+        };
+    };
+    SubmitCat: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["SubmissionResponse"];
+        };
+    };
+    ListCats: {
+        parameters: {
+            query?: {
+                area?: string;
+                keyword?: string;
+                sort?: "newest" | "latest_seen" | "popular";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatPageResponse"];
+        };
+    };
+    GetCat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListCatHotspots: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatHotspotResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CreateCatProfileSuggestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSuggestionInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ProfileSuggestionResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListCatSightings: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SightingPageResponse"];
+        };
+    };
+    CreateCatSighting: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SightingInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["SightingPageResponse"];
+        };
+    };
+    GetMyCatCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CatalogResponse"];
         };
     };
     ListAdminClubCategories: {
@@ -14026,7 +18093,7 @@ export interface operations {
     ListAdminContentSecurityReviews: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing";
+                resource_type?: "campus_circle_post" | "comment" | "marketplace_listing" | "errand" | "carpool" | "empty_classroom_report" | "course_material" | "course_material_feedback" | "what_to_eat_listing" | "cat_submission" | "cat_sighting" | "cat_profile_suggestion";
                 suggestion?: "pass" | "review" | "risky";
                 status?: "auto_approved" | "pending_manual" | "manual_approved" | "manual_rejected";
                 page?: number;
@@ -14053,6 +18120,363 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["ContentSecurityReviewResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ModerateAdminCourseIntelligenceContribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    action: "publish" | "hide" | "restore";
+                    reason?: string;
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceContributionResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCourseIntelligenceAliases: {
+        parameters: {
+            query?: {
+                alias?: string;
+                status?: "pending" | "active" | "disabled";
+                match_status?: "queued" | "processing" | "matched" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceCourseAliasPageResponse"];
+        };
+    };
+    DecideAdminCourseIntelligenceAliasMappings: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceAliasDecisionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceCourseAliasResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RematchAdminCourseIntelligenceAlias: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceAliasRematchInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceCourseAliasResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCourseIntelligenceImportBatches: {
+        parameters: {
+            query?: {
+                status?: "preview" | "running" | "succeeded" | "partial" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceImportBatchPageResponse"];
+        };
+    };
+    ListAdminCourseIntelligenceQueue: {
+        parameters: {
+            query?: {
+                queue_type?: "course_binding" | "teacher_binding" | "contribution_moderation" | "report" | "duplicate" | "privacy" | "defamation" | "inaccurate" | "other";
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceQueuePageResponse"];
+        };
+    };
+    ResolveAdminCourseIntelligenceReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveAdminCourseIntelligenceReportBody"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceActionResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ReextractAdminCourseIntelligenceReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    extractor_version?: string;
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceReviewPageResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DecideAdminCourseIntelligenceBinding: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    binding_type: "course" | "teacher";
+                    /** Format: uint64 */
+                    target_id?: number;
+                    course_code?: string;
+                    reason?: string;
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceQueuePageResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateCourseIntelligenceContribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceContributionInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["CourseIntelligenceContributionResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    GetCourseIntelligenceContribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceContributionResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateCourseIntelligenceContribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceContributionUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceContributionResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetCourseIntelligenceOverview: {
+        parameters: {
+            query?: {
+                teacher_id?: number;
+                term?: string;
+            };
+            header?: never;
+            path: {
+                course_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceOverviewResponse"];
+        };
+    };
+    ListCourseIntelligenceReviews: {
+        parameters: {
+            query?: {
+                teacher_id?: number;
+                dimension?: "grading" | "attendance" | "workload" | "exam" | "classroom" | "difficulty_time";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                course_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceReviewPageResponse"];
+        };
+    };
+    CreateCourseIntelligenceReaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceReactionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CourseIntelligenceActionResponse"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    CreateCourseIntelligenceReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseIntelligenceReportInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["CourseIntelligenceActionResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetCourseIntelligenceTeacher: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacher_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CourseIntelligenceTeacherResponse"];
             404: components["responses"]["Error"];
         };
     };
@@ -15074,6 +19498,8 @@ export interface operations {
                 "application/json": {
                     category?: string;
                     description: string;
+                    /** @enum {string} */
+                    payment_mode?: "offline" | "wechat";
                     /** Format: int64 */
                     reward_cents: number;
                     pickup_location: string;
@@ -15110,6 +19536,18 @@ export interface operations {
             200: components["responses"]["ErrandPageResponse"];
         };
     };
+    GetErrandPaymentPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ErrandPaymentPolicyResponse"];
+        };
+    };
     GetErrand: {
         parameters: {
             query?: never;
@@ -15141,6 +19579,8 @@ export interface operations {
                 "application/json": {
                     category?: string;
                     description: string;
+                    /** @enum {string} */
+                    payment_mode?: "offline" | "wechat";
                     /** Format: int64 */
                     reward_cents: number;
                     pickup_location: string;
@@ -15401,7 +19841,7 @@ export interface operations {
     ListMyFavorites: {
         parameters: {
             query?: {
-                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type?: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
                 page?: number;
                 page_size?: number;
             };
@@ -15418,7 +19858,7 @@ export interface operations {
     GetFavoriteState: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -15435,7 +19875,7 @@ export interface operations {
     AddFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -15453,7 +19893,7 @@ export interface operations {
     RemoveFavorite: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "cat";
             };
             header?: never;
             path: {
@@ -15481,6 +19921,442 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["HomeFeedPageResponse"];
+        };
+    };
+    ListAdminLotteryCampaigns: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignPageResponse"];
+        };
+    };
+    CreateAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["LotteryCampaignResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    GetAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryCampaignUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CancelAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminLotteryCampaignSponsors: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotterySponsorsUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    StopAdminLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminLotteryCodes: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCodePageResponse"];
+        };
+    };
+    ListAdminLotteryDrawBatches: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawBatchPageResponse"];
+        };
+    };
+    RetryAdminLotteryDrawBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryVersionInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["LotteryDrawBatchPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminLotteryShareAttributions: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryShareAttributionPageResponse"];
+        };
+    };
+    ListAdminLotteryWins: {
+        parameters: {
+            query?: {
+                campaign_id?: number;
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryWinPageResponse"];
+        };
+    };
+    FulfillAdminLotteryWin: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotteryFulfillWinInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryWinResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListLotteryCampaigns: {
+        parameters: {
+            query?: {
+                status?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignPageResponse"];
+        };
+    };
+    GetLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ListMyLotteryCodes: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCodePageResponse"];
+        };
+    };
+    ListMyLotteryDraws: {
+        parameters: {
+            query?: {
+                request_key?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawPageResponse"];
+        };
+    };
+    DrawLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryDrawResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    JoinLotteryCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryCampaignResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListLotteryCampaignResults: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryResultPageResponse"];
+        };
+    };
+    SubmitLotteryShareAttribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["LotteryShareAttributionResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateLotteryShareToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: components["responses"]["LotteryShareTokenResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetLotteryWin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["LotteryWinResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminMarketplaceListings: {
@@ -16291,6 +21167,344 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    ListAdminWithdrawals: {
+        parameters: {
+            query?: {
+                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminWithdrawal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ReviewWithdrawal: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                    /** @enum {string} */
+                    decision: "approve" | "reject";
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateWechatPay: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: components["responses"]["WechatPayResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    QueryWechatPay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PaymentStatusResponse"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatPayCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatRefundCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    HandleWechatTransferCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WechatCallbackResponse"];
+            400: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListMySettlementPayables: {
+        parameters: {
+            query?: {
+                status?: "available" | "reserved" | "transferring" | "paid" | "blocked";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["SettlementPayablePageResponse"];
+        };
+    };
+    CreateMerchantTransfer: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["MerchantTransferResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateWithdrawal: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    scene_key: "commission" | "purchase" | "secondhand_recycle";
+                    /** Format: int64 */
+                    expected_amount_cents: number;
+                    /** Format: int64 */
+                    expected_payable_count: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListMyWithdrawals: {
+        parameters: {
+            query?: {
+                status?: "pending_review" | "approved" | "processing" | "awaiting_user_confirmation" | "succeeded" | "rejected" | "failed";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalPageResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetMyWithdrawalSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalSummaryResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetMyWithdrawal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["WithdrawalResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListMyPersonalTimetableItems: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PersonalTimetableItemListResponse"];
+        };
+    };
+    CreatePersonalTimetableItem: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate";
+                    period_id: string;
+                    offering_id: string;
+                    schedule_slot_ids: number[];
+                    data_version: string;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["PersonalTimetableItemResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DeletePersonalTimetableItem: {
+        parameters: {
+            query: {
+                expected_version: number;
+            };
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["PersonalTimetableItemResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RefreshPersonalTimetableItem: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["PersonalTimetableItemResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListPrivateConversations: {
         parameters: {
             query?: {
@@ -16415,7 +21629,7 @@ export interface operations {
     LikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {
@@ -16433,7 +21647,7 @@ export interface operations {
     UnlikeResource: {
         parameters: {
             query: {
-                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment";
+                resource_type: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
             };
             header?: never;
             path: {
@@ -16613,8 +21827,10 @@ export interface operations {
         parameters: {
             query?: {
                 relation?: "all" | "buyer" | "seller";
+                status_group?: "all" | "action_required" | "in_progress" | "ended";
+                keyword?: string;
                 order_type?: "marketplace" | "errand";
-                trade_status?: "confirmed" | "completed" | "cancelled" | "expired";
+                trade_status?: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
                 fulfillment_status?: "not_started" | "in_progress" | "delivered";
                 page?: number;
                 page_size?: number;

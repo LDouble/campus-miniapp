@@ -1,4 +1,5 @@
 import { Image, Text, View } from '@tarojs/components'
+import type { ReactNode } from 'react'
 import type { ContentSegment } from '../../api/types'
 import { campusStickers } from '../../assets/stickers'
 import { openPublicProfile } from '../../features/profile/public-profile'
@@ -10,6 +11,8 @@ type MentionContentProps = {
   segments?: ContentSegment[] | null
   className?: string
   stickerClassName?: string
+  leading?: ReactNode
+  trailing?: ReactNode
 }
 
 const stickerById = new Map(campusStickers.map((sticker) => [sticker.id, sticker]))
@@ -51,11 +54,14 @@ export default function MentionContent({
   segments,
   className = '',
   stickerClassName = '',
+  leading,
+  trailing,
 }: MentionContentProps) {
   const hasSegments = Array.isArray(segments) && segments.length > 0
 
   return (
     <View className={['mention-content', className].filter(Boolean).join(' ')}>
+      {leading}
       {hasSegments ? segments?.map((segment, index) => {
         if (segment.type !== 'mention' || !segment.user_id) {
           return renderText(segment.text, stickerClassName, `segment-${index}`)
@@ -75,6 +81,7 @@ export default function MentionContent({
           </Text>
         )
       }) : renderText(content, stickerClassName, 'fallback')}
+      {trailing}
     </View>
   )
 }

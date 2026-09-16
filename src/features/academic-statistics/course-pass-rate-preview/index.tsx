@@ -1,14 +1,6 @@
-import { useEffect, useState } from 'react'
 import { Text, View } from '@tarojs/components'
 import { openCourseStatistics } from '../navigation'
-import {
-  CoursePassRate,
-  getCoursePassRatePreview,
-} from '../repository'
-import {
-  isAcademicBindingRequiredError,
-  openAcademicCredentialBinding,
-} from '../../academic-verification/binding-guidance'
+import { useCoursePassRatePreview } from './state'
 import './index.scss'
 
 type Props = {
@@ -28,44 +20,12 @@ export default function CoursePassRatePreview({
   courseName,
   teacherName = '',
 }: Props) {
-  const [data, setData] = useState<CoursePassRate | null>(null)
-  const [loading, setLoading] = useState(Boolean(courseCode.trim()))
-  const [fromCache, setFromCache] = useState(false)
-  const [bindingRequired, setBindingRequired] = useState(false)
-
-  useEffect(() => {
-    const normalized = courseCode.trim()
-    if (!normalized) {
-      setLoading(false)
-      return
-    }
-    let active = true
-    setLoading(true)
-    setData(null)
-    setFromCache(false)
-    setBindingRequired(false)
-    getCoursePassRatePreview(normalized)
-      .then((result) => {
-        if (!active) return
-        const nextData = result.data && Number.isFinite(result.data.pass_rate)
-          ? result.data
-          : null
-        setData(nextData)
-        setFromCache(Boolean(nextData) && result.fromCache)
-      })
-      .catch((error) => {
-        if (!active) return
-        setData(null)
-        setFromCache(false)
-        setBindingRequired(isAcademicBindingRequiredError(error))
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-    return () => {
-      active = false
-    }
-  }, [courseCode])
+  const {
+    bindingRequired,
+    data,
+    fromCache,
+    loading,
+  } = useCoursePassRatePreview(courseCode)
 
   if (
     !courseCode.trim()
@@ -76,10 +36,6 @@ export default function CoursePassRatePreview({
   ) return null
 
   const openDetails = () => {
-    if (bindingRequired) {
-      void openAcademicCredentialBinding()
-      return
-    }
     void openCourseStatistics({ courseCode, courseName, teacherName })
   }
 

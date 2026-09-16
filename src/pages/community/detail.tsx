@@ -6,6 +6,7 @@ import Taro, {
 import { Button, Image, Text, View } from '@tarojs/components'
 import type { CampusCirclePostView } from '../../api/types'
 import { isApiError } from '../../api/client'
+import { KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
 import CustomNavbar from '../../components/custom-navbar'
 import MentionContent from '../../components/mention-content'
 import {
@@ -18,6 +19,7 @@ import {
   formatCommunityViewCount,
   reportCommunityPostView,
 } from '../../features/community/post-view'
+import { communityPostTopics, communityTopicUrl } from '../../features/community/topic'
 import CommunityLevelBadge from '../../features/community/level-badge'
 import { openContentReport } from '../../features/content-report'
 import FavoriteToggle from '../../features/favorites/favorite-toggle'
@@ -32,6 +34,11 @@ import { useCampusShare } from '../../features/share'
 import { plainStickerContent } from '../../features/stickers/content'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import { showActionSheetSelection } from '../../utils/action-sheet'
+import {
+  communityPinActionLabel,
+  confirmCommunityPinAction,
+  getCommunityPinAction,
+} from '../../features/community/pin-action'
 import './detail.scss'
 
 const communityDetailIcons = {
@@ -45,7 +52,11 @@ const communityDetailIcons = {
 const actionLabels: Record<string, string> = {
   edit: '编辑动态',
   withdraw: '删除动态',
+  pin: '置顶到本版块',
+  unpin: '取消本版块置顶',
 }
+
+const ADMIN_WITHDRAW_ACTION = 'admin_withdraw'
 
 const formatDetailDateTime = (value?: string | null) => (
   formatDateTime(value).replace(/^(\d{2})月(\d{2})日/u, '$1-$2')
@@ -57,6 +68,9 @@ export default function CommunityDetailPage() {
   const [focusedCommentId, setFocusedCommentId] = useState(0)
   const [loading, setLoading] = useState(true)
   const [deletingPost, setDeletingPost] = useState(false)
+  const [pinningPost, setPinningPost] = useState(false)
+  const [adminWithdrawVisible, setAdminWithdrawVisible] = useState(false)
+  const [adminWithdrawReason, setAdminWithdrawReason] = useState('')
   const [error, setError] = useState('')
   const viewReportAttemptedPostIdsRef = useRef(new Set<number>())
 
@@ -193,6 +207,95 @@ export default function CommunityDetailPage() {
     }
   }
 
+  const runPinAction = async () => {
+    if (!post || pinningPost || deletingPost) return
+    const action = getCommunityPinAction(post)
+    if (!action || !await confirmCommunityPinAction(action, '当前帖子所属')) return
+    setPinningPost(true)
+    try {
+      const updated = await lifeServicesRepository.updateCampusCirclePostPin(post.id, {
+        expectedVersion: post.version,
+        pinned: action === 'pin',
+      })
+      setPost(updated)
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: `${communityPinActionLabel(action)}成功`, icon: 'success' })
+    } catch (actionError) {
+      if (isApiError(actionError) && (actionError.statusCode === 403 || actionError.statusCode === 409)) {
+        await load(post.id, focusedCommentId)
+      }
+      Taro.showToast({
+        title: isApiError(actionError)
+          ? actionError.statusCode === 409
+            ? '状态已变化，已刷新最新内容'
+            : actionError.message
+          : '操作失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setPinningPost(false)
+    }
+  }
+
+  const canOpenAdminWithdraw = Boolean(
+    post
+    && post.available_actions.includes(ADMIN_WITHDRAW_ACTION),
+  )
+
+  const closeAdminWithdraw = () => {
+    if (deletingPost || pinningPost) return
+    setAdminWithdrawVisible(false)
+    setAdminWithdrawReason('')
+  }
+
+  const openAdminWithdraw = () => {
+    if (!canOpenAdminWithdraw || deletingPost || pinningPost) return
+    setAdminWithdrawReason('')
+    setAdminWithdrawVisible(true)
+  }
+
+  const adminWithdrawPost = async () => {
+    if (!post || deletingPost || pinningPost) return
+    const reason = adminWithdrawReason.trim()
+    if (!reason) {
+      Taro.showToast({ title: '请填写撤销原因', icon: 'none' })
+      return
+    }
+    if (reason.length > 500) {
+      Taro.showToast({ title: '撤销原因不能超过 500 字', icon: 'none' })
+      return
+    }
+
+    setDeletingPost(true)
+    try {
+      await lifeServicesRepository.adminWithdrawCampusCirclePost(post.id, {
+        expected_version: post.version,
+        reason,
+      })
+      setAdminWithdrawVisible(false)
+      setAdminWithdrawReason('')
+      markLifeHubSectionDirty('community')
+      Taro.showToast({ title: '帖子已撤销', icon: 'success' })
+      void Taro.switchTab({ url: '/pages/community/index' })
+    } catch (actionError) {
+      if (isApiError(actionError) && actionError.statusCode === 403) {
+        Taro.showToast({ title: '权限不足，无法撤销帖子', icon: 'none' })
+        return
+      }
+      if (isApiError(actionError) && actionError.statusCode === 409) {
+        await load(post.id)
+        Taro.showToast({ title: '帖子状态已变化，已刷新最新详情', icon: 'none' })
+        return
+      }
+      Taro.showToast({
+        title: isApiError(actionError) ? actionError.message : '撤销失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      setDeletingPost(false)
+    }
+  }
+
   const canReportPost = Boolean(
     post
     && post.viewer_relation !== 'owner'
@@ -211,10 +314,14 @@ export default function CommunityDetailPage() {
   const permissionActions = post ? buildDetailFooterActions({
     availableActions: post.available_actions,
     labels: actionLabels,
-    priority: ['edit', 'withdraw'],
+    priority: ['pin', 'unpin', 'edit', 'withdraw'],
     dangerActions: ['withdraw'],
-    busy: deletingPost,
-    onAction: (action) => action === 'edit' ? editPost() : void deletePost(),
+    busy: deletingPost || pinningPost,
+    onAction: (action) => {
+      if (action === 'edit') editPost()
+      else if (action === 'withdraw') void deletePost()
+      else void runPinAction()
+    },
   }) : []
 
   const postMenuItems = [
@@ -223,10 +330,11 @@ export default function CommunityDetailPage() {
       run: action.onClick,
     })),
     ...(canReportPost ? [{ label: '举报', run: reportPost }] : []),
+    ...(canOpenAdminWithdraw ? [{ label: '撤销帖子', run: openAdminWithdraw }] : []),
   ]
 
   const openPostMenu = async () => {
-    if (postMenuItems.length === 0 || deletingPost) return
+    if (postMenuItems.length === 0 || deletingPost || pinningPost) return
     const tapIndex = await showActionSheetSelection(postMenuItems.map((item) => item.label))
     const selected = tapIndex === null ? null : postMenuItems[tapIndex]
     if (selected) selected.run()
@@ -235,6 +343,13 @@ export default function CommunityDetailPage() {
   const scrollToComments = () => {
     void Taro.pageScrollTo({ selector: '.business-detail-comments', duration: 180 })
   }
+
+  const openTopic = (topicId: number) => {
+    const url = communityTopicUrl(topicId)
+    if (url) void Taro.navigateTo({ url })
+  }
+
+  const topicLinks = post ? communityPostTopics(post) : []
 
   return (
     <View className='community-detail'>
@@ -291,18 +406,23 @@ export default function CommunityDetailPage() {
                 )}
               />
 
-              {post.topic?.name && (
-                <View className='community-detail__topic'>
-                  <Text selectable>#{post.topic.name}</Text>
-                </View>
-              )}
-
-              {post.content && (
+              {(post.content || topicLinks.length > 0) && (
                 <MentionContent
-                  content={post.content}
+                  content={post.content || ''}
                   segments={post.content_segments}
                   className='community-detail__body community-detail-card__body'
                   stickerClassName='community-detail__body-sticker'
+                  trailing={topicLinks.map((topic) => (
+                    <View
+                      key={topic.id}
+                      className='community-detail__topic'
+                      ariaRole='button'
+                      ariaLabel={`查看话题：${topic.name}`}
+                      onClick={() => openTopic(topic.id)}
+                    >
+                      <Text selectable>#{topic.name}</Text>
+                    </View>
+                  ))}
                 />
               )}
 
@@ -378,6 +498,50 @@ export default function CommunityDetailPage() {
                 markLifeHubSectionDirty('community')
               }}
             />
+
+            {adminWithdrawVisible && (
+              <View className='community-detail__admin-withdraw-mask' onClick={closeAdminWithdraw}>
+                <View
+                  className='community-detail__admin-withdraw-sheet'
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <Text className='community-detail__admin-withdraw-title'>撤销帖子</Text>
+                  <Text className='community-detail__admin-withdraw-description'>
+                    撤销后帖子和评论将不再公开展示，且无法恢复。请填写撤销原因。
+                  </Text>
+                  <View className='community-detail__admin-withdraw-field'>
+                    <KeyboardSafeTextarea
+                      id='community-admin-withdraw-reason'
+                      className='community-detail__admin-withdraw-textarea'
+                      value={adminWithdrawReason}
+                      maxlength={500}
+                      autoHeight={false}
+                      cursorSpacing={24}
+                      placeholder='填写撤销原因（必填）'
+                      disabled={deletingPost}
+                      onInput={(event) => setAdminWithdrawReason(event.detail.value)}
+                    />
+                    <Text>{adminWithdrawReason.length}/500</Text>
+                  </View>
+                  <View className='community-detail__admin-withdraw-actions'>
+                    <View
+                      className='community-detail__admin-withdraw-cancel'
+                      ariaRole='button'
+                      ariaLabel='取消撤销帖子'
+                      onClick={closeAdminWithdraw}
+                    >取消</View>
+                    <View
+                      className={adminWithdrawReason.trim() && !deletingPost
+                        ? 'community-detail__admin-withdraw-confirm'
+                        : 'community-detail__admin-withdraw-confirm community-detail__admin-withdraw-confirm--disabled'}
+                      ariaRole='button'
+                      ariaLabel='确认撤销帖子'
+                      onClick={() => void adminWithdrawPost()}
+                    >{deletingPost ? '正在撤销' : '确认撤销'}</View>
+                  </View>
+                </View>
+              </View>
+            )}
           </>
         )}
       </View>
