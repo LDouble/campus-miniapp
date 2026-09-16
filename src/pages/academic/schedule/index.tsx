@@ -29,7 +29,6 @@ import {
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
-import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import { loadAcademicCalendar } from '../../../features/calendar/repository'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
@@ -48,6 +47,7 @@ import {
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
 } from '../schedule-courses'
+import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
 import { academicStorage } from '../storage'
 import {
   AcademicPeriod,
@@ -377,7 +377,7 @@ export default function SchedulePage() {
   )
   const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
   const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
-  const [personalCourses, setPersonalCourses] = useState<Course[]>([])
+  const [personalCourses, setPersonalCourses] = useState<Course[]>(() => academicStorage.getPersonalCourses(academicUserId, educationLevel, preferences.schedulePeriodId))
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
   const [selectedScheduleCourses, setSelectedScheduleCourses] = useState<Course[]>(() => (
     academicStorage.getCourseSelectionScheduleCourses(academicUserId)
@@ -475,14 +475,17 @@ export default function SchedulePage() {
     }
     const requestId = personalTimetableRequestRef.current + 1
     personalTimetableRequestRef.current = requestId
+    setPersonalCourses(academicStorage.getPersonalCourses(academicUserId, educationLevel, nextPeriodId))
     try {
       const result = await listPersonalTimetableItems(educationLevel, nextPeriodId)
       if (personalTimetableRequestRef.current !== requestId) return
-      setPersonalCourses(result.items.flatMap(mapPersonalTimetableItemCourses))
+      const courses = result.items.flatMap(mapPersonalTimetableItemCourses)
+      academicStorage.setPersonalCourses(academicUserId, educationLevel, nextPeriodId, courses)
+      setPersonalCourses(courses)
     } catch {
-      if (personalTimetableRequestRef.current === requestId) setPersonalCourses([])
+      // 请求失败保留当前用户、学历和学期的本地蹭课缓存。
     }
-  }, [educationLevel, preferences.schedulePeriodId])
+  }, [academicUserId, educationLevel, preferences.schedulePeriodId])
 
   useEffect(() => {
     let active = true
@@ -683,7 +686,7 @@ export default function SchedulePage() {
   }, [academicUserId, initialized, isSimulation, periods, preferences.schedulePeriodId])
 
   useEffect(() => {
-    if (!initialized || isSimulation) return
+    if (isSimulation) return
     void loadPersonalCourses()
   }, [initialized, isSimulation, loadPersonalCourses])
 
@@ -1103,7 +1106,12 @@ export default function SchedulePage() {
           return
         }
         await removePersonalTimetableItem(course.auditItemId, course.auditItemVersion)
-        setPersonalCourses((current) => current.filter((item) => item.auditItemId !== course.auditItemId))
+        personalTimetableRequestRef.current += 1
+        setPersonalCourses((current) => {
+          const next = current.filter((item) => item.auditItemId !== course.auditItemId)
+          academicStorage.setPersonalCourses(academicUserId, educationLevel, course.periodId, next)
+          return next
+        })
       } else {
         setCustomCourses((current) => current.filter((item) => item.id !== course.id))
       }
@@ -1804,18 +1812,24 @@ export default function SchedulePage() {
             <Text>下拉更新课表</Text>
           </View>
         )}
-        {loading ? (
+        {loading && !allCourses.length ? (
           <View className='academic-state'>
             <View className='academic-state__loader' />
             <Text>正在整理课程表…</Text>
           </View>
         ) : (
-          isAcademicBindingRequiredError(loadError)
-          || (loadError && !usingCache)
+          (isAcademicBindingRequiredError(loadError) || (loadError && !usingCache))
+          && !allCourses.length
         ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />
         ) : (
           <>
+            {Boolean(loadError) && (
+              <View className='schedule-note' ariaRole='status' onClick={refreshSchedule}>
+                <Text className='schedule-note__label'>课表查询失败</Text>
+                <Text className='schedule-note__copy'>已保留可用课程和蹭课数据，点击重试。</Text>
+              </View>
+            )}
             {isSimulation && (
               <View className='schedule-note' ariaRole='status'>
                 <Text className='schedule-note__label'>模拟选课</Text>
@@ -1826,7 +1840,7 @@ export default function SchedulePage() {
               cache={serverCache}
               updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}
               localUpdatedAt={usingCache ? cacheUpdatedAt : 0}
-              localFallback={Boolean(loadError)}
+              localFallback={usingCache && Boolean(loadError)}
             />
             {scheduleNote.trim() && (
               <ScheduleNoteMarquee content={scheduleNote} />

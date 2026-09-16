@@ -508,3 +508,23 @@ assert.match(
 )
 
 process.stdout.write('academic schedule isolation smoke: ok\n')
+
+// 模拟小程序持久化存储，验证离线蹭课不会跨账号、学历、学期串用。
+const localValues = new Map<string, unknown>()
+const taroPath = require.resolve('@tarojs/taro')
+const previousTaro = require.cache[taroPath]
+require.cache[taroPath] = { exports: { default: {
+  getStorageSync: (key: string) => localValues.get(key),
+  setStorageSync: (key: string, value: unknown) => localValues.set(key, value),
+} } } as NodeModule
+const { academicStorage } = require('../src/pages/academic/storage')
+const auditCourse = { ...course('audit-1', 'A'), source: 'audit' }
+academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [auditCourse])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [auditCourse])
+assert.deepEqual(academicStorage.getPersonalCourses(2, 'undergraduate', 'A'), [])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'graduate', 'A'), [])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'B'), [])
+academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [])
+assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [], '移除后不恢复旧缓存')
+if (previousTaro) require.cache[taroPath] = previousTaro
+else delete require.cache[taroPath]

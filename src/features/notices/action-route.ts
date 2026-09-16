@@ -1,9 +1,11 @@
+import { normalizeLegacySocialPath } from '../legacy-social-routes'
+
 const commentIdFromAction = (path: string) => {
   const match = path.match(/[?&]comment_id=(\d+)/)
   return match ? Number(match[1]) : 0
 }
 
-const directMessageActionPattern = /^\/pages\/direct-messages\/chat\?id=([1-9]\d*)$/
+const directMessageActionPattern = /^\/(?:pages|packages\/social)\/direct-messages\/chat\?id=([1-9]\d*)$/
 
 export const isPrivateMessageNoticeAction = (path: string) => directMessageActionPattern.test(path)
 
@@ -12,8 +14,9 @@ export const noticeActionRoute = (
   options: { allowPrivateMessages?: boolean } = {},
 ) => {
   if (!path) return ''
+  path = normalizeLegacySocialPath(path)
   if (isPrivateMessageNoticeAction(path)) {
-    return options.allowPrivateMessages === false ? '' : path
+    return options.allowPrivateMessages === false ? '' : path.replace('/packages/social/', '/pages/')
   }
   if (path.startsWith('/pages/direct-messages/chat')) return ''
   if (path.startsWith('/pages/')) return path

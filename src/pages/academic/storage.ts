@@ -322,6 +322,16 @@ export const academicStorage = {
       // 说明状态不是关键数据，保存失败时无需打扰用户。
     }
   },
+  getPersonalCourses: (userId: number, level: string, periodId: string): Course[] => {
+    const value = safeRead<unknown>(`academic.personalCourses.v1.${userId}.${level}.${periodId}`, [])
+    return Array.isArray(value) ? value.filter((course): course is Course => (
+      Boolean(course) && course.source === 'audit'
+      && validCourse({ ...course, source: 'official' }) && course.periodId === periodId
+    )) : []
+  },
+  setPersonalCourses: (userId: number, level: string, periodId: string, courses: Course[]) => {
+    safeWrite(`academic.personalCourses.v1.${userId}.${level}.${periodId}`, courses)
+  },
   getCustomCourses: () => safeRead<Course[]>(CUSTOM_COURSES_KEY, []),
   setCustomCourses: (courses: Course[]) => safeWrite(CUSTOM_COURSES_KEY, courses),
   getPreferences: (fallback: AcademicPreferences) => (
