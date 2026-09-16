@@ -8421,6 +8421,8 @@ export interface components {
             current_snapshot_id: number | null;
             enabled: boolean;
             failure_reason?: string | null;
+            /** Format: int64 */
+            last_duration_ms?: number | null;
             /** Format: date-time */
             last_failure_at?: string | null;
             /** Format: date-time */
