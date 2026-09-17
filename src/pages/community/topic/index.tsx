@@ -1,16 +1,28 @@
-import { useCallback, useRef, useState } from 'react'
-import Taro, { useLoad, usePullDownRefresh } from '@tarojs/taro'
-import { Text, View } from '@tarojs/components'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import Taro, { useDidHide, useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
+import { Switch, Text, View } from '@tarojs/components'
 import { useViewPageVisible } from '../../../features/community/use-view-page-visible'
-import type { CampusCirclePostView, CampusCircleTopicView } from '../../../api/types'
+import type {
+  CampusCircleClassParticipation,
+  CampusCirclePostView,
+  CampusCircleTopicView,
+} from '../../../api/types'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
 import {
   communityTopicPublisherUrl,
   parsePositiveId,
 } from '../../../features/community/topic'
+import {
+  isClassDiscussionTopic,
+  visibleClassDiscussionAnnouncement,
+} from '../../../features/class-discussion/context'
+import { classDiscussionTopicPublisherUrl } from '../../../features/class-discussion/topic'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
-import { markLifeHubSectionDirty } from '../../../features/life-services/refresh-policy'
+import {
+  getLifeHubRefreshRevision,
+  markLifeHubSectionDirty,
+} from '../../../features/life-services/refresh-policy'
 import CommunityCommentSheet from '../../../features/community/comment-sheet'
 import CommunityPostCard, { type CommunityPostCommentPreview } from '../../../features/community/post-card'
 import { mergePublicCommentPreview } from '../../../features/community/comments'
@@ -19,8 +31,24 @@ import { useDismissCommunityOverlaysOnScroll } from '../../../features/community
 import { useCampusShare } from '../../../features/share'
 import './index.scss'
 import { openPublicProfile } from '../../../features/profile/public-profile'
+import { apiDateTimeCampusParts } from '../../../utils/date-time'
+import { requestWechatSubscriptionForModule, requestWechatSubscriptionForModuleWithResult } from '../../../features/wechat-subscription'
 
 const TOPIC_POSTS_PAGE_SIZE = 20
+const ANNOUNCEMENT_COLLAPSE_LIMIT = 180
+
+type ClassDiscussionParticipationState = CampusCircleClassParticipation & { topicId: number }
+
+const isUnavailableTopicError = (error: unknown) => (
+  isApiError(error) && (error.statusCode === 403 || error.statusCode === 404)
+)
+
+const formatAnnouncementTime = (value?: string | null) => {
+  const parts = value ? apiDateTimeCampusParts(value) : null
+  return parts
+    ? `${parts.year}年${parts.month}月${parts.day}日 ${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`
+    : '刚刚发布'
+}
 
 const mergeUniquePosts = (
   current: CampusCirclePostView[],
@@ -49,7 +77,103 @@ export default function CommunityTopicPage() {
   const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+  const [announcementExpanded, setAnnouncementExpanded] = useState(false)
+  const [classParticipation, setClassParticipation] = useState<ClassDiscussionParticipationState | null>(null)
+  const [classParticipationError, setClassParticipationError] = useState('')
+  const [classNotificationUpdating, setClassNotificationUpdating] = useState(false)
+  const [classParticipationRetryVersion, setClassParticipationRetryVersion] = useState(0)
+  const [classWechatRegistrationRetry, setClassWechatRegistrationRetry] = useState<(() => Promise<boolean>) | null>(null)
+  const [classWechatRegistrationRetrying, setClassWechatRegistrationRetrying] = useState(false)
   const requestSequence = useRef(0)
+  const topicRequestSequence = useRef(0)
+  const topicIdRef = useRef(0)
+  const hasShown = useRef(false)
+  const loadedRefreshRevision = useRef(-1)
+  const classParticipationRef = useRef<ClassDiscussionParticipationState | null>(null)
+  const classParticipationInFlightTopicIdRef = useRef(0)
+  const classParticipationPendingTopicIdRef = useRef(0)
+  const classParticipationRequestSequence = useRef(0)
+  const classNotificationRequestSequence = useRef(0)
+  const classNotificationUpdatingRef = useRef(false)
+  const classWechatRegistrationRetryingRef = useRef(false)
+  const activeClassDiscussionTopicIdRef = useRef(0)
+
+  const applyClassParticipation = useCallback((next: ClassDiscussionParticipationState | null) => {
+    classParticipationRef.current = next
+    setClassParticipation(next)
+  }, [])
+
+  const recordClassParticipation = useCallback(async (nextTopic: CampusCircleTopicView) => {
+    if (!isClassDiscussionTopic(nextTopic) || nextTopic.status !== 'active') return
+    const id = nextTopic.id
+    if (classNotificationUpdatingRef.current) return
+    if (classParticipationInFlightTopicIdRef.current === id) {
+      classParticipationPendingTopicIdRef.current = id
+      return
+    }
+
+    const requestId = ++classParticipationRequestSequence.current
+    const notificationRequestSequenceAtStart = classNotificationRequestSequence.current
+    classParticipationInFlightTopicIdRef.current = id
+    try {
+      const result = await lifeServicesRepository.recordCampusCircleClassParticipation(id)
+      if (
+        requestId !== classParticipationRequestSequence.current
+        || activeClassDiscussionTopicIdRef.current !== id
+      ) return
+      const current = classParticipationRef.current
+      const notificationChangedWhileRecording = (
+        notificationRequestSequenceAtStart !== classNotificationRequestSequence.current
+      )
+      applyClassParticipation({
+        ...result,
+        topicId: id,
+        // 提醒设置比人数刷新更新，不能由较早的参与登记响应覆盖。
+        notifications_enabled: notificationChangedWhileRecording && current?.topicId === id
+          ? current.notifications_enabled
+          : result.notifications_enabled,
+      })
+      setClassParticipationError('')
+    } catch {
+      if (
+        requestId === classParticipationRequestSequence.current
+        && activeClassDiscussionTopicIdRef.current === id
+      ) {
+        setClassParticipationError('参与状态暂未同步，下拉刷新后重试')
+      }
+    } finally {
+      if (classParticipationInFlightTopicIdRef.current === id) {
+        classParticipationInFlightTopicIdRef.current = 0
+      }
+      if (
+        classParticipationPendingTopicIdRef.current === id
+        && activeClassDiscussionTopicIdRef.current === id
+        && !classNotificationUpdatingRef.current
+      ) {
+        classParticipationPendingTopicIdRef.current = 0
+        setClassParticipationRetryVersion((version) => version + 1)
+      }
+    }
+  }, [applyClassParticipation])
+
+  useEffect(() => {
+    if (!topic || !isClassDiscussionTopic(topic) || topic.status !== 'active') {
+      activeClassDiscussionTopicIdRef.current = 0
+      classParticipationRequestSequence.current += 1
+      classParticipationPendingTopicIdRef.current = 0
+      applyClassParticipation(null)
+      setClassParticipationError('')
+      return
+    }
+    activeClassDiscussionTopicIdRef.current = topic.id
+    void recordClassParticipation(topic)
+    return () => {
+      if (activeClassDiscussionTopicIdRef.current === topic.id) {
+        activeClassDiscussionTopicIdRef.current = 0
+        classParticipationRequestSequence.current += 1
+      }
+    }
+  }, [applyClassParticipation, classParticipationRetryVersion, recordClassParticipation, topic])
 
   const load = useCallback(async (id: number, nextPage = 1, append = false) => {
     if (!Number.isInteger(id) || id < 1) {
@@ -61,6 +185,10 @@ export default function CommunityTopicPage() {
     }
 
     const requestId = ++requestSequence.current
+    const topicRequestId = append
+      ? topicRequestSequence.current
+      : ++topicRequestSequence.current
+    const refreshRevisionAtStart = getLifeHubRefreshRevision('community')
     if (append) setLoadingMore(true)
     else {
       setLoading(true)
@@ -90,10 +218,13 @@ export default function CommunityTopicPage() {
         }),
       ])
       if (requestId !== requestSequence.current) return
-      setTopic(topicResult)
+      if (topicRequestId === topicRequestSequence.current) setTopic(topicResult)
       setPosts(mergeUniquePosts([], postsResult.items))
       setPage(postsResult.page)
       setTotal(Number(postsResult.total))
+      if (refreshRevisionAtStart === getLifeHubRefreshRevision('community')) {
+        loadedRefreshRevision.current = refreshRevisionAtStart
+      }
     } catch (loadError) {
       if (requestId !== requestSequence.current) return
       const message = isApiError(loadError) ? loadError.message : '话题加载失败'
@@ -111,10 +242,45 @@ export default function CommunityTopicPage() {
     }
   }, [])
 
+  const refreshTopic = useCallback(async (id: number) => {
+    if (!Number.isInteger(id) || id < 1) return
+    const requestId = ++topicRequestSequence.current
+    try {
+      const nextTopic = await lifeServicesRepository.getCampusCircleTopic(id)
+      if (requestId === topicRequestSequence.current) setTopic(nextTopic)
+    } catch (refreshError) {
+      if (requestId !== topicRequestSequence.current) return
+      if (isUnavailableTopicError(refreshError)) {
+        setTopic(null)
+        setPosts([])
+        setTotal(0)
+        setPage(1)
+        setError('课堂讨论已不可用')
+      }
+      // 网络失败时保留已展示的话题信息；下拉刷新仍会完整反馈失败状态。
+    }
+  }, [])
+
   useLoad((options) => {
     const id = parsePositiveId(options.id)
+    topicIdRef.current = id
     setTopicId(id)
     void load(id)
+  })
+  useDidHide(() => {
+    activeClassDiscussionTopicIdRef.current = 0
+    classParticipationRequestSequence.current += 1
+  })
+  useDidShow(() => {
+    // 初次进入已由 useLoad 拉取。后台公告不改变本地版本号，因此每次返回都刷新话题元数据。
+    if (!hasShown.current) {
+      hasShown.current = true
+      return
+    }
+    const id = topicIdRef.current
+    if (id < 1) return
+    if (loadedRefreshRevision.current !== getLifeHubRefreshRevision('community')) void load(id)
+    else void refreshTopic(id)
   })
   usePullDownRefresh(useCallback(() => {
     void load(topicId)
@@ -138,7 +304,9 @@ export default function CommunityTopicPage() {
       return shareImage ? { ...result, imageUrl: shareImage } : result
     }
     return {
-      title: topic ? `#${topic.name}｜OUSea话题` : 'OUSea话题',
+      title: isClassDiscussionTopic(topic)
+        ? `${topic?.name || '课堂讨论'}｜课堂讨论`
+        : topic ? `#${topic.name}｜OUSea话题` : 'OUSea话题',
       path: topicId ? '/pages/community/topic/index' : '/pages/community/index',
       query: topicId ? { id: topicId } : undefined,
       imageUrl: topic?.cover_url || undefined,
@@ -152,11 +320,22 @@ export default function CommunityTopicPage() {
     setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
     markLifeHubSectionDirty('community')
   }, [])
+  const requestClassInteractionSubscription = useCallback(() => {
+    const participation = classParticipationRef.current
+    if (
+      !participation?.notifications_enabled
+      || participation.topicId !== activeClassDiscussionTopicIdRef.current
+      || classNotificationUpdatingRef.current
+    ) return
+    // Keep the request inside the click gesture; navigation does not depend on consent.
+    requestWechatSubscriptionForModule('community')
+  }, [])
   const openPost = useCallback((post: CampusCirclePostView) => {
+    requestClassInteractionSubscription()
     setOpenActionPostId(null)
     saveCommunityDetailSnapshot(post)
     return Taro.navigateTo({ url: `/pages/community/detail?id=${post.id}&mode=post&snapshot=1` })
-  }, [])
+  }, [requestClassInteractionSubscription])
   const openComments = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
     setCommentSubmitting(false)
@@ -206,8 +385,61 @@ export default function CommunityTopicPage() {
   }, [])
   const openPublisher = useCallback(() => {
     if (!topic) return
-    return Taro.navigateTo({ url: communityTopicPublisherUrl(topic.id) })
-  }, [topic])
+    requestClassInteractionSubscription()
+    const url = isClassDiscussionTopic(topic)
+      ? classDiscussionTopicPublisherUrl(topic.id)
+      : communityTopicPublisherUrl(topic.id)
+    return Taro.navigateTo({ url })
+  }, [requestClassInteractionSubscription, topic])
+  const updateClassNotifications = useCallback(async (notificationsEnabled: boolean) => {
+    const current = classParticipationRef.current
+    if (!current || classNotificationUpdatingRef.current) return
+
+    const requestId = ++classNotificationRequestSequence.current
+    classNotificationUpdatingRef.current = true
+    setClassNotificationUpdating(true)
+    const previous = current
+    const optimistic = { ...current, notifications_enabled: notificationsEnabled }
+    applyClassParticipation(optimistic)
+    try {
+      const result = await lifeServicesRepository.updateCampusCircleClassNotifications(
+        current.topicId,
+        { notifications_enabled: notificationsEnabled },
+      )
+      if (
+        requestId === classNotificationRequestSequence.current
+        && activeClassDiscussionTopicIdRef.current === current.topicId
+        && classParticipationRef.current?.topicId === current.topicId
+      ) {
+        applyClassParticipation({ ...result, topicId: current.topicId })
+        if (!result.notifications_enabled) setClassWechatRegistrationRetry(null)
+        setClassParticipationError('')
+        Taro.showToast({
+          title: result.notifications_enabled ? '已开启新帖子和公告提醒' : '已关闭新帖子和公告提醒',
+          icon: 'none',
+        })
+      }
+    } catch (updateError) {
+      if (
+        requestId === classNotificationRequestSequence.current
+        && activeClassDiscussionTopicIdRef.current === current.topicId
+        && classParticipationRef.current?.topicId === current.topicId
+      ) {
+        applyClassParticipation(previous)
+        Taro.showToast({
+          title: isApiError(updateError) ? updateError.message : '提醒设置失败，请稍后重试',
+          icon: 'none',
+        })
+      }
+    } finally {
+      if (requestId === classNotificationRequestSequence.current) {
+        classNotificationUpdatingRef.current = false
+        if (activeClassDiscussionTopicIdRef.current === current.topicId) {
+          setClassNotificationUpdating(false)
+        }
+      }
+    }
+  }, [applyClassParticipation])
   const openPostAuthor = useCallback((post: CampusCirclePostView) => {
     void openPublicProfile(post.author_id)
   }, [])
@@ -219,18 +451,161 @@ export default function CommunityTopicPage() {
     void load(topicId, page + 1, true)
   }, [load, loading, loadingMore, page, posts.length, topicId, total])
 
-  const participateLabel = topic?.kind === 'campaign' ? '参与活动' : '参与讨论'
+  const classDiscussion = isClassDiscussionTopic(topic)
+  const activeClassParticipation = classParticipation?.topicId === topic?.id
+    ? classParticipation
+    : null
+  const requestClassWechatSubscription = useCallback((event: { stopPropagation: () => void }) => {
+    event.stopPropagation()
+    if (!activeClassParticipation?.notifications_enabled) return
 
-  return <View className='community-topic-page'>
+    // 订阅面板必须在用户点击的同步调用链中打开，不能先 await 配置或网络请求。
+    const subscription = requestWechatSubscriptionForModuleWithResult('community')
+    void subscription.then((result) => {
+      if (result.accepted && result.registered) {
+        setClassWechatRegistrationRetry(null)
+        Taro.showToast({ title: '已订阅微信提醒', icon: 'success' })
+        return
+      }
+      if (result.accepted && result.retryRegistration) {
+        setClassWechatRegistrationRetry(() => result.retryRegistration!)
+        Taro.showToast({ title: '微信授权已完成，请重新登记微信提醒', icon: 'none' })
+        return
+      }
+      if (result.needsSettings) {
+        Taro.showToast({ title: '请在微信设置中开启订阅消息', icon: 'none' })
+        return
+      }
+      Taro.showToast({
+        title: result.requested ? '未订阅微信提醒，站内提醒不受影响' : '当前没有可用的微信提醒模板',
+        icon: 'none',
+      })
+    })
+  }, [activeClassParticipation?.notifications_enabled])
+  const retryClassWechatRegistration = useCallback((event: { stopPropagation: () => void }) => {
+    event.stopPropagation()
+    if (
+      !activeClassParticipation?.notifications_enabled
+      || !classWechatRegistrationRetry
+      || classWechatRegistrationRetryingRef.current
+    ) return
+    classWechatRegistrationRetryingRef.current = true
+    setClassWechatRegistrationRetrying(true)
+    void classWechatRegistrationRetry().then((registered) => {
+      if (registered) {
+        setClassWechatRegistrationRetry(null)
+        Taro.showToast({ title: '已订阅微信提醒', icon: 'success' })
+      } else {
+        Taro.showToast({ title: '微信提醒登记失败，请重试', icon: 'none' })
+      }
+    }).finally(() => {
+      classWechatRegistrationRetryingRef.current = false
+      setClassWechatRegistrationRetrying(false)
+    })
+  }, [activeClassParticipation?.notifications_enabled, classWechatRegistrationRetry])
+  const announcement = visibleClassDiscussionAnnouncement(topic)
+  const announcementKey = announcement
+    ? `${announcement.title}:${announcement.published_at || ''}:${announcement.content}`
+    : ''
+  const announcementLong = announcement ? announcement.content.length > ANNOUNCEMENT_COLLAPSE_LIMIT : false
+  useEffect(() => {
+    setAnnouncementExpanded(false)
+  }, [announcementKey])
+  const participateLabel = classDiscussion
+    ? '发布课堂讨论'
+    : topic?.kind === 'campaign' ? '参与活动' : '参与讨论'
+
+  return <View
+    className='community-topic-page'
+    onClick={(event) => {
+      if (classDiscussion) event.stopPropagation()
+    }}
+  >
     <CustomNavbar
-      title={topic ? `#${topic.name}` : '话题'}
-      subtitle={topic?.description || '校园话题'}
+      title={classDiscussion ? '课堂讨论' : topic ? `#${topic.name}` : '话题'}
+      subtitle={classDiscussion
+        ? '按选课号和学年学期关联，所有同学都可参与讨论'
+        : topic?.description || '校园话题'}
       showBack
     />
     <View className='community-topic-page__content'>
+      {!loading && !error && topic && classDiscussion && (
+        <View
+          className='community-topic-class-context'
+          onClick={(event) => event.stopPropagation()}
+        >
+          <Text className='community-topic-class-context__eyebrow'>课堂讨论</Text>
+          <Text className='community-topic-class-context__name'>{topic.name}</Text>
+          <Text className='community-topic-class-context__description'>
+            {topic.description || '按选课号和学年学期关联，所有同学都可参与讨论'}
+          </Text>
+          {activeClassParticipation && (
+            <View className='community-topic-class-context__participation'>
+              <Text>已有 {activeClassParticipation.participant_count} 人来过</Text>
+              <View className='community-topic-class-context__notification'>
+                <View>
+                  <Text>新帖子和公告提醒</Text>
+                  <Text>评论和回复仅通知对应同学</Text>
+                </View>
+                <Switch
+                  checked={activeClassParticipation.notifications_enabled}
+                  disabled={classNotificationUpdating}
+                  color='var(--ousea-ocean-500, #2B7AEF)'
+                  ariaLabel={activeClassParticipation.notifications_enabled
+                    ? '关闭新帖子和公告提醒'
+                    : '开启新帖子和公告提醒'}
+                  onChange={(event) => {
+                    event.stopPropagation()
+                    void updateClassNotifications(Boolean(event.detail.value))
+                  }}
+                />
+              </View>
+              {activeClassParticipation.notifications_enabled ? (
+                <View
+                  className='community-topic-class-context__wechat-subscription'
+                  ariaRole='button'
+                  ariaLabel={classWechatRegistrationRetry ? '重新登记课堂微信提醒' : '订阅课堂微信提醒'}
+                  onClick={classWechatRegistrationRetry
+                    ? retryClassWechatRegistration
+                    : requestClassWechatSubscription}
+                >{classWechatRegistrationRetrying
+                  ? '正在登记微信提醒…'
+                  : classWechatRegistrationRetry ? '重新登记微信提醒' : '订阅微信提醒'}</View>
+              ) : (
+                <Text className='community-topic-class-context__wechat-subscription-note'>
+                  开启群提醒后可订阅微信提醒
+                </Text>
+              )}
+            </View>
+          )}
+          {!activeClassParticipation && classParticipationError && (
+            <Text className='community-topic-class-context__error'>{classParticipationError}</Text>
+          )}
+        </View>
+      )}
+      {!loading && !error && announcement && (
+        <View className='community-topic-announcement' ariaLabel='课堂公告'>
+          <Text className='community-topic-announcement__eyebrow'>课堂公告</Text>
+          <Text className='community-topic-announcement__title'>{announcement.title}</Text>
+          <Text className='community-topic-announcement__time'>
+            {formatAnnouncementTime(announcement.published_at)}
+          </Text>
+          <Text className={`community-topic-announcement__content ${announcementLong && !announcementExpanded ? 'community-topic-announcement__content--collapsed' : ''}`}>
+            {announcement.content}
+          </Text>
+          {announcementLong && (
+            <View
+              className='community-topic-announcement__toggle'
+              ariaRole='button'
+              ariaLabel={announcementExpanded ? '收起课堂公告全文' : '展开课堂公告全文'}
+              onClick={() => setAnnouncementExpanded((current) => !current)}
+            >{announcementExpanded ? '收起' : '展开全文'}</View>
+          )}
+        </View>
+      )}
       {!loading && !error && topic && (
         <View className='community-topic-feed-heading'>
-          <Text className='community-topic-feed-heading__tab'>最新发表</Text>
+          <Text className='community-topic-feed-heading__tab'>{classDiscussion ? '课堂动态' : '最新发表'}</Text>
           <Text className='community-topic-feed-heading__count'>共 {topic.post_count} 条动态</Text>
         </View>
       )}
@@ -268,7 +643,7 @@ export default function CommunityTopicPage() {
       {!loading && !error && topic && posts.length === 0 && (
         <View className='community-topic-empty'>
           <Text>还没有人发布动态</Text>
-          <Text>带上这个话题，成为第一个参与讨论的人</Text>
+          <Text>{classDiscussion ? '发布第一条课堂讨论，和同学一起交流' : '带上这个话题，成为第一个参与讨论的人'}</Text>
         </View>
       )}
       {!loading && !error && posts.length < total && (

@@ -27,6 +27,8 @@ import {
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
+import { getClassDiscussionContext } from '../../../features/class-discussion/context'
+import { openClassDiscussion } from '../../../features/class-discussion/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { loadAcademicCalendar } from '../../../features/calendar/repository'
@@ -211,6 +213,8 @@ interface CourseDetailCardProps {
   onDelete?: () => void
   onWanted: () => void
   onFindMaterials: () => void
+  onOpenDiscussion: () => void
+  discussionOpening?: boolean
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
@@ -251,10 +255,13 @@ function CourseDetailCard({
   onDelete,
   onWanted,
   onFindMaterials,
+  onOpenDiscussion,
+  discussionOpening = false,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   const courseNote = course.note?.trim() || ''
   const classNum = course.classNum?.trim() || ''
+  const classDiscussionAvailable = !!getClassDiscussionContext(course)
   const selectionState = simulationMode ? getSimulationSelectionState(course) : null
   return (
     <View className={[
@@ -327,9 +334,18 @@ function CourseDetailCard({
             </View>
             <Text>去发现 ›</Text>
           </View>
-          {!isQualificationEdition && <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
-            <View onClick={onWanted}>求购课本</View>
-          </View>}
+          <View className={`course-resource-actions__secondary ${isQualificationEdition ? 'course-resource-actions__secondary--single' : 'course-resource-actions__secondary--two'}`}>
+            <View
+              className={!classDiscussionAvailable || discussionOpening ? 'course-resource-actions__action--disabled' : ''}
+              ariaRole='button'
+              ariaLabel={classDiscussionAvailable ? '进入课堂讨论' : '当前课程缺少选课号或学年学期，无法进入课堂讨论'}
+              onClick={() => {
+                if (discussionOpening) return
+                onOpenDiscussion()
+              }}
+            >{discussionOpening ? '正在打开讨论…' : classDiscussionAvailable ? '课堂讨论' : '暂无选课号'}</View>
+            {!isQualificationEdition && <View onClick={onWanted}>求购课本</View>}
+          </View>
         </View>
         {isRemovableCourse(course) && onDelete && (
           <View className='course-conflict-card__danger-action' onClick={onDelete}>
@@ -409,6 +425,7 @@ export default function SchedulePage() {
   const [courseDraft, setCourseDraft] = useState<CustomCourseDraft>(
     emptyDraft(preferences.schedulePeriodId),
   )
+  const [discussionOpening, setDiscussionOpening] = useState(false)
   const scheduleRequestRef = useRef(0)
   const simulationPeriodsRequestRef = useRef(0)
   const personalTimetableRequestRef = useRef(0)
@@ -1015,6 +1032,16 @@ export default function SchedulePage() {
     void openCourseMaterials(context)
   }
 
+  const openCourseDiscussion = async (course: Course) => {
+    if (discussionOpening) return
+    setDiscussionOpening(true)
+    try {
+      await openClassDiscussion(course, runtimeConfig)
+    } finally {
+      setDiscussionOpening(false)
+    }
+  }
+
   const openCourseForm = (course?: Course) => {
     setCourseDraft(course ? {
       id: course.id,
@@ -1589,6 +1616,8 @@ export default function SchedulePage() {
                   onEdit={() => openCourseForm(activeCourse)}
                   onWanted={() => openCourseTrade(activeCourse)}
                   onFindMaterials={() => openCourseMaterialPage(activeCourse)}
+                  onOpenDiscussion={() => void openCourseDiscussion(activeCourse)}
+                  discussionOpening={discussionOpening}
                 />
               </View>
             </View>

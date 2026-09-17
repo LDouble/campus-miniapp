@@ -468,6 +468,7 @@ export default function PublishPage() {
   const [topicKeyword, setTopicKeyword] = useState('')
   const [topicSearchLoading, setTopicSearchLoading] = useState(false)
   const [topicSearchError, setTopicSearchError] = useState(false)
+  const [classDiscussionTopicId, setClassDiscussionTopicId] = useState(0)
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
@@ -502,6 +503,7 @@ export default function PublishPage() {
   const selectedTopicCount = form.communityTopicIds.length + form.communityTopicNames.length
 
   const changeTopicPickerOpen = (open: boolean) => {
+    if (classDiscussionTopicId > 0) return
     if (open) {
       contentFocusRequestRef.current += 1
       setContentInputFocused(false)
@@ -518,6 +520,7 @@ export default function PublishPage() {
   }
 
   const toggleCommunityTopic = (topicId: number) => {
+    if (classDiscussionTopicId > 0) return
     if (!Number.isInteger(topicId) || topicId <= 0) return
     const selected = form.communityTopicIds.includes(topicId)
     if (!selected && selectedTopicCount >= 3) {
@@ -544,6 +547,7 @@ export default function PublishPage() {
   }
 
   const addCommunityTopicName = () => {
+    if (classDiscussionTopicId > 0) return
     const name = normalizeTopicName(topicKeyword)
     if (!isCreatableTopicName(name)) {
       Taro.showToast({ title: '话题仅支持中文、字母、数字或下划线', icon: 'none' })
@@ -569,6 +573,7 @@ export default function PublishPage() {
   }
 
   const removeCommunityTopicName = (name: string) => {
+    if (classDiscussionTopicId > 0) return
     setForm((current) => ({
       ...current,
       communityTopicNames: current.communityTopicNames.filter(
@@ -754,6 +759,11 @@ export default function PublishPage() {
     const initialId = Number(options.id || 0)
     const initialCommunitySectionId = Number(options.community_section_id || 0)
     const initialCommunityTopicId = Number(options.community_topic_id || 0)
+    const initialClassDiscussionTopicId = Number(options.class_discussion_topic_id || 0)
+    const lockedClassDiscussionTopicId = Number.isInteger(initialClassDiscussionTopicId)
+      && initialClassDiscussionTopicId > 0
+      ? initialClassDiscussionTopicId
+      : 0
     setSection(initialSection)
     setMode(initialMode)
     setResourceId(initialId)
@@ -762,6 +772,7 @@ export default function PublishPage() {
         ? initialCommunitySectionId
         : 0,
     )
+    setClassDiscussionTopicId(lockedClassDiscussionTopicId)
     if (initialMode !== 'create' && initialId > 0) {
       setRestoringCreateDefaults(false)
       void loadEdit(initialSection, initialId)
@@ -794,11 +805,16 @@ export default function PublishPage() {
               ? initialCommunitySectionId
               : nextForm.communitySectionId,
             communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
-              ? initialCommunityTopicId
+              ? lockedClassDiscussionTopicId || initialCommunityTopicId
               : nextForm.communityTopicId,
-            communityTopicIds: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
+            communityTopicIds: lockedClassDiscussionTopicId > 0
+              ? [lockedClassDiscussionTopicId]
+              : Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
               ? [initialCommunityTopicId]
               : nextForm.communityTopicIds,
+            communityTopicNames: lockedClassDiscussionTopicId > 0
+              ? []
+              : nextForm.communityTopicNames,
           }
           : nextForm)
       }).finally(() => setRestoringCreateDefaults(false))
@@ -873,7 +889,7 @@ export default function PublishPage() {
       return {
         id,
         key: `id:${id}`,
-        name: topic?.name || '已选话题',
+        name: topic?.name || (id === classDiscussionTopicId ? '课堂讨论' : '已选话题'),
         pending: false,
       }
     })
@@ -884,7 +900,17 @@ export default function PublishPage() {
       pending: true,
     }))
     return [...selectedIds, ...pendingNames]
-  }, [form.communityTopicIds, form.communityTopicNames, topics])
+  }, [classDiscussionTopicId, form.communityTopicIds, form.communityTopicNames, topics])
+
+  useEffect(() => {
+    if (!classDiscussionTopicId) return
+    setForm((current) => ({
+      ...current,
+      communityTopicId: classDiscussionTopicId,
+      communityTopicIds: [classDiscussionTopicId],
+      communityTopicNames: [],
+    }))
+  }, [classDiscussionTopicId])
 
   useEffect(() => {
     if (section !== 'community' || mode !== 'create' || !sectionsReady) return
@@ -1130,13 +1156,17 @@ export default function PublishPage() {
           media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
           image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
           mention_user_ids: form.mentionCandidates.map((candidate) => candidate.id),
-          topic_id: form.communityTopicId || undefined,
-          topic_ids: form.communityTopicIds.length > 0 ? form.communityTopicIds : undefined,
-          primary_topic_id: form.communityTopicId || undefined,
-          topic_names: normalizeTopicNames([
-            ...form.communityTopicNames,
-            ...extractCommunityTopicNames(form.content),
-          ]),
+          topic_id: classDiscussionTopicId || form.communityTopicId || undefined,
+          topic_ids: classDiscussionTopicId > 0
+            ? [classDiscussionTopicId]
+            : form.communityTopicIds.length > 0 ? form.communityTopicIds : undefined,
+          primary_topic_id: classDiscussionTopicId || form.communityTopicId || undefined,
+          topic_names: classDiscussionTopicId > 0
+            ? undefined
+            : normalizeTopicNames([
+              ...form.communityTopicNames,
+              ...extractCommunityTopicNames(form.content),
+            ]),
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createCampusCirclePost(input)).id
@@ -1416,23 +1446,28 @@ export default function PublishPage() {
                       {selectedTopicEntries.map((topic) => (
                         <View
                           key={topic.key}
-                          className='publisher-composer-topic'
-                          ariaRole='button'
-                          ariaLabel={`移除话题${topic.name}`}
+                          className={topic.id === classDiscussionTopicId
+                            ? 'publisher-composer-topic publisher-composer-topic--locked'
+                            : 'publisher-composer-topic'}
+                          ariaRole={topic.id === classDiscussionTopicId ? undefined : 'button'}
+                          ariaLabel={topic.id === classDiscussionTopicId
+                            ? `课堂讨论已关联：${topic.name}`
+                            : `移除话题${topic.name}`}
                           onClick={() => {
+                            if (topic.id === classDiscussionTopicId) return
                             if (topic.pending) removeCommunityTopicName(topic.name)
                             else toggleCommunityTopic(topic.id)
                           }}
                         >
                           <Text>#{topic.name}</Text>
-                          <Text>×</Text>
+                          <Text>{topic.id === classDiscussionTopicId ? '课堂讨论' : '×'}</Text>
                         </View>
                       ))}
                     </View>
                   )}
                   <View className='publisher-composer-toolbar'>
                     <View className='publisher-composer-toolbar__tools'>
-                      {section === 'community' && (
+                      {section === 'community' && classDiscussionTopicId === 0 && (
                         <View
                           id='publisher-topic-trigger'
                           className={topicPickerOpen

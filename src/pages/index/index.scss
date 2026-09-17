@@ -1198,6 +1198,28 @@ page { background: var(--campus-page, #f4f7fb); }
     min-width: 0;
   }
 
+  &__discussion {
+    flex: none;
+    min-width: 76rpx;
+    min-height: 56rpx;
+    padding: 0 12rpx;
+    margin-left: 12rpx;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 56rpx;
+    text-align: center;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    border: 1rpx solid var(--ousea-ocean-100, #e3effe);
+    border-radius: 16rpx;
+
+    &--disabled {
+      color: var(--campus-text-muted, #6b7a90);
+      background: var(--campus-surface-subtle, #f5f8fc);
+      border-color: var(--campus-border, #e8edf4);
+      opacity: .7;
+    }
+  }
+
   &__course-name {
     display: block;
     max-width: 100%;

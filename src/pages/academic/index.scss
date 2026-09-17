@@ -3792,6 +3792,12 @@ page {
     border-color: var(--campus-border, #e8edf4);
     border-radius: var(--ousea-radius-card-sm, 24rpx);
   }
+
+  & .course-resource-actions__action--disabled {
+    color: var(--campus-text-muted, #6b7a90);
+    background: var(--campus-surface-subtle, #f5f8fc);
+    opacity: .7;
+  }
 }
 
 /* 成绩、考试、选课结果共用的学期选择器：入口清晰，面板紧凑且不使用过度胶囊化。 */

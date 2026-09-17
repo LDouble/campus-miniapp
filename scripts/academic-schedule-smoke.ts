@@ -338,6 +338,16 @@ assert.deepEqual(
   '同步课表应保留同一选课号的全部真实时段，仅隐藏选课号相同的本地草稿',
 )
 assert.match(
+  academicRepositorySource,
+  /mapPersonalTimetableItemCourses[\s\S]*?const classNum = item\.opening_code\?\.trim\(\) \|\| undefined[\s\S]*?\.\.\.\(classNum \? \{ classNum \} : \{\}\)/u,
+  '蹭课课表必须使用 opening_code 与正式课程按同一选课号关联',
+)
+assert.doesNotMatch(
+  academicRepositorySource,
+  /mapPersonalTimetableItemCourses[\s\S]*?classNum:\s*item\.(?:class_name|offering_id)/u,
+  '缺失 opening_code 时不能回退为班级名称或开课实例 ID',
+)
+assert.match(
   academicStyleSource,
   /详情卡片使用统一中性承载面[\s\S]*?\.course-float-card\s*\{[\s\S]*?background:\s*var\(--campus-surface/u,
   '课程详情浮层应使用统一中性承载面',
@@ -517,7 +527,9 @@ require.cache[taroPath] = { exports: { default: {
   getStorageSync: (key: string) => localValues.get(key),
   setStorageSync: (key: string, value: unknown) => localValues.set(key, value),
 } } } as NodeModule
-const { academicStorage } = require('../src/pages/academic/storage')
+
+const { academicStorage, migrateLegacyPersonalCourses } = require('../src/pages/academic/storage')
+
 const auditCourse = { ...course('audit-1', 'A'), source: 'audit' }
 academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [auditCourse])
 assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [auditCourse])
@@ -526,5 +538,29 @@ assert.deepEqual(academicStorage.getPersonalCourses(1, 'graduate', 'A'), [])
 assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'B'), [])
 academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [])
 assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [], '移除后不恢复旧缓存')
+const legacyAuditCourse = {
+  ...course('legacy-audit-1', 'legacy-period'),
+  classNum: '旧班级名称',
+  source: 'audit' as const,
+}
+localValues.set('academic.personalCourses.v1.3.undergraduate.legacy-period', [legacyAuditCourse])
+const migratedLegacyCourses = academicStorage.getPersonalCourses(3, 'undergraduate', 'legacy-period')
+assert.equal(migratedLegacyCourses.length, 1, 'v1 蹭课缓存必须保留课程展示')
+assert.equal(migratedLegacyCourses[0].classNum, undefined, 'v1 蹭课缓存必须移除非选课号 classNum')
+assert.equal(
+  migrateLegacyPersonalCourses([legacyAuditCourse], 'legacy-period')[0].classNum,
+  undefined,
+  '旧缓存迁移不得把 class_name 或 offering_id 作为课堂讨论关联字段',
+)
+const v2AuditCourse = {
+  ...legacyAuditCourse,
+  classNum: 'XK-1001',
+}
+localValues.set('academic.personalCourses.v2.3.undergraduate.legacy-period', [v2AuditCourse])
+assert.deepEqual(
+  academicStorage.getPersonalCourses(3, 'undergraduate', 'legacy-period'),
+  [v2AuditCourse],
+  'v2 缓存应优先保留服务端 opening_code 映射得到的选课号',
+)
 if (previousTaro) require.cache[taroPath] = previousTaro
 else delete require.cache[taroPath]

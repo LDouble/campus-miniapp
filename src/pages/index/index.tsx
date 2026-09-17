@@ -45,6 +45,8 @@ import { useDismissCommunityOverlaysOnScroll } from '../../features/community/us
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
+import { getClassDiscussionContext } from '../../features/class-discussion/context'
+import { openClassDiscussion } from '../../features/class-discussion/navigation'
 import {
   avatarText,
   resolveCoursePreview,
@@ -481,6 +483,7 @@ function Index() {
   const [coursePreview, setCoursePreview] = useState(() => (
     loadCachedCoursePreview(runtimeConfig, campusName)
   ))
+  const [discussionOpeningCourseId, setDiscussionOpeningCourseId] = useState('')
   const [academicCalendarLabel, setAcademicCalendarLabel] = useState(
     loadCachedAcademicLabel,
   )
@@ -767,6 +770,16 @@ function Index() {
       '/pages/academic/schedule/index',
       { config: runtimeConfig },
     )
+  }
+
+  const openCourseDiscussion = async (course: Parameters<typeof openClassDiscussion>[0]) => {
+    if (discussionOpeningCourseId) return
+    setDiscussionOpeningCourseId(course.id)
+    try {
+      await openClassDiscussion(course, runtimeConfig)
+    } finally {
+      setDiscussionOpeningCourseId('')
+    }
   }
 
   const openCalendar = () => {
@@ -1060,6 +1073,27 @@ function Index() {
               <Image src={icons.location} mode='aspectFit' />
               <Text>{item.course.location || '地点待定'}</Text>
             </View>
+          </View>
+          <View
+            className={[
+              'schedule-card__discussion',
+              !getClassDiscussionContext(item.course) || discussionOpeningCourseId
+                ? 'schedule-card__discussion--disabled'
+                : '',
+            ].filter(Boolean).join(' ')}
+            ariaRole='button'
+            ariaLabel={getClassDiscussionContext(item.course)
+              ? `进入${item.course.name}课堂讨论`
+              : `${item.course.name}缺少选课号或学年学期，无法进入课堂讨论`}
+            onClick={(event) => {
+              event.stopPropagation()
+              if (discussionOpeningCourseId) return
+              void openCourseDiscussion(item.course)
+            }}
+          >
+            <Text>{discussionOpeningCourseId === item.course.id
+              ? '打开中'
+              : getClassDiscussionContext(item.course) ? '讨论' : '暂无选课号'}</Text>
           </View>
         </View>
       ))}

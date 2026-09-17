@@ -51,6 +51,7 @@
     "test:clubs": "ts-node --transpile-only scripts/clubs-smoke.ts",
     "test:official-notices": "ts-node --transpile-only scripts/official-notices-smoke.ts",
     "test:community-topic": "ts-node --transpile-only scripts/community-topic-smoke.ts",
+    "test:class-discussion": "ts-node --transpile-only scripts/class-discussion-smoke.ts",
     "test:community-section-pins": "ts-node --transpile-only scripts/community-section-pins-smoke.ts",
     "test:community-what-to-eat": "ts-node --transpile-only scripts/community-what-to-eat-smoke.ts",
     "test:cat-atlas": "ts-node --transpile-only scripts/cat-atlas-smoke.ts",
