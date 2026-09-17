@@ -1,4 +1,5 @@
 import type { MiniappModuleKey } from '../runtime-config'
+import { normalizeLegacySocialPath } from '../legacy-social-routes'
 
 export type CurrentMiniappPage = {
   route?: string
@@ -14,10 +15,14 @@ const lifeHubSectionModules: Record<string, MiniappModuleKey> = {
   carpool: 'carpool',
 }
 
+const normalizeSubscriptionRoute = (route: string) => normalizeLegacySocialPath(
+  `/${route.replace(/^\/+/, '')}`,
+).replace(/^\/+/, '')
+
 export const resolvePageSubscriptionModule = (
   page: CurrentMiniappPage,
 ): MiniappModuleKey | null => {
-  const route = page.route || ''
+  const route = normalizeSubscriptionRoute(page.route || '')
   if (route === 'pages/community/index') {
     return lifeHubSectionModules[page.options?.section || ''] || 'community'
   }

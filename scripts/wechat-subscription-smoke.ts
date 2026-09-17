@@ -39,4 +39,11 @@ assertModule('pages/direct-messages/chat', 'private_message', { id: '123' })
 assertModule('pages/direct-messages/chat', 'private_message')
 assertModule('pages/messages/index', null)
 
+assertModule('packages/social/community/detail', 'community')
+assertModule('packages/social/errands/detail', 'errand')
+assertModule('packages/social/marketplace/detail', 'marketplace')
+assertModule('packages/social/carpool/detail', 'carpool')
+assertModule('packages/social/publish/index', 'marketplace', { section: 'market' })
+assertModule('packages/social/direct-messages/chat', 'private_message', { id: '123' })
+
 console.log('wechat subscription configuration smoke test passed')
