@@ -31,9 +31,13 @@ export interface MaterialUploadDraft {
 export interface MaterialUploadMetadata {
   title: string
   kind: MaterialKind
+  /** 规范课程使用完整集合；首项同时是兼容接口的主课程。 */
+  courseIds: number[]
+  /** 未收录课程只能单独作为候选，不能与规范课程混用。 */
+  candidateCourseName: string
+  /** 草稿 v3 兼容字段；页面升级期间只用于候选名称输入。 */
   courseName: string
   courseId?: number
-  periodId?: string
   description: string
 }
 
@@ -46,7 +50,7 @@ export interface MaterialUploadBatch {
 }
 
 export interface MaterialUploadState {
-  version: 3
+  version: 4
   drafts: MaterialUploadDraft[]
   metadata: MaterialUploadMetadata
   batch: MaterialUploadBatch

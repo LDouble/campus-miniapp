@@ -60,11 +60,24 @@ const blockerMeta: Record<BlockerModule, {
     route: '/pages/my-services/index?section=carpool&relation=all',
     icon: icons.carpool,
   },
+  // 结算能力尚未提供小程序独立入口，保留阻断项并引导用户查看个人服务。
+  settlement: {
+    label: '待处理的结算记录',
+    route: '/pages/my-services/index',
+    icon: icons.market,
+  },
+  withdrawal: {
+    label: '待处理的提现记录',
+    route: '/pages/my-services/index',
+    icon: icons.market,
+  },
 }
 
-const qualificationBlockerRoute = (module: BlockerModule) => featureMigratedUrl({
-  module: module === 'trade_order' ? 'marketplace' : module,
-})
+const qualificationBlockerRoute = (module: BlockerModule) => {
+  // 资格版尚无结算/提现迁移模块；保留真实的小程序服务入口，避免伪造 marketplace module。
+  if (module === 'settlement' || module === 'withdrawal') return blockerMeta[module].route
+  return featureMigratedUrl({ module: module === 'trade_order' ? 'marketplace' : module })
+}
 
 const preflightFromError = (error: ApiError) => {
   const details = error.details

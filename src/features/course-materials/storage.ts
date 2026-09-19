@@ -10,9 +10,10 @@ import type {
   MaterialUploadStatus,
 } from './types'
 
-const UPLOAD_DRAFTS_KEY_PREFIX = 'courseMaterials.uploadDrafts.v3.'
+const UPLOAD_DRAFTS_KEY_PREFIX = 'courseMaterials.uploadDrafts.v4.'
 const LEGACY_UPLOAD_DRAFTS_KEY = 'courseMaterials.uploadDrafts.v1'
 const LEGACY_UPLOAD_DRAFTS_V2_KEY_PREFIX = 'courseMaterials.uploadDrafts.v2.'
+const LEGACY_UPLOAD_DRAFTS_V3_KEY_PREFIX = 'courseMaterials.uploadDrafts.v3.'
 const RECENT_COURSES_KEY_PREFIX = 'courseMaterials.recentCourses.v1.'
 const validKinds = new Set<MaterialKind>([
   'slides',
@@ -54,8 +55,10 @@ const isMetadata = (value: unknown): value is MaterialUploadMetadata => {
   return (
     typeof metadata.title === 'string'
     && validKinds.has(metadata.kind)
+    && Array.isArray(metadata.courseIds)
+    && metadata.courseIds.every((id) => Number.isSafeInteger(id) && id > 0)
+    && typeof metadata.candidateCourseName === 'string'
     && typeof metadata.courseName === 'string'
-    && (metadata.courseId === undefined || Number.isSafeInteger(metadata.courseId))
     && typeof metadata.description === 'string'
   )
 }
@@ -64,7 +67,7 @@ const isUploadState = (value: unknown): value is MaterialUploadState => {
   if (!value || typeof value !== 'object') return false
   const state = value as MaterialUploadState
   return (
-    state.version === 3
+    state.version === 4
     && Array.isArray(state.drafts)
     && state.drafts.every(isDraft)
     && isMetadata(state.metadata)
@@ -116,9 +119,40 @@ export const materialDraftStorage = {
     try {
       Taro.removeStorageSync(LEGACY_UPLOAD_DRAFTS_KEY)
       Taro.removeStorageSync(`${LEGACY_UPLOAD_DRAFTS_V2_KEY_PREFIX}${userId}`)
+      const legacyV3 = Taro.getStorageSync<unknown>(`${LEGACY_UPLOAD_DRAFTS_V3_KEY_PREFIX}${userId}`)
       const value = Taro.getStorageSync<unknown>(draftsKey(userId))
-      if (!isUploadState(value)) return null
-      const drafts = await Promise.all(value.drafts.map(async (draft) => {
+      const migrated = !isUploadState(value) && legacyV3 && typeof legacyV3 === 'object'
+        ? (() => {
+            const legacy = legacyV3 as {
+              drafts?: unknown
+              metadata?: { courseId?: unknown; courseName?: unknown; title?: unknown; kind?: unknown; description?: unknown }
+              batch?: unknown
+            }
+            const courseId = legacy.metadata?.courseId
+            const courseName = legacy.metadata?.courseName
+            if (!Array.isArray(legacy.drafts) || !legacy.metadata || !legacy.batch) return null
+            return {
+              version: 4 as const,
+              drafts: legacy.drafts,
+              metadata: {
+                title: typeof legacy.metadata.title === 'string' ? legacy.metadata.title : '',
+                kind: legacy.metadata.kind,
+                courseIds: Number.isSafeInteger(courseId) && Number(courseId) > 0 ? [Number(courseId)] : [],
+                candidateCourseName: typeof courseName === 'string' && !Number.isSafeInteger(courseId) ? courseName : '',
+                courseName: typeof courseName === 'string' ? courseName : '',
+                description: typeof legacy.metadata.description === 'string' ? legacy.metadata.description : '',
+              },
+              batch: legacy.batch,
+            }
+          })()
+        : value
+      if (!isUploadState(migrated)) return null
+      if (migrated !== value) {
+        // 先落盘 v4，再清理 v3，避免迁移中断丢失草稿。
+        Taro.setStorageSync(draftsKey(userId), migrated)
+        Taro.removeStorageSync(`${LEGACY_UPLOAD_DRAFTS_V3_KEY_PREFIX}${userId}`)
+      }
+      const drafts = await Promise.all(migrated.drafts.map(async (draft) => {
         const exists = !!draft.persistentFile && await fileExists(draft.filePath)
         if (!exists) {
           return {
@@ -141,7 +175,7 @@ export const materialDraftStorage = {
         }
         return draft
       }))
-      return { ...value, drafts }
+      return { ...migrated, drafts }
     } catch {
       return null
     }
