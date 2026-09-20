@@ -97,7 +97,6 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
   const renderGroup = (group: TodayHotEntry[], groupIndex: number) => <View className='today-hot-entry__group'>
     {group.map((item, row) => <View key={item.post_id} className={`today-hot-entry__row today-hot-entry__row--${row + 1}`} onClick={(event) => { event.stopPropagation(); if (!touchMoved.current) open(item) }}>
       <Text className='today-hot-entry__number'>{groupIndex * 2 + row + 1}</Text>
-      {item.section_name && <Text className='today-hot-entry__tag'>#{item.section_name}#</Text>}
       <Text className='today-hot-entry__summary'>{summaryFor(item)}</Text>
     </View>)}
   </View>
