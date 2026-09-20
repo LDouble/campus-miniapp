@@ -6,6 +6,12 @@ import {
   inferMaterialKind,
   normalizeMaterialTitle,
 } from '../src/features/course-materials/inference'
+import {
+  coursePickerSelectedIds,
+  hasMaterialCourseSelection,
+  materialEducationLevelLabels,
+  resolveCompleteMaterialCoursePage,
+} from '../src/features/course-materials/course-directory'
 import type { MaterialCourseView } from '../src/api/types'
 import {
   buildCourseMaterialQuery,
@@ -14,6 +20,7 @@ import type { MaterialUploadDraft } from '../src/features/course-materials/types
 import { getSelectedTempFiles } from '../src/utils/file-selection'
 import {
   MAX_MATERIAL_FILE_SIZE,
+  MAX_MATERIAL_COURSES,
   isMaterialUploadSessionReusable,
   resolveMaterialCourse,
   selectSupportedMaterialFiles,
@@ -35,6 +42,36 @@ const courses: MaterialCourseView[] = [{
 assert.equal(resolveMaterialCourse(courses, { name: '高数二' })?.id, 1)
 assert.equal(resolveMaterialCourse(courses, { courseCode: 'math-002' })?.id, 1)
 assert.equal(resolveMaterialCourse(courses, { name: '不存在课程' }), undefined)
+assert.equal(resolveMaterialCourse([{
+  ...courses[0],
+  id: 3,
+  course_code: 'MATH-102',
+  source_course_codes: ['MATH-002-OLD'],
+}], {
+  courseCode: 'math-002-old',
+})?.id, 3)
+assert.equal(resolveMaterialCourse([...courses, {
+  ...courses[0], id: 2, course_code: 'MATH-003', name: '高等数学（二）',
+}], { name: '高等数学（二）' }), undefined)
+assert.equal(materialEducationLevelLabels.undergraduate, '本科')
+assert.equal(resolveCompleteMaterialCoursePage({
+  items: courses,
+  page: 1,
+  page_size: 100,
+  total: 1,
+}, { courseCode: 'MATH-002' })?.id, 1)
+assert.equal(resolveCompleteMaterialCoursePage({
+  items: courses,
+  page: 1,
+  page_size: 100,
+  total: 101,
+}, { courseCode: 'MATH-002' }), undefined)
+assert.deepEqual(coursePickerSelectedIds('upload', [1], 2, [3]), [1])
+assert.deepEqual(coursePickerSelectedIds('filter', [1], 2, [3]), [2])
+assert.deepEqual(coursePickerSelectedIds('edit', [1], 2, [3]), [3])
+assert.equal(hasMaterialCourseSelection([3], ''), true)
+assert.equal(hasMaterialCourseSelection([], '未收录课程'), true)
+assert.equal(hasMaterialCourseSelection([], ''), false)
 const matchingCases: MaterialCourseView[] = [
   {
     ...courses[0],
@@ -58,6 +95,16 @@ assert.equal(resolveMaterialCourse(matchingCases, { name: '线性代数' }), und
   '多个同名课程不得自动选中第一个')
 assert.equal(resolveMaterialCourse(matchingCases, { courseCode: 'unknown-code', name: '线性代数' }), undefined,
   '携带未建档课程代码时不得回退到同名课程')
+assert.equal(resolveMaterialCourse([matchingCases[0]], { courseCode: 'unknown-code', name: '线性代数' }), undefined,
+  '即使同名课程唯一，未命中代码也不得自动关联')
+const crossLevelCourses: MaterialCourseView[] = [
+  { ...matchingCases[0], education_level: 'undergraduate' },
+  { ...matchingCases[0], id: 5, education_level: 'graduate' },
+]
+assert.equal(resolveMaterialCourse(crossLevelCourses, { courseCode: 'MATH-OLD-001', educationLevel: 'graduate' })?.id, 5,
+  '跨培养层次同代码应在指定层次内匹配')
+assert.equal(resolveMaterialCourse(crossLevelCourses, { name: '线性代数', educationLevel: 'undergraduate' })?.id, 2,
+  '仅名称匹配也应遵守培养层次筛选')
 assert.equal(resolveMaterialCourse([
   ...matchingCases,
   { ...courses[0], id: 4, course_code: 'MATH-DUPLICATE', source_course_codes: ['MATH-OLD-001'], name: '数学分析' },
@@ -91,11 +138,24 @@ const draft: MaterialUploadDraft = {
 const metadata = {
   title: '课程资料',
   kind: 'notes' as const,
+  courseIds: [1],
+  candidateCourseName: '',
   courseName: '高等数学（二）',
-  courseId: 1,
   description: '',
 }
 assert.equal(validateMaterialDrafts([draft], metadata), '')
+assert.equal(validateMaterialDrafts([draft], {
+  ...metadata,
+  courseIds: [1, 1, 2],
+}), '')
+assert.match(validateMaterialDrafts([draft], {
+  ...metadata,
+  courseIds: Array.from({ length: MAX_MATERIAL_COURSES + 1 }, (_, index) => index + 1),
+}), /最多关联/)
+assert.match(validateMaterialDrafts([draft], {
+  ...metadata,
+  candidateCourseName: '未收录课程',
+}), /不能同时/)
 assert.match(validateMaterialDrafts([
   { ...draft, fileSize: MAX_MATERIAL_FILE_SIZE + 1 },
 ], metadata), /超过 50MB/)
@@ -174,6 +234,14 @@ const materialsStyle = readFileSync(
   resolve(__dirname, '../src/pages/materials/index.scss'),
   'utf8',
 )
+const materialsPage = readFileSync(
+  resolve(__dirname, '../src/pages/materials/index.tsx'),
+  'utf8',
+)
+assert.doesNotMatch(materialsPage, /listAllMaterialCourses/u)
+assert.match(materialsPage, /listMaterialCourses\('', 1, 100\)/u)
+assert.match(materialsPage, /materialCourses\(item\)\.some\(\(itemCourse\) => itemCourse\.id === courseId\)/u)
+assert.match(materialsPage, /onScrollToLower=\{loadMoreCoursePicker\}/u)
 assert.match(materialsStyle, /\.materials-sheet--filter \{[^}]*max-height: 72vh;/u)
 assert.match(materialsStyle, /\.materials-sheet--filter[\s\S]*?\.materials-sheet__body \{[^}]*overflow-y: auto;/u)
 assert.match(materialsStyle, /\.materials-sheet--upload-course \{[^}]*height: 76vh;[^}]*max-height: 76vh;/u)

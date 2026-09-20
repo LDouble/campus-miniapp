@@ -72,11 +72,11 @@ const blockerMeta: Record<BlockerModule, {
   },
 }
 
-const qualificationBlockerRoute = (module: BlockerModule) => featureMigratedUrl({
-  module: ['trade_order', 'settlement', 'withdrawal'].includes(module)
-    ? 'marketplace'
-    : module as Exclude<BlockerModule, 'trade_order' | 'settlement' | 'withdrawal'>,
-})
+const qualificationBlockerRoute = (module: BlockerModule) => {
+  // 资格版尚无结算/提现迁移模块，不能把它们伪装为二手模块。
+  if (module === 'settlement' || module === 'withdrawal') return '/pages/my-services/index'
+  return featureMigratedUrl({ module: module === 'trade_order' ? 'marketplace' : module })
+}
 
 const isFinancialBlocker = (module: BlockerModule) => (
   module === 'settlement' || module === 'withdrawal'

@@ -9,6 +9,7 @@ import type {
 
 export const supportedMaterialExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx'] as const
 export const MAX_MATERIAL_FILES = 5
+export const MAX_MATERIAL_COURSES = 10
 export const MAX_MATERIAL_FILE_SIZE = 50 * 1024 * 1024
 
 export interface SelectedMaterialFile {
@@ -57,7 +58,15 @@ export const validateMaterialDrafts = (
 ) => {
   if (!drafts.length) return '请先选择资料文件'
   if (drafts.length > MAX_MATERIAL_FILES) return '单次最多上传 5 个文件'
-  if (!metadata.title.trim() || !metadata.courseName.trim()) return '请补全资料名称和课程'
+  if (!metadata.title.trim()) return '请补全资料名称'
+  const courseIds = Array.from(new Set(metadata.courseIds.filter((id) => (
+    Number.isSafeInteger(id) && id > 0
+  ))))
+  if (courseIds.length > MAX_MATERIAL_COURSES) return `最多关联 ${MAX_MATERIAL_COURSES} 门课程`
+  if (courseIds.length && metadata.candidateCourseName.trim()) {
+    return '已关联规范课程时不能同时填写候选课程'
+  }
+  if (!courseIds.length && !metadata.candidateCourseName.trim()) return '请至少选择一门课程'
   for (const draft of drafts) {
     if (!draft.filePath || draft.status === 'needs_file') return `${draft.fileName} 需要重新选择`
     if (!isSupportedMaterialFile(draft.fileName)) return `${draft.fileName} 的文件类型暂不支持`
@@ -85,15 +94,18 @@ export const isMaterialUploadSessionReusable = (
 
 export const resolveMaterialCourse = (
   courses: MaterialCourseView[],
-  value: { id?: number; name?: string; courseCode?: string },
+  value: { id?: number; name?: string; courseCode?: string; educationLevel?: string },
 ) => {
   if (value.id) {
     const byId = courses.find((course) => course.id === value.id)
     if (byId) return byId
   }
+  const candidates = value.educationLevel
+    ? courses.filter((course) => course.education_level === value.educationLevel)
+    : courses
   const code = value.courseCode?.trim().toLowerCase()
   if (code) {
-    const byCode = courses.filter((course) => {
+    const byCode = candidates.filter((course) => {
       const sourceCodes = course.source_course_codes || []
       return [course.course_code, ...sourceCodes]
         .some((candidate) => candidate.trim().toLowerCase() === code)
@@ -107,7 +119,7 @@ export const resolveMaterialCourse = (
   }
   const name = normalizedCourseText(value.name || '')
   if (!name) return undefined
-  const byName = courses.filter((course) => (
+  const byName = candidates.filter((course) => (
     normalizedCourseText(course.name) === name
     || (course.aliases || []).some((alias) => normalizedCourseText(alias) === name)
   ))

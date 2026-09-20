@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Taro, { useDidShow, useReachBottom, useRouter } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
@@ -13,7 +13,7 @@ import {
   createMaterialUploadSession,
   downloadAndOpenMaterial,
   getCourseMaterial,
-  listAllMaterialCourses,
+  listMaterialCourses,
   listAllMyCourseMaterials,
   listCourseMaterials,
   listMyCourseMaterialFeedbacks,
@@ -28,6 +28,7 @@ import { getSelectedTempFiles } from '../../utils/file-selection'
 import { useCampusShare } from '../../features/share'
 import type {
   CourseMaterialView,
+  MaterialCoursePage,
   MaterialCourseView,
   MaterialFeedbackCategory,
   MaterialFeedbackView,
@@ -39,6 +40,12 @@ import {
   inferMaterialKind,
   normalizeMaterialTitle,
 } from '../../features/course-materials/inference'
+import {
+  coursePickerSelectedIds,
+  hasMaterialCourseSelection,
+  materialEducationLevelLabels,
+  resolveCompleteMaterialCoursePage,
+} from '../../features/course-materials/course-directory'
 import {
   getRecentCourseSuggestions,
   materialDraftStorage,
@@ -73,16 +80,21 @@ const icons = {
   materials: require('../../assets/icons/materials.svg'),
 }
 
+type CoursePickerTarget = 'upload' | 'filter' | 'edit'
 type Sheet = 'filter' | 'upload' | 'upload-course' | 'detail' | 'feedback' | null
 type ViewMode = 'browse' | 'mine' | 'feedbacks'
 
 interface UploadCourseOption {
-  id?: number
+  id: number
   name: string
-  courseCode?: string
+  courseCode: string
+  educationLevel: string
   department?: string
-  periodId?: string
   searchText: string
+}
+
+interface BrowseCourseOption extends UploadCourseOption {
+  label: string
 }
 
 const materialSourceLabels: Record<
@@ -120,6 +132,17 @@ const packageSize = (material: CourseMaterialView) => (
   material.files.reduce((total, file) => total + file.size_bytes, 0)
 )
 
+const materialCourses = (material: CourseMaterialView) => (
+  material.courses?.length ? material.courses : material.course ? [material.course] : []
+)
+
+const materialCourseLabel = (material: CourseMaterialView, limit = 2) => {
+  const courses = materialCourses(material)
+  if (!courses.length) return material.candidate_course_name || '课程待确认'
+  const names = courses.slice(0, limit).map((course) => course.name)
+  return `${names.join('、')}${courses.length > limit ? ` +${courses.length - limit}` : ''}`
+}
+
 const draftStatusMeta = {
   draft: { label: '待上传', className: 'draft' },
   uploading: { label: '上传中', className: 'uploading' },
@@ -156,9 +179,36 @@ const createUploadMetadata = (
   title: '',
   kind: 'other',
   courseName: routeContext.courseName || '',
-  periodId: routeContext.periodId,
+  courseIds: [],
+  candidateCourseName: '',
   description: '',
 })
+
+const courseOptionFromRecord = (course: MaterialCourseView): BrowseCourseOption => ({
+  id: course.id,
+  name: course.name,
+  courseCode: course.course_code,
+  educationLevel: materialEducationLevelLabels[course.education_level],
+  department: course.department || undefined,
+  label: `${course.name} · ${course.course_code} · ${course.education_level}`,
+  searchText: [
+    course.name,
+    course.course_code,
+    ...(course.source_course_codes || []),
+    course.education_level,
+    course.department,
+    ...(course.aliases || []),
+  ].filter(Boolean).join(' ').toLowerCase(),
+})
+
+const mergeMaterialCourses = (
+  current: MaterialCourseView[],
+  next: MaterialCourseView[],
+) => {
+  const records = new Map(current.map((course) => [course.id, course]))
+  next.forEach((course) => records.set(course.id, course))
+  return [...records.values()]
+}
 
 const useDebouncedValue = <T,>(value: T, delay: number) => {
   const [debounced, setDebounced] = useState(value)
@@ -187,11 +237,9 @@ export default function MaterialsPage() {
   const [cachedCourseSuggestions] = useState(getRecentCourseSuggestions)
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebouncedValue(keyword, 300)
-  const [course, setCourse] = useState(routeContext.courseName || '全部课程')
+  const [courseId, setCourseId] = useState<number | undefined>()
+  const [courseLabel, setCourseLabel] = useState(routeContext.courseName || '全部课程')
   const [kind, setKind] = useState<'all' | MaterialKind>('all')
-  const [limitToSourcePeriod, setLimitToSourcePeriod] = useState(
-    !!routeContext.periodId,
-  )
   const [viewMode, setViewMode] = useState<ViewMode>(
     routeContext.view === 'mine' ? 'mine' : 'browse',
   )
@@ -217,17 +265,28 @@ export default function MaterialsPage() {
     createUploadMetadata(routeContext),
   )
   const [uploadCourseQuery, setUploadCourseQuery] = useState('')
+  const [coursePickerTarget, setCoursePickerTarget] = useState<CoursePickerTarget>('upload')
+  const [coursePickerItems, setCoursePickerItems] = useState<MaterialCourseView[]>([])
+  const [coursePickerPage, setCoursePickerPage] = useState(1)
+  const [coursePickerTotal, setCoursePickerTotal] = useState(0)
+  const [coursePickerLoading, setCoursePickerLoading] = useState(false)
+  const coursePickerRequestGeneration = useRef(0)
   const [uploadBatch, setUploadBatch] = useState<MaterialUploadBatch>(createUploadBatch)
   const [draftUserId, setDraftUserId] = useState(0)
   const [draftStorageReady, setDraftStorageReady] = useState(false)
   const [apiCourses, setApiCourses] = useState<MaterialCourseView[]>([])
   const [coursesLoaded, setCoursesLoaded] = useState(false)
+  const [routeCourseLookupReady, setRouteCourseLookupReady] = useState(!routeContext.courseName)
+  const [routeMatchedCourse, setRouteMatchedCourse] = useState<MaterialCourseView | null>(null)
+  const routeCoursePreselected = useRef(false)
+  const uploadMetadataTouched = useRef(false)
   const [materials, setMaterials] = useState<CourseMaterialView[]>([])
   const [myMaterials, setMyMaterials] = useState<CourseMaterialView[]>([])
   const [myFeedbacks, setMyFeedbacks] = useState<MaterialFeedbackView[]>([])
   const [activeMaterial, setActiveMaterial] = useState<CourseMaterialView | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCourse, setEditCourse] = useState('')
+  const [editCourseIds, setEditCourseIds] = useState<number[]>([])
   const [editKind, setEditKind] = useState<MaterialKind>('other')
   const [feedbackCategory, setFeedbackCategory] = useState<MaterialFeedbackCategory>('file_unavailable')
   const [feedbackFileId, setFeedbackFileId] = useState<number | undefined>()
@@ -270,7 +329,7 @@ export default function MaterialsPage() {
       return
     }
     materialDraftStorage.write(draftUserId, {
-      version: 3,
+      version: 4,
       drafts,
       metadata,
       batch: uploadBatch,
@@ -283,16 +342,115 @@ export default function MaterialsPage() {
   })
 
   useEffect(() => {
-    listAllMaterialCourses()
-      .then(setApiCourses)
-      .catch(() => Taro.showToast({ title: '课程分类加载失败', icon: 'none' }))
-      .finally(() => setCoursesLoaded(true))
-  }, [])
+    let active = true
+    setRouteMatchedCourse(null)
+    setRouteCourseLookupReady(!routeContext.courseName)
+    const appendCourses = (items: MaterialCourseView[]) => {
+      if (!active) return
+      setApiCourses((current) => mergeMaterialCourses(current, items))
+    }
+    const load = async () => {
+      try {
+        const firstPage = await listMaterialCourses('', 1, 100)
+        appendCourses(firstPage.items)
+        if (!routeContext.courseName) return
+        const findExact = (page: MaterialCoursePage, lookupKeyword: string) => (
+          resolveCompleteMaterialCoursePage(page, {
+            name: routeContext.courseName,
+            courseCode: lookupKeyword === routeContext.courseCode ? routeContext.courseCode : undefined,
+          })
+        )
+        let matched: MaterialCourseView | undefined
+        let canFallbackToName = true
+        if (routeContext.courseCode) {
+          const byCode = await listMaterialCourses(routeContext.courseCode, 1, 100)
+          appendCourses(byCode.items)
+          canFallbackToName = byCode.total <= byCode.items.length
+          if (canFallbackToName) {
+            matched = findExact(byCode, routeContext.courseCode)
+          }
+        }
+        if (!matched && canFallbackToName && routeContext.courseName) {
+          const byName = await listMaterialCourses(routeContext.courseName, 1, 100)
+          appendCourses(byName.items)
+          if (byName.total <= byName.items.length) {
+            matched = resolveCompleteMaterialCoursePage(byName, { name: routeContext.courseName })
+          }
+        }
+        if (active && matched) {
+          setCourseId(matched.id)
+          setCourseLabel(courseOptionFromRecord(matched).label)
+          setRouteMatchedCourse(matched)
+        }
+      } catch {
+        if (active) Taro.showToast({ title: '课程分类加载失败', icon: 'none' })
+      } finally {
+        if (active) {
+          setCoursesLoaded(true)
+          setRouteCourseLookupReady(true)
+        }
+      }
+    }
+    void load()
+    return () => { active = false }
+  }, [routeContext.courseCode, routeContext.courseName])
+
+  useEffect(() => {
+    if (sheet !== 'upload-course') return
+    const generation = coursePickerRequestGeneration.current
+    const isCurrent = () => coursePickerRequestGeneration.current === generation
+    setCoursePickerLoading(true)
+    const timer = setTimeout(() => {
+      void listMaterialCourses(uploadCourseQuery.trim(), 1, 100)
+        .then((page) => {
+          if (!isCurrent()) return
+          setCoursePickerItems(page.items)
+          setCoursePickerPage(page.page)
+          setCoursePickerTotal(page.total)
+          setApiCourses((current) => mergeMaterialCourses(current, page.items))
+        })
+        .catch(() => {
+          if (isCurrent()) Taro.showToast({ title: '课程搜索失败，请重试', icon: 'none' })
+        })
+        .finally(() => {
+          if (isCurrent()) setCoursePickerLoading(false)
+        })
+    }, 250)
+    return () => {
+      clearTimeout(timer)
+      if (isCurrent()) coursePickerRequestGeneration.current += 1
+    }
+  }, [sheet, uploadCourseQuery])
+
+  useEffect(() => {
+    if (
+      routeCoursePreselected.current
+      || !draftStorageReady
+      || drafts.length
+      || metadata.courseIds.length
+      || !!metadata.candidateCourseName.trim()
+      || uploadMetadataTouched.current
+      || !coursesLoaded
+      || !routeCourseLookupReady
+      || !routeContext.courseName
+      || !routeMatchedCourse
+    ) return
+    routeCoursePreselected.current = true
+    setMetadata((current) => ({
+      ...current,
+      courseName: routeMatchedCourse.name,
+      courseId: routeMatchedCourse.id,
+      courseIds: [routeMatchedCourse.id],
+      candidateCourseName: '',
+    }))
+  }, [coursesLoaded, draftStorageReady, drafts.length, metadata.candidateCourseName, metadata.courseIds.length, routeContext.courseName, routeCourseLookupReady, routeMatchedCourse])
 
   const openMaterialDetail = (material: CourseMaterialView) => {
+    setApiCourses((current) => mergeMaterialCourses(current, materialCourses(material)))
     setActiveMaterial(material)
     setEditTitle(material.title)
-    setEditCourse(material.course?.name || material.candidate_course_name || '')
+    setEditCourse(materialCourseLabel(material))
+    setEditCourseIds(materialCourses(material).map((item) => item.id))
     setEditKind(material.material_type)
     setSheet('detail')
   }
@@ -308,14 +466,9 @@ export default function MaterialsPage() {
     buildCourseSuggestions(apiCourses, cachedCourseSuggestions)
   ), [apiCourses, cachedCourseSuggestions])
   const selectedCourse = useMemo(() => (
-    course === '全部课程'
-      ? undefined
-      : resolveMaterialCourse(apiCourses, {
-        name: course,
-        courseCode: course === routeContext.courseName ? routeContext.courseCode : undefined,
-      })
-  ), [apiCourses, course, routeContext.courseCode, routeContext.courseName])
-  const unresolvedCourse = coursesLoaded && course !== '全部课程' && !selectedCourse
+    courseId ? apiCourses.find((item) => item.id === courseId) : undefined
+  ), [apiCourses, courseId])
+  const unresolvedCourse = coursesLoaded && courseLabel !== '全部课程' && !courseId
 
   useEffect(() => {
     if (viewMode !== 'browse' || !coursesLoaded) return
@@ -330,10 +483,10 @@ export default function MaterialsPage() {
     setLoading(true)
     setMaterialsLoadFailed(false)
     listCourseMaterials({
-      courseId: selectedCourse?.id,
+      courseId,
       materialType: kind === 'all' ? undefined : kind,
       keyword: debouncedKeyword,
-      periodId: limitToSourcePeriod ? routeContext.periodId : undefined,
+      periodId: undefined,
       page: 1,
       pageSize: 20,
     })
@@ -358,10 +511,8 @@ export default function MaterialsPage() {
     coursesLoaded,
     debouncedKeyword,
     kind,
-    limitToSourcePeriod,
     materialsReloadKey,
-    routeContext.periodId,
-    selectedCourse?.id,
+    courseId,
     unresolvedCourse,
     viewMode,
   ])
@@ -375,10 +526,10 @@ export default function MaterialsPage() {
     ) return
     setLoading(true)
     listCourseMaterials({
-      courseId: selectedCourse?.id,
+      courseId,
       materialType: kind === 'all' ? undefined : kind,
       keyword: debouncedKeyword,
-      periodId: limitToSourcePeriod ? routeContext.periodId : undefined,
+      periodId: undefined,
       page: materialsPage + 1,
       pageSize: 20,
     })
@@ -396,22 +547,18 @@ export default function MaterialsPage() {
 
   const visibleMyMaterials = useMemo(() => myMaterials.filter((item) => {
     const search = keyword.trim().toLowerCase()
-    const courseName = item.course?.name || item.candidate_course_name || ''
+    const courseNames = materialCourses(item).map((itemCourse) => itemCourse.name).join(' ')
     const filenames = item.files.map((file) => file.original_filename).join('')
-    return (!search || `${item.title}${courseName}${filenames}`.toLowerCase().includes(search))
-      && (course === '全部课程' || courseName === course)
+    return (!search || `${item.title}${courseNames}${item.candidate_course_name || ''}${filenames}`.toLowerCase().includes(search))
+      && (!courseId || materialCourses(item).some((itemCourse) => itemCourse.id === courseId))
       && (kind === 'all' || item.material_type === kind)
-  }), [course, keyword, kind, myMaterials])
+  }), [courseId, keyword, kind, myMaterials])
 
   const courseOptions = useMemo(() => {
-    const names = [
-      routeContext.courseName,
-      ...apiCourses.map((item) => item.name),
-      ...courseSuggestions.map((item) => item.name),
-      metadata.courseName,
-    ].filter(Boolean) as string[]
-    return ['全部课程', ...Array.from(new Set(names))]
-  }, [apiCourses, courseSuggestions, metadata.courseName, routeContext.courseName])
+    const records = [...apiCourses]
+    if (courseId && !records.some((item) => item.id === courseId) && selectedCourse) records.unshift(selectedCourse)
+    return records.map(courseOptionFromRecord)
+  }, [apiCourses, courseId, selectedCourse])
   const uploadCourseMatch = useMemo(() => resolveMaterialCourse(apiCourses, {
     id: metadata.courseId,
     name: metadata.courseName,
@@ -425,115 +572,45 @@ export default function MaterialsPage() {
     routeContext.courseCode,
     routeContext.courseName,
   ])
-  const uploadCourseCandidates = useMemo<UploadCourseOption[]>(() => {
-    const seen = new Set<string>()
-    return [
-      ...(routeContext.courseName ? [{
-        name: routeContext.courseName,
-        courseCode: routeContext.courseCode,
-        periodId: routeContext.periodId,
-      }] : []),
-      ...courseSuggestions,
-    ].flatMap((suggestion) => {
-      const record = resolveMaterialCourse(apiCourses, {
-        name: suggestion.name,
-        courseCode: suggestion.courseCode,
-      })
-      const name = record?.name || suggestion.name.trim()
-      const key = name.toLowerCase()
-      if (!name || seen.has(key)) return []
-      seen.add(key)
-      return [{
-        id: record?.id,
-        name,
-        courseCode: record?.course_code || suggestion.courseCode,
-        department: record?.department || undefined,
-        periodId: name === routeContext.courseName
-          ? routeContext.periodId
-          : suggestion.periodId,
-        searchText: [
-          name,
-          record?.course_code,
-          record?.department,
-          ...(record?.aliases || []),
-        ].filter(Boolean).join(' ').toLowerCase(),
-      }]
-    })
-  }, [
-    apiCourses,
-    courseSuggestions,
-    routeContext.courseCode,
-    routeContext.courseName,
-    routeContext.periodId,
-  ])
+  const uploadCourseCandidates = useMemo<UploadCourseOption[]>(() => (
+    apiCourses.map(courseOptionFromRecord)
+  ), [apiCourses])
   const uploadCourseOptions = useMemo(() => {
-    const courseKeyword = metadata.courseName.trim().toLowerCase()
-    const visible = courseKeyword && !uploadCourseMatch
-      ? uploadCourseCandidates.filter((item) => item.searchText.includes(courseKeyword))
-      : uploadCourseCandidates
-    const selectedId = uploadCourseMatch?.id
-    const selectedName = uploadCourseMatch?.name || metadata.courseName.trim()
-    const isSelected = (item: UploadCourseOption) => (
-      selectedId ? item.id === selectedId : item.name === selectedName
-    )
-    return [...visible]
-      .sort((left, right) => Number(isSelected(right)) - Number(isSelected(left)))
+    return [...uploadCourseCandidates]
+      .sort((left, right) => Number(metadata.courseIds.includes(right.id)) - Number(metadata.courseIds.includes(left.id)))
       .slice(0, 6)
   }, [
-    metadata.courseName,
+    metadata.courseIds,
     uploadCourseCandidates,
-    uploadCourseMatch,
   ])
   const visibleUploadCourseOptions = useMemo(() => {
-    const courseKeyword = uploadCourseQuery.trim().toLowerCase()
-    const visible = courseKeyword
-      ? uploadCourseCandidates.filter((item) => item.searchText.includes(courseKeyword))
-      : uploadCourseCandidates
-    const selectedId = uploadCourseMatch?.id
-    const selectedName = uploadCourseMatch?.name || metadata.courseName.trim()
-    const isSelected = (item: UploadCourseOption) => (
-      selectedId ? item.id === selectedId : item.name === selectedName
-    )
-    return [...visible]
-      .sort((left, right) => Number(isSelected(right)) - Number(isSelected(left)))
+    return coursePickerItems.map(courseOptionFromRecord)
+      .sort((left, right) => Number(metadata.courseIds.includes(right.id)) - Number(metadata.courseIds.includes(left.id)))
   }, [
-    metadata.courseName,
-    uploadCourseCandidates,
-    uploadCourseMatch,
-    uploadCourseQuery,
+    coursePickerItems,
+    metadata.courseIds,
   ])
-  const filtersActive = course !== '全部课程' || kind !== 'all'
+  const filtersActive = courseLabel !== '全部课程' || kind !== 'all'
   const sourceCourseActive = !!routeContext.courseName
-    && course === routeContext.courseName
+    && !!courseId
   const sourceLabel = routeContext.source
     ? materialSourceLabels[routeContext.source]
     : '从课程进入'
-  const sourcePeriodLabel = routeContext.periodLabel || '来源学期'
-  const canExpandPeriod = !!routeContext.periodId
-    && sourceCourseActive
-    && limitToSourcePeriod
-    && !materialsLoadFailed
-    && !unresolvedCourse
   const heroCopy = sourceCourseActive
     ? routeContext.action === 'upload'
-      ? '课程和学期已自动带入，选择文件即可分享'
-      : limitToSourcePeriod
-        ? `正在查看${sourcePeriodLabel}的已审核资料`
-        : '正在查看这门课程的全部学期资料'
+      ? '课程已自动带入，可继续关联其他课程'
+      : '正在查看这门课程的全部资料'
     : '一份资料可包含多个文件，审核通过后统一展示'
-  const selectBrowseCourse = (nextCourse: string) => {
-    setCourse(nextCourse)
-    setLimitToSourcePeriod(
-      !!routeContext.periodId && nextCourse === routeContext.courseName,
-    )
+  const selectBrowseCourse = (nextCourse?: UploadCourseOption) => {
+    setCourseId(nextCourse?.id)
+    setCourseLabel(nextCourse
+      ? (`${nextCourse.name} · ${nextCourse.courseCode} · ${nextCourse.educationLevel}`)
+      : '全部课程')
   }
   const handleMaterialsEmptyClick = () => {
     if (materialsLoadFailed) {
       setMaterialsReloadKey((current) => current + 1)
       return
-    }
-    if (canExpandPeriod) {
-      setLimitToSourcePeriod(false)
     }
   }
 
@@ -551,38 +628,97 @@ export default function MaterialsPage() {
 
   const updateMetadata = (patch: Partial<MaterialUploadMetadata>) => {
     if (uploading) return
+    uploadMetadataTouched.current = true
     setMetadata((current) => ({ ...current, ...patch }))
     invalidateUploadSession()
   }
   const updateUploadCourseName = (courseName: string) => {
-    const record = resolveMaterialCourse(apiCourses, {
-      name: courseName,
-      courseCode: courseName === routeContext.courseName
-        ? routeContext.courseCode
-        : undefined,
-    })
     updateMetadata({
       courseName,
-      courseId: record?.id,
-      periodId: record?.name === routeContext.courseName
-        ? routeContext.periodId
-        : undefined,
+      courseId: undefined,
+      courseIds: [],
+      candidateCourseName: courseName,
     })
   }
-  const openUploadCoursePicker = () => {
-    setUploadCourseQuery(uploadCourseMatch ? '' : metadata.courseName.trim())
+  const openCoursePicker = (target: CoursePickerTarget) => {
+    coursePickerRequestGeneration.current += 1
+    setCoursePickerTarget(target)
+    setCoursePickerLoading(true)
+    setCoursePickerItems([])
+    setCoursePickerPage(1)
+    setCoursePickerTotal(0)
+    setUploadCourseQuery('')
     onKeyboardVisibilityChange(0)
     setSheet('upload-course')
   }
+  const openUploadCoursePicker = () => {
+    openCoursePicker('upload')
+  }
+  const openFilterCoursePicker = () => {
+    openCoursePicker('filter')
+  }
+  const openEditCoursePicker = () => {
+    openCoursePicker('edit')
+  }
+  const updateCoursePickerQuery = (value: string) => {
+    coursePickerRequestGeneration.current += 1
+    setCoursePickerLoading(true)
+    setCoursePickerItems([])
+    setCoursePickerPage(1)
+    setCoursePickerTotal(0)
+    setUploadCourseQuery(value)
+  }
   const selectUploadCourseOption = (option: UploadCourseOption) => {
+    if (coursePickerTarget === 'filter') {
+      selectBrowseCourse(option)
+      setSheet('filter')
+      return
+    }
+    if (coursePickerTarget === 'edit') {
+      if (!editCourseIds.includes(option.id) && editCourseIds.length >= 10) {
+        Taro.showToast({ title: '最多关联 10 门课程', icon: 'none' })
+        return
+      }
+      const next = editCourseIds.includes(option.id)
+        ? editCourseIds.filter((id) => id !== option.id)
+        : [...editCourseIds, option.id]
+      setEditCourseIds(next)
+      setEditCourse(next.length ? '' : editCourse)
+      return
+    }
+    if (!metadata.courseIds.includes(option.id) && metadata.courseIds.length >= 10) {
+      Taro.showToast({ title: '最多关联 10 门课程', icon: 'none' })
+      return
+    }
     updateMetadata({
-      courseName: option.name,
-      courseId: option.id,
-      periodId: option.periodId,
+      courseName: '',
+      courseId: undefined,
+      courseIds: metadata.courseIds.includes(option.id)
+        ? metadata.courseIds.filter((id) => id !== option.id)
+        : [...metadata.courseIds, option.id],
+      candidateCourseName: '',
     })
-    setUploadCourseQuery('')
-    onKeyboardVisibilityChange(0)
-    setSheet('upload')
+  }
+
+  const loadMoreCoursePicker = () => {
+    if (coursePickerLoading || coursePickerItems.length >= coursePickerTotal) return
+    const generation = coursePickerRequestGeneration.current
+    const isCurrent = () => coursePickerRequestGeneration.current === generation
+    setCoursePickerLoading(true)
+    listMaterialCourses(uploadCourseQuery.trim(), coursePickerPage + 1, 100)
+      .then((page) => {
+        if (!isCurrent()) return
+        setCoursePickerItems((current) => mergeMaterialCourses(current, page.items))
+        setCoursePickerPage(page.page)
+        setCoursePickerTotal(page.total)
+        setApiCourses((current) => mergeMaterialCourses(current, page.items))
+      })
+      .catch(() => {
+        if (isCurrent()) Taro.showToast({ title: '下一页课程加载失败', icon: 'none' })
+      })
+      .finally(() => {
+        if (isCurrent()) setCoursePickerLoading(false)
+      })
   }
 
   const chooseFiles = async () => {
@@ -618,7 +754,7 @@ export default function MaterialsPage() {
       )
       const courseRecord = resolveMaterialCourse(apiCourses, {
         name: firstSuggestion?.name,
-        courseCode: firstSuggestion?.courseCode || routeContext.courseCode,
+        courseCode: firstSuggestion?.courseCode,
       })
       const nextDrafts: MaterialUploadDraft[] = []
       let hasTemporaryFile = false
@@ -648,7 +784,8 @@ export default function MaterialsPage() {
         kind: inferMaterialKind(selected[0].name),
         courseName: courseRecord?.name || firstSuggestion?.name || '',
         courseId: courseRecord?.id,
-        periodId: firstSuggestion?.periodId,
+        courseIds: courseRecord?.id ? [courseRecord.id] : [],
+        candidateCourseName: courseRecord ? '' : firstSuggestion?.name || '',
         description: '',
       })
       setUploadBatch(createUploadBatch())
@@ -697,7 +834,7 @@ export default function MaterialsPage() {
       setUploadBatch(nextBatch)
       if (draftUserId) {
         materialDraftStorage.write(draftUserId, {
-          version: 3,
+          version: 4,
           drafts: nextDrafts,
           metadata,
           batch: nextBatch,
@@ -728,19 +865,12 @@ export default function MaterialsPage() {
         }
       })
       if (!workingBatch.sessionId) {
-        const courseRecord = resolveMaterialCourse(apiCourses, {
-          id: metadata.courseId,
-          name: metadata.courseName,
-          courseCode: metadata.courseName === routeContext.courseName
-            ? routeContext.courseCode
-            : undefined,
-        })
         const session = await createMaterialUploadSession({
           title: metadata.title.trim(),
           material_type: metadata.kind,
-          course_id: courseRecord?.id,
-          candidate_course_name: courseRecord ? undefined : metadata.courseName.trim(),
-          period_id: metadata.periodId || undefined,
+          course_ids: metadata.courseIds,
+          course_id: metadata.courseIds[0],
+          candidate_course_name: metadata.courseIds.length ? undefined : metadata.candidateCourseName.trim(),
           description: metadata.description.trim() || undefined,
           files,
         }, workingBatch.createIdempotencyKey)
@@ -839,19 +969,23 @@ export default function MaterialsPage() {
   }
 
   const saveRejectedMaterial = async () => {
-    if (!activeMaterial || !editTitle.trim() || !editCourse.trim()) {
+    const courseIds = Array.from(new Set(editCourseIds))
+    if (!activeMaterial || !editTitle.trim() || !hasMaterialCourseSelection(courseIds, editCourse)) {
       Taro.showToast({ title: '请补全资料名称和课程', icon: 'none' })
       return
     }
-    const courseRecord = resolveMaterialCourse(apiCourses, { name: editCourse.trim() })
+    if (courseIds.length > 10) {
+      Taro.showToast({ title: '最多关联 10 门课程', icon: 'none' })
+      return
+    }
     try {
       const updated = await updateMyCourseMaterial(activeMaterial.id, {
         expected_version: activeMaterial.version,
         title: editTitle.trim(),
         material_type: editKind,
-        course_id: courseRecord?.id,
-        candidate_course_name: courseRecord ? undefined : editCourse.trim(),
-        period_id: activeMaterial.period_id || undefined,
+        course_ids: courseIds,
+        course_id: courseIds[0],
+        candidate_course_name: courseIds.length ? undefined : editCourse.trim(),
         description: activeMaterial.description || undefined,
       })
       setMyMaterials((current) => current.map((item) => (
@@ -916,8 +1050,9 @@ export default function MaterialsPage() {
   const closeSheet = () => {
     if (!uploading && !submittingFeedback) {
       if (sheet === 'upload-course') {
+        coursePickerRequestGeneration.current += 1
         setUploadCourseQuery('')
-        setSheet('upload')
+        setSheet(coursePickerTarget === 'filter' ? 'filter' : coursePickerTarget === 'edit' ? 'detail' : 'upload')
         onKeyboardVisibilityChange(0)
         return
       }
@@ -950,38 +1085,30 @@ export default function MaterialsPage() {
         <View className='materials-hero'>
           <View>
             <Text className='materials-hero__eyebrow'>{sourceCourseActive ? sourceLabel : '海大同学资料库'}</Text>
-            <Text className='materials-hero__title'>{course === '全部课程' ? '把好资料，传给下一位同学' : course}</Text>
+            <Text className='materials-hero__title'>{courseLabel === '全部课程' ? '把好资料，传给下一位同学' : courseLabel}</Text>
             <Text className='materials-hero__copy'>{heroCopy}</Text>
           </View>
           <Image src={icons.materials} mode='aspectFit' />
         </View>
-        {viewMode === 'browse' && sourceCourseActive && routeContext.periodId && (
-          <View className='materials-source-context'>
-            <View>
-              <Text>{limitToSourcePeriod ? sourcePeriodLabel : '全部学期'}</Text>
-              <Text>{limitToSourcePeriod ? '优先保持来源页面的课程范围' : '课程不变，仅放宽学期范围'}</Text>
-            </View>
-            <Text onClick={() => setLimitToSourcePeriod((current) => !current)}>
-              {limitToSourcePeriod ? '查看其他学期' : '只看来源学期'}
-            </Text>
-          </View>
-        )}
         {viewMode !== 'feedbacks' && <View className='materials-actions'>
           <View className={`materials-filter-button ${filtersActive ? 'materials-filter-button--active' : ''}`} ariaRole='button' ariaLabel='筛选课程资料' onClick={() => setSheet('filter')}><Text>筛选</Text>{filtersActive && <View />}</View>
           <ScrollView scrollX showScrollbar={false} className='materials-course-scroll'>
-            <View className='materials-course-list'>{courseOptions.slice(0, 4).map((item) => <View key={item} className={`materials-course-chip ${course === item ? 'materials-course-chip--active' : ''}`} ariaRole='button' ariaLabel={`筛选课程：${item}`} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
+            <View className='materials-course-list'>
+              <View className={`materials-course-chip ${courseLabel === '全部课程' ? 'materials-course-chip--active' : ''}`} ariaRole='button' ariaLabel='筛选全部课程' onClick={() => selectBrowseCourse()}>全部课程</View>
+              {courseOptions.slice(0, 3).map((item) => <View key={item.id} className={`materials-course-chip ${courseId === item.id ? 'materials-course-chip--active' : ''}`} ariaRole='button' ariaLabel={`筛选课程：${item.label}`} onClick={() => selectBrowseCourse(item)}>{item.label}</View>)}
+            </View>
           </ScrollView>
           <View className='materials-upload-button' ariaRole='button' ariaLabel='分享课程资料' onClick={openUpload}>分享资料</View>
         </View>}
 
         {viewMode === 'browse' && <>
-          <View className='materials-heading'><View><Text>课程资料</Text><Text>{limitToSourcePeriod && routeContext.periodId ? `${sourcePeriodLabel} · 仅展示已审核内容` : '全部学期 · 仅展示已审核内容'}</Text></View><Text>{materialsTotal} 份</Text></View>
+          <View className='materials-heading'><View><Text>课程资料</Text><Text>跨学期汇总 · 仅展示已审核内容</Text></View><Text>{materialsTotal} 份</Text></View>
           {loading && !materials.length ? <View className='materials-empty'><View /><Text>正在加载资料</Text><Text>请稍候</Text></View> : <View className='materials-list'>
             {materials.map((item) => <View key={item.id} className='material-card' onClick={() => openMaterialDetail(item)}>
               <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
               <View className='material-card__main'>
                 <Text className='material-card__title'>{item.title}</Text>
-                <Text className='material-card__course'>{item.course?.name || item.candidate_course_name || '课程待确认'} · {item.files.length} 个文件</Text>
+                <Text className='material-card__course'>{materialCourseLabel(item)} · {item.files.length} 个文件</Text>
                 <Text className='material-card__status'>{item.download_count} 次下载 · {formatFileSize(packageSize(item))}</Text>
               </View>
               <Text className='material-card__arrow'>›</Text>
@@ -989,13 +1116,13 @@ export default function MaterialsPage() {
           </View>}
           {loading && !!materials.length && <Text className='materials-loading-more'>正在加载更多…</Text>}
           {!loading && !materials.length && <View
-            className={`materials-empty ${materialsLoadFailed || canExpandPeriod ? 'materials-empty--action' : ''}`}
+            className={`materials-empty ${materialsLoadFailed ? 'materials-empty--action' : ''}`}
             onClick={handleMaterialsEmptyClick}
           >
             <View />
-            <Text>{materialsLoadFailed ? '资料暂时没有加载出来' : unresolvedCourse ? '该课程尚未归入课程目录' : canExpandPeriod ? '这个学期还没有资料' : '没有找到相关资料'}</Text>
+            <Text>{materialsLoadFailed ? '资料暂时没有加载出来' : unresolvedCourse ? '该课程尚未归入课程目录' : '没有找到相关资料'}</Text>
             <Text>
-              {materialsLoadFailed ? '点击这里重新加载' : unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : canExpandPeriod ? '看看这门课的其他学期资料 ›' : '试试更换课程、类型或关键词'}
+              {materialsLoadFailed ? '点击这里重新加载' : unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : '试试更换课程、类型或关键词'}
             </Text>
           </View>}
         </>}
@@ -1016,7 +1143,7 @@ export default function MaterialsPage() {
               <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
               <View className='material-card__main'>
                 <Text className='material-card__title'>{item.title}</Text>
-                <Text className='material-card__course'>{item.course?.name || item.candidate_course_name || '课程待确认'} · {item.files.length} 个文件</Text>
+                <Text className='material-card__course'>{materialCourseLabel(item)} · {item.files.length} 个文件</Text>
                 <Text className={`material-card__status material-card__status--${item.status}`}>{materialStatusLabels[item.status]}{item.rejection_reason ? ` · ${item.rejection_reason}` : ''}</Text>
               </View>
               <Text className='material-card__arrow'>›</Text>
@@ -1059,14 +1186,18 @@ export default function MaterialsPage() {
           {sheet === 'filter' && <View className='materials-sheet__body'>
             <Text className='materials-sheet__title'>筛选资料</Text>
             <Text className='materials-sheet__label'>课程</Text>
-            <View className='materials-option-grid'>{courseOptions.map((item) => <View key={item} className={course === item ? 'materials-option--active' : ''} onClick={() => selectBrowseCourse(item)}>{item}</View>)}</View>
+            <View className='materials-option-grid'>
+              <View className={courseLabel === '全部课程' ? 'materials-option--active' : ''} onClick={() => selectBrowseCourse()}>全部课程</View>
+              {courseOptions.slice(0, 8).map((item) => <View key={item.id} className={courseId === item.id ? 'materials-option--active' : ''} onClick={() => selectBrowseCourse(item)}>{item.label}</View>)}
+            </View>
+            <View className='materials-secondary' onClick={openFilterCoursePicker}>搜索全部课程</View>
             <Text className='materials-sheet__label'>资料类型</Text>
             <View className='materials-option-grid'>
               <View className={kind === 'all' ? 'materials-option--active' : ''} onClick={() => setKind('all')}>全部类型</View>
               {materialKinds.map((item) => <View key={item} className={kind === item ? 'materials-option--active' : ''} onClick={() => setKind(item)}>{materialKindLabels[item]}</View>)}
             </View>
             <View className='materials-primary' onClick={() => setSheet(null)}>查看资料</View>
-            <View className='materials-secondary' onClick={() => { selectBrowseCourse('全部课程'); setKind('all') }}>清除筛选</View>
+            <View className='materials-secondary' onClick={() => { selectBrowseCourse(); setKind('all') }}>清除筛选</View>
           </View>}
 
           {sheet === 'upload' && <View className='materials-sheet__body materials-upload-sheet__body'>
@@ -1086,7 +1217,7 @@ export default function MaterialsPage() {
               />
               <View className='materials-sheet__field-heading'>
                 <Text>课程</Text>
-                <Text className={coursesLoaded && !uploadCourseMatch && metadata.courseName.trim()
+                <Text className={coursesLoaded && !metadata.courseIds.length && metadata.courseName.trim()
                   ? 'materials-sheet__field-status materials-sheet__field-status--pending'
                   : 'materials-sheet__field-status'}
                 >
@@ -1094,8 +1225,8 @@ export default function MaterialsPage() {
                     ? '请选择'
                     : !coursesLoaded
                       ? '正在匹配'
-                      : uploadCourseMatch
-                        ? '已匹配课程库'
+                      : metadata.courseIds.length
+                        ? `已关联 ${metadata.courseIds.length} 门`
                         : '将由管理员归类'}
                 </Text>
               </View>
@@ -1126,22 +1257,29 @@ export default function MaterialsPage() {
                 {!!uploadCourseOptions.length ? (
                   <View className='materials-course-picker__grid'>
                     {uploadCourseOptions.map((item) => {
-                      const selected = item.id
-                        ? item.id === uploadCourseMatch?.id
-                        : item.name === metadata.courseName
+                      const selected = !!item.id && metadata.courseIds.includes(item.id)
                       return (
                         <View
                           key={`${item.id || 'candidate'}-${item.name}`}
                           className={`materials-course-picker__option ${selected ? 'materials-course-picker__option--active' : ''}`}
-                          onClick={() => updateMetadata({
-                            courseName: item.name,
-                            courseId: item.id,
-                            periodId: item.periodId,
-                          })}
+                          onClick={() => {
+                            if (item.id && !selected && metadata.courseIds.length >= 10) {
+                              Taro.showToast({ title: '最多关联 10 门课程', icon: 'none' })
+                              return
+                            }
+                            updateMetadata({
+                            courseName: '',
+                            courseId: undefined,
+                            courseIds: metadata.courseIds.includes(item.id)
+                              ? metadata.courseIds.filter((id) => id !== item.id)
+                              : [...metadata.courseIds, item.id],
+                            candidateCourseName: '',
+                            })
+                          }}
                         >
                           <View>
                             <Text>{item.name}</Text>
-                            <Text>{item.courseCode || '课程目录'}</Text>
+                            <Text>{item.courseCode} · {item.educationLevel}</Text>
                           </View>
                           {selected && <Text>已选</Text>}
                         </View>
@@ -1153,12 +1291,13 @@ export default function MaterialsPage() {
                     没有匹配课程，可直接使用输入的名称
                   </Text>
                 )}
+                {!!metadata.courseIds.length && <Text className='materials-course-picker__caption'>已选：{apiCourses.filter((item) => metadata.courseIds.includes(item.id)).map((item) => courseOptionFromRecord(item).label).join('、')}</Text>}
                 <View
                   className='materials-course-picker__more'
                   onClick={openUploadCoursePicker}
                 >
                   <Text>查看全部课程</Text>
-                  <Text>{uploadCourseCandidates.length ? `${uploadCourseCandidates.length} 门 ›` : '›'}</Text>
+                  <Text>搜索并添加 ›</Text>
                 </View>
               </View>
               <Text className='materials-sheet__label'>资料类型</Text>
@@ -1198,34 +1337,39 @@ export default function MaterialsPage() {
                 <Text>‹</Text>
                 <Text>返回分享资料</Text>
               </View>
-              <Text className='materials-sheet__title'>选择课程</Text>
+              <Text className='materials-sheet__title'>{coursePickerTarget === 'filter' ? '筛选课程' : coursePickerTarget === 'edit' ? '修改课程' : '选择课程'}</Text>
               <Text className='materials-sheet__subtitle'>支持课程名称、课程号和课程别名搜索</Text>
               <View className='materials-course-browser__search'>
                 <Image src={icons.search} mode='aspectFit' />
                 <KeyboardSafeInput
                   value={uploadCourseQuery}
-                  onInput={(event) => setUploadCourseQuery(event.detail.value)}
+                  onInput={(event) => updateCoursePickerQuery(event.detail.value)}
                   confirmType='search'
                   placeholder='搜索全部课程'
                   onKeyboardVisibilityChange={onKeyboardVisibilityChange}
                 />
                 {!!uploadCourseQuery && (
-                  <View onClick={() => setUploadCourseQuery('')}>×</View>
+                  <View onClick={() => updateCoursePickerQuery('')}>×</View>
                 )}
               </View>
               <View className='materials-course-browser__summary'>
                 <Text>{uploadCourseQuery.trim() ? '搜索结果' : '全部课程'}</Text>
-                <Text>{visibleUploadCourseOptions.length} 门</Text>
+                <Text>{coursePickerTotal} 门</Text>
               </View>
               <ScrollView
                 scrollY
                 showScrollbar={false}
                 className='materials-course-browser__list'
+                onScrollToLower={loadMoreCoursePicker}
               >
                 {visibleUploadCourseOptions.map((item) => {
-                  const selected = item.id
-                    ? item.id === uploadCourseMatch?.id
-                    : item.name === metadata.courseName
+                  const selectedIds = coursePickerSelectedIds(
+                    coursePickerTarget,
+                    metadata.courseIds,
+                    courseId,
+                    editCourseIds,
+                  )
+                  const selected = selectedIds.includes(item.id)
                   return (
                     <View
                       key={`${item.id || 'candidate'}-${item.name}`}
@@ -1234,9 +1378,9 @@ export default function MaterialsPage() {
                     >
                       <View>
                         <Text>{item.name}</Text>
-                        <Text>{[item.courseCode, item.department].filter(Boolean).join(' · ') || '课程目录'}</Text>
+                        <Text>{[item.courseCode, item.educationLevel, item.department].filter(Boolean).join(' · ')}</Text>
                       </View>
-                      <Text>{selected ? '当前选择' : '选择'}</Text>
+                      <Text>{selected ? '移除' : '添加'}</Text>
                     </View>
                   )
                 })}
@@ -1246,6 +1390,7 @@ export default function MaterialsPage() {
                     <Text>返回后仍可直接输入课程名称</Text>
                   </View>
                 )}
+                {coursePickerLoading && <Text className='materials-loading-more'>正在加载课程…</Text>}
               </ScrollView>
             </View>
           )}
@@ -1253,7 +1398,7 @@ export default function MaterialsPage() {
           {sheet === 'detail' && activeMaterial && <View className='materials-sheet__body'>
             <View className={`materials-detail-file material-card__file--${activeMaterial.material_type}`}>{materialKindLabels[activeMaterial.material_type]}</View>
             <Text className='materials-sheet__title'>{activeMaterial.title}</Text>
-            <Text className='materials-sheet__subtitle'>{activeMaterial.course?.name || activeMaterial.candidate_course_name || '课程待确认'} · {materialStatusLabels[activeMaterial.status]}</Text>
+            <Text className='materials-sheet__subtitle'>{materialCourseLabel(activeMaterial, 999)} · {materialStatusLabels[activeMaterial.status]}</Text>
             {!!activeMaterial.description && <Text className='materials-detail-description'>{activeMaterial.description}</Text>}
             <View className='materials-detail-list'>
               {activeMaterial.files.map((file, index) => <View key={file.id} className='materials-detail-file-row'>
@@ -1266,7 +1411,10 @@ export default function MaterialsPage() {
               <Text className='materials-sheet__label'>修改资料名称</Text>
               <KeyboardSafeInput value={editTitle} onInput={(event) => setEditTitle(event.detail.value)} className='materials-input' onKeyboardVisibilityChange={onKeyboardVisibilityChange} />
               <Text className='materials-sheet__label'>修改课程</Text>
-              <KeyboardSafeInput value={editCourse} onInput={(event) => setEditCourse(event.detail.value)} className='materials-input' placeholder='找不到课程也可直接输入' onKeyboardVisibilityChange={onKeyboardVisibilityChange} />
+              {!editCourseIds.length && <KeyboardSafeInput value={editCourse} onInput={(event) => setEditCourse(event.detail.value)} className='materials-input' placeholder='找不到课程也可直接输入' onKeyboardVisibilityChange={onKeyboardVisibilityChange} />}
+              {!!editCourseIds.length && <Text className='materials-upload-notice'>已关联：{apiCourses.filter((item) => editCourseIds.includes(item.id)).map((item) => courseOptionFromRecord(item).label).join('、')}</Text>}
+              <View className='materials-secondary' onClick={openEditCoursePicker}>搜索并关联课程</View>
+              {!!editCourseIds.length && <Text className='materials-secondary' onClick={() => { setEditCourseIds([]); setEditCourse('') }}>改为候选课程</Text>}
               <Text className='materials-sheet__label'>修改类型</Text>
               <ScrollView scrollX showScrollbar={false}>
                 <View className='materials-inline-options'>{materialKinds.map((item) => <View key={item} className={editKind === item ? 'materials-option--active' : ''} onClick={() => setEditKind(item)}>{materialKindLabels[item]}</View>)}</View>
