@@ -14,6 +14,7 @@ import {
   View,
 } from '@tarojs/components'
 import { useViewPageVisible } from '../../features/community/use-view-page-visible'
+import { useCampusLocationPrompt } from '../../features/campus-location/use-campus-location-prompt'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
@@ -489,6 +490,25 @@ function Index() {
   const homeFeedLoadingMoreRef = useRef(false)
   const homeHasShown = useRef(false)
   const homeBackTopVisibleRef = useRef(false)
+  const applyCampus = useCallback((selectedCampus: string) => {
+    try {
+      // 先持久化，避免存储失败时首页与课表使用不同校区。
+      saveSelectedCampus(selectedCampus)
+    } catch {
+      void Taro.showToast({ title: '校区保存失败，请重试', icon: 'none' })
+      return
+    }
+    const config = getMiniappRuntimeConfig()
+    setRuntimeConfig(config)
+    setCampusName(selectedCampus)
+    setBannerIndex(0)
+    setCoursePreview(loadCachedCoursePreview(config, selectedCampus))
+  }, [])
+  const dismissCampusLocationPrompt = useCampusLocationPrompt(
+    viewPageVisible && !homeFeedLoading && !homeFeedRefreshing
+      && !showNotificationGuide && !homeCommentItem && !isAccountCancelled(),
+    applyCampus,
+  )
   const headerCollapsed = useCollapsingHeader({
     triggerSelector: '.campus__eyebrow',
     threshold: 48,
@@ -694,6 +714,11 @@ function Index() {
       void Taro.reLaunch({ url: '/pages/account-cancellation/index?success=1' })
       return
     }
+    const config = getMiniappRuntimeConfig()
+    const selectedCampus = getSelectedCampus(config)
+    setRuntimeConfig(config)
+    setCampusName(selectedCampus)
+    setCoursePreview(loadCachedCoursePreview(config, selectedCampus))
     // 首页从详情返回时保留 Feed 分页和滚动位置，完整刷新交给下拉刷新。
     if (homeHasShown.current) return
     homeHasShown.current = true
@@ -774,14 +799,12 @@ function Index() {
   }
 
   const chooseCampus = async () => {
+    dismissCampusLocationPrompt()
     const campuses = enabledCampuses(runtimeConfig)
     const tapIndex = await showActionSheetSelection(campuses)
     if (tapIndex === null) return
     const selectedCampus = campuses[tapIndex]
-    setCampusName(selectedCampus)
-    setBannerIndex(0)
-    saveSelectedCampus(selectedCampus)
-    setCoursePreview(loadCachedCoursePreview(runtimeConfig, selectedCampus))
+    applyCampus(selectedCampus)
   }
 
   const openHomeFeedItem = (item: HomeFeedItemView) => {
