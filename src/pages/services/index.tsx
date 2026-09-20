@@ -78,6 +78,7 @@ const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> =
     items: [
       { key: 'schedule', name: '课程表', icon: icons.calendar, route: '/pages/academic/schedule/index' },
       { key: 'grades', name: '成绩查询', icon: icons.grade, route: '/pages/academic/grades/index' },
+      { key: 'grade-ranking', name: '成绩排名', icon: icons.grade, route: '/pages/academic/rankings/index' },
       { key: 'exams', name: '考试安排', icon: icons.exam, route: '/pages/academic/exams/index' },
       { key: 'result', name: '选课结果', icon: icons.result, route: '/pages/academic/selection/index' },
       { key: 'pass-rate', name: '课程通过率', icon: icons.passRate, route: '/pages/academic/statistics/courses' },
