@@ -5,6 +5,7 @@ const fullPages = [
   'pages/app-login/index',
   'pages/community/index',
   'pages/community/detail',
+  'pages/today-hot/index',
   'pages/community/topic/index',
   'pages/errands/detail',
   'pages/marketplace/detail',
@@ -51,6 +52,7 @@ const fullPages = [
 const qualificationExcludedPages = new Set([
   'pages/community/index',
   'pages/community/detail',
+  'pages/today-hot/index',
   'pages/community/topic/index',
   'pages/errands/detail',
   'pages/marketplace/detail',
@@ -80,6 +82,7 @@ const mainPages = fullPages.filter((page) => mainPagePaths.has(page))
 
 const socialMainPages = [
   'pages/community/detail',
+  'pages/today-hot/index',
   'pages/community/topic/index',
   'pages/publish/index',
   'pages/my-services/index',
@@ -208,7 +211,9 @@ export default defineAppConfig({
     navigationBarBackgroundColor: '@navigationBarBackgroundColor',
     navigationBarTitleText: 'OUSea',
     navigationBarTextStyle: '@navigationBarTextStyle' as 'black',
-    backgroundColor: '@backgroundColor'
+    backgroundColor: '@backgroundColor',
+    backgroundColorTop: '@backgroundColor',
+    backgroundColorBottom: '@backgroundColor'
   },
   permission: {
     'scope.userLocation': {

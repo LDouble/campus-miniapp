@@ -2,7 +2,7 @@
   "light": {
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f4f7fb",
+    "backgroundColor": "#f5f8fc",
     "backgroundTextStyle": "dark",
     "tabBarColor": "#90a1b9",
     "tabBarSelectedColor": "#2b7fff",

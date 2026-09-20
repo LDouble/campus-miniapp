@@ -167,10 +167,57 @@ for (const key of ['blue', 'green', 'pink', 'purple', 'orange', 'cyan']) {
   )
 }
 
+const todayHotTokens = (tokenJson.global.color as Record<string, Record<string, TokenLeaf>>)['today-hot']
+
+for (const [key, token] of Object.entries(todayHotTokens)) {
+  const cssName = `--ousea-today-hot-${key}`
+  const value = token.value.toLowerCase()
+
+  assert.equal(cssVariables[cssName], value, `${cssName} 必须与今日上头 Token 源一致`)
+  assert.match(
+    sassTokens,
+    new RegExp(`\\$ousea-today-hot-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)},\\s*${escapeRegex(value)}\\);`, 'u'),
+    `${cssName} 必须有同名 Sass 映射`,
+  )
+}
+
+for (const key of Object.keys(todayHotTokens)) {
+  assert.match(
+    appStyle,
+    new RegExp(`--campus-today-hot-${key}:\\s*var\\(--ousea-today-hot-[\\w-]+\\);`, 'u'),
+    `浅色主题必须提供 --campus-today-hot-${key} 语义令牌`,
+  )
+}
+
+const todayHotShadows = (tokenJson.global.shadow as Record<string, Record<string, TokenLeaf>>)['today-hot']
+
+for (const [key, token] of Object.entries(todayHotShadows)) {
+  const cssName = `--ousea-today-hot-shadow-${key}`
+  const value = token.value.toLowerCase()
+
+  assert.equal(cssVariables[cssName], value, `${cssName} 必须与今日上头阴影 Token 源一致`)
+  assert.match(
+    sassTokens,
+    new RegExp(`\\$ousea-today-hot-shadow-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)},`, 'u'),
+    `${cssName} 必须有同名 Sass 映射`,
+  )
+  assert.match(
+    appStyle,
+    new RegExp(`--campus-today-hot-shadow-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)}\\);`, 'u'),
+    `浅色主题必须提供 --campus-today-hot-shadow-${key} 语义令牌`,
+  )
+}
+
 assert.match(
   appStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*--campus-service-page-top:\s*var\(--ousea-service-dark-page-top\);/u,
-  '暗色主题必须覆盖全部服务页面令牌',
+  /\.campus-theme--dark\s*\{[\s\S]*--campus-today-hot-surface:\s*var\(--campus-surface\);[\s\S]*--campus-today-hot-label:\s*var\(--campus-text-heading\);[\s\S]*--campus-today-hot-muted:\s*var\(--campus-text-muted\);/u,
+  '暗色主题必须复用 Campus 表面、标题与辅助文字语义',
+)
+
+assert.match(
+  appStyle,
+  /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{[\s\S]*--campus-service-page-top:\s*var\(--ousea-service-dark-page-top\);/u,
+  '系统深色场景必须覆盖全部服务页面令牌',
 )
 assert.match(master, /global\.color\.service/u)
 assert.match(master, /global\.shadow\.service/u)

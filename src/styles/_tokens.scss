@@ -138,6 +138,27 @@ $ousea-service-shadow-dark-category-pink: var(--ousea-service-shadow-dark-catego
 $ousea-service-shadow-dark-category-purple: var(--ousea-service-shadow-dark-category-purple, 0 0 24rpx rgba(163, 171, 255, 0.15));
 $ousea-service-shadow-dark-category-orange: var(--ousea-service-shadow-dark-category-orange, 0 0 24rpx rgba(251, 191, 36, 0.15));
 $ousea-service-shadow-dark-category-cyan: var(--ousea-service-shadow-dark-category-cyan, 0 0 24rpx rgba(56, 189, 248, 0.15));
+$ousea-today-hot-surface: var(--ousea-today-hot-surface, #ffffff);
+$ousea-today-hot-border: var(--ousea-today-hot-border, rgba(241, 245, 249, 0.8));
+$ousea-today-hot-divider: var(--ousea-today-hot-divider, #f1f5f9);
+$ousea-today-hot-label: var(--ousea-today-hot-label, #1e293b);
+$ousea-today-hot-text: var(--ousea-today-hot-text, #334155);
+$ousea-today-hot-muted: var(--ousea-today-hot-muted, #94a3b8);
+$ousea-today-hot-icon-start: var(--ousea-today-hot-icon-start, #f97316);
+$ousea-today-hot-icon-middle: var(--ousea-today-hot-icon-middle, #f59e0b);
+$ousea-today-hot-icon-end: var(--ousea-today-hot-icon-end, #f43f5e);
+$ousea-today-hot-row-first-bg: var(--ousea-today-hot-row-first-bg, #fee2e2);
+$ousea-today-hot-row-first-text: var(--ousea-today-hot-row-first-text, #dc2626);
+$ousea-today-hot-row-second-bg: var(--ousea-today-hot-row-second-bg, rgba(249, 115, 22, 0.1));
+$ousea-today-hot-row-second-text: var(--ousea-today-hot-row-second-text, #ea580c);
+$ousea-today-hot-tag-first: var(--ousea-today-hot-tag-first, #ea580c);
+$ousea-today-hot-tag-second: var(--ousea-today-hot-tag-second, #2f77f4);
+$ousea-today-hot-badge-first-bg: var(--ousea-today-hot-badge-first-bg, #fee2e2);
+$ousea-today-hot-badge-first-text: var(--ousea-today-hot-badge-first-text, #dc2626);
+$ousea-today-hot-badge-second-bg: var(--ousea-today-hot-badge-second-bg, #dbeafe);
+$ousea-today-hot-badge-second-text: var(--ousea-today-hot-badge-second-text, #2563eb);
+$ousea-today-hot-shadow-card: var(--ousea-today-hot-shadow-card, 0 6rpx 30rpx rgba(0, 0, 0, 0.03));
+$ousea-today-hot-shadow-icon: var(--ousea-today-hot-shadow-icon, 0 8rpx 12rpx -2rpx rgba(249, 115, 22, 0.25), 0 4rpx 8rpx -4rpx rgba(249, 115, 22, 0.25));
 
 // Brand and semantic colors
 $color-primary: var(--campus-primary, #2b7aef);
@@ -201,6 +222,29 @@ $shadow-service-pink: var(--campus-service-shadow-pink, 0 2rpx 4rpx 0 rgba(15, 2
 $shadow-service-purple: var(--campus-service-shadow-purple, 0 2rpx 4rpx 0 rgba(15, 23, 42, 0.05));
 $shadow-service-orange: var(--campus-service-shadow-orange, 0 2rpx 4rpx 0 rgba(15, 23, 42, 0.05));
 $shadow-service-cyan: var(--campus-service-shadow-cyan, 0 2rpx 4rpx 0 rgba(15, 23, 42, 0.05));
+
+// Today hot homepage ticker
+$color-today-hot-surface: var(--campus-today-hot-surface, #ffffff);
+$color-today-hot-border: var(--campus-today-hot-border, rgba(241, 245, 249, 0.8));
+$color-today-hot-divider: var(--campus-today-hot-divider, #f1f5f9);
+$color-today-hot-label: var(--campus-today-hot-label, #1e293b);
+$color-today-hot-text: var(--campus-today-hot-text, #334155);
+$color-today-hot-muted: var(--campus-today-hot-muted, #94a3b8);
+$color-today-hot-icon-start: var(--campus-today-hot-icon-start, #f97316);
+$color-today-hot-icon-middle: var(--campus-today-hot-icon-middle, #f59e0b);
+$color-today-hot-icon-end: var(--campus-today-hot-icon-end, #f43f5e);
+$color-today-hot-row-first-bg: var(--campus-today-hot-row-first-bg, #fee2e2);
+$color-today-hot-row-first-text: var(--campus-today-hot-row-first-text, #dc2626);
+$color-today-hot-row-second-bg: var(--campus-today-hot-row-second-bg, rgba(249, 115, 22, 0.1));
+$color-today-hot-row-second-text: var(--campus-today-hot-row-second-text, #ea580c);
+$color-today-hot-tag-first: var(--campus-today-hot-tag-first, #ea580c);
+$color-today-hot-tag-second: var(--campus-today-hot-tag-second, #2f77f4);
+$color-today-hot-badge-first-bg: var(--campus-today-hot-badge-first-bg, #fee2e2);
+$color-today-hot-badge-first-text: var(--campus-today-hot-badge-first-text, #dc2626);
+$color-today-hot-badge-second-bg: var(--campus-today-hot-badge-second-bg, #dbeafe);
+$color-today-hot-badge-second-text: var(--campus-today-hot-badge-second-text, #2563eb);
+$shadow-today-hot-card: var(--campus-today-hot-shadow-card, 0 6rpx 30rpx rgba(0, 0, 0, 0.03));
+$shadow-today-hot-icon: var(--campus-today-hot-shadow-icon, 0 8rpx 12rpx -2rpx rgba(249, 115, 22, 0.25), 0 4rpx 8rpx -4rpx rgba(249, 115, 22, 0.25));
 
 // Route semantics
 $color-route-origin: var(--campus-route-origin, #00d492);

@@ -78,6 +78,10 @@ const qualificationBlockerRoute = (module: BlockerModule) => {
   return featureMigratedUrl({ module: module === 'trade_order' ? 'marketplace' : module })
 }
 
+const isFinancialBlocker = (module: BlockerModule) => (
+  module === 'settlement' || module === 'withdrawal'
+)
+
 const preflightFromError = (error: ApiError) => {
   const details = error.details
   if (!details || typeof details !== 'object') return null
@@ -131,6 +135,19 @@ export default function AccountCancellationPage() {
         icon: 'none',
       })
     }
+  }
+
+  const openBlocker = async (module: BlockerModule, route: string) => {
+    if (isQualificationEdition && isFinancialBlocker(module)) {
+      const result = await Taro.showModal({
+        title: '请前往新版校园服务处理',
+        content: '当前版本不提供收益结算和提现处理，请在新版校园服务完成处理后再返回注销检查。',
+        confirmText: '前往新版',
+        cancelText: '暂不处理',
+      })
+      if (!result.confirm) return
+    }
+    await Taro.navigateTo({ url: route })
   }
 
   const cancelAccount = async () => {
@@ -282,11 +299,12 @@ export default function AccountCancellationPage() {
                 </View>
                 <View
                   className='cancellation-blocker__action'
-                  onClick={() => Taro.navigateTo({
-                    url: isQualificationEdition
+                  onClick={() => void openBlocker(
+                    blocker.module,
+                    isQualificationEdition
                       ? qualificationBlockerRoute(blocker.module)
                       : meta.route,
-                  })}
+                  )}
                 >
                   <Text>去处理</Text><Image src={icons.arrow} mode='aspectFit' />
                 </View>

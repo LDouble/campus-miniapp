@@ -89,25 +89,28 @@ const formatCatalogSlotLocation = (
 /** 将服务端保存的蹭课快照拆成课表可渲染的时间块。 */
 export const mapPersonalTimetableItemCourses = (
   item: PersonalTimetableItemView,
-): Course[] => item.slots.map((slot) => ({
-  id: `audit-${item.id}-${slot.source_schedule_slot_id}`,
-  periodId: item.period_id,
-  courseCode: item.course_code ?? undefined,
-  classNum: item.class_name ?? item.offering_id,
-  name: item.course_name,
-  teacher: item.teachers.join('、'),
-  location: formatCatalogSlotLocation(slot, item.location_text),
-  campus: slot.campus || item.campus || undefined,
-  weekday: slot.weekday,
-  startSection: slot.start_section,
-  endSection: slot.end_section,
-  weeks: [...slot.weeks],
-  color: courseColorForClass(item.offering_id),
-  source: 'audit',
-  auditItemId: item.id,
-  auditItemVersion: item.version,
-  auditStatus: item.source_status,
-}))
+): Course[] => {
+  const classNum = item.opening_code?.trim() || undefined
+  return item.slots.map((slot) => ({
+    id: `audit-${item.id}-${slot.source_schedule_slot_id}`,
+    periodId: item.period_id,
+    courseCode: item.course_code ?? undefined,
+    ...(classNum ? { classNum } : {}),
+    name: item.course_name,
+    teacher: item.teachers.join('、'),
+    location: formatCatalogSlotLocation(slot, item.location_text),
+    campus: slot.campus || item.campus || undefined,
+    weekday: slot.weekday,
+    startSection: slot.start_section,
+    endSection: slot.end_section,
+    weeks: [...slot.weeks],
+    color: courseColorForClass(item.offering_id),
+    source: 'audit',
+    auditItemId: item.id,
+    auditItemVersion: item.version,
+    auditStatus: item.source_status,
+  }))
+}
 
 const mapGrade = (grade: AcademicGrade): GradeRecord => ({
   id: grade.id,

@@ -107,12 +107,15 @@ export const resolveMaterialCourse = (
   if (code) {
     const byCode = candidates.filter((course) => {
       const sourceCodes = course.source_course_codes || []
-      return [course.course_code, ...sourceCodes].some((courseCode) => (
-        courseCode.trim().toLowerCase() === code
-      ))
+      return [course.course_code, ...sourceCodes]
+        .some((candidate) => candidate.trim().toLowerCase() === code)
     })
+    // PR #274 支持合并后的来源课程代码。无论规范代码还是来源代码，多个候选
+    // 都表示服务端数据仍有歧义，不能把资料误归到数组中的第一门课程。
     if (byCode.length === 1) return byCode[0]
-    if (byCode.length > 1) return undefined
+    // 有课程代码时绝不能回退到同名/别名：名称可能跨学期或跨院系复用，且代码
+    // 未建档也不能把资料错误地关联到另一门同名课程。
+    return undefined
   }
   const name = normalizedCourseText(value.name || '')
   if (!name) return undefined

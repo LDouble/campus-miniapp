@@ -20,6 +20,7 @@ type FavoriteToggleProps = {
   initialFavorited?: boolean
   loadState?: boolean
   compact?: boolean
+  iconSrc?: string
   onChange?: (favorited: boolean) => void
 }
 
@@ -59,6 +60,7 @@ export default function FavoriteToggle({
   initialFavorited,
   loadState = true,
   compact = false,
+  iconSrc,
   onChange,
 }: FavoriteToggleProps) {
   const [favorited, setFavorited] = useState<boolean | null>(initialFavorited ?? null)
@@ -119,7 +121,7 @@ export default function FavoriteToggle({
     >
       <Image
         className='favorite-toggle__icon'
-        src={favorited ? bookmarkActiveIcon : bookmarkIcon}
+        src={favorited ? bookmarkActiveIcon : iconSrc || bookmarkIcon}
         mode='aspectFit'
       />
       {!compact && <View className='favorite-toggle__label'>{favorited ? '已收藏' : '收藏'}</View>}

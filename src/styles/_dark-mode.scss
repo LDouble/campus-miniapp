@@ -1,7 +1,8 @@
+@media (prefers-color-scheme: dark) {
 // 只放无法由基础语义令牌自动覆盖的暗色例外。
 // 由全局主题根节点驱动，允许用户偏好覆盖系统主题。
 
-.campus-theme--dark {
+.campus-theme {
   // 社区吸顶导航：避免浅色轨道在暗色页面中形成高亮色块，并保证两级标签均清晰可读。
   & .life-hub-navigation {
     border-bottom-color: var(--campus-border, #243244);
@@ -2162,9 +2163,11 @@
     border-color: var(--campus-border, #243244);
   }
 }
+}
 
+@media (prefers-color-scheme: dark) {
 // 校园身份认证沿用原生登录页式的细分隔布局；暗色模式仅切换语义色，不恢复卡片层级。
-.campus-theme--dark {
+.campus-theme {
   & .verification-hero,
   & .verification-hero--pending,
   & .verification-hero--verified,
@@ -2240,4 +2243,7 @@
   }
 
   & .verification-security__icon { background: var(--campus-icon-surface-blue, #162a46); }
+}
+
+
 }

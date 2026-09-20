@@ -1,4 +1,4 @@
-import { createElement, useCallback, useEffect, useRef, useState } from 'react'
+import { createElement, useCallback, useEffect, useRef } from 'react'
 import Taro, { useDidShow, useDidHide, useLaunch } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import {
@@ -13,15 +13,7 @@ import { installAppUpdate } from './features/app-update'
 import { noticesRepository } from './features/notices/repository'
 import { initializeSystemState } from './state/system'
 import { preloadClientBootstrap, preloadPublicData } from './state/public-data'
-import {
-  applyCampusThemeToNativeChrome,
-  applyCampusThemeToCurrentPage,
-  getCampusTheme,
-  initializeCampusTheme,
-  preloadCampusWebview,
-  subscribeCampusTheme,
-  type CampusTheme,
-} from './features/theme-preference'
+import { refreshCampusTheme, initializeCampusTheme } from './features/system-theme'
 import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
@@ -38,9 +30,8 @@ import './app.scss'
 // 必须在页面脚本注册前安装，避免 Taro 为每个页面暴露无用的 onResize 生命周期。
 installWechatRuntimeCompat()
 
-// 在 App 生命周期和首个业务页面创建前同步原生主题。
-// 页面级 page-meta 只负责校准最终页面，不再承担冷启动首帧修复。
-const initialCampusTheme = initializeCampusTheme()
+// 仅图片资源订阅微信主题；页面颜色由媒体查询和 theme.json 原生适配。
+initializeCampusTheme()
 
 const refreshMessageUnreadCount = async () => {
   try {
@@ -52,7 +43,6 @@ const refreshMessageUnreadCount = async () => {
 }
 
 function App(props) {
-  const [campusTheme, setCampusTheme] = useState<CampusTheme>(initialCampusTheme)
   const privateMessageUnreadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const privateMessageUnreadVisibleRef = useRef(false)
   const privateMessageUnreadPollingGeneration = useRef(0)
@@ -78,8 +68,6 @@ function App(props) {
   }, [stopPrivateMessageUnreadPolling])
 
   useLaunch(() => {
-    // preloadWebview 依赖已注册的 App 实例；onLaunch 是安全且早于首次用户导航的时机。
-    preloadCampusWebview()
     initializeSystemState()
     installAppUpdate()
     void preloadPublicData()
@@ -92,20 +80,13 @@ function App(props) {
     installGlobalErrorReporting()
   }, [])
 
-  useEffect(() => subscribeCampusTheme((theme) => {
-    setCampusTheme(theme)
-  }), [])
-
   // 对应 onShow
   useDidShow(() => {
     logForegroundNavigationState()
     privateMessageUnreadVisibleRef.current = true
     privateMessageUnreadPollingGeneration.current += 1
     const generation = privateMessageUnreadPollingGeneration.current
-    const theme = getCampusTheme()
-    setCampusTheme((currentTheme) => currentTheme === theme ? currentTheme : theme)
-    applyCampusThemeToCurrentPage(theme)
-    applyCampusThemeToNativeChrome(theme)
+    refreshCampusTheme()
     const bootstrap = preloadClientBootstrap()
     void preloadPublicData(bootstrap)
     void refreshMessageUnreadCount()
@@ -146,7 +127,7 @@ function App(props) {
   return createElement(
     View,
     {
-      className: `campus-app-root campus-theme campus-theme--${campusTheme}`,
+      className: 'campus-app-root campus-theme',
       onClick: requestWechatSubscriptionForCurrentPage,
     },
     props.children,

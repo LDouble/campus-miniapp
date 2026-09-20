@@ -3773,28 +3773,115 @@ page {
 }
 
 .course-resource-actions--course-card {
-  padding: 12rpx;
-  background: var(--campus-surface-subtle, #f5f8fc);
-  border: 1rpx solid var(--campus-border, #e8edf4);
-  border-radius: var(--ousea-radius-card-sm, 24rpx);
+  padding-top: var(--ousea-space-2, 24rpx);
+  border-top: 1rpx solid var(--campus-border, #e8edf4);
 
-  & .course-resource-actions__primary {
-    min-height: 88rpx;
-    color: #fff;
-    background: var(--campus-primary, #2b7aef);
-    border-color: var(--campus-primary, #2b7aef);
-    border-radius: var(--ousea-radius-card-sm, 24rpx);
-    box-shadow: var(--campus-shadow-card, 0 8rpx 24rpx rgba(29, 95, 214, .08));
+  & .course-resource-actions__discussion {
+    display: flex;
+    align-items: center;
+    min-height: 104rpx;
+    padding: 8rpx 0;
+    color: var(--campus-text-heading, #1a2333);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
 
-    > view text:last-child { color: rgba(255, 255, 255, .82); }
+    .course-resource-actions__discussion-icon-wrap {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: 64rpx;
+      height: 64rpx;
+      background: var(--campus-surface-primary, #f2f7fe);
+      border-radius: 20rpx;
+    }
+
+    .course-resource-actions__discussion-icon {
+      flex: none;
+      width: 36rpx;
+      height: 36rpx;
+    }
+
+    .course-resource-actions__discussion-copy {
+      flex: 1;
+      min-width: 0;
+      margin-left: var(--ousea-space-2, 24rpx);
+    }
+
+    .course-resource-actions__discussion-label {
+      display: block;
+      overflow: hidden;
+      color: inherit;
+      font-size: var(--ousea-font-size-title, 33rpx);
+      font-weight: var(--ousea-font-weight-semibold, 600);
+      line-height: 1.4;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .course-resource-actions__discussion-description {
+      display: block;
+      margin-top: 2rpx;
+      overflow: hidden;
+      color: var(--campus-text-secondary, #6b7a90);
+      font-size: var(--ousea-font-size-caption, 24rpx);
+      font-weight: var(--ousea-font-weight-regular, 400);
+      line-height: 1.4;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .course-resource-actions__discussion-chevron {
+      flex: none;
+      margin-left: var(--ousea-space-2, 24rpx);
+      color: var(--campus-text-muted, #6b7a90);
+      font-size: 36rpx;
+      font-weight: 400;
+      line-height: 1;
+    }
   }
 
-  & .course-resource-actions__secondary > view {
-    min-height: 72rpx;
-    color: var(--campus-primary-strong, #1d5fd6);
-    background: var(--campus-surface, #fff);
-    border-color: var(--campus-border, #e8edf4);
+  & .course-resource-actions__secondary {
+    gap: 0;
+    margin-top: 8rpx;
+    background: var(--campus-surface-subtle, #f5f8fc);
     border-radius: var(--ousea-radius-card-sm, 24rpx);
+    overflow: hidden;
+
+    > .course-resource-actions__secondary-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 88rpx;
+      padding: 0 20rpx;
+      color: var(--campus-text-body, #3a4759);
+      font-size: var(--ousea-font-size-label, 27rpx);
+      font-weight: var(--ousea-font-weight-medium, 500);
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+
+      > text:last-child {
+        margin-left: var(--ousea-space-1, 16rpx);
+        color: var(--campus-text-muted, #6b7a90);
+        font-size: 32rpx;
+        font-weight: 400;
+      }
+
+      & + .course-resource-actions__secondary-item {
+        border-left: 1rpx solid var(--campus-border, #e8edf4);
+      }
+    }
+  }
+
+  & .course-resource-actions__action--disabled {
+    color: var(--campus-text-muted, #6b7a90);
+    opacity: .7;
+
+    .course-resource-actions__discussion-icon-wrap {
+      background: var(--campus-surface-subtle, #f5f8fc);
+    }
   }
 }
 
@@ -3986,11 +4073,12 @@ page {
   .period-options__item { transition: none; }
 }
 
+@media (prefers-color-scheme: dark) {
 /*
  * 本页的 Ousea 浅色视觉规则位于全局 dark-mode 之后加载。
  * 暗色例外必须在页面最终样式层收口，避免同优先级的浅色回退值覆盖主题语义令牌。
  */
-.campus-theme--dark {
+.campus-theme {
   .academic-toolbar--schedule .academic-toolbar__period image {
     filter: brightness(0) saturate(100%) invert(72%) sepia(31%) saturate(1127%) hue-rotate(182deg) brightness(101%) contrast(98%);
   }
@@ -4088,13 +4176,21 @@ page {
   .day-course__status--not-selected { color: var(--campus-errand-end, #ffb900); }
 
   .course-resource-actions--course-card {
-    background: var(--campus-surface, #111827);
     border-color: var(--campus-border, #243244);
 
-    .course-resource-actions__secondary > view {
-      color: var(--campus-primary-strong, #93c5fd);
+    .course-resource-actions__secondary {
       background: var(--campus-surface-subtle, #172033);
-      border-color: var(--campus-border, #243244);
+
+      > .course-resource-actions__secondary-item {
+        color: var(--campus-text-body, #d7e0ec);
+
+        & + .course-resource-actions__secondary-item {
+          border-color: var(--campus-border, #243244);
+        }
+      }
     }
   }
+}
+
+
 }

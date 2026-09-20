@@ -21,6 +21,8 @@ const SCHEDULE_CACHE_KEY_PREFIX = 'academic.scheduleCache.v1.'
 const RECORDS_CACHE_KEY_PREFIX = 'academic.recordsCache.v1.'
 const SELECTION_DRAFT_KEY = 'academic.selectionDraft.v1'
 const SELECTION_SCHEDULE_CACHE_KEY_PREFIX = 'academic.courseSelectionScheduleCache.v1.'
+const PERSONAL_COURSES_V1_KEY_PREFIX = 'academic.personalCourses.v1.'
+const PERSONAL_COURSES_V2_KEY_PREFIX = 'academic.personalCourses.v2.'
 
 export interface AcademicScheduleCache {
   version: 1
@@ -103,6 +105,28 @@ const validCourse = (value: unknown): value is Course => {
     && course.source === 'official'
   )
 }
+
+const personalCoursesKey = (
+  version: 1 | 2,
+  userId: number,
+  level: string,
+  periodId: string,
+) => `${version === 2 ? PERSONAL_COURSES_V2_KEY_PREFIX : PERSONAL_COURSES_V1_KEY_PREFIX}${userId}.${level}.${periodId}`
+
+const validPersonalCourses = (value: unknown, periodId: string): Course[] => (
+  Array.isArray(value) ? value.filter((course): course is Course => (
+    Boolean(course) && course.source === 'audit'
+    && validCourse({ ...course, source: 'official' }) && course.periodId === periodId
+  )) : []
+)
+
+/**
+ * v1 把班级名称或开课实例 ID 写入了 classNum。保留旧课程展示，
+ * 但禁止它们在离线状态下参与按选课号聚合的功能。
+ */
+export const migrateLegacyPersonalCourses = (value: unknown, periodId: string): Course[] => (
+  validPersonalCourses(value, periodId).map(({ classNum: _classNum, ...course }) => course)
+)
 
 const validString = (value: unknown) => typeof value === 'string'
 const validOptionalString = (value: unknown) => value === undefined || validString(value)
@@ -323,14 +347,13 @@ export const academicStorage = {
     }
   },
   getPersonalCourses: (userId: number, level: string, periodId: string): Course[] => {
-    const value = safeRead<unknown>(`academic.personalCourses.v1.${userId}.${level}.${periodId}`, [])
-    return Array.isArray(value) ? value.filter((course): course is Course => (
-      Boolean(course) && course.source === 'audit'
-      && validCourse({ ...course, source: 'official' }) && course.periodId === periodId
-    )) : []
+    const v2Value = safeRead<unknown>(personalCoursesKey(2, userId, level, periodId), null)
+    if (v2Value !== null) return validPersonalCourses(v2Value, periodId)
+    const v1Value = safeRead<unknown>(personalCoursesKey(1, userId, level, periodId), [])
+    return migrateLegacyPersonalCourses(v1Value, periodId)
   },
   setPersonalCourses: (userId: number, level: string, periodId: string, courses: Course[]) => {
-    safeWrite(`academic.personalCourses.v1.${userId}.${level}.${periodId}`, courses)
+    safeWrite(personalCoursesKey(2, userId, level, periodId), courses)
   },
   getCustomCourses: () => safeRead<Course[]>(CUSTOM_COURSES_KEY, []),
   setCustomCourses: (courses: Course[]) => safeWrite(CUSTOM_COURSES_KEY, courses),

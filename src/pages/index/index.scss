@@ -24,6 +24,11 @@ page { background: var(--campus-page, #f4f7fb); }
     margin: 0 -28rpx;
   }
 
+  > .today-hot-entry {
+    /* 与日历同组，按 DOM 顺序排在日历之后、常用服务之前。 */
+    order: 2;
+  }
+
   &__orb {
     position: absolute;
     z-index: 0;
@@ -1196,6 +1201,28 @@ page { background: var(--campus-page, #f4f7fb); }
   &__course-copy {
     flex: 1;
     min-width: 0;
+  }
+
+  &__discussion {
+    flex: none;
+    min-width: 76rpx;
+    min-height: 56rpx;
+    padding: 0 12rpx;
+    margin-left: 12rpx;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 56rpx;
+    text-align: center;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    border: 1rpx solid var(--campus-border, #e8edf4);
+    border-radius: 16rpx;
+
+    &--disabled {
+      color: var(--campus-text-muted, #6b7a90);
+      background: var(--campus-surface-subtle, #f5f8fc);
+      border-color: var(--campus-border, #e8edf4);
+      opacity: .7;
+    }
   }
 
   &__course-name {
@@ -4582,6 +4609,7 @@ page {
 }
 
 @media (prefers-color-scheme: dark) {
+.campus-theme {
   .schedule-card__event-divider {
     background: linear-gradient(
       90deg,
@@ -4597,6 +4625,9 @@ page {
 
 }
 
+
+}
+
 .service-panel__customize {
   display: flex;
   align-items: center;
@@ -4608,5 +4639,52 @@ page {
 .service-panel__grid-icon {
   @each $tone in blue, green, pink, purple, orange, cyan {
     &--#{$tone} { background: linear-gradient(135deg, var(--campus-service-#{$tone}-start), var(--campus-service-#{$tone}-end)); border: 1rpx solid var(--campus-service-#{$tone}-border); }
+  }
+}
+
+.home-class-question {
+  padding: 0 var(--ousea-space-3, 32rpx) calc(var(--ousea-space-3, 32rpx) + env(safe-area-inset-bottom));
+
+  &__context {
+    padding: var(--ousea-space-1, 16rpx) 0 var(--ousea-space-2, 24rpx);
+    border-bottom: 1rpx solid var(--campus-border, #e8edf4);
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 104rpx;
+    padding: var(--ousea-space-1, 16rpx) 0;
+    gap: var(--ousea-space-2, 24rpx);
+    box-sizing: border-box;
+    border-bottom: 1rpx solid var(--campus-border, #e8edf4);
+
+    color: var(--campus-text-body, #3a4759);
+    font-size: var(--ousea-font-size-label, 27rpx);
+    line-height: 1.5;
+
+    > text { flex: 1; min-width: 0; }
+    image { flex: none; width: 24rpx; height: 24rpx; }
+    &:active { opacity: .65; }
+    &:last-child { border-bottom: 0; }
+  }
+
+  &__name {
+    display: block;
+    color: var(--campus-text-heading, #1a2333);
+    font-size: var(--ousea-font-size-body, 32rpx);
+    font-weight: var(--ousea-font-weight-medium, 500);
+    line-height: 1.4;
+    word-break: break-all;
+  }
+
+  &__meta {
+    display: block;
+    margin-top: 8rpx;
+    color: var(--campus-text-secondary, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.5;
+    word-break: break-all;
   }
 }

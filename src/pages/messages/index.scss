@@ -534,7 +534,8 @@
 
 .messages-tabs { margin-bottom: 20rpx; }
 
-.campus-theme--dark {
+@media (prefers-color-scheme: dark) {
+.campus-theme {
   .messages-section-heading__title,
   .messages-conversation-card__head text:first-child,
   .messages-notification-entry__copy text:first-child,
@@ -574,6 +575,9 @@
   }
 
   .messages-summary view:last-child { color: var(--campus-primary-strong, #93c5fd); }
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -854,7 +858,8 @@
   background: var(--campus-primary, #2b7aef);
 }
 
-.campus-theme--dark {
+@media (prefers-color-scheme: dark) {
+.campus-theme {
   .messages-page .custom-navbar__fixed,
   .messages-section-heading,
   .messages-conversation-list,
@@ -883,6 +888,9 @@
 
   .messages-tabs view { color: var(--campus-text-secondary, #aab8ca); }
   .messages-tabs .messages-tabs__active { color: var(--campus-primary, #60a5fa); }
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -931,6 +939,10 @@
   }
 }
 
-.campus-theme--dark .messages-notification-entry__icon image {
+@media (prefers-color-scheme: dark) {
+.campus-theme .messages-notification-entry__icon image {
   filter: none;
+}
+
+
 }

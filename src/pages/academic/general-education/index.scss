@@ -504,8 +504,9 @@ page {
   .general-education-state__loader { animation: none; }
 }
 
-.campus-theme--dark,
-page.theme-dark {
+@media (prefers-color-scheme: dark) {
+.campus-theme,
+page {
   & {
     background: #0b1220 !important;
   }
@@ -584,4 +585,7 @@ page.theme-dark {
   .general-education-module-option {
     color: var(--campus-text-body, #d7e0ec);
   }
+}
+
+
 }

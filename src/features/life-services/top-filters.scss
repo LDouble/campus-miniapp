@@ -182,7 +182,8 @@
   }
 }
 
-.campus-theme--dark {
+@media (prefers-color-scheme: dark) {
+.campus-theme {
   .life-service-filter-chip,
   .life-service-filter-toolbar > .campus-selector__trigger--topbar:not(.campus-selector__trigger--icon-only) {
     background: var(--campus-surface-subtle, #172033);
@@ -214,4 +215,7 @@
   .life-service-filter-more > text {
     border-color: var(--campus-surface, #111827);
   }
+}
+
+
 }

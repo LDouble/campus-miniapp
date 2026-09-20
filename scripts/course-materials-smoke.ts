@@ -72,6 +72,44 @@ assert.deepEqual(coursePickerSelectedIds('edit', [1], 2, [3]), [3])
 assert.equal(hasMaterialCourseSelection([3], ''), true)
 assert.equal(hasMaterialCourseSelection([], '未收录课程'), true)
 assert.equal(hasMaterialCourseSelection([], ''), false)
+const matchingCases: MaterialCourseView[] = [
+  {
+    ...courses[0],
+    id: 2,
+    course_code: 'MATH-CANONICAL',
+    source_course_codes: ['MATH-OLD-001'],
+    name: '线性代数',
+    aliases: [],
+  },
+  {
+    ...courses[0],
+    id: 3,
+    course_code: 'MATH-OTHER',
+    name: '线性代数',
+    aliases: [],
+  },
+]
+assert.equal(resolveMaterialCourse(matchingCases, { courseCode: 'math-old-001' })?.id, 2,
+  '合并后的稳定来源课程代码应精确命中规范课程')
+assert.equal(resolveMaterialCourse(matchingCases, { name: '线性代数' }), undefined,
+  '多个同名课程不得自动选中第一个')
+assert.equal(resolveMaterialCourse(matchingCases, { courseCode: 'unknown-code', name: '线性代数' }), undefined,
+  '携带未建档课程代码时不得回退到同名课程')
+assert.equal(resolveMaterialCourse([matchingCases[0]], { courseCode: 'unknown-code', name: '线性代数' }), undefined,
+  '即使同名课程唯一，未命中代码也不得自动关联')
+const crossLevelCourses: MaterialCourseView[] = [
+  { ...matchingCases[0], education_level: 'undergraduate' },
+  { ...matchingCases[0], id: 5, education_level: 'graduate' },
+]
+assert.equal(resolveMaterialCourse(crossLevelCourses, { courseCode: 'MATH-OLD-001', educationLevel: 'graduate' })?.id, 5,
+  '跨培养层次同代码应在指定层次内匹配')
+assert.equal(resolveMaterialCourse(crossLevelCourses, { name: '线性代数', educationLevel: 'undergraduate' })?.id, 2,
+  '仅名称匹配也应遵守培养层次筛选')
+assert.equal(resolveMaterialCourse([
+  ...matchingCases,
+  { ...courses[0], id: 4, course_code: 'MATH-DUPLICATE', source_course_codes: ['MATH-OLD-001'], name: '数学分析' },
+], { courseCode: 'MATH-OLD-001' }), undefined,
+'多个规范或来源代码候选不得自动选中第一个')
 assert.equal(inferCourseSuggestion('高数二期末真题.pdf', [
   { name: '大学英语' },
   { name: '高数二' },

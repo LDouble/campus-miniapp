@@ -53,16 +53,22 @@
   }
   &--add { background: var(--campus-service-blue-start); border: 1PX dashed var(--campus-service-blue-foreground); }
 }
-.campus-theme--dark .services-group { border-radius: 12PX; border-width: 0; }
-.campus-theme--dark .services-item__name { color: var(--campus-service-text-heading); }
+@media (prefers-color-scheme: dark) {
+  .campus-theme .services-group { border-radius: 12PX; border-width: 0; }
+  .campus-theme .services-item__name { color: var(--campus-service-text-heading); }
+}
 .services-group:not(.services-group--pinned) .services-icon {
   @each $tone in blue, green, pink, purple, orange, cyan {
     &--#{$tone} { box-shadow: var(--campus-service-shadow-category-#{$tone}); }
   }
 }
-.campus-theme--dark .services-icon:not(.services-icon--add) { border-width: 0; }
+@media (prefers-color-scheme: dark) {
+  .campus-theme .services-icon:not(.services-icon--add) { border-width: 0; }
+}
 
-.campus-theme--dark .services-edit { color: var(--campus-service-blue-foreground); }
+@media (prefers-color-scheme: dark) {
+  .campus-theme .services-edit { color: var(--campus-service-blue-foreground); }
+}
 .services-empty { display: block; padding: 16PX 0; color: var(--campus-service-text-muted); font-size: var(--ousea-font-size-caption, 12PX); line-height: 1.6; }
 .services-migrated { padding: 14PX; background: var(--campus-service-surface); border-radius: 16PX; text { display: block; margin-bottom: 6PX; font-size: var(--ousea-font-size-caption, 12PX); } }
 // 编辑在当前宫格内完成，不再使用独立弹层。
