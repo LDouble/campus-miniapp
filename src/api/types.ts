@@ -11,6 +11,7 @@ export type AccountCancellationResult = components['schemas']['AccountCancellati
 export type AcademicIdentity = components['schemas']['AcademicIdentity']
 export type AcademicVerificationRequest = components['schemas']['AcademicVerificationRequest']
 export type AcademicVerificationStatus = components['schemas']['AcademicVerificationStatus']
+export type ClientBootstrap = components['schemas']['ClientBootstrap']
 export type AcademicVerificationMaterial = components['schemas']['AcademicVerificationMaterial']
 export type AcademicVerificationUploadTarget = components['schemas']['AcademicVerificationUploadTarget']
 export type AcademicPeriod = components['schemas']['AcademicPeriod']

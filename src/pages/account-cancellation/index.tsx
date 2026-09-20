@@ -60,10 +60,22 @@ const blockerMeta: Record<BlockerModule, {
     route: '/pages/my-services/index?section=carpool&relation=all',
     icon: icons.carpool,
   },
+  settlement: {
+    label: '待处理的交易结算',
+    route: '/pages/my-services/index?section=orders&relation=all',
+    icon: icons.market,
+  },
+  withdrawal: {
+    label: '待处理的提现申请',
+    route: '/pages/my-services/index?section=orders&relation=all',
+    icon: icons.market,
+  },
 }
 
 const qualificationBlockerRoute = (module: BlockerModule) => featureMigratedUrl({
-  module: module === 'trade_order' ? 'marketplace' : module,
+  module: ['trade_order', 'settlement', 'withdrawal'].includes(module)
+    ? 'marketplace'
+    : module as Exclude<BlockerModule, 'trade_order' | 'settlement' | 'withdrawal'>,
 })
 
 const preflightFromError = (error: ApiError) => {

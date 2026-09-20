@@ -464,7 +464,7 @@ function Index() {
       if (!account.ok) return { notice: 0, private: 0, userId: 0 }
       const [notice, privateMessage] = await Promise.all([
         settle(noticesRepository.unreadCount()),
-        settle(refreshPrivateMessageUnreadCount(true)),
+        settle(refreshPrivateMessageUnreadCount(force)),
       ])
       return {
         notice: notice.ok ? Number(notice.value.count) || 0 : 0,
