@@ -415,6 +415,20 @@ export const getMiniappRuntimeConfig = cachedRuntimeConfig
 
 let pendingRequest: Promise<MiniappRuntimeConfig> | null = null
 
+export const seedMiniappRuntimeConfig = (
+  view: RuntimeConfigView,
+): MiniappRuntimeConfig => {
+  if (!isRuntimeConfig(view.value)) throw new Error('invalid miniapp runtime config')
+  const value = normalizeRuntimeConfig(view.value)
+  Taro.setStorageSync(CONFIG_STORAGE_KEY, {
+    version: 1,
+    serverVersion: Number(view.version) || 0,
+    updatedAt: Date.now(),
+    value,
+  } as StoredRuntimeConfig)
+  return value
+}
+
 export const loadMiniappRuntimeConfig = (
   options: { force?: boolean } = {},
 ): Promise<MiniappRuntimeConfig> => {
@@ -432,17 +446,7 @@ export const loadMiniappRuntimeConfig = (
     path: '/api/v1/runtime-configs/miniapp/bootstrap',
     anonymous: true,
   })
-    .then((view) => {
-      if (!isRuntimeConfig(view.value)) throw new Error('invalid miniapp runtime config')
-      const value = normalizeRuntimeConfig(view.value)
-      Taro.setStorageSync(CONFIG_STORAGE_KEY, {
-        version: 1,
-        serverVersion: Number(view.version) || 0,
-        updatedAt: Date.now(),
-        value,
-      } as StoredRuntimeConfig)
-      return value
-    })
+    .then(seedMiniappRuntimeConfig)
     .catch(cachedRuntimeConfig)
     .finally(() => {
       if (pendingRequest === tracked) pendingRequest = null
