@@ -326,12 +326,24 @@ export default function CommunityTopicPage() {
     }
   })
 
+  const pendingLikeIds = useRef(new Set<number>())
   const toggleLike = useCallback(async (post: CampusCirclePostView) => {
-    const updated = post.liked
-      ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
-      : await lifeServicesRepository.likeCampusCirclePost(post.id)
-    setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
-    markLifeHubSectionDirty('community')
+    if (pendingLikeIds.current.has(post.id)) return
+    pendingLikeIds.current.add(post.id)
+    try {
+      const updated = post.liked
+        ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
+        : await lifeServicesRepository.likeCampusCirclePost(post.id)
+      setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
+      markLifeHubSectionDirty('community')
+    } catch (likeError) {
+      Taro.showToast({
+        title: isApiError(likeError) ? likeError.message : '操作失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      pendingLikeIds.current.delete(post.id)
+    }
   }, [])
   const requestClassInteractionSubscription = useCallback(() => {
     const participation = classParticipationRef.current
