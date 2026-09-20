@@ -93,6 +93,7 @@ string
   grades: '从成绩进入',
   selection: '从选课结果进入',
   exams: '从考试安排进入',
+  discussion: '从课堂讨论进入',
 }
 
 const decodeRouteValue = (value?: string) => {
@@ -175,7 +176,7 @@ export default function MaterialsPage() {
     courseCode: decodeRouteValue(router.params.courseCode),
     periodId: decodeRouteValue(router.params.periodId),
     periodLabel: decodeRouteValue(router.params.periodLabel),
-    source: ['schedule', 'grades', 'selection'].includes(router.params.source || '')
+    source: ['schedule', 'grades', 'selection', 'exams', 'discussion'].includes(router.params.source || '')
       ? router.params.source as MaterialRouteContext['source']
       : undefined,
     action: router.params.action === 'upload' ? 'upload' : undefined,
@@ -730,6 +731,9 @@ export default function MaterialsPage() {
         const courseRecord = resolveMaterialCourse(apiCourses, {
           id: metadata.courseId,
           name: metadata.courseName,
+          courseCode: metadata.courseName === routeContext.courseName
+            ? routeContext.courseCode
+            : undefined,
         })
         const session = await createMaterialUploadSession({
           title: metadata.title.trim(),

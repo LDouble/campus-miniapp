@@ -9,8 +9,10 @@ type WechatOpenSettingOption = NonNullable<Parameters<typeof Taro.openSetting>[0
 
 export type WechatSubscriptionResult = {
   accepted: boolean
+  registered: boolean
   needsSettings: boolean
   requested: boolean
+  retryRegistration?: () => Promise<boolean>
 }
 
 type StartedWechatSubscription = {
@@ -62,17 +64,16 @@ const subscriptionNeedsSettings = (error: unknown) => {
 
 const recordAcceptedTemplateIds = (
   templateIds: string[],
-  result: Record<string, unknown>,
-) => {
-  const acceptedTemplateIds = templateIds.filter((id) => result[id] === 'accept')
-  if (acceptedTemplateIds.length === 0) return
-  void apiRequest({
-    path: '/api/v1/notices/subscriptions',
-    method: 'POST',
-    data: { template_ids: acceptedTemplateIds },
-    idempotencyKey: createIdempotencyKey('notice-subscription'),
-  }).catch(() => undefined)
-}
+  idempotencyKey: string,
+) => apiRequest({
+  path: '/api/v1/notices/subscriptions',
+  method: 'POST',
+  data: { template_ids: templateIds },
+  idempotencyKey,
+}).then(
+  () => true,
+  () => false,
+)
 
 // 必须在用户点击的同步调用链内发起；只将微信明确同意的模板异步登记。
 const startWechatSubscription = (configuredTemplateIds: unknown): StartedWechatSubscription => {
@@ -84,7 +85,12 @@ const startWechatSubscription = (configuredTemplateIds: unknown): StartedWechatS
     || !getAccessToken()
   ) return {
     requested: false,
-    result: Promise.resolve({ accepted: false, needsSettings: false, requested: false }),
+    result: Promise.resolve({
+      accepted: false,
+      registered: false,
+      needsSettings: false,
+      requested: false,
+    }),
   }
   requesting = true
   // Taro 的跨平台类型错误地要求 entityIds；微信小程序运行时只接受 tmplIds。
@@ -92,17 +98,32 @@ const startWechatSubscription = (configuredTemplateIds: unknown): StartedWechatS
   return {
     requested: true,
     result: requestWechatSubscriptionMessage(option)
-      .then((result) => {
+      .then(async (result) => {
         const normalizedResult = result as Record<string, unknown>
-        recordAcceptedTemplateIds(templateIds, normalizedResult)
+        const acceptedTemplateIds = templateIds.filter((id) => normalizedResult[id] === 'accept')
+        const accepted = acceptedTemplateIds.length > 0
+        if (!accepted) {
+          return {
+            accepted: false,
+            registered: false,
+            needsSettings: templateIds.some((id) => normalizedResult[id] === 'ban'),
+            requested: true,
+          }
+        }
+        const idempotencyKey = createIdempotencyKey('notice-subscription')
+        const retryRegistration = () => recordAcceptedTemplateIds(acceptedTemplateIds, idempotencyKey)
+        const registered = await retryRegistration()
         return {
-          accepted: templateIds.some((id) => normalizedResult[id] === 'accept'),
+          accepted: true,
+          registered,
           needsSettings: templateIds.some((id) => normalizedResult[id] === 'ban'),
           requested: true,
+          ...(registered ? {} : { retryRegistration }),
         }
       })
       .catch((error) => ({
         accepted: false,
+        registered: false,
         needsSettings: subscriptionNeedsSettings(error),
         requested: true,
       }))

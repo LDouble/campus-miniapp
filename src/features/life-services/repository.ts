@@ -5,6 +5,7 @@ import type {
   CampusCirclePostView,
   CampusCirclePostViewPage,
   CampusCircleHome,
+  CampusCircleClassParticipation,
   CampusCircleTopicPage,
   CampusCircleTopicView,
   CampusCircleSectionView,
@@ -43,6 +44,7 @@ type CreateCommentBody = operations['CreateComment']['requestBody']['content']['
 type CreateContentReportBody = operations['CreateContentReport']['requestBody']['content']['application/json']
 type RecordCampusCirclePostViewBody = operations['RecordCampusCirclePostView']['requestBody']['content']['application/json']
 type RecordCampusCirclePostViewResult = operations['RecordCampusCirclePostView']['responses'][200]['content']['application/json']['data']
+type UpdateCampusCircleClassNotificationsBody = operations['UpdateCampusCircleClassNotifications']['requestBody']['content']['application/json']
 
 export type PagingQuery = {
   page?: number
@@ -201,6 +203,24 @@ export const lifeServicesRepository = {
 
   getCampusCircleTopic(id: number) {
     return apiRequest<CampusCircleTopicView>({ path: `/api/v1/campus-circle/topics/${id}` })
+  },
+
+  recordCampusCircleClassParticipation(id: number) {
+    return apiRequest<CampusCircleClassParticipation>({
+      path: `/api/v1/campus-circle/class-discussions/${id}/participation`,
+      method: 'POST',
+    })
+  },
+
+  updateCampusCircleClassNotifications(
+    id: number,
+    input: UpdateCampusCircleClassNotificationsBody,
+  ) {
+    return apiRequest<CampusCircleClassParticipation>({
+      path: `/api/v1/campus-circle/class-discussions/${id}/notifications`,
+      method: 'PUT',
+      data: input,
+    })
   },
 
   listCampusCirclePosts(search: CampusCircleSearch = {}) {

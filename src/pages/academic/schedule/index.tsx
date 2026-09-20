@@ -27,6 +27,8 @@ import {
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
+import { getClassDiscussionContext } from '../../../features/class-discussion/context'
+import { openClassDiscussion } from '../../../features/class-discussion/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { loadAcademicCalendar } from '../../../features/calendar/repository'
@@ -79,6 +81,7 @@ const icons = {
   semester: require('../../../assets/icons/calendar.svg'),
   sync: require('../../../assets/icons/sync.svg'),
 }
+const classDiscussionEntryIcon = require('../../../assets/icons/class-discussion-entry.svg')
 
 const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
 const SCHEDULE_NOTE_COPY_ID = 'academic-schedule-note-copy'
@@ -211,6 +214,8 @@ interface CourseDetailCardProps {
   onDelete?: () => void
   onWanted: () => void
   onFindMaterials: () => void
+  onOpenDiscussion: () => void
+  discussionOpening?: boolean
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
@@ -251,10 +256,13 @@ function CourseDetailCard({
   onDelete,
   onWanted,
   onFindMaterials,
+  onOpenDiscussion,
+  discussionOpening = false,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   const courseNote = course.note?.trim() || ''
   const classNum = course.classNum?.trim() || ''
+  const classDiscussionAvailable = !!getClassDiscussionContext(course)
   const selectionState = simulationMode ? getSimulationSelectionState(course) : null
   return (
     <View className={[
@@ -296,8 +304,8 @@ function CourseDetailCard({
             <Text className='course-conflict-card__note-label'>排课提示</Text>
             <Text className='course-conflict-card__note-copy'>
               {course.auditStatus === 'withdrawn'
-                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“蹭课检索”。'
-                : '课程目录已有更新，请到“蹭课检索”同步最新安排。'}
+                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“课程查询”。'
+                : '课程目录已有更新，请到“课程查询”同步最新安排。'}
             </Text>
           </View>
         )}
@@ -320,16 +328,43 @@ function CourseDetailCard({
           </View>
         )}
         <View className='course-resource-actions course-resource-actions--course-card'>
-          <View className='course-resource-actions__primary' onClick={onFindMaterials}>
-            <View>
-              <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
-              <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '按课程与当前学期为你筛选'}</Text>
+          <View
+            className={[
+              'course-resource-actions__discussion',
+              !classDiscussionAvailable || discussionOpening ? 'course-resource-actions__action--disabled' : '',
+            ].filter(Boolean).join(' ')}
+            ariaRole='button'
+            ariaLabel={classDiscussionAvailable ? '进入课堂讨论' : '当前课程缺少选课号或学年学期，无法进入课堂讨论'}
+            onClick={() => {
+              if (discussionOpening) return
+              onOpenDiscussion()
+            }}
+          >
+            <View className='course-resource-actions__discussion-icon-wrap' aria-hidden>
+              <Image className='course-resource-actions__discussion-icon' src={classDiscussionEntryIcon} mode='aspectFit' />
             </View>
-            <Text>去发现 ›</Text>
+            <View className='course-resource-actions__discussion-copy'>
+              <Text className='course-resource-actions__discussion-label'>
+                {discussionOpening ? '正在打开讨论…' : classDiscussionAvailable ? '课堂讨论' : '暂不能进入讨论'}
+              </Text>
+              <Text className='course-resource-actions__discussion-description'>
+                {classDiscussionAvailable ? '和同学聊聊作业与资料' : '补充选课号和学年学期后开启'}
+              </Text>
+            </View>
+            <Text className='course-resource-actions__discussion-chevron' aria-hidden>›</Text>
           </View>
-          {!isQualificationEdition && <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
-            <View onClick={onWanted}>求购课本</View>
-          </View>}
+          <View className={`course-resource-actions__secondary ${isQualificationEdition ? 'course-resource-actions__secondary--single' : 'course-resource-actions__secondary--two'}`}>
+            <View className='course-resource-actions__secondary-item' ariaRole='button' ariaLabel={isQualificationEdition ? '打开新版课程服务' : '发现课程资料'} onClick={onFindMaterials}>
+              <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
+              <Text aria-hidden>›</Text>
+            </View>
+            {!isQualificationEdition && (
+              <View className='course-resource-actions__secondary-item' ariaRole='button' ariaLabel='求购课本' onClick={onWanted}>
+                <Text>求购课本</Text>
+                <Text aria-hidden>›</Text>
+              </View>
+            )}
+          </View>
         </View>
         {isRemovableCourse(course) && onDelete && (
           <View className='course-conflict-card__danger-action' onClick={onDelete}>
@@ -409,6 +444,7 @@ export default function SchedulePage() {
   const [courseDraft, setCourseDraft] = useState<CustomCourseDraft>(
     emptyDraft(preferences.schedulePeriodId),
   )
+  const [discussionOpening, setDiscussionOpening] = useState(false)
   const scheduleRequestRef = useRef(0)
   const simulationPeriodsRequestRef = useRef(0)
   const personalTimetableRequestRef = useRef(0)
@@ -1018,6 +1054,16 @@ export default function SchedulePage() {
     void openCourseMaterials(context)
   }
 
+  const openCourseDiscussion = async (course: Course) => {
+    if (discussionOpening) return
+    setDiscussionOpening(true)
+    try {
+      await openClassDiscussion(course, runtimeConfig)
+    } finally {
+      setDiscussionOpening(false)
+    }
+  }
+
   const openCourseForm = (course?: Course) => {
     setCourseDraft(course ? {
       id: course.id,
@@ -1595,6 +1641,8 @@ export default function SchedulePage() {
                   onEdit={() => openCourseForm(activeCourse)}
                   onWanted={() => openCourseTrade(activeCourse)}
                   onFindMaterials={() => openCourseMaterialPage(activeCourse)}
+                  onOpenDiscussion={() => void openCourseDiscussion(activeCourse)}
+                  discussionOpening={discussionOpening}
                 />
               </View>
             </View>
