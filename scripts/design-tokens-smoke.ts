@@ -181,7 +181,7 @@ for (const [key, token] of Object.entries(todayHotTokens)) {
   )
 }
 
-for (const key of ['wash-start', 'wash-end', 'text', 'brand']) {
+for (const key of Object.keys(todayHotTokens)) {
   assert.match(
     appStyle,
     new RegExp(`--campus-today-hot-${key}:\\s*var\\(--ousea-today-hot-[\\w-]+\\);`, 'u'),
@@ -189,10 +189,29 @@ for (const key of ['wash-start', 'wash-end', 'text', 'brand']) {
   )
 }
 
+const todayHotShadows = (tokenJson.global.shadow as Record<string, Record<string, TokenLeaf>>)['today-hot']
+
+for (const [key, token] of Object.entries(todayHotShadows)) {
+  const cssName = `--ousea-today-hot-shadow-${key}`
+  const value = token.value.toLowerCase()
+
+  assert.equal(cssVariables[cssName], value, `${cssName} 必须与今日上头阴影 Token 源一致`)
+  assert.match(
+    sassTokens,
+    new RegExp(`\\$ousea-today-hot-shadow-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)},`, 'u'),
+    `${cssName} 必须有同名 Sass 映射`,
+  )
+  assert.match(
+    appStyle,
+    new RegExp(`--campus-today-hot-shadow-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)}\\);`, 'u'),
+    `浅色主题必须提供 --campus-today-hot-shadow-${key} 语义令牌`,
+  )
+}
+
 assert.match(
   appStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*--campus-today-hot-wash-start:\s*rgba\(56, 189, 248, 0\.12\);[\s\S]*--campus-today-hot-wash-end:\s*transparent;[\s\S]*--campus-today-hot-text:\s*var\(--campus-text-heading\);/u,
-  '暗色主题必须使用低透明蓝色洗底并复用 Campus 标题文字',
+  /\.campus-theme--dark\s*\{[\s\S]*--campus-today-hot-surface:\s*var\(--campus-surface\);[\s\S]*--campus-today-hot-label:\s*var\(--campus-text-heading\);[\s\S]*--campus-today-hot-muted:\s*var\(--campus-text-muted\);/u,
+  '暗色主题必须复用 Campus 表面、标题与辅助文字语义',
 )
 
 assert.match(

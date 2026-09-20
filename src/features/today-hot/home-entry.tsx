@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import Taro, { useDidHide, useDidShow } from '@tarojs/taro'
 import { Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import { plainStickerContent } from '../stickers/content'
@@ -6,7 +6,7 @@ import { usePostExposure } from '../community/use-post-exposure'
 import { getTodayHotSessionWindow, reportTodayHotEvent } from './analytics'
 import { todayHotRepository, type TodayHotEntry } from './repository'
 import { readReducedMotion } from './motion'
-import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex } from './carousel'
+import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex, groupDiscussionItems } from './carousel'
 import './today-hot.scss'
 
 const hotBanner = require('../../assets/icons/everyone-chatting.svg')
@@ -23,7 +23,8 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
   const [foreground, setForeground] = useState(true)
   const [entryVisible, setEntryVisible] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(reduceMotion)
-  const current = items[index]
+  const groups = useMemo(() => groupDiscussionItems(items), [items])
+  const current = groups[index]?.[0]
   const currentRef = useRef<TodayHotEntry | null>(null)
   const touchStartY = useRef<number | null>(null)
   const touchMoved = useRef(false)
@@ -36,7 +37,7 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
       const nextItems = result.enabled ? result.items.slice(0, 30) : []
       setItems(nextItems); setSnapshotId(result.enabled ? result.snapshot_id || null : null)
       setIntervalSeconds(carouselIntervalMs(result.carousel_interval_seconds) / 1000)
-      setIndex((value) => nextItems.length ? value % nextItems.length : 0)
+      setIndex((value) => nextItems.length ? value % Math.ceil(nextItems.length / 2) : 0)
     } catch { setItems([]); setSnapshotId(null) }
   }, [])
   useEffect(() => { void load() }, [load])
@@ -53,12 +54,12 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
     shownOnce.current = true
   })
   useDidHide(() => setForeground(false))
-  const canAutoplay = enabled && items.length > 1 && pageVisible && foreground && entryVisible && !touching && !reducedMotion
+  const canAutoplay = enabled && groups.length > 1 && pageVisible && foreground && entryVisible && !touching && !reducedMotion
   useEffect(() => {
     if (!canAutoplay) return undefined
-    const timer = setInterval(() => setIndex((value) => nextCarouselIndex(value, items.length)), carouselIntervalMs(interval))
+    const timer = setInterval(() => setIndex((value) => nextCarouselIndex(value, groups.length)), carouselIntervalMs(interval))
     return () => clearInterval(timer)
-  }, [canAutoplay, interval, items.length])
+  }, [canAutoplay, interval, groups.length])
   usePostExposure({
     selector: '#today-hot-home-entry',
     enabled: enabled && pageVisible,
@@ -67,8 +68,8 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
   })
   if (!enabled) return null
   const copy = summaryFor(current)
-  const open = () => {
-    const item = currentRef.current
+  const open = (selected?: TodayHotEntry) => {
+    const item = selected || currentRef.current
     if (!item || !snapshotId) return
     setTouching(true)
     reportTodayHotEvent('today_hot_module_click', { snapshotId, source: 'home', postId: item.post_id })
@@ -86,24 +87,30 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
     const delta = touchStartY.current === null || typeof endY !== 'number' ? 0 : endY - touchStartY.current
     touchStartY.current = null
     // 只响应短促的上下轻扫；长距离滑动优先交给首页正常滚动。
-    const step = carouselSwipeStep(delta, items.length)
+    const step = carouselSwipeStep(delta, groups.length)
     if (step) {
       touchMoved.current = true
-      setIndex((value) => nextCarouselIndex(value, items.length, step))
+      setIndex((value) => nextCarouselIndex(value, groups.length, step))
     }
     setTouching(false)
   }
+  const renderGroup = (group: TodayHotEntry[], groupIndex: number) => <View className='today-hot-entry__group'>
+    {group.map((item, row) => <View key={item.post_id} className={`today-hot-entry__row today-hot-entry__row--${row + 1}`} onClick={(event) => { event.stopPropagation(); if (!touchMoved.current) open(item) }}>
+      <Text className='today-hot-entry__number'>{groupIndex * 2 + row + 1}</Text>
+      {item.section_name && <Text className='today-hot-entry__tag'>#{item.section_name}#</Text>}
+      <Text className='today-hot-entry__summary'>{summaryFor(item)}</Text>
+    </View>)}
+  </View>
   return <View id='today-hot-home-entry' className='today-hot-entry' ariaRole='button' ariaLabel={`大家在聊：${copy}`} onTouchStart={startTouch} onTouchEnd={finishTouch} onTouchCancel={() => { touchStartY.current = null; setTouching(false) }} onClick={() => { if (!touchMoved.current) open() }}>
     <View className='today-hot-entry__brand'>
-      <Image className='today-hot-entry__art' src={hotBanner} mode='scaleToFill' />
+      <View className='today-hot-entry__icon'><Image className='today-hot-entry__art' src={hotBanner} mode='aspectFit' /></View>
       <Text className='today-hot-entry__brand-title'>大家在聊</Text>
     </View>
-    {items.length > 1 && !reducedMotion ? (
-      <Swiper className='today-hot-entry__ticker' vertical circular current={index} duration={280} disableTouch indicatorDots={false}>
-        {items.map((item) => <SwiperItem key={item.post_id}>
-          <View className='today-hot-entry__row'><Text className='today-hot-entry__summary'>{summaryFor(item)}</Text></View>
-        </SwiperItem>)}
+    {groups.length > 1 && !reducedMotion ? (
+      <Swiper className='today-hot-entry__ticker' vertical circular current={index} duration={600} disableTouch indicatorDots={false}>
+        {groups.map((group, groupIndex) => <SwiperItem key={group[0].post_id}>{renderGroup(group, groupIndex)}</SwiperItem>)}
       </Swiper>
-    ) : <View className='today-hot-entry__ticker today-hot-entry__row'><Text className='today-hot-entry__summary'>{copy}</Text></View>}
+    ) : <View className='today-hot-entry__ticker'>{renderGroup(groups[index], index)}</View>}
+    <View className='today-hot-entry__more'><Text>热聊榜</Text><View className='today-hot-entry__chevron' /></View>
   </View>
 }

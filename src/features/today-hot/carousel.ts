@@ -10,3 +10,10 @@ export const nextCarouselIndex = (current: number, itemCount: number, step = 1) 
   if (itemCount < 2) return 0
   return ((current + step) % itemCount + itemCount) % itemCount
 }
+
+/** 每屏两条，奇数末屏保留真实单条，不复制帖子填充。 */
+export const groupDiscussionItems = <T,>(items: readonly T[]): T[][] => {
+  const groups: T[][] = []
+  for (let index = 0; index < items.length; index += 2) groups.push(items.slice(index, index + 2))
+  return groups
+}

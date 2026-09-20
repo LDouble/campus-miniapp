@@ -1,6 +1,6 @@
 import { readReducedMotion } from '../src/features/today-hot/motion'
 import { strict as assert } from 'node:assert'
-import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex } from '../src/features/today-hot/carousel'
+import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex, groupDiscussionItems } from '../src/features/today-hot/carousel'
 import { consumeTodayHotDetailReturn, saveTodayHotDetailReturn } from '../src/features/today-hot/detail-return'
 
 assert.equal(carouselIntervalMs(0), 5_000)
@@ -40,3 +40,9 @@ for (const path of ['../src/pages/today-hot/index.config', '../src/packages/soci
   assert.equal(config.navigationStyle, 'custom')
   assert.equal(config.enablePullDownRefresh, true)
 }
+
+assert.deepEqual(groupDiscussionItems([]), [])
+assert.deepEqual(groupDiscussionItems([1]), [[1]])
+assert.deepEqual(groupDiscussionItems([1, 2]), [[1, 2]])
+assert.deepEqual(groupDiscussionItems([1, 2, 3]), [[1, 2], [3]])
+assert.deepEqual(groupDiscussionItems([1, 2, 3, 4]).flat(), [1, 2, 3, 4], '轮播应完整保留服务端顺序且不重复帖子')
