@@ -24,6 +24,11 @@ page { background: var(--campus-page, #f4f7fb); }
     margin: 0 -28rpx;
   }
 
+  > .today-hot-entry {
+    /* 与日历同组，按 DOM 顺序排在日历之后、常用服务之前。 */
+    order: 2;
+  }
+
   &__orb {
     position: absolute;
     z-index: 0;

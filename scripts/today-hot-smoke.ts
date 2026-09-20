@@ -1,3 +1,4 @@
+import { readReducedMotion } from '../src/features/today-hot/motion'
 import { strict as assert } from 'node:assert'
 import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex } from '../src/features/today-hot/carousel'
 import { consumeTodayHotDetailReturn, saveTodayHotDetailReturn } from '../src/features/today-hot/detail-return'
@@ -21,3 +22,21 @@ assert.equal(detailReturn?.post, returnedPost, 'detail like state should return 
 assert.equal(detailReturn?.approvedCommentDelta, 1, 'detail comment delta should accumulate')
 assert.equal(consumeTodayHotDetailReturn(88), null, 'detail state is consumed only once')
 process.stdout.write('today hot carousel behavior smoke: ok\n')
+
+async function verifySystemSettings() {
+  assert.equal(await readReducedMotion(() => ({ reduceMotion: true }), () => false), true)
+  assert.equal(await readReducedMotion(() => ({}), () => false), false)
+  assert.equal(await readReducedMotion(() => Promise.resolve({ reduce_motion: true }), () => false), true)
+  assert.equal(await readReducedMotion(undefined, () => true), true)
+  assert.equal(await readReducedMotion(() => { throw new Error('unsupported') }, () => false), false)
+  process.stdout.write('today hot platform settings regression: ok\n')
+}
+void verifySystemSettings().catch((error) => { console.error(error); process.exitCode = 1 })
+
+// 主包和分包入口都应只使用页面内导航，并启用下拉刷新。
+;(globalThis as unknown as { definePageConfig: (value: unknown) => unknown }).definePageConfig = (value) => value
+for (const path of ['../src/pages/today-hot/index.config', '../src/packages/social/today-hot/index.config']) {
+  const config = require(path).default
+  assert.equal(config.navigationStyle, 'custom')
+  assert.equal(config.enablePullDownRefresh, true)
+}

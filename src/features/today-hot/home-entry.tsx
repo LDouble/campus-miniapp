@@ -5,6 +5,7 @@ import { plainStickerContent } from '../stickers/content'
 import { usePostExposure } from '../community/use-post-exposure'
 import { getTodayHotSessionWindow, reportTodayHotEvent } from './analytics'
 import { todayHotRepository, type TodayHotEntry } from './repository'
+import { readReducedMotion } from './motion'
 import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex } from './carousel'
 import './today-hot.scss'
 
@@ -40,11 +41,11 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
   }, [])
   useEffect(() => { void load() }, [load])
   useEffect(() => {
-    const getter = (Taro as unknown as { getSystemSetting?: () => Promise<Record<string, unknown>> }).getSystemSetting
-    if (!getter) return
-    void getter().then((settings) => {
-      setReducedMotion(Boolean(settings.reduceMotion || settings.reduce_motion) || reduceMotion())
-    }).catch(() => undefined)
+    let mounted = true
+    void readReducedMotion(Taro.getSystemSetting, reduceMotion).then((reduced) => {
+      if (mounted) setReducedMotion(reduced)
+    })
+    return () => { mounted = false }
   }, [])
   useDidShow(() => {
     setForeground(true)
