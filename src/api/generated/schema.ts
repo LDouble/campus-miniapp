@@ -1636,6 +1636,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/posts/{id}/today-hot-override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 创建或更新今日上头推荐或排除项；排除优先于推荐 */
+        put: operations["UpsertAdminCampusCircleTodayHotOverride"];
+        post?: never;
+        /** 删除今日上头运营项并记录审计 */
+        delete: operations["DeleteAdminCampusCircleTodayHotOverride"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/posts/{id}/withdraw": {
         parameters: {
             query?: never;
@@ -1716,6 +1734,92 @@ export interface paths {
         put?: never;
         /** 归档校园圈子模块 */
         post: operations["ArchiveCampusCircleSection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询今日上头配置、运营项和刷新操作审计 */
+        get: operations["ListAdminCampusCircleTodayHotAudits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取今日上头配置 */
+        get: operations["GetAdminCampusCircleTodayHotConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 更新今日上头配置并记录审计 */
+        patch: operations["UpdateAdminCampusCircleTodayHotConfig"];
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询今日上头推荐和排除运营项 */
+        get: operations["ListAdminCampusCircleTodayHotOverrides"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 请求异步刷新已启用的今日上头；重复请求合并到同一任务 */
+        post: operations["RefreshAdminCampusCircleTodayHot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取今日上头任务和当前快照状态 */
+        get: operations["GetAdminCampusCircleTodayHotStatus"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2076,6 +2180,40 @@ export interface paths {
         };
         /** 查询服务端配置的启用校园圈板块树 */
         get: operations["ListCampusCircleSections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/today-hot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取首页今日上头轮播；功能关闭、无有效或过期快照时返回禁用且不返回内容 */
+        get: operations["GetCampusCircleTodayHot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/today-hot/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 基于固定快照分页读取今日上头帖子，并在读取时重新检查公开可见性 */
+        get: operations["ListCampusCircleTodayHotPosts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8319,6 +8457,163 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        CampusCircleTodayHotAudit: {
+            action: string;
+            /** Format: uint64 */
+            actor_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            payload?: string | null;
+            /** Format: uint64 */
+            post_id?: number | null;
+        };
+        CampusCircleTodayHotAuditPage: {
+            items: components["schemas"]["CampusCircleTodayHotAudit"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTodayHotAuditPageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotAuditPage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotCarousel: {
+            carousel_interval_seconds: number;
+            enabled: boolean;
+            /** Format: date-time */
+            generated_at?: string | null;
+            items: components["schemas"]["CampusCircleTodayHotItem"][];
+            /** Format: uint64 */
+            snapshot_id?: number | null;
+        };
+        CampusCircleTodayHotCarouselResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotCarousel"];
+            request_id: string;
+        };
+        CampusCircleTodayHotConfig: {
+            candidate_window_hours: number;
+            carousel_interval_seconds: number;
+            carousel_limit: number;
+            /** Format: double */
+            comment_weight: number;
+            enabled: boolean;
+            exploration_ratio_basis_points: number;
+            /** Format: double */
+            like_weight: number;
+            signal_window_hours: number;
+            snapshot_limit: number;
+            /** Format: uint64 */
+            version: number;
+            /** Format: double */
+            view_weight: number;
+        };
+        CampusCircleTodayHotConfigInput: {
+            candidate_window_hours: number;
+            carousel_interval_seconds: number;
+            carousel_limit: number;
+            /** Format: double */
+            comment_weight: number;
+            enabled: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+            exploration_ratio_basis_points: number;
+            /** Format: double */
+            like_weight: number;
+            signal_window_hours: number;
+            snapshot_limit: number;
+            /** Format: double */
+            view_weight: number;
+        };
+        CampusCircleTodayHotConfigResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotConfig"];
+            request_id: string;
+        };
+        CampusCircleTodayHotItem: {
+            content: string;
+            images: string[];
+            /** Format: uint64 */
+            post_id: number;
+            section_name: string;
+        };
+        CampusCircleTodayHotOverride: {
+            /** Format: date-time */
+            ends_at?: string | null;
+            kind: components["schemas"]["CampusCircleTodayHotOverrideKind"];
+            /** Format: uint64 */
+            post_id: number;
+            reason: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: uint64 */
+            updated_by: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        CampusCircleTodayHotOverrideInput: {
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** Format: uint64 */
+            expected_version: number;
+            kind: components["schemas"]["CampusCircleTodayHotOverrideKind"];
+            reason: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+        };
+        /** @enum {string} */
+        CampusCircleTodayHotOverrideKind: "recommend" | "exclude";
+        CampusCircleTodayHotOverridePage: {
+            items: components["schemas"]["CampusCircleTodayHotOverride"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTodayHotOverridePageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotOverridePage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotOverrideResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotOverride"];
+            request_id: string;
+        };
+        CampusCircleTodayHotPage: {
+            context_unavailable: boolean;
+            /** Format: date-time */
+            generated_at: string;
+            has_more: boolean;
+            items: components["schemas"]["CampusCirclePostView"][];
+            next_cursor?: string | null;
+            /** Format: uint64 */
+            snapshot_id: number;
+        };
+        CampusCircleTodayHotPageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotPage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotStatus: {
+            /** Format: int64 */
+            candidate_count: number;
+            /** Format: uint64 */
+            current_snapshot_id: number | null;
+            enabled: boolean;
+            failure_reason?: string | null;
+            /** Format: int64 */
+            last_duration_ms?: number | null;
+            /** Format: date-time */
+            last_failure_at?: string | null;
+            /** Format: date-time */
+            last_success_at: string | null;
+            refresh_queued: boolean;
+            stale: boolean;
+            warmup: boolean;
+        };
+        CampusCircleTodayHotStatusResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotStatus"];
+            request_id: string;
+        };
         CampusCircleTopicAuditPage: {
             items: components["schemas"]["CampusCircleTopicAuditView"][];
             page: number;
@@ -12915,6 +13210,69 @@ export interface components {
                 "application/json": components["schemas"]["CampusCircleSectionTreeResponseBody"];
             };
         };
+        /** @description 今日上头运营审计分页 */
+        CampusCircleTodayHotAuditPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotAuditPageResponseBody"];
+            };
+        };
+        /** @description 首页今日上头轮播数据 */
+        CampusCircleTodayHotCarouselResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotCarouselResponseBody"];
+            };
+        };
+        /** @description 今日上头运营配置 */
+        CampusCircleTodayHotConfigResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotConfigResponseBody"];
+            };
+        };
+        /** @description 今日上头运营覆盖项分页 */
+        CampusCircleTodayHotOverridePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverridePageResponseBody"];
+            };
+        };
+        /** @description 今日上头运营覆盖项 */
+        CampusCircleTodayHotOverrideResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverrideResponseBody"];
+            };
+        };
+        /** @description 固定快照的今日上头帖子页 */
+        CampusCircleTodayHotPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotPageResponseBody"];
+            };
+        };
+        /** @description 今日上头任务运行状态 */
+        CampusCircleTodayHotStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotStatusResponseBody"];
+            };
+        };
         /** @description 校园圈话题自动关联审计记录 */
         CampusCircleTopicAuditPageResponse: {
             headers: {
@@ -16403,6 +16761,53 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    UpsertAdminCampusCircleTodayHotOverride: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverrideInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotOverrideResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DeleteAdminCampusCircleTodayHotOverride: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            204: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     AdminWithdrawCampusCirclePost: {
         parameters: {
             query?: never;
@@ -16550,6 +16955,94 @@ export interface operations {
         responses: {
             200: components["responses"]["CampusCircleSectionResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCampusCircleTodayHotAudits: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotAuditPageResponse"];
+        };
+    };
+    GetAdminCampusCircleTodayHotConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotConfigResponse"];
+        };
+    };
+    UpdateAdminCampusCircleTodayHotConfig: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotConfigInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotConfigResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCampusCircleTodayHotOverrides: {
+        parameters: {
+            query?: {
+                kind?: "recommend" | "exclude";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotOverridePageResponse"];
+        };
+    };
+    RefreshAdminCampusCircleTodayHot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: components["responses"]["CampusCircleTodayHotStatusResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminCampusCircleTodayHotStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotStatusResponse"];
         };
     };
     ListAdminCampusCircleTopics: {
@@ -17092,6 +17585,39 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CampusCircleSectionTreeResponse"];
+        };
+    };
+    GetCampusCircleTodayHot: {
+        parameters: {
+            query?: {
+                window?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotCarouselResponse"];
+        };
+    };
+    ListCampusCircleTodayHotPosts: {
+        parameters: {
+            query?: {
+                snapshot_id?: number;
+                cursor?: string;
+                context_post_id?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotPageResponse"];
+            404: components["responses"]["Error"];
+            410: components["responses"]["Error"];
         };
     };
     ListCampusCircleTopics: {

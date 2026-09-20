@@ -53,6 +53,8 @@ import {
   setCustomTabBarPublishSection,
   syncCustomTabBar,
 } from '../../utils/tabbar'
+import { consumeTodayHotCommunityIntent } from '../../features/today-hot/navigation'
+import { reportTodayHotEvent } from '../../features/today-hot/analytics'
 import './index.scss'
 
 const icons = {
@@ -249,6 +251,7 @@ export default function CommunityPage() {
 
   useDidShow(() => {
     syncCustomTabBar('community')
+    const todayHotIntent = consumeTodayHotCommunityIntent()
     if (
       hasShown.current
       && isLifeHubSectionRefreshRequired(displayedSection)
@@ -301,6 +304,18 @@ export default function CommunityPage() {
         setActiveSection('market')
         setMarketplaceSearchPrefill(marketplacePrefill)
       }
+      return
+    }
+    if (todayHotIntent) {
+      setMarketplaceSearchPrefill(null)
+      setActiveSection('community')
+      setActiveCommunitySectionId(0)
+      Taro.removeStorageSync(LIFE_HUB_SECTION_KEY)
+      reportTodayHotEvent('today_hot_community_arrival', {
+        snapshotId: todayHotIntent.snapshotId,
+        source: 'today_hot_feed',
+      })
+      void Taro.pageScrollTo({ scrollTop: 0, duration: 0 })
       return
     }
     const savedSection = Taro.getStorageSync<string>(LIFE_HUB_SECTION_KEY)

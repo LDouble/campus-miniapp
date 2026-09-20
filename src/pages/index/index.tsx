@@ -17,6 +17,7 @@ import { readShortcuts } from '../../features/service-shortcuts/preferences'
 import { openService as openCustomService } from '../../features/service-shortcuts/navigation'
 import { getServiceIcon } from '../../features/service-shortcuts/icons'
 import { useViewPageVisible } from '../../features/community/use-view-page-visible'
+import TodayHotHomeEntry from '../../features/today-hot/home-entry'
 import { useCampusLocationPrompt } from '../../features/campus-location/use-campus-location-prompt'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
@@ -1095,6 +1096,8 @@ function Index() {
           {todayCalendarEvents.length > 0 && calendarTimeline}
         </View>
       </View>
+
+      {!isQualificationEdition && <TodayHotHomeEntry pageVisible={viewPageVisible} />}
 
       {homeFeatureFlags.todayTask && todayTask && (
         <View

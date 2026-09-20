@@ -98,6 +98,27 @@
         "dark-cyan-border": { "value": "transparent", "type": "color", "description": "全部服务暗色青色图标无描边" },
         "dark-cyan-foreground": { "value": "#38BDF8", "type": "color", "description": "全部服务暗色青色图标前景（primary-container）" }
       },
+      "today-hot": {
+        "surface": { "value": "#FFFFFF", "type": "color", "description": "大家在聊热聊榜白色卡片表面" },
+        "border": { "value": "rgba(241, 245, 249, 0.8)", "type": "color", "description": "大家在聊热聊榜浅色边框" },
+        "divider": { "value": "#F1F5F9", "type": "color", "description": "大家在聊标签区分隔线" },
+        "label": { "value": "#1E293B", "type": "color", "description": "大家在聊左侧标签文字" },
+        "text": { "value": "#334155", "type": "color", "description": "大家在聊话题摘要文字" },
+        "muted": { "value": "#94A3B8", "type": "color", "description": "大家在聊热聊榜辅助文字" },
+        "icon-start": { "value": "#F97316", "type": "color", "description": "大家在聊对话图标渐变起点" },
+        "icon-middle": { "value": "#F59E0B", "type": "color", "description": "大家在聊对话图标渐变中点" },
+        "icon-end": { "value": "#F43F5E", "type": "color", "description": "大家在聊对话图标渐变终点" },
+        "row-first-bg": { "value": "#FEE2E2", "type": "color", "description": "大家在聊第一话题序号与徽章底色" },
+        "row-first-text": { "value": "#DC2626", "type": "color", "description": "大家在聊第一话题序号与徽章文字" },
+        "row-second-bg": { "value": "rgba(249, 115, 22, 0.1)", "type": "color", "description": "大家在聊第二话题序号底色" },
+        "row-second-text": { "value": "#EA580C", "type": "color", "description": "大家在聊第二话题序号文字" },
+        "tag-first": { "value": "#EA580C", "type": "color", "description": "大家在聊第一话题标签文字" },
+        "tag-second": { "value": "#2F77F4", "type": "color", "description": "大家在聊第二话题标签文字" },
+        "badge-first-bg": { "value": "#FEE2E2", "type": "color", "description": "大家在聊第一话题状态徽章底色" },
+        "badge-first-text": { "value": "#DC2626", "type": "color", "description": "大家在聊第一话题状态徽章文字" },
+        "badge-second-bg": { "value": "#DBEAFE", "type": "color", "description": "大家在聊第二话题状态徽章底色" },
+        "badge-second-text": { "value": "#2563EB", "type": "color", "description": "大家在聊第二话题状态徽章文字" }
+      },
       "cat": {
         "sage": { "value": "#637B65", "type": "color", "description": "图鉴植物与辅助强调" },
         "cream": { "value": "#FFFBEB", "type": "color", "description": "猫咪图鉴奶油底" },
@@ -159,6 +180,10 @@
         "dark-category-purple": { "value": "0 0 24rpx rgba(163, 171, 255, 0.15)", "type": "shadow", "description": "全部服务暗色靛蓝色分类图标辉光" },
         "dark-category-orange": { "value": "0 0 24rpx rgba(251, 191, 36, 0.15)", "type": "shadow", "description": "全部服务暗色橙色分类图标辉光" },
         "dark-category-cyan": { "value": "0 0 24rpx rgba(56, 189, 248, 0.15)", "type": "shadow", "description": "全部服务暗色青色分类图标辉光" }
+      },
+      "today-hot": {
+        "card": { "value": "0 6rpx 30rpx rgba(0, 0, 0, 0.03)", "type": "shadow", "description": "大家在聊热聊榜卡片轻阴影" },
+        "icon": { "value": "0 8rpx 12rpx -2rpx rgba(249, 115, 22, 0.25), 0 4rpx 8rpx -4rpx rgba(249, 115, 22, 0.25)", "type": "shadow", "description": "大家在聊对话图标橙色轻阴影" }
       }
     },
     "fontSize": {
