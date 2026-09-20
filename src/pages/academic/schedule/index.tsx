@@ -906,6 +906,9 @@ export default function SchedulePage() {
   }, [academicUserId, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
+    const config = getMiniappRuntimeConfig()
+    setRuntimeConfig(config)
+    setCampusName(getSelectedCampus(config))
     if (isSimulation) {
       setSimulationCourses(academicStorage.getSelectionDraftCourses())
       setShowSelectionGuide(true)
@@ -1353,6 +1356,9 @@ export default function SchedulePage() {
           const selectionState = isSimulation
             ? getSimulationSelectionState(course)
             : null
+          const hasPreviewHeader = selectionState === 'not-selected'
+            || (!isCurrentWeek && Number.isFinite(nextCourseWeek))
+            || (isCurrentWeek && relatedCount > 0)
           return (
             <View
               key={getCourseScheduleKey(course)}
@@ -1391,7 +1397,7 @@ export default function SchedulePage() {
                 </>
               ) : (
                 <>
-                  <View className='timetable-course__preview-head'>
+                  {hasPreviewHeader && <View className='timetable-course__preview-head'>
                     {selectionState === 'not-selected' && (
                       <Text className={`timetable-course__selection-status timetable-course__selection-status--${selectionState}`}>
                         待教务选
@@ -1405,7 +1411,7 @@ export default function SchedulePage() {
                     ) : isCurrentWeek && relatedCount > 0 ? (
                       <Text className='timetable-course__related-count'>+{relatedCount}</Text>
                     ) : null}
-                  </View>
+                  </View>}
                   <Text className='timetable-course__name'>{course.name}</Text>
                   {isSimulation ? (
                     <Text className='timetable-course__class-num'>
