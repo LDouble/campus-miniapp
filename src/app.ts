@@ -12,7 +12,7 @@ import { registerWechatAiHandoff } from './features/wechat-ai/handoff'
 import { installAppUpdate } from './features/app-update'
 import { noticesRepository } from './features/notices/repository'
 import { initializeSystemState } from './state/system'
-import { preloadPublicData } from './state/public-data'
+import { preloadClientBootstrap, preloadPublicData } from './state/public-data'
 import {
   applyCampusThemeToNativeChrome,
   applyCampusThemeToCurrentPage,
@@ -106,21 +106,25 @@ function App(props) {
     setCampusTheme((currentTheme) => currentTheme === theme ? currentTheme : theme)
     applyCampusThemeToCurrentPage(theme)
     applyCampusThemeToNativeChrome(theme)
-    void preloadPublicData()
+    const bootstrap = preloadClientBootstrap()
+    void preloadPublicData(bootstrap)
     void refreshMessageUnreadCount()
     void guardCurrentPage()
     if (!isQualificationEdition) {
-      void loadMiniappRuntimeConfig().then((config) => {
+      void bootstrap.then(
+        () => loadMiniappRuntimeConfig(),
+        () => loadMiniappRuntimeConfig(),
+      ).then((config) => {
         if (!canRearmForegroundPrivateMessagePolling(
           privateMessageUnreadVisibleRef.current,
           generation,
           privateMessageUnreadPollingGeneration.current,
         )) return
         if (resolveMiniappModule(config, 'private_message').state !== 'enabled') {
-          void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+          void refreshPrivateMessageUnreadCount().catch(() => undefined)
           return
         }
-        void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+        void refreshPrivateMessageUnreadCount().catch(() => undefined)
         schedulePrivateMessageUnreadPolling()
       })
     }

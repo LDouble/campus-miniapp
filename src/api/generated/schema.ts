@@ -2631,6 +2631,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 聚合当前用户的小程序初始化数据 */
+        get: operations["GetClientBootstrap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/club-categories": {
         parameters: {
             query?: never;
@@ -8729,6 +8746,28 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        ClientBootstrap: {
+            academic_verification?: components["schemas"]["AcademicVerificationStatus"] | null;
+            checkin?: components["schemas"]["DailyCheckinStatus"] | null;
+            errors: {
+                [key: string]: components["schemas"]["ClientBootstrapSectionError"];
+            };
+            notice_subscription?: components["schemas"]["NoticeSubscriptionBootstrap"] | null;
+            runtime_config?: components["schemas"]["RuntimeConfig"] | null;
+            /** Format: int32 */
+            schema_version: number;
+        };
+        ClientBootstrapResponseBody: {
+            data: components["schemas"]["ClientBootstrap"];
+            request_id: string;
+        };
+        ClientBootstrapSectionError: {
+            code: string;
+        };
+        NoticeSubscriptionBootstrap: {
+            available: boolean;
+            template_ids: string[];
+        };
         /** @enum {string} */
         ClubAvailableAction: "edit" | "submit_review" | "verify_academic";
         ClubCategory: {
@@ -12951,6 +12990,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["SubmissionResponseBody"];
+            };
+        };
+        /** @description 当前用户的小程序初始化数据 */
+        ClientBootstrapResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClientBootstrapResponseBody"];
             };
         };
         /** @description 社团分类列表 */
@@ -17653,6 +17701,18 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CatalogResponse"];
+        };
+    };
+    GetClientBootstrap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClientBootstrapResponse"];
         };
     };
     ListAdminClubCategories: {

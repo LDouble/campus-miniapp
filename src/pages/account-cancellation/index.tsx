@@ -61,7 +61,7 @@ const blockerMeta: Record<BlockerModule, {
     icon: icons.carpool,
   },
   settlement: {
-    label: '待处理的收益结算',
+    label: '待处理的交易结算',
     route: '/pages/my-services/index?section=orders&relation=all',
     icon: icons.market,
   },
@@ -73,9 +73,9 @@ const blockerMeta: Record<BlockerModule, {
 }
 
 const qualificationBlockerRoute = (module: BlockerModule) => featureMigratedUrl({
-  module: module === 'errand' || module === 'carpool'
-    ? module
-    : 'marketplace',
+  module: ['trade_order', 'settlement', 'withdrawal'].includes(module)
+    ? 'marketplace'
+    : module as Exclude<BlockerModule, 'trade_order' | 'settlement' | 'withdrawal'>,
 })
 
 const isFinancialBlocker = (module: BlockerModule) => (
