@@ -1,13 +1,13 @@
 .home-course-carousel {
   margin-right: calc(-1 * var(--ousea-space-3, 32rpx));
 
-  &__swiper { height: 240rpx; }
+  &__swiper { height: 224rpx; }
   &__pagination {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8rpx;
-    height: 32rpx;
+    height: 24rpx;
     margin-right: var(--ousea-space-3, 32rpx);
   }
   &__dot {
@@ -46,7 +46,7 @@
     pointer-events: none;
   }
   &__main { position: relative; }
-  &__heading { display: flex; align-items: center; gap: 16rpx; height: 40rpx; margin-bottom: 12rpx; }
+  &__heading { display: flex; align-items: center; gap: 16rpx; height: 40rpx; margin-bottom: 8rpx; }
   &__status {
     flex: none;
     margin-top: 0;
@@ -73,7 +73,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  &__meta { min-height: 40rpx; display: flex; align-items: center; min-width: 0; gap: var(--ousea-space-1, 16rpx); }
+  &__meta { min-height: 32rpx; display: flex; align-items: center; min-width: 0; gap: var(--ousea-space-1, 16rpx); }
   &__section {
     flex: none;
     padding: 4rpx 8rpx;
@@ -100,9 +100,9 @@
     align-items: center;
     justify-content: space-between;
     min-height: 88rpx;
-    margin-top: 16rpx;
+    margin-top: 8rpx;
     gap: var(--ousea-space-1, 16rpx);
-    border-top: 1rpx solid var(--campus-border, #e8edf4);
+    border-top: 0;
   }
   &__activity { display: flex; align-items: center; gap: 12rpx; flex: 1; min-width: 0; }
   &__avatars {
@@ -152,17 +152,34 @@
   &__discussion-label {
     display: flex;
     align-items: center;
-    gap: 8rpx;
-    padding: 6rpx 16rpx;
-    font-weight: var(--ousea-font-weight-bold, 700);
+    box-sizing: border-box;
+    height: 40rpx;
+    gap: 6rpx;
+    padding: 0;
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 28rpx;
+    font-weight: var(--ousea-font-weight-medium, 500);
     border-radius: var(--ousea-radius-pill, 999rpx);
-    background: var(--campus-surface-primary, #f2f7fe);
-    border: 1rpx solid var(--campus-border-strong, #e3effe);
-    image { width: 24rpx; height: 24rpx; }
+    background: transparent;
+    border: 0;
+    text { display: block; line-height: 28rpx; }
+  }
+  &__discussion-icon {
+    flex: none;
+    width: 22rpx;
+    height: 22rpx;
+    background-color: currentColor;
+    mask: url('../../assets/icons/home-course-discussion.svg') center / contain no-repeat;
+    -webkit-mask: url('../../assets/icons/home-course-discussion.svg') center / contain no-repeat;
+  }
+  &__unavailable {
+    color: var(--campus-text-secondary, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: var(--ousea-line-height-ui, 1.4);
   }
   &__action--disabled { opacity: .5; }
 }
 
 .campus-theme--dark .home-course-card {
-  &__location image, &__discussion-label image { filter: brightness(0) invert(1); }
+  &__location image { filter: brightness(0) invert(1); }
 }

@@ -9,6 +9,7 @@ import type {
 } from '../../../api/types'
 import { isApiError } from '../../../api/client'
 import CustomNavbar from '../../../components/custom-navbar'
+import { formatGradePeriod } from '../../academic/utils'
 import {
   communityTopicPublisherUrl,
   parsePositiveId,
@@ -569,10 +570,7 @@ export default function CommunityTopicPage() {
             <View className='community-topic-class-context__badges'>
               {topic.class_discussion && <>
                 <Text className='community-topic-class-context__badge'>
-                  {topic.class_discussion.period_id}
-                </Text>
-                <Text className='community-topic-class-context__badge community-topic-class-context__badge--plain'>
-                  选课号 {topic.class_discussion.class_num}
+                  {formatGradePeriod(topic.class_discussion.period_id).label}
                 </Text>
               </>}
               <Text className='community-topic-class-context__badge community-topic-class-context__badge--public'>公开讨论</Text>

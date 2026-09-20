@@ -58,6 +58,7 @@ import HomeCourseCarousel from '../../features/home/course-carousel'
 import {
   avatarText,
   resolveCoursePreview,
+  tomorrowStartingPeriod,
 } from '../../features/home/data'
 import {
   homeFeedItemToPost,
@@ -159,7 +160,7 @@ const icons = {
 }
 
 // 首页服务入口使用预着色的 SDR SVG，避免微信 iOS 为 CSS filter 创建原生图像合成层。
-const homeFeatureFlags = { todayTask: false } as const
+const homeFeatureFlags = { todayTask: false, campusRecommendation: false } as const
 
 const HOME_COURSE_PREVIEW_LIMIT = 8
 
@@ -256,7 +257,8 @@ const loadLatestAcademic = async (
     scheduleNotesByPeriod,
   )
 
-  const { periodId } = resolveScheduleAnchor(periods)
+  const startingTomorrow = tomorrowStartingPeriod(periods)
+  const periodId = startingTomorrow?.id || resolveScheduleAnchor(periods).periodId
   const anchoredPeriod = periods.find((period) => period.id === periodId)
   const isCurrentPeriod = !!anchoredPeriod
     && getCurrentAcademicWeek([anchoredPeriod]) !== null
@@ -264,7 +266,7 @@ const loadLatestAcademic = async (
     && Object.prototype.hasOwnProperty.call(coursesByPeriod, periodId)
   const hasCredential = hasAcademicCredential(userId)
 
-  if (periodId && isCurrentPeriod && !hasCachedCourses && hasCredential) {
+  if (periodId && (isCurrentPeriod || startingTomorrow) && !hasCachedCourses && hasCredential) {
     const coursesResult = await settle(academicRepository.getCourses(periodId))
     if (coursesResult.ok) {
       try {
@@ -819,15 +821,7 @@ function Index() {
     ? coursePreview.dateLabel
     : `共 ${coursePreview.total} 门`
   const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
-  const holidayCountdown = coursePreview.dayLabel === '假期'
-    ? Math.max(1, Math.round(
-      (new Date(
-        coursePreview.targetDate.getFullYear(),
-        coursePreview.targetDate.getMonth(),
-        coursePreview.targetDate.getDate(),
-      ).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000,
-    ))
-    : null
+
 
   const toggleCalendarReminder = async (eventId: string) => {
     const existing = calendarReminders.find((item) => item.event_id === eventId)
@@ -956,16 +950,11 @@ function Index() {
             ariaLabel={`查看校历：${event.title}`}
             onClick={openCalendar}
           >
-            <View className='schedule-card__timeline-marker'>
-              <View className='schedule-card__timeline-dot schedule-card__timeline-dot--event' />
-            </View>
-            <View className='schedule-card__course-copy'>
+            <View className='home-course-events__copy'>
+              <Text className='home-course-events__date'>{calendarEventDateLabel(event)}</Text>
               <View className='today-card__event-title-line'>
                 <Text className='schedule-card__course-name'>{event.title}</Text>
                 {event.priority === 'important' && <Text className='today-card__important'>重要</Text>}
-              </View>
-              <View className='today-card__event-date'>
-                <Text>{calendarEventDateLabel(event)}</Text>
               </View>
             </View>
             {event.remindable && (
@@ -1048,7 +1037,6 @@ function Index() {
       </View>
 
       <View className='service-panel motion-enter motion-enter--delay-3'>
-        <View className='service-panel__simple-head'><Text className='service-panel__title'>常用服务</Text><View className='service-panel__customize' ariaRole='button' onClick={() => Taro.navigateTo({ url: '/pages/services/index?edit=1' })}><Image src={getServiceIcon('edit', campusTheme).src} mode='aspectFit' /><Text>自定义</Text></View></View>
         <View className='service-panel__home-grid'>
           {featuredHomeServices.map((item) => (
             <View
@@ -1081,29 +1069,31 @@ function Index() {
             <Text className='home-course-section__count'>{scheduleCountLabel}</Text>
           </View>
           <View className='home-course-section__all' ariaRole='button' ariaLabel='查看完整课程表' onClick={openSchedule}>
-            <Text>整周课表</Text><Image src={scheduleCalendarArrowIcon} mode='aspectFit' />
+            <Text>整周课表</Text><Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
-        {coursePreview.items.length > 0 ? (
-          <HomeCourseCarousel
-            key={coursePreview.items.map((item) => `${item.course.id}:${item.startsAt.getTime()}`).join('|')}
-            items={coursePreview.items}
-            openingCourseId={discussionOpeningCourseId}
-            onViewSchedule={openSchedule}
-            onDiscussion={(course) => { void openCourseDiscussion(course) }}
-          />
-        ) : (
-          <View className='home-course-section__empty' ariaRole='button' ariaLabel='查看课程表' onClick={openSchedule}>
-            <Text>{coursePreview.emptyText}</Text>
-            <Text>{holidayCountdown ? `${holidayCountdown}天后开学` : coursePreview.emptyHint}</Text>
-          </View>
-        )}
-        {coursePreview.hiddenCount > 0 && (
-          <View className='home-course-section__more' ariaRole='button' onClick={openSchedule}>
-            还有 {coursePreview.hiddenCount} 门课程，查看完整课表
-          </View>
-        )}
-        {todayCalendarEvents.length > 0 && calendarTimeline}
+        <View className={todayCalendarEvents.length > 0 ? 'home-course-section__card home-course-section__card--with-events' : 'home-course-section__card'}>
+          {coursePreview.items.length > 0 ? (
+            <HomeCourseCarousel
+              key={coursePreview.items.map((item) => `${item.course.id}:${item.startsAt.getTime()}`).join('|')}
+              items={coursePreview.items}
+              openingCourseId={discussionOpeningCourseId}
+              onViewSchedule={openSchedule}
+              onDiscussion={(course) => { void openCourseDiscussion(course) }}
+            />
+          ) : (
+            <View className='home-course-section__empty' ariaRole='button' ariaLabel='查看课程表' onClick={openSchedule}>
+              <Text>{coursePreview.emptyText}</Text>
+              {coursePreview.dayLabel !== '假期' && <Text>{coursePreview.emptyHint}</Text>}
+            </View>
+          )}
+          {coursePreview.hiddenCount > 0 && (
+            <View className='home-course-section__more' ariaRole='button' onClick={openSchedule}>
+              还有 {coursePreview.hiddenCount} 门课程，查看完整课表
+            </View>
+          )}
+          {todayCalendarEvents.length > 0 && calendarTimeline}
+        </View>
       </View>
 
       {homeFeatureFlags.todayTask && todayTask && (
@@ -1183,7 +1173,7 @@ function Index() {
           <Text className='home-migrated__hint'>{migrationGuide.hint}</Text>
         </View>
       ) : (<>
-      <View
+      {homeFeatureFlags.campusRecommendation && (<View
         className={[
           'hero-card',
           'motion-enter',
@@ -1277,7 +1267,7 @@ function Index() {
             </View>
           </View>
         )}
-      </View>
+      </View>)}
 
       <View className='moments-panel'>
         <View className='moments-panel__header'>

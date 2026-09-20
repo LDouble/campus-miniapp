@@ -304,8 +304,8 @@ function CourseDetailCard({
             <Text className='course-conflict-card__note-label'>排课提示</Text>
             <Text className='course-conflict-card__note-copy'>
               {course.auditStatus === 'withdrawn'
-                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“蹭课检索”。'
-                : '课程目录已有更新，请到“蹭课检索”同步最新安排。'}
+                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“课程查询”。'
+                : '课程目录已有更新，请到“课程查询”同步最新安排。'}
             </Text>
           </View>
         )}

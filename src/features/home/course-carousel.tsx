@@ -4,7 +4,6 @@ import type { Course } from '../../pages/academic/types'
 import type { CoursePreviewItem } from './data'
 import { getClassDiscussionContext } from '../class-discussion/context'
 import locationIcon from '../../assets/icons/home-course-location.svg'
-import discussionIcon from '../../assets/icons/home-course-discussion.svg'
 import './course-carousel.scss'
 
 type Props = {
@@ -62,7 +61,7 @@ export default function HomeCourseCarousel({
                   </View>
                 </View>
                 <View className='home-course-card__footer'>
-                  <View className='home-course-card__activity'>
+                  {available ? <View className='home-course-card__activity'>
                     <View className='home-course-card__avatars'>
                       {[
                         { name: '张', background: '#BFDBFE', color: '#1E3A8A' },
@@ -76,19 +75,20 @@ export default function HomeCourseCarousel({
                     </View>
                     <Text className='home-course-card__activity-label'>大家正在聊…</Text>
                   </View>
-                  <View className='home-course-card__actions'>
+                  : <Text className='home-course-card__unavailable'>课程信息不完整，暂无法讨论</Text>}
+                  {available && <View className='home-course-card__actions'>
                     <View
-                      className={`home-course-card__discussion${openingCourseId || !available ? ' home-course-card__action--disabled' : ''}`}
+                      className={`home-course-card__discussion${openingCourseId ? ' home-course-card__action--disabled' : ''}`}
                       ariaRole='button'
-                      ariaLabel={available ? `进入${item.course.name}课堂讨论` : '缺少选课号或学期，暂不能进入讨论'}
+                      ariaLabel={`进入${item.course.name}课堂讨论`}
                       onClick={() => { if (!openingCourseId) onDiscussion(item.course) }}
                     >
                       <View className='home-course-card__discussion-label'>
-                        <Text>{openingCourseId === item.course.id ? '打开中…' : available ? '进讨论组' : '暂不可用'}</Text>
-                        <Image src={discussionIcon} mode='aspectFit' />
+                        <View className='home-course-card__discussion-icon' />
+                        <Text>{openingCourseId === item.course.id ? '打开中…' : '进讨论组'}</Text>
                       </View>
                     </View>
-                  </View>
+                  </View>}
                 </View>
               </View>
             </SwiperItem>
