@@ -169,8 +169,8 @@ for (const key of ['blue', 'green', 'pink', 'purple', 'orange', 'cyan']) {
 
 assert.match(
   appStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*--campus-service-page-top:\s*var\(--ousea-service-dark-page-top\);/u,
-  '暗色主题必须覆盖全部服务页面令牌',
+  /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{[\s\S]*--campus-service-page-top:\s*var\(--ousea-service-dark-page-top\);/u,
+  '系统深色场景必须覆盖全部服务页面令牌',
 )
 assert.match(master, /global\.color\.service/u)
 assert.match(master, /global\.shadow\.service/u)

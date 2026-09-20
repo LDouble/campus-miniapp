@@ -208,7 +208,9 @@ export default defineAppConfig({
     navigationBarBackgroundColor: '@navigationBarBackgroundColor',
     navigationBarTitleText: 'OUSea',
     navigationBarTextStyle: '@navigationBarTextStyle' as 'black',
-    backgroundColor: '@backgroundColor'
+    backgroundColor: '@backgroundColor',
+    backgroundColorTop: '@backgroundColor',
+    backgroundColorBottom: '@backgroundColor'
   },
   permission: {
     'scope.userLocation': {

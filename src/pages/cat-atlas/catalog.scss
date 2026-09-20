@@ -263,11 +263,12 @@
   .cat-journal__card { transition: none; }
 }
 
+@media (prefers-color-scheme: dark) {
 /* Theme class is attached to the page root by the runtime.  Keep this as a
  * self-match as well as an ancestor match so the catalogue does not retain
  * its warm light-paper variables in dark mode. */
-.cat-journal.campus-theme--dark,
-.campus-theme--dark .cat-journal {
+.cat-journal.campus-theme,
+.campus-theme .cat-journal {
   --cat-paper: var(--campus-page);
   --cat-card: var(--campus-surface);
   --cat-ink: var(--campus-text-heading);
@@ -304,4 +305,7 @@
   .cat-journal__hero,
   .cat-journal__photo-frame { background: var(--campus-surface-subtle); }
   .cat-journal__dot { color: var(--campus-text-muted); }
+}
+
+
 }

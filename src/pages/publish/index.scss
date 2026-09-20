@@ -1103,6 +1103,7 @@ page {
 }
 
 @media (prefers-color-scheme: dark) {
+.campus-theme {
   .publisher-composer-tool__icon {
     opacity: 0.72;
   }
@@ -1110,6 +1111,9 @@ page {
   .publisher-composer-tool--active .publisher-composer-tool__icon {
     opacity: 0.92;
   }
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {

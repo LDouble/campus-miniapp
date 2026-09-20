@@ -4604,6 +4604,7 @@ page {
 }
 
 @media (prefers-color-scheme: dark) {
+.campus-theme {
   .schedule-card__event-divider {
     background: linear-gradient(
       90deg,
@@ -4616,6 +4617,9 @@ page {
   .schedule-card__scroll-cue-arrow {
     filter: brightness(0) invert(1);
   }
+
+}
+
 
 }
 

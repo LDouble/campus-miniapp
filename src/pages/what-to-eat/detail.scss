@@ -605,50 +605,82 @@
   background: #d8d8d8;
 }
 
-.campus-theme--dark .food-detail-page {
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-page {
   color: var(--campus-text-body);
   background: var(--campus-page);
 }
 
-.campus-theme--dark .food-detail-cover {
+
+}
+
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-cover {
   background: var(--campus-surface-primary);
 }
 
-.campus-theme--dark .food-detail-info,
-.campus-theme--dark .food-detail-card,
-.campus-theme--dark .food-detail-review-section,
-.campus-theme--dark .food-detail-comment-bar,
-.campus-theme--dark .food-detail-review-sheet__footer {
+
+}
+
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-info,
+.campus-theme .food-detail-card,
+.campus-theme .food-detail-review-section,
+.campus-theme .food-detail-comment-bar,
+.campus-theme .food-detail-review-sheet__footer {
   border-color: var(--campus-border);
   background: var(--campus-surface);
 }
 
-.campus-theme--dark .food-detail-cover__image,
-.campus-theme--dark .food-detail-review-card__images image,
-.campus-theme--dark .food-detail-review-sheet__textarea,
-.campus-theme--dark .food-detail-comment-bar__trigger {
+
+}
+
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-cover__image,
+.campus-theme .food-detail-review-card__images image,
+.campus-theme .food-detail-review-sheet__textarea,
+.campus-theme .food-detail-comment-bar__trigger {
   background: var(--campus-surface-subtle);
 }
 
-.campus-theme--dark .food-detail-review-card,
-.campus-theme--dark .food-detail-review-sheet__comment,
-.campus-theme--dark .food-detail-review-sheet__toolbar {
+
+}
+
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-review-card,
+.campus-theme .food-detail-review-sheet__comment,
+.campus-theme .food-detail-review-sheet__toolbar {
   border-color: var(--campus-border);
 }
 
-.campus-theme--dark .food-detail-info__category,
-.campus-theme--dark .food-detail-review-card__avatar,
-.campus-theme--dark .food-detail-tag {
+
+}
+
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-info__category,
+.campus-theme .food-detail-review-card__avatar,
+.campus-theme .food-detail-tag {
   color: var(--campus-text-body);
   background: var(--campus-surface-primary);
   border-color: var(--campus-border-strong);
 }
 
-.campus-theme--dark .food-detail-review-sheet__comment {
+
+}
+
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-review-sheet__comment {
   background: var(--campus-surface-subtle);
 }
 
-.campus-theme--dark .food-detail-review-sheet__submit { background: var(--campus-primary); }
+
+}
+
+@media (prefers-color-scheme: dark) {
+.campus-theme .food-detail-review-sheet__submit { background: var(--campus-primary); }
+
+
+}
 
 @media (max-width: 340px) {
   .food-detail-content {

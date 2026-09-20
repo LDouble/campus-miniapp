@@ -309,7 +309,7 @@ button {
   background: var(--campus-page, #f5f8fc);
 }
 
-// App 根节点在首帧就带上主题类，避免等待页面 onShow 或 setData 后才切换背景。
+// 业务页面始终带有这个结构锚点；颜色由宿主的系统主题决定。
 .campus-app-root {
   display: block;
   width: 100%;
@@ -369,7 +369,9 @@ button {
   }
 }
 
-.campus-theme--dark {
+@media (prefers-color-scheme: dark) {
+  page,
+  .campus-theme {
   --campus-cat-page: var(--campus-page);
   --campus-cat-surface: var(--campus-surface);
   --campus-cat-subtle: var(--campus-surface-subtle);
@@ -473,4 +475,9 @@ button {
   --campus-shadow-sheet: 0 -8rpx 32rpx rgba(0, 0, 0, 0.32);
 
   color-scheme: dark;
+  }
+
+  page {
+    background: var(--campus-page, #0b1220);
+  }
 }

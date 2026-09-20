@@ -4073,11 +4073,12 @@ page {
   .period-options__item { transition: none; }
 }
 
+@media (prefers-color-scheme: dark) {
 /*
  * 本页的 Ousea 浅色视觉规则位于全局 dark-mode 之后加载。
  * 暗色例外必须在页面最终样式层收口，避免同优先级的浅色回退值覆盖主题语义令牌。
  */
-.campus-theme--dark {
+.campus-theme {
   .academic-toolbar--schedule .academic-toolbar__period image {
     filter: brightness(0) saturate(100%) invert(72%) sepia(31%) saturate(1127%) hue-rotate(182deg) brightness(101%) contrast(98%);
   }
@@ -4189,4 +4190,7 @@ page {
       }
     }
   }
+}
+
+
 }
