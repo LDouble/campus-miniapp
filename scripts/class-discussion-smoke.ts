@@ -3,10 +3,12 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   getClassDiscussionContext,
+  getClassDiscussionMaterialNavigation,
   isClassDiscussionTopic,
   visibleClassDiscussionAnnouncement,
 } from '../src/features/class-discussion/context'
 import { classDiscussionDraftKey, classDiscussionTopicPublisherUrl, classQuickQuestionContent, withClassQuickQuestionDraft } from '../src/features/class-discussion/topic'
+import type { CampusCircleTopicView } from '../src/api/types'
 import type { Course } from '../src/pages/academic/types'
 
 const course = (patch: Partial<Course> = {}): Course => ({
@@ -30,8 +32,36 @@ assert.deepEqual(getClassDiscussionContext(course()), {
   periodId: '2025-2026-2',
   courseName: '大学英语',
 })
+assert.deepEqual(getClassDiscussionContext(course({ courseCode: ' MATH-0001 ' })), {
+  classNum: '20250001',
+  periodId: '2025-2026-2',
+  courseName: '大学英语',
+  courseCode: 'MATH-0001',
+})
 assert.equal(getClassDiscussionContext(course({ classNum: ' ' })), null)
 assert.equal(getClassDiscussionContext(course({ periodId: ' ' })), null)
+const classDiscussionMetadataTopic = {
+  class_discussion: {
+    class_num: '20250001',
+    period_id: '2025-2026-2',
+    course_name: '大学英语',
+    course_code: 'ENGL-001',
+  },
+} as CampusCircleTopicView
+assert.deepEqual(getClassDiscussionMaterialNavigation(classDiscussionMetadataTopic), {
+  courseName: '大学英语',
+  courseCode: 'ENGL-001',
+  periodId: '2025-2026-2',
+  source: 'discussion',
+})
+assert.equal(getClassDiscussionMaterialNavigation({
+  ...classDiscussionMetadataTopic,
+  class_discussion: undefined,
+}), null, '缺少结构化课堂元数据不得解析话题标题或描述')
+assert.equal(getClassDiscussionMaterialNavigation({
+  ...classDiscussionMetadataTopic,
+  class_discussion: { ...classDiscussionMetadataTopic.class_discussion, course_name: ' ' },
+}), null, '缺少课程名时不得创建不安全的资料跳转')
 assert.equal(isClassDiscussionTopic({ slug: 'class-discussion-abc123' }), true)
 assert.equal(isClassDiscussionTopic({ slug: 'campus-topic-abc123' }), false)
 const classTopicWithAnnouncement = {
@@ -74,10 +104,16 @@ assert.equal(
 
 const publisherSource = readFileSync(resolve(__dirname, '../src/pages/publish/index.tsx'), 'utf8')
 const topicPageSource = readFileSync(resolve(__dirname, '../src/pages/community/topic/index.tsx'), 'utf8')
+const classroomActionsSource = readFileSync(resolve(__dirname, '../src/features/class-discussion/post-actions.tsx'), 'utf8')
+const postCardSource = readFileSync(resolve(__dirname, '../src/features/community/post-card.tsx'), 'utf8')
 assert.match(publisherSource, /classDiscussionTopicId > 0[\s\S]*?communityTopicIds: \[classDiscussionTopicId\]/u)
 assert.match(publisherSource, /communityTopicNames: lockedClassDiscussionTopicId > 0[\s\S]*?\[\]/u)
 assert.match(publisherSource, /topic_names: classDiscussionTopicId > 0[\s\S]*?undefined/u)
 assert.match(topicPageSource, /isClassDiscussionTopic\(topic\)[\s\S]*?classDiscussionTopicPublisherUrl/u)
+assert.match(topicPageSource, /community-topic-class-filters[\s\S]*?课程资料/u, '课堂页应提供真实课程资料入口')
+assert.match(classroomActionsSource, /openType='share'/u, '课堂帖子应支持微信分享')
+assert.match(classroomActionsSource, /FavoriteToggle[\s\S]*?campus_circle_post/u, '课堂帖子应复用真实收藏能力')
+assert.doesNotMatch(postCardSource, /openType='share'|data-share-/u, '通用社区帖子卡不得带入课堂分享实现')
 assert.match(topicPageSource, /useDidShow\(\(\) => \{[\s\S]*?loadedRefreshRevision/u)
 assert.match(topicPageSource, /community-topic-class-context[\s\S]*?topic\.description/u)
 assert.match(topicPageSource, /else void refreshTopic\(id\)/u, '返回页面应单独刷新公告元数据')

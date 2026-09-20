@@ -3707,6 +3707,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/material-course-catalog-sync-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询资料课程自动建档的进度与结果 */
+        get: operations["ListMaterialCourseCatalogSyncRuns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/material-courses": {
         parameters: {
             query?: never;
@@ -8090,6 +8107,7 @@ export interface components {
         };
         CampusCircleClassCandidate: {
             class_num: string;
+            course_code?: string;
             course_name: string;
             education_level: string;
             /** Format: uint64 */
@@ -8107,6 +8125,12 @@ export interface components {
         CampusCircleClassCandidatePageResponseBody: {
             data: components["schemas"]["CampusCircleClassCandidatePage"];
             request_id: string;
+        };
+        CampusCircleClassDiscussionContext: {
+            class_num: string;
+            course_code?: string;
+            course_name: string;
+            period_id: string;
         };
         CampusCircleClassParticipation: {
             notifications_enabled: boolean;
@@ -8386,6 +8410,7 @@ export interface components {
             announcement?: components["schemas"]["CampusCircleClassAnnouncement"];
             auto_association_enabled?: boolean;
             auto_created?: boolean;
+            class_discussion?: components["schemas"]["CampusCircleClassDiscussionContext"];
             cover_url: string | null;
             /** Format: date-time */
             created_at: string;
@@ -9696,6 +9721,8 @@ export interface components {
         CourseMaterialView: {
             candidate_course_name?: string | null;
             course?: components["schemas"]["MaterialCourseView"];
+            /** @description 跨学期关联课程，首项为兼容主课程 */
+            courses?: components["schemas"]["MaterialCourseView"][];
             /** Format: date-time */
             created_at: string;
             description?: string | null;
@@ -9727,6 +9754,8 @@ export interface components {
             candidate_course_name?: string | null;
             /** Format: uint64 */
             course_id?: number | null;
+            /** @description 有序课程集合，去重后最多十门，不区分学期 */
+            course_ids?: number[];
             description?: string | null;
             files: components["schemas"]["MaterialUploadFileInput"][];
             material_type: components["schemas"]["MaterialType"];
@@ -9735,6 +9764,42 @@ export interface components {
         };
         /** @enum {string} */
         EducationLevel: "undergraduate" | "graduate" | "general";
+        MaterialCourseCatalogSyncPage: {
+            items: components["schemas"]["MaterialCourseCatalogSyncView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MaterialCourseCatalogSyncPageResponseBody: {
+            data: components["schemas"]["MaterialCourseCatalogSyncPage"];
+            request_id: string;
+        };
+        MaterialCourseCatalogSyncView: {
+            /** Format: int64 */
+            attempts: number;
+            /** Format: uint64 */
+            batch_id: number;
+            /** Format: int64 */
+            created_course_count: number;
+            /** Format: date-time */
+            finished_at?: string | null;
+            /** Format: uint64 */
+            last_entry_id: number;
+            last_error?: string | null;
+            /** Format: int64 */
+            linked_existing_count: number;
+            /** Format: int64 */
+            processed_entries: number;
+            /** Format: int64 */
+            skipped_entry_count: number;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** @enum {string} */
+            status: "queued" | "running" | "succeeded" | "failed";
+            /** Format: uint64 */
+            version: number;
+        };
         MaterialCoursePage: {
             items: components["schemas"]["MaterialCourseView"][];
             page: number;
@@ -9762,6 +9827,8 @@ export interface components {
             name: string;
             /** Format: int64 */
             sort_order: number;
+            /** @description 含已合并课程的稳定来源代码，用于课程上下文精确匹配 */
+            source_course_codes?: string[];
             /** @enum {string} */
             status: "enabled" | "disabled";
             /** Format: uint64 */
@@ -13280,6 +13347,15 @@ export interface components {
                 "application/json": components["schemas"]["CourseMaterialResponseBody"];
             };
         };
+        /** @description 资料课程目录同步记录 */
+        MaterialCourseCatalogSyncPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialCourseCatalogSyncPageResponseBody"];
+            };
+        };
         /** @description 课程分类分页 */
         MaterialCoursePageResponse: {
             headers: {
@@ -16205,6 +16281,7 @@ export interface operations {
                     class_num: string;
                     period_id: string;
                     course_name?: string;
+                    course_code?: string;
                 };
             };
         };
@@ -16681,6 +16758,7 @@ export interface operations {
                     class_num: string;
                     period_id: string;
                     course_name?: string;
+                    course_code?: string;
                 };
             };
         };
@@ -18932,6 +19010,7 @@ export interface operations {
                     action: "keep" | "correct_course" | "take_down" | "reject";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     resolution_note: string;
                 };
             };
@@ -19015,6 +19094,7 @@ export interface operations {
                     action: "approve" | "reject";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     create_course_name?: string;
                     create_course_code?: string;
                     /** @enum {string} */
@@ -19093,6 +19173,21 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    ListMaterialCourseCatalogSyncRuns: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialCourseCatalogSyncPageResponse"];
         };
     };
     ListAdminMaterialCourses: {
@@ -19331,6 +19426,7 @@ export interface operations {
                     material_type: "slides" | "notes" | "exam" | "homework" | "review" | "other";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     candidate_course_name?: string;
                     period_id?: string;
                     description?: string;

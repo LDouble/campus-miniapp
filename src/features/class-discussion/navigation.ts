@@ -26,6 +26,7 @@ const resolveClassDiscussionTopic = (course: Course) => {
       class_num: context.classNum,
       period_id: context.periodId,
       ...(context.courseName ? { course_name: context.courseName } : {}),
+      ...(context.courseCode ? { course_code: context.courseCode } : {}),
     },
   })
 }

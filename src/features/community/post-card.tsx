@@ -22,6 +22,7 @@ import {
   communityPinActionLabel,
   getCommunityPinAction,
 } from './pin-action'
+import ClassDiscussionPostActions from '../class-discussion/post-actions'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -77,7 +78,7 @@ type Props = {
   onCloseActions?: () => void
   onOpenAuthor?: (post: CampusCirclePostView) => void
   onSelectSection?: (sectionId: number) => void
-  variant?: 'community' | 'marketplace' | 'errand' | 'carpool'
+  variant?: 'community' | 'classroom' | 'marketplace' | 'errand' | 'carpool'
   instanceKey?: string
   businessPreview?: { title: string; meta: string }
   trailingAction?: ReactNode
@@ -299,7 +300,7 @@ function CommunityPostCard({
               {contentIsClamped && <Text className='community-post__expand'>全文</Text>}
             </View>
           )}
-          {businessPreview && variant !== 'community' && (
+          {businessPreview && variant !== 'community' && variant !== 'classroom' && (
             <View className={`community-post__business-preview community-post__business-preview--${variant}`}>
               <View className='community-post__business-icon'>
                 <Image src={communityIcons[variant]} mode='aspectFit' />
@@ -441,9 +442,9 @@ function CommunityPostCard({
           </View>
         </View>
 
-        {(likedByCopy || commentPreviews.length > 0 || post.comment_count > 3) && (
+        {((variant !== 'classroom' && likedByCopy) || commentPreviews.length > 0 || post.comment_count > 3) && (
           <View className='community-post__engagement'>
-            {likedByCopy && (
+            {variant !== 'classroom' && likedByCopy && (
               <View className='community-post__liked-by'>
                 <Image src={communityIcons.heart} mode='aspectFit' />
                 <Text>{likedByCopy}</Text>
@@ -510,6 +511,15 @@ function CommunityPostCard({
               </View>
             )}
           </View>
+        )}
+        {variant === 'classroom' && (
+          <ClassDiscussionPostActions
+            post={post}
+            sectionName={sectionName}
+            shareTitle={readableContent}
+            onToggleLike={onToggleLike}
+            onOpenComments={onOpenComments}
+          />
         )}
       </View>
     </View>

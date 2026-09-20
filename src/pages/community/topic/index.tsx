@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidHide, useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
-import { Switch, Text, View } from '@tarojs/components'
+import { Image, Switch, Text, View } from '@tarojs/components'
 import { useViewPageVisible } from '../../../features/community/use-view-page-visible'
 import type {
   CampusCircleClassParticipation,
@@ -14,6 +14,7 @@ import {
   parsePositiveId,
 } from '../../../features/community/topic'
 import {
+  getClassDiscussionMaterialNavigation,
   isClassDiscussionTopic,
   visibleClassDiscussionAnnouncement,
 } from '../../../features/class-discussion/context'
@@ -37,6 +38,14 @@ import './index.scss'
 import { openPublicProfile } from '../../../features/profile/public-profile'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule, requestWechatSubscriptionForModuleWithResult } from '../../../features/wechat-subscription'
+import { openCourseMaterials } from '../../../features/course-materials/navigation'
+
+const classDiscussionIcons = {
+  bell: require('../../../assets/community/class-discussion-bell.svg'),
+  comment: require('../../../assets/community/class-discussion-book.svg'),
+  material: require('../../../assets/community/class-discussion-material.svg'),
+  plus: require('../../../assets/community/class-discussion-plus-white.svg'),
+}
 
 const TOPIC_POSTS_PAGE_SIZE = 20
 
@@ -395,6 +404,15 @@ export default function CommunityTopicPage() {
       : communityTopicPublisherUrl(topic.id)
     return Taro.navigateTo({ url })
   }, [requestClassInteractionSubscription, topic])
+  const openClassMaterials = useCallback(() => {
+    const context = getClassDiscussionMaterialNavigation(topic)
+    if (!context) {
+      Taro.showToast({ title: '课程资料关联信息暂不可用', icon: 'none' })
+      return
+    }
+    requestClassInteractionSubscription()
+    void openCourseMaterials(context)
+  }, [requestClassInteractionSubscription, topic])
   const updateClassNotifications = useCallback(async (notificationsEnabled: boolean) => {
     const current = classParticipationRef.current
     if (!current || classNotificationUpdatingRef.current) return
@@ -536,10 +554,30 @@ export default function CommunityTopicPage() {
           onClick={(event) => event.stopPropagation()}
         >
           <View className='community-topic-class-context__heading'>
-            <View>
-              <Text className='community-topic-class-context__name'>{topic.name}</Text>
+            <View className='community-topic-class-context__badges'>
+              {topic.class_discussion && <>
+                <Text className='community-topic-class-context__badge'>
+                  {topic.class_discussion.period_id}
+                </Text>
+                <Text className='community-topic-class-context__badge community-topic-class-context__badge--plain'>
+                  选课号 {topic.class_discussion.class_num}
+                </Text>
+              </>}
+              <Text className='community-topic-class-context__badge community-topic-class-context__badge--public'>公开讨论</Text>
             </View>
+            {activeClassParticipation && (
+              <View
+                className='community-topic-class-context__reminder'
+                ariaRole='button'
+                ariaLabel={classSettingsExpanded ? '收起课堂提醒设置' : '展开课堂提醒设置'}
+                onClick={() => setClassSettingsExpanded((current) => !current)}
+              >
+                <Image src={classDiscussionIcons.bell} mode='aspectFit' />
+                <Text>{activeClassParticipation.notifications_enabled ? '提醒已开' : '提醒已关'}</Text>
+              </View>
+            )}
           </View>
+          <Text className='community-topic-class-context__name'>{topic.name}</Text>
           <Text className='community-topic-class-context__description'>
             {topic.description || '按选课号和学年学期关联'}
           </Text>
@@ -548,15 +586,6 @@ export default function CommunityTopicPage() {
               <Text className='community-topic-class-context__count'>
                 已有 {activeClassParticipation.participant_count} 人来过
               </Text>
-              <View
-                className='community-topic-class-context__settings-entry'
-                ariaRole='button'
-                ariaLabel={classSettingsExpanded ? '收起课堂提醒设置' : '展开课堂提醒设置'}
-                onClick={() => setClassSettingsExpanded((current) => !current)}
-              >
-                <Text>{activeClassParticipation.notifications_enabled ? '提醒已开' : '提醒已关'}</Text>
-                <Text className='community-topic-class-context__settings-arrow'>提醒设置</Text>
-              </View>
               {classSettingsExpanded && (
                 <View className='community-topic-class-context__settings-panel'>
                   <View className='community-topic-class-context__notification'>
@@ -602,8 +631,37 @@ export default function CommunityTopicPage() {
           )}
         </View>
       )}
+      {!loading && !error && topic && classDiscussion && (
+        <View className='community-topic-class-filters' ariaLabel='课堂讨论筛选'>
+          <View className='community-topic-class-filters__item community-topic-class-filters__item--active'>
+            <Text>全部讨论 ({topic.post_count})</Text>
+          </View>
+          <View
+            className='community-topic-class-filters__item'
+            ariaRole='button'
+            ariaLabel={`查看${topic.name}的课程资料`}
+            onClick={openClassMaterials}
+          >
+            <Text>课程资料</Text>
+          </View>
+          {announcement && (
+            <View
+              className='community-topic-class-filters__item'
+              ariaRole='button'
+              ariaLabel='查看课堂公告'
+              onClick={() => {
+                setAnnouncementExpanded(true)
+                void Taro.pageScrollTo({ selector: '#class-discussion-announcement', duration: 300 })
+              }}
+            >
+              <Text>教学通知</Text>
+            </View>
+          )}
+        </View>
+      )}
       {!loading && !error && announcement && (
         <View
+          id='class-discussion-announcement'
           className={`community-topic-announcement ${announcementExpanded ? 'community-topic-announcement--expanded' : ''}`}
           ariaRole='button'
           ariaLabel={announcementExpanded ? '收起课堂公告全文' : '展开课堂公告全文'}
@@ -627,7 +685,7 @@ export default function CommunityTopicPage() {
       {!loading && !error && topic && (
         <View className='community-topic-feed-heading'>
           <Text className='community-topic-feed-heading__tab'>{classDiscussion ? '课堂动态' : '最新发表'}</Text>
-          <Text className='community-topic-feed-heading__count'>共 {topic.post_count} 条动态</Text>
+          <Text className='community-topic-feed-heading__count'>{classDiscussion ? `共 ${topic.post_count} 条讨论` : `共 ${topic.post_count} 条动态`}</Text>
         </View>
       )}
 
@@ -647,10 +705,11 @@ export default function CommunityTopicPage() {
         <CommunityPostCard
           key={post.id}
           post={post}
+          variant={classDiscussion ? 'classroom' : 'community'}
           trackViews
           viewExposureSurface='topic'
           viewTrackingEnabled={viewPageVisible && !commentPost}
-          sectionName='校园社区'
+          sectionName={classDiscussion ? '课堂讨论' : '校园社区'}
           actionsOpen={openActionPostId === post.id}
           onToggleActions={toggleActions}
           onCloseActions={closeActions}
@@ -703,15 +762,29 @@ export default function CommunityTopicPage() {
     {!loading && !error && topic && (
       <View className='community-topic-page__action-bar'>
         {classDiscussion && (
-          <View className='community-topic-page__quick-questions' ariaLabel='快捷提问'>
+          <View className='community-topic-page__quick-questions' ariaLabel='课堂快捷操作'>
             {classQuickQuestions.filter((question) => question.id !== 'attendance').map((question) => (
               <View
                 key={question.id}
                 className='community-topic-page__quick-question'
                 ariaRole='button'
-                ariaLabel={`${question.label}，发布到${topic.name}`}
-                onClick={() => openPublisher(question.id)}
-              >{question.id === 'homework' ? '问作业' : '求资料'}</View>
+                ariaLabel={question.id === 'materials'
+                  ? `查看${topic.name}的课程资料`
+                  : `${question.label}，发布到${topic.name}`}
+                onClick={() => question.id === 'materials'
+                  ? openClassMaterials()
+                  : openPublisher(question.id)}
+              >
+                <View className='community-topic-page__quick-question-icon'>
+                  <Image
+                    src={question.id === 'homework'
+                      ? classDiscussionIcons.comment
+                      : classDiscussionIcons.material}
+                    mode='aspectFit'
+                  />
+                </View>
+                <Text>{question.id === 'homework' ? '问作业' : '资料'}</Text>
+              </View>
             ))}
           </View>
         )}
@@ -720,8 +793,8 @@ export default function CommunityTopicPage() {
           ariaRole='button'
           ariaLabel={`${participateLabel}：${topic.name}`}
           onClick={() => openPublisher()}
-        >
-          {participateLabel}
+        >{classDiscussion && <Image src={classDiscussionIcons.plus} mode='aspectFit' />}
+          <Text>{participateLabel}</Text>
         </View>
       </View>
     )}
