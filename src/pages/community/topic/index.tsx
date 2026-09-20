@@ -17,7 +17,11 @@ import {
   isClassDiscussionTopic,
   visibleClassDiscussionAnnouncement,
 } from '../../../features/class-discussion/context'
-import { classDiscussionTopicPublisherUrl } from '../../../features/class-discussion/topic'
+import {
+  classDiscussionTopicPublisherUrl,
+  classQuickQuestions,
+  type ClassQuickQuestionId,
+} from '../../../features/class-discussion/topic'
 import { lifeServicesRepository } from '../../../features/life-services/repository'
 import {
   getLifeHubRefreshRevision,
@@ -35,7 +39,6 @@ import { apiDateTimeCampusParts } from '../../../utils/date-time'
 import { requestWechatSubscriptionForModule, requestWechatSubscriptionForModuleWithResult } from '../../../features/wechat-subscription'
 
 const TOPIC_POSTS_PAGE_SIZE = 20
-const ANNOUNCEMENT_COLLAPSE_LIMIT = 180
 
 type ClassDiscussionParticipationState = CampusCircleClassParticipation & { topicId: number }
 
@@ -78,6 +81,7 @@ export default function CommunityTopicPage() {
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
   const [announcementExpanded, setAnnouncementExpanded] = useState(false)
+  const [classSettingsExpanded, setClassSettingsExpanded] = useState(false)
   const [classParticipation, setClassParticipation] = useState<ClassDiscussionParticipationState | null>(null)
   const [classParticipationError, setClassParticipationError] = useState('')
   const [classNotificationUpdating, setClassNotificationUpdating] = useState(false)
@@ -383,11 +387,11 @@ export default function CommunityTopicPage() {
         : item
     )))
   }, [])
-  const openPublisher = useCallback(() => {
+  const openPublisher = useCallback((question?: ClassQuickQuestionId) => {
     if (!topic) return
     requestClassInteractionSubscription()
     const url = isClassDiscussionTopic(topic)
-      ? classDiscussionTopicPublisherUrl(topic.id)
+      ? classDiscussionTopicPublisherUrl(topic.id, question)
       : communityTopicPublisherUrl(topic.id)
     return Taro.navigateTo({ url })
   }, [requestClassInteractionSubscription, topic])
@@ -507,7 +511,6 @@ export default function CommunityTopicPage() {
   const announcementKey = announcement
     ? `${announcement.title}:${announcement.published_at || ''}:${announcement.content}`
     : ''
-  const announcementLong = announcement ? announcement.content.length > ANNOUNCEMENT_COLLAPSE_LIMIT : false
   useEffect(() => {
     setAnnouncementExpanded(false)
   }, [announcementKey])
@@ -516,16 +519,14 @@ export default function CommunityTopicPage() {
     : topic?.kind === 'campaign' ? '参与活动' : '参与讨论'
 
   return <View
-    className='community-topic-page'
+    className={`community-topic-page ${classDiscussion ? 'community-topic-page--class' : ''}`}
     onClick={(event) => {
       if (classDiscussion) event.stopPropagation()
     }}
   >
     <CustomNavbar
       title={classDiscussion ? '课堂讨论' : topic ? `#${topic.name}` : '话题'}
-      subtitle={classDiscussion
-        ? '按选课号和学年学期关联，所有同学都可参与讨论'
-        : topic?.description || '校园话题'}
+      subtitle={classDiscussion ? undefined : topic?.description || '校园话题'}
       showBack
     />
     <View className='community-topic-page__content'>
@@ -534,47 +535,65 @@ export default function CommunityTopicPage() {
           className='community-topic-class-context'
           onClick={(event) => event.stopPropagation()}
         >
-          <Text className='community-topic-class-context__eyebrow'>课堂讨论</Text>
-          <Text className='community-topic-class-context__name'>{topic.name}</Text>
+          <View className='community-topic-class-context__heading'>
+            <View>
+              <Text className='community-topic-class-context__name'>{topic.name}</Text>
+            </View>
+          </View>
           <Text className='community-topic-class-context__description'>
-            {topic.description || '按选课号和学年学期关联，所有同学都可参与讨论'}
+            {topic.description || '按选课号和学年学期关联'}
           </Text>
           {activeClassParticipation && (
             <View className='community-topic-class-context__participation'>
-              <Text>已有 {activeClassParticipation.participant_count} 人来过</Text>
-              <View className='community-topic-class-context__notification'>
-                <View>
-                  <Text>新帖子和公告提醒</Text>
-                  <Text>评论和回复仅通知对应同学</Text>
-                </View>
-                <Switch
-                  checked={activeClassParticipation.notifications_enabled}
-                  disabled={classNotificationUpdating}
-                  color='var(--ousea-ocean-500, #2B7AEF)'
-                  ariaLabel={activeClassParticipation.notifications_enabled
-                    ? '关闭新帖子和公告提醒'
-                    : '开启新帖子和公告提醒'}
-                  onChange={(event) => {
-                    event.stopPropagation()
-                    void updateClassNotifications(Boolean(event.detail.value))
-                  }}
-                />
+              <Text className='community-topic-class-context__count'>
+                已有 {activeClassParticipation.participant_count} 人来过
+              </Text>
+              <View
+                className='community-topic-class-context__settings-entry'
+                ariaRole='button'
+                ariaLabel={classSettingsExpanded ? '收起课堂提醒设置' : '展开课堂提醒设置'}
+                onClick={() => setClassSettingsExpanded((current) => !current)}
+              >
+                <Text>{activeClassParticipation.notifications_enabled ? '提醒已开' : '提醒已关'}</Text>
+                <Text className='community-topic-class-context__settings-arrow'>提醒设置</Text>
               </View>
-              {activeClassParticipation.notifications_enabled ? (
-                <View
-                  className='community-topic-class-context__wechat-subscription'
-                  ariaRole='button'
-                  ariaLabel={classWechatRegistrationRetry ? '重新登记课堂微信提醒' : '订阅课堂微信提醒'}
-                  onClick={classWechatRegistrationRetry
-                    ? retryClassWechatRegistration
-                    : requestClassWechatSubscription}
-                >{classWechatRegistrationRetrying
-                  ? '正在登记微信提醒…'
-                  : classWechatRegistrationRetry ? '重新登记微信提醒' : '订阅微信提醒'}</View>
-              ) : (
-                <Text className='community-topic-class-context__wechat-subscription-note'>
-                  开启群提醒后可订阅微信提醒
-                </Text>
+              {classSettingsExpanded && (
+                <View className='community-topic-class-context__settings-panel'>
+                  <View className='community-topic-class-context__notification'>
+                    <View>
+                      <Text>接收新帖子和公告</Text>
+                      <Text>评论和回复仅通知对应同学</Text>
+                    </View>
+                    <Switch
+                      checked={activeClassParticipation.notifications_enabled}
+                      disabled={classNotificationUpdating}
+                      color='var(--ousea-ocean-500, #2B7AEF)'
+                      ariaLabel={activeClassParticipation.notifications_enabled
+                        ? '关闭新帖子和公告提醒'
+                        : '开启新帖子和公告提醒'}
+                      onChange={(event) => {
+                        event.stopPropagation()
+                        void updateClassNotifications(Boolean(event.detail.value))
+                      }}
+                    />
+                  </View>
+                  {activeClassParticipation.notifications_enabled ? (
+                    <View
+                      className='community-topic-class-context__wechat-subscription'
+                      ariaRole='button'
+                      ariaLabel={classWechatRegistrationRetry ? '重新登记课堂微信提醒' : '订阅课堂微信提醒'}
+                      onClick={classWechatRegistrationRetry
+                        ? retryClassWechatRegistration
+                        : requestClassWechatSubscription}
+                    >{classWechatRegistrationRetrying
+                      ? '正在登记微信提醒…'
+                      : classWechatRegistrationRetry ? '重新登记微信提醒' : '开通微信提醒'}</View>
+                  ) : (
+                    <Text className='community-topic-class-context__wechat-subscription-note'>
+                      开启群提醒后可开通微信提醒
+                    </Text>
+                  )}
+                </View>
               )}
             </View>
           )}
@@ -584,23 +603,25 @@ export default function CommunityTopicPage() {
         </View>
       )}
       {!loading && !error && announcement && (
-        <View className='community-topic-announcement' ariaLabel='课堂公告'>
-          <Text className='community-topic-announcement__eyebrow'>课堂公告</Text>
-          <Text className='community-topic-announcement__title'>{announcement.title}</Text>
-          <Text className='community-topic-announcement__time'>
-            {formatAnnouncementTime(announcement.published_at)}
-          </Text>
-          <Text className={`community-topic-announcement__content ${announcementLong && !announcementExpanded ? 'community-topic-announcement__content--collapsed' : ''}`}>
-            {announcement.content}
-          </Text>
-          {announcementLong && (
-            <View
-              className='community-topic-announcement__toggle'
-              ariaRole='button'
-              ariaLabel={announcementExpanded ? '收起课堂公告全文' : '展开课堂公告全文'}
-              onClick={() => setAnnouncementExpanded((current) => !current)}
-            >{announcementExpanded ? '收起' : '展开全文'}</View>
-          )}
+        <View
+          className={`community-topic-announcement ${announcementExpanded ? 'community-topic-announcement--expanded' : ''}`}
+          ariaRole='button'
+          ariaLabel={announcementExpanded ? '收起课堂公告全文' : '展开课堂公告全文'}
+          onClick={() => setAnnouncementExpanded((current) => !current)}
+        >
+          <View className='community-topic-announcement__heading'>
+            <Text className='community-topic-announcement__eyebrow'>公告</Text>
+            <Text className='community-topic-announcement__title'>{announcement.title}</Text>
+            <Text className='community-topic-announcement__toggle'>
+              {announcementExpanded ? '收起' : '展开'}
+            </Text>
+          </View>
+          {announcementExpanded && <>
+            <Text className='community-topic-announcement__time'>
+              {formatAnnouncementTime(announcement.published_at)}
+            </Text>
+            <Text className='community-topic-announcement__content'>{announcement.content}</Text>
+          </>}
         </View>
       )}
       {!loading && !error && topic && (
@@ -681,11 +702,24 @@ export default function CommunityTopicPage() {
     </View>
     {!loading && !error && topic && (
       <View className='community-topic-page__action-bar'>
+        {classDiscussion && (
+          <View className='community-topic-page__quick-questions' ariaLabel='快捷提问'>
+            {classQuickQuestions.filter((question) => question.id !== 'attendance').map((question) => (
+              <View
+                key={question.id}
+                className='community-topic-page__quick-question'
+                ariaRole='button'
+                ariaLabel={`${question.label}，发布到${topic.name}`}
+                onClick={() => openPublisher(question.id)}
+              >{question.id === 'homework' ? '问作业' : '求资料'}</View>
+            ))}
+          </View>
+        )}
         <View
           className='community-topic-page__participate'
           ariaRole='button'
           ariaLabel={`${participateLabel}：${topic.name}`}
-          onClick={openPublisher}
+          onClick={() => openPublisher()}
         >
           {participateLabel}
         </View>

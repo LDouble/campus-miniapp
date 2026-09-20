@@ -6,7 +6,7 @@ import {
   isClassDiscussionTopic,
   visibleClassDiscussionAnnouncement,
 } from '../src/features/class-discussion/context'
-import { classDiscussionTopicPublisherUrl } from '../src/features/class-discussion/topic'
+import { classDiscussionDraftKey, classDiscussionTopicPublisherUrl, classQuickQuestionContent, withClassQuickQuestionDraft } from '../src/features/class-discussion/topic'
 import type { Course } from '../src/pages/academic/types'
 
 const course = (patch: Partial<Course> = {}): Course => ({
@@ -111,5 +111,31 @@ assert.match(topicPageSource, /useDidHide\(\(\) => \{[\s\S]*?classParticipationR
 const repositorySource = readFileSync(resolve(__dirname, '../src/features/life-services/repository.ts'), 'utf8')
 assert.match(repositorySource, /class-discussions\/\$\{id\}\/participation/u)
 assert.match(repositorySource, /class-discussions\/\$\{id\}\/notifications/u)
+
+
+// 首页快捷提问必须保留课堂关联；模板仅用于空草稿，不能覆盖用户输入或图片。
+assert.equal(classDiscussionTopicPublisherUrl(23, 'homework'),
+  '/pages/publish/index?section=community&community_topic_id=23&class_discussion_topic_id=23&class_question=homework')
+assert.equal(classDiscussionTopicPublisherUrl(23, 'free'),
+  '/pages/publish/index?section=community&community_topic_id=23&class_discussion_topic_id=23&class_question=free',
+  '自由提问也必须锁定当前课堂')
+assert.equal(classDiscussionTopicPublisherUrl(0, 'materials'), '')
+assert.equal(classQuickQuestionContent('unknown'), '')
+assert.equal(classQuickQuestionContent('free'), '', '自由提问不应注入模板文案')
+assert.notEqual(classDiscussionDraftKey(23), classDiscussionDraftKey(24))
+assert.notEqual(classDiscussionDraftKey(23), 'community')
+const emptyClassDraft = { content: '', images: [], communityTopicIds: [23] }
+assert.equal(withClassQuickQuestionDraft(emptyClassDraft, 'homework').content, classQuickQuestionContent('homework'))
+assert.equal(withClassQuickQuestionDraft(emptyClassDraft, 'materials').content, classQuickQuestionContent('materials'))
+assert.deepEqual(withClassQuickQuestionDraft(emptyClassDraft, 'homework').communityTopicIds, [23])
+const authoredClassDraft = { ...emptyClassDraft, content: '已经写好的问题' }
+assert.equal(withClassQuickQuestionDraft(authoredClassDraft, 'materials'), authoredClassDraft)
+const imageClassDraft = { content: '', images: [{ mediaId: 9 }] }
+assert.equal(withClassQuickQuestionDraft(imageClassDraft, 'homework'), imageClassDraft)
+assert.equal(withClassQuickQuestionDraft(emptyClassDraft, 'unknown'), emptyClassDraft)
+assert.equal(withClassQuickQuestionDraft(emptyClassDraft, 'free'), emptyClassDraft,
+  '自由提问应保持空草稿，交给用户自行输入')
+assert.equal(withClassQuickQuestionDraft(authoredClassDraft, 'free'), authoredClassDraft,
+  '自由提问不得覆盖已有草稿')
 
 console.log('class discussion smoke: ok')

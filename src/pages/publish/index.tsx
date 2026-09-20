@@ -27,6 +27,7 @@ import {
   type MarketplaceSource,
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { classDiscussionDraftKey, withClassQuickQuestionDraft } from '../../features/class-discussion/topic'
 import MentionPicker from '../../features/mentions/mention-picker'
 import {
   expandMentionDeletion,
@@ -304,20 +305,22 @@ const storedDrafts = () => {
   return migrated
 }
 
-const draftKey = (section: PublishSection, intent: MarketplaceIntent = 'sell') => (
-  section === 'market' ? `${section}:${intent}` : section
+const draftKey = (section: PublishSection, intent: MarketplaceIntent = 'sell', classTopicId = 0) => (
+  section === 'community' && classTopicId > 0
+    ? classDiscussionDraftKey(classTopicId)
+    : section === 'market' ? `${section}:${intent}` : section
 )
 
-const saveDraft = (section: PublishSection, form: PublisherForm) => {
+const saveDraft = (section: PublishSection, form: PublisherForm, classTopicId = 0) => {
   Taro.setStorageSync(DRAFT_KEY, {
     ...storedDrafts(),
-    [draftKey(section, form.marketIntent)]: form,
+    [draftKey(section, form.marketIntent, classTopicId)]: form,
   })
 }
 
-const clearDraft = (section: PublishSection, form: PublisherForm) => {
+const clearDraft = (section: PublishSection, form: PublisherForm, classTopicId = 0) => {
   const drafts = storedDrafts()
-  delete drafts[draftKey(section, form.marketIntent)]
+  delete drafts[draftKey(section, form.marketIntent, classTopicId)]
   if (Object.keys(drafts).length > 0) {
     Taro.setStorageSync(DRAFT_KEY, drafts)
   } else {
@@ -779,10 +782,16 @@ export default function PublishPage() {
     } else {
       setRestoringCreateDefaults(true)
       void loadRememberedContact().then((remembered) => {
-        const draft = storedDrafts()[draftKey(initialSection, initialIntent)]
+        const draft = storedDrafts()[draftKey(initialSection, initialIntent, lockedClassDiscussionTopicId)]
           || emptyForm(initialIntent)
+        const questionDraft = initialSection === 'community' && lockedClassDiscussionTopicId > 0
+          ? withClassQuickQuestionDraft(draft, options.class_question)
+          : draft
+        if (options.class_question && questionDraft === draft && (draft.content.trim() || draft.images.length)) {
+          Taro.showToast({ title: '已恢复这门课的草稿', icon: 'none' })
+        }
         const initialForm = initialSection === 'community'
-          ? draft
+          ? questionDraft
           : withRememberedPublisherContact(draft, remembered)
         const prefill = initialSection === 'market' && options.course_prefill === '1'
           ? consumeMarketplacePublishPrefill()
@@ -823,8 +832,11 @@ export default function PublishPage() {
       .then((result) => setSections(result.items))
       .catch(() => setSections([]))
       .finally(() => setSectionsReady(true))
-    void lifeServicesRepository.listCampusCircleTopics({ pageSize: 50 })
-      .then((result) => setTopics(result.items.filter((item) => item.status === 'active')))
+    const initialTopics = lockedClassDiscussionTopicId > 0
+      ? lifeServicesRepository.getCampusCircleTopic(lockedClassDiscussionTopicId).then((topic) => [topic])
+      : lifeServicesRepository.listCampusCircleTopics({ pageSize: 50 }).then((result) => result.items)
+    void initialTopics
+      .then((items) => setTopics(items.filter((item) => item.status === 'active')))
       .catch(() => setTopics([]))
   })
 
@@ -938,18 +950,18 @@ export default function PublishPage() {
 
   useEffect(() => {
     if (mode !== 'create' || loadingEdit || restoringCreateDefaults) return
-    const timer = setTimeout(() => saveDraft(section, form), 350)
+    const timer = setTimeout(() => saveDraft(section, form, classDiscussionTopicId), 350)
     return () => clearTimeout(timer)
-  }, [form, loadingEdit, mode, restoringCreateDefaults, section])
+  }, [classDiscussionTopicId, form, loadingEdit, mode, restoringCreateDefaults, section])
 
   const selectSection = (next: PublishSection) => {
-    if (mode !== 'create' || next === section || restoringCreateDefaults) return
+    if (mode !== 'create' || next === section || restoringCreateDefaults || classDiscussionTopicId > 0) return
     if (form.images.some((image) => image.status === 'uploading')) {
       Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
       return
     }
     requestWechatSubscriptionForPublishSection(next)
-    saveDraft(section, form)
+    saveDraft(section, form, classDiscussionTopicId)
     setSection(next)
     const nextForm = storedDrafts()[draftKey(next)] || emptyForm()
     setForm(next === 'community'
@@ -964,7 +976,7 @@ export default function PublishPage() {
       return
     }
     if (mode === 'create') {
-      saveDraft(section, form)
+      saveDraft(section, form, classDiscussionTopicId)
       const nextForm = storedDrafts()[draftKey('market', intent)] || emptyForm(intent)
       setForm(withRememberedPublisherContact(nextForm, rememberedContactRef.current))
       return
@@ -1122,7 +1134,7 @@ export default function PublishPage() {
   }, [communitySectionOptions, contentMaxLength, form, section, sectionsReady, serializedContent])
 
   const navigateAfterSubmit = async (id: number) => {
-    clearDraft(section, form)
+    clearDraft(section, form, classDiscussionTopicId)
     Taro.showToast({ title: '已提交审核', icon: 'success' })
     await new Promise((resolve) => setTimeout(resolve, 450))
     if (section === 'errands') {
@@ -1279,14 +1291,14 @@ export default function PublishPage() {
       Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
       return
     }
-    saveDraft(section, form)
+    saveDraft(section, form, classDiscussionTopicId)
     Taro.showToast({ title: '草稿已保存', icon: 'success' })
     setTimeout(() => Taro.navigateBack(), 350)
   }
 
   const navbarTitle = section === 'market'
     ? form.marketIntent === 'wanted' ? '发布求购' : '出售闲置'
-    : section === 'community' ? '发布动态'
+    : section === 'community' ? classDiscussionTopicId > 0 ? '课堂提问' : '发布动态'
       : section === 'errands' ? '发布跑腿'
         : '发布同行'
   return (
@@ -1303,7 +1315,7 @@ export default function PublishPage() {
       >
         <View className='publisher-type-panel'>
           <View className='publisher-types' ariaRole='tablist'>
-            {sectionOptions.map((item) => (
+            {sectionOptions.filter((item) => !classDiscussionTopicId || item.key === 'community').map((item) => (
               <View
                 key={item.key}
                 className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}

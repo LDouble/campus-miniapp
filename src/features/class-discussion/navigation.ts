@@ -11,6 +11,8 @@ import {
 } from '../runtime-config'
 import type { Course } from '../../pages/academic/types'
 import { getClassDiscussionContext } from './context'
+import { classDiscussionTopicPublisherUrl, type ClassQuickQuestionId } from './topic'
+import { lifeServicesRepository } from '../life-services/repository'
 
 const resolvingDiscussionKeys = new Set<string>()
 
@@ -31,6 +33,7 @@ const resolveClassDiscussionTopic = (course: Course) => {
 export const openClassDiscussion = async (
   course: Course,
   config: MiniappRuntimeConfig = getMiniappRuntimeConfig(),
+  question?: ClassQuickQuestionId,
 ) => {
   const context = getClassDiscussionContext(course)
   if (!context) {
@@ -59,9 +62,15 @@ export const openClassDiscussion = async (
 
     const topic = await resolveClassDiscussionTopic(course)
     if (!topic) return false
+    if (question) {
+      // 参与统计同步失败不应阻断提问，课堂页仍会在下次进入时重试登记。
+      void lifeServicesRepository.recordCampusCircleClassParticipation(topic.id).catch(() => undefined)
+    }
     return await openMiniappModule(
       'community',
-      `/pages/community/topic/index?id=${topic.id}`,
+      question
+        ? classDiscussionTopicPublisherUrl(topic.id, question)
+        : `/pages/community/topic/index?id=${topic.id}`,
       { config },
     )
   } catch (error) {

@@ -7,7 +7,6 @@ import Taro, {
 } from '@tarojs/taro'
 import {
   Image,
-  ScrollView,
   Swiper,
   SwiperItem,
   Text,
@@ -42,6 +41,7 @@ import type {
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
+import BottomSheet from '../../components/bottom-sheet'
 import UserAvatar from '../../components/user-avatar'
 import CommunityCommentSheet from '../../features/community/comment-sheet'
 import CommunityPostCard, { type CommunityPostCommentPreview } from '../../features/community/post-card'
@@ -50,8 +50,11 @@ import { useDismissCommunityOverlaysOnScroll } from '../../features/community/us
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
-import { getClassDiscussionContext } from '../../features/class-discussion/context'
 import { openClassDiscussion } from '../../features/class-discussion/navigation'
+import { type ClassQuickQuestionId } from '../../features/class-discussion/topic'
+import scheduleCalendarArrowIcon from '../../assets/icons/home-schedule-calendar-arrow.svg'
+import allServicesIcon from '../../assets/icons/home-services-all.svg'
+import HomeCourseCarousel from '../../features/home/course-carousel'
 import {
   avatarText,
   resolveCoursePreview,
@@ -77,7 +80,6 @@ import {
   openWechatSubscriptionSettings,
 } from '../../features/wechat-subscription/request'
 import {
-  formatOfficialNoticeCompactDate,
   officialNoticeSourceLabels,
 } from '../../features/official-notices/types'
 import type { OfficialNotice } from '../../features/official-notices/types'
@@ -130,6 +132,7 @@ import {
   type CampusTheme,
 } from '../../features/theme-preference'
 import './index.scss'
+import './course-home.scss'
 
 const fullLifeServicesRepository = __CAMPUS_APP_EDITION__ === 'qualification'
   ? null
@@ -152,7 +155,6 @@ const icons = {
   check: require('../../assets/icons/check-circle.svg'),
   clubs: require('../../assets/icons/clubs.svg'),
   whatToEat: require('../../assets/icons/what-to-eat.svg'),
-  campaign: require('../../assets/icons/campaign.svg'),
   arrowUp: require('../../assets/icons/arrow-up.svg'),
 }
 
@@ -160,7 +162,6 @@ const icons = {
 const homeFeatureFlags = { todayTask: false } as const
 
 const HOME_COURSE_PREVIEW_LIMIT = 8
-const SCHEDULE_SCROLL_VISIBLE_ROWS = 3
 
 const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   community: 'community',
@@ -383,6 +384,8 @@ function Index() {
     loadCachedCoursePreview(runtimeConfig, campusName)
   ))
   const [discussionOpeningCourseId, setDiscussionOpeningCourseId] = useState('')
+  const discussionOpeningRef = useRef(false)
+  const [quickQuestionCourse, setQuickQuestionCourse] = useState<Parameters<typeof openClassDiscussion>[0] | null>(null)
   const [academicCalendarLabel, setAcademicCalendarLabel] = useState(
     loadCachedAcademicLabel,
   )
@@ -428,6 +431,7 @@ function Index() {
   })
 
   const loadHome = useCallback(async (force = false) => {
+    setQuickQuestionCourse(null)
     const homeFeedRequestId = ++homeFeedRequestSequence.current
     homeFeedLoadingMoreRef.current = false
     setHomeFeedLoadingMore(false)
@@ -662,12 +666,17 @@ function Index() {
     )
   }
 
-  const openCourseDiscussion = async (course: Parameters<typeof openClassDiscussion>[0]) => {
-    if (discussionOpeningCourseId) return
+  const openCourseDiscussion = async (
+    course: Parameters<typeof openClassDiscussion>[0],
+    question?: ClassQuickQuestionId,
+  ) => {
+    if (discussionOpeningRef.current) return
+    discussionOpeningRef.current = true
     setDiscussionOpeningCourseId(course.id)
     try {
-      await openClassDiscussion(course, runtimeConfig)
+      await openClassDiscussion(course, runtimeConfig, question)
     } finally {
+      discussionOpeningRef.current = false
       setDiscussionOpeningCourseId('')
     }
   }
@@ -682,6 +691,7 @@ function Index() {
     const tapIndex = await showActionSheetSelection(campuses)
     if (tapIndex === null) return
     const selectedCampus = campuses[tapIndex]
+    setQuickQuestionCourse(null)
     applyCampus(selectedCampus)
   }
 
@@ -788,6 +798,7 @@ function Index() {
     const moduleKey = serviceModuleKeys[service.key]
     return !moduleKey || resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
+  const featuredHomeServices = visibleHomeServices
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
   const homeFeedCanLoadMore = homeFeedItems.length < homeFeedTotal
   useLoadMoreSignal({
@@ -804,14 +815,9 @@ function Index() {
   const momentsLoading = homeFeedLoading
   const momentsError = homeFeedError && homeFeedItems.length === 0
   const todayCalendarEvents = upcomingHomeCalendarEvents(calendar, campusName)
-  const scheduleRowCount = coursePreview.items.length + todayCalendarEvents.length
-  const scheduleCanScroll = scheduleRowCount > SCHEDULE_SCROLL_VISIBLE_ROWS
-  const ongoingCourseIndex = coursePreview.items.findIndex((item) => item.status === 'ongoing')
-  const highlightedCourseIndex = ongoingCourseIndex >= 0
-    ? ongoingCourseIndex
-    : coursePreview.items.length > 0
-      ? 0
-      : -1
+  const scheduleCountLabel = coursePreview.dayLabel === '假期'
+    ? coursePreview.dateLabel
+    : `共 ${coursePreview.total} 门`
   const todayTask = resolveTodayTask(dailyCheckin, userLevelTasks)
   const holidayCountdown = coursePreview.dayLabel === '假期'
     ? Math.max(1, Math.round(
@@ -933,60 +939,8 @@ function Index() {
       && !!normalizeWebViewUrl(runtimeBanner.action.value))
   )
 
-  const scheduleTimeline = (
-    <View className='schedule-card__timeline'>
-      <View className='schedule-card__timeline-line' />
-      {coursePreview.items.map((item, index) => (
-        <View
-          key={`${item.course.id}-${item.startsAt.getTime()}`}
-          className={[
-            'schedule-card__course-row',
-            index === highlightedCourseIndex
-              ? 'schedule-card__course-row--active'
-              : '',
-          ].filter(Boolean).join(' ')}
-          ariaRole='button'
-          ariaLabel={`查看课表：${item.course.name}`}
-          onClick={openSchedule}
-        >
-          <View className='schedule-card__timeline-marker'>
-            <View className='schedule-card__timeline-dot' />
-          </View>
-          <View className='schedule-card__course-copy'>
-            <Text className='schedule-card__course-name'>{item.course.name}</Text>
-            <View className='schedule-card__meta'>
-              <Text>第 {item.course.startSection}-{item.course.endSection} 节</Text>
-              <Text className='schedule-card__meta-divider'>·</Text>
-              <Image src={icons.location} mode='aspectFit' />
-              <Text>{item.course.location || '地点待定'}</Text>
-            </View>
-          </View>
-          <View
-            className={[
-              'schedule-card__discussion',
-              !getClassDiscussionContext(item.course) || discussionOpeningCourseId
-                ? 'schedule-card__discussion--disabled'
-                : '',
-            ].filter(Boolean).join(' ')}
-            ariaRole='button'
-            ariaLabel={getClassDiscussionContext(item.course)
-              ? `进入${item.course.name}课堂讨论`
-              : `${item.course.name}缺少选课号或学年学期，无法进入课堂讨论`}
-            onClick={(event) => {
-              event.stopPropagation()
-              if (discussionOpeningCourseId) return
-              void openCourseDiscussion(item.course)
-            }}
-          >
-            <Text>{discussionOpeningCourseId === item.course.id
-              ? '打开中'
-              : getClassDiscussionContext(item.course) ? '讨论' : '暂无选课号'}</Text>
-          </View>
-        </View>
-      ))}
-      {todayCalendarEvents.length > 0 && coursePreview.items.length > 0 && (
-        <View className='schedule-card__event-divider' />
-      )}
+  const calendarTimeline = (
+    <View className='schedule-card__timeline home-course-events'>
       {todayCalendarEvents.map((event, eventIndex) => {
         const reminder = calendarReminders.find((item) => item.event_id === event.id)
         return (
@@ -1037,7 +991,7 @@ function Index() {
   )
 
   return (
-    <View className='campus'>
+    <View className='campus campus--course-home'>
       <CustomNavbar
         title='OUSea'
         immersive
@@ -1093,77 +1047,63 @@ function Index() {
         </View>
       </View>
 
-      <View className='schedule-card today-card motion-enter motion-enter--delay-2'>
-        <View className='schedule-card__header'>
-          <View className='schedule-card__date'>
-            <View className='schedule-card__heading-bar' />
-            <Text className='schedule-card__day-label'>
-              {coursePreview.dayLabel === '假期' ? '假期中' : coursePreview.dayLabel}
-            </Text>
-          </View>
-          <View
-            className='schedule-card__summary'
-            ariaRole='button'
-            ariaLabel='查看完整校历'
-            onClick={openCalendar}
-          >
-            <Text>校历</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
+      <View className='service-panel motion-enter motion-enter--delay-3'>
+        <View className='service-panel__simple-head'><Text className='service-panel__title'>常用服务</Text><View className='service-panel__customize' ariaRole='button' onClick={() => Taro.navigateTo({ url: '/pages/services/index?edit=1' })}><Image src={getServiceIcon('edit', campusTheme).src} mode='aspectFit' /><Text>自定义</Text></View></View>
+        <View className='service-panel__home-grid'>
+          {featuredHomeServices.map((item) => (
+            <View
+              key={item.key}
+              className={`service-panel__grid-item service-panel__grid-item--${getServiceIcon(item.key, campusTheme).tone} service-panel__grid-item--key-${item.key}`}
+              ariaRole='button'
+              ariaLabel={item.name}
+              onClick={() => openCustomService(item, runtimeConfig)}
+            >
+              <View className={`service-panel__grid-icon service-panel__grid-icon--${getServiceIcon(item.key, campusTheme).tone}`}>
+                <Image src={getServiceIcon(item.key, campusTheme).src} mode='aspectFit' />
+              </View>
+              <Text className='service-panel__grid-name'>{item.name}</Text>
+            </View>
+          ))}
+          <View className='service-panel__grid-item service-panel__grid-item--all' ariaRole='button' ariaLabel='查看全部服务' onClick={openAllServices}>
+            <View className='service-panel__grid-icon'><Image src={allServicesIcon} mode='aspectFit' /></View>
+            <Text className='service-panel__grid-name'>全部服务</Text>
           </View>
         </View>
+      </View>
 
-        {(coursePreview.items.length > 0 || todayCalendarEvents.length > 0) ? (
-          <View className='schedule-card__courses'>
-            <View className='schedule-card__timeline-scroll'>
-              {scheduleCanScroll ? (
-                <ScrollView
-                  className='schedule-card__scroll'
-                  scrollY
-                  enhanced
-                  showScrollbar={false}
-                >
-                  {scheduleTimeline}
-                </ScrollView>
-              ) : scheduleTimeline}
-              {scheduleCanScroll && (
-                <View
-                  className='schedule-card__scroll-cue'
-                  ariaRole='img'
-                  ariaLabel='课表提醒可以上下滑动查看'
-                >
-                  <Image
-                    className='schedule-card__scroll-cue-arrow schedule-card__scroll-cue-arrow--up'
-                    src={icons.arrow}
-                    mode='aspectFit'
-                  />
-                  <Image
-                    className='schedule-card__scroll-cue-arrow schedule-card__scroll-cue-arrow--down'
-                    src={icons.arrow}
-                    mode='aspectFit'
-                  />
-                </View>
-              )}
-            </View>
-            {coursePreview.hiddenCount > 0 && (
-              <View
-                className='schedule-card__more'
-                ariaRole='button'
-                ariaLabel={`查看剩余 ${coursePreview.hiddenCount} 节课程`}
-                onClick={openSchedule}
-              >
-                <Text>还有 {coursePreview.hiddenCount} 节课程</Text>
-                <Image src={icons.arrow} mode='aspectFit' />
-              </View>
-            )}
+      <View className='home-course-section motion-enter motion-enter--delay-2'>
+        <View className='home-course-section__header'>
+          <View className='home-course-section__heading'>
+            <View className='home-course-section__bar' />
+            <Text className='home-course-section__title'>
+              {coursePreview.dayLabel === '假期' ? '假期安排' : coursePreview.dayLabel === '明天' ? '明日课程' : '今日课程'}
+            </Text>
+            <Text className='home-course-section__count'>{scheduleCountLabel}</Text>
           </View>
+          <View className='home-course-section__all' ariaRole='button' ariaLabel='查看完整课程表' onClick={openSchedule}>
+            <Text>整周课表</Text><Image src={scheduleCalendarArrowIcon} mode='aspectFit' />
+          </View>
+        </View>
+        {coursePreview.items.length > 0 ? (
+          <HomeCourseCarousel
+            key={coursePreview.items.map((item) => `${item.course.id}:${item.startsAt.getTime()}`).join('|')}
+            items={coursePreview.items}
+            openingCourseId={discussionOpeningCourseId}
+            onViewSchedule={openSchedule}
+            onDiscussion={(course) => { void openCourseDiscussion(course) }}
+          />
         ) : (
-          <View className='schedule-card__empty'>
-            <View className='schedule-card__empty-copy'>
-              <Text>{coursePreview.emptyText}</Text>
-              <Text>{holidayCountdown ? `${holidayCountdown}天后开学` : coursePreview.emptyHint}</Text>
-            </View>
+          <View className='home-course-section__empty' ariaRole='button' ariaLabel='查看课程表' onClick={openSchedule}>
+            <Text>{coursePreview.emptyText}</Text>
+            <Text>{holidayCountdown ? `${holidayCountdown}天后开学` : coursePreview.emptyHint}</Text>
           </View>
         )}
+        {coursePreview.hiddenCount > 0 && (
+          <View className='home-course-section__more' ariaRole='button' onClick={openSchedule}>
+            还有 {coursePreview.hiddenCount} 门课程，查看完整课表
+          </View>
+        )}
+        {todayCalendarEvents.length > 0 && calendarTimeline}
       </View>
 
       {homeFeatureFlags.todayTask && todayTask && (
@@ -1190,40 +1130,6 @@ function Index() {
           </View>
         </View>
       )}
-
-      <View className='service-panel motion-enter motion-enter--delay-3'>
-        <View className='service-panel__simple-head'>
-          <View className='service-panel__heading'>
-            <View className='service-panel__heading-bar' />
-            <Text className='service-panel__title'>常用服务</Text><View className='service-panel__customize' ariaRole='button' onClick={() => Taro.navigateTo({ url: '/pages/services/index?edit=1' })}>自定义</View>
-          </View>
-          <View
-            className='service-panel__all'
-            ariaRole='button'
-            ariaLabel='查看全部服务'
-            onClick={openAllServices}
-          >
-            <Text>全部</Text>
-            <Image src={icons.arrow} mode='aspectFit' />
-          </View>
-        </View>
-        <View className='service-panel__home-grid'>
-          {visibleHomeServices.map((item) => (
-            <View
-              key={item.key}
-              className={`service-panel__grid-item service-panel__grid-item--key-${item.key}`}
-              ariaRole='button'
-              ariaLabel={item.name}
-              onClick={() => openCustomService(item, runtimeConfig)}
-            >
-              <View className={`service-panel__grid-icon service-panel__grid-icon--${getServiceIcon(item.key, campusTheme).tone}`}>
-                <Image src={getServiceIcon(item.key, campusTheme).src} mode='aspectFit' />
-              </View>
-              <Text className='service-panel__grid-name'>{item.name}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
 
       <View className='official-notices-home motion-enter motion-enter--delay-4'>
         <View
@@ -1253,21 +1159,9 @@ function Index() {
             ariaLabel={`查看通知：${item.title}`}
             onClick={() => openOfficialNotice(item)}
           >
-            <View className='official-notices-home__icon'>
-              <Image src={icons.campaign} mode='aspectFit' />
-            </View>
+            <Text className='official-notices-home__source-badge'>{officialNoticeSourceLabels[item.source]}</Text>
             <View className='official-notices-home__copy'>
               <Text className='official-notices-home__copy-title'>{item.title}</Text>
-              <View className='official-notices-home__meta'>
-                <Text className='official-notices-home__source'>
-                  {officialNoticeSourceLabels[item.source]}
-                </Text>
-                <Text className='official-notices-home__publisher'>{item.publisher}</Text>
-                <Text className='official-notices-home__meta-separator'>·</Text>
-                <Text className='official-notices-home__date'>
-                  {formatOfficialNoticeCompactDate(item.source_published_at)}
-                </Text>
-              </View>
             </View>
             <Image className='official-notices-home__arrow' src={icons.arrow} mode='aspectFit' />
           </View>
@@ -1478,6 +1372,40 @@ function Index() {
         <Image src={icons.arrowUp} mode='aspectFit' />
         <Text>顶部</Text>
       </View>
+      <BottomSheet
+        visible={quickQuestionCourse !== null}
+        title='向同学提问'
+        onClose={() => setQuickQuestionCourse(null)}
+      >
+        <View className='home-class-question'>
+          <View className='home-class-question__context'>
+            <Text className='home-class-question__name'>{quickQuestionCourse?.name}</Text>
+            <Text className='home-class-question__meta'>
+              {quickQuestionCourse?.periodId} · 选课号 {quickQuestionCourse?.classNum}
+            </Text>
+          </View>
+          {([
+            { id: 'homework', label: '问作业' },
+            { id: 'materials', label: '求资料' },
+            { id: 'free', label: '自由提问' },
+          ] as const).map((question) => (
+            <View
+              key={question.id}
+              className={`home-class-question__option home-class-question__option--${question.id}`}
+              ariaRole='button'
+              ariaLabel={`${question.label}，发布到${quickQuestionCourse?.name}`}
+              onClick={() => {
+                if (!quickQuestionCourse || discussionOpeningCourseId) return
+                setQuickQuestionCourse(null)
+                void openCourseDiscussion(quickQuestionCourse, question.id)
+              }}
+            >
+              <Text>{question.label}</Text>
+              <Image src={scheduleCalendarArrowIcon} mode='aspectFit' />
+            </View>
+          ))}
+        </View>
+      </BottomSheet>
       {homeCommentItem ? (
         <CommunityCommentSheet
           key={`${homeCommentItem.source_type}-${homeCommentItem.source_id}`}

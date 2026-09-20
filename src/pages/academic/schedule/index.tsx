@@ -81,6 +81,7 @@ const icons = {
   semester: require('../../../assets/icons/calendar.svg'),
   sync: require('../../../assets/icons/sync.svg'),
 }
+const classDiscussionEntryIcon = require('../../../assets/icons/class-discussion-entry.svg')
 
 const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
 const SCHEDULE_NOTE_COPY_ID = 'academic-schedule-note-copy'
@@ -327,24 +328,42 @@ function CourseDetailCard({
           </View>
         )}
         <View className='course-resource-actions course-resource-actions--course-card'>
-          <View className='course-resource-actions__primary' onClick={onFindMaterials}>
-            <View>
-              <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
-              <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '按课程与当前学期为你筛选'}</Text>
+          <View
+            className={[
+              'course-resource-actions__discussion',
+              !classDiscussionAvailable || discussionOpening ? 'course-resource-actions__action--disabled' : '',
+            ].filter(Boolean).join(' ')}
+            ariaRole='button'
+            ariaLabel={classDiscussionAvailable ? '进入课堂讨论' : '当前课程缺少选课号或学年学期，无法进入课堂讨论'}
+            onClick={() => {
+              if (discussionOpening) return
+              onOpenDiscussion()
+            }}
+          >
+            <View className='course-resource-actions__discussion-icon-wrap' aria-hidden>
+              <Image className='course-resource-actions__discussion-icon' src={classDiscussionEntryIcon} mode='aspectFit' />
             </View>
-            <Text>去发现 ›</Text>
+            <View className='course-resource-actions__discussion-copy'>
+              <Text className='course-resource-actions__discussion-label'>
+                {discussionOpening ? '正在打开讨论…' : classDiscussionAvailable ? '课堂讨论' : '暂不能进入讨论'}
+              </Text>
+              <Text className='course-resource-actions__discussion-description'>
+                {classDiscussionAvailable ? '和同学聊聊作业与资料' : '补充选课号和学年学期后开启'}
+              </Text>
+            </View>
+            <Text className='course-resource-actions__discussion-chevron' aria-hidden>›</Text>
           </View>
           <View className={`course-resource-actions__secondary ${isQualificationEdition ? 'course-resource-actions__secondary--single' : 'course-resource-actions__secondary--two'}`}>
-            <View
-              className={!classDiscussionAvailable || discussionOpening ? 'course-resource-actions__action--disabled' : ''}
-              ariaRole='button'
-              ariaLabel={classDiscussionAvailable ? '进入课堂讨论' : '当前课程缺少选课号或学年学期，无法进入课堂讨论'}
-              onClick={() => {
-                if (discussionOpening) return
-                onOpenDiscussion()
-              }}
-            >{discussionOpening ? '正在打开讨论…' : classDiscussionAvailable ? '课堂讨论' : '暂无选课号'}</View>
-            {!isQualificationEdition && <View onClick={onWanted}>求购课本</View>}
+            <View className='course-resource-actions__secondary-item' ariaRole='button' ariaLabel={isQualificationEdition ? '打开新版课程服务' : '发现课程资料'} onClick={onFindMaterials}>
+              <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
+              <Text aria-hidden>›</Text>
+            </View>
+            {!isQualificationEdition && (
+              <View className='course-resource-actions__secondary-item' ariaRole='button' ariaLabel='求购课本' onClick={onWanted}>
+                <Text>求购课本</Text>
+                <Text aria-hidden>›</Text>
+              </View>
+            )}
           </View>
         </View>
         {isRemovableCourse(course) && onDelete && (

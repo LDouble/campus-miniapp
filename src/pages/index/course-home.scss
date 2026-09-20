@@ -1,0 +1,147 @@
+/* Figma 3770:2：服务宫格、横向课程、简洁通知；沿用 OUSea 语义色。 */
+page .campus.campus--course-home {
+  background: linear-gradient(180deg, var(--campus-icon-surface-blue, #e3effe) 0, var(--campus-surface-primary, #f2f7fe) 800rpx, var(--campus-page, #f5f8fc) 1500rpx);
+
+  .campus__header { order: 1; }
+  .service-panel { order: 2; }
+  .home-course-section { order: 3; }
+  .official-notices-home { order: 4; }
+  .today-task { order: 5; }
+  .hero-card, .home-migrated { order: 6; }
+  .moments-panel { order: 7; }
+
+  .service-panel {
+    padding: 28rpx 24rpx 32rpx;
+    margin-top: 0;
+    margin-bottom: var(--ousea-space-2, 24rpx);
+    background: var(--campus-surface, #fff);
+    border: 1rpx solid var(--campus-border, #e8edf4);
+    border-radius: var(--ousea-radius-card, 32rpx);
+    box-shadow: none;
+  }
+  .service-panel__simple-head { margin-bottom: 28rpx; min-height: 0; align-items: center; }
+  .service-panel__title { font-size: 28rpx; line-height: 40rpx; font-weight: var(--ousea-font-weight-semibold, 600); }
+  .service-panel__customize {
+    position: relative; display: flex; gap: 6rpx; margin-left: 0;
+    min-height: 0; padding: 6rpx 14rpx; border-radius: 999rpx;
+    font-size: 22rpx; line-height: 30rpx; color: var(--campus-service-text-muted);
+    background: var(--campus-service-elevated);
+    image { width: 24rpx; height: 24rpx; opacity: .65; }
+    &::before { content: ''; position: absolute; inset: -14rpx 0; }
+  }
+  .service-panel__home-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 28rpx 8rpx;
+  }
+  .service-panel__grid-item {
+    min-height: 0;
+    padding: 0;
+    gap: 12rpx;
+  }
+  .service-panel__grid-icon {
+    width: 76rpx;
+    height: 76rpx;
+    border-radius: 26rpx;
+    border: 0;
+    box-shadow: none;
+    @each $tone in blue, green, pink, purple, orange, cyan {
+      &--#{$tone} { background: var(--campus-service-#{$tone}-start); }
+    }
+    image { width: 40rpx; height: 40rpx; }
+  }
+  .service-panel__grid-name {
+    font-size: calc(var(--ousea-font-size-caption, 24rpx) * .9167);
+    font-weight: var(--ousea-font-weight-regular, 400);
+    line-height: 1.4;
+    color: var(--campus-text-body, #3a4759);
+  }
+  .service-panel__grid-item--all .service-panel__grid-icon { background: var(--campus-icon-surface, #f0f4f8); }
+
+  .home-course-section { margin-bottom: var(--ousea-space-2, 24rpx); }
+  .home-course-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 88rpx;
+    gap: var(--ousea-space-1, 16rpx);
+  }
+  .home-course-section__heading { display: flex; align-items: center; min-width: 0; gap: 12rpx; }
+  .home-course-section__bar { flex: none; width: 12rpx; height: 32rpx; border-radius: 8rpx; background: var(--campus-primary, #2b7aef); }
+  .home-course-section__title {
+    flex: none;
+    color: var(--campus-text-heading, #1a2333);
+    font-size: var(--ousea-font-size-title, 33rpx);
+    font-weight: var(--ousea-font-weight-medium, 500);
+    line-height: 1.4;
+  }
+  .home-course-section__count {
+    min-width: 0;
+    padding: 4rpx 12rpx;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    color: var(--campus-text-secondary, #6b7a90);
+    background: var(--campus-surface-subtle, #f5f8fc);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    white-space: nowrap;
+  }
+  .home-course-section__all {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4rpx;
+    min-width: 88rpx;
+    min-height: 88rpx;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    color: var(--campus-primary-strong, #1d5fd6);
+    image { width: 24rpx; height: 24rpx; }
+  }
+  .home-course-section__empty {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ousea-space-1, 16rpx);
+    padding: var(--ousea-space-3, 32rpx);
+    background: var(--campus-surface, #fff);
+    border: 1rpx solid var(--campus-border, #e8edf4);
+    border-radius: var(--ousea-radius-card, 32rpx);
+    color: var(--campus-text-heading, #1a2333);
+    font-size: var(--ousea-font-size-body, 32rpx);
+    text + text { color: var(--campus-text-secondary, #6b7a90); font-size: var(--ousea-font-size-caption, 24rpx); }
+  }
+  .home-course-section__more { display: flex; align-items: center; min-height: 88rpx; color: var(--campus-primary-strong, #1d5fd6); font-size: var(--ousea-font-size-caption, 24rpx); }
+  .home-course-events {
+    margin-top: var(--ousea-space-1, 16rpx);
+    padding: var(--ousea-space-2, 24rpx);
+    background: var(--campus-surface, #fff);
+    border-radius: var(--ousea-radius-card, 32rpx);
+  }
+
+  .official-notices-home {
+    padding: 0 var(--ousea-space-3, 32rpx) var(--ousea-space-1, 16rpx);
+    margin-top: 0;
+    margin-bottom: var(--ousea-space-3, 32rpx);
+    border-radius: var(--ousea-radius-card, 32rpx);
+    border: 1rpx solid var(--campus-border, #e8edf4);
+    box-shadow: none;
+  }
+  .official-notices-home__head { min-height: 88rpx; margin: 0; padding: 0; border-bottom: 1rpx solid var(--campus-border, #e8edf4); }
+  .official-notices-home__heading-bar { width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--campus-like, #f04e6b); }
+  .official-notices-home__title { font-size: var(--ousea-font-size-label, 27rpx); font-weight: var(--ousea-font-weight-medium, 500); }
+  .official-notices-home__more { font-size: var(--ousea-font-size-caption, 24rpx); color: var(--campus-text-secondary, #6b7a90); }
+  .official-notices-home__item { gap: var(--ousea-space-1, 16rpx); padding: 12rpx 0; min-height: 88rpx; border: 0; }
+  .official-notices-home__source-badge {
+    flex: none;
+    max-width: 120rpx;
+    padding: 4rpx 8rpx;
+    border-radius: 6rpx;
+    background: var(--campus-surface-primary, #f2f7fe);
+    color: var(--campus-primary-strong, #1d5fd6);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+  }
+  .official-notices-home__copy-title { font-size: var(--ousea-font-size-caption, 24rpx); font-weight: var(--ousea-font-weight-regular, 400); -webkit-line-clamp: 2; }
+  .official-notices-home__arrow { display: none; }
+}
+
+.campus-theme--dark .campus--course-home .service-panel__grid-item--all image { filter: brightness(0) invert(1); }
+.campus-theme--dark .home-course-section__all image,
+.campus-theme--dark .home-class-question__option image { filter: brightness(0) invert(1); }
