@@ -13,7 +13,12 @@ import {
   Text,
   View,
 } from '@tarojs/components'
+import { allServices, serviceModules as serviceModuleKeys, migratedServiceKeys as migratedHomeServiceKeys } from '../../features/service-shortcuts/catalog'
+import { readShortcuts } from '../../features/service-shortcuts/preferences'
+import { openService as openCustomService } from '../../features/service-shortcuts/navigation'
+import { getServiceIcon } from '../../features/service-shortcuts/icons'
 import { useViewPageVisible } from '../../features/community/use-view-page-visible'
+import { useCampusLocationPrompt } from '../../features/campus-location/use-campus-location-prompt'
 import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
@@ -150,118 +155,11 @@ const icons = {
 }
 
 // 首页服务入口使用预着色的 SDR SVG，避免微信 iOS 为 CSS filter 创建原生图像合成层。
-const homeServiceIcons = {
-  light: {
-    academic: require('../../assets/icons/home-service-academic.svg'),
-    calendar: require('../../assets/icons/home-service-calendar.svg'),
-    schedule: require('../../assets/icons/home-service-schedule.svg'),
-    grade: require('../../assets/icons/home-service-grade.svg'),
-    exam: require('../../assets/icons/home-service-exam.svg'),
-    result: require('../../assets/icons/home-service-result.svg'),
-    passRate: require('../../assets/icons/home-service-pass-rate.svg'),
-    materials: require('../../assets/icons/home-service-materials.svg'),
-    shuttle: require('../../assets/icons/home-service-shuttle.svg'),
-    carpool: require('../../assets/icons/home-service-carpool.svg'),
-    community: require('../../assets/icons/home-service-community.svg'),
-    market: require('../../assets/icons/home-service-market.svg'),
-    errands: require('../../assets/icons/home-service-errands.svg'),
-    clubs: require('../../assets/icons/home-service-clubs.svg'),
-    whatToEat: require('../../assets/icons/home-service-what-to-eat.svg'),
-    catAtlas: require('../../assets/icons/home-service-cat-atlas.svg'),
-  },
-  dark: {
-    academic: require('../../assets/icons/home-service-academic-dark.svg'),
-    calendar: require('../../assets/icons/home-service-calendar-dark.svg'),
-    schedule: require('../../assets/icons/home-service-schedule-dark.svg'),
-    grade: require('../../assets/icons/home-service-grade-dark.svg'),
-    exam: require('../../assets/icons/home-service-exam-dark.svg'),
-    result: require('../../assets/icons/home-service-result-dark.svg'),
-    passRate: require('../../assets/icons/home-service-pass-rate-dark.svg'),
-    materials: require('../../assets/icons/home-service-materials-dark.svg'),
-    shuttle: require('../../assets/icons/home-service-shuttle-dark.svg'),
-    carpool: require('../../assets/icons/home-service-carpool-dark.svg'),
-    community: require('../../assets/icons/home-service-community-dark.svg'),
-    market: require('../../assets/icons/home-service-market-dark.svg'),
-    errands: require('../../assets/icons/home-service-errands-dark.svg'),
-    clubs: require('../../assets/icons/home-service-clubs-dark.svg'),
-    whatToEat: require('../../assets/icons/home-service-what-to-eat-dark.svg'),
-    catAtlas: require('../../assets/icons/home-service-cat-atlas-dark.svg'),
-  },
-}
-type HomeServiceIconKey = keyof typeof homeServiceIcons.light
-
-const homeFeatureFlags = {
-  todayTask: false,
-} as const
+const homeFeatureFlags = { todayTask: false } as const
 
 const HOME_COURSE_PREVIEW_LIMIT = 8
 const SCHEDULE_SCROLL_VISIBLE_ROWS = 3
 
-const quickServices = [
-  {
-    key: 'schedule',
-    name: '课程表',
-    iconKey: 'schedule' as HomeServiceIconKey,
-    tone: 'blue',
-    route: '/pages/academic/schedule/index',
-  },
-  {
-    key: 'grades',
-    name: '成绩',
-    iconKey: 'grade' as HomeServiceIconKey,
-    tone: 'blue',
-    route: '/pages/academic/grades/index',
-  },
-  {
-    key: 'exams',
-    name: '考试',
-    iconKey: 'exam' as HomeServiceIconKey,
-    tone: 'sand',
-    route: '/pages/academic/exams/index',
-  },
-  { key: 'result', name: '选课结果', iconKey: 'result' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/selection/index' },
-  { key: 'simulation', name: '模拟选课', iconKey: 'schedule' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/schedule/index?mode=simulation' },
-  { key: 'pass-rate', name: '通过率', iconKey: 'passRate' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/statistics/courses' },
-  { key: 'materials', name: '资料', iconKey: 'materials' as HomeServiceIconKey, tone: 'cyan', route: '/pages/materials/index' },
-  { key: 'calendar', name: '校历', iconKey: 'calendar' as HomeServiceIconKey, tone: 'pink', route: '/pages/calendar/index' },
-  { key: 'shuttle', name: '校车', iconKey: 'shuttle' as HomeServiceIconKey, tone: 'blue', route: '/pages/shuttle/index' },
-  { key: 'community', name: '社区', iconKey: 'community' as HomeServiceIconKey, tone: 'cyan', tab: '/pages/community/index' },
-  { key: 'market', name: '二手', iconKey: 'market' as HomeServiceIconKey, tone: 'pink', module: 'market' },
-  { key: 'errands', name: '跑腿', iconKey: 'errands' as HomeServiceIconKey, tone: 'sand', module: 'errands' },
-  { key: 'course-audit', name: '课程查询', iconKey: 'academic' as HomeServiceIconKey, tone: 'cyan', route: '/pages/academic/course-catalog/index' },
-  { key: 'general-education', name: '通识查询', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/academic/general-education/index' },
-  { key: 'classroom', name: '空教室', iconKey: 'academic' as HomeServiceIconKey, tone: 'blue', route: '/pages/empty-classroom/index' },
-  { key: 'clubs', name: '社团', iconKey: 'clubs' as HomeServiceIconKey, tone: 'cyan', route: '/pages/clubs/index' },
-  { key: 'what-to-eat', name: '今天吃什么', iconKey: 'whatToEat' as HomeServiceIconKey, tone: 'sand', route: '/pages/what-to-eat/index' },
-  { key: 'cat-atlas', name: '猫猫图鉴', iconKey: 'catAtlas' as HomeServiceIconKey, tone: 'sand', route: '/pages/cat-atlas/index' },
-]
-
-const migratedHomeServiceKeys = new Set([
-  'materials',
-  'community',
-  'market',
-  'errands',
-  'carpool',
-  'clubs',
-])
-const serviceModuleKeys: Partial<Record<string, MiniappModuleKey>> = {
-  schedule: 'academic_schedule',
-  grades: 'academic_grades',
-  exams: 'academic_exams',
-  result: 'academic_selection',
-  simulation: 'academic_schedule',
-  'pass-rate': 'academic_statistics',
-  materials: 'course_materials',
-  calendar: 'calendar',
-  shuttle: 'shuttle',
-  community: 'community',
-  market: 'marketplace',
-  errands: 'errand',
-  carpool: 'carpool',
-  classroom: 'empty_classroom',
-  clubs: 'club',
-  'what-to-eat': 'what_to_eat',
-}
 const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   community: 'community',
   errands: 'errand',
@@ -419,6 +317,7 @@ const loadHomeAcademic = async (
 }
 
 function Index() {
+  const [shortcutKeys, setShortcutKeys] = useState(readShortcuts)
   const viewPageVisible = useViewPageVisible()
   useCampusShare((event) => {
     const target = event.target as {
@@ -489,6 +388,25 @@ function Index() {
   const homeFeedLoadingMoreRef = useRef(false)
   const homeHasShown = useRef(false)
   const homeBackTopVisibleRef = useRef(false)
+  const applyCampus = useCallback((selectedCampus: string) => {
+    try {
+      // 先持久化，避免存储失败时首页与课表使用不同校区。
+      saveSelectedCampus(selectedCampus)
+    } catch {
+      void Taro.showToast({ title: '校区保存失败，请重试', icon: 'none' })
+      return
+    }
+    const config = getMiniappRuntimeConfig()
+    setRuntimeConfig(config)
+    setCampusName(selectedCampus)
+    setBannerIndex(0)
+    setCoursePreview(loadCachedCoursePreview(config, selectedCampus))
+  }, [])
+  const dismissCampusLocationPrompt = useCampusLocationPrompt(
+    viewPageVisible && !homeFeedLoading && !homeFeedRefreshing
+      && !showNotificationGuide && !homeCommentItem && !isAccountCancelled(),
+    applyCampus,
+  )
   const headerCollapsed = useCollapsingHeader({
     triggerSelector: '.campus__eyebrow',
     threshold: 48,
@@ -546,7 +464,7 @@ function Index() {
       if (!account.ok) return { notice: 0, private: 0, userId: 0 }
       const [notice, privateMessage] = await Promise.all([
         settle(noticesRepository.unreadCount()),
-        settle(refreshPrivateMessageUnreadCount(true)),
+        settle(refreshPrivateMessageUnreadCount(force)),
       ])
       return {
         notice: notice.ok ? Number(notice.value.count) || 0 : 0,
@@ -689,11 +607,17 @@ function Index() {
   }, [campusName, runtimeConfig])
 
   useDidShow(() => {
+    setShortcutKeys(readShortcuts())
     syncCustomTabBar('home')
     if (isAccountCancelled()) {
       void Taro.reLaunch({ url: '/pages/account-cancellation/index?success=1' })
       return
     }
+    const config = getMiniappRuntimeConfig()
+    const selectedCampus = getSelectedCampus(config)
+    setRuntimeConfig(config)
+    setCampusName(selectedCampus)
+    setCoursePreview(loadCachedCoursePreview(config, selectedCampus))
     // 首页从详情返回时保留 Feed 分页和滚动位置，完整刷新交给下拉刷新。
     if (homeHasShown.current) return
     homeHasShown.current = true
@@ -723,40 +647,6 @@ function Index() {
     )
   }
 
-  const openAcademic = (route: string) => {
-    const service = quickServices.find((item) => (
-      'route' in item && item.route === route
-    ))
-    const moduleKey = service ? serviceModuleKeys[service.key] : undefined
-    if (isQualificationEdition && moduleKey === 'course_materials') {
-      void openMigratedFeaturePage({ module: 'course_materials' })
-      return
-    }
-    if (moduleKey) {
-      void openMiniappModule(moduleKey, route, { config: runtimeConfig })
-      return
-    }
-    Taro.navigateTo({ url: route })
-  }
-
-  const openQuickService = (item: typeof quickServices[number]) => {
-    if ('tab' in item && item.tab) {
-      void openLifeHub('community')
-      return
-    }
-    if ('route' in item && item.route) {
-      openAcademic(item.route)
-      return
-    }
-    if ('module' in item && item.module) {
-      if (['market', 'errands', 'carpool'].includes(item.module)) {
-        void openLifeHub(item.module as LifeHubSection)
-        return
-      }
-      Taro.showToast({ title: `${item.name}入口配置异常`, icon: 'none' })
-    }
-  }
-
   const openAllServices = () => {
     Taro.navigateTo({ url: '/pages/services/index' })
   }
@@ -774,14 +664,12 @@ function Index() {
   }
 
   const chooseCampus = async () => {
+    dismissCampusLocationPrompt()
     const campuses = enabledCampuses(runtimeConfig)
     const tapIndex = await showActionSheetSelection(campuses)
     if (tapIndex === null) return
     const selectedCampus = campuses[tapIndex]
-    setCampusName(selectedCampus)
-    setBannerIndex(0)
-    saveSelectedCampus(selectedCampus)
-    setCoursePreview(loadCachedCoursePreview(runtimeConfig, selectedCampus))
+    applyCampus(selectedCampus)
   }
 
   const openHomeFeedItem = (item: HomeFeedItemView) => {
@@ -882,11 +770,10 @@ function Index() {
     30000,
     Math.max(3000, runtimeConfig.slogan_interval_ms),
   )
-  const visibleHomeServices = quickServices.filter((service) => {
-    if (isQualificationEdition && migratedHomeServiceKeys.has(service.key)) return false
+  const visibleHomeServices = shortcutKeys.map((key) => allServices.find((item) => item.key === key)).filter((service): service is typeof allServices[number] => {
+    if (!service || (isQualificationEdition && migratedHomeServiceKeys.has(service.key))) return false
     const moduleKey = serviceModuleKeys[service.key]
-    if (!moduleKey) return 'route' in service && Boolean(service.route)
-    return resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
+    return !moduleKey || resolveMiniappModule(runtimeConfig, moduleKey, campusName).state === 'enabled'
   })
   const migrationGuide = getMigrationGuideCopy(runtimeConfig)
   const homeFeedCanLoadMore = homeFeedItems.length < homeFeedTotal
@@ -1274,7 +1161,7 @@ function Index() {
         <View className='service-panel__simple-head'>
           <View className='service-panel__heading'>
             <View className='service-panel__heading-bar' />
-            <Text className='service-panel__title'>常用服务</Text>
+            <Text className='service-panel__title'>常用服务</Text><View className='service-panel__customize' ariaRole='button' onClick={() => Taro.navigateTo({ url: '/pages/services/index?edit=1' })}>自定义</View>
           </View>
           <View
             className='service-panel__all'
@@ -1290,13 +1177,13 @@ function Index() {
           {visibleHomeServices.map((item) => (
             <View
               key={item.key}
-              className={`service-panel__grid-item service-panel__grid-item--${item.tone} service-panel__grid-item--key-${item.key}`}
+              className={`service-panel__grid-item service-panel__grid-item--key-${item.key}`}
               ariaRole='button'
               ariaLabel={item.name}
-              onClick={() => openQuickService(item)}
+              onClick={() => openCustomService(item, runtimeConfig)}
             >
-              <View className='service-panel__grid-icon'>
-                <Image src={homeServiceIcons[campusTheme][item.iconKey]} mode='aspectFit' />
+              <View className={`service-panel__grid-icon service-panel__grid-icon--${getServiceIcon(item.key, campusTheme).tone}`}>
+                <Image src={getServiceIcon(item.key, campusTheme).src} mode='aspectFit' />
               </View>
               <Text className='service-panel__grid-name'>{item.name}</Text>
             </View>

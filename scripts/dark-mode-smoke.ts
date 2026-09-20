@@ -375,10 +375,9 @@ assert.doesNotMatch(
   /&__grid-icon image\s*\{[\s\S]{0,240}filter:/u,
   '首页服务入口不得在浅色模式下使用 CSS 图像滤镜',
 )
-assert.match(homeSource, /const homeServiceIcons = \{/u)
-assert.match(homeSource, /home-service-schedule\.svg/u)
-assert.match(homeSource, /home-service-calendar-dark\.svg/u)
-assert.match(homeSource, /homeServiceIcons\[campusTheme\]\[item\.iconKey\]/u)
+assert.match(homeSource, /getServiceIcon\(item.key, campusTheme\).src/u)
+assert.match(read('src/features/service-shortcuts/icons.ts'), /schedule-category-dark\.svg/u)
+assert.match(read('src/features/service-shortcuts/icons.ts'), /schedule-category-light\.svg/u)
 assert.match(read('src/pages/index/index.scss'), /--campus-icon-surface-blue/u)
 assert.match(read('src/pages/index/index.scss'), /--campus-icon-surface-cyan/u)
 assert.match(read('src/pages/index/index.scss'), /--campus-icon-surface-orange/u)

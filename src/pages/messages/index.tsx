@@ -176,13 +176,13 @@ export default function MessagesPage() {
       setPrivateReady(true)
       if (privateMessageEnabled) {
         void loadPrivatePreview()
-        void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+        void refreshPrivateMessageUnreadCount().catch(() => undefined)
       } else {
         setConversations([])
         setPrivateError('')
         setPrivateLoading(false)
         setPrivateHasMore(false)
-        void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+        void refreshPrivateMessageUnreadCount().catch(() => undefined)
       }
     })
     void refreshNoticeUnreadCount()
