@@ -577,9 +577,11 @@ export default function CommunityTopicPage() {
               </View>
             )}
           </View>
-          <Text className='community-topic-class-context__name'>{topic.name}</Text>
+          <Text className='community-topic-class-context__name'>
+            {topic.class_discussion?.course_name || topic.name}
+          </Text>
           <Text className='community-topic-class-context__description'>
-            {topic.description || '按选课号和学年学期关联'}
+            公开课堂讨论，不限本班同学参与。交流课后习题、共享课程资料。
           </Text>
           {activeClassParticipation && (
             <View className='community-topic-class-context__participation'>

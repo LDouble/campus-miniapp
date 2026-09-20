@@ -115,7 +115,7 @@ assert.match(classroomActionsSource, /openType='share'/u, '课堂帖子应支持
 assert.match(classroomActionsSource, /FavoriteToggle[\s\S]*?campus_circle_post/u, '课堂帖子应复用真实收藏能力')
 assert.doesNotMatch(postCardSource, /openType='share'|data-share-/u, '通用社区帖子卡不得带入课堂分享实现')
 assert.match(topicPageSource, /useDidShow\(\(\) => \{[\s\S]*?loadedRefreshRevision/u)
-assert.match(topicPageSource, /community-topic-class-context[\s\S]*?topic\.description/u)
+assert.match(topicPageSource, /community-topic-class-context__name[\s\S]*?topic\.class_discussion\?\.course_name \|\| topic\.name/u)
 assert.match(topicPageSource, /else void refreshTopic\(id\)/u, '返回页面应单独刷新公告元数据')
 assert.match(topicPageSource, /community-topic-announcement[\s\S]*?announcement\.content/u)
 assert.match(topicPageSource, /error\.statusCode === 403 \|\| error\.statusCode === 404/u, '访问失效话题应识别为不可用')
