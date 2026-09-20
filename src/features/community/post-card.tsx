@@ -285,7 +285,7 @@ function CommunityPostCard({
                 leading={topicLinks.map((topic) => (
                   <View
                     key={topic.id}
-                    className='community-post__topic-link community-post__topic-link--content'
+                    className={`community-post__topic-link community-post__topic-link--content${variant === 'classroom' ? ' community-post__topic-link--classroom' : ''}`}
                     ariaRole='button'
                     ariaLabel={`查看话题：${topic.name}`}
                     onClick={(event) => {
@@ -505,7 +505,9 @@ function CommunityPostCard({
                       onOpen(post)
                     }}
                   >
-                    查看全部 {post.comment_count} 条评论
+                    {variant === 'classroom'
+                      ? <>查看全部 {post.comment_count} 条讨论回复 &gt;</>
+                      : <>查看全部 {post.comment_count} 条评论</>}
                   </View>
                 )}
               </View>

@@ -3,10 +3,11 @@ import type { CampusCirclePostView } from '../../api/types'
 import FavoriteToggle from '../favorites/favorite-toggle'
 
 const icons = {
-  comment: require('../../assets/community/comment.svg'),
-  heart: require('../../assets/community/feed-heart.svg'),
-  heartActive: require('../../assets/community/heart-active.svg'),
-  share: require('../../assets/community/share.svg'),
+  comment: require('../../assets/community/class-discussion-comment.svg'),
+  heart: require('../../assets/community/class-discussion-like.svg'),
+  heartActive: require('../../assets/community/class-discussion-like-active.svg'),
+  bookmark: require('../../assets/community/class-discussion-bookmark.svg'),
+  share: require('../../assets/community/class-discussion-share.svg'),
 }
 
 type Props = {
@@ -53,7 +54,7 @@ export default function ClassDiscussionPostActions({
         <Image src={icons.comment} mode='aspectFit' />
         <Text>{post.comment_count || '评论'}</Text>
       </View>
-      <FavoriteToggle resourceId={post.id} resourceType='campus_circle_post' />
+      <FavoriteToggle iconSrc={icons.bookmark} resourceId={post.id} resourceType='campus_circle_post' />
       <Button
         className='community-post__classroom-action community-post__classroom-share'
         hoverClass='none'
