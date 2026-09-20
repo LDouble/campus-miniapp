@@ -1,148 +1,60 @@
 import { strict as assert } from 'node:assert'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-type ThemeDefinition = {
-  light: Record<string, string>
-  dark: Record<string, string>
-}
-
 const root = process.cwd()
-const read = (path: string) => readFileSync(join(root, path), 'utf8')
-const theme = JSON.parse(read('src/theme.json')) as ThemeDefinition
+const read = (file: string) => readFileSync(join(root, file), 'utf8')
+const theme = JSON.parse(read('src/theme.json')) as { light: Record<string, string>, dark: Record<string, string> }
 const appConfig = read('src/app.config.ts')
 const appSource = read('src/app.ts')
 const appStyle = read('src/app.scss')
+const systemTheme = read('src/features/system-theme.ts')
+const plugin = read('config/plugins/weapp-compat.js')
+const profile = read('src/pages/profile/index.tsx')
+const tabBarStyle = read('src/custom-tab-bar/index.wxss')
 const darkModeStyle = read('src/styles/_dark-mode.scss')
-const themePreference = read('src/features/theme-preference.ts')
-const weappCompatPlugin = read('config/plugins/weapp-compat.js')
-const profileSource = read('src/pages/profile/index.tsx')
+
+for (const key of ['navigationBarBackgroundColor', 'navigationBarTextStyle', 'backgroundColor', 'backgroundTextStyle', 'tabBarColor', 'tabBarSelectedColor', 'tabBarBackgroundColor', 'tabBarBorderStyle']) {
+  assert.ok(theme.light[key] && theme.dark[key], `theme.json 缺少 ${key}`)
+}
+assert.notEqual(theme.light.backgroundColor, theme.dark.backgroundColor)
+assert.match(appConfig, /darkmode:\s*true/u)
+assert.match(appConfig, /themeLocation:\s*'theme\.json'/u)
+assert.match(appConfig, /backgroundColor:\s*'@backgroundColor'/u)
+assert.match(appStyle, /@media\s*\(prefers-color-scheme:\s*dark\)/u, '深色样式必须由系统媒体查询驱动')
+assert.match(appStyle, /--campus-surface:\s*#111827/u)
+
+assert.match(appSource, /initializeCampusTheme/u)
+assert.match(appSource, /refreshCampusTheme/u)
+assert.match(systemTheme, /getCampusTheme/u)
+assert.match(systemTheme, /Taro\.onThemeChange/u)
+assert.match(systemTheme, /getAppBaseInfo/u)
+assert.match(systemTheme, /getSystemInfoSync/u)
+assert.doesNotMatch(systemTheme, /Storage|setData|page-meta|setNavigationBarColor|reLaunch|restartMiniProgram/u, '系统主题核心不得包含偏好存储、页面注入或原生换色')
+assert.ok(!existsSync(join(root, 'src/features/theme-preference.ts')), '手动主题偏好模块必须删除')
+assert.doesNotMatch(profile, /深色模式|setCampusThemePreference|showActionSheetSelection/u, '个人页不得保留手动主题入口')
+
+assert.match(plugin, /campus-theme/u, '构建必须保留静态主题根标记')
+assert.doesNotMatch(plugin, /__campusTheme|page-meta|createThemePageMeta|,t:t/u, '构建不得注入动态主题数据或 page-meta')
+assert.match(tabBarStyle, /@media\s*\(prefers-color-scheme:\s*dark\)/u, '底栏必须按系统深色媒体查询渲染')
+assert.doesNotMatch(tabBarStyle, /tab-bar--dark/u, '底栏不得依赖运行时主题 class')
+
+for (const file of [
+  'src/pages/index/index.scss', 'src/pages/direct-messages/chat.scss', 'src/pages/publish/index.scss',
+  'src/pages/what-to-eat/index.scss', 'src/components/sticker-picker/index.scss', 'src/features/favorites/favorite-toggle.scss',
+]) {
+  assert.match(read(file), /@media\s*\(prefers-color-scheme:\s*dark\)/u, `${file} 必须提供系统深色场景业务可读性覆盖`)
+}
+for (const marker of ['service-panel__grid-icon', 'schedule-card', 'community-panel', 'market-panel', 'clubs-page', 'course-conflict-card']) {
+  assert.match(darkModeStyle, new RegExp(marker, 'u'), `全局暗色业务覆盖不得丢失 ${marker}`)
+}
+console.log('dark mode system-only smoke: ok')
+
 const shuttleDetailStyle = read('src/pages/shuttle/detail.scss')
 const academicStyle = read('src/pages/academic/index.scss')
 const courseCatalogStyle = read('src/pages/academic/course-catalog/index.scss')
 const homeSource = read('src/pages/index/index.tsx')
-const tokens = read('src/styles/_tokens.scss')
-const tabBarSource = read('src/custom-tab-bar/index.js')
-const tabBarTemplate = read('src/custom-tab-bar/index.wxml')
-const tabBarStyle = read('src/custom-tab-bar/index.wxss')
-const aiThemeSource = read('src/ai-mode/skills/campus-info/utils/theme.js')
-const aiThemeFiles = [
-  'empty-classroom-list',
-  'official-notice-list',
-  'shuttle-route-list',
-].map((name) => ({
-  script: read(`src/ai-mode/skills/campus-info/components/${name}/index.js`),
-  template: read(`src/ai-mode/skills/campus-info/components/${name}/index.wxml`),
-  style: read(`src/ai-mode/skills/campus-info/components/${name}/index.wxss`),
-}))
-
-const requiredThemeKeys = [
-  'navigationBarBackgroundColor',
-  'navigationBarTextStyle',
-  'backgroundColor',
-  'backgroundTextStyle',
-  'tabBarColor',
-  'tabBarSelectedColor',
-  'tabBarBackgroundColor',
-  'tabBarBorderStyle',
-]
-
-assert.match(appConfig, /darkmode:\s*true/u)
-assert.match(appConfig, /themeLocation:\s*'theme\.json'/u)
-assert.match(appConfig, /navigationBarBackgroundColor:\s*'@navigationBarBackgroundColor'/u)
-assert.match(appConfig, /backgroundColor:\s*'@backgroundColor'/u)
-assert.match(appConfig, /backgroundTextStyle:\s*'@backgroundTextStyle'/u)
-
-for (const key of requiredThemeKeys) {
-  assert.ok(theme.light[key], `浅色主题缺少 ${key}`)
-  assert.ok(theme.dark[key], `暗色主题缺少 ${key}`)
-}
-
-assert.notEqual(theme.light.backgroundColor, theme.dark.backgroundColor)
-assert.notEqual(theme.light.navigationBarTextStyle, theme.dark.navigationBarTextStyle)
-assert.match(appStyle, /\.campus-theme--dark\s*\{/u)
-assert.match(appStyle, /--campus-surface:\s*#111827/u)
-assert.match(appStyle, /--campus-icon-surface-orange:\s*#3a291a/u)
-assert.match(tokens, /\$color-on-accent:\s*#fff/u)
-assert.doesNotMatch(tokens, /\$color-on-accent:\s*var\(--campus-surface/u)
-assert.doesNotMatch(appStyle, /@media \(prefers-color-scheme: dark\)/u)
-assert.match(appSource, /const initialCampusTheme = initializeCampusTheme\(\)/u)
-assert.match(appSource, /preloadCampusWebview\(\)/u)
-assert.match(appSource, /useState<CampusTheme>\(initialCampusTheme\)/u)
-assert.ok(
-  appSource.indexOf('const initialCampusTheme = initializeCampusTheme()') < appSource.indexOf('function App('),
-  '主题初始化必须早于 App 生命周期和页面创建',
-)
-assert.ok(
-  appSource.indexOf('useLaunch(() => {') < appSource.indexOf('preloadCampusWebview()'),
-  'WebView 预热必须在 App onLaunch 注册后执行',
-)
-assert.match(appSource, /campus-app-root campus-theme campus-theme--\$\{campusTheme\}/u)
-assert.match(appSource, /useState<CampusTheme>/u)
-assert.match(themePreference, /CAMPUS_THEME_STORAGE_KEY/u)
-assert.match(themePreference, /CampusThemePreference = 'system' \| CampusTheme/u)
-assert.match(themePreference, /Taro\.getCurrentPages\(\)/u)
-assert.match(themePreference, /page\.setData\?\.\(\{ __campusTheme: theme \}\)/u)
-assert.doesNotMatch(themePreference, /document\.body/u)
-assert.match(weappCompatPlugin, /injectCampusThemeIntoPageRoots/u)
-assert.match(weappCompatPlugin, /resolveThemeBackgroundColors/u)
-assert.match(weappCompatPlugin, /assets\['theme\.json'\]/u)
-assert.match(weappCompatPlugin, /createThemePageMeta/u)
-assert.match(weappCompatPlugin, /<page-meta/u)
-assert.match(weappCompatPlugin, /page-style/u)
-assert.match(weappCompatPlugin, /background-color-top/u)
-assert.match(weappCompatPlugin, /background-color-bottom/u)
-assert.match(weappCompatPlugin, /root-background-color/u)
-assert.match(weappCompatPlugin, /background-text-style/u)
-assert.match(weappCompatPlugin, /nextSource\.startsWith\('<page-meta'\)/u)
-assert.match(weappCompatPlugin, /campus-theme campus-theme--/u)
-assert.match(weappCompatPlugin, /root:root,t:__campusTheme/u)
-assert.match(weappCompatPlugin, /componentConfig\.component === true/u)
-assert.match(weappCompatPlugin, /__campusTheme:\$\{initialThemeExpression\}/u)
-assert.match(weappCompatPlugin, /wx\.getStorageSync\('campus-theme-preference'\)/u)
-assert.match(weappCompatPlugin, /wx\.getAppBaseInfo\(\)/u)
-assert.match(weappCompatPlugin, /wx\.getSystemInfoSync\(\)/u)
-assert.match(themePreference, /Taro\.getSystemInfoSync\(\)/u)
-assert.match(themePreference, /Taro\.setStorageSync/u)
-assert.match(themePreference, /Taro\.onThemeChange/u)
-assert.match(themePreference, /setNavigationBarColor/u)
-assert.match(themePreference, /setBackgroundColor/u)
-assert.match(themePreference, /setTabBarStyle/u)
-assert.match(themePreference, /Taro\.preloadWebview\(\{\}\)/u)
-assert.match(themePreference, /webviewPreloadStarted/u)
-assert.match(profileSource, /<Text>深色模式<\/Text>/u)
-assert.match(profileSource, /\{ label: '跟随系统', value: 'system' \}/u)
-assert.match(profileSource, /\{ label: '打开', value: 'dark' \}/u)
-assert.match(profileSource, /const profileMenuIcons = \{/u)
-assert.match(profileSource, /home-service-schedule-dark\.svg/u)
-assert.match(profileSource, /profileMenuIcons\[campusTheme\]\[item\.iconKey\]/u)
-assert.doesNotMatch(
-  read('src/pages/profile/index.scss'),
-  /profile-menu__icon[\s\S]{0,360}filter:/u,
-  '我的服务入口不得依赖 CSS 图像滤镜完成重着色',
-)
-assert.match(profileSource, /\{ label: '关闭', value: 'light' \}/u)
-assert.match(profileSource, /showActionSheetSelection/u)
-assert.match(profileSource, /restartWithCampusThemePreference\(nextPreference\)/u)
-assert.match(profileSource, /profile-theme-entry__value/u)
-assert.doesNotMatch(profileSource, /<Switch/u)
-assert.match(themePreference, /wx\.restartMiniProgram\(\{/u)
-assert.match(themePreference, /path: '\/pages\/index\/index'/u)
-assert.match(themePreference, /Taro\.reLaunch\(\{ url: '\/pages\/index\/index' \}\)/u)
-assert.match(tabBarTemplate, /tab-bar--dark/u)
-assert.match(tabBarSource, /getCampusTheme\(\) === 'dark'/u)
-assert.match(tabBarStyle, /\.tab-bar--dark \.tab-bar__dock/u)
-assert.doesNotMatch(tabBarStyle, /@media \(prefers-color-scheme: dark\)/u)
-assert.match(aiThemeSource, /campus-theme-preference/u)
-assert.match(aiThemeSource, /wx\.getAppBaseInfo\(\)/u)
-assert.match(aiThemeSource, /wx\.getSystemInfoSync\(\)/u)
-for (const source of aiThemeFiles) {
-  assert.match(source.script, /getCampusTheme\(\) === 'dark'/u)
-  assert.match(source.template, /darkMode \?/u)
-  assert.match(source.style, /--dark/u)
-  assert.doesNotMatch(source.style, /prefers-color-scheme/u)
-}
-assert.match(darkModeStyle, /\.campus-theme--dark\s*\{/u)
+assert.match(darkModeStyle, /\.campus-theme\s*\{/u)
 assert.doesNotMatch(darkModeStyle, /icon-button/u)
 assert.match(darkModeStyle, /& \.service-panel__grid-icon/u)
 assert.match(darkModeStyle, /&\.campus \.custom-navbar__fixed/u)
@@ -317,22 +229,22 @@ assert.ok(contrast('#ffffff', '#1d4ed8') >= 4.5, '暗色学业与校车头图文
 assert.ok(contrast('#93c5fd', '#172554') >= 4.5, '暗色浮层选项文字对比度不足')
 assert.match(
   academicStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*\.academic-toolbar--schedule \.academic-toolbar__period image\s*\{[\s\S]*filter:/u,
+  /\.campus-theme\s*\{[\s\S]*\.academic-toolbar--schedule \.academic-toolbar__period image\s*\{[\s\S]*filter:/u,
   '课表学期图标缺少页面最终样式层的暗色适配',
 )
 assert.match(
   academicStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*\.course-float-card\s*\{[\s\S]*background:\s*var\(--campus-surface,\s*#111827\)/u,
+  /\.campus-theme\s*\{[\s\S]*\.course-float-card\s*\{[\s\S]*background:\s*var\(--campus-surface,\s*#111827\)/u,
   '课程详情浮层缺少页面最终样式层的暗色表面',
 )
 assert.match(
   academicStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*\.course-conflict-card\s*\{[\s\S]*&__name\s*\{\s*color:\s*var\(--campus-text-heading,\s*#f8fafc\)/u,
+  /\.campus-theme\s*\{[\s\S]*\.course-conflict-card\s*\{[\s\S]*&__name\s*\{\s*color:\s*var\(--campus-text-heading,\s*#f8fafc\)/u,
   '课程详情卡片缺少页面最终样式层的暗色文字',
 )
 assert.match(
   courseCatalogStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*&\.course-catalog-page\s*\{[\s\S]*--course-accent:\s*var\(--campus-primary,/u,
+  /\.campus-theme\s*\{[\s\S]*&\.course-catalog-page\s*\{[\s\S]*--course-accent:\s*var\(--campus-primary,/u,
   '蹭课页缺少页面最终样式层的暗色主题变量',
 )
 assert.match(
@@ -357,12 +269,12 @@ assert.match(
 )
 assert.match(
   courseCatalogStyle,
-  /\.campus-theme--dark \.course-catalog-page\s*\{[\s\S]*--course-accent:\s*var\(--campus-primary,/u,
+  /\.campus-theme \.course-catalog-page\s*\{[\s\S]*--course-accent:\s*var\(--campus-primary,/u,
   '蹭课页缺少主题类作为外层容器时的暗色主题变量兼容路径',
 )
 assert.match(
   courseCatalogStyle,
-  /\.campus-theme--dark \.course-catalog-page \.course-catalog-search__field,[\s\S]*\.campus-theme--dark \.course-catalog-page \.course-catalog-search__advanced-category\s*\{[\s\S]*background:\s*var\(--campus-surface-subtle,/u,
+  /\.campus-theme \.course-catalog-page \.course-catalog-search__field,[\s\S]*\.campus-theme \.course-catalog-page \.course-catalog-search__advanced-category\s*\{[\s\S]*background:\s*var\(--campus-surface-subtle,/u,
   '蹭课页缺少主题类作为外层容器时的暗色筛选区域',
 )
 assert.doesNotMatch(

@@ -2,6 +2,13 @@ page {
   background: #faf7f2;
 }
 
+@media (prefers-color-scheme: dark) {
+  page,
+  .tab-page {
+    background: var(--campus-page, #0b1220);
+  }
+}
+
 .tab-page {
   min-height: 100vh;
   padding-bottom: 158rpx;

@@ -180,6 +180,10 @@
   &__action--disabled { opacity: .5; }
 }
 
-.campus-theme--dark .home-course-card {
+@media (prefers-color-scheme: dark) {
+.campus-theme .home-course-card {
   &__location image { filter: brightness(0) invert(1); }
+}
+
+
 }

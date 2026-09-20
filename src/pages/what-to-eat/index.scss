@@ -540,6 +540,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
+.campus-theme {
   .what-to-eat-hero {
     background: var(--campus-surface);
   }
@@ -548,6 +549,9 @@
   .what-to-eat-card__placeholder {
     background: #172554;
   }
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {

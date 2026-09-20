@@ -171,24 +171,34 @@
   }
 }
 
-.tab-bar--dark .tab-bar__dock {
+/* 自定义 TabBar 在页面主题根之外，依宿主系统主题建立完整的暗色表面。 */
+@media (prefers-color-scheme: dark) {
+  .tab-bar {
+    --campus-surface: #111827;
+    --campus-border: #243244;
+    --campus-text-muted: #8494aa;
+    --campus-primary: #60a5fa;
+  }
+
+  .tab-bar .tab-bar__dock {
     color: var(--campus-text-muted, #8494aa);
     background: var(--campus-surface, #111827);
-}
+  }
 
-.tab-bar--dark .tab-bar__highlight {
+  .tab-bar .tab-bar__highlight {
     display: none;
-}
+  }
 
-.tab-bar--dark .tab-bar__text {
+  .tab-bar .tab-bar__text {
     color: var(--campus-text-muted, #8494aa);
-}
+  }
 
-.tab-bar--dark .tab-bar__item--active .tab-bar__text {
+  .tab-bar .tab-bar__item--active .tab-bar__text {
     color: var(--campus-primary, #60a5fa);
-}
+  }
 
-.tab-bar--dark .tab-bar__publish-button {
+  .tab-bar .tab-bar__publish-button {
     border-color: var(--campus-surface, #111827);
     background: var(--campus-primary, #3b82f6);
+  }
 }

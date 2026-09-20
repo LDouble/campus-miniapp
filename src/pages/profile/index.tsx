@@ -40,16 +40,12 @@ import {
 import type { MediaImageDraft } from '../../features/media/images'
 import { chooseMediaImages } from '../../features/media/selection'
 import { syncCustomTabBar } from '../../utils/tabbar'
-import { showActionSheetSelection } from '../../utils/action-sheet'
 import { openPublicProfile } from '../../features/profile/public-profile'
 import {
   getCampusTheme,
-  getCampusThemePreference,
-  restartWithCampusThemePreference,
   subscribeCampusTheme,
   type CampusTheme,
-  type CampusThemePreference,
-} from '../../features/theme-preference'
+} from '../../features/system-theme'
 import './index.scss'
 
 const icons = {
@@ -57,7 +53,6 @@ const icons = {
   identity: require('../../assets/icons/academic.svg'),
   privacy: require('../../assets/icons/study.svg'),
   account: require('../../assets/icons/profile.svg'),
-  theme: require('../../assets/icons/theme.svg'),
 }
 
 // 我的服务与首页共享预着色的 SDR 图标，暗色下不再把浅色 SVG 滤成灰白。
@@ -82,21 +77,6 @@ const profileMenuIcons = {
   },
 }
 type ProfileMenuIconKey = keyof typeof profileMenuIcons.light
-
-const themePreferenceOptions: Array<{
-  label: string
-  value: CampusThemePreference
-}> = [
-  { label: '跟随系统', value: 'system' },
-  { label: '打开', value: 'dark' },
-  { label: '关闭', value: 'light' },
-]
-
-const themePreferenceLabels: Record<CampusThemePreference, string> = {
-  system: '跟随系统',
-  dark: '打开',
-  light: '关闭',
-}
 
 const menus = [
   {
@@ -187,9 +167,6 @@ const avatarModerationNoticeCopy: Record<AvatarModerationNotice, string> = {
 
 export default function ProfilePage() {
   const [campusTheme, setCampusTheme] = useState<CampusTheme>(getCampusTheme)
-  const [themePreference, setThemePreferenceState] = useState<CampusThemePreference>(
-    getCampusThemePreference,
-  )
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [accountLoaded, setAccountLoaded] = useState(false)
@@ -224,10 +201,7 @@ export default function ProfilePage() {
   const isAvatarOperationCurrent = useCallback((operation: AvatarModerationOperation) => (
     profileVisibleRef.current && isAvatarOperationLatest(operation)
   ), [isAvatarOperationLatest])
-  useEffect(() => subscribeCampusTheme((theme, preference) => {
-    setCampusTheme(theme)
-    setThemePreferenceState(preference)
-  }), [])
+  useEffect(() => subscribeCampusTheme((theme) => setCampusTheme(theme)), [])
   const loadCurrentUser = useCallback(async (
     showError = false,
     force = false,
@@ -607,16 +581,6 @@ export default function ProfilePage() {
     }
     void openPublicProfile(currentUser.user.id)
   }
-  const chooseCampusTheme = async () => {
-    const selectedIndex = await showActionSheetSelection(
-      themePreferenceOptions.map((option) => option.label),
-    )
-    if (selectedIndex === null) return
-    const nextPreference = themePreferenceOptions[selectedIndex]?.value
-    if (!nextPreference || nextPreference === themePreference) return
-    restartWithCampusThemePreference(nextPreference)
-  }
-
   return (
     <View className='profile-page'>
       <CustomNavbar title='我的' />
@@ -774,37 +738,6 @@ export default function ProfilePage() {
                 <Text>{item.name}</Text>
               </View>
             ))}
-          </View>
-        </View>
-
-        <View className='profile-section motion-enter motion-enter--delay-3'>
-          <View className='profile-section__heading profile-section__heading--standalone'>
-            <View className='profile-section__heading-bar' />
-            <Text className='profile-section__title'>显示与外观</Text>
-          </View>
-          <View className='profile-account-list'>
-            <View
-              className='profile-identity-entry profile-theme-entry'
-              ariaRole='button'
-              ariaLabel={`深色模式，当前${themePreferenceLabels[themePreference]}`}
-              onClick={() => void chooseCampusTheme()}
-            >
-              <View className='profile-identity-entry__icon profile-theme-entry__icon'>
-                <Image src={icons.theme} mode='aspectFit' />
-              </View>
-              <View className='profile-identity-entry__main'>
-                <Text>深色模式</Text>
-                <Text>选择跟随系统或手动设置</Text>
-              </View>
-              <Text className='profile-theme-entry__value'>
-                {themePreferenceLabels[themePreference]}
-              </Text>
-              <Image
-                className='profile-identity-entry__arrow'
-                src={icons.arrow}
-                mode='aspectFit'
-              />
-            </View>
           </View>
         </View>
 

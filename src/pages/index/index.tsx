@@ -131,7 +131,7 @@ import {
   getCampusTheme,
   subscribeCampusTheme,
   type CampusTheme,
-} from '../../features/theme-preference'
+} from '../../features/system-theme'
 import './index.scss'
 import './course-home.scss'
 

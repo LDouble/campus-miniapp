@@ -7,14 +7,19 @@ import { selectOne, is } from 'css-select'
 
 const css = postcss.parse(compile(resolve(__dirname, '../src/pages/lottery/detail.scss'), { logger: { warn() {}, debug() {} } }).css)
 
-// 模拟构建插件：主题类与页面类位于同一个根节点，不能只检查源码存在 dark 字样。
+// 模拟静态构建根标记：页面类与 campus-theme 位于同一个根节点；深色规则只在媒体查询场景采纳。
 const rootFor = (theme: 'light' | 'dark') => selectOne('view', parseDocument(
-  `<page><view class="campus-theme campus-theme--${theme} lottery-detail-page"></view></page>`,
+  `<page><view class="campus-theme lottery-detail-page"></view></page>`,
 ).children)!
 const matchingDeclarations = (theme: 'light' | 'dark', property: string) => {
   const declarations: string[] = []
   css.walkRules(rule => {
-    if (rule.parent?.type === 'atrule') return
+    if (rule.parent?.type === 'atrule') {
+      if (rule.parent.name !== 'media') return
+      const darkMedia = /prefers-color-scheme:\s*dark/u.test(rule.parent.params)
+      const lightMedia = /prefers-color-scheme:\s*light/u.test(rule.parent.params)
+      if ((darkMedia && theme !== 'dark') || (lightMedia && theme !== 'light') || (!darkMedia && !lightMedia)) return
+    }
     if (!rule.selectors.some(selector => !selector.includes('::') && is(rootFor(theme), selector))) return
     rule.walkDecls(property, decl => { declarations.push(decl.value) })
   })
@@ -26,7 +31,7 @@ assert.deepEqual(matchingDeclarations('dark', '--campus-border'), [], '深色根
 assert.ok(matchingDeclarations('light', '--campus-text-primary')[0].includes('--ousea-lottery-ink'), '浅色视觉保持原样')
 assert.ok(matchingDeclarations('dark', 'background').at(-1)?.includes('--campus-page'), '深色背景规则必须匹配页面根节点自身')
 
-const card = selectOne('view', parseDocument('<view class="campus-theme--dark"><view class="lottery-detail-hero"></view></view>').children)!
-assert.equal(is(card, '.campus-theme--dark .lottery-detail-page'), false, '祖先选择器不能匹配主题根节点')
+const card = selectOne('view', parseDocument('<view class="campus-theme"><view class="lottery-detail-hero"></view></view>').children)!
+assert.equal(is(card, '.campus-theme .lottery-detail-page'), false, '祖先选择器不能匹配主题根节点')
 
 console.log('lottery dark mode compiled selector smoke: ok')

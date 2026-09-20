@@ -236,6 +236,13 @@ page .campus.campus--course-home {
   .official-notices-home__arrow { display: none; }
 }
 
-.campus-theme--dark .campus--course-home .service-panel__grid-item--all image { filter: brightness(0) invert(1); }
-.campus-theme--dark .home-course-section__all image,
-.campus-theme--dark .home-class-question__option image { filter: brightness(0) invert(1); }
+@media (prefers-color-scheme: dark) {
+.campus-theme .campus--course-home .service-panel__grid-item--all image { filter: brightness(0) invert(1); }
+
+
+}
+@media (prefers-color-scheme: dark) {
+.campus-theme .home-course-section__all image,
+.campus-theme .home-class-question__option image { filter: brightness(0) invert(1); }
+
+}

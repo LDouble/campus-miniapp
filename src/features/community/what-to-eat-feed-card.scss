@@ -132,13 +132,19 @@
   background: var(--ousea-ocean-50, #f2f7fe);
 }
 
-page.dark .what-to-eat-feed-card,
-page.theme-dark .what-to-eat-feed-card {
+@media (prefers-color-scheme: dark) {
+page .what-to-eat-feed-card {
   background: var(--campus-surface, #111827);
   border-color: var(--campus-border, #243244);
 }
 
-page.dark .what-to-eat-feed-card__action:not(.what-to-eat-feed-card__action--secondary),
-page.theme-dark .what-to-eat-feed-card__action:not(.what-to-eat-feed-card__action--secondary) {
+
+}
+
+@media (prefers-color-scheme: dark) {
+page .what-to-eat-feed-card__action:not(.what-to-eat-feed-card__action--secondary) {
   background: var(--campus-surface-primary, #172554);
+}
+
+
 }
