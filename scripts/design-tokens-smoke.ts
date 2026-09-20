@@ -101,9 +101,83 @@ assert.equal(
   '13.5',
   '设计 Token JSON 必须保留 13.5px label 精度',
 )
+
+const serviceTokens = (tokenJson.global.color as Record<string, Record<string, TokenLeaf>>).service
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
+
+for (const [key, token] of Object.entries(serviceTokens)) {
+  const cssName = `--ousea-service-${key}`
+  const value = token.value.toLowerCase()
+
+  assert.equal(cssVariables[cssName], value, `${cssName} 必须与全部服务 Token 源一致`)
+  assert.match(
+    sassTokens,
+    new RegExp(
+      `\\$ousea-service-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)},\\s*${escapeRegex(value)}\\);`,
+      'u',
+    ),
+    `${cssName} 必须有同名 Sass 映射`,
+  )
+}
+
+const serviceShadows = (tokenJson.global.shadow as Record<string, Record<string, TokenLeaf>>).service
+
+for (const [key, token] of Object.entries(serviceShadows)) {
+  const cssName = `--ousea-service-shadow-${key}`
+  const value = token.value.toLowerCase()
+
+  assert.equal(cssVariables[cssName], value, `${cssName} 必须与全部服务阴影 Token 源一致`)
+  assert.match(
+    sassTokens,
+    new RegExp(
+      `\\$ousea-service-shadow-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)},\\s*${escapeRegex(value)}\\);`,
+      'u',
+    ),
+    `${cssName} 必须有同名 Sass 映射`,
+  )
+}
+
+for (const key of [
+  'page-top', 'page-middle', 'page-base', 'surface', 'surface-glass', 'border', 'divider', 'text', 'text-heading', 'text-body', 'text-muted', 'elevated',
+  ...['blue', 'green', 'orange'].flatMap((tone) => [`accent-${tone}`, `count-${tone}`]),
+  ...['blue', 'green', 'pink', 'purple', 'orange', 'cyan'].flatMap((tone) => [
+    `${tone}-start`, `${tone}-end`, `${tone}-border`, `${tone}-foreground`,
+  ]),
+]) {
+  assert.match(
+    appStyle,
+    new RegExp(`--campus-service-${escapeRegex(key)}:\\s*var\\(--ousea-service-[\\w-]+\\);`, 'u'),
+    `全部服务必须提供 --campus-service-${key} 语义令牌`,
+  )
+}
+
+for (const key of ['card', 'blue', 'green', 'pink', 'purple', 'orange', 'cyan']) {
+  assert.match(
+    appStyle,
+    new RegExp(`--campus-service-shadow-${key}:\\s*var\\(--ousea-service-shadow-[\\w-]+\\);`, 'u'),
+    `全部服务必须提供 --campus-service-shadow-${key} 语义令牌`,
+  )
+}
+
+for (const key of ['blue', 'green', 'pink', 'purple', 'orange', 'cyan']) {
+  assert.match(
+    appStyle,
+    new RegExp(`--campus-service-shadow-category-${key}:\\s*var\\(--ousea-service-shadow-[\\w-]+\\);`, 'u'),
+    `全部服务必须提供 --campus-service-shadow-category-${key} 语义令牌`,
+  )
+}
+
+assert.match(
+  appStyle,
+  /\.campus-theme--dark\s*\{[\s\S]*--campus-service-page-top:\s*var\(--ousea-service-dark-page-top\);/u,
+  '暗色主题必须覆盖全部服务页面令牌',
+)
+assert.match(master, /global\.color\.service/u)
+assert.match(master, /global\.shadow\.service/u)
+assert.match(master, /--campus-service-\*/u)
 assert.match(master, /Ousea \/ Global[^。]*唯一基础视觉源/u)
 assert.match(master, /不得新建[^。\n]*同义基础 Token/u)
-assert.match(agentRules, /All new miniapp UI[^.]*Ousea \/ Global[^.]*single source of truth/u)
+assert.match(agentRules, /All new miniapp UI[^.]*Ousea \/ Global[^.]*default design source/u)
 
 for (const [cat, global] of [['page', 'page'], ['surface', 'surface'], ['subtle', 'surface-subtle'], ['border', 'border']]) {
   assert.ok(appStyle.includes(`--campus-cat-${cat}: var(--campus-${global});`), '猫咪图鉴基础表面必须复用全局语义')

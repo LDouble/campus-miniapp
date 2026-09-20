@@ -59,11 +59,9 @@ const freshBarrageStyleSource = readFileSync(
   'utf8',
 )
 const visibleHomeServicesSource = homeSource.match(
-  /const visibleHomeServices = quickServices\.filter\(\(service\) => \{([\s\S]*?)\n  \}\)/,
+  /const visibleHomeServices = shortcutKeys[\s\S]*?=> \{([\s\S]*?)\n  \}\)/,
 )?.[1] || ''
-const serviceModuleKeysSource = homeSource.match(
-  /const serviceModuleKeys:[\s\S]*?= \{([\s\S]*?)\n\}/,
-)?.[1] || ''
+const serviceModuleKeysSource = readFileSync(resolve(__dirname, '../src/features/service-shortcuts/catalog.ts'), 'utf8')
 
 assert.ok(
   !homeSource.includes('const homeServiceKeys')
@@ -77,7 +75,7 @@ assert.ok(
 )
 assert.ok(
   visibleHomeServicesSource.includes('const moduleKey = serviceModuleKeys[service.key]')
-    && visibleHomeServicesSource.includes("if (!moduleKey) return 'route' in service && Boolean(service.route)")
+    && visibleHomeServicesSource.includes("return !moduleKey || resolveMiniappModule")
     && visibleHomeServicesSource.includes(".state === 'enabled'"),
   '首页常用服务必须保留本地路由，并只展示运行时状态为 enabled 的受控入口',
 )
