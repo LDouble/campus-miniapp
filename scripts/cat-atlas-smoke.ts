@@ -54,7 +54,7 @@ assert.match(catalogList, /setArea\(item\)/u, '全部图鉴应支持切换校区
 assert.match(catalogList, /changeSort/u, '全部图鉴应支持切换排序')
 assert.match(catalogList, /cat-journal__load-more/u, '全部图鉴应显示加载更多状态')
 assert.match(list, /CatalogList/u, '旧列表路由应复用普通列表组件')
-assert.match(source('../src/pages/services/index.tsx'), /cat-atlas.*pages\/cat-atlas\/index/u, '服务入口应直接打开猫咪图鉴首页')
+assert.match(source('../src/features/service-shortcuts/catalog.ts'), /cat-atlas.*pages\/cat-atlas\/index/u, '服务入口应直接打开猫咪图鉴首页')
 assert.doesNotMatch(appConfig, /pagePath: 'pages\/cat-atlas\//u, '猫猫图鉴不应注册为独立 Tab')
 assert.match(catalogList, /cat-journal__card/u, '独立列表页应渲染猫咪卡片')
 assert.match(detail, /我遇到它了/u, '详情页应提供目击打卡入口')

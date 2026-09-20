@@ -1,237 +1,90 @@
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CustomNavbar from '../../components/custom-navbar'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
-import {
-  getMiniappRuntimeConfig,
-  getMigrationGuideCopy,
-  loadMiniappRuntimeConfig,
-  openMiniappModule,
-  resolveMiniappModule,
-  type MiniappModuleKey,
-} from '../../features/runtime-config'
+import { getMiniappRuntimeConfig, getMigrationGuideCopy, loadMiniappRuntimeConfig, resolveMiniappModule } from '../../features/runtime-config'
 import { useCampusShare } from '../../features/share'
 import { getCampusTheme, subscribeCampusTheme } from '../../features/theme-preference'
+import { allServices, migratedServiceKeys, serviceGroups, serviceModules, type ServiceItem } from '../../features/service-shortcuts/catalog'
+import { openService } from '../../features/service-shortcuts/navigation'
+import { MAX_SHORTCUTS, readShortcuts, saveShortcuts } from '../../features/service-shortcuts/preferences'
+import ShortcutEditor from '../../features/service-shortcuts/editor'
+import { getServiceIcon } from '../../features/service-shortcuts/icons'
 import './index.scss'
 
-const icons = {
-  calendar: require('../../assets/icons/calendar.svg'),
-  grade: require('../../assets/icons/grade.svg'),
-  exam: require('../../assets/icons/exam.svg'),
-  result: require('../../assets/icons/result.svg'),
-  passRate: require('../../assets/icons/pass-rate.svg'),
-  materials: require('../../assets/icons/materials.svg'),
-  shuttle: require('../../assets/icons/shuttle.svg'),
-  community: require('../../assets/icons/community.svg'),
-  market: require('../../assets/icons/market.svg'),
-  errands: require('../../assets/icons/errands.svg'),
-  academic: require('../../assets/icons/academic.svg'),
-  clubs: require('../../assets/icons/clubs.svg'),
-  whatToEat: require('../../assets/icons/what-to-eat.svg'),
-  catAtlas: require('../../assets/icons/home-service-cat-atlas.svg'),
-}
-
-type ServiceItem = {
-  key: string
-  name: string
-  icon: string
-  route?: string
-  tab?: string
-  lifeSection?: 'community' | 'errands' | 'market' | 'carpool'
-}
-
-const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
-const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
-  schedule: 'academic_schedule',
-  simulation: 'academic_schedule',
-  grades: 'academic_grades',
-  exams: 'academic_exams',
-  result: 'academic_selection',
-  'pass-rate': 'academic_statistics',
-  calendar: 'calendar',
-  classroom: 'empty_classroom',
-  materials: 'course_materials',
-  shuttle: 'shuttle',
-  carpool: 'carpool',
-  community: 'community',
-  market: 'marketplace',
-  errands: 'errand',
-  clubs: 'club',
-  'what-to-eat': 'what_to_eat',
-}
-
-const migratedServiceKeys = new Set([
-  'materials',
-  'carpool',
-  'community',
-  'market',
-  'errands',
-  'clubs',
-])
-
-const groups: Array<{ title: string; subtitle: string; items: ServiceItem[] }> = [
-  {
-    title: '教务服务',
-    subtitle: '课程与教学信息',
-    items: [
-      { key: 'schedule', name: '课程表', icon: icons.calendar, route: '/pages/academic/schedule/index' },
-      { key: 'grades', name: '成绩查询', icon: icons.grade, route: '/pages/academic/grades/index' },
-      { key: 'exams', name: '考试安排', icon: icons.exam, route: '/pages/academic/exams/index' },
-      { key: 'result', name: '选课结果', icon: icons.result, route: '/pages/academic/selection/index' },
-      { key: 'pass-rate', name: '课程通过率', icon: icons.passRate, route: '/pages/academic/statistics/courses' },
-      { key: 'course-audit', name: '蹭课检索', icon: icons.academic, route: '/pages/academic/course-catalog/index' },
-      { key: 'general-education', name: '通识查询', icon: icons.academic, route: '/pages/academic/general-education/index' },
-      { key: 'simulation', name: '模拟选课', icon: icons.academic, route: '/pages/academic/schedule/index?mode=simulation' },
-      { key: 'calendar', name: '校历', icon: icons.calendar, route: '/pages/calendar/index' },
-    ],
-  },
-  {
-    title: '学习服务',
-    subtitle: '学习空间与资源',
-    items: [
-      { key: 'classroom', name: '空教室', icon: icons.academic, route: '/pages/empty-classroom/index' },
-      { key: 'materials', name: '学习资料', icon: icons.materials, route: '/pages/materials/index' },
-    ],
-  },
-  {
-    title: '校园生活',
-    subtitle: '日常校园服务',
-    items: [
-      { key: 'shuttle', name: '校园校车', icon: icons.shuttle, route: '/pages/shuttle/index' },
-      { key: 'carpool', name: '校园找同行', icon: icons.shuttle, lifeSection: 'carpool' },
-      { key: 'community', name: '校园社区', icon: icons.community, lifeSection: 'community' },
-      { key: 'market', name: '校园二手', icon: icons.market, lifeSection: 'market' },
-      { key: 'errands', name: '校园跑腿', icon: icons.errands, lifeSection: 'errands' },
-      { key: 'clubs', name: '社团广场', icon: icons.clubs, route: '/pages/clubs/index' },
-      { key: 'lottery', name: '校园抽奖', icon: icons.result, route: '/pages/lottery/index' },
-      { key: 'what-to-eat', name: '今天吃什么', icon: icons.whatToEat, route: '/pages/what-to-eat/index' },
-      { key: 'cat-atlas', name: '猫猫图鉴', icon: icons.catAtlas, route: '/pages/cat-atlas/index' },
-    ],
-  },
-]
-
 export default function Services() {
+  const router = useRouter()
+  const suppressNavigationUntil = useRef(0)
   const [campusTheme, setCampusTheme] = useState(getCampusTheme)
-  useEffect(() => subscribeCampusTheme(setCampusTheme), [])
-  useCampusShare(() => ({
-    title: 'OUSea服务｜学业、出行与校园生活',
-    path: '/pages/services/index',
-  }))
-
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
-  const migrationGuide = getMigrationGuideCopy(runtimeConfig)
-
-  useDidShow(() => {
-    void loadMiniappRuntimeConfig().then(setRuntimeConfig)
-  })
-
-  const openService = (item: ServiceItem) => {
-    const moduleKey = serviceModules[item.key]
-    if (isQualificationEdition && migratedServiceKeys.has(item.key)) {
-      const module = item.key === 'materials'
-        ? 'course_materials'
-        : item.key === 'market'
-          ? 'marketplace'
-          : item.key === 'errands'
-            ? 'errand'
-            : item.key === 'clubs'
-              ? 'club'
-              : item.key
-      void openMigratedFeaturePage({
-        module: module as 'community' | 'marketplace' | 'errand' | 'carpool' | 'course_materials' | 'club',
-      })
-      return
-    }
-    if (item.lifeSection) {
-      if (
-        moduleKey
-        && resolveMiniappModule(runtimeConfig, moduleKey).state === 'enabled'
-      ) {
-        Taro.setStorageSync(LIFE_HUB_SECTION_KEY, item.lifeSection)
-      }
-      if (moduleKey) {
-        void openMiniappModule(
-          moduleKey,
-          '/pages/community/index',
-          { tab: true, config: runtimeConfig },
-        )
-      }
-      return
-    }
-    if (item.tab) {
-      Taro.switchTab({ url: item.tab })
-      return
-    }
-    if (item.route) {
-      if (moduleKey) {
-        void openMiniappModule(moduleKey, item.route, { config: runtimeConfig })
-        return
-      }
-      Taro.navigateTo({ url: item.route })
-      return
-    }
-    Taro.showToast({ title: `${item.name}入口配置异常`, icon: 'none' })
+  const [keys, setKeys] = useState(readShortcuts)
+  const [editing, setEditing] = useState(router.params.edit === '1')
+  const [draft, setDraft] = useState(readShortcuts)
+  const startEditing = () => { setDraft([...keys]); setEditing(true) }
+  const finishEditing = () => {
+    if (!saveShortcuts(draft)) { void Taro.showToast({ title: '保存失败，请重试', icon: 'none' }); return }
+    setKeys([...draft]); setEditing(false)
   }
-
+  const toggleShortcut = (key: string) => {
+    if (draft.includes(key)) { setDraft(draft.filter((value) => value !== key)); return }
+    if (draft.length >= MAX_SHORTCUTS) { void Taro.showToast({ title: `最多选择${MAX_SHORTCUTS}项`, icon: 'none' }); return }
+    setDraft([...draft, key])
+  }
+  useEffect(() => subscribeCampusTheme(setCampusTheme), [])
+  useCampusShare(() => ({ title: 'OUSea服务｜学业、出行与校园生活', path: '/pages/services/index' }))
+  useDidShow(() => { setKeys(readShortcuts()); void loadMiniappRuntimeConfig().then(setRuntimeConfig) })
+  const available = allServices.filter((item) => {
+    if (isQualificationEdition && migratedServiceKeys.has(item.key)) return false
+    const module = serviceModules[item.key]
+    return !module || resolveMiniappModule(runtimeConfig, module).state !== 'hidden'
+  })
+  const customizable = available.filter((item) => {
+    const module = serviceModules[item.key]
+    return !module || resolveMiniappModule(runtimeConfig, module).state === 'enabled'
+  })
+  const availableKeys = new Set(available.map((item) => item.key))
+  const pinned = keys.map((key) => available.find((item) => item.key === key)).filter((item): item is ServiceItem => Boolean(item))
+  const migrationGuide = getMigrationGuideCopy(runtimeConfig)
+  const renderItem = (item: ServiceItem, variant: 'pinned' | 'category' = 'pinned') => (
+    <View key={item.key} className={`services-item services-item--${item.key}`} ariaRole='button' ariaLabel={`打开${item.name}`} onLongPress={() => { if (variant === 'pinned') { suppressNavigationUntil.current = Date.now() + 800; startEditing() } }} onClick={() => { if (editing) { if (customizable.some((entry) => entry.key === item.key)) toggleShortcut(item.key); return } if (Date.now() >= suppressNavigationUntil.current) openService(item, runtimeConfig) }}>
+      <View className={`services-icon services-icon--${getServiceIcon(item.key, campusTheme).tone}`}>
+        <Image src={getServiceIcon(item.key, campusTheme).src} mode='aspectFit' />
+        {editing && customizable.some((entry) => entry.key === item.key) && <View className={`services-toggle ${draft.includes(item.key) ? 'services-toggle--selected' : ''}`} ariaRole='button' ariaLabel={`${draft.includes(item.key) ? '移除' : '添加'}${item.name}`} onClick={(event) => { event.stopPropagation(); toggleShortcut(item.key) }}><Image src={getServiceIcon(draft.includes(item.key) ? 'edit-selected' : 'edit-add', campusTheme).src} mode='aspectFit' /></View>}
+      </View>
+      <Text className='services-item__name'>{item.name}</Text>
+    </View>
+  )
   return (
-    <View className='services-page'>
+    <View className={`services-page ${editing ? 'services-page--editing' : ''}`}>
       <CustomNavbar title='全部服务' subtitle='中国海洋大学' showBack />
       <View className='services-page__content'>
-        {groups.map((group) => {
-          const items = group.items.filter((item) => {
-            if (isQualificationEdition && migratedServiceKeys.has(item.key)) return false
-            const moduleKey = serviceModules[item.key]
-            return !moduleKey
-              || resolveMiniappModule(runtimeConfig, moduleKey).state !== 'hidden'
-          })
+
+        {editing && <View className='services-edit-notice'><View><Text className='services-edit-notice__title'>点击减号移出，下方点加号快速添加</Text><Text className='services-edit-notice__hint'>拖动可排序 · 已添加的服务在下方自动隐藏</Text></View><Text className='services-edit-notice__count'>{draft.length} / {MAX_SHORTCUTS} 项</Text></View>}
+        <View className='services-group services-group--pinned'>
+          <View className='services-group__head'>
+            <View className='services-group__heading'><Text className='services-group__title'>我的常用</Text>{editing && <Text className='services-edit-capacity'>可放{MAX_SHORTCUTS}项</Text>}</View>
+            <View className='services-edit-actions'>
+              {editing && <View className='services-edit' ariaRole='button' onClick={() => setEditing(false)}>取消</View>}
+              <View className={`services-edit ${editing ? 'services-edit--done' : ''}`} ariaRole='button' ariaLabel={editing ? '完成编辑' : '编辑常用服务'} onClick={editing ? finishEditing : startEditing}><Image src={editing ? require('../../assets/icons/services-stitch/edit-done.svg') : getServiceIcon('edit', campusTheme).src} mode='aspectFit' /><Text>{editing ? '完成' : '自定义'}</Text></View>
+            </View>
+          </View>
+          <Text className='services-group__subtitle'>{editing ? `点击右上角减号即可移除 · 当前已选 ${draft.length} 项` : '长按拖拽排序或点击编辑'}</Text>
+          {editing ? <ShortcutEditor keys={draft} available={customizable} theme={campusTheme} onChange={setDraft} /> : <View className='services-group__grid'>{pinned.map((item) => renderItem(item))}</View>}
+          {!editing && pinned.length === 0 && <Text className='services-empty'>点击自定义，添加常用服务</Text>}
+        </View>
+        {serviceGroups.map((group, index) => {
+          const items = group.items.filter((item) => availableKeys.has(item.key) && (!editing || (!draft.includes(item.key) && customizable.some((entry) => entry.key === item.key))))
           if (!items.length) return null
-          return (
-          <View key={group.title} className='services-group'>
-            <View className='services-group__head'>
-              <View>
-                <Text className='services-group__title'>{group.title}</Text>
-                <Text className='services-group__subtitle'>{group.subtitle}</Text>
-              </View>
-              <Text className='services-group__count'>{items.length} 项</Text>
-            </View>
-            <View className='services-group__grid'>
-              {items.map((item) => (
-                <View
-                  key={item.key}
-                  className='services-group__item'
-                  role='button'
-                  ariaLabel={`打开${item.name}`}
-                  onClick={() => openService(item)}
-                >
-                  <View className='services-group__icon' style={item.key === 'cat-atlas' ? { background: 'var(--campus-icon-surface-orange)' } : undefined}>
-                    <Image src={item.key === 'cat-atlas' && campusTheme === 'dark' ? require('../../assets/icons/home-service-cat-atlas-dark.svg') : item.icon} mode='aspectFit' />
-                  </View>
-                  <Text>{item.name}</Text>
-                </View>
-              ))}
-            </View>
+          return <View key={group.title} className={`services-group services-group--category-${index}`}>
+            <View className='services-group__head'><View className='services-group__heading'><Text className='services-group__title'>{group.title}</Text>{editing && <Text className='services-pool-hint'>点击＋直接加入</Text>}</View><Text className='services-group__count'>{editing ? '剩余 ' : ''}{items.length} 项</Text></View>
+            <View className='services-group__grid'>{items.map((item) => renderItem(item, 'category'))}</View>
           </View>
-          )
         })}
-        {isQualificationEdition && (
-          <View className='services-migrated'>
-            <View>
-              <Text className='services-migrated__title'>{migrationGuide.title}</Text>
-              <Text className='services-migrated__copy'>{migrationGuide.description}</Text>
-            </View>
-            <View
-              className='services-migrated__action'
-              role='button'
-              ariaLabel={migrationGuide.entry_button_text}
-              onClick={() => void openMigratedFeaturePage({ module: 'community' })}
-            >
-              {migrationGuide.entry_button_text}
-            </View>
-          </View>
-        )}
+        {isQualificationEdition && <View className='services-migrated' onClick={() => void openMigratedFeaturePage({ module: 'community' })}><Text>{migrationGuide.title}</Text><Text>{migrationGuide.description}</Text><Text>{migrationGuide.entry_button_text}</Text></View>}
       </View>
+
     </View>
   )
 }
