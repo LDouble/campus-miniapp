@@ -578,15 +578,15 @@ export default function CommunityTopicPage() {
             )}
           </View>
           <Text className='community-topic-class-context__name'>
-            {topic.class_discussion?.course_name || topic.name}
+            {topic.name}
           </Text>
           <Text className='community-topic-class-context__description'>
-            公开课堂讨论，不限本班同学参与。交流课后习题、共享课程资料。
+            不限本班同学参与。支持习题答疑、课堂资料共享与期末备考研讨。
           </Text>
           {activeClassParticipation && (
             <View className='community-topic-class-context__participation'>
               <Text className='community-topic-class-context__count'>
-                已有 {activeClassParticipation.participant_count} 人来过
+                共 {activeClassParticipation.participant_count} 人参与讨论
               </Text>
               {classSettingsExpanded && (
                 <View className='community-topic-class-context__settings-panel'>

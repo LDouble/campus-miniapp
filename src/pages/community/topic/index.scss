@@ -403,6 +403,7 @@ page { background: var(--campus-surface, #fff); }
     border: 1rpx solid var(--ousea-ocean-100, #e3effe);
     border-radius: var(--ousea-radius-card, 32rpx);
     background: var(--campus-surface, #fff);
+    background: linear-gradient(135deg, var(--campus-surface, #fff) 0%, var(--campus-surface, #fff) 50%, var(--ousea-ocean-100, #e3effe) 100%);
     box-shadow: 0 4rpx 20rpx rgba(10, 37, 64, .04);
 
     &::after {
@@ -430,7 +431,7 @@ page { background: var(--campus-surface, #fff); }
       min-height: 32rpx;
       flex: 1;
       flex-direction: row;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
       justify-content: flex-start;
       gap: 10rpx;
@@ -438,6 +439,8 @@ page { background: var(--campus-surface, #fff); }
 
     &__badge {
       display: inline-flex;
+      flex: none;
+      white-space: nowrap;
       max-width: 100%;
       box-sizing: border-box;
       overflow-wrap: anywhere;
@@ -456,14 +459,22 @@ page { background: var(--campus-surface, #fff); }
         border: 1rpx solid #d1fae5;
       }
 
-      &--plain { color: var(--campus-text-secondary, #6b7a90); background: #f1f5f9; }
+      &--plain {
+        display: block;
+        min-width: 0;
+        flex: 0 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--campus-text-secondary, #6b7a90);
+        background: #f1f5f9;
+      }
     }
 
     &__name {
       position: relative;
       display: block;
-      margin-top: 20rpx;
-      padding-left: 16rpx;
+      margin-top: 24rpx;
+      padding-left: 32rpx;
       color: var(--campus-text-heading, #1a2333);
       font-size: 36rpx;
       font-weight: var(--ousea-font-weight-bold, 700);
@@ -473,8 +484,8 @@ page { background: var(--campus-surface, #fff); }
         position: absolute;
         top: 8rpx;
         left: 0;
-        width: 6rpx;
-        height: 28rpx;
+        width: 16rpx;
+        height: 32rpx;
         border-radius: 4rpx;
         background: var(--ousea-ocean-600, #1d5fd6);
         content: '';
@@ -492,9 +503,9 @@ page { background: var(--campus-surface, #fff); }
       display: flex;
       flex: none;
       flex-direction: row;
-      min-width: 112rpx;
-      min-height: 56rpx;
-      padding: 0 14rpx;
+      min-width: 0;
+      min-height: 48rpx;
+      padding: 0 20rpx;
       align-items: center;
       justify-content: center;
       gap: 6rpx;
@@ -505,7 +516,7 @@ page { background: var(--campus-surface, #fff); }
       font-size: 22rpx;
       font-weight: var(--ousea-font-weight-medium, 500);
 
-      image { width: 23rpx; height: 23rpx; }
+      image { width: 28rpx; height: 28rpx; }
     }
 
     &__participation {
