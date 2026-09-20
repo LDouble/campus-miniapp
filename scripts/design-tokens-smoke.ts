@@ -167,6 +167,34 @@ for (const key of ['blue', 'green', 'pink', 'purple', 'orange', 'cyan']) {
   )
 }
 
+const todayHotTokens = (tokenJson.global.color as Record<string, Record<string, TokenLeaf>>)['today-hot']
+
+for (const [key, token] of Object.entries(todayHotTokens)) {
+  const cssName = `--ousea-today-hot-${key}`
+  const value = token.value.toLowerCase()
+
+  assert.equal(cssVariables[cssName], value, `${cssName} 必须与今日上头 Token 源一致`)
+  assert.match(
+    sassTokens,
+    new RegExp(`\\$ousea-today-hot-${escapeRegex(key)}:\\s*var\\(${escapeRegex(cssName)},\\s*${escapeRegex(value)}\\);`, 'u'),
+    `${cssName} 必须有同名 Sass 映射`,
+  )
+}
+
+for (const key of ['wash-start', 'wash-end', 'text', 'brand']) {
+  assert.match(
+    appStyle,
+    new RegExp(`--campus-today-hot-${key}:\\s*var\\(--ousea-today-hot-[\\w-]+\\);`, 'u'),
+    `浅色主题必须提供 --campus-today-hot-${key} 语义令牌`,
+  )
+}
+
+assert.match(
+  appStyle,
+  /\.campus-theme--dark\s*\{[\s\S]*--campus-today-hot-wash-start:\s*rgba\(56, 189, 248, 0\.12\);[\s\S]*--campus-today-hot-wash-end:\s*transparent;[\s\S]*--campus-today-hot-text:\s*var\(--campus-text-heading\);/u,
+  '暗色主题必须使用低透明蓝色洗底并复用 Campus 标题文字',
+)
+
 assert.match(
   appStyle,
   /\.campus-theme--dark\s*\{[\s\S]*--campus-service-page-top:\s*var\(--ousea-service-dark-page-top\);/u,

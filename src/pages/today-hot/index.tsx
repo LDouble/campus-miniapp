@@ -234,7 +234,7 @@ export default function TodayHotPage() {
 
   return (
     <View className='today-hot-page'>
-      <CustomNavbar title='今日上头' showBack />
+      <CustomNavbar title='大家在聊' showBack />
       <View className='today-hot-page__intro'>看看校园里正在聊什么</View>
       {contextUnavailable && (
         <View className='today-hot-page__notice'>你点开的动态暂不可见，已为你展示其他精选内容</View>

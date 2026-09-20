@@ -138,6 +138,10 @@ $ousea-service-shadow-dark-category-pink: var(--ousea-service-shadow-dark-catego
 $ousea-service-shadow-dark-category-purple: var(--ousea-service-shadow-dark-category-purple, 0 0 24rpx rgba(163, 171, 255, 0.15));
 $ousea-service-shadow-dark-category-orange: var(--ousea-service-shadow-dark-category-orange, 0 0 24rpx rgba(251, 191, 36, 0.15));
 $ousea-service-shadow-dark-category-cyan: var(--ousea-service-shadow-dark-category-cyan, 0 0 24rpx rgba(56, 189, 248, 0.15));
+$ousea-today-hot-wash-start: var(--ousea-today-hot-wash-start, #e0f2fe);
+$ousea-today-hot-wash-end: var(--ousea-today-hot-wash-end, rgba(224, 242, 254, 0));
+$ousea-today-hot-text: var(--ousea-today-hot-text, #1e293b);
+$ousea-today-hot-brand: var(--ousea-today-hot-brand, #1d5fd6);
 
 // Brand and semantic colors
 $color-primary: var(--campus-primary, #2b7aef);
@@ -201,6 +205,12 @@ $shadow-service-pink: var(--campus-service-shadow-pink, 0 2rpx 4rpx 0 rgba(15, 2
 $shadow-service-purple: var(--campus-service-shadow-purple, 0 2rpx 4rpx 0 rgba(15, 23, 42, 0.05));
 $shadow-service-orange: var(--campus-service-shadow-orange, 0 2rpx 4rpx 0 rgba(15, 23, 42, 0.05));
 $shadow-service-cyan: var(--campus-service-shadow-cyan, 0 2rpx 4rpx 0 rgba(15, 23, 42, 0.05));
+
+// Today hot homepage ticker
+$color-today-hot-wash-start: var(--campus-today-hot-wash-start, #e0f2fe);
+$color-today-hot-wash-end: var(--campus-today-hot-wash-end, rgba(224, 242, 254, 0));
+$color-today-hot-text: var(--campus-today-hot-text, #1e293b);
+$color-today-hot-brand: var(--campus-today-hot-brand, #1d5fd6);
 
 // Route semantics
 $color-route-origin: var(--campus-route-origin, #00d492);

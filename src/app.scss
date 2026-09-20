@@ -150,6 +150,10 @@ page {
   --ousea-service-shadow-dark-category-purple: 0 0 24rpx rgba(163, 171, 255, 0.15);
   --ousea-service-shadow-dark-category-orange: 0 0 24rpx rgba(251, 191, 36, 0.15);
   --ousea-service-shadow-dark-category-cyan: 0 0 24rpx rgba(56, 189, 248, 0.15);
+  --ousea-today-hot-wash-start: #e0f2fe;
+  --ousea-today-hot-wash-end: rgba(224, 242, 254, 0);
+  --ousea-today-hot-text: #1e293b;
+  --ousea-today-hot-brand: #1d5fd6;
   --ousea-font-size-badge: 20rpx;
   --ousea-font-size-caption: 24rpx;
   --ousea-font-size-label: 27rpx;
@@ -252,6 +256,10 @@ page {
   --campus-service-shadow-category-purple: var(--ousea-service-shadow-category);
   --campus-service-shadow-category-orange: var(--ousea-service-shadow-category);
   --campus-service-shadow-category-cyan: var(--ousea-service-shadow-category);
+  --campus-today-hot-wash-start: var(--ousea-today-hot-wash-start);
+  --campus-today-hot-wash-end: var(--ousea-today-hot-wash-end);
+  --campus-today-hot-text: var(--ousea-today-hot-text);
+  --campus-today-hot-brand: var(--ousea-today-hot-brand);
   --campus-overlay: rgba(15, 23, 42, 0.42);
   --campus-text-primary: var(--ousea-ink-900);
   --campus-text-secondary: var(--ousea-ink-500);
@@ -453,6 +461,10 @@ button {
   --campus-service-shadow-category-purple: var(--ousea-service-shadow-dark-category-purple);
   --campus-service-shadow-category-orange: var(--ousea-service-shadow-dark-category-orange);
   --campus-service-shadow-category-cyan: var(--ousea-service-shadow-dark-category-cyan);
+  --campus-today-hot-wash-start: rgba(56, 189, 248, 0.12);
+  --campus-today-hot-wash-end: transparent;
+  --campus-today-hot-text: var(--campus-text-heading);
+  --campus-today-hot-brand: var(--ousea-today-hot-brand);
   --campus-overlay: rgba(0, 0, 0, 0.68);
   --campus-text-primary: #f8fafc;
   --campus-text-secondary: #aab8ca;

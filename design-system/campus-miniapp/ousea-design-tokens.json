@@ -98,6 +98,12 @@
         "dark-cyan-border": { "value": "transparent", "type": "color", "description": "全部服务暗色青色图标无描边" },
         "dark-cyan-foreground": { "value": "#38BDF8", "type": "color", "description": "全部服务暗色青色图标前景（primary-container）" }
       },
+      "today-hot": {
+        "wash-start": { "value": "#E0F2FE", "type": "color", "description": "大家在聊横幅浅蓝洗底起点" },
+        "wash-end": { "value": "rgba(224, 242, 254, 0)", "type": "color", "description": "大家在聊横幅浅蓝洗底终点" },
+        "text": { "value": "#1E293B", "type": "color", "description": "大家在聊横幅右侧话题文字" },
+        "brand": { "value": "#1D5FD6", "type": "color", "description": "大家在聊对话气泡标识主蓝" }
+      },
       "cat": {
         "sage": { "value": "#637B65", "type": "color", "description": "图鉴植物与辅助强调" },
         "cream": { "value": "#FFFBEB", "type": "color", "description": "猫咪图鉴奶油底" },

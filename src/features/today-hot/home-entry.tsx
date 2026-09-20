@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidHide, useDidShow } from '@tarojs/taro'
-import { Image, Text, View } from '@tarojs/components'
+import { Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import { plainStickerContent } from '../stickers/content'
 import { usePostExposure } from '../community/use-post-exposure'
 import { getTodayHotSessionWindow, reportTodayHotEvent } from './analytics'
@@ -9,7 +9,7 @@ import { readReducedMotion } from './motion'
 import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex } from './carousel'
 import './today-hot.scss'
 
-const flameIcon = require('../../assets/icons/today-hot-flame.svg')
+const hotBanner = require('../../assets/icons/everyone-chatting.svg')
 
 const reduceMotion = () => { try { return typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false } }
 const summaryFor = (item: TodayHotEntry) => plainStickerContent(item.content || '').replace(/\s+/g, ' ').trim() || (item.images?.length ? '图片动态' : '校园动态')
@@ -93,10 +93,17 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
     }
     setTouching(false)
   }
-  return <View id='today-hot-home-entry' className='today-hot-entry' ariaRole='button' ariaLabel={`今日上头：${copy}`} onTouchStart={startTouch} onTouchEnd={finishTouch} onTouchCancel={() => { touchStartY.current = null; setTouching(false) }} onClick={() => { if (!touchMoved.current) open() }}>
-    <View className='today-hot-entry__glow today-hot-entry__glow--left' /><View className='today-hot-entry__glow today-hot-entry__glow--right' />
-    <View className='today-hot-entry__copy'><View className='today-hot-entry__chip'><Image src={flameIcon} mode='aspectFit' /><Text>今日上头</Text></View><Text className='today-hot-entry__summary'>{copy}</Text>{current.section_name && <Text className='today-hot-entry__section'>{current.section_name}</Text>}</View>
-    {!plainStickerContent(current.content || '').trim() && current.images[0] && <Image className='today-hot-entry__thumbnail' src={current.images[0]} mode='aspectFill' />}
-    <Text className='today-hot-entry__arrow'>›</Text>
+  return <View id='today-hot-home-entry' className='today-hot-entry' ariaRole='button' ariaLabel={`大家在聊：${copy}`} onTouchStart={startTouch} onTouchEnd={finishTouch} onTouchCancel={() => { touchStartY.current = null; setTouching(false) }} onClick={() => { if (!touchMoved.current) open() }}>
+    <View className='today-hot-entry__brand'>
+      <Image className='today-hot-entry__art' src={hotBanner} mode='scaleToFill' />
+      <Text className='today-hot-entry__brand-title'>大家在聊</Text>
+    </View>
+    {items.length > 1 && !reducedMotion ? (
+      <Swiper className='today-hot-entry__ticker' vertical circular current={index} duration={280} disableTouch indicatorDots={false}>
+        {items.map((item) => <SwiperItem key={item.post_id}>
+          <View className='today-hot-entry__row'><Text className='today-hot-entry__summary'>{summaryFor(item)}</Text></View>
+        </SwiperItem>)}
+      </Swiper>
+    ) : <View className='today-hot-entry__ticker today-hot-entry__row'><Text className='today-hot-entry__summary'>{copy}</Text></View>}
   </View>
 }
