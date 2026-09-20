@@ -36,6 +36,8 @@
 
 猫猫图鉴沿用已确认 Figma 首页与详情的影集视觉：`cat.cream #FFFBEB`、`paper #FAF7F2`、`sand #F4E7D6`、`line #F5F5F4`、`cocoa #292524`、`muted #847971`、`caramel #C86230`。纸面仅用于猫图鉴页面，白卡复用全局 surface；其他模块不变。二级页导航为 24rpx 中等字重，页面卡片可使用与详情一致的 48rpx 圆角。详见 `pages/cat-atlas.md`。
 
+全部服务按 Stitch 项目 `3237828770888524086` 的五列新画板执行。该页专属颜色统一登记在 `global.color.service`、阴影登记在 `global.shadow.service`，运行时只通过 `--campus-service-*` 消费；它们只作用于全部服务页和首页服务快捷入口，不重映射 `--campus-page`、`--campus-surface` 等其他页面的全局颜色。浅色页面底色为 `service.page-base #F4F7FB`，卡片为白色与 `slate-100` 边框；暗色页面为 `#0F131D`，卡片为 `surface-container-low / 90%` 且无边框。卡片分隔线必须使用 `--campus-service-divider`。分类标题标记只能使用 `--campus-service-accent-blue/green/orange`，数量徽章文字使用相应的 `--campus-service-count-*`，不得以图标前景色代替。六组图标采用平面单色底板：保留 `*-start/end` 仅为兼容既有调用，两者均为同一 plate 值；图标使用 `*-border`、`*-foreground` 与相应阴影。常用区使用 `--campus-service-shadow-{tone}`，分类区使用更低强度的 `--campus-service-shadow-category-{tone}`；暗色模式保留新稿实际使用的低强度同色辉光，禁止沿用旧稿的大面积渐变或玻璃发光。
+
 ### 2.1 基础颜色
 
 | 令牌 | 色值 | 用途 |

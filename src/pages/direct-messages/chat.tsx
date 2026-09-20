@@ -504,7 +504,7 @@ export default function DirectMessageChatPage() {
 
   useDidShow(() => {
     visibleRef.current = true
-    void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+    void refreshPrivateMessageUnreadCount().catch(() => undefined)
     schedulePolling()
   })
 

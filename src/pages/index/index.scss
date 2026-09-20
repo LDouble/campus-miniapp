@@ -4601,3 +4601,17 @@ page {
   }
 
 }
+
+.service-panel__customize {
+  display: flex;
+  align-items: center;
+  min-height: 88rpx;
+  margin-left: 16rpx;
+  color: var(--campus-primary);
+  font-size: var(--ousea-font-size-caption, 24rpx);
+}
+.service-panel__grid-icon {
+  @each $tone in blue, green, pink, purple, orange, cyan {
+    &--#{$tone} { background: linear-gradient(135deg, var(--campus-service-#{$tone}-start), var(--campus-service-#{$tone}-end)); border: 1rpx solid var(--campus-service-#{$tone}-border); }
+  }
+}

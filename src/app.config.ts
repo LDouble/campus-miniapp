@@ -215,7 +215,7 @@ export default defineAppConfig({
   },
   permission: {
     'scope.userLocation': {
-      desc: '用于记录你遇到猫咪的地点'
+      desc: '用于识别所在校区并提醒切换校区与作息，以及记录遇到猫咪的地点'
     }
   },
   requiredPrivateInfos: ['choosePoi', 'getLocation'],
