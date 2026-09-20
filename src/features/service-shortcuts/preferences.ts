@@ -3,7 +3,7 @@ import { allServices } from './catalog'
 
 export const SHORTCUT_STORAGE_KEY = 'campus.home.serviceShortcuts.v1'
 export const MAX_SHORTCUTS = 9
-export const DEFAULT_SHORTCUTS = ['schedule', 'calendar', 'grades', 'exams', 'classroom', 'simulation', 'materials', 'cat-atlas', 'what-to-eat']
+export const DEFAULT_SHORTCUTS = ['schedule', 'grades', 'exams', 'classroom', 'pass-rate', 'market', 'calendar', 'shuttle', 'carpool']
 const known = new Set(allServices.map((item) => item.key))
 
 export function normalizeShortcuts(value: unknown): string[] {

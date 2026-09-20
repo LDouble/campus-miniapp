@@ -3,7 +3,7 @@ export interface CourseMaterialNavigation {
   courseCode?: string
   periodId?: string
   periodLabel?: string
-  source?: 'schedule' | 'grades' | 'selection' | 'exams'
+  source?: 'schedule' | 'grades' | 'selection' | 'exams' | 'discussion'
   action?: 'upload'
 }
 

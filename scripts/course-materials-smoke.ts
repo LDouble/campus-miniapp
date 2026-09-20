@@ -35,6 +35,34 @@ const courses: MaterialCourseView[] = [{
 assert.equal(resolveMaterialCourse(courses, { name: '高数二' })?.id, 1)
 assert.equal(resolveMaterialCourse(courses, { courseCode: 'math-002' })?.id, 1)
 assert.equal(resolveMaterialCourse(courses, { name: '不存在课程' }), undefined)
+const matchingCases: MaterialCourseView[] = [
+  {
+    ...courses[0],
+    id: 2,
+    course_code: 'MATH-CANONICAL',
+    source_course_codes: ['MATH-OLD-001'],
+    name: '线性代数',
+    aliases: [],
+  },
+  {
+    ...courses[0],
+    id: 3,
+    course_code: 'MATH-OTHER',
+    name: '线性代数',
+    aliases: [],
+  },
+]
+assert.equal(resolveMaterialCourse(matchingCases, { courseCode: 'math-old-001' })?.id, 2,
+  '合并后的稳定来源课程代码应精确命中规范课程')
+assert.equal(resolveMaterialCourse(matchingCases, { name: '线性代数' }), undefined,
+  '多个同名课程不得自动选中第一个')
+assert.equal(resolveMaterialCourse(matchingCases, { courseCode: 'unknown-code', name: '线性代数' }), undefined,
+  '携带未建档课程代码时不得回退到同名课程')
+assert.equal(resolveMaterialCourse([
+  ...matchingCases,
+  { ...courses[0], id: 4, course_code: 'MATH-DUPLICATE', source_course_codes: ['MATH-OLD-001'], name: '数学分析' },
+], { courseCode: 'MATH-OLD-001' }), undefined,
+'多个规范或来源代码候选不得自动选中第一个')
 assert.equal(inferCourseSuggestion('高数二期末真题.pdf', [
   { name: '大学英语' },
   { name: '高数二' },

@@ -1517,6 +1517,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/class-discussions/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 输入课程名或选课号按需搜索课堂，可精确筛选学期，不预加载全量候选 */
+        get: operations["SearchAdminCampusCircleClassCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/class-discussions/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理员按选课号和学年学期创建或定位课堂讨论 */
+        post: operations["ResolveAdminCampusCircleClassDiscussion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/posts": {
         parameters: {
             query?: never;
@@ -1741,6 +1775,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/topics/{id}/announcement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理员保存、发布或撤回当前课堂公告，草稿仅后台可见 */
+        patch: operations["UpdateCampusCircleClassAnnouncement"];
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/topics/{id}/archive": {
         parameters: {
             query?: never;
@@ -1786,6 +1837,57 @@ export interface paths {
         put?: never;
         /** 管理端将一个校园话题合并到另一个话题 */
         post: operations["MergeAdminCampusCircleTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/class-discussions/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按选课号和学年学期获取或创建公开课堂讨论，不校验教学班归属 */
+        post: operations["ResolveCampusCircleClassDiscussion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/class-discussions/{id}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置当前用户已参与课堂的站内消息提醒 */
+        put: operations["UpdateCampusCircleClassNotifications"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/class-discussions/{id}/participation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 首次进入课堂记录去重参与人数，默认开启提醒，重复进入保留设置 */
+        post: operations["RecordCampusCircleClassParticipation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3597,6 +3699,23 @@ export interface paths {
         };
         /** 查询学生提交但尚未归一的课程名称 */
         get: operations["ListMaterialCourseCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/material-course-catalog-sync-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询资料课程自动建档的进度与结果 */
+        get: operations["ListMaterialCourseCatalogSyncRuns"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7979,6 +8098,49 @@ export interface components {
             /** Format: int64 */
             view_count?: number;
         };
+        CampusCircleClassAnnouncement: {
+            content: string;
+            published: boolean;
+            /** Format: date-time */
+            published_at?: string | null;
+            title: string;
+        };
+        CampusCircleClassCandidate: {
+            class_num: string;
+            course_code?: string;
+            course_name: string;
+            education_level: string;
+            /** Format: uint64 */
+            id: number;
+            period_id: string;
+            teachers?: string | null;
+        };
+        CampusCircleClassCandidatePage: {
+            items: components["schemas"]["CampusCircleClassCandidate"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleClassCandidatePageResponseBody: {
+            data: components["schemas"]["CampusCircleClassCandidatePage"];
+            request_id: string;
+        };
+        CampusCircleClassDiscussionContext: {
+            class_num: string;
+            course_code?: string;
+            course_name: string;
+            period_id: string;
+        };
+        CampusCircleClassParticipation: {
+            notifications_enabled: boolean;
+            /** Format: int64 */
+            participant_count: number;
+        };
+        CampusCircleClassParticipationResponseBody: {
+            data: components["schemas"]["CampusCircleClassParticipation"];
+            request_id: string;
+        };
         CampusCircleCurationInput: {
             /** Format: uint64 */
             expected_version: number;
@@ -8245,8 +8407,10 @@ export interface components {
         } | null;
         CampusCircleTopicView: {
             aliases?: string[];
+            announcement?: components["schemas"]["CampusCircleClassAnnouncement"];
             auto_association_enabled?: boolean;
             auto_created?: boolean;
+            class_discussion?: components["schemas"]["CampusCircleClassDiscussionContext"];
             cover_url: string | null;
             /** Format: date-time */
             created_at: string;
@@ -9557,6 +9721,8 @@ export interface components {
         CourseMaterialView: {
             candidate_course_name?: string | null;
             course?: components["schemas"]["MaterialCourseView"];
+            /** @description 跨学期关联课程，首项为兼容主课程 */
+            courses?: components["schemas"]["MaterialCourseView"][];
             /** Format: date-time */
             created_at: string;
             description?: string | null;
@@ -9588,6 +9754,8 @@ export interface components {
             candidate_course_name?: string | null;
             /** Format: uint64 */
             course_id?: number | null;
+            /** @description 有序课程集合，去重后最多十门，不区分学期 */
+            course_ids?: number[];
             description?: string | null;
             files: components["schemas"]["MaterialUploadFileInput"][];
             material_type: components["schemas"]["MaterialType"];
@@ -9596,6 +9764,42 @@ export interface components {
         };
         /** @enum {string} */
         EducationLevel: "undergraduate" | "graduate" | "general";
+        MaterialCourseCatalogSyncPage: {
+            items: components["schemas"]["MaterialCourseCatalogSyncView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MaterialCourseCatalogSyncPageResponseBody: {
+            data: components["schemas"]["MaterialCourseCatalogSyncPage"];
+            request_id: string;
+        };
+        MaterialCourseCatalogSyncView: {
+            /** Format: int64 */
+            attempts: number;
+            /** Format: uint64 */
+            batch_id: number;
+            /** Format: int64 */
+            created_course_count: number;
+            /** Format: date-time */
+            finished_at?: string | null;
+            /** Format: uint64 */
+            last_entry_id: number;
+            last_error?: string | null;
+            /** Format: int64 */
+            linked_existing_count: number;
+            /** Format: int64 */
+            processed_entries: number;
+            /** Format: int64 */
+            skipped_entry_count: number;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** @enum {string} */
+            status: "queued" | "running" | "succeeded" | "failed";
+            /** Format: uint64 */
+            version: number;
+        };
         MaterialCoursePage: {
             items: components["schemas"]["MaterialCourseView"][];
             page: number;
@@ -9623,6 +9827,8 @@ export interface components {
             name: string;
             /** Format: int64 */
             sort_order: number;
+            /** @description 含已合并课程的稳定来源代码，用于课程上下文精确匹配 */
+            source_course_codes?: string[];
             /** @enum {string} */
             status: "enabled" | "disabled";
             /** Format: uint64 */
@@ -12628,6 +12834,24 @@ export interface components {
                 "application/json": components["schemas"]["CalendarReminderResponseBody"];
             };
         };
+        /** @description 按需搜索的课堂候选，每页最多20条 */
+        CampusCircleClassCandidatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleClassCandidatePageResponseBody"];
+            };
+        };
+        /** @description 当前用户课堂参与状态与去重人数 */
+        CampusCircleClassParticipationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleClassParticipationResponseBody"];
+            };
+        };
         /** @description 校园圈首页运营聚合 */
         CampusCircleHomeResponse: {
             headers: {
@@ -13121,6 +13345,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CourseMaterialResponseBody"];
+            };
+        };
+        /** @description 资料课程目录同步记录 */
+        MaterialCourseCatalogSyncPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialCourseCatalogSyncPageResponseBody"];
             };
         };
         /** @description 课程分类分页 */
@@ -16013,6 +16246,52 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    SearchAdminCampusCircleClassCandidates: {
+        parameters: {
+            query: {
+                keyword: string;
+                period_id?: string;
+                education_level?: "undergraduate" | "graduate";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleClassCandidatePageResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ResolveAdminCampusCircleClassDiscussion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    class_num: string;
+                    period_id: string;
+                    course_name?: string;
+                    course_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
     ListAdminCampusCirclePosts: {
         parameters: {
             query?: {
@@ -16372,6 +16651,35 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    UpdateCampusCircleClassAnnouncement: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    content: string;
+                    published: boolean;
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ArchiveAdminCampusCircleTopic: {
         parameters: {
             query?: never;
@@ -16435,6 +16743,66 @@ export interface operations {
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    ResolveCampusCircleClassDiscussion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    class_num: string;
+                    period_id: string;
+                    course_name?: string;
+                    course_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    UpdateCampusCircleClassNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    notifications_enabled: boolean;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleClassParticipationResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RecordCampusCircleClassParticipation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleClassParticipationResponse"];
+            404: components["responses"]["Error"];
         };
     };
     GetCampusCircleHome: {
@@ -18642,6 +19010,7 @@ export interface operations {
                     action: "keep" | "correct_course" | "take_down" | "reject";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     resolution_note: string;
                 };
             };
@@ -18725,6 +19094,7 @@ export interface operations {
                     action: "approve" | "reject";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     create_course_name?: string;
                     create_course_code?: string;
                     /** @enum {string} */
@@ -18803,6 +19173,21 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    ListMaterialCourseCatalogSyncRuns: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialCourseCatalogSyncPageResponse"];
         };
     };
     ListAdminMaterialCourses: {
@@ -19041,6 +19426,7 @@ export interface operations {
                     material_type: "slides" | "notes" | "exam" | "homework" | "review" | "other";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     candidate_course_name?: string;
                     period_id?: string;
                     description?: string;
