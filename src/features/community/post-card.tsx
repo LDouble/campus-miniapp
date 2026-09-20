@@ -66,6 +66,7 @@ const formatCommunityPostTime = (value?: string | null, now = Date.now()) => {
 type Props = {
   post: CampusCirclePostView
   sectionName: string
+  hiddenTopicId?: number
   ariaLabel?: string
   motionDelay?: number
   timeFormatter?: (value?: string | null) => string
@@ -105,6 +106,7 @@ export type CommunityPostCommentPreview = {
 function CommunityPostCard({
   post,
   sectionName,
+  hiddenTopicId,
   ariaLabel,
   motionDelay = 0,
   timeFormatter,
@@ -157,7 +159,7 @@ function CommunityPostCard({
   const readableContent = plainStickerContent(post.content || '')
   const contentParts = parseStickerContent(post.content || '')
   const contentIsClamped = readableContent.length > 90
-  const topicLinks = communityPostTopics(post)
+  const topicLinks = communityPostTopics(post).filter((topic) => topic.id !== hiddenTopicId)
   const operationBadges = [
     post.is_pinned && '置顶',
     post.is_featured && '精选',

@@ -720,6 +720,7 @@ export default function CommunityTopicPage() {
           key={post.id}
           post={post}
           variant={classDiscussion ? 'classroom' : 'community'}
+          hiddenTopicId={classDiscussion ? topicId : undefined}
           trackViews
           viewExposureSurface='topic'
           viewTrackingEnabled={viewPageVisible && !commentPost}
