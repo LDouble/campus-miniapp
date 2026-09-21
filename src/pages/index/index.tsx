@@ -12,6 +12,10 @@ import {
   Text,
   View,
 } from '@tarojs/components'
+import { getCachedPageUser, getCachedPageUserId, getPageCacheScope, subscribePageCacheScope } from '../../state/page-cache'
+import { homeCacheKey, readHomeSnapshot, updateHomeSnapshot, refreshHomeSection } from '../../features/home/page-cache'
+
+import { getLifeHubRefreshRevision, markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { allServices, serviceModules as serviceModuleKeys, migratedServiceKeys as migratedHomeServiceKeys } from '../../features/service-shortcuts/catalog'
 import { readShortcuts } from '../../features/service-shortcuts/preferences'
 import { openService as openCustomService } from '../../features/service-shortcuts/navigation'
@@ -31,7 +35,6 @@ import {
 } from '../../api/calendar-reminders'
 import { isAccountCancelled } from '../../api/auth'
 import {
-  getActiveAcademicUserId,
   hasAcademicCredential,
 } from '../../api/academic-credential'
 import type {
@@ -124,6 +127,7 @@ import {
 } from '../../features/home/today'
 import {
   getCalendarEducationLevel,
+  getCachedAcademicCalendar,
   loadAcademicCalendar,
 } from '../../features/calendar/repository'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
@@ -222,10 +226,10 @@ const loadCachedCoursePreview = (
   config: MiniappRuntimeConfig,
   campusName: string,
 ) => {
-  const userId = getActiveAcademicUserId()
+  const userId = getCachedPageUserId()
   return resolveCoursePreview(
     academicStorage.getScheduleCache(userId),
-    academicStorage.getCustomCourses(),
+    academicStorage.getCustomCourses(getCachedPageUserId()),
     config,
     campusName,
     new Date(),
@@ -234,7 +238,7 @@ const loadCachedCoursePreview = (
 }
 
 const loadCachedAcademicLabel = () => {
-  const cache = academicStorage.getScheduleCache(getActiveAcademicUserId())
+  const cache = academicStorage.getScheduleCache(getCachedPageUserId())
   return getAcademicCalendarLabel(cache?.periods || [])
 }
 
@@ -242,9 +246,11 @@ const loadLatestAcademic = async (
   userId: number,
   cache: AcademicScheduleCache | null,
   force = false,
+  isCurrent: () => boolean = () => true,
 ) => {
   const periodsResult = await settle(academicRepository.getPeriods({ force }))
-  if (!periodsResult.ok || !periodsResult.value.length) return cache
+  if (!isCurrent() || !periodsResult.ok) return cache
+  cache = academicStorage.getScheduleCache(userId) || cache
 
   const periods = periodsResult.value
   let coursesByPeriod = cache ? cache.coursesByPeriod : {}
@@ -263,13 +269,15 @@ const loadLatestAcademic = async (
   const anchoredPeriod = periods.find((period) => period.id === periodId)
   const isCurrentPeriod = !!anchoredPeriod
     && getCurrentAcademicWeek([anchoredPeriod]) !== null
-  const hasCachedCourses = !!periodId
-    && Object.prototype.hasOwnProperty.call(coursesByPeriod, periodId)
   const hasCredential = hasAcademicCredential(userId)
 
-  if (periodId && (isCurrentPeriod || startingTomorrow) && !hasCachedCourses && hasCredential) {
+  if (periodId && (isCurrentPeriod || startingTomorrow) && hasCredential) {
     const coursesResult = await settle(academicRepository.getCourses(periodId))
-    if (coursesResult.ok) {
+    if (isCurrent() && coursesResult.ok) {
+      const latest = academicStorage.getScheduleCache(userId)
+      coursesByPeriod = latest?.coursesByPeriod || coursesByPeriod
+      coursesUpdatedAtByPeriod = latest?.coursesUpdatedAtByPeriod || coursesUpdatedAtByPeriod
+      scheduleNotesByPeriod = latest?.scheduleNotesByPeriod || scheduleNotesByPeriod
       try {
         const updatedAt = Date.now()
         coursesByPeriod = setCoursesForPeriod(
@@ -311,18 +319,31 @@ const loadLatestAcademic = async (
 const loadHomeAcademic = async (
   accountPromise: Promise<Settled<Awaited<ReturnType<typeof getCurrentUser>>>>,
   force = false,
+  isCurrent: () => boolean = () => true,
 ) => {
   const account = await accountPromise
-  const userId = account.ok ? account.value.user.id : getActiveAcademicUserId()
+  const userId = account.ok ? account.value.user.id : getCachedPageUserId()
   const cache = academicStorage.getScheduleCache(userId)
-  if (!account.ok) return cache
+  if (!isCurrent() || !account.ok) return cache
 
   const verification = await settle(getAcademicVerificationStatus({ force }))
-  if (!verification.ok || verification.value.identity?.status !== 'verified') return cache
-  return loadLatestAcademic(userId, cache, force)
+  if (!isCurrent() || !verification.ok || verification.value.identity?.status !== 'verified') return cache
+  return loadLatestAcademic(userId, cache, force, isCurrent)
 }
 
 function Index() {
+  const [scope, setScope] = useState(getPageCacheScope)
+  useEffect(() => subscribePageCacheScope(() => setScope(getPageCacheScope())), [])
+  return <IndexContent key={scope} />
+}
+
+function IndexContent() {
+  const [initialSnapshot] = useState(readHomeSnapshot)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false; setCustomTabBarHidden(false) }
+  }, [])
   const [shortcutKeys, setShortcutKeys] = useState(readShortcuts)
   const viewPageVisible = useViewPageVisible()
   useCampusShare((event) => {
@@ -350,12 +371,12 @@ function Index() {
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
-  const [username, setUsername] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
-  const [avatarUserId, setAvatarUserId] = useState(0)
-  const [homeFeedItems, setHomeFeedItems] = useState<HomeFeedItemView[]>([])
-  const [homeFeedPage, setHomeFeedPage] = useState(1)
-  const [homeFeedTotal, setHomeFeedTotal] = useState(0)
+  const [username, setUsername] = useState(() => getCachedPageUser()?.username || '')
+  const [avatarUrl, setAvatarUrl] = useState(() => getCachedPageUser()?.avatar_url || '')
+  const [avatarUserId, setAvatarUserId] = useState(getCachedPageUserId)
+  const [homeFeedItems, setHomeFeedItems] = useState<HomeFeedItemView[]>(() => enabledHomeFeedItems(initialSnapshot.feed?.items || [], getMiniappRuntimeConfig()))
+  const [homeFeedPage, setHomeFeedPage] = useState(initialSnapshot.feed?.page || 1)
+  const [homeFeedTotal, setHomeFeedTotal] = useState(initialSnapshot.feed?.total || 0)
   const [homeFeedLoadingMore, setHomeFeedLoadingMore] = useState(false)
   const [homeFeedLoadMoreError, setHomeFeedLoadMoreError] = useState(false)
   const [homeFeedRefreshing, setHomeFeedRefreshing] = useState(false)
@@ -373,15 +394,17 @@ function Index() {
     likedByNicknames: string[]
   }>>({})
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
-  const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>([])
-  const [calendar, setCalendar] = useState<Awaited<ReturnType<typeof loadAcademicCalendar>>['calendar']>(null)
-  const [calendarReminders, setCalendarReminders] = useState<CalendarReminderView[]>([])
-  const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinStatus | null>(null)
+  const [noticesError, setNoticesError] = useState(false)
+  const [noticesLoading, setNoticesLoading] = useState(!initialSnapshot.notices)
+  const [officialNotices, setOfficialNotices] = useState<OfficialNotice[]>(initialSnapshot.notices || [])
+  const [calendar, setCalendar] = useState<Awaited<ReturnType<typeof loadAcademicCalendar>>['calendar']>(() => getCachedAcademicCalendar().calendar)
+  const [calendarReminders, setCalendarReminders] = useState<CalendarReminderView[]>(initialSnapshot.reminders || [])
+  const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinStatus | null>(initialSnapshot.checkin || null)
   const [homeCheckinSubmitting, setHomeCheckinSubmitting] = useState(false)
   const [showNotificationGuide, setShowNotificationGuide] = useState(false)
   const [notificationGuideUserId, setNotificationGuideUserId] = useState(0)
   const [userLevelTasks, setUserLevelTasks] = useState<UserLevelTask[]>([])
-  const [homeFeedLoading, setHomeFeedLoading] = useState(true)
+  const [homeFeedLoading, setHomeFeedLoading] = useState(!initialSnapshot.feed)
   const [homeFeedError, setHomeFeedError] = useState(false)
   const [coursePreview, setCoursePreview] = useState(() => (
     loadCachedCoursePreview(runtimeConfig, campusName)
@@ -434,142 +457,151 @@ function Index() {
   })
 
   const loadHome = useCallback(async (force = false) => {
-    setQuickQuestionCourse(null)
+    const key = homeCacheKey()
+    const requestScope = getPageCacheScope()
     const homeFeedRequestId = ++homeFeedRequestSequence.current
+    const isCurrent = () => mounted.current && key === homeCacheKey()
+      && homeFeedRequestId === homeFeedRequestSequence.current
+    setQuickQuestionCourse(null)
     homeFeedLoadingMoreRef.current = false
     setHomeFeedLoadingMore(false)
     setHomeFeedLoadMoreError(false)
     setHomeFeedRefreshing(true)
-    const latestRuntimeConfig = await loadMiniappRuntimeConfig()
-    const notificationTemplateIds = resolveHomeNotificationTemplateIds(
-      latestRuntimeConfig.subscription_templates,
-    )
-    const moduleEnabled = (key: MiniappModuleKey) => (
-      resolveMiniappModule(latestRuntimeConfig, key).state === 'enabled'
+    // 同步配置决定首屏，不把配置、授权或任一区块放在渲染的前置链路。
+    const latestRuntimeConfig = getMiniappRuntimeConfig()
+    const moduleEnabled = (moduleKey: MiniappModuleKey) => (
+      resolveMiniappModule(latestRuntimeConfig, moduleKey).state === 'enabled'
     )
     const accountPromise = settle(getCurrentUser({ force }))
-    // 未认证用户只展示缓存；已认证用户才在后台刷新教务数据。
-    const academicPromise = moduleEnabled('academic_schedule')
-      ? loadHomeAcademic(accountPromise, force)
-      : accountPromise.then((account) => academicStorage.getScheduleCache(
-        account.ok ? account.value.user.id : getActiveAcademicUserId(),
-      ))
     const homeFeedEnabled = ['community', 'marketplace', 'errand', 'carpool']
-      .some((key) => moduleEnabled(key as MiniappModuleKey))
-    const homeFeedPromise = !isQualificationEdition
-      && fullLifeServicesRepository
-      && homeFeedEnabled
-      ? settle(fullLifeServicesRepository.listHomeFeed({ page: 1, pageSize: HOME_FEED_PAGE_SIZE }))
-      : Promise.resolve({ ok: false } as Settled<never>)
-    const officialNoticesPromise = settle(officialNoticesRepository.feed({
-      pageSize: 2,
-    }))
-    const calendarPromise = moduleEnabled('calendar')
-      ? loadAcademicCalendar(getCalendarEducationLevel(), { force })
-      : Promise.resolve({ calendar: null, source: 'unavailable' as const, updatedAt: 0 })
-    const checkinPromise = accountPromise.then((account) => (
-      account.ok ? settle(getMyDailyCheckinStatus()) : { ok: false } as Settled<never>
-    ))
-    const unreadPromise = accountPromise.then(async (account) => {
-      if (!account.ok) return { notice: 0, private: 0, userId: 0 }
-      const [notice, privateMessage] = await Promise.all([
-        settle(noticesRepository.unreadCount()),
-        settle(refreshPrivateMessageUnreadCount(force)),
-      ])
-      return {
-        notice: notice.ok ? Number(notice.value.count) || 0 : 0,
-        private: privateMessage.ok ? Number(privateMessage.value) || 0 : 0,
-        userId: account.value.user.id,
-      }
-    })
-    const subscriptionSettingsPromise = accountPromise.then((account) => (
-      account.ok ? getWechatSubscriptionSettings(notificationTemplateIds) : { enabled: false, mainSwitchOff: false }
-    ))
-    const tasksPromise = homeFeatureFlags.todayTask
-      ? accountPromise.then((account) => (
-        account.ok ? settle(listMyUserLevelTasks()) : { ok: false } as Settled<never>
-      ))
-      : Promise.resolve({ ok: false } as Settled<never>)
-    const remindersPromise = accountPromise.then((account) => (
-      account.ok ? settle(listMyCalendarReminders()) : { ok: false } as Settled<never>
-    ))
-    const [
-      account,
-      homeFeed,
-      latestAcademic,
-      latestOfficialNotices,
-      latestCalendar,
-      latestCheckin,
-      latestTasks,
-      latestReminders,
-      latestUnread,
-      subscriptionSettings,
-    ] = await Promise.all([
-      accountPromise,
-      homeFeedPromise,
-      academicPromise,
-      officialNoticesPromise,
-      calendarPromise,
-      checkinPromise,
-      tasksPromise,
-      remindersPromise,
-      unreadPromise,
-      subscriptionSettingsPromise,
-    ])
-
-    const selectedCampus = getSelectedCampus(latestRuntimeConfig)
-    setRuntimeConfig(latestRuntimeConfig)
-    setCampusName(selectedCampus)
-    setBannerIndex(0)
-    setCoursePreview(resolveCoursePreview(
-      latestAcademic,
-      academicStorage.getCustomCourses(),
-      latestRuntimeConfig,
-      selectedCampus,
-      new Date(),
-      HOME_COURSE_PREVIEW_LIMIT,
-    ))
-    if (account.ok) {
-      setUsername(account.value.user.username)
-      setAvatarUrl(account.value.user.avatar_url || '')
-      setAvatarUserId(account.value.user.id)
+      .some((moduleKey) => moduleEnabled(moduleKey as MiniappModuleKey))
+    const refreshFeed = async (config: MiniappRuntimeConfig) => {
+      if (!fullLifeServicesRepository || isQualificationEdition) return
+      const enabled = ['community', 'marketplace', 'errand', 'carpool']
+        .some((moduleKey) => resolveMiniappModule(config, moduleKey as MiniappModuleKey).state === 'enabled')
+      if (!enabled) return
+      const revision = getLifeHubRefreshRevision('community')
+      await refreshHomeSection(
+        () => fullLifeServicesRepository.listHomeFeed({ page: 1, pageSize: HOME_FEED_PAGE_SIZE }),
+        (result) => {
+          if (revision !== getLifeHubRefreshRevision('community')) return
+          const feed = { items: enabledHomeFeedItems(result.items, getMiniappRuntimeConfig()), page: result.page, total: Number(result.total) }
+          setHomeFeedItems(feed.items)
+          setHomeFeedPage(feed.page)
+          setHomeFeedTotal(feed.total)
+          setHomeReactions({})
+          setHomeFeedError(false)
+          updateHomeSnapshot(key, { feed })
+        }, isCurrent, () => setHomeFeedError(true),
+      )
+      if (isCurrent()) { setHomeFeedLoading(false); setHomeFeedRefreshing(false) }
     }
-    setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))
-    if (homeFeedRequestId === homeFeedRequestSequence.current) {
-      if (homeFeed.ok) {
-        setHomeFeedItems(enabledHomeFeedItems(homeFeed.value.items, latestRuntimeConfig))
-        setHomeFeedPage(homeFeed.value.page)
-        setHomeFeedTotal(Number(homeFeed.value.total))
-        setHomeReactions({})
-        setHomeFeedError(false)
-      } else {
-        setHomeFeedItems([])
-        setHomeFeedPage(1)
-        setHomeFeedTotal(0)
-        setHomeFeedError(homeFeedEnabled)
-      }
-    }
-    setOfficialNotices(latestOfficialNotices.ok ? latestOfficialNotices.value.items : [])
-    setCalendar(latestCalendar.calendar)
-    setDailyCheckin(latestCheckin.ok ? latestCheckin.value : null)
-    setUserLevelTasks(latestTasks.ok ? latestTasks.value.items : [])
-    setCalendarReminders(latestReminders.ok ? latestReminders.value.items : [])
-    const shouldShowGuide = !subscriptionSettings.enabled && shouldShowHomeNotificationGuide({
-      userId: latestUnread.userId,
-      unreadCount: latestUnread.notice + latestUnread.private,
-      templateIds: notificationTemplateIds,
-      record: readHomeNotificationGuideRecord(latestUnread.userId),
-    })
-    if (shouldShowGuide) saveHomeNotificationGuideRecord(latestUnread.userId)
-    setNotificationGuideUserId(latestUnread.userId)
-    setCustomTabBarHidden(shouldShowGuide)
-    setShowNotificationGuide(shouldShowGuide)
-    if (homeFeedRequestId === homeFeedRequestSequence.current) {
+    const jobs = [
+      refreshHomeSection(() => loadMiniappRuntimeConfig({ force }), (config) => {
+        setRuntimeConfig(config)
+        setCampusName(getSelectedCampus(config))
+        setHomeFeedItems((items) => enabledHomeFeedItems(items, config))
+        if (!homeFeedEnabled) void refreshFeed(config)
+      }, () => mounted.current && requestScope === getPageCacheScope()
+        && homeFeedRequestId === homeFeedRequestSequence.current),
+      refreshFeed(latestRuntimeConfig),
+      refreshHomeSection(() => accountPromise, (account) => {
+        if (!account.ok) return
+        setUsername(account.value.user.username)
+        setAvatarUrl(account.value.user.avatar_url || '')
+        setAvatarUserId(account.value.user.id)
+      }, isCurrent),
+      refreshHomeSection(() => moduleEnabled('academic_schedule')
+        ? loadHomeAcademic(accountPromise, force, isCurrent)
+        : Promise.resolve(academicStorage.getScheduleCache(getCachedPageUserId())), (cache) => {
+        setCoursePreview(resolveCoursePreview(cache, academicStorage.getCustomCourses(getCachedPageUserId()),
+          getMiniappRuntimeConfig(), getSelectedCampus(getMiniappRuntimeConfig()), new Date(), HOME_COURSE_PREVIEW_LIMIT))
+        setAcademicCalendarLabel(getAcademicCalendarLabel(cache?.periods || []))
+      }, isCurrent),
+      refreshHomeSection(() => officialNoticesRepository.feed({ pageSize: 2 }), (result) => {
+        setOfficialNotices(result.items)
+        setNoticesError(false)
+        updateHomeSnapshot(key, { notices: result.items })
+      }, isCurrent, () => setNoticesError(true)).then(() => { if (isCurrent()) setNoticesLoading(false) }),
+      refreshHomeSection(() => moduleEnabled('calendar')
+        ? loadAcademicCalendar(getCalendarEducationLevel(), { force })
+        : Promise.resolve({ calendar: null, source: 'unavailable' as const, updatedAt: 0 }), (result) => {
+        if (result.source !== 'unavailable') setCalendar(result.calendar)
+      }, isCurrent),
+      refreshHomeSection(async () => {
+        const account = await accountPromise
+        if (!account.ok || !isCurrent()) return null
+        return getMyDailyCheckinStatus()
+      }, (result) => {
+        if (!result) return
+        setDailyCheckin(result)
+        updateHomeSnapshot(key, { checkin: result })
+      }, isCurrent),
+      refreshHomeSection(async () => {
+        const account = await accountPromise
+        if (!account.ok || !isCurrent()) return null
+        return listMyCalendarReminders()
+      }, (result) => {
+        if (!result) return
+        setCalendarReminders(result.items)
+        updateHomeSnapshot(key, { reminders: result.items })
+      }, isCurrent),
+      refreshHomeSection(async () => {
+        const account = await accountPromise
+        if (!account.ok || !isCurrent() || !homeFeatureFlags.todayTask) return null
+        return listMyUserLevelTasks()
+      }, (result) => { if (result) setUserLevelTasks(result.items) }, isCurrent),
+      refreshHomeSection(async () => {
+        const account = await accountPromise
+        if (!account.ok || !isCurrent()) return null
+        const templateIds = resolveHomeNotificationTemplateIds(latestRuntimeConfig.subscription_templates)
+        const [notice, privateMessage, settings] = await Promise.all([
+          settle(noticesRepository.unreadCount()), settle(refreshPrivateMessageUnreadCount(force)),
+          getWechatSubscriptionSettings(templateIds),
+        ])
+        return { userId: account.value.user.id, templateIds, settings,
+          unread: (notice.ok ? Number(notice.value.count) || 0 : 0) + (privateMessage.ok ? Number(privateMessage.value) || 0 : 0) }
+      }, (result) => {
+        if (!result) return
+        const show = !result.settings.enabled && shouldShowHomeNotificationGuide({
+          userId: result.userId, unreadCount: result.unread, templateIds: result.templateIds,
+          record: readHomeNotificationGuideRecord(result.userId),
+        })
+        if (show) saveHomeNotificationGuideRecord(result.userId)
+        setNotificationGuideUserId(result.userId)
+        setCustomTabBarHidden(show)
+        setShowNotificationGuide(show)
+      }, isCurrent),
+    ]
+    if (!homeFeedEnabled || isQualificationEdition) {
       setHomeFeedLoading(false)
       setHomeFeedRefreshing(false)
     }
-    Taro.stopPullDownRefresh()
+    try { await Promise.all(jobs) } finally {
+      if (isCurrent()) {
+        setHomeFeedLoading(false)
+        setHomeFeedRefreshing(false)
+        void Taro.stopPullDownRefresh()
+      }
+    }
   }, [])
+
+  // 校区变化时立即换为对应缓存；返回详情不重置同校区分页。
+  useEffect(() => {
+    const snapshot = readHomeSnapshot()
+    setHomeFeedItems(enabledHomeFeedItems(snapshot.feed?.items || [], getMiniappRuntimeConfig()))
+    setHomeFeedPage(snapshot.feed?.page || 1)
+    setHomeFeedTotal(snapshot.feed?.total || 0)
+    setOfficialNotices(snapshot.notices || [])
+    setNoticesError(false)
+    setNoticesLoading(!snapshot.notices)
+    setCalendarReminders(snapshot.reminders || [])
+    setDailyCheckin(snapshot.checkin || null)
+    setHomeFeedError(false)
+    setHomeFeedLoading(!snapshot.feed)
+    void loadHome()
+    return () => { homeFeedRequestSequence.current += 1 }
+  }, [campusName, loadHome])
 
   const loadHomeFeedMore = useCallback(async () => {
     if (
@@ -580,17 +612,18 @@ function Index() {
       || homeFeedItems.length >= homeFeedTotal
     ) return
 
+    const key = homeCacheKey()
     const requestId = ++homeFeedRequestSequence.current
     homeFeedLoadingMoreRef.current = true
     setHomeFeedLoadingMore(true)
     setHomeFeedLoadMoreError(false)
     try {
-      const latestRuntimeConfig = await loadMiniappRuntimeConfig()
+      const latestRuntimeConfig = getMiniappRuntimeConfig()
       const result = await fullLifeServicesRepository.listHomeFeed({
         page: homeFeedPage + 1,
         pageSize: HOME_FEED_PAGE_SIZE,
       })
-      if (requestId !== homeFeedRequestSequence.current) return
+      if (!mounted.current || key !== homeCacheKey() || requestId !== homeFeedRequestSequence.current) return
       setHomeFeedItems((current) => mergeHomeFeedItems(
         current,
         enabledHomeFeedItems(result.items, latestRuntimeConfig),
@@ -631,7 +664,6 @@ function Index() {
     // 首页从详情返回时保留 Feed 分页和滚动位置，完整刷新交给下拉刷新。
     if (homeHasShown.current) return
     homeHasShown.current = true
-    void loadHome()
   })
 
   usePullDownRefresh(() => {
@@ -712,6 +744,7 @@ function Index() {
   const toggleHomeFeedLike = async (item: HomeFeedItemView) => {
     if (!fullLifeServicesRepository || item.source_type !== 'campus_circle_post') return
     const key = homeFeedKey(item)
+    const cacheKey = homeCacheKey()
     const current = homeReactions[key] || {
       liked: item.liked,
       likeCount: item.like_count,
@@ -721,6 +754,8 @@ function Index() {
       const reaction = current.liked
         ? await fullLifeServicesRepository.unlikeResource(item.source_id, 'campus_circle_post')
         : await fullLifeServicesRepository.likeResource(item.source_id, 'campus_circle_post')
+      if (!mounted.current || cacheKey !== homeCacheKey()) return
+      markLifeHubSectionDirty('community')
       const currentUserName = username.trim()
       const likedByNicknames = reaction.liked
         ? currentUserName && !current.likedByNicknames.includes(currentUserName)
@@ -859,6 +894,10 @@ function Index() {
       Taro.showToast({ title: '提醒设置失败，请稍后重试', icon: 'none' })
     }
   }
+
+  useEffect(() => {
+    if (dailyCheckin) updateHomeSnapshot(homeCacheKey(), { checkin: dailyCheckin })
+  }, [dailyCheckin])
 
   const openTodayTask = () => {
     if (!todayTask) return
@@ -1141,8 +1180,8 @@ function Index() {
           </View>
         </View>
         {officialNotices.length === 0 ? (
-          <View className='official-notices-home__empty' onClick={openOfficialNotices}>
-            暂无最新通知，点击进入通知中心
+          <View className='official-notices-home__empty' onClick={noticesError ? () => void loadHome() : openOfficialNotices}>
+            {noticesLoading ? '正在加载通知' : noticesError ? '通知加载失败，点击重试' : '暂无最新通知，点击进入通知中心'}
           </View>
         ) : officialNotices.map((item) => (
           <View
@@ -1291,9 +1330,9 @@ function Index() {
 
         <View className='moments-feed'>
           {momentsLoading && <View className='home-section-state'>正在加载校园动态</View>}
-          {!momentsLoading && momentsError && (
+          {!momentsLoading && homeFeedError && (
             <View className='home-section-state home-section-state--error' onClick={() => void loadHome()}>
-              动态加载失败，点击重试
+              {homeFeedItems.length ? '更新失败，正在显示上次内容，点击重试' : '动态加载失败，点击重试'}
             </View>
           )}
           {!momentsLoading && !momentsError && homeFeedItems.length === 0 && (

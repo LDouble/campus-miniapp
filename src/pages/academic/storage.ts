@@ -11,6 +11,7 @@ import {
 import { sanitizeCoursesByPeriod } from './schedule-courses'
 
 const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
+const CUSTOM_COURSES_OWNER_KEY = 'academic.customCourses.legacyOwner.v1'
 const PREFERENCES_KEY = 'academic.preferences.v1'
 const GRADE_SIMULATION_KEY = 'academic.gradeSimulation.v1'
 const SCHEDULE_REFRESH_GUIDE_KEY = 'academic.scheduleRefreshGuide.v2'
@@ -355,8 +356,28 @@ export const academicStorage = {
   setPersonalCourses: (userId: number, level: string, periodId: string, courses: Course[]) => {
     safeWrite(personalCoursesKey(2, userId, level, periodId), courses)
   },
-  getCustomCourses: () => safeRead<Course[]>(CUSTOM_COURSES_KEY, []),
-  setCustomCourses: (courses: Course[]) => safeWrite(CUSTOM_COURSES_KEY, courses),
+  getCustomCourses: (platformUserId?: number): Course[] => {
+    if (platformUserId === undefined) return safeRead<Course[]>(CUSTOM_COURSES_KEY, [])
+    const key = `academic.customCourses.v2.${platformUserId}`
+    const scoped = safeRead<unknown>(key, null)
+    const sanitize = (value: unknown): Course[] => Array.isArray(value) ? value.filter((course) => (
+      course && course.source === 'custom' && validCourse({ ...course, source: 'official' })
+    )) : []
+    if (scoped !== null) return sanitize(scoped)
+    // 旧键没有账号信息，只在本机既有教务凭据能确认归属时迁移；不让另一账号认领。
+    const credential = safeRead<{ platformUserId?: number }>('campus.academicCredential.v1', {})
+    const owner = safeRead<number>(CUSTOM_COURSES_OWNER_KEY, 0)
+    if (platformUserId > 0 && credential.platformUserId === platformUserId && (!owner || owner === platformUserId)) {
+      const courses = sanitize(safeRead<unknown>(CUSTOM_COURSES_KEY, []))
+      safeWrite(CUSTOM_COURSES_OWNER_KEY, platformUserId)
+      safeWrite(key, courses)
+      return courses
+    }
+    return []
+  },
+  setCustomCourses: (courses: Course[], platformUserId?: number) => safeWrite(
+    platformUserId === undefined ? CUSTOM_COURSES_KEY : `academic.customCourses.v2.${platformUserId}`, courses,
+  ),
   getPreferences: (fallback: AcademicPreferences) => (
     safeRead<AcademicPreferences>(PREFERENCES_KEY, fallback)
   ),

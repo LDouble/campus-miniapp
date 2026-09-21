@@ -15,6 +15,11 @@ import type {
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import CommunityFeedPanel from '../../features/community/feed-panel'
 import { consumeCommunityFeedPin } from '../../features/community/feed-pin'
+import {
+  communityCacheKey,
+  isCommunitySectionsCache,
+  isCommunityTopicsCache,
+} from '../../features/community/community-cache'
 import { useDismissCommunityOverlaysOnScroll } from '../../features/community/use-overlay-dismissal'
 import {
   isLifeHubSection,
@@ -55,6 +60,12 @@ import {
 } from '../../utils/tabbar'
 import { consumeTodayHotCommunityIntent } from '../../features/today-hot/navigation'
 import { reportTodayHotEvent } from '../../features/today-hot/analytics'
+import {
+  getPageCacheScope,
+  readPageCache,
+  subscribePageCacheScope,
+  writePageCache,
+} from '../../state/page-cache'
 import './index.scss'
 
 const icons = {
@@ -71,13 +82,25 @@ const lifeSectionModules: Record<LifeHubSection, MiniappModuleKey> = {
   carpool: 'carpool',
 }
 
+const readCachedCommunityRoots = () => (
+  readPageCache(communityCacheKey('sections'), isCommunitySectionsCache) || []
+)
+
+const readCachedHotTopics = () => (
+  readPageCache(communityCacheKey('hot-topics'), isCommunityTopicsCache) || []
+)
+
 export default function CommunityPage() {
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [activeSection, setActiveSection] = useState<LifeHubSection>('community')
-  const [communityRoots, setCommunityRoots] = useState<CampusCircleSectionView[]>([])
-  const [communitySectionsReady, setCommunitySectionsReady] = useState(false)
+  const [communityRoots, setCommunityRoots] = useState<CampusCircleSectionView[]>(
+    readCachedCommunityRoots,
+  )
+  const [communitySectionsReady, setCommunitySectionsReady] = useState(
+    () => readCachedCommunityRoots().length > 0,
+  )
   const [communitySectionsError, setCommunitySectionsError] = useState('')
-  const [hotTopics, setHotTopics] = useState<CampusCircleTopicView[]>([])
+  const [hotTopics, setHotTopics] = useState<CampusCircleTopicView[]>(readCachedHotTopics)
   const [activeCommunitySectionId, setActiveCommunitySectionId] = useState(0)
   const [pinnedCommunityPost, setPinnedCommunityPost] = useState<
     CampusCirclePostView | null
@@ -96,6 +119,11 @@ export default function CommunityPage() {
   const hasShown = useRef(false)
   const communitySectionsFreshAt = useRef(0)
   const communitySectionsRequest = useRef(0)
+  const hotTopicsRequest = useRef(0)
+  const mountedRef = useRef(true)
+  const hasCommunitySectionsRef = useRef(communityRoots.length > 0)
+  const loadCommunitySectionsRef = useRef<(force?: boolean) => Promise<void>>(async () => undefined)
+  const loadHotTopicsRef = useRef<() => Promise<void>>(async () => undefined)
   const navbarMetrics = getNavbarMetrics()
 
   useEffect(() => {
@@ -105,6 +133,12 @@ export default function CommunityPage() {
     )) return
     setMarketFilters((current) => ({ ...current, category: undefined }))
   }, [marketFilters.category, runtimeConfig.marketplace_categories])
+
+  useEffect(() => {
+    hasCommunitySectionsRef.current = communityRoots.length > 0
+  }, [communityRoots.length])
+
+  useEffect(() => () => { mountedRef.current = false }, [])
 
   useLoad((options) => {
     if (!isLifeHubSection(options.section)) return
@@ -170,14 +204,18 @@ export default function CommunityPage() {
       && Date.now() - communitySectionsFreshAt.current < COMMUNITY_SECTIONS_FRESH_MS
     ) return
     const requestId = ++communitySectionsRequest.current
+    const scope = getPageCacheScope()
+    const cacheKey = communityCacheKey('sections')
     setCommunitySectionsError('')
     try {
       const result = await lifeServicesRepository.listCampusCircleSections()
-      if (requestId !== communitySectionsRequest.current) return
+      if (!mountedRef.current || requestId !== communitySectionsRequest.current
+        || scope !== getPageCacheScope() || cacheKey !== communityCacheKey('sections')) return
       const roots = result.items.filter(
         (item) => item.parent_id === null && item.status === 'active',
       )
       setCommunityRoots(roots)
+      writePageCache(cacheKey, roots)
       setActiveCommunitySectionId((current) => {
         const available = roots.flatMap((root) => [
           root,
@@ -188,25 +226,51 @@ export default function CommunityPage() {
       })
       communitySectionsFreshAt.current = Date.now()
     } catch {
-      if (requestId !== communitySectionsRequest.current) return
-      setCommunityRoots([])
-      setActiveCommunitySectionId(0)
-      setCommunitySectionsError('社区板块加载失败，请稍后重试')
+      if (!mountedRef.current || requestId !== communitySectionsRequest.current
+        || scope !== getPageCacheScope() || cacheKey !== communityCacheKey('sections')) return
+      if (!hasCommunitySectionsRef.current) {
+        setCommunitySectionsError('社区板块加载失败，请稍后重试')
+      }
     } finally {
-      if (requestId === communitySectionsRequest.current) {
+      if (mountedRef.current && requestId === communitySectionsRequest.current
+        && scope === getPageCacheScope() && cacheKey === communityCacheKey('sections')) {
         setCommunitySectionsReady(true)
       }
     }
   }
 
   const loadHotTopics = async () => {
+    const requestId = ++hotTopicsRequest.current
+    const scope = getPageCacheScope()
+    const cacheKey = communityCacheKey('hot-topics')
     try {
       const result = await lifeServicesRepository.getCampusCircleHome()
-      setHotTopics((result.hot_topics || []).slice(0, 6))
+      if (!mountedRef.current || requestId !== hotTopicsRequest.current
+        || scope !== getPageCacheScope() || cacheKey !== communityCacheKey('hot-topics')) return
+      const topics = (result.hot_topics || []).slice(0, 6)
+      setHotTopics(topics)
+      writePageCache(cacheKey, topics)
     } catch {
-      setHotTopics([])
+      // 网络、授权或配置服务暂不可用时继续展示已恢复的热门话题。
     }
   }
+
+  loadCommunitySectionsRef.current = loadCommunitySections
+  loadHotTopicsRef.current = loadHotTopics
+
+  useEffect(() => subscribePageCacheScope(() => {
+    ++communitySectionsRequest.current
+    ++hotTopicsRequest.current
+    const roots = readCachedCommunityRoots()
+    setCommunityRoots(roots)
+    setCommunitySectionsReady(roots.length > 0)
+    setCommunitySectionsError('')
+    setHotTopics(readCachedHotTopics())
+    setActiveCommunitySectionId(roots[0]?.id || 0)
+    communitySectionsFreshAt.current = 0
+    void loadCommunitySectionsRef.current(true)
+    void loadHotTopicsRef.current()
+  }), [])
 
   const selectSection = (section: LifeHubSection) => {
     const module = resolveMiniappModule(runtimeConfig, lifeSectionModules[section])
@@ -337,7 +401,7 @@ export default function CommunityPage() {
 
   usePullDownRefresh(() => {
     setPinnedCommunityPost(null)
-    markLifeHubSectionDirty(displayedSection)
+    markLifeHubSectionDirty(displayedSection, false)
     setRefreshSignal((current) => current + 1)
     if (resolveMiniappModule(runtimeConfig, 'community').state === 'enabled') {
       void loadCommunitySections(true).finally(() => Taro.stopPullDownRefresh())
@@ -523,6 +587,7 @@ export default function CommunityPage() {
               </View>
             )}
             <CommunityFeedPanel
+              key={getPageCacheScope()}
               sectionRoots={communityRoots}
               activeSection={activeCommunitySection}
               sectionsReady={communitySectionsReady}

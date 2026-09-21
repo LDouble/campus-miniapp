@@ -4,10 +4,14 @@ import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { ITouchEvent } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import {
-  getActiveAcademicUserId,
   loadAcademicCredential,
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
+import {
+  getCachedPageUserId,
+  getPageCacheScope,
+  subscribePageCacheScope,
+} from '../../../state/page-cache'
 import type { AcademicCacheMetadata, AcademicCalendar } from '../../../api/types'
 import {
   listPersonalTimetableItems,
@@ -197,9 +201,9 @@ const fallbackSimulationPeriods = (courses: Course[]): AcademicPeriod[] => {
   }))
 }
 
-const getDefaultEducationLevel = (): AcademicEducationLevel => {
+const getDefaultEducationLevel = (platformUserId: number): AcademicEducationLevel => {
   try {
-    return loadAcademicCredential(getActiveAcademicUserId()).educationLevel
+    return loadAcademicCredential(platformUserId).educationLevel
   } catch {
     return 'undergraduate'
   }
@@ -377,12 +381,33 @@ function CourseDetailCard({
 }
 
 export default function SchedulePage() {
+  const [pageCacheScope, setPageCacheScope] = useState(getPageCacheScope)
+
+  useEffect(() => subscribePageCacheScope(() => {
+    setPageCacheScope(getPageCacheScope())
+  }), [])
+
+  return (
+    <SchedulePageContent
+      key={pageCacheScope}
+      academicUserId={getCachedPageUserId()}
+      pageCacheScope={pageCacheScope}
+    />
+  )
+}
+
+export function SchedulePageContent({
+  academicUserId,
+  pageCacheScope,
+}: {
+  academicUserId: number
+  pageCacheScope: string
+}) {
   const isSimulation = Taro.useRouter().params.mode === 'simulation'
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
-  const [academicUserId] = useState(getActiveAcademicUserId)
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
   ))
@@ -410,8 +435,10 @@ export default function SchedulePage() {
   const [officialCoursesByPeriod, setOfficialCoursesByPeriod] = useState<CoursesByPeriod>(
     initialCoursesByPeriod,
   )
-  const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
-  const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
+  const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses(academicUserId))
+  const [educationLevel] = useState<AcademicEducationLevel>(() => (
+    getDefaultEducationLevel(academicUserId)
+  ))
   const [personalCourses, setPersonalCourses] = useState<Course[]>(() => academicStorage.getPersonalCourses(academicUserId, educationLevel, preferences.schedulePeriodId))
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
   const [selectedScheduleCourses, setSelectedScheduleCourses] = useState<Course[]>(() => (
@@ -452,6 +479,10 @@ export default function SchedulePage() {
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
   const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const isCurrentPageCacheScope = useCallback(
+    () => getPageCacheScope() === pageCacheScope,
+    [pageCacheScope],
+  )
 
   const dismissSelectionGuide = () => {
     setShowSelectionGuide(false)
@@ -514,14 +545,14 @@ export default function SchedulePage() {
     setPersonalCourses(academicStorage.getPersonalCourses(academicUserId, educationLevel, nextPeriodId))
     try {
       const result = await listPersonalTimetableItems(educationLevel, nextPeriodId)
-      if (personalTimetableRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || personalTimetableRequestRef.current !== requestId) return
       const courses = result.items.flatMap(mapPersonalTimetableItemCourses)
       academicStorage.setPersonalCourses(academicUserId, educationLevel, nextPeriodId, courses)
       setPersonalCourses(courses)
     } catch {
       // 请求失败保留当前用户、学历和学期的本地蹭课缓存。
     }
-  }, [academicUserId, educationLevel, preferences.schedulePeriodId])
+  }, [academicUserId, educationLevel, isCurrentPageCacheScope, preferences.schedulePeriodId])
 
   useEffect(() => {
     let active = true
@@ -614,7 +645,7 @@ export default function SchedulePage() {
     let active = true
     academicRepository.getPeriods()
       .then((records) => {
-        if (!active) return
+        if (!active || !isCurrentPageCacheScope()) return
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         academicStorage.setScheduleCache(
           academicUserId,
@@ -626,7 +657,7 @@ export default function SchedulePage() {
         applyPeriods(records)
       })
       .catch((error) => {
-        if (!active) return
+        if (!active || !isCurrentPageCacheScope()) return
         if (initialScheduleCache && initialScheduleCache.periods.length) {
           applyPeriods(initialScheduleCache.periods)
           setUsingCache(true)
@@ -641,7 +672,7 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [academicUserId, initialScheduleCache, isSimulation, loadSimulationPeriods])
+  }, [academicUserId, initialScheduleCache, isCurrentPageCacheScope, isSimulation, loadSimulationPeriods])
 
   useEffect(() => {
     if (!initialized || isSimulation) return
@@ -673,7 +704,7 @@ export default function SchedulePage() {
     setLoadError(null)
     academicRepository.getCourses(periodId)
       .then((result) => {
-        if (!active || scheduleRequestRef.current !== requestId) return
+        if (!active || !isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
         const courses = requireCoursesForPeriod(result.records, periodId)
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         const updatedAt = Date.now()
@@ -704,7 +735,7 @@ export default function SchedulePage() {
         setServerCache(result.cache || null)
       })
       .catch((error) => {
-        if (!active || scheduleRequestRef.current !== requestId) return
+        if (!active || !isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
         if (hasCachedCourses) {
           setUsingCache(true)
           setLoadError(error)
@@ -714,12 +745,12 @@ export default function SchedulePage() {
         }
       })
       .finally(() => {
-        if (active && scheduleRequestRef.current === requestId) setLoading(false)
+        if (active && isCurrentPageCacheScope() && scheduleRequestRef.current === requestId) setLoading(false)
       })
     return () => {
       active = false
     }
-  }, [academicUserId, initialized, isSimulation, periods, preferences.schedulePeriodId])
+  }, [academicUserId, initialized, isCurrentPageCacheScope, isSimulation, periods, preferences.schedulePeriodId])
 
   useEffect(() => {
     if (isSimulation) return
@@ -731,7 +762,7 @@ export default function SchedulePage() {
       ? { ...preferences, scheduleView: storedPreferences.scheduleView }
       : preferences)
   }, [isSimulation, preferences, storedPreferences])
-  useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
+  useEffect(() => academicStorage.setCustomCourses(customCourses, academicUserId), [academicUserId, customCourses])
 
   useEffect(() => {
     if (!showRefreshGuide || loading || sheet) return undefined
@@ -828,6 +859,7 @@ export default function SchedulePage() {
     setSyncingSelectedCourses(true)
     try {
       const result = await academicRepository.getCourseSelectionSchedule(periodId)
+      if (!isCurrentPageCacheScope()) return
       const courses = requireCoursesForPeriod(result.records, periodId)
       const cachedCourses = academicStorage.getCourseSelectionScheduleCourses(academicUserId)
       const nextCourses = [
@@ -841,10 +873,11 @@ export default function SchedulePage() {
         icon: 'none',
       })
     } catch {
+      if (!isCurrentPageCacheScope()) return
       // 失败时保留上次已成功同步的教务课表和全部本地模拟草稿。
       Taro.showToast({ title: '同步失败，已保留当前模拟课表', icon: 'none' })
     } finally {
-      setSyncingSelectedCourses(false)
+      if (isCurrentPageCacheScope()) setSyncingSelectedCourses(false)
     }
   }
 
@@ -869,13 +902,13 @@ export default function SchedulePage() {
     setUsingCache(hasCachedCourses)
     try {
       const records = await academicRepository.getPeriods({ force: true })
-      if (scheduleRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
       const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
       const courseResult = schedulePeriodId
         ? await academicRepository.getCourses(schedulePeriodId)
         : undefined
-      if (scheduleRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
       const courses = courseResult
         ? requireCoursesForPeriod(courseResult.records, schedulePeriodId)
         : []
@@ -925,7 +958,7 @@ export default function SchedulePage() {
       }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
     } catch (error) {
-      if (scheduleRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
       if (hasCachedCourses) {
         setUsingCache(true)
         setLoadError(error)
@@ -934,12 +967,12 @@ export default function SchedulePage() {
         setLoadError(error)
       }
     } finally {
-      if (scheduleRequestRef.current === requestId) {
+      if (isCurrentPageCacheScope() && scheduleRequestRef.current === requestId) {
         setLoading(false)
         setRetrying(false)
       }
     }
-  }, [academicUserId, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
+  }, [academicUserId, isCurrentPageCacheScope, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
     const config = getMiniappRuntimeConfig()
