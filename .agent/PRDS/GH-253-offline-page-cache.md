@@ -92,3 +92,13 @@
 ## 手机预览反馈
 
 已生成本次构建的预览二维码。用户最初反馈断网重新进入时首页动态和社区帖子为空，后续确认“看起来好了”，并要求发起 PR。只读核查模拟器持久化快照及实际结构校验均通过；反馈期间未修改业务代码。该反馈不等同于全部真机场景验收通过。
+
+## 详情页长回复链布局修复（同分支补充）
+
+用户明确要求在当前分支继续修复帖子详情页二级评论增多后的布局问题。原实现虽然不增加视觉缩进，却递归生成 reply-node / reply-children 原生节点；80 条连续回复生成 165 层渲染节点。改为保留原先序顺序、回复关系和操作目标，将所有二级回复同层渲染，消除随链长增长的视图深度。所有使用 DetailComments 的业务详情页共享修复。
+
+- 新增 `test:comment-layout` 执行真实渲染函数：旧实现深度断言 165 != 9 失败；新实现长短线程深度相同，80 条不丢失，分支顺序、缺失父节点、循环关系及末尾回复目标均通过。
+- lint、typecheck、comment-layout、comment-like、community-performance、community-detail-figma、business-detail-navigation、typography、dark-mode、build:weapp、diff --check 通过。
+- 微信模拟器只拦截请求注入测试线程：展开 80 条后测得 80 个回复节点，均高度为正、前后无重叠、左右与宽度一致；末尾回复完整可见，点击后输入栏指向测试同学 910080。未向服务器发布测试评论，请求 mock 已恢复并离开测试详情。
+- 截图：`/tmp/gh254-replies-expanded.jpg`、`/tmp/gh254-replies-bottom.jpg`、`/tmp/gh254-reply-last-target.jpg`。真机尚待验证。
+- `test:comment-reply` 在原 master 独立副本也因旧 `focusCommentTemporarily(created.id)` 源码断言失败（现代码使用 displayComment.id），未改动该旧测试；新增布局测试单独接入 ci:check。

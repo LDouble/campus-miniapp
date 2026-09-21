@@ -23,6 +23,7 @@ import { openPublicProfile } from '../../profile/public-profile'
 import { insertStickerToken, serializeStickerTokens } from '../../stickers/content'
 import {
   buildCommentTree,
+  flattenCommentTree,
   commentRootId,
   mergeLocalThreadReply,
 } from '../../community/comments'
@@ -314,7 +315,7 @@ const renderReplyTree = (
   onStartReply: (comment: CommentView) => void,
   onOpenActions: (comment: CommentView) => void,
   onToggleLike: (comment: CommentView) => void,
-) => nodes.map(({ comment, children }) => {
+) => flattenCommentTree(nodes).map((comment) => {
   const replyTargetName = comment.reply_to_user_id
     ? memberNames.get(comment.reply_to_user_id) || '上一位同学'
     : ''
@@ -402,23 +403,6 @@ const renderReplyTree = (
           </View>
         </View>
       </View>
-      {children.length > 0 && (
-        <View className='business-detail-comment__reply-children'>
-          {renderReplyTree(
-            children,
-            memberNames,
-            targetAuthorId,
-            focusedCommentId,
-            enteringCommentId,
-            removingCommentId,
-            likingIds,
-            currentUserId,
-            onStartReply,
-            onOpenActions,
-            onToggleLike,
-          )}
-        </View>
-      )}
     </View>
   )
 })
