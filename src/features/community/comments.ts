@@ -59,6 +59,20 @@ export const buildCommentTree = <T extends Pick<CommentView, 'id' | 'parent_id'>
   return roots
 }
 
+/** 保留评论树的先序顺序，展示时使用同级节点，避免长回复链堆叠原生视图。 */
+export const flattenCommentTree = <T extends Pick<CommentView, 'id' | 'parent_id'>>(
+  nodes: CommentTreeNode<T>[],
+): T[] => {
+  const result: T[] = []
+  const pending = [...nodes].reverse()
+  while (pending.length) {
+    const node = pending.pop()!
+    result.push(node.comment)
+    for (let i = node.children.length - 1; i >= 0; i--) pending.push(node.children[i])
+  }
+  return result
+}
+
 export const buildCampusCircleCommentInput = (
   postId: number,
   content: string,

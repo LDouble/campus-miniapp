@@ -7,17 +7,28 @@ import { getTodayHotSessionWindow, reportTodayHotEvent } from './analytics'
 import { todayHotRepository, type TodayHotEntry } from './repository'
 import { readReducedMotion } from './motion'
 import { carouselIntervalMs, carouselSwipeStep, nextCarouselIndex, groupDiscussionItems } from './carousel'
+import {
+  isTodayHotEntry,
+  readTodayHotHomeSnapshot,
+  todayHotHomeCacheKey,
+  type TodayHotHomeSnapshot,
+  writeTodayHotHomeSnapshot,
+} from './home-cache'
+import { getPageCacheScope } from '../../state/page-cache'
 import './today-hot.scss'
 
 const hotBanner = require('../../assets/icons/everyone-chatting.svg')
 
 const reduceMotion = () => { try { return typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false } }
 const summaryFor = (item: TodayHotEntry) => plainStickerContent(item.content || '').replace(/\s+/g, ' ').trim() || (item.images?.length ? '图片动态' : '校园动态')
+const isPositiveInteger = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) > 0
 
 export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolean }) {
-  const [items, setItems] = useState<TodayHotEntry[]>([])
-  const [snapshotId, setSnapshotId] = useState<number | null>(null)
-  const [interval, setIntervalSeconds] = useState(5)
+  // 页面按账号作用域重挂载；初始化函数确保缓存先于任意网络响应进入首帧。
+  const [home, setHome] = useState(readTodayHotHomeSnapshot)
+  const items = home.items
+  const snapshotId = home.snapshotId
+  const interval = home.intervalSeconds
   const [index, setIndex] = useState(0)
   const [touching, setTouching] = useState(false)
   const [foreground, setForeground] = useState(true)
@@ -29,16 +40,33 @@ export default function TodayHotHomeEntry({ pageVisible }: { pageVisible: boolea
   const touchStartY = useRef<number | null>(null)
   const touchMoved = useRef(false)
   const shownOnce = useRef(false)
+  const requestSequence = useRef(0)
   currentRef.current = current || null
   const enabled = Boolean(snapshotId && current)
   const load = useCallback(async () => {
+    const requestId = ++requestSequence.current
+    const scope = getPageCacheScope()
+    const cacheKey = todayHotHomeCacheKey()
     try {
       const result = await todayHotRepository.getHome(getTodayHotSessionWindow())
-      const nextItems = result.enabled ? result.items.slice(0, 30) : []
-      setItems(nextItems); setSnapshotId(result.enabled ? result.snapshot_id || null : null)
-      setIntervalSeconds(carouselIntervalMs(result.carousel_interval_seconds) / 1000)
+      if (requestId !== requestSequence.current || scope !== getPageCacheScope()) return
+      const nextItems = result.enabled
+        ? result.items.filter(isTodayHotEntry).slice(0, 30)
+        : []
+      const nextSnapshot: TodayHotHomeSnapshot = {
+        enabled: Boolean(result.enabled),
+        items: nextItems,
+        snapshotId: result.enabled && isPositiveInteger(result.snapshot_id)
+          ? result.snapshot_id
+          : null,
+        intervalSeconds: carouselIntervalMs(result.carousel_interval_seconds) / 1000,
+      }
+      writeTodayHotHomeSnapshot(cacheKey, nextSnapshot)
+      setHome(nextSnapshot)
       setIndex((value) => nextItems.length ? value % Math.ceil(nextItems.length / 2) : 0)
-    } catch { setItems([]); setSnapshotId(null) }
+    } catch {
+      // 缓存或上一次成功内容继续可见；没有缓存时保持既有空态，避免异常白屏。
+    }
   }, [])
   useEffect(() => { void load() }, [load])
   useEffect(() => {

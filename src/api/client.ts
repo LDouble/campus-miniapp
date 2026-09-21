@@ -1,7 +1,6 @@
 import Taro from '@tarojs/taro'
 import {
   apiUrl,
-  clearSession,
   ensureAccessToken,
   refreshAccessToken,
 } from './auth'
@@ -202,9 +201,9 @@ export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<Ap
   ) {
     try {
       await refreshAccessToken()
-    } catch {
-      clearSession()
-      return throwApiError(responseError, options)
+    } catch (refreshError) {
+      // 网络失败不代表凭据失效；明确的 refresh 401 由认证层处理。
+      throw refreshError
     }
     return apiRequestEnvelope<T>({ ...options, retryAfterRefresh: false })
   }

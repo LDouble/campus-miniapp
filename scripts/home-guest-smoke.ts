@@ -196,19 +196,19 @@ assert.ok(
 )
 assert.ok(
   homeSource.includes('academicStorage.getScheduleCache(')
-    && homeSource.includes('account.ok ? account.value.user.id : getActiveAcademicUserId()'),
+    && homeSource.includes('account.ok ? account.value.user.id : getCachedPageUserId()'),
   '首页课表预览应仅使用当前用户的本地缓存',
 )
 assert.ok(
-  homeSource.includes('!hasCachedCourses && hasCredential'),
+  homeSource.includes('&& hasCredential)') && !homeSource.includes('!hasCachedCourses && hasCredential'),
   '首页只有持有当前用户教务凭据时才可刷新课程，避免自动跳转重新绑定',
 )
 assert.ok(
-  homeSource.includes('getAcademicCalendarLabel(latestAcademic?.periods || [])'),
+  homeSource.includes('getAcademicCalendarLabel(cache?.periods || [])'),
   '首页标签必须与课表卡片使用同一次教务学期结果',
 )
 assert.ok(
-  homeSource.includes('setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))'),
+  homeSource.includes('setAcademicCalendarLabel(getAcademicCalendarLabel(cache?.periods || []))'),
   '首页学期标签不得改用公共校历数据源',
 )
 assert.ok(

@@ -155,7 +155,6 @@
 .business-detail-comment__reply-identity .community-level-badge,
 .business-detail-comment__reply-identity .business-detail-comment__author-badge { margin: 0 8rpx; flex: none; }
 .business-detail-comment__reply-content { margin-top: 6rpx; color: var(--campus-text-body, #3a4759); font-size: var(--ousea-font-size-comment, 30rpx); font-weight: var(--ousea-font-weight-regular, 400); line-height: var(--ousea-line-height-comment, 1.65); overflow-wrap: anywhere; white-space: pre-wrap; }
-.business-detail-comment__reply-children { display: flex; margin: 0; padding: 0; border: 0; flex-direction: column; }
 .business-detail-comment__reply-delete { margin-left: auto; color: var(--campus-danger, #ff2056); }
 .business-detail-comment--focused .business-detail-comment__bubble { background: var(--ousea-ocean-50, #f2f7fe); box-shadow: 0 0 0 4rpx var(--ousea-ocean-100, #e3effe); }
 .business-detail-comment__reply--focused { background: var(--ousea-ocean-50, #f2f7fe); box-shadow: 0 0 0 4rpx var(--ousea-ocean-100, #e3effe); }

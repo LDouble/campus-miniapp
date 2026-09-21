@@ -1,9 +1,14 @@
 import Taro from '@tarojs/taro'
+import { clearPageSession, getPageSessionGeneration } from '../state/page-cache'
 import type { ApiErrorEnvelope, ApiSuccessEnvelope, TokenPair } from './types'
 import { resolveApiBaseUrl } from './environment'
 import { invalidateSharedResourceGroup } from '../state/shared-resource'
 import { getLotteryShareAttributionToken } from './lottery-share-attribution'
 import { clearAllPendingLotteryDrawKeys } from '../features/lottery/draw-request'
+
+const readAuthStorage = <T,>(key: string): T | undefined => {
+  try { return Taro.getStorageSync<T>(key) } catch { return undefined }
+}
 
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
 const REFRESH_TOKEN_KEY = 'campus.auth.refreshToken.v1'
@@ -47,7 +52,7 @@ let authenticatePromise: Promise<string> | null = null
 let refreshPromise: Promise<string> | null = null
 
 const tokenExpiresSoon = () => {
-  const expiresAt = Number(Taro.getStorageSync<number>(TOKEN_EXPIRES_AT_KEY) || 0)
+  const expiresAt = Number(readAuthStorage<number>(TOKEN_EXPIRES_AT_KEY) || 0)
   return expiresAt > 0 && expiresAt <= Date.now() + 30_000
 }
 
@@ -58,6 +63,7 @@ const saveTokens = (tokens: TokenPair) => {
 }
 
 export const clearSession = () => {
+  clearPageSession()
   Taro.removeStorageSync(ACCESS_TOKEN_KEY)
   Taro.removeStorageSync(REFRESH_TOKEN_KEY)
   Taro.removeStorageSync(TOKEN_EXPIRES_AT_KEY)
@@ -76,7 +82,7 @@ export class AccountCancelledError extends Error {
 }
 
 export const isAccountCancelled = () => (
-  Taro.getStorageSync<boolean>(ACCOUNT_CANCELLED_KEY) === true
+  readAuthStorage<boolean>(ACCOUNT_CANCELLED_KEY) === true
 )
 
 export const markAccountCancelled = () => {
@@ -85,11 +91,11 @@ export const markAccountCancelled = () => {
 }
 
 export const getAccessToken = () => (
-  String(Taro.getStorageSync<string>(ACCESS_TOKEN_KEY) || '')
+  String(readAuthStorage<string>(ACCESS_TOKEN_KEY) || '')
 )
 
 const getRefreshToken = () => (
-  String(Taro.getStorageSync<string>(REFRESH_TOKEN_KEY) || '')
+  String(readAuthStorage<string>(REFRESH_TOKEN_KEY) || '')
 )
 
 const parseTokenResponse = (
@@ -105,11 +111,13 @@ const parseTokenResponse = (
 }
 
 const wechatLogin = async () => {
-  const loginResult = await Taro.login()
+  const generation = getPageSessionGeneration()
+  const loginResult = await Taro.login({ timeout: 10_000 })
   if (!loginResult.code) throw new Error('微信登录凭证获取失败')
 
   const response = await Taro.request<ApiSuccessEnvelope<TokenPair> | ApiErrorEnvelope>({
     url: apiUrl('/api/v1/auth/wechat/login'),
+    timeout: 15_000,
     method: 'POST',
     data: {
       app_id: WECHAT_APP_ID,
@@ -122,6 +130,7 @@ const wechatLogin = async () => {
       'Content-Type': 'application/json',
     },
   })
+  if (generation !== getPageSessionGeneration()) throw new Error('登录会话已切换，请重试')
   return parseTokenResponse(response.statusCode, response.data)
 }
 
@@ -166,8 +175,10 @@ export const refreshAccessToken = () => {
         return login()
       }
 
+      const generation = getPageSessionGeneration()
       const response = await Taro.request<ApiSuccessEnvelope<TokenPair> | ApiErrorEnvelope>({
         url: apiUrl('/api/v1/auth/refresh'),
+        timeout: 15_000,
         method: 'POST',
         data: { refresh_token: refreshToken },
         header: {
@@ -175,6 +186,7 @@ export const refreshAccessToken = () => {
           'Content-Type': 'application/json',
         },
       })
+      if (generation !== getPageSessionGeneration()) throw new Error('登录会话已切换，请重试')
       if (response.statusCode === 401) {
         clearSession()
         return login()
