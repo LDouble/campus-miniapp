@@ -5,6 +5,8 @@ import {
   classifyAdditionError,
   isAcademicCredentialInvalidationCode,
   shouldApplyAdditionResponse,
+  shouldClearCredentialOnInvalidation,
+  shouldWriteAdditionResult,
   type CourseAdditionIdentity,
 } from '../src/pages/academic/course-addition-results/state'
 import { createAdditionCache } from '../src/pages/academic/course-addition-results/addition-cache'
@@ -136,5 +138,25 @@ assert.equal(
   'stale_ignored',
   '旧请求其他错误应忽略',
 )
+
+// 凭证清除条件：只在活跃凭证仍属于发起请求的同一代时才清除。
+const clear = shouldClearCredentialOnInvalidation
+assert.equal(clear({ snapshotUserId: 1, snapshotStudentNo: 'S1', activeUserId: 1, activeStudentNo: 'S1' }), true, '凭证仍属于请求应清除')
+assert.equal(clear({ snapshotUserId: 1, snapshotStudentNo: 'S1', activeUserId: 2, activeStudentNo: 'S1' }), false, '平台账号切换后旧请求不得清除')
+assert.equal(clear({ snapshotUserId: 1, snapshotStudentNo: 'S1', activeUserId: 1, activeStudentNo: 'S2' }), false, '同账号换学号后旧请求不得清除')
+assert.equal(clear({ snapshotUserId: 1, snapshotStudentNo: 'S1', activeUserId: 1, activeStudentNo: null }), false, '凭证已不存在不得清除')
+
+// 回归场景组合：完整请求生命周期决策。
+// 场景1：S1 旧请求失败晚于 S2 成功 —— 不呈现、不清除新身份凭证。
+assert.equal(classifyAdditionError({ errorCode: 'invalid_academic_credentials', isMounted: true, isCurrentRequest: false }), 'stale_ignored')
+assert.equal(clear({ snapshotUserId: 1, snapshotStudentNo: 'S1', activeUserId: 1, activeStudentNo: 'S2' }), false)
+// 场景2：同身份旧请求晚于新请求 —— 乱序丢弃。
+assert.equal(shouldApplyAdditionResponse({ requestId: 1, currentRequestId: 2, requestIdentityKey: s1, currentIdentityKey: s1 }), false)
+// 场景3：正常当前认证失效 —— 呈现 + 清除。
+assert.equal(classifyAdditionError({ errorCode: 'invalid_academic_credentials', isMounted: true, isCurrentRequest: true }), 'credential_invalidated')
+assert.equal(clear({ snapshotUserId: 1, snapshotStudentNo: 'S1', activeUserId: 1, activeStudentNo: 'S1' }), true)
+// 场景4：卸载后成功返回 —— mounted 短路，不写 storage。
+assert.equal(shouldWriteAdditionResult(false, true), false, '卸载后即使守卫通过也不写 storage')
+assert.equal(shouldWriteAdditionResult(true, true), true, '挂载且守卫通过才写 storage')
 
 console.log('academic course-addition smoke: ok')

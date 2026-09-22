@@ -39,6 +39,12 @@ export const shouldApplyAdditionResponse = (args: {
   && args.requestIdentityKey === args.currentIdentityKey
 )
 
+/** 成功回包是否写回：组件必须仍挂载，且请求代际/身份代际仍一致。 */
+export const shouldWriteAdditionResult = (
+  mounted: boolean,
+  guardPassed: boolean,
+): boolean => mounted && guardPassed
+
 /** academicPost 会先清除本地教务凭证再抛出的错误码。 */
 export const ACADEMIC_CREDENTIAL_INVALIDATION_CODES = [
   'invalid_academic_credentials',
@@ -75,3 +81,18 @@ export const classifyAdditionError = (args: {
   if (isAcademicCredentialInvalidationCode(args.errorCode)) return 'credential_invalidated'
   return 'present_error'
 }
+
+/**
+ * 凭证失效时是否允许清除本地凭证：只有当前活跃凭证仍属于发起请求的同一
+ * 代（同 user 同学号）才清除，避免旧身份/旧请求的失效清除已切换的新凭证。
+ */
+export const shouldClearCredentialOnInvalidation = (args: {
+  snapshotUserId: number
+  snapshotStudentNo: string
+  activeUserId: number
+  activeStudentNo: string | null
+}): boolean => (
+  args.activeUserId === args.snapshotUserId
+  && args.activeStudentNo !== null
+  && args.activeStudentNo === args.snapshotStudentNo
+)

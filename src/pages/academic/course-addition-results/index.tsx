@@ -25,6 +25,7 @@ import {
   academicIdentityKey,
   classifyAdditionError,
   shouldApplyAdditionResponse,
+  shouldWriteAdditionResult,
   type CourseAdditionIdentity,
 } from './state'
 import '../index.scss'
@@ -146,7 +147,7 @@ function CourseAdditionResultsPageContent({
     setLoadError(null)
     try {
       const result = await academicRepository.getCourseAdditionResults(periodId)
-      if (!mountedRef.current || !guardPassed()) return
+      if (!shouldWriteAdditionResult(mountedRef.current, guardPassed())) return
       academicStorage.setAdditionRecords(academicUserId, identityKey, periodId, result.records)
       setRecords(result.records)
       setCacheUpdatedAt(Date.now())
