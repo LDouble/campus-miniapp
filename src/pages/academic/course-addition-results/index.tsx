@@ -6,6 +6,7 @@ import {
   loadAcademicCredential,
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
+import { isApiError } from '../../../api/client'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
@@ -22,6 +23,7 @@ import type {
 import { getPeriodLabel, resolveDefaultPeriodId, resolveRetainedPeriodId } from '../utils'
 import {
   academicIdentityKey,
+  classifyAdditionError,
   shouldApplyAdditionResponse,
   type CourseAdditionIdentity,
 } from './state'
@@ -69,6 +71,7 @@ export default function CourseAdditionResultsPage() {
       key={identityKey}
       academicUserId={identity.userId}
       educationLevel={identity.educationLevel}
+      identityKey={identityKey}
     />
   )
 }
@@ -76,15 +79,14 @@ export default function CourseAdditionResultsPage() {
 function CourseAdditionResultsPageContent({
   academicUserId,
   educationLevel,
+  identityKey,
 }: {
   academicUserId: number
   educationLevel: AcademicEducationLevel
+  identityKey: string
 }) {
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
-  ))
-  const [initialRecordsCache] = useState(() => (
-    academicStorage.getRecordsCache(academicUserId)
   ))
   const [periods, setPeriods] = useState<AcademicPeriod[]>(
     initialScheduleCache?.periods || [],
@@ -92,11 +94,13 @@ function CourseAdditionResultsPageContent({
   const [selectedPeriodId, setSelectedPeriodId] = useState(() => (
     resolveDefaultPeriodId(initialScheduleCache?.periods || [])
   ))
-  const initialRecords = initialRecordsCache?.additionsByPeriod[selectedPeriodId]
-  const initialUpdatedAt = initialRecordsCache
-    ?.additionsUpdatedAtByPeriod[selectedPeriodId] || 0
+  const [initialAddition] = useState(() => (
+    academicStorage.getAdditionRecords(academicUserId, identityKey, selectedPeriodId)
+  ))
+  const initialRecords = initialAddition?.records || []
+  const initialUpdatedAt = initialAddition?.updatedAt || 0
   const [records, setRecords] = useState<CourseAdditionResultRecord[]>(
-    initialRecords || [],
+    initialRecords,
   )
   const [loading, setLoading] = useState(!initialUpdatedAt)
   const [retrying, setRetrying] = useState(false)
@@ -112,25 +116,21 @@ function CourseAdditionResultsPageContent({
   const isGraduate = educationLevel === 'graduate'
   const hasSelectedPeriod = periods.some((period) => period.id === selectedPeriodId)
 
-  const applyGuard = (requestId: number, requestIdentityKey: string) => (
-    shouldApplyAdditionResponse({
-      requestId,
-      currentRequestId: additionsRequestRef.current,
-      requestIdentityKey,
-      currentIdentityKey: academicIdentityKey(readCurrentIdentity()),
-    })
-  )
-
   const refreshAdditions = useCallback(async (
     manual = false,
     periodId = selectedPeriodId,
   ) => {
     if (isGraduate) return
     const requestId = ++additionsRequestRef.current
-    const requestIdentityKey = academicIdentityKey(readCurrentIdentity())
-    const cache = academicStorage.getRecordsCache(academicUserId)
-    const cached = cache?.additionsByPeriod[periodId]
-    const updatedAt = cache?.additionsUpdatedAtByPeriod[periodId] || 0
+    const guardPassed = () => shouldApplyAdditionResponse({
+      requestId,
+      currentRequestId: additionsRequestRef.current,
+      requestIdentityKey: identityKey,
+      currentIdentityKey: academicIdentityKey(readCurrentIdentity()),
+    })
+    const cache = academicStorage.getAdditionRecords(academicUserId, identityKey, periodId)
+    const cached = cache?.records
+    const updatedAt = cache?.updatedAt || 0
     setRecords(cached || [])
     setCacheUpdatedAt(updatedAt)
     setUsingCache(Boolean(cached))
@@ -140,14 +140,27 @@ function CourseAdditionResultsPageContent({
     setLoadError(null)
     try {
       const result = await academicRepository.getCourseAdditionResults(periodId)
-      if (!applyGuard(requestId, requestIdentityKey)) return
-      academicStorage.setAdditionRecords(academicUserId, periodId, result.records)
+      if (!guardPassed()) return
+      academicStorage.setAdditionRecords(academicUserId, identityKey, periodId, result.records)
       setRecords(result.records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
       setServerCache(result.cache || null)
     } catch (error) {
-      if (!applyGuard(requestId, requestIdentityKey)) return
+      const action = classifyAdditionError(
+        isApiError(error) ? error.code : null,
+        guardPassed(),
+      )
+      if (action === 'credential_invalidated') {
+        // 请求自身导致凭证失效（academicPost 已 clearAcademicCredential）：
+        // 清空敏感显示并呈现重新绑定引导，不能被身份守卫静默吞掉。
+        setRecords([])
+        setUsingCache(false)
+        setServerCache(null)
+        setLoadError(error)
+        return
+      }
+      if (action === 'identity_switched') return
       if (updatedAt) {
         setUsingCache(true)
         setLoadError(error)
@@ -161,7 +174,7 @@ function CourseAdditionResultsPageContent({
         setRetrying(false)
       }
     }
-  }, [academicUserId, isGraduate, selectedPeriodId])
+  }, [academicUserId, identityKey, isGraduate, selectedPeriodId])
 
   useEffect(() => {
     academicRepository.getPeriods({ force: true })

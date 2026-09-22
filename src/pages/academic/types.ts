@@ -126,6 +126,20 @@ export interface CourseAdditionResultRecord {
   auditText: string
 }
 
+export interface AcademicRecordsCache {
+  version: 1
+  platformUserId: number
+  grades: GradeRecord[]
+  gradesUpdatedAt: number
+  examsByPeriod: Record<string, ExamRecord[]>
+  examsUpdatedAtByPeriod: Record<string, number>
+  selectionsByPeriod: Record<string, CourseSelectionRecord[]>
+  selectionsUpdatedAtByPeriod: Record<string, number>
+  additionsByPeriod: Record<string, CourseAdditionResultRecord[]>
+  additionsUpdatedAtByPeriod: Record<string, number>
+  additionIdentityScope?: string
+}
+
 export interface AcademicPreferences {
   section: AcademicSection
   schedulePeriodId: string

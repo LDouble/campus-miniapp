@@ -2,6 +2,7 @@ import Taro from '@tarojs/taro'
 import {
   AcademicPeriod,
   AcademicPreferences,
+  AcademicRecordsCache,
   CourseAdditionResultRecord,
   CourseSelectionRecord,
   Course,
@@ -9,6 +10,7 @@ import {
   GradeRecord,
   GradeSimulation,
 } from './types'
+import { additionRecordsForScope } from './course-addition-results/state'
 import { sanitizeCoursesByPeriod } from './schedule-courses'
 
 const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
@@ -36,19 +38,6 @@ export interface AcademicScheduleCache {
   scheduleNotesByPeriod?: Record<string, string>
   /** 旧版本的全局课程更新时间，仅用于读取迁移。 */
   updatedAt?: number
-}
-
-export interface AcademicRecordsCache {
-  version: 1
-  platformUserId: number
-  grades: GradeRecord[]
-  gradesUpdatedAt: number
-  examsByPeriod: Record<string, ExamRecord[]>
-  examsUpdatedAtByPeriod: Record<string, number>
-  selectionsByPeriod: Record<string, CourseSelectionRecord[]>
-  selectionsUpdatedAtByPeriod: Record<string, number>
-  additionsByPeriod: Record<string, CourseAdditionResultRecord[]>
-  additionsUpdatedAtByPeriod: Record<string, number>
 }
 
 const safeRead = <T>(key: string, fallback: T): T => {
@@ -265,6 +254,7 @@ const emptyRecordsCache = (platformUserId: number): AcademicRecordsCache => ({
   selectionsUpdatedAtByPeriod: {},
   additionsByPeriod: {},
   additionsUpdatedAtByPeriod: {},
+  additionIdentityScope: '',
 })
 
 const validScheduleCache = (
@@ -463,7 +453,22 @@ export const academicStorage = {
       additionsUpdatedAtByPeriod: validTimestampMap(value.additionsUpdatedAtByPeriod)
         ? value.additionsUpdatedAtByPeriod
         : {},
+      additionIdentityScope: typeof value.additionIdentityScope === 'string'
+        ? value.additionIdentityScope
+        : '',
     }
+  },
+  getAdditionRecords: (
+    platformUserId: number,
+    identityScope: string,
+    periodId: string,
+  ) => {
+    if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
+    return additionRecordsForScope(
+      academicStorage.getRecordsCache(platformUserId),
+      identityScope,
+      periodId,
+    )
   },
   setGradeRecords: (platformUserId: number, grades: GradeRecord[]) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return
@@ -507,14 +512,17 @@ export const academicStorage = {
   },
   setAdditionRecords: (
     platformUserId: number,
+    identityScope: string,
     periodId: string,
     records: CourseAdditionResultRecord[],
   ) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0 || !periodId) return
+    if (!identityScope) return
     const current = academicStorage.getRecordsCache(platformUserId)
       || emptyRecordsCache(platformUserId)
     safeWrite<AcademicRecordsCache>(recordsCacheKey(platformUserId), {
       ...current,
+      additionIdentityScope: identityScope,
       additionsByPeriod: { ...current.additionsByPeriod, [periodId]: records },
       additionsUpdatedAtByPeriod: {
         ...current.additionsUpdatedAtByPeriod,
