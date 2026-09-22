@@ -22,6 +22,7 @@ import type {
 } from '../types'
 import { getPeriodLabel, resolveDefaultPeriodId, resolveRetainedPeriodId } from '../utils'
 import {
+  academicCacheScope,
   academicIdentityKey,
   classifyAdditionError,
   shouldApplyAdditionResponse,
@@ -52,6 +53,7 @@ type AdditionSheet = 'period' | 'detail' | null
 export default function CourseAdditionResultsPage() {
   const [identity, setIdentity] = useState<CourseAdditionIdentity>(readCurrentIdentity)
   const identityKey = academicIdentityKey(identity)
+  const cacheScope = academicCacheScope(identity)
 
   useEffect(() => subscribePageCacheScope(() => {
     setIdentity((current) => {
@@ -73,6 +75,7 @@ export default function CourseAdditionResultsPage() {
       academicUserId={identity.userId}
       educationLevel={identity.educationLevel}
       identityKey={identityKey}
+      cacheScope={cacheScope}
     />
   )
 }
@@ -81,10 +84,12 @@ function CourseAdditionResultsPageContent({
   academicUserId,
   educationLevel,
   identityKey,
+  cacheScope,
 }: {
   academicUserId: number
   educationLevel: AcademicEducationLevel
   identityKey: string
+  cacheScope: string
 }) {
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
@@ -96,7 +101,7 @@ function CourseAdditionResultsPageContent({
     resolveDefaultPeriodId(initialScheduleCache?.periods || [])
   ))
   const [initialAddition] = useState(() => (
-    academicStorage.getAdditionRecords(academicUserId, identityKey, selectedPeriodId)
+    academicStorage.getAdditionRecords(academicUserId, cacheScope, selectedPeriodId)
   ))
   const initialRecords = initialAddition?.records || []
   const initialUpdatedAt = initialAddition?.updatedAt || 0
@@ -135,7 +140,7 @@ function CourseAdditionResultsPageContent({
       requestIdentityKey: identityKey,
       currentIdentityKey: academicIdentityKey(readCurrentIdentity()),
     })
-    const cache = academicStorage.getAdditionRecords(academicUserId, identityKey, periodId)
+    const cache = academicStorage.getAdditionRecords(academicUserId, cacheScope, periodId)
     const cached = cache?.records
     const updatedAt = cache?.updatedAt || 0
     setRecords(cached || [])
@@ -148,7 +153,7 @@ function CourseAdditionResultsPageContent({
     try {
       const result = await academicRepository.getCourseAdditionResults(periodId)
       if (!shouldWriteAdditionResult(mountedRef.current, guardPassed())) return
-      academicStorage.setAdditionRecords(academicUserId, identityKey, periodId, result.records)
+      academicStorage.setAdditionRecords(academicUserId, cacheScope, periodId, result.records)
       setRecords(result.records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
@@ -185,7 +190,7 @@ function CourseAdditionResultsPageContent({
         setRetrying(false)
       }
     }
-  }, [academicUserId, identityKey, isGraduate, selectedPeriodId])
+  }, [academicUserId, cacheScope, identityKey, isGraduate, selectedPeriodId])
 
   useEffect(() => {
     academicRepository.getPeriods({ force: true })

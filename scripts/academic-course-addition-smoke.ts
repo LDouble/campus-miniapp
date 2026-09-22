@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { resolveRetainedPeriodId } from '../src/pages/academic/utils'
 import {
+  academicCacheScope,
   academicIdentityKey,
   classifyAdditionError,
   shouldApplyAdditionResponse,
@@ -51,11 +52,19 @@ const identity = (
 
 const s1 = academicIdentityKey(identity(1, 'S1', 'undergraduate'))
 const s2 = academicIdentityKey(identity(1, 'S2', 'undergraduate'))
+const scope1 = academicCacheScope(identity(1, 'S1', 'undergraduate'))
+const scope2 = academicCacheScope(identity(1, 'S2', 'undergraduate'))
 
 assert.notEqual(s1, academicIdentityKey(identity(2, 'S1', 'undergraduate')), '平台账号切换必须改变身份代际')
 assert.notEqual(s1, s2, '同账号重新绑定学号必须改变身份代际')
 assert.notEqual(s1, academicIdentityKey(identity(1, 'S1', 'graduate')), '同账号切换学生类型必须改变身份代际')
 assert.equal(s1, academicIdentityKey(identity(1, 'S1', 'undergraduate')), '相同身份应产生相同代际')
+
+// 缓存作用域：不同身份必须产生不同摘要，且摘要不包含明文学号。
+assert.notEqual(scope1, scope2, '不同身份的缓存作用域必须不同')
+assert.notEqual(scope1, academicCacheScope(identity(1, 'S1', 'graduate')), '同账号换学生类型缓存作用域必须不同')
+assert.equal(scope1, academicCacheScope(identity(1, 'S1', 'undergraduate')), '相同身份缓存作用域必须一致')
+assert.equal(scope1.includes('S1'), false, '缓存作用域不得包含明文学号')
 
 const guard = (overrides: Partial<Parameters<typeof shouldApplyAdditionResponse>[0]> = {}) => (
   shouldApplyAdditionResponse({
@@ -90,16 +99,16 @@ const cache = createAdditionCache({
   set: (key, value) => { store.set(key, value) },
 })
 
-cache.setAdditionRecords(1, s1, 'P1', [additionRecord('a1')])
-cache.setAdditionRecords(1, s1, 'P2', [additionRecord('a2')])
-assert.equal(cache.getAdditionRecords(1, s1, 'P1')?.records[0].id, 'a1', 'S1 应读到自己的 P1')
-assert.equal(cache.getAdditionRecords(1, s1, 'P2')?.records[0].id, 'a2', 'S1 应读到自己的 P2')
-assert.equal(cache.getAdditionRecords(1, s2, 'P2'), null, '换 S2 后不得读 S1 的 P2')
+cache.setAdditionRecords(1, scope1, 'P1', [additionRecord('a1')])
+cache.setAdditionRecords(1, scope1, 'P2', [additionRecord('a2')])
+assert.equal(cache.getAdditionRecords(1, scope1, 'P1')?.records[0].id, 'a1', 'S1 应读到自己的 P1')
+assert.equal(cache.getAdditionRecords(1, scope1, 'P2')?.records[0].id, 'a2', 'S1 应读到自己的 P2')
+assert.equal(cache.getAdditionRecords(1, scope2, 'P2'), null, '换 S2 后不得读 S1 的 P2')
 
-cache.setAdditionRecords(1, s2, 'P1', [additionRecord('b1')])
-assert.equal(cache.getAdditionRecords(1, s2, 'P1')?.records[0].id, 'b1', 'S2 应读到自己的 P1')
-assert.equal(cache.getAdditionRecords(1, s2, 'P2')?.records.length ?? -1, 0, 'S2 写 P1 后不得把 S1 的 P2 当成自己的缓存')
-assert.equal(cache.getAdditionRecords(1, s1, 'P2'), null, '换身份后 S1 的旧缓存应已失效')
+cache.setAdditionRecords(1, scope2, 'P1', [additionRecord('b1')])
+assert.equal(cache.getAdditionRecords(1, scope2, 'P1')?.records[0].id, 'b1', 'S2 应读到自己的 P1')
+assert.equal(cache.getAdditionRecords(1, scope2, 'P2')?.records.length ?? -1, 0, 'S2 写 P1 后不得把 S1 的 P2 当成自己的缓存')
+assert.equal(cache.getAdditionRecords(1, scope1, 'P2'), null, '换身份后 S1 的旧缓存应已失效')
 
 // 坏缓存边界：null map / 非数组记录应返回 null，不进入页面 .map 白屏。
 const badStore = new Map<string, unknown>()
@@ -108,17 +117,17 @@ const badCache = createAdditionCache({
   set: (key, value) => { badStore.set(key, value) },
 })
 badStore.set('academic.additionRecords.v1.1', {
-  version: 1, platformUserId: 1, identityScope: s1,
+  version: 1, platformUserId: 1, identityScope: scope1,
   additionsByPeriod: null,
   additionsUpdatedAtByPeriod: {},
 })
-assert.equal(badCache.getAdditionRecords(1, s1, 'P1'), null, 'null map 应返回 null')
+assert.equal(badCache.getAdditionRecords(1, scope1, 'P1'), null, 'null map 应返回 null')
 badStore.set('academic.additionRecords.v1.1', {
-  version: 1, platformUserId: 1, identityScope: s1,
+  version: 1, platformUserId: 1, identityScope: scope1,
   additionsByPeriod: { P1: 'not-an-array' },
   additionsUpdatedAtByPeriod: { P1: 123 },
 })
-assert.equal(badCache.getAdditionRecords(1, s1, 'P1'), null, '非数组记录应返回 null')
+assert.equal(badCache.getAdditionRecords(1, scope1, 'P1'), null, '非数组记录应返回 null')
 
 // 错误分类：只有当前请求（mounted + 当前 requestId）且 academicPost 实际清除了凭证才呈现。
 assert.equal(
@@ -219,9 +228,50 @@ const runCurrentInvalidation = async () => {
   assert.equal(hasAcademicCredential(1), false, '普通当前凭证失效必须确实被清除')
 }
 
+// 同一 revision 内请求序号/最新成功保护：A、B 同 revision，B 先成功，A 后返回失效。
+const runSameRevisionOrdering = async () => {
+  clearAcademicCredential()
+  saveAcademicCredential(1, { studentNo: 'S1', password: 'password', educationLevel: 'undergraduate' })
+
+  const pending: Array<{ resolve: (value: unknown) => void; reject: (error: unknown) => void }> = []
+  const post = createAcademicPost({
+    getCurrentIdentity: async () => ({ user_id: 1 }),
+    loadCredential: (userId) => loadAcademicCredential(userId),
+    getCredentialRevision,
+    clearCredential: () => clearAcademicCredential(),
+    requestEnvelope: () => new Promise((resolve, reject) => {
+      pending.push({ resolve, reject })
+    }),
+    isCredentialInvalidationError: (error) => (
+      Boolean(error) && (error as { code?: string }).code === 'invalid_academic_credentials'
+    ),
+  })
+
+  const promiseA = post('/api/v1/academic/course-addition-results', 'P')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const promiseB = post('/api/v1/academic/course-addition-results', 'P')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  // B 先成功，更新最新成功序号。
+  pending[1].resolve({ data: [additionRecord('b1')] })
+  await promiseB
+
+  // A 后返回失效：revision 未变，但已有更新的成功请求，不得清除凭证。
+  pending[0].reject({ code: 'invalid_academic_credentials' })
+  let errorA: unknown = null
+  try {
+    await promiseA
+  } catch (error) {
+    errorA = error
+  }
+  assert.equal((errorA as { credentialInvalidated?: boolean })?.credentialInvalidated, undefined, 'B 成功后 A 不得标记清除凭证')
+  assert.equal(loadAcademicCredential(1).password, 'password', 'B 成功后 A 返回失效不得清除凭证')
+}
+
 const run = async () => {
   await runLifecycle()
   await runCurrentInvalidation()
+  await runSameRevisionOrdering()
   console.log('academic course-addition smoke: ok')
 }
 
