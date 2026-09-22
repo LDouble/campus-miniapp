@@ -1,7 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { resolveRetainedPeriodId } from '../src/pages/academic/utils'
 import {
-  academicCacheScope,
   academicIdentityKey,
   classifyAdditionError,
   shouldApplyAdditionResponse,
@@ -48,23 +47,25 @@ const identity = (
   userId: number,
   studentNo: string,
   educationLevel: 'undergraduate' | 'graduate',
-): CourseAdditionIdentity => ({ userId, studentNo, educationLevel })
+  identityScopeToken = '',
+): CourseAdditionIdentity => ({ userId, studentNo, educationLevel, identityScopeToken })
 
 const s1 = academicIdentityKey(identity(1, 'S1', 'undergraduate'))
 const s2 = academicIdentityKey(identity(1, 'S2', 'undergraduate'))
-const scope1 = academicCacheScope(identity(1, 'S1', 'undergraduate'))
-const scope2 = academicCacheScope(identity(1, 'S2', 'undergraduate'))
 
 assert.notEqual(s1, academicIdentityKey(identity(2, 'S1', 'undergraduate')), '平台账号切换必须改变身份代际')
 assert.notEqual(s1, s2, '同账号重新绑定学号必须改变身份代际')
 assert.notEqual(s1, academicIdentityKey(identity(1, 'S1', 'graduate')), '同账号切换学生类型必须改变身份代际')
 assert.equal(s1, academicIdentityKey(identity(1, 'S1', 'undergraduate')), '相同身份应产生相同代际')
 
-// 缓存作用域：不同身份必须产生不同摘要，且摘要不包含明文学号。
-assert.notEqual(scope1, scope2, '不同身份的缓存作用域必须不同')
-assert.notEqual(scope1, academicCacheScope(identity(1, 'S1', 'graduate')), '同账号换学生类型缓存作用域必须不同')
-assert.equal(scope1, academicCacheScope(identity(1, 'S1', 'undergraduate')), '相同身份缓存作用域必须一致')
-assert.equal(scope1.includes('S1'), false, '缓存作用域不得包含明文学号')
+// 身份绑定随机 token：保存凭证生成 token，换身份重新生成，且不含明文学号。
+saveAcademicCredential(1, { studentNo: 'S1', password: 'p', educationLevel: 'undergraduate' })
+const token1 = loadAcademicCredential(1).identityScopeToken || ''
+saveAcademicCredential(1, { studentNo: 'S2', password: 'p', educationLevel: 'undergraduate' })
+const token2 = loadAcademicCredential(1).identityScopeToken || ''
+assert.ok(token1, '保存凭证应生成身份 token')
+assert.notEqual(token1, token2, '换学号后身份 token 应重新生成')
+assert.equal(token1.includes('S1'), false, '身份 token 不得包含明文学号')
 
 const guard = (overrides: Partial<Parameters<typeof shouldApplyAdditionResponse>[0]> = {}) => (
   shouldApplyAdditionResponse({
@@ -99,16 +100,16 @@ const cache = createAdditionCache({
   set: (key, value) => { store.set(key, value) },
 })
 
-cache.setAdditionRecords(1, scope1, 'P1', [additionRecord('a1')])
-cache.setAdditionRecords(1, scope1, 'P2', [additionRecord('a2')])
-assert.equal(cache.getAdditionRecords(1, scope1, 'P1')?.records[0].id, 'a1', 'S1 应读到自己的 P1')
-assert.equal(cache.getAdditionRecords(1, scope1, 'P2')?.records[0].id, 'a2', 'S1 应读到自己的 P2')
-assert.equal(cache.getAdditionRecords(1, scope2, 'P2'), null, '换 S2 后不得读 S1 的 P2')
+cache.setAdditionRecords(1, token1, 'P1', [additionRecord('a1')])
+cache.setAdditionRecords(1, token1, 'P2', [additionRecord('a2')])
+assert.equal(cache.getAdditionRecords(1, token1, 'P1')?.records[0].id, 'a1', 'S1 应读到自己的 P1')
+assert.equal(cache.getAdditionRecords(1, token1, 'P2')?.records[0].id, 'a2', 'S1 应读到自己的 P2')
+assert.equal(cache.getAdditionRecords(1, token2, 'P2'), null, '换 token 后不得读旧身份的 P2')
 
-cache.setAdditionRecords(1, scope2, 'P1', [additionRecord('b1')])
-assert.equal(cache.getAdditionRecords(1, scope2, 'P1')?.records[0].id, 'b1', 'S2 应读到自己的 P1')
-assert.equal(cache.getAdditionRecords(1, scope2, 'P2')?.records.length ?? -1, 0, 'S2 写 P1 后不得把 S1 的 P2 当成自己的缓存')
-assert.equal(cache.getAdditionRecords(1, scope1, 'P2'), null, '换身份后 S1 的旧缓存应已失效')
+cache.setAdditionRecords(1, token2, 'P1', [additionRecord('b1')])
+assert.equal(cache.getAdditionRecords(1, token2, 'P1')?.records[0].id, 'b1', '新 token 应读到自己的 P1')
+assert.equal(cache.getAdditionRecords(1, token2, 'P2')?.records.length ?? -1, 0, '新 token 写 P1 后不得把旧 token 的 P2 当成自己的缓存')
+assert.equal(cache.getAdditionRecords(1, token1, 'P2'), null, '换身份后旧 token 的缓存应已失效')
 
 // 坏缓存边界：null map / 非数组记录应返回 null，不进入页面 .map 白屏。
 const badStore = new Map<string, unknown>()
@@ -117,17 +118,17 @@ const badCache = createAdditionCache({
   set: (key, value) => { badStore.set(key, value) },
 })
 badStore.set('academic.additionRecords.v1.1', {
-  version: 1, platformUserId: 1, identityScope: scope1,
+  version: 1, platformUserId: 1, identityScope: token1,
   additionsByPeriod: null,
   additionsUpdatedAtByPeriod: {},
 })
-assert.equal(badCache.getAdditionRecords(1, scope1, 'P1'), null, 'null map 应返回 null')
+assert.equal(badCache.getAdditionRecords(1, token1, 'P1'), null, 'null map 应返回 null')
 badStore.set('academic.additionRecords.v1.1', {
-  version: 1, platformUserId: 1, identityScope: scope1,
+  version: 1, platformUserId: 1, identityScope: token1,
   additionsByPeriod: { P1: 'not-an-array' },
   additionsUpdatedAtByPeriod: { P1: 123 },
 })
-assert.equal(badCache.getAdditionRecords(1, scope1, 'P1'), null, '非数组记录应返回 null')
+assert.equal(badCache.getAdditionRecords(1, token1, 'P1'), null, '非数组记录应返回 null')
 
 // 错误分类：只有当前请求（mounted + 当前 requestId）且 academicPost 实际清除了凭证才呈现。
 assert.equal(
@@ -268,10 +269,55 @@ const runSameRevisionOrdering = async () => {
   assert.equal(loadAcademicCredential(1).password, 'password', 'B 成功后 A 返回失效不得清除凭证')
 }
 
+// 三请求乱序：A(1)、B(2)、C(3)，按 C 成功 → A 成功 → B 认证失败返回。
+// latestSuccess 先 3，后 A 成功不应回退到 1（Math.max 高水位），B 的 2 不得清除。
+const runThreeRequestOrdering = async () => {
+  clearAcademicCredential()
+  saveAcademicCredential(1, { studentNo: 'S1', password: 'password', educationLevel: 'undergraduate' })
+
+  const pending: Array<{ resolve: (value: unknown) => void; reject: (error: unknown) => void }> = []
+  const post = createAcademicPost({
+    getCurrentIdentity: async () => ({ user_id: 1 }),
+    loadCredential: (userId) => loadAcademicCredential(userId),
+    getCredentialRevision,
+    clearCredential: () => clearAcademicCredential(),
+    requestEnvelope: () => new Promise((resolve, reject) => {
+      pending.push({ resolve, reject })
+    }),
+    isCredentialInvalidationError: (error) => (
+      Boolean(error) && (error as { code?: string }).code === 'invalid_academic_credentials'
+    ),
+  })
+
+  const promiseA = post('/api/v1/academic/course-addition-results', 'P')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const promiseB = post('/api/v1/academic/course-addition-results', 'P')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const promiseC = post('/api/v1/academic/course-addition-results', 'P')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  // C 成功 → A 成功 → B 认证失败。
+  pending[2].resolve({ data: [additionRecord('c1')] })
+  await promiseC
+  pending[0].resolve({ data: [additionRecord('a1')] })
+  await promiseA
+
+  pending[1].reject({ code: 'invalid_academic_credentials' })
+  let errorB: unknown = null
+  try {
+    await promiseB
+  } catch (error) {
+    errorB = error
+  }
+  assert.equal((errorB as { credentialInvalidated?: boolean })?.credentialInvalidated, undefined, 'C 成功后 B 认证失败不得标记清除凭证')
+  assert.equal(loadAcademicCredential(1).password, 'password', 'C 已证明凭证有效，B 不得清除凭证')
+}
+
 const run = async () => {
   await runLifecycle()
   await runCurrentInvalidation()
   await runSameRevisionOrdering()
+  await runThreeRequestOrdering()
   console.log('academic course-addition smoke: ok')
 }
 

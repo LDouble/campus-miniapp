@@ -10,6 +10,8 @@ export type AcademicCredential = {
   studentNo: string
   password: string
   educationLevel: AcademicEducationLevel
+  /** 身份绑定随机 token，作为持久化缓存作用域，避免学号以明文持久化。旧数据可能缺失。 */
+  identityScopeToken?: string
 }
 
 export type AcademicEducationLevel = 'undergraduate' | 'graduate'
@@ -31,6 +33,13 @@ let credentialRevision = 0
 export const getCredentialRevision = () => credentialRevision
 
 const validUserId = (value: number) => Number.isSafeInteger(value) && value > 0
+
+const generateIdentityScopeToken = (): string => {
+  const now = Date.now().toString(36)
+  const rand1 = Math.random().toString(36).slice(2)
+  const rand2 = Math.random().toString(36).slice(2)
+  return `${now}-${rand1}-${rand2}`
+}
 
 export const isAcademicEducationLevel = (
   value: unknown,
@@ -79,10 +88,13 @@ const restoreAcademicCredential = (platformUserId: number) => {
     return null
   }
 
-  const credential = {
+  const credential: AcademicCredential = {
     studentNo: stored.credential.studentNo.trim(),
     password: stored.credential.password,
     educationLevel: stored.credential.educationLevel,
+    identityScopeToken: typeof stored.credential.identityScopeToken === 'string'
+      ? stored.credential.identityScopeToken
+      : '',
   }
   credentialsByUser.set(platformUserId, credential)
   activeUserId = platformUserId
@@ -116,6 +128,7 @@ export const saveAcademicCredential = (
     studentNo,
     password: credential.password,
     educationLevel: credential.educationLevel,
+    identityScopeToken: generateIdentityScopeToken(),
   }
   credentialsByUser.set(platformUserId, normalizedCredential)
   activeUserId = platformUserId

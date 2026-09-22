@@ -53,7 +53,7 @@ export const createAcademicPost = (deps: AcademicPostDeps) => {
     try {
       const response = await deps.requestEnvelope<T[]>({ path, data })
       if (deps.getCredentialRevision() === snapshotRevision) {
-        latestSuccessSequence = mySequence
+        latestSuccessSequence = Math.max(latestSuccessSequence, mySequence)
       }
       return {
         records: response.data,

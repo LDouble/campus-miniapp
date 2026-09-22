@@ -22,7 +22,6 @@ import type {
 } from '../types'
 import { getPeriodLabel, resolveDefaultPeriodId, resolveRetainedPeriodId } from '../utils'
 import {
-  academicCacheScope,
   academicIdentityKey,
   classifyAdditionError,
   shouldApplyAdditionResponse,
@@ -42,9 +41,10 @@ const readCurrentIdentity = (): CourseAdditionIdentity => {
       userId,
       studentNo: credential.studentNo,
       educationLevel: credential.educationLevel,
+      identityScopeToken: credential.identityScopeToken || '',
     }
   } catch {
-    return { userId, studentNo: '', educationLevel: 'undergraduate' }
+    return { userId, studentNo: '', educationLevel: 'undergraduate', identityScopeToken: '' }
   }
 }
 
@@ -53,7 +53,7 @@ type AdditionSheet = 'period' | 'detail' | null
 export default function CourseAdditionResultsPage() {
   const [identity, setIdentity] = useState<CourseAdditionIdentity>(readCurrentIdentity)
   const identityKey = academicIdentityKey(identity)
-  const cacheScope = academicCacheScope(identity)
+  const cacheScope = identity.identityScopeToken
 
   useEffect(() => subscribePageCacheScope(() => {
     setIdentity((current) => {

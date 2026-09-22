@@ -42,17 +42,29 @@ const expectMissing = (userId: number) => {
   )
 }
 
+const assertLoadedCredential = (
+  module: typeof credentialModule,
+  userId: number,
+  expected: { studentNo: string; password: string; educationLevel: string },
+) => {
+  const loaded = module.loadAcademicCredential(userId)
+  assert.equal(loaded.studentNo, expected.studentNo)
+  assert.equal(loaded.password, expected.password)
+  assert.equal(loaded.educationLevel, expected.educationLevel)
+  assert.equal(typeof loaded.identityScopeToken, 'string', '加载凭证应携带身份 token')
+}
+
 credentialModule.clearAcademicCredential()
 expectMissing(1)
 
 credentialModule.saveAcademicCredential(1, credential)
 assert.equal(credentialModule.getActiveAcademicUserId(), 1)
-assert.deepEqual(credentialModule.loadAcademicCredential(1), credential)
+assertLoadedCredential(credentialModule, 1, credential)
 
 // 模拟小程序进程重启：运行时模块重载，但本地存储仍然存在。
 credentialModule = loadCredentialModule()
 assert.equal(credentialModule.getActiveAcademicUserId(), 0)
-assert.deepEqual(credentialModule.loadAcademicCredential(1), credential)
+assertLoadedCredential(credentialModule, 1, credential)
 assert.equal(credentialModule.getActiveAcademicUserId(), 1)
 
 // 平台账号切换必须清除前一账号的运行期及本地凭据。

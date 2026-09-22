@@ -9,6 +9,8 @@ export type CourseAdditionIdentity = {
   userId: number
   studentNo: string
   educationLevel: AcademicEducationLevel
+  /** 身份绑定随机 token，作为持久化缓存作用域（旧数据可能为空串）。 */
+  identityScopeToken: string
 }
 
 /**
@@ -18,28 +20,6 @@ export type CourseAdditionIdentity = {
 export const academicIdentityKey = (identity: CourseAdditionIdentity): string => (
   `${identity.userId}:${identity.studentNo}:${identity.educationLevel}`
 )
-
-// 128 位 FNV-1a 摘要（4 个 32 位 FNV，不同种子），用于给持久化缓存作用域
-// 编码、避免把真实学号以明文持久化；它不是密码学保证，但碰撞概率足够低，
-// 不作为凭证代际使用。
-const fnv1a32 = (value: string, seed: number): number => {
-  let hash = seed >>> 0
-  for (let index = 0; index < value.length; index++) {
-    hash ^= value.charCodeAt(index)
-    hash = Math.imul(hash, 0x01000193)
-  }
-  return hash >>> 0
-}
-
-export const academicCacheScope = (identity: CourseAdditionIdentity): string => {
-  const raw = `${identity.userId}:${identity.studentNo}:${identity.educationLevel}`
-  return [
-    fnv1a32(raw, 0x811c9dc5),
-    fnv1a32(raw, 0x01000193),
-    fnv1a32(raw, 0x1000193),
-    fnv1a32(raw, 0xdeadbeef),
-  ].map((hash) => hash.toString(16).padStart(8, '0')).join('')
-}
 
 /**
  * 在途响应守卫：只有请求代际和身份代际都与当前状态一致时才允许把结果
