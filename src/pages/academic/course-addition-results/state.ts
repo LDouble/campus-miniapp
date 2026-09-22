@@ -11,7 +11,8 @@ export type CourseAdditionIdentity = {
   educationLevel: AcademicEducationLevel
 }
 
-// 不可逆编码，避免把真实学号以明文持久化到本地 storage。
+// 32 位非密码哈希，仅用于给缓存作用域编码、避免把真实学号以明文持久化到
+// 本地 storage；它不是凭证代际，也不用于可靠身份比较。
 const hashIdentity = (value: string): string => {
   let hash = 5381
   for (let index = 0; index < value.length; index++) {
@@ -69,30 +70,16 @@ export type AdditionErrorAction =
 
 /**
  * 分类请求失败后的处理动作。先验证组件仍挂载且请求仍是当前请求（旧请求、
- * 已卸载组件的结果一律忽略）；只有当前请求的凭证失效才清空显示并呈现重新
- * 绑定引导。旧身份/旧请求返回失效不会影响新身份或新请求。
+ * 已卸载组件的结果一律忽略）；只有 academicPost 已实际清除凭证（
+ * credentialInvalidatedHere 标记）才清空显示并呈现重新绑定引导。旧身份/
+ * 旧请求返回失效不会影响新身份或新请求。
  */
 export const classifyAdditionError = (args: {
-  errorCode: unknown
   isMounted: boolean
   isCurrentRequest: boolean
+  credentialInvalidatedHere: boolean
 }): AdditionErrorAction => {
   if (!args.isMounted || !args.isCurrentRequest) return 'stale_ignored'
-  if (isAcademicCredentialInvalidationCode(args.errorCode)) return 'credential_invalidated'
+  if (args.credentialInvalidatedHere) return 'credential_invalidated'
   return 'present_error'
 }
-
-/**
- * 凭证失效时是否允许清除本地凭证：只有当前活跃凭证仍属于发起请求的同一
- * 代（同 user 同学号）才清除，避免旧身份/旧请求的失效清除已切换的新凭证。
- */
-export const shouldClearCredentialOnInvalidation = (args: {
-  snapshotUserId: number
-  snapshotStudentNo: string
-  activeUserId: number
-  activeStudentNo: string | null
-}): boolean => (
-  args.activeUserId === args.snapshotUserId
-  && args.activeStudentNo !== null
-  && args.activeStudentNo === args.snapshotStudentNo
-)

@@ -35,7 +35,7 @@
     "test:home-term-preview": "ts-node --transpile-only scripts/home-term-preview-smoke.ts",
     "test:course-audit": "ts-node --transpile-only scripts/course-audit-smoke.ts",
     "test:academic-exams": "ts-node --transpile-only scripts/academic-exams-smoke.ts",
-    "test:academic-course-addition": "ts-node --transpile-only scripts/academic-course-addition-smoke.ts",
+    "test:academic-course-addition": "ts-node --transpile-only --require ./scripts/mock-taro.cjs scripts/academic-course-addition-smoke.ts",
     "test:selection-sheet": "ts-node --transpile-only scripts/selection-sheet-flicker-smoke.ts",
     "test:academic-cache-metadata": "ts-node --transpile-only scripts/academic-cache-metadata-smoke.ts",
     "test:academic-statistics": "ts-node --transpile-only scripts/academic-statistics-smoke.ts",

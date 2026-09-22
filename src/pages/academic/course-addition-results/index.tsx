@@ -155,7 +155,9 @@ function CourseAdditionResultsPageContent({
       setServerCache(result.cache || null)
     } catch (error) {
       const action = classifyAdditionError({
-        errorCode: isApiError(error) ? error.code : null,
+        credentialInvalidatedHere: Boolean(
+          isApiError(error) && (error as { credentialInvalidated?: boolean }).credentialInvalidated,
+        ),
         isMounted: mountedRef.current,
         isCurrentRequest: requestId === additionsRequestRef.current,
       })

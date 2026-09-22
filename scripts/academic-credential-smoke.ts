@@ -84,12 +84,17 @@ assert.ok(source.includes('writeStoredAcademicCredential'), '验证成功后必�
 assert.ok(source.includes('removeStoredAcademicCredential'), '解绑或账号切换时必须清理本地凭据')
 
 const academicApiSource = readFileSync(resolve(__dirname, '../src/api/academic.ts'), 'utf8')
+const academicPostSource = readFileSync(resolve(__dirname, '../src/api/academic-post.ts'), 'utf8')
 assert.ok(
-  academicApiSource.includes("'invalid_academic_credentials'")
-    && academicApiSource.includes("'academic_password_expired'")
-    && academicApiSource.includes("'academic_account_restricted'")
-    && academicApiSource.includes('clearAcademicCredential()'),
-  '校方拒绝、密码过期或账号受限时必须清理本机旧凭据',
+  academicPostSource.includes("'invalid_academic_credentials'")
+    && academicPostSource.includes("'academic_password_expired'")
+    && academicPostSource.includes("'academic_account_restricted'")
+    && academicPostSource.includes('clearCredential()'),
+  '校方拒绝、密码过期或账号受限时请求执行器必须清理本机旧凭据',
+)
+assert.ok(
+  academicApiSource.includes('clearCredential: clearAcademicCredential'),
+  '生产请求层必须注入真实清除凭证实现',
 )
 assert.ok(
   !academicApiSource.includes("from '@tarojs/taro'")

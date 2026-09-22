@@ -21,6 +21,40 @@ const ADDITION_RECORDS_KEY_PREFIX = 'academic.additionRecords.v1.'
 
 const cacheKey = (platformUserId: number) => `${ADDITION_RECORDS_KEY_PREFIX}${platformUserId}`
 
+const isValidCourseAdditionResult = (value: unknown): value is CourseAdditionResultRecord => {
+  if (!value || typeof value !== 'object') return false
+  const record = value as CourseAdditionResultRecord
+  return typeof record.id === 'string'
+    && typeof record.periodId === 'string'
+    && typeof record.periodName === 'string'
+    && typeof record.courseCode === 'string'
+    && typeof record.courseName === 'string'
+    && typeof record.selectionCode === 'string'
+    && typeof record.teacher === 'string'
+    && typeof record.teachingClass === 'string'
+    && typeof record.auditText === 'string'
+}
+
+const isValidPeriodMap = (
+  value: unknown,
+): value is Record<string, CourseAdditionResultRecord[]> => (
+  !!value
+  && typeof value === 'object'
+  && !Array.isArray(value)
+  && Object.values(value).every((records) => (
+    Array.isArray(records) && records.every(isValidCourseAdditionResult)
+  ))
+)
+
+const isValidTimestampMap = (value: unknown): value is Record<string, number> => (
+  !!value
+  && typeof value === 'object'
+  && !Array.isArray(value)
+  && Object.values(value).every((timestamp) => (
+    typeof timestamp === 'number' && Number.isFinite(timestamp)
+  ))
+)
+
 const isValidRecord = (
   value: unknown,
   platformUserId: number,
@@ -31,8 +65,8 @@ const isValidRecord = (
   return record.version === 1
     && record.platformUserId === platformUserId
     && record.identityScope === identityScope
-    && typeof record.additionsByPeriod === 'object'
-    && typeof record.additionsUpdatedAtByPeriod === 'object'
+    && isValidPeriodMap(record.additionsByPeriod)
+    && isValidTimestampMap(record.additionsUpdatedAtByPeriod)
 }
 
 export const createAdditionCache = (backend: AdditionCacheBackend) => ({

@@ -24,6 +24,11 @@ export class AcademicCredentialMissingError extends Error {
 
 const credentialsByUser = new Map<number, AcademicCredential>()
 let activeUserId = 0
+// 凭证单调代际：每次保存或清除凭证时递增。发起请求时捕获该代际，返回
+// 认证失败时只在代际未变时清除，避免旧身份/旧密码请求清除刚保存的新凭证。
+let credentialRevision = 0
+
+export const getCredentialRevision = () => credentialRevision
 
 const validUserId = (value: number) => Number.isSafeInteger(value) && value > 0
 
@@ -119,6 +124,7 @@ export const saveAcademicCredential = (
     platformUserId,
     credential: normalizedCredential,
   })
+  credentialRevision += 1
   invalidateSharedResourceGroup('academic', { clearData: false })
 }
 
@@ -153,12 +159,14 @@ export const clearAcademicCredential = (platformUserId?: number) => {
   if (!platformUserId) {
     clearRuntimeCredentials()
     removeStoredAcademicCredential()
+    credentialRevision += 1
     return
   }
   if (!validUserId(platformUserId)) return
 
   credentialsByUser.delete(platformUserId)
   if (activeUserId === platformUserId) activeUserId = 0
+  credentialRevision += 1
   const stored = readStoredAcademicCredential()
   if (
     !isStoredAcademicCredential(stored)
