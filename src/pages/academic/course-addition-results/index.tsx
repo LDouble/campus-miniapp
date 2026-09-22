@@ -10,6 +10,7 @@ import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
+import { subscribePageCacheScope } from '../../../state/page-cache'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
@@ -18,32 +19,72 @@ import type {
   AcademicPeriod,
   CourseAdditionResultRecord,
 } from '../types'
-import { getPeriodLabel, resolveDefaultPeriodId } from '../utils'
+import { getPeriodLabel, resolveDefaultPeriodId, resolveRetainedPeriodId } from '../utils'
+import {
+  academicIdentityKey,
+  shouldApplyAdditionResponse,
+  type CourseAdditionIdentity,
+} from './state'
 import '../index.scss'
 import './index.scss'
 
 const ACADEMIC_CHEVRON = require('../../../assets/icons/academic-chevron-down.svg')
 
-const getEducationLevel = (platformUserId: number): AcademicEducationLevel => {
+const readCurrentIdentity = (): CourseAdditionIdentity => {
+  const userId = getActiveAcademicUserId()
   try {
-    return loadAcademicCredential(platformUserId).educationLevel
+    const credential = loadAcademicCredential(userId)
+    return {
+      userId,
+      studentNo: credential.studentNo,
+      educationLevel: credential.educationLevel,
+    }
   } catch {
-    return 'undergraduate'
+    return { userId, studentNo: '', educationLevel: 'undergraduate' }
   }
 }
 
 type AdditionSheet = 'period' | 'detail' | null
 
 export default function CourseAdditionResultsPage() {
-  const [academicUserId] = useState(getActiveAcademicUserId)
+  const [identity, setIdentity] = useState<CourseAdditionIdentity>(readCurrentIdentity)
+  const identityKey = academicIdentityKey(identity)
+
+  useEffect(() => subscribePageCacheScope(() => {
+    setIdentity((current) => {
+      const next = readCurrentIdentity()
+      return academicIdentityKey(next) === academicIdentityKey(current) ? current : next
+    })
+  }), [])
+
+  Taro.useDidShow(() => {
+    setIdentity((current) => {
+      const next = readCurrentIdentity()
+      return academicIdentityKey(next) === academicIdentityKey(current) ? current : next
+    })
+  })
+
+  return (
+    <CourseAdditionResultsPageContent
+      key={identityKey}
+      academicUserId={identity.userId}
+      educationLevel={identity.educationLevel}
+    />
+  )
+}
+
+function CourseAdditionResultsPageContent({
+  academicUserId,
+  educationLevel,
+}: {
+  academicUserId: number
+  educationLevel: AcademicEducationLevel
+}) {
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
   ))
   const [initialRecordsCache] = useState(() => (
     academicStorage.getRecordsCache(academicUserId)
-  ))
-  const [educationLevel] = useState<AcademicEducationLevel>(() => (
-    getEducationLevel(academicUserId)
   ))
   const [periods, setPeriods] = useState<AcademicPeriod[]>(
     initialScheduleCache?.periods || [],
@@ -71,12 +112,22 @@ export default function CourseAdditionResultsPage() {
   const isGraduate = educationLevel === 'graduate'
   const hasSelectedPeriod = periods.some((period) => period.id === selectedPeriodId)
 
+  const applyGuard = (requestId: number, requestIdentityKey: string) => (
+    shouldApplyAdditionResponse({
+      requestId,
+      currentRequestId: additionsRequestRef.current,
+      requestIdentityKey,
+      currentIdentityKey: academicIdentityKey(readCurrentIdentity()),
+    })
+  )
+
   const refreshAdditions = useCallback(async (
     manual = false,
     periodId = selectedPeriodId,
   ) => {
     if (isGraduate) return
     const requestId = ++additionsRequestRef.current
+    const requestIdentityKey = academicIdentityKey(readCurrentIdentity())
     const cache = academicStorage.getRecordsCache(academicUserId)
     const cached = cache?.additionsByPeriod[periodId]
     const updatedAt = cache?.additionsUpdatedAtByPeriod[periodId] || 0
@@ -89,14 +140,14 @@ export default function CourseAdditionResultsPage() {
     setLoadError(null)
     try {
       const result = await academicRepository.getCourseAdditionResults(periodId)
-      if (additionsRequestRef.current !== requestId) return
+      if (!applyGuard(requestId, requestIdentityKey)) return
       academicStorage.setAdditionRecords(academicUserId, periodId, result.records)
       setRecords(result.records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
       setServerCache(result.cache || null)
     } catch (error) {
-      if (additionsRequestRef.current !== requestId) return
+      if (!applyGuard(requestId, requestIdentityKey)) return
       if (updatedAt) {
         setUsingCache(true)
         setLoadError(error)
@@ -105,7 +156,7 @@ export default function CourseAdditionResultsPage() {
         setLoadError(error)
       }
     } finally {
-      if (additionsRequestRef.current === requestId) {
+      if (requestId === additionsRequestRef.current) {
         setLoading(false)
         setRetrying(false)
       }
@@ -117,11 +168,9 @@ export default function CourseAdditionResultsPage() {
       .then((nextPeriods) => {
         setPeriods(nextPeriods)
         if (!nextPeriods.length) setLoading(false)
-        setSelectedPeriodId((current) => {
-          const next = resolveDefaultPeriodId(nextPeriods)
-          if (!next) return current
-          return next === current ? current : next
-        })
+        // 保留仍存在的用户选择；只有选择已失效才回退到默认学期，避免慢速
+        // 学期响应覆写用户已选的学期。
+        setSelectedPeriodId((current) => resolveRetainedPeriodId(nextPeriods, current))
       })
       .catch((error) => {
         if (initialScheduleCache?.periods.length) {
@@ -151,7 +200,7 @@ export default function CourseAdditionResultsPage() {
     setLoadError(null)
     try {
       const nextPeriods = await academicRepository.getPeriods({ force: true })
-      const periodId = resolveDefaultPeriodId(nextPeriods)
+      const periodId = resolveRetainedPeriodId(nextPeriods, selectedPeriodId)
       if (!periodId) throw new Error('academic period unavailable')
       setPeriods(nextPeriods)
       setSelectedPeriodId(periodId)
@@ -162,7 +211,7 @@ export default function CourseAdditionResultsPage() {
       setRetrying(false)
       setLoading(false)
     }
-  }, [refreshAdditions])
+  }, [refreshAdditions, selectedPeriodId])
 
   useEffect(() => {
     if (!hasSelectedPeriod || isGraduate) return
@@ -183,6 +232,10 @@ export default function CourseAdditionResultsPage() {
     setSheet('detail')
   }
 
+  const toolbarHint = loading || retrying
+    ? '同步中…'
+    : loadError ? '同步失败' : '已同步'
+
   const toolbar = (
     <View className='academic-toolbar academic-toolbar--simple'>
       <View className='academic-toolbar__period' onClick={() => setSheet('period')}>
@@ -193,7 +246,7 @@ export default function CourseAdditionResultsPage() {
       </View>
       <View className='academic-toolbar__hint'>
         <View />
-        <Text>结果同步中</Text>
+        <Text>{toolbarHint}</Text>
       </View>
     </View>
   )
