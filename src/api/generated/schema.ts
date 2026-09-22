@@ -2786,6 +2786,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/class-discussion-digests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课堂精选预演记录 */
+        get: operations["ListAdminClassDiscussionDigestPreviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看课堂精选预演详情 */
+        get: operations["GetAdminClassDiscussionDigestPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/bootstrap": {
         parameters: {
             query?: never;
@@ -9098,6 +9132,70 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        ClassDiscussionDigestExclusionSummary: {
+            [key: string]: number;
+        };
+        /** @enum {string} */
+        ClassDiscussionDigestMode: "preview" | "formal";
+        ClassDiscussionDigestPreviewPage: {
+            items: components["schemas"]["ClassDiscussionDigestPreviewView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassDiscussionDigestPreviewPageResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestPreviewPage"];
+            request_id: string;
+        };
+        ClassDiscussionDigestPreviewResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestPreviewView"];
+            request_id: string;
+        };
+        ClassDiscussionDigestPreviewView: {
+            action_path: string;
+            /** Format: int32 */
+            candidate_count: number;
+            class_num: string;
+            /** Format: uint64 */
+            config_version: number;
+            /** Format: date-time */
+            created_at: string;
+            exclusions: components["schemas"]["ClassDiscussionDigestExclusionSummary"];
+            /** Format: date-time */
+            expires_at: string;
+            feature_enabled: boolean;
+            fingerprint: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int32 */
+            matched_count: number;
+            mode: components["schemas"]["ClassDiscussionDigestMode"];
+            period_id: string;
+            proposed_summary: string;
+            proposed_title: string;
+            topics: components["schemas"]["ClassDiscussionDigestTopic"][];
+            wechat_send_enabled: boolean;
+            window_key: string;
+        };
+        ClassDiscussionDigestTopic: {
+            answered: boolean;
+            /** @enum {string} */
+            category: "question" | "share" | "answer";
+            /** Format: uint64 */
+            classroom_topic_id: number;
+            /** Format: uint64 */
+            content_id: number;
+            /** @enum {string} */
+            content_kind: "post" | "comment";
+            key: string;
+            /** Format: date-time */
+            published_at: string;
+            reason: string;
+            /** Format: uint64 */
+            root_post_id: number;
+            summary: string;
+        };
         ClientBootstrap: {
             academic_verification?: components["schemas"]["AcademicVerificationStatus"] | null;
             checkin?: components["schemas"]["DailyCheckinStatus"] | null;
@@ -13456,6 +13554,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["SubmissionResponseBody"];
+            };
+        };
+        /** @description 课堂精选预演列表 */
+        ClassDiscussionDigestPreviewPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestPreviewPageResponseBody"];
+            };
+        };
+        /** @description 课堂精选预演详情 */
+        ClassDiscussionDigestPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestPreviewResponseBody"];
             };
         };
         /** @description 当前用户的小程序初始化数据 */
@@ -18371,6 +18487,39 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CatalogResponse"];
+        };
+    };
+    ListAdminClassDiscussionDigestPreviews: {
+        parameters: {
+            query?: {
+                period_id?: string;
+                class_num?: string;
+                mode?: "preview" | "formal";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestPreviewPageResponse"];
+        };
+    };
+    GetAdminClassDiscussionDigestPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestPreviewResponse"];
+            404: components["responses"]["Error"];
         };
     };
     GetClientBootstrap: {
