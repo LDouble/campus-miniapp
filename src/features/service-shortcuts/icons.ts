@@ -39,6 +39,12 @@ const serviceShortcutIcons: Record<string, ServiceShortcutIconVariants> = {
       dark: { src: require('../../assets/icons/services-stitch/result-category-dark.svg'), tone: 'blue' },
     },
   },
+  'course-addition': {
+    category: {
+      light: { src: require('../../assets/icons/services-stitch/result-category-light.svg'), tone: 'blue' },
+      dark: { src: require('../../assets/icons/services-stitch/result-category-dark.svg'), tone: 'blue' },
+    },
+  },
   'pass-rate': {
     category: {
       light: { src: require('../../assets/icons/services-stitch/pass-rate-category-light.svg'), tone: 'blue' },

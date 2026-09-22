@@ -10,6 +10,8 @@ export type AcademicCredential = {
   studentNo: string
   password: string
   educationLevel: AcademicEducationLevel
+  /** 身份绑定随机 token，作为持久化缓存作用域，避免学号以明文持久化。旧数据可能缺失。 */
+  identityScopeToken?: string
 }
 
 export type AcademicEducationLevel = 'undergraduate' | 'graduate'
@@ -24,8 +26,20 @@ export class AcademicCredentialMissingError extends Error {
 
 const credentialsByUser = new Map<number, AcademicCredential>()
 let activeUserId = 0
+// 凭证单调代际：每次保存或清除凭证时递增。发起请求时捕获该代际，返回
+// 认证失败时只在代际未变时清除，避免旧身份/旧密码请求清除刚保存的新凭证。
+let credentialRevision = 0
+
+export const getCredentialRevision = () => credentialRevision
 
 const validUserId = (value: number) => Number.isSafeInteger(value) && value > 0
+
+const generateIdentityScopeToken = (): string => {
+  const now = Date.now().toString(36)
+  const rand1 = Math.random().toString(36).slice(2)
+  const rand2 = Math.random().toString(36).slice(2)
+  return `${now}-${rand1}-${rand2}`
+}
 
 export const isAcademicEducationLevel = (
   value: unknown,
@@ -74,10 +88,13 @@ const restoreAcademicCredential = (platformUserId: number) => {
     return null
   }
 
-  const credential = {
+  const credential: AcademicCredential = {
     studentNo: stored.credential.studentNo.trim(),
     password: stored.credential.password,
     educationLevel: stored.credential.educationLevel,
+    identityScopeToken: typeof stored.credential.identityScopeToken === 'string'
+      ? stored.credential.identityScopeToken
+      : '',
   }
   credentialsByUser.set(platformUserId, credential)
   activeUserId = platformUserId
@@ -111,6 +128,7 @@ export const saveAcademicCredential = (
     studentNo,
     password: credential.password,
     educationLevel: credential.educationLevel,
+    identityScopeToken: generateIdentityScopeToken(),
   }
   credentialsByUser.set(platformUserId, normalizedCredential)
   activeUserId = platformUserId
@@ -119,6 +137,7 @@ export const saveAcademicCredential = (
     platformUserId,
     credential: normalizedCredential,
   })
+  credentialRevision += 1
   invalidateSharedResourceGroup('academic', { clearData: false })
 }
 
@@ -153,12 +172,14 @@ export const clearAcademicCredential = (platformUserId?: number) => {
   if (!platformUserId) {
     clearRuntimeCredentials()
     removeStoredAcademicCredential()
+    credentialRevision += 1
     return
   }
   if (!validUserId(platformUserId)) return
 
   credentialsByUser.delete(platformUserId)
   if (activeUserId === platformUserId) activeUserId = 0
+  credentialRevision += 1
   const stored = readStoredAcademicCredential()
   if (
     !isStoredAcademicCredential(stored)

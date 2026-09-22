@@ -45,6 +45,7 @@ export const serviceGroups: Array<{ title: string; subtitle: string; items: Serv
       { key: 'grades', name: '成绩单', route: '/pages/academic/grades/index' },
       { key: 'exams', name: '考试安排', route: '/pages/academic/exams/index' },
       { key: 'result', name: '选课结果', route: '/pages/academic/selection/index' },
+      { key: 'course-addition', name: '加课结果', route: '/pages/academic/course-addition-results/index' },
       { key: 'pass-rate', name: '通过率', route: '/pages/academic/statistics/courses' },
       { key: 'course-audit', name: '课程查询', route: '/pages/academic/course-catalog/index' },
       { key: 'general-education', name: '通识查询', route: '/pages/academic/general-education/index' },

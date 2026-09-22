@@ -2,12 +2,14 @@ import Taro from '@tarojs/taro'
 import {
   AcademicPeriod,
   AcademicPreferences,
+  AcademicRecordsCache,
   CourseSelectionRecord,
   Course,
   ExamRecord,
   GradeRecord,
   GradeSimulation,
 } from './types'
+import { createAdditionCache } from './course-addition-results/addition-cache'
 import { sanitizeCoursesByPeriod } from './schedule-courses'
 
 const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
@@ -35,17 +37,6 @@ export interface AcademicScheduleCache {
   scheduleNotesByPeriod?: Record<string, string>
   /** 旧版本的全局课程更新时间，仅用于读取迁移。 */
   updatedAt?: number
-}
-
-export interface AcademicRecordsCache {
-  version: 1
-  platformUserId: number
-  grades: GradeRecord[]
-  gradesUpdatedAt: number
-  examsByPeriod: Record<string, ExamRecord[]>
-  examsUpdatedAtByPeriod: Record<string, number>
-  selectionsByPeriod: Record<string, CourseSelectionRecord[]>
-  selectionsUpdatedAtByPeriod: Record<string, number>
 }
 
 const safeRead = <T>(key: string, fallback: T): T => {
@@ -297,6 +288,24 @@ const scheduleUpdatedAtByPeriod = (
   )
 }
 
+// 加课结果独立缓存，用身份作用域隔离；生产使用 Taro storage，测试注入内存后端。
+const additionCache = createAdditionCache({
+  get: (key) => {
+    try {
+      return Taro.getStorageSync(key)
+    } catch {
+      return null
+    }
+  },
+  set: (key, value) => {
+    try {
+      Taro.setStorageSync(key, value)
+    } catch {
+      // 写入失败不应使已成功的网络结果变成失败。
+    }
+  },
+})
+
 export const academicStorage = {
   getSelectionDraftCourses: (): Course[] => safeRead<Course[]>(SELECTION_DRAFT_KEY, []).filter((course) => course.source === 'simulation'),
   setSelectionDraftCourses: (courses: Course[]) => safeWrite(SELECTION_DRAFT_KEY, courses),
@@ -435,8 +444,10 @@ export const academicStorage = {
   getRecordsCache: (platformUserId: number) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
     const value = safeRead<unknown>(recordsCacheKey(platformUserId), null)
-    return validRecordsCache(value, platformUserId) ? value : null
+    if (!validRecordsCache(value, platformUserId)) return null
+    return { ...value }
   },
+  getAdditionRecords: additionCache.getAdditionRecords,
   setGradeRecords: (platformUserId: number, grades: GradeRecord[]) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return
     const current = academicStorage.getRecordsCache(platformUserId)
@@ -477,4 +488,5 @@ export const academicStorage = {
       },
     })
   },
+  setAdditionRecords: additionCache.setAdditionRecords,
 }

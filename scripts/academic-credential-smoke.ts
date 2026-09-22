@@ -42,17 +42,29 @@ const expectMissing = (userId: number) => {
   )
 }
 
+const assertLoadedCredential = (
+  module: typeof credentialModule,
+  userId: number,
+  expected: { studentNo: string; password: string; educationLevel: string },
+) => {
+  const loaded = module.loadAcademicCredential(userId)
+  assert.equal(loaded.studentNo, expected.studentNo)
+  assert.equal(loaded.password, expected.password)
+  assert.equal(loaded.educationLevel, expected.educationLevel)
+  assert.equal(typeof loaded.identityScopeToken, 'string', '加载凭证应携带身份 token')
+}
+
 credentialModule.clearAcademicCredential()
 expectMissing(1)
 
 credentialModule.saveAcademicCredential(1, credential)
 assert.equal(credentialModule.getActiveAcademicUserId(), 1)
-assert.deepEqual(credentialModule.loadAcademicCredential(1), credential)
+assertLoadedCredential(credentialModule, 1, credential)
 
 // 模拟小程序进程重启：运行时模块重载，但本地存储仍然存在。
 credentialModule = loadCredentialModule()
 assert.equal(credentialModule.getActiveAcademicUserId(), 0)
-assert.deepEqual(credentialModule.loadAcademicCredential(1), credential)
+assertLoadedCredential(credentialModule, 1, credential)
 assert.equal(credentialModule.getActiveAcademicUserId(), 1)
 
 // 平台账号切换必须清除前一账号的运行期及本地凭据。
@@ -84,12 +96,17 @@ assert.ok(source.includes('writeStoredAcademicCredential'), '验证成功后必�
 assert.ok(source.includes('removeStoredAcademicCredential'), '解绑或账号切换时必须清理本地凭据')
 
 const academicApiSource = readFileSync(resolve(__dirname, '../src/api/academic.ts'), 'utf8')
+const academicPostSource = readFileSync(resolve(__dirname, '../src/api/academic-post.ts'), 'utf8')
 assert.ok(
-  academicApiSource.includes("'invalid_academic_credentials'")
-    && academicApiSource.includes("'academic_password_expired'")
-    && academicApiSource.includes("'academic_account_restricted'")
-    && academicApiSource.includes('clearAcademicCredential()'),
-  '校方拒绝、密码过期或账号受限时必须清理本机旧凭据',
+  academicPostSource.includes("'invalid_academic_credentials'")
+    && academicPostSource.includes("'academic_password_expired'")
+    && academicPostSource.includes("'academic_account_restricted'")
+    && academicPostSource.includes('clearCredential()'),
+  '校方拒绝、密码过期或账号受限时请求执行器必须清理本机旧凭据',
+)
+assert.ok(
+  academicApiSource.includes('clearCredential: clearAcademicCredential'),
+  '生产请求层必须注入真实清除凭证实现',
 )
 assert.ok(
   !academicApiSource.includes("from '@tarojs/taro'")

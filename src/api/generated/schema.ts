@@ -472,6 +472,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/course-addition-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 查询本人指定学期加课申请结果 */
+        post: operations["ListAcademicCourseAdditionResults"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/course-selection-schedule": {
         parameters: {
             query?: never;
@@ -7183,6 +7200,21 @@ export interface components {
             weekday: number;
             weeks: number[];
         };
+        AcademicCourseAdditionResult: {
+            audit_text: string;
+            course_code: string;
+            course_name: string;
+            id: string;
+            period_id: string;
+            period_name: string;
+            selection_code: string;
+            teacher: string;
+            teaching_class: string;
+        };
+        AcademicCourseAdditionResultListResponseBody: {
+            data: components["schemas"]["AcademicCourseAdditionResult"][];
+            request_id: string;
+        };
         AcademicCourseListResponseBody: {
             cache?: components["schemas"]["AcademicQueryCache"] | null;
             data: components["schemas"]["AcademicCourse"][];
@@ -12778,6 +12810,15 @@ export interface components {
                 "application/json": components["schemas"]["AcademicCalendarResponseBody"];
             };
         };
+        /** @description 本人指定学期加课申请结果 */
+        AcademicCourseAdditionResultListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseAdditionResultListResponseBody"];
+            };
+        };
         /** @description 本人指定学期课程 */
         AcademicCourseListResponse: {
             headers: {
@@ -15136,6 +15177,31 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AcademicCalendarResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAcademicCourseAdditionResults: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    student_no: string;
+                    password: string;
+                    period_id: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCourseAdditionResultListResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };

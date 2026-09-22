@@ -2,19 +2,26 @@ import { apiRequest, apiRequestEnvelope, isApiError } from './client'
 import { getCurrentIdentity } from './account'
 import {
   clearAcademicCredential,
+  getCredentialRevision,
   loadAcademicCredential,
 } from './academic-credential'
+import {
+  ACADEMIC_CREDENTIAL_INVALIDATION_CODES,
+  createAcademicPost,
+} from './academic-post'
 import type {
   AcademicCourse,
   AcademicCourseSelection,
+  AcademicCourseAdditionResult,
   AcademicCalendar,
   AcademicEducationLevel,
   AcademicExam,
   AcademicGrade,
   AcademicPeriod,
-  AcademicCacheMetadata,
 } from './types'
 import { createSharedResource } from '../state/shared-resource'
+
+export type { AcademicQueryResult } from './academic-post'
 
 export const getAcademicCalendar = (educationLevel: AcademicEducationLevel) => (
   apiRequest<AcademicCalendar>({
@@ -24,51 +31,21 @@ export const getAcademicCalendar = (educationLevel: AcademicEducationLevel) => (
   })
 )
 
-type AcademicRequestBody = {
-  student_no: string
-  password: string
-  period_id?: string
-}
-
-const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBody> => {
-  const currentUser = await getCurrentIdentity()
-  const credential = loadAcademicCredential(currentUser.user_id)
-  return {
-    student_no: credential.studentNo,
-    password: credential.password,
-    ...(periodId ? { period_id: periodId } : {}),
-  }
-}
-
-export type AcademicQueryResult<T> = {
-  records: T[]
-  cache?: AcademicCacheMetadata
-  scheduleNote?: string
-}
-
-const academicPost = async <T>(path: string, periodId?: string): Promise<AcademicQueryResult<T>> => {
-  const data = await academicRequestBody(periodId)
-  try {
-    const response = await apiRequestEnvelope<T[]>({ path, method: 'POST', data })
-    return {
-      records: response.data,
-      ...(response.cache ? { cache: response.cache } : {}),
-      ...(response.scheduleNote !== undefined ? { scheduleNote: response.scheduleNote } : {}),
-    }
-  } catch (error) {
-    if (
-      isApiError(error)
-      && [
-        'invalid_academic_credentials',
-        'academic_password_expired',
-        'academic_account_restricted',
-      ].includes(error.code)
-    ) {
-      clearAcademicCredential()
-    }
-    throw error
-  }
-}
+const academicPost = createAcademicPost({
+  getCurrentIdentity,
+  loadCredential: loadAcademicCredential,
+  getCredentialRevision,
+  clearCredential: clearAcademicCredential,
+  requestEnvelope: (options) => apiRequestEnvelope({
+    path: options.path,
+    method: 'POST',
+    data: options.data,
+  }),
+  isCredentialInvalidationError: (error) => (
+    isApiError(error)
+    && (ACADEMIC_CREDENTIAL_INVALIDATION_CODES as readonly string[]).includes(error.code)
+  ),
+})
 
 export const ACADEMIC_PERIODS_FRESH_MS = 30 * 60 * 1000
 
@@ -105,6 +82,13 @@ export const listAcademicExams = (periodId: string) => academicPost<AcademicExam
 export const listAcademicCourseSelections = (periodId: string) => (
   academicPost<AcademicCourseSelection>(
     '/api/v1/academic/course-selections',
+    periodId,
+  )
+)
+
+export const listAcademicCourseAdditionResults = (periodId: string) => (
+  academicPost<AcademicCourseAdditionResult>(
+    '/api/v1/academic/course-addition-results',
     periodId,
   )
 )
