@@ -2,6 +2,7 @@ import { apiRequest, apiRequestEnvelope, isApiError } from './client'
 import { getCurrentIdentity } from './account'
 import {
   clearAcademicCredential,
+  getActiveAcademicUserId,
   loadAcademicCredential,
 } from './academic-credential'
 import type {
@@ -31,24 +32,28 @@ type AcademicRequestBody = {
   period_id?: string
 }
 
-const academicRequestBody = async (periodId?: string): Promise<AcademicRequestBody> => {
-  const currentUser = await getCurrentIdentity()
-  const credential = loadAcademicCredential(currentUser.user_id)
-  return {
-    student_no: credential.studentNo,
-    password: credential.password,
-    ...(periodId ? { period_id: periodId } : {}),
-  }
-}
-
 export type AcademicQueryResult<T> = {
   records: T[]
   cache?: AcademicCacheMetadata
   scheduleNote?: string
 }
 
+const ACADEMIC_CREDENTIAL_INVALIDATION_CODES = [
+  'invalid_academic_credentials',
+  'academic_password_expired',
+  'academic_account_restricted',
+] as const
+
 const academicPost = async <T>(path: string, periodId?: string): Promise<AcademicQueryResult<T>> => {
-  const data = await academicRequestBody(periodId)
+  const currentUser = await getCurrentIdentity()
+  const credential = loadAcademicCredential(currentUser.user_id)
+  const data: AcademicRequestBody = {
+    student_no: credential.studentNo,
+    password: credential.password,
+    ...(periodId ? { period_id: periodId } : {}),
+  }
+  const snapshotUserId = currentUser.user_id
+  const snapshotStudentNo = credential.studentNo
   try {
     const response = await apiRequestEnvelope<T[]>({ path, method: 'POST', data })
     return {
@@ -59,13 +64,20 @@ const academicPost = async <T>(path: string, periodId?: string): Promise<Academi
   } catch (error) {
     if (
       isApiError(error)
-      && [
-        'invalid_academic_credentials',
-        'academic_password_expired',
-        'academic_account_restricted',
-      ].includes(error.code)
+      && (ACADEMIC_CREDENTIAL_INVALIDATION_CODES as readonly string[]).includes(error.code)
     ) {
-      clearAcademicCredential()
+      // 只在当前活跃凭证仍属于本请求（同 user 同学号）时清除，避免旧身份/
+      // 旧请求返回失效时清除已切换的新身份凭证。
+      if (getActiveAcademicUserId() === snapshotUserId) {
+        try {
+          const activeCredential = loadAcademicCredential(snapshotUserId)
+          if (activeCredential.studentNo === snapshotStudentNo) {
+            clearAcademicCredential()
+          }
+        } catch {
+          // 凭证已不存在，无需清除。
+        }
+      }
     }
     throw error
   }

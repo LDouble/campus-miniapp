@@ -112,6 +112,12 @@ function CourseAdditionResultsPageContent({
   const [activeRecord, setActiveRecord] = useState<CourseAdditionResultRecord | null>(null)
   const additionsRequestRef = useRef(0)
   const firstPageShowRef = useRef(true)
+  const mountedRef = useRef(true)
+
+  useEffect(() => () => {
+    // 卸载后置为 false，使在途请求的异步结果不再写回 storage / 页面。
+    mountedRef.current = false
+  }, [])
 
   const isGraduate = educationLevel === 'graduate'
   const hasSelectedPeriod = periods.some((period) => period.id === selectedPeriodId)
@@ -140,27 +146,29 @@ function CourseAdditionResultsPageContent({
     setLoadError(null)
     try {
       const result = await academicRepository.getCourseAdditionResults(periodId)
-      if (!guardPassed()) return
+      if (!mountedRef.current || !guardPassed()) return
       academicStorage.setAdditionRecords(academicUserId, identityKey, periodId, result.records)
       setRecords(result.records)
       setCacheUpdatedAt(Date.now())
       setUsingCache(false)
       setServerCache(result.cache || null)
     } catch (error) {
-      const action = classifyAdditionError(
-        isApiError(error) ? error.code : null,
-        guardPassed(),
-      )
+      const action = classifyAdditionError({
+        errorCode: isApiError(error) ? error.code : null,
+        isMounted: mountedRef.current,
+        isCurrentRequest: requestId === additionsRequestRef.current,
+      })
       if (action === 'credential_invalidated') {
-        // 请求自身导致凭证失效（academicPost 已 clearAcademicCredential）：
-        // 清空敏感显示并呈现重新绑定引导，不能被身份守卫静默吞掉。
+        // 当前请求自身导致凭证失效：关闭详情、清空敏感显示并呈现重新绑定引导。
+        setSheet(null)
+        setActiveRecord(null)
         setRecords([])
         setUsingCache(false)
         setServerCache(null)
         setLoadError(error)
         return
       }
-      if (action === 'identity_switched') return
+      if (action === 'stale_ignored') return
       if (updatedAt) {
         setUsingCache(true)
         setLoadError(error)
@@ -169,7 +177,7 @@ function CourseAdditionResultsPageContent({
         setLoadError(error)
       }
     } finally {
-      if (requestId === additionsRequestRef.current) {
+      if (mountedRef.current && requestId === additionsRequestRef.current) {
         setLoading(false)
         setRetrying(false)
       }

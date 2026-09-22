@@ -1,8 +1,4 @@
 import type { AcademicEducationLevel } from '../../../api/academic-credential'
-import type {
-  AcademicRecordsCache,
-  CourseAdditionResultRecord,
-} from '../types'
 
 /**
  * 页面身份代际：同时区分平台账号和教务绑定身份。平台账号切换会改变
@@ -15,8 +11,17 @@ export type CourseAdditionIdentity = {
   educationLevel: AcademicEducationLevel
 }
 
+// 不可逆编码，避免把真实学号以明文持久化到本地 storage。
+const hashIdentity = (value: string): string => {
+  let hash = 5381
+  for (let index = 0; index < value.length; index++) {
+    hash = ((hash << 5) + hash + value.charCodeAt(index)) >>> 0
+  }
+  return hash.toString(36)
+}
+
 export const academicIdentityKey = (identity: CourseAdditionIdentity): string => (
-  `${identity.userId}:${identity.studentNo}:${identity.educationLevel}`
+  hashIdentity(`${identity.userId}:${identity.studentNo}:${identity.educationLevel}`)
 )
 
 /**
@@ -53,36 +58,20 @@ export const isAcademicCredentialInvalidationCode = (
 
 export type AdditionErrorAction =
   | 'credential_invalidated'
-  | 'identity_switched'
+  | 'stale_ignored'
   | 'present_error'
 
 /**
- * 分类请求失败后的处理动作。凭证失效是请求自身导致的（academicPost 已
- * clearAcademicCredential），即使身份守卫判定不一致也必须呈现认证失败引导，
- * 不能被静默吞掉；只有真正的身份切换/乱序才静默丢弃。
+ * 分类请求失败后的处理动作。先验证组件仍挂载且请求仍是当前请求（旧请求、
+ * 已卸载组件的结果一律忽略）；只有当前请求的凭证失效才清空显示并呈现重新
+ * 绑定引导。旧身份/旧请求返回失效不会影响新身份或新请求。
  */
-export const classifyAdditionError = (
-  errorCode: unknown,
-  guardPassed: boolean,
-): AdditionErrorAction => {
-  if (isAcademicCredentialInvalidationCode(errorCode)) return 'credential_invalidated'
-  if (!guardPassed) return 'identity_switched'
+export const classifyAdditionError = (args: {
+  errorCode: unknown
+  isMounted: boolean
+  isCurrentRequest: boolean
+}): AdditionErrorAction => {
+  if (!args.isMounted || !args.isCurrentRequest) return 'stale_ignored'
+  if (isAcademicCredentialInvalidationCode(args.errorCode)) return 'credential_invalidated'
   return 'present_error'
-}
-
-/**
- * 从 records cache 中取出指定身份作用域与学期的加课结果。作用域不一致
- * （含旧缓存没有身份作用域）时返回 null，避免同 platformUserId 换学号/换身份
- * 类型后读到旧数据。
- */
-export const additionRecordsForScope = (
-  cache: AcademicRecordsCache | null,
-  identityScope: string,
-  periodId: string,
-): { records: CourseAdditionResultRecord[]; updatedAt: number } | null => {
-  if (!cache || !identityScope || cache.additionIdentityScope !== identityScope) return null
-  return {
-    records: cache.additionsByPeriod[periodId] || [],
-    updatedAt: cache.additionsUpdatedAtByPeriod[periodId] || 0,
-  }
 }

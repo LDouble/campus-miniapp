@@ -3,14 +3,13 @@ import {
   AcademicPeriod,
   AcademicPreferences,
   AcademicRecordsCache,
-  CourseAdditionResultRecord,
   CourseSelectionRecord,
   Course,
   ExamRecord,
   GradeRecord,
   GradeSimulation,
 } from './types'
-import { additionRecordsForScope } from './course-addition-results/state'
+import { createAdditionCache } from './course-addition-results/addition-cache'
 import { sanitizeCoursesByPeriod } from './schedule-courses'
 
 const CUSTOM_COURSES_KEY = 'academic.customCourses.v1'
@@ -177,20 +176,6 @@ const validSelection = (value: unknown): value is CourseSelectionRecord => {
     && validOptionalString(selection.note)
 }
 
-const validCourseAdditionResult = (value: unknown): value is CourseAdditionResultRecord => {
-  if (!value || typeof value !== 'object') return false
-  const result = value as CourseAdditionResultRecord
-  return validString(result.id)
-    && validString(result.periodId)
-    && validString(result.periodName)
-    && validString(result.courseCode)
-    && validString(result.courseName)
-    && validString(result.selectionCode)
-    && validString(result.teacher)
-    && validString(result.teachingClass)
-    && validString(result.auditText)
-}
-
 const scheduleCacheKey = (platformUserId: number) => (
   `${SCHEDULE_CACHE_KEY_PREFIX}${platformUserId}`
 )
@@ -252,9 +237,6 @@ const emptyRecordsCache = (platformUserId: number): AcademicRecordsCache => ({
   examsUpdatedAtByPeriod: {},
   selectionsByPeriod: {},
   selectionsUpdatedAtByPeriod: {},
-  additionsByPeriod: {},
-  additionsUpdatedAtByPeriod: {},
-  additionIdentityScope: '',
 })
 
 const validScheduleCache = (
@@ -305,6 +287,24 @@ const scheduleUpdatedAtByPeriod = (
     Object.keys(coursesByPeriod).map((periodId) => [periodId, cache.updatedAt as number]),
   )
 }
+
+// 加课结果独立缓存，用身份作用域隔离；生产使用 Taro storage，测试注入内存后端。
+const additionCache = createAdditionCache({
+  get: (key) => {
+    try {
+      return Taro.getStorageSync(key)
+    } catch {
+      return null
+    }
+  },
+  set: (key, value) => {
+    try {
+      Taro.setStorageSync(key, value)
+    } catch {
+      // 写入失败不应使已成功的网络结果变成失败。
+    }
+  },
+})
 
 export const academicStorage = {
   getSelectionDraftCourses: (): Course[] => safeRead<Course[]>(SELECTION_DRAFT_KEY, []).filter((course) => course.source === 'simulation'),
@@ -445,31 +445,9 @@ export const academicStorage = {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
     const value = safeRead<unknown>(recordsCacheKey(platformUserId), null)
     if (!validRecordsCache(value, platformUserId)) return null
-    return {
-      ...value,
-      additionsByPeriod: validRecordMap(value.additionsByPeriod, validCourseAdditionResult)
-        ? value.additionsByPeriod
-        : {},
-      additionsUpdatedAtByPeriod: validTimestampMap(value.additionsUpdatedAtByPeriod)
-        ? value.additionsUpdatedAtByPeriod
-        : {},
-      additionIdentityScope: typeof value.additionIdentityScope === 'string'
-        ? value.additionIdentityScope
-        : '',
-    }
+    return { ...value }
   },
-  getAdditionRecords: (
-    platformUserId: number,
-    identityScope: string,
-    periodId: string,
-  ) => {
-    if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
-    return additionRecordsForScope(
-      academicStorage.getRecordsCache(platformUserId),
-      identityScope,
-      periodId,
-    )
-  },
+  getAdditionRecords: additionCache.getAdditionRecords,
   setGradeRecords: (platformUserId: number, grades: GradeRecord[]) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return
     const current = academicStorage.getRecordsCache(platformUserId)
@@ -510,24 +488,5 @@ export const academicStorage = {
       },
     })
   },
-  setAdditionRecords: (
-    platformUserId: number,
-    identityScope: string,
-    periodId: string,
-    records: CourseAdditionResultRecord[],
-  ) => {
-    if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0 || !periodId) return
-    if (!identityScope) return
-    const current = academicStorage.getRecordsCache(platformUserId)
-      || emptyRecordsCache(platformUserId)
-    safeWrite<AcademicRecordsCache>(recordsCacheKey(platformUserId), {
-      ...current,
-      additionIdentityScope: identityScope,
-      additionsByPeriod: { ...current.additionsByPeriod, [periodId]: records },
-      additionsUpdatedAtByPeriod: {
-        ...current.additionsUpdatedAtByPeriod,
-        [periodId]: Date.now(),
-      },
-    })
-  },
+  setAdditionRecords: additionCache.setAdditionRecords,
 }

@@ -135,9 +135,6 @@ export interface AcademicRecordsCache {
   examsUpdatedAtByPeriod: Record<string, number>
   selectionsByPeriod: Record<string, CourseSelectionRecord[]>
   selectionsUpdatedAtByPeriod: Record<string, number>
-  additionsByPeriod: Record<string, CourseAdditionResultRecord[]>
-  additionsUpdatedAtByPeriod: Record<string, number>
-  additionIdentityScope?: string
 }
 
 export interface AcademicPreferences {
