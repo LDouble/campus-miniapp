@@ -1,0 +1,170 @@
+.academic-page--addition {
+  .addition-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 200rpx;
+    padding: 30rpx 32rpx;
+    margin-bottom: 22rpx;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e6f0f3 0%, #f6f5e8 100%);
+    border: 2rpx solid rgba(96, 139, 155, 0.14);
+    border-radius: 34rpx;
+    box-shadow: 0 15rpx 34rpx rgba(72, 112, 126, 0.09);
+
+    text { display: block; }
+
+    &__eyebrow { color: #6a8490; font-size: 24rpx; }
+
+    &__number {
+      margin: 8rpx 0 6rpx;
+      color: #315a68;
+      font-size: 52rpx;
+      font-weight: 780;
+      line-height: 1;
+
+      text {
+        display: inline;
+        margin-left: 6rpx;
+        font-size: 24rpx;
+        font-weight: 650;
+      }
+    }
+
+    &__copy { color: #6d8792; font-size: 23rpx; }
+
+    &__seal {
+      display: flex;
+      flex: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100rpx;
+      height: 100rpx;
+      color: #5d8ea0;
+      font-size: 25rpx;
+      font-weight: 760;
+      letter-spacing: 3rpx;
+      background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
+      border: 4rpx solid rgba(99, 143, 158, 0.26);
+      border-radius: 50%;
+      transform: rotate(10deg);
+    }
+  }
+
+  .addition-card {
+    position: relative;
+    padding: 27rpx 25rpx 21rpx;
+    margin-bottom: 16rpx;
+    overflow: hidden;
+    background: var(--campus-surface-glass, rgba(255, 255, 255, 0.9));
+    border: 2rpx solid rgba(92, 143, 148, 0.09);
+    border-radius: 30rpx;
+    box-shadow: 0 12rpx 26rpx rgba(62, 105, 109, 0.055);
+
+    &::before {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 8rpx;
+      content: '';
+      background: #60abb5;
+    }
+
+    &__status {
+      position: absolute;
+      top: 24rpx;
+      right: 24rpx;
+      display: flex;
+      align-items: center;
+      gap: 7rpx;
+      padding: 8rpx 12rpx;
+      color: #4d8975;
+      font-size: 21rpx;
+      font-weight: 700;
+      background: #e9f5ee;
+      border-radius: 999rpx;
+
+      view {
+        width: 8rpx;
+        height: 8rpx;
+        background: currentColor;
+        border-radius: 50%;
+      }
+    }
+
+    &__name {
+      display: block;
+      max-width: 72%;
+      margin-bottom: 20rpx;
+      overflow: hidden;
+      color: #2b555c;
+      font-size: 28rpx;
+      font-weight: 740;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__line {
+      display: flex;
+      margin: 9rpx 0;
+      color: #5d747a;
+      font-size: 25rpx;
+    }
+
+    &__label {
+      flex: none;
+      width: 88rpx;
+      color: #93a2a5;
+    }
+
+    &__footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 18rpx;
+      padding-top: 17rpx;
+      margin-top: 16rpx;
+      color: #7c9296;
+      font-size: 24rpx;
+      border-top: 2rpx solid #edf2f1;
+
+      text:last-child { color: #649b9c; }
+    }
+  }
+
+  .addition-detail__badge {
+    display: inline-flex;
+    padding: 9rpx 15rpx;
+    margin-bottom: 15rpx;
+    color: #4d8975;
+    font-size: 23rpx;
+    font-weight: 700;
+    background: #e9f5ee;
+    border-radius: 999rpx;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .academic-page--addition {
+    .addition-card {
+      background: rgba(28, 42, 48, 0.85);
+      border-color: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 12rpx 26rpx rgba(0, 0, 0, 0.25);
+
+      &__name { color: #d7e6e8; }
+      &__line { color: #a4b9be; }
+      &__label { color: #71898e; }
+      &__footer { color: #839ca1; border-top-color: rgba(255, 255, 255, 0.08); }
+    }
+
+    .addition-hero {
+      background: linear-gradient(135deg, rgba(38, 66, 74, 0.85) 0%, rgba(48, 52, 44, 0.85) 100%);
+      border-color: rgba(255, 255, 255, 0.08);
+
+      &__eyebrow { color: #8ba3aa; }
+      &__number { color: #cfe2e6; }
+      &__copy { color: #8ba3aa; }
+    }
+  }
+}

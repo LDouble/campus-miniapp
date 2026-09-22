@@ -7,6 +7,7 @@ import {
 import type {
   AcademicCourse,
   AcademicCourseSelection,
+  AcademicCourseAdditionResult,
   AcademicCalendar,
   AcademicEducationLevel,
   AcademicExam,
@@ -105,6 +106,13 @@ export const listAcademicExams = (periodId: string) => academicPost<AcademicExam
 export const listAcademicCourseSelections = (periodId: string) => (
   academicPost<AcademicCourseSelection>(
     '/api/v1/academic/course-selections',
+    periodId,
+  )
+)
+
+export const listAcademicCourseAdditionResults = (periodId: string) => (
+  academicPost<AcademicCourseAdditionResult>(
+    '/api/v1/academic/course-addition-results',
     periodId,
   )
 )

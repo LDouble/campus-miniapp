@@ -1,5 +1,6 @@
 import {
   listAcademicCourses,
+  listAcademicCourseAdditionResults,
   listAcademicCourseSelectionSchedule,
   listAcademicCourseSelections,
   listAcademicExams,
@@ -8,6 +9,7 @@ import {
 } from '../../api/academic'
 import type {
   AcademicCourse,
+  AcademicCourseAdditionResult,
   AcademicCourseSelection,
   AcademicExam,
   AcademicGrade,
@@ -19,6 +21,7 @@ import { apiDateTimeCampusParts } from '../../utils/date-time'
 import {
   AcademicPeriod,
   Course,
+  CourseAdditionResultRecord,
   CourseSelectionRecord,
   ExamRecord,
   GradeRecord,
@@ -160,6 +163,20 @@ const mapCourseSelection = (
   note: selection.note ?? undefined,
 })
 
+const mapCourseAdditionResult = (
+  result: AcademicCourseAdditionResult,
+): CourseAdditionResultRecord => ({
+  id: result.id,
+  periodId: result.period_id,
+  periodName: result.period_name,
+  courseCode: result.course_code,
+  courseName: result.course_name,
+  selectionCode: result.selection_code,
+  teacher: result.teacher,
+  teachingClass: result.teaching_class,
+  auditText: result.audit_text,
+})
+
 export interface AcademicRepository {
   getPeriods: (options?: { force?: boolean }) => Promise<AcademicPeriod[]>
   getCourses: (periodId: string) => Promise<AcademicQueryResult<Course>>
@@ -167,6 +184,7 @@ export interface AcademicRepository {
   getGrades: () => Promise<AcademicQueryResult<GradeRecord>>
   getExams: (periodId: string) => Promise<AcademicQueryResult<ExamRecord>>
   getCourseSelections: (periodId: string) => Promise<AcademicQueryResult<CourseSelectionRecord>>
+  getCourseAdditionResults: (periodId: string) => Promise<AcademicQueryResult<CourseAdditionResultRecord>>
 }
 
 const mapQueryResult = <Source, Target>(
@@ -204,5 +222,9 @@ export const academicRepository: AcademicRepository = {
   getCourseSelections: async (periodId) => mapQueryResult(
     await listAcademicCourseSelections(periodId),
     mapCourseSelection,
+  ),
+  getCourseAdditionResults: async (periodId) => mapQueryResult(
+    await listAcademicCourseAdditionResults(periodId),
+    mapCourseAdditionResult,
   ),
 }

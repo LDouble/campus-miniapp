@@ -114,6 +114,18 @@ export interface CourseSelectionRecord {
   note?: string
 }
 
+export interface CourseAdditionResultRecord {
+  id: string
+  periodId: string
+  periodName: string
+  courseCode: string
+  courseName: string
+  selectionCode: string
+  teacher: string
+  teachingClass: string
+  auditText: string
+}
+
 export interface AcademicPreferences {
   section: AcademicSection
   schedulePeriodId: string

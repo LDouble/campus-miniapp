@@ -35,6 +35,7 @@ const SAFE_PAGES = new Set([
   '/pages/academic/grades/index',
   '/pages/academic/exams/index',
   '/pages/academic/selection/index',
+  '/pages/academic/course-addition-results/index',
   '/pages/services/index',
   '/pages/lottery/detail',
   '/pages/lottery/codes/index',

@@ -2,6 +2,7 @@ import Taro from '@tarojs/taro'
 import {
   AcademicPeriod,
   AcademicPreferences,
+  CourseAdditionResultRecord,
   CourseSelectionRecord,
   Course,
   ExamRecord,
@@ -46,6 +47,8 @@ export interface AcademicRecordsCache {
   examsUpdatedAtByPeriod: Record<string, number>
   selectionsByPeriod: Record<string, CourseSelectionRecord[]>
   selectionsUpdatedAtByPeriod: Record<string, number>
+  additionsByPeriod: Record<string, CourseAdditionResultRecord[]>
+  additionsUpdatedAtByPeriod: Record<string, number>
 }
 
 const safeRead = <T>(key: string, fallback: T): T => {
@@ -185,6 +188,20 @@ const validSelection = (value: unknown): value is CourseSelectionRecord => {
     && validOptionalString(selection.note)
 }
 
+const validCourseAdditionResult = (value: unknown): value is CourseAdditionResultRecord => {
+  if (!value || typeof value !== 'object') return false
+  const result = value as CourseAdditionResultRecord
+  return validString(result.id)
+    && validString(result.periodId)
+    && validString(result.periodName)
+    && validString(result.courseCode)
+    && validString(result.courseName)
+    && validString(result.selectionCode)
+    && validString(result.teacher)
+    && validString(result.teachingClass)
+    && validString(result.auditText)
+}
+
 const scheduleCacheKey = (platformUserId: number) => (
   `${SCHEDULE_CACHE_KEY_PREFIX}${platformUserId}`
 )
@@ -246,6 +263,8 @@ const emptyRecordsCache = (platformUserId: number): AcademicRecordsCache => ({
   examsUpdatedAtByPeriod: {},
   selectionsByPeriod: {},
   selectionsUpdatedAtByPeriod: {},
+  additionsByPeriod: {},
+  additionsUpdatedAtByPeriod: {},
 })
 
 const validScheduleCache = (
@@ -435,7 +454,16 @@ export const academicStorage = {
   getRecordsCache: (platformUserId: number) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return null
     const value = safeRead<unknown>(recordsCacheKey(platformUserId), null)
-    return validRecordsCache(value, platformUserId) ? value : null
+    if (!validRecordsCache(value, platformUserId)) return null
+    return {
+      ...value,
+      additionsByPeriod: validRecordMap(value.additionsByPeriod, validCourseAdditionResult)
+        ? value.additionsByPeriod
+        : {},
+      additionsUpdatedAtByPeriod: validTimestampMap(value.additionsUpdatedAtByPeriod)
+        ? value.additionsUpdatedAtByPeriod
+        : {},
+    }
   },
   setGradeRecords: (platformUserId: number, grades: GradeRecord[]) => {
     if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) return
@@ -473,6 +501,23 @@ export const academicStorage = {
       selectionsByPeriod: { ...current.selectionsByPeriod, [periodId]: records },
       selectionsUpdatedAtByPeriod: {
         ...current.selectionsUpdatedAtByPeriod,
+        [periodId]: Date.now(),
+      },
+    })
+  },
+  setAdditionRecords: (
+    platformUserId: number,
+    periodId: string,
+    records: CourseAdditionResultRecord[],
+  ) => {
+    if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0 || !periodId) return
+    const current = academicStorage.getRecordsCache(platformUserId)
+      || emptyRecordsCache(platformUserId)
+    safeWrite<AcademicRecordsCache>(recordsCacheKey(platformUserId), {
+      ...current,
+      additionsByPeriod: { ...current.additionsByPeriod, [periodId]: records },
+      additionsUpdatedAtByPeriod: {
+        ...current.additionsUpdatedAtByPeriod,
         [periodId]: Date.now(),
       },
     })
