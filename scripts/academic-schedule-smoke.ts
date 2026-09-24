@@ -2,6 +2,8 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  compareCoursesForDisplay,
+  getCourseDisplaySpan,
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
@@ -34,6 +36,40 @@ const course = (id: string, periodId: string): Course => ({
   color: 'aqua',
   source: 'official',
 })
+
+const officialShortCourse: Course = {
+  ...course('official-7-8', '2026-fall'),
+  startSection: 7,
+  endSection: 8,
+}
+const auditLongCourse: Course = {
+  ...course('audit-5-8', '2026-fall'),
+  startSection: 5,
+  endSection: 8,
+  source: 'audit',
+}
+const overlappingCourses = [auditLongCourse, officialShortCourse]
+  .sort((left, right) => compareCoursesForDisplay(left, right, 1))
+assert.equal(overlappingCourses[0], officialShortCourse, '同周冲突应优先展示教务课程')
+assert.deepEqual(
+  getCourseDisplaySpan(overlappingCourses),
+  { startSection: 5, endSection: 8 },
+  '冲突卡片应覆盖 5–8 节，而非教务课程自身的 7–8 节',
+)
+assert.deepEqual(
+  getCourseDisplaySpan([
+    { ...officialShortCourse, startSection: 5 },
+    { ...auditLongCourse, startSection: 7 },
+  ]),
+  { startSection: 5, endSection: 8 },
+  '教务课程较长时仍应覆盖完整冲突时段',
+)
+assert.equal(
+  [auditLongCourse, { ...officialShortCourse, weeks: [2] }]
+    .sort((left, right) => compareCoursesForDisplay(left, right, 1))[0],
+  auditLongCourse,
+  '当前周课程应优先于其他周次的教务课程',
+)
 
 const period = (id: string, startDate: string, isCurrent = false): AcademicPeriod => ({
   id,

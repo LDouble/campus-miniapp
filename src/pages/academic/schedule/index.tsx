@@ -45,6 +45,8 @@ import {
 } from '../repository'
 import {
   CoursesByPeriod,
+  compareCoursesForDisplay,
+  getCourseDisplaySpan,
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
@@ -1013,7 +1015,8 @@ export function SchedulePageContent({
 
   const openCourse = (course: Course) => {
     setActiveCourse(course)
-    setActiveSlotCourses(allCourses.filter((item) => isCourseOverlap(item, course)))
+    setActiveSlotCourses(allCourses.filter((item) => isCourseOverlap(item, course))
+      .sort((left, right) => compareCoursesForDisplay(left, right, preferences.week)))
     setSheet('course-detail')
   }
 
@@ -1022,11 +1025,7 @@ export function SchedulePageContent({
       course.weekday === weekday
       && course.startSection <= section
       && course.endSection >= section
-    )).sort((left, right) => (
-      Number(isCourseInWeek(right, preferences.week))
-        - Number(isCourseInWeek(left, preferences.week))
-      || left.id.localeCompare(right.id)
-    ))
+    )).sort((left, right) => compareCoursesForDisplay(left, right, preferences.week))
     if (!slotCourses.length) return
     setActiveCourse(slotCourses[0])
     setActiveSlotCourses(slotCourses)
@@ -1404,22 +1403,10 @@ export function SchedulePageContent({
         {allCourses.map((course) => {
           const overlappingCourses = allCourses
             .filter((item) => isCourseOverlap(item, course))
-            .sort((left, right) => {
-              const leftCurrent = isCourseInWeek(left, preferences.week)
-              const rightCurrent = isCourseInWeek(right, preferences.week)
-              if (leftCurrent !== rightCurrent) return Number(rightCurrent) - Number(leftCurrent)
-              const leftNextWeek = Math.min(
-                ...left.weeks.filter((week) => week >= preferences.week),
-                Number.POSITIVE_INFINITY,
-              )
-              const rightNextWeek = Math.min(
-                ...right.weeks.filter((week) => week >= preferences.week),
-                Number.POSITIVE_INFINITY,
-              )
-              return leftNextWeek - rightNextWeek || left.id.localeCompare(right.id)
-            })
+            .sort((left, right) => compareCoursesForDisplay(left, right, preferences.week))
           const primaryCourse = overlappingCourses[0]
           if (course !== primaryCourse) return null
+          const displaySpan = getCourseDisplaySpan(overlappingCourses)
           const overlapCount = overlappingCourses.length
           const currentCourses = overlappingCourses.filter((item) => (
             isCourseInWeek(item, preferences.week)
@@ -1451,7 +1438,7 @@ export function SchedulePageContent({
               ].filter(Boolean).join(' ')}
               style={{
                 gridColumn: String(course.weekday + 1),
-                gridRow: `${course.startSection} / span ${course.endSection - course.startSection + 1}`,
+                gridRow: `${displaySpan.startSection} / span ${displaySpan.endSection - displaySpan.startSection + 1}`,
               }}
               ariaRole='button'
               ariaLabel={hasConflict
