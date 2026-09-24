@@ -45,6 +45,27 @@ export const getCoursesForWeek = (
   week: number,
 ) => courses.filter((course) => course.weeks.includes(week))
 
+/** 当前周优先；同周冲突时，以教务课程作为课表卡片的展示课程。 */
+export const compareCoursesForDisplay = (left: Course, right: Course, week: number) => {
+  const currentDifference = Number(right.weeks.includes(week)) - Number(left.weeks.includes(week))
+  if (currentDifference) return currentDifference
+
+  const nextWeek = (course: Course) => Math.min(
+    ...course.weeks.filter((courseWeek) => courseWeek >= week),
+    Number.POSITIVE_INFINITY,
+  )
+  const nextWeekDifference = nextWeek(left) - nextWeek(right)
+  if (nextWeekDifference) return nextWeekDifference
+
+  const officialDifference = Number(right.source === 'official') - Number(left.source === 'official')
+  return officialDifference || left.id.localeCompare(right.id)
+}
+
+export const getCourseDisplaySpan = (courses: Course[]) => ({
+  startSection: Math.min(...courses.map((course) => course.startSection)),
+  endSection: Math.max(...courses.map((course) => course.endSection)),
+})
+
 export const setCoursesForPeriod = (
   coursesByPeriod: CoursesByPeriod,
   periodId: string,
