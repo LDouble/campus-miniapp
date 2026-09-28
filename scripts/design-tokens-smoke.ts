@@ -210,8 +210,8 @@ for (const [key, token] of Object.entries(todayHotShadows)) {
 
 assert.match(
   appStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*--campus-today-hot-surface:\s*var\(--campus-surface\);[\s\S]*--campus-today-hot-label:\s*var\(--campus-text-heading\);[\s\S]*--campus-today-hot-muted:\s*var\(--campus-text-muted\);/u,
-  '暗色主题必须复用 Campus 表面、标题与辅助文字语义',
+  /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{[\s\S]*--campus-today-hot-surface:\s*var\(--campus-surface\);[\s\S]*--campus-today-hot-label:\s*var\(--campus-text-heading\);[\s\S]*--campus-today-hot-muted:\s*var\(--campus-text-muted\);/u,
+  '系统深色场景必须复用 Campus 表面、标题与辅助文字语义',
 )
 
 assert.match(
