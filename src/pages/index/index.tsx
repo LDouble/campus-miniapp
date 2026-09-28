@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
+  useDidHide,
   useDidShow,
   usePageScroll,
   usePullDownRefresh,
@@ -27,6 +28,13 @@ import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
 import { isApiError } from '../../api/client'
+import {
+  claimActivityPopup,
+  clickActivityPopupDisplay,
+  closeActivityPopupDisplay,
+  confirmActivityPopupDisplay,
+  getActivityPopupCandidate,
+} from '../../api/activity-popups'
 import { listMyUserLevelTasks } from '../../api/user-levels'
 import {
   deleteMyCalendarReminder,
@@ -132,6 +140,18 @@ import {
 } from '../../features/calendar/repository'
 import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import { useCampusShare } from '../../features/share'
+import ActivityPopup, { type ActivityPopupState } from '../../features/activity-popup/popup'
+import {
+  isActivityPopupActionSupported,
+  openActivityPopupAction,
+} from '../../features/activity-popup/navigation'
+import {
+  ACTIVITY_POPUP_IDLE_MS,
+  isActivityPopupCandidateValid,
+  isActivityPopupClaimUsable,
+  preloadActivityPopupImage,
+  shouldReportActivityPopupClose,
+} from '../../features/activity-popup/policy'
 import {
   getCampusTheme,
   subscribeCampusTheme,
@@ -403,6 +423,8 @@ function IndexContent() {
   const [homeCheckinSubmitting, setHomeCheckinSubmitting] = useState(false)
   const [showNotificationGuide, setShowNotificationGuide] = useState(false)
   const [notificationGuideUserId, setNotificationGuideUserId] = useState(0)
+  const [homeOverlaysResolved, setHomeOverlaysResolved] = useState(false)
+  const [activityPopup, setActivityPopup] = useState<ActivityPopupState | null>(null)
   const [userLevelTasks, setUserLevelTasks] = useState<UserLevelTask[]>([])
   const [homeFeedLoading, setHomeFeedLoading] = useState(!initialSnapshot.feed)
   const [homeFeedError, setHomeFeedError] = useState(false)
@@ -420,6 +442,54 @@ function IndexContent() {
   const homeFeedLoadingMoreRef = useRef(false)
   const homeHasShown = useRef(false)
   const homeBackTopVisibleRef = useRef(false)
+  const activityPopupRef = useRef<ActivityPopupState | null>(null)
+  const activityPopupAttemptedRef = useRef(false)
+  const activityPopupInteractedRef = useRef(false)
+  const activityPopupPageActiveRef = useRef(true)
+  const activityPopupPresentedRef = useRef(false)
+  const activityPopupServerConfirmedRef = useRef(false)
+  const activityPopupConfirmPromiseRef = useRef<Promise<boolean> | null>(null)
+  const activityPopupClickedRef = useRef(false)
+  const activityPopupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const clearActivityPopupTimer = () => {
+    if (activityPopupTimerRef.current !== null) {
+      clearTimeout(activityPopupTimerRef.current)
+      activityPopupTimerRef.current = null
+    }
+  }
+  const dismissActivityPopup = () => {
+    const current = activityPopupRef.current
+    if (!current) return
+    const reportClose = () => {
+      if (shouldReportActivityPopupClose(
+        activityPopupPresentedRef.current,
+        activityPopupServerConfirmedRef.current,
+      )) {
+        void closeActivityPopupDisplay(current.displayId)
+      }
+    }
+    const confirmation = activityPopupConfirmPromiseRef.current
+    activityPopupRef.current = null
+    setActivityPopup(null)
+    setCustomTabBarHidden(false)
+    if (confirmation) {
+      void confirmation.then((confirmed) => {
+        if (confirmed) reportClose()
+      })
+      return
+    }
+    reportClose()
+  }
+  const markActivityPopupInteraction = () => {
+    if (activityPopupRef.current || activityPopupAttemptedRef.current) return
+    activityPopupInteractedRef.current = true
+    clearActivityPopupTimer()
+  }
+  useDidHide(() => {
+    activityPopupPageActiveRef.current = false
+    clearActivityPopupTimer()
+    dismissActivityPopup()
+  })
   const applyCampus = useCallback((selectedCampus: string) => {
     try {
       // 先持久化，避免存储失败时首页与课表使用不同校区。
@@ -434,7 +504,7 @@ function IndexContent() {
     setBannerIndex(0)
     setCoursePreview(loadCachedCoursePreview(config, selectedCampus))
   }, [])
-  const dismissCampusLocationPrompt = useCampusLocationPrompt(
+  const { dismissForSession: dismissCampusLocationPrompt, pending: campusLocationPromptPending } = useCampusLocationPrompt(
     viewPageVisible && !homeFeedLoading && !homeFeedRefreshing
       && !showNotificationGuide && !homeCommentItem && !isAccountCancelled(),
     applyCampus,
@@ -446,6 +516,7 @@ function IndexContent() {
   })
 
   usePageScroll(({ scrollTop }) => {
+    if (Number(scrollTop) > 0) markActivityPopupInteraction()
     const nextVisible = Number(scrollTop) > 480
     if (nextVisible === homeBackTopVisibleRef.current) return
     homeBackTopVisibleRef.current = nextVisible
@@ -467,6 +538,7 @@ function IndexContent() {
     setHomeFeedLoadingMore(false)
     setHomeFeedLoadMoreError(false)
     setHomeFeedRefreshing(true)
+    setHomeOverlaysResolved(false)
     // 同步配置决定首屏，不把配置、授权或任一区块放在渲染的前置链路。
     const latestRuntimeConfig = getMiniappRuntimeConfig()
     const moduleEnabled = (moduleKey: MiniappModuleKey) => (
@@ -571,7 +643,9 @@ function IndexContent() {
         setNotificationGuideUserId(result.userId)
         setCustomTabBarHidden(show)
         setShowNotificationGuide(show)
-      }, isCurrent),
+      }, isCurrent).finally(() => {
+        if (isCurrent()) setHomeOverlaysResolved(true)
+      }),
     ]
     if (!homeFeedEnabled || isQualificationEdition) {
       setHomeFeedLoading(false)
@@ -665,6 +739,74 @@ function IndexContent() {
     if (homeHasShown.current) return
     homeHasShown.current = true
   })
+
+  useEffect(() => {
+    if (
+      !homeOverlaysResolved
+      || showNotificationGuide
+      || homeCommentItem
+      || quickQuestionCourse
+      || campusLocationPromptPending
+      || activityPopup
+      || activityPopupAttemptedRef.current
+      || activityPopupInteractedRef.current
+      || !activityPopupPageActiveRef.current
+      || !homeHasShown.current
+      || isAccountCancelled()
+    ) return
+
+    const canStillShow = () => (
+      mounted.current
+      && activityPopupPageActiveRef.current
+      && !activityPopupInteractedRef.current
+      && !activityPopupRef.current
+      && !showNotificationGuide
+      && !homeCommentItem
+      && !quickQuestionCourse
+      && !campusLocationPromptPending
+      && !isAccountCancelled()
+    )
+
+    activityPopupTimerRef.current = setTimeout(() => {
+      activityPopupTimerRef.current = null
+      if (!canStillShow()) return
+      activityPopupAttemptedRef.current = true
+      void (async () => {
+        try {
+          const candidate = await getActivityPopupCandidate()
+          if (
+            !canStillShow()
+            || !isActivityPopupCandidateValid(candidate)
+            || !isActivityPopupActionSupported(candidate.action)
+          ) return
+          await preloadActivityPopupImage(candidate.image_url)
+          if (!canStillShow()) return
+          const claim = await claimActivityPopup(candidate.id)
+          if (!isActivityPopupClaimUsable(claim) || !canStillShow()) {
+            return
+          }
+          const nextPopup = { candidate, displayId: claim.display_id }
+          activityPopupRef.current = nextPopup
+          activityPopupPresentedRef.current = false
+          activityPopupServerConfirmedRef.current = false
+          activityPopupConfirmPromiseRef.current = null
+          activityPopupClickedRef.current = false
+          setCustomTabBarHidden(true)
+          setActivityPopup(nextPopup)
+        } catch {
+          // 候选、图片或预占失败时静默放弃，首页不显示空弹层。
+        }
+      })()
+    }, ACTIVITY_POPUP_IDLE_MS)
+    return clearActivityPopupTimer
+  }, [
+    activityPopup,
+    campusLocationPromptPending,
+    homeCommentItem,
+    homeOverlaysResolved,
+    quickQuestionCourse,
+    showNotificationGuide,
+  ])
 
   usePullDownRefresh(() => {
     setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
@@ -951,6 +1093,47 @@ function IndexContent() {
     if (!opened) Taro.showToast({ title: '暂时无法打开提醒设置', icon: 'none' })
   }
 
+  const confirmActivityPopup = () => {
+    const current = activityPopupRef.current
+    if (!current || activityPopupConfirmPromiseRef.current) return
+    activityPopupPresentedRef.current = true
+    const confirmation = confirmActivityPopupDisplay(current.displayId).then(
+      () => {
+        activityPopupServerConfirmedRef.current = true
+        return true
+      },
+      () => {
+        return false
+      },
+    )
+    activityPopupConfirmPromiseRef.current = confirmation
+    void confirmation.then((confirmed) => {
+      if (confirmed) return
+      // 预占已失效或确认失败时不继续展示，避免服务端未计入频控却打扰用户。
+      if (activityPopupRef.current?.displayId === current.displayId) dismissActivityPopup()
+    })
+  }
+
+  const handleActivityPopupImageError = () => {
+    dismissActivityPopup()
+  }
+
+  const openActivityPopup = () => {
+    const current = activityPopupRef.current
+    if (!current || activityPopupClickedRef.current) return
+    activityPopupClickedRef.current = true
+    activityPopupRef.current = null
+    setActivityPopup(null)
+    setCustomTabBarHidden(false)
+    // 统计不能占用用户点击链路；微信跨小程序跳转必须由这次点击直接触发。
+    void clickActivityPopupDisplay(current.displayId)
+    void openActivityPopupAction(current.candidate.action)
+      .then((opened) => {
+        if (!opened) Taro.showToast({ title: '活动暂时无法打开，请稍后重试', icon: 'none' })
+      })
+      .catch(() => Taro.showToast({ title: '活动暂时无法打开，请稍后重试', icon: 'none' }))
+  }
+
   const openRuntimeBanner = (banner: RuntimeBanner) => {
     if (banner.action.type === 'miniapp_path' && banner.action.value) {
       Taro.navigateTo({ url: banner.action.value })
@@ -1020,7 +1203,10 @@ function IndexContent() {
   )
 
   return (
-    <View className='campus campus--course-home'>
+    <View
+      className='campus campus--course-home'
+      onTouchStart={markActivityPopupInteraction}
+    >
       <CustomNavbar
         title='OUSea'
         immersive
@@ -1503,6 +1689,15 @@ function IndexContent() {
             </View>
           </View>
         </View>
+      )}
+      {activityPopup && (
+        <ActivityPopup
+          popup={activityPopup}
+          onPresented={confirmActivityPopup}
+          onClose={dismissActivityPopup}
+          onClick={openActivityPopup}
+          onImageError={handleActivityPopupImageError}
+        />
       )}
       </>)}
 

@@ -42,6 +42,7 @@
     "test:service-shortcuts": "ts-node --transpile-only scripts/service-shortcuts-smoke.ts",
     "test:home-guest": "ts-node --transpile-only scripts/home-guest-smoke.ts",
     "test:home-notification-checkin": "ts-node --transpile-only scripts/home-notification-checkin-smoke.ts",
+    "test:activity-popup": "ts-node --transpile-only --require ./scripts/mock-taro.cjs scripts/activity-popup-smoke.ts",
     "test:life-hub-refresh": "ts-node --transpile-only scripts/life-hub-refresh-smoke.ts",
     "test:errand-display": "ts-node --transpile-only scripts/errand-display-smoke.ts",
     "test:marketplace-categories": "ts-node --transpile-only scripts/marketplace-category-filter-smoke.ts",

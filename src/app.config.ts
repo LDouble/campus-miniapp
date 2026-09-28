@@ -1,3 +1,5 @@
+import { activityPopupMiniProgramAppIds } from './features/activity-popup/mini-program-targets'
+
 const isQualificationEdition = __CAMPUS_APP_EDITION__ === 'qualification'
 const isWechatAiEnabled = __CAMPUS_WECHAT_AI_ENABLED__
 const fullPages = [
@@ -178,7 +180,7 @@ const preloadRule = Object.fromEntries(
   ]),
 )
 
-const targetMiniProgramAppId = __CAMPUS_TARGET_WECHAT_APP_ID__.trim()
+const navigateToMiniProgramAppIdList = activityPopupMiniProgramAppIds()
 
 const wechatAiModeConfig = isWechatAiEnabled
   ? {
@@ -231,8 +233,8 @@ export default defineAppConfig({
     borderStyle: '@tabBarBorderStyle' as 'white',
     list: tabBarList
   },
-  ...(isQualificationEdition && targetMiniProgramAppId
-    ? { navigateToMiniProgramAppIdList: [targetMiniProgramAppId] }
+  ...(navigateToMiniProgramAppIdList.length
+    ? { navigateToMiniProgramAppIdList }
     : {}),
   ...wechatAiModeConfig
 })

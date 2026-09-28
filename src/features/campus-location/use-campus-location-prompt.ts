@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Taro, { useDidHide, useDidShow, useUnload } from '@tarojs/taro'
 import { enabledCampuses, getMiniappRuntimeConfig, getSelectedCampus } from '../runtime-config'
 import { createCampusLocationPrompt } from './controller'
@@ -23,6 +23,7 @@ const prompt = createCampusLocationPrompt({
 
 export const useCampusLocationPrompt = (ready: boolean, onSwitch: (campus: string) => void) => {
   const active = useRef(true)
+  const [pending, setPending] = useState(false)
   const context = useRef({ ready, onSwitch })
   context.current = { ready, onSwitch }
   const cancelPending = () => {
@@ -30,12 +31,20 @@ export const useCampusLocationPrompt = (ready: boolean, onSwitch: (campus: strin
     prompt.cancelPending()
   }
   useDidShow(() => { active.current = true })
-  useDidHide(cancelPending)
-  useUnload(cancelPending)
+  useDidHide(() => {
+    cancelPending()
+    setPending(false)
+  })
+  useUnload(() => {
+    cancelPending()
+    setPending(false)
+  })
   useEffect(() => cancelPending, [])
 
   useEffect(() => {
     if (process.env.TARO_ENV !== 'weapp' || !ready) return
+    let cancelled = false
+    setPending(true)
     void prompt.run({
       isEligible: () => {
         const config = getMiniappRuntimeConfig()
@@ -44,8 +53,11 @@ export const useCampusLocationPrompt = (ready: boolean, onSwitch: (campus: strin
           && enabledCampuses(config).includes(WEST_COAST_CAMPUS)
       },
       switchCampus: () => context.current.onSwitch(WEST_COAST_CAMPUS),
+    }).finally(() => {
+      if (!cancelled) setPending(false)
     })
+    return () => { cancelled = true }
   }, [ready])
 
-  return prompt.dismissForSession
+  return { dismissForSession: prompt.dismissForSession, pending }
 }

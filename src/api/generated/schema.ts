@@ -1499,6 +1499,212 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/activity-popups/candidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取当前可尝试展示的活动弹框 */
+        get: operations["GetActivityPopupCandidate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/displays/{display_id}/click": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 记录活动弹框点击 */
+        post: operations["ClickActivityPopupDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/displays/{display_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 记录活动弹框关闭 */
+        post: operations["CloseActivityPopupDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/displays/{display_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 确认活动弹框已展示 */
+        post: operations["ConfirmActivityPopupDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/{id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 原子预占活动弹框展示资格 */
+        post: operations["ClaimActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询活动弹框 */
+        get: operations["ListAdminActivityPopups"];
+        put?: never;
+        /** 创建活动弹框草稿 */
+        post: operations["CreateAdminActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/action-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询活动跳转目标目录 */
+        get: operations["ListActivityPopupActionOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/media/upload-target": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建活动图片直传目标 */
+        post: operations["CreateActivityPopupMediaUploadTarget"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/media/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 完成活动图片上传 */
+        post: operations["CompleteActivityPopupMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询活动弹框详情 */
+        get: operations["GetAdminActivityPopup"];
+        /** 更新活动弹框草稿 */
+        put: operations["UpdateAdminActivityPopup"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 暂停活动弹框 */
+        post: operations["PauseAdminActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布活动弹框 */
+        post: operations["PublishAdminActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/calendar/reminders": {
         parameters: {
             query?: never;
@@ -2778,6 +2984,92 @@ export interface paths {
         };
         /** 查询我的猫咪图鉴 */
         get: operations["GetMyCatCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digest/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课堂讨论分析记录 */
+        get: operations["ListAdminClassDiscussionDigestAnalysisAudits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digest/analyses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看课堂讨论分析详情和尝试记录 */
+        get: operations["GetAdminClassDiscussionDigestAnalysisAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digest/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看课堂讨论分析提示词配置 */
+        get: operations["GetAdminClassDiscussionDigestClassifierConfig"];
+        /** 更新课堂讨论分析提示词配置 */
+        put: operations["UpdateAdminClassDiscussionDigestClassifierConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课堂精选预演记录 */
+        get: operations["ListAdminClassDiscussionDigestPreviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看课堂精选预演详情 */
+        get: operations["GetAdminClassDiscussionDigestPreview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8234,6 +8526,160 @@ export interface components {
             registration_version: number;
             status: string;
         };
+        ActivityPopupAction: {
+            params: {
+                [key: string]: string;
+            };
+            target_key: string;
+            type: components["schemas"]["ActivityPopupActionType"];
+        };
+        ActivityPopupActionOption: {
+            allowed_params?: string[];
+            label: string;
+            target_key: string;
+            type: components["schemas"]["ActivityPopupActionType"];
+        };
+        ActivityPopupActionOptions: {
+            items: components["schemas"]["ActivityPopupActionOption"][];
+        };
+        ActivityPopupActionOptionsResponseBody: {
+            data: components["schemas"]["ActivityPopupActionOptions"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ActivityPopupActionType: "internal_page" | "mini_program";
+        ActivityPopupCandidate: {
+            activity: components["schemas"]["ActivityPopupCandidateView"];
+        };
+        ActivityPopupCandidateResponseBody: {
+            data: components["schemas"]["ActivityPopupCandidate"];
+            request_id: string;
+        };
+        ActivityPopupCandidateView: {
+            action: components["schemas"]["ActivityPopupAction"];
+            /** Format: uint64 */
+            id: number;
+            image_url: string;
+        };
+        ActivityPopupClaim: {
+            /** Format: uuid */
+            display_id: string;
+            /** Format: date-time */
+            lease_expires_at: string;
+        };
+        ActivityPopupClaimResponseBody: {
+            data: components["schemas"]["ActivityPopupClaim"];
+            request_id: string;
+        };
+        ActivityPopupMedia: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            id: number;
+            moderation_status: string;
+            status: string;
+            /** Format: uint64 */
+            version: number;
+            /** Format: int64 */
+            width: number;
+        };
+        ActivityPopupMediaResponseBody: {
+            data: components["schemas"]["ActivityPopupMedia"];
+            request_id: string;
+        };
+        ActivityPopupMediaUploadInput: {
+            /** @enum {string} */
+            mime_type: "image/jpeg" | "image/png";
+            /** Format: int64 */
+            size: number;
+        };
+        ActivityPopupMediaUploadTarget: {
+            /** Format: date-time */
+            expires_at: string;
+            /** @enum {string} */
+            file_field: "file";
+            form_fields: {
+                [key: string]: string;
+            };
+            headers: {
+                [key: string]: string;
+            };
+            /** Format: uint64 */
+            media_id: number;
+            /** @enum {string} */
+            upload_method: "POST";
+            /** Format: uri */
+            upload_url: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        ActivityPopupMediaUploadTargetResponseBody: {
+            data: components["schemas"]["ActivityPopupMediaUploadTarget"];
+            request_id: string;
+        };
+        ActivityPopupPage: {
+            items: components["schemas"]["ActivityPopupView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ActivityPopupPageResponseBody: {
+            data: components["schemas"]["ActivityPopupPage"];
+            request_id: string;
+        };
+        ActivityPopupResponseBody: {
+            data: components["schemas"]["ActivityPopupView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ActivityPopupStatus: "draft" | "published" | "paused";
+        ActivityPopupUpdateRequest: components["schemas"]["ActivityPopupWriteRequest"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        ActivityPopupVersionRequest: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        ActivityPopupView: {
+            action: components["schemas"]["ActivityPopupAction"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            image_media_id: number;
+            image_url: string | null;
+            /** Format: int64 */
+            max_shows: number;
+            /** Format: int64 */
+            min_interval_hours: number;
+            name: string;
+            /** Format: int64 */
+            priority: number;
+            /** Format: date-time */
+            start_at: string;
+            status: components["schemas"]["ActivityPopupStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
+        ActivityPopupWriteRequest: {
+            action: components["schemas"]["ActivityPopupAction"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: uint64 */
+            image_media_id: number;
+            /** Format: int64 */
+            max_shows: number;
+            /** Format: int64 */
+            min_interval_hours: number;
+            name: string;
+            /** Format: int64 */
+            priority: number;
+            /** Format: date-time */
+            start_at: string;
+        };
         CalendarReminderList: {
             items: components["schemas"]["CalendarReminderView"][];
         };
@@ -9097,6 +9543,185 @@ export interface components {
             status: components["schemas"]["SubmissionStatus"];
             /** Format: uint64 */
             version: number;
+        };
+        ClassDiscussionDigestAnalysisAudit: {
+            answered: boolean;
+            /** Format: int32 */
+            attempt_count: number;
+            attempts: components["schemas"]["ClassDiscussionDigestAnalysisAuditAttempt"][];
+            category: string;
+            class_num: string;
+            /** Format: uint64 */
+            classroom_topic_id: number;
+            /** Format: double */
+            confidence: number;
+            /** Format: uint64 */
+            config_version: number;
+            /** @enum {string} */
+            content_kind: "post" | "comment";
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uint64 */
+            id: number;
+            immediate_useful: boolean;
+            input_sha256: string;
+            /** Format: date-time */
+            input_snapshot_expires_at: string | null;
+            last_error_code: string;
+            latest_input_excerpt: string;
+            /** Format: date-time */
+            next_attempt_at?: string | null;
+            /** Format: date-time */
+            observed_at: string;
+            period_id: string;
+            /** Format: int32 */
+            prompt_attempt_count: number;
+            prompt_sha256: string;
+            /** Format: uint64 */
+            publication_version: number;
+            reason: string;
+            /** Format: double */
+            relevance: number;
+            /** Format: uint64 */
+            root_post_id: number;
+            /** Format: uint64 */
+            source_id: number;
+            /** @enum {string} */
+            status: "pending" | "processing" | "ready" | "retry_wait" | "terminal_failed" | "failed";
+            summary: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: double */
+            value: number;
+        };
+        ClassDiscussionDigestAnalysisAuditAttempt: {
+            answered: boolean;
+            /** Format: int32 */
+            attempt_number: number;
+            category: string;
+            classifier_prompt: string;
+            /** Format: date-time */
+            completed_at?: string | null;
+            /** Format: double */
+            confidence: number;
+            /** Format: uint64 */
+            config_version: number;
+            error_code: string;
+            /** Format: uint64 */
+            id: number;
+            immediate_useful: boolean;
+            input_sha256: string;
+            input_snapshot: string | null;
+            /** Format: date-time */
+            input_snapshot_expires_at?: string | null;
+            /** Format: date-time */
+            next_attempt_at?: string | null;
+            prompt_sha256: string;
+            reason: string;
+            /** Format: double */
+            relevance: number;
+            /** Format: date-time */
+            started_at: string;
+            /** @enum {string} */
+            status: "processing" | "retry_wait" | "ready" | "failed" | "abandoned";
+            summary: string;
+            /** Format: double */
+            value: number;
+        };
+        ClassDiscussionDigestAnalysisAuditPage: {
+            items: components["schemas"]["ClassDiscussionDigestAnalysisAudit"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassDiscussionDigestAnalysisAuditPageResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestAnalysisAuditPage"];
+            request_id: string;
+        };
+        ClassDiscussionDigestAnalysisAuditResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestAnalysisAudit"];
+            request_id: string;
+        };
+        ClassDiscussionDigestClassifierConfig: {
+            classifier_prompt: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        ClassDiscussionDigestClassifierConfigResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestClassifierConfig"];
+            request_id: string;
+        };
+        ClassDiscussionDigestExclusionSummary: {
+            [key: string]: number;
+        };
+        /** @enum {string} */
+        ClassDiscussionDigestMode: "preview" | "formal";
+        ClassDiscussionDigestPreviewPage: {
+            items: components["schemas"]["ClassDiscussionDigestPreviewView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassDiscussionDigestPreviewPageResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestPreviewPage"];
+            request_id: string;
+        };
+        ClassDiscussionDigestPreviewResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestPreviewView"];
+            request_id: string;
+        };
+        ClassDiscussionDigestPreviewView: {
+            action_path: string;
+            /** Format: int32 */
+            candidate_count: number;
+            class_num: string;
+            /** Format: uint64 */
+            config_version: number;
+            /** Format: date-time */
+            created_at: string;
+            exclusions: components["schemas"]["ClassDiscussionDigestExclusionSummary"];
+            /** Format: date-time */
+            expires_at: string;
+            feature_enabled: boolean;
+            fingerprint: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int32 */
+            matched_count: number;
+            mode: components["schemas"]["ClassDiscussionDigestMode"];
+            period_id: string;
+            proposed_summary: string;
+            proposed_title: string;
+            topics: components["schemas"]["ClassDiscussionDigestTopic"][];
+            wechat_send_enabled: boolean;
+            window_key: string;
+        };
+        ClassDiscussionDigestTopic: {
+            answered: boolean;
+            /** @enum {string} */
+            category: "question" | "share" | "answer";
+            /** Format: uint64 */
+            classroom_topic_id: number;
+            /** Format: uint64 */
+            content_id: number;
+            /** @enum {string} */
+            content_kind: "post" | "comment";
+            key: string;
+            /** Format: date-time */
+            published_at: string;
+            reason: string;
+            /** Format: uint64 */
+            root_post_id: number;
+            summary: string;
+        };
+        UpdateClassDiscussionDigestClassifierConfigRequest: {
+            classifier_prompt: string;
+            /** Format: uint64 */
+            expected_version: number;
         };
         ClientBootstrap: {
             academic_verification?: components["schemas"]["AcademicVerificationStatus"] | null;
@@ -11541,7 +12166,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat" | "cat_atlas";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat" | "cat_atlas" | "activity_popup";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -13152,6 +13777,69 @@ export interface components {
                 "application/json": components["schemas"]["ActivityResponseBody"];
             };
         };
+        /** @description 活动跳转目标目录 */
+        ActivityPopupActionOptionsResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupActionOptionsResponseBody"];
+            };
+        };
+        /** @description 当前候选活动弹框 */
+        ActivityPopupCandidateResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupCandidateResponseBody"];
+            };
+        };
+        /** @description 活动弹框展示资格 */
+        ActivityPopupClaimResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupClaimResponseBody"];
+            };
+        };
+        /** @description 活动图片 */
+        ActivityPopupMediaResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupMediaResponseBody"];
+            };
+        };
+        /** @description 活动图片直传目标 */
+        ActivityPopupMediaUploadTargetResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupMediaUploadTargetResponseBody"];
+            };
+        };
+        /** @description 活动弹框分页 */
+        ActivityPopupPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupPageResponseBody"];
+            };
+        };
+        /** @description 活动弹框 */
+        ActivityPopupResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupResponseBody"];
+            };
+        };
         /** @description 我的校历事件提醒 */
         CalendarReminderListResponse: {
             headers: {
@@ -13456,6 +14144,51 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["SubmissionResponseBody"];
+            };
+        };
+        /** @description 课堂讨论内容分析记录分页 */
+        ClassDiscussionDigestAnalysisAuditPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestAnalysisAuditPageResponseBody"];
+            };
+        };
+        /** @description 课堂讨论内容分析记录详情 */
+        ClassDiscussionDigestAnalysisAuditResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestAnalysisAuditResponseBody"];
+            };
+        };
+        /** @description 课堂讨论内容分析配置 */
+        ClassDiscussionDigestClassifierConfigResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestClassifierConfigResponseBody"];
+            };
+        };
+        /** @description 课堂精选预演列表 */
+        ClassDiscussionDigestPreviewPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestPreviewPageResponseBody"];
+            };
+        };
+        /** @description 课堂精选预演详情 */
+        ClassDiscussionDigestPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestPreviewResponseBody"];
             };
         };
         /** @description 当前用户的小程序初始化数据 */
@@ -16619,6 +17352,241 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    GetActivityPopupCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupCandidateResponse"];
+        };
+    };
+    ClickActivityPopupDisplay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                display_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CloseActivityPopupDisplay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                display_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ConfirmActivityPopupDisplay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                display_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ClaimActivityPopup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupClaimResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminActivityPopups: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupPageResponse"];
+        };
+    };
+    CreateAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupWriteRequest"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ActivityPopupResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    ListActivityPopupActionOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupActionOptionsResponse"];
+        };
+    };
+    CreateActivityPopupMediaUploadTarget: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupMediaUploadInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ActivityPopupMediaUploadTargetResponse"];
+        };
+    };
+    CompleteActivityPopupMedia: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupVersionRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupMediaResponse"];
+        };
+    };
+    GetAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupUpdateRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PauseAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupVersionRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupVersionRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListMyCalendarReminders: {
         parameters: {
             query?: never;
@@ -18371,6 +19339,102 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CatalogResponse"];
+        };
+    };
+    ListAdminClassDiscussionDigestAnalysisAudits: {
+        parameters: {
+            query?: {
+                period_id?: string;
+                class_num?: string;
+                status?: "pending" | "processing" | "ready" | "retry_wait" | "terminal_failed" | "failed";
+                content_kind?: "post" | "comment";
+                source_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestAnalysisAuditPageResponse"];
+        };
+    };
+    GetAdminClassDiscussionDigestAnalysisAudit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestAnalysisAuditResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetAdminClassDiscussionDigestClassifierConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestClassifierConfigResponse"];
+        };
+    };
+    UpdateAdminClassDiscussionDigestClassifierConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateClassDiscussionDigestClassifierConfigRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestClassifierConfigResponse"];
+        };
+    };
+    ListAdminClassDiscussionDigestPreviews: {
+        parameters: {
+            query?: {
+                period_id?: string;
+                class_num?: string;
+                mode?: "preview" | "formal";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestPreviewPageResponse"];
+        };
+    };
+    GetAdminClassDiscussionDigestPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestPreviewResponse"];
+            404: components["responses"]["Error"];
         };
     };
     GetClientBootstrap: {

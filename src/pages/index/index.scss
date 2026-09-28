@@ -1959,6 +1959,71 @@ page { background: var(--campus-page, #f4f7fb); }
   }
 }
 
+/* 首页活动仅在首屏静置后出现，图片已预加载才会挂载，避免空白闪烁。 */
+.activity-popup {
+  position: fixed;
+  z-index: 270;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: rgba(4, 12, 24, 0.68);
+
+  &__card {
+    position: relative;
+    width: min(100%, 640rpx);
+    overflow: hidden;
+    background: var(--campus-surface, #fff);
+    border: 1rpx solid var(--campus-border, #e8edf4);
+    border-radius: var(--ousea-radius-card-lg, 36rpx);
+    box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+    max-height: 78vh;
+  }
+
+  &__close {
+    position: absolute;
+    top: 16rpx;
+    right: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88rpx;
+    min-height: 88rpx;
+    padding: 0 16rpx;
+    color: #fff;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1;
+    background: rgba(26, 35, 51, 0.7);
+    border-radius: 999rpx;
+  }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 88rpx;
+    margin: 20rpx 24rpx 24rpx;
+    color: #fff;
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    background: var(--campus-primary, #2b7aef);
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+  }
+
+  &__close:active,
+  &__action:active,
+  &__image-action:active {
+    opacity: 0.78;
+  }
+}
+
 /* 首页轻量引导：只在用户具备对应任务时出现，不重复 TabBar 的未读提示。 */
 .home-notification-guide {
   position: fixed;
@@ -2057,6 +2122,7 @@ page { background: var(--campus-page, #f4f7fb); }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .activity-popup__card,
   .home-notification-guide__sheet {
     transition: none;
   }
