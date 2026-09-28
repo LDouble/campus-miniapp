@@ -179,6 +179,9 @@ const preloadRule = Object.fromEntries(
 )
 
 const targetMiniProgramAppId = __CAMPUS_TARGET_WECHAT_APP_ID__.trim()
+const navigateToMiniProgramAppIdList = targetMiniProgramAppId
+  ? [targetMiniProgramAppId]
+  : []
 
 const wechatAiModeConfig = isWechatAiEnabled
   ? {
@@ -231,8 +234,8 @@ export default defineAppConfig({
     borderStyle: '@tabBarBorderStyle' as 'white',
     list: tabBarList
   },
-  ...(isQualificationEdition && targetMiniProgramAppId
-    ? { navigateToMiniProgramAppIdList: [targetMiniProgramAppId] }
+  ...(navigateToMiniProgramAppIdList.length
+    ? { navigateToMiniProgramAppIdList }
     : {}),
   ...wechatAiModeConfig
 })
