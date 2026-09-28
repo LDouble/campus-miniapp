@@ -4,7 +4,6 @@ const isQualificationEdition = __CAMPUS_APP_EDITION__ === 'qualification'
 const isWechatAiEnabled = __CAMPUS_WECHAT_AI_ENABLED__
 const fullPages = [
   'pages/index/index',
-  'pages/app-login/index',
   'pages/community/index',
   'pages/community/detail',
   'pages/today-hot/index',
@@ -75,7 +74,6 @@ const qualificationExcludedPages = new Set([
 
 const mainPagePaths = new Set([
   'pages/index/index',
-  'pages/app-login/index',
   'pages/community/index',
   'pages/messages/index',
   'pages/profile/index',
