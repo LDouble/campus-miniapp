@@ -1,5 +1,9 @@
 import Taro from '@tarojs/taro'
 import type { ActivityPopupAction } from '../../api/activity-popups'
+import {
+  ACTIVITY_POPUP_MINI_PROGRAM_PATH_MAX_LENGTH,
+  activityPopupMiniProgramTargets,
+} from './mini-program-targets'
 
 type InternalTarget = {
   path: string
@@ -16,22 +20,6 @@ const internalTargets: Record<string, InternalTarget> = {
   today_hot: { path: '/pages/today-hot/index', allowedParams: ['snapshot_id', 'post_id'] },
 }
 
-const miniProgramTargets: Record<string, {
-  appId: string
-  allowedParams: readonly string[]
-  envVersion: 'develop' | 'trial' | 'release'
-}> = {
-  full_miniapp: {
-    appId: __CAMPUS_TARGET_WECHAT_APP_ID__.trim(),
-    allowedParams: ['path'],
-    envVersion: __CAMPUS_TARGET_MINIAPP_ENV_VERSION__ === 'develop'
-      ? 'develop'
-      : __CAMPUS_TARGET_MINIAPP_ENV_VERSION__ === 'trial'
-        ? 'trial'
-        : 'release',
-  },
-}
-
 const pickParams = (params: Record<string, string>, allowed: readonly string[]) => (
   Object.fromEntries(
     allowed.flatMap((key) => {
@@ -42,6 +30,37 @@ const pickParams = (params: Record<string, string>, allowed: readonly string[]) 
     }),
   ) as Record<string, string>
 )
+
+const isSafeCustomMiniProgramPath = (path: string) => (
+  path.startsWith('/')
+  && !path.startsWith('//')
+  && !path.includes('..')
+  && !/[\r\n\t]/u.test(path)
+)
+
+const resolveMiniProgramPath = (
+  params: Record<string, string>,
+  required: boolean,
+  safePathRequired: boolean,
+) => {
+  const path = params.path
+  if (path === undefined) return required ? null : ''
+  // 后端按 Go rune、管理端按 Array.from 计数，客户端也以 Unicode code point 对齐。
+  return typeof path === 'string' && Array.from(path).length <= ACTIVITY_POPUP_MINI_PROGRAM_PATH_MAX_LENGTH
+    && (!required || path.length > 0)
+    && (!safePathRequired || isSafeCustomMiniProgramPath(path))
+    ? path
+    : null
+}
+
+const resolveMiniProgramTarget = (action: ActivityPopupAction) => {
+  const target = activityPopupMiniProgramTargets[action.target_key]
+  if (!target?.appId) return null
+  const params = action.params || {}
+  if (target.requiresDeclaredAppId && params.app_id !== target.appId) return null
+  const path = resolveMiniProgramPath(params, target.requiresPath, target.requiresSafePath)
+  return path === null ? null : { target, path }
+}
 
 const queryString = (params: Record<string, string>) => {
   const entries = Object.entries(params)
@@ -61,13 +80,13 @@ export const openActivityPopupAction = async (action: ActivityPopupAction): Prom
   }
 
   if (action.type === 'mini_program') {
-    const target = miniProgramTargets[action.target_key]
-    if (!target?.appId) return false
-    const params = pickParams(action.params || {}, target.allowedParams)
+    const resolved = resolveMiniProgramTarget(action)
+    if (!resolved) return false
     await Taro.navigateToMiniProgram({
-      appId: target.appId,
-      path: params.path || '',
-      envVersion: target.envVersion,
+      appId: resolved.target.appId,
+      // 外部小程序按其页面协议解释 path；不能重新编码或截断后台传入值。
+      path: resolved.path,
+      envVersion: resolved.target.envVersion,
       extraData: { source: 'activity_popup', target_key: action.target_key },
     })
     return true
@@ -80,6 +99,6 @@ export const isActivityPopupActionSupported = (action: ActivityPopupAction) => (
   action.type === 'internal_page'
     ? Boolean(internalTargets[action.target_key])
     : action.type === 'mini_program'
-      ? Boolean(miniProgramTargets[action.target_key]?.appId)
+      ? Boolean(resolveMiniProgramTarget(action))
       : false
 )

@@ -21,6 +21,11 @@ const {
   isActivityPopupActionSupported,
   openActivityPopupAction,
 } = require('../src/features/activity-popup/navigation') as typeof import('../src/features/activity-popup/navigation')
+const {
+  ACTIVITY_POPUP_CUSTOM_MINI_PROGRAM_APP_ID,
+  ACTIVITY_POPUP_MINI_PROGRAM_PATH_MAX_LENGTH,
+  activityPopupMiniProgramAppIds,
+} = require('../src/features/activity-popup/mini-program-targets') as typeof import('../src/features/activity-popup/mini-program-targets')
 
 const candidate = {
   id: 12,
@@ -63,6 +68,74 @@ assert.equal(isActivityPopupActionSupported(externalAction), true)
 }
 assert.equal(isActivityPopupActionSupported({ ...externalAction, target_key: 'arbitrary_app_id' }), false)
 
+// 覆盖用户提供的滴滴落地参数量级，但不把其中的会话追踪值提交到仓库。
+const customPath = `/pages/index/webview?url=https%3A%2F%2Fprod.didi.cn%2Flanding%3Fpayload%3D${'x'.repeat(1400)}`
+assert.ok(customPath.length > 1024 && customPath.length <= ACTIVITY_POPUP_MINI_PROGRAM_PATH_MAX_LENGTH, '脱敏长 path 必须覆盖验收样例量级且不超过新上限')
+const customAction = {
+  type: 'mini_program' as const,
+  target_key: 'custom_miniapp',
+  params: { app_id: ACTIVITY_POPUP_CUSTOM_MINI_PROGRAM_APP_ID, path: customPath },
+}
+assert.equal(isActivityPopupActionSupported(customAction), true, '登记的自定义小程序才能作为活动目标')
+{
+  const opened = await openActivityPopupAction(customAction)
+  assert.equal(opened, true)
+  assert.deepEqual(externalTarget, {
+    appId: ACTIVITY_POPUP_CUSTOM_MINI_PROGRAM_APP_ID,
+    path: customPath,
+  }, '长 path 必须按原文传给目标小程序')
+}
+const unsupportedAppIdAction = {
+  ...customAction,
+  params: { ...customAction.params, app_id: 'wxnotregistered' },
+}
+assert.equal(isActivityPopupActionSupported(unsupportedAppIdAction), false, '未登记 AppID 必须在展示前被拒绝')
+assert.equal(await openActivityPopupAction(unsupportedAppIdAction), false, '未登记 AppID 不能调用跳转 API')
+assert.equal(isActivityPopupActionSupported({
+  ...customAction,
+  params: { app_id: ACTIVITY_POPUP_CUSTOM_MINI_PROGRAM_APP_ID },
+}), false, 'custom_miniapp 缺少必填 path 时不能跳目标首页')
+assert.equal(isActivityPopupActionSupported({
+  ...customAction,
+  params: { app_id: ACTIVITY_POPUP_CUSTOM_MINI_PROGRAM_APP_ID, path: '' },
+}), false, 'custom_miniapp 空 path 时不能跳目标首页')
+for (const unsafePath of [
+  'pages/index',
+  '//pages/index',
+  '/pages/../index',
+  '/pages/index\nnext',
+  '/pages/index\rnext',
+  '/pages/index\tnext',
+]) {
+  assert.equal(isActivityPopupActionSupported({
+    ...customAction,
+    params: { ...customAction.params, path: unsafePath },
+  }), false, `custom_miniapp 必须拒绝不安全 path：${JSON.stringify(unsafePath)}`)
+}
+assert.equal(await openActivityPopupAction({
+  ...customAction,
+  params: { ...customAction.params, path: '/pages/../index' },
+}), false, '不安全 path 不能调用跳转 API')
+const overlongPathAction = {
+  ...customAction,
+  params: { ...customAction.params, path: 'x'.repeat(ACTIVITY_POPUP_MINI_PROGRAM_PATH_MAX_LENGTH + 1) },
+}
+assert.equal(isActivityPopupActionSupported(overlongPathAction), false, '超过 2048 字符的 path 必须显式拒绝')
+assert.equal(await openActivityPopupAction(overlongPathAction), false, '超过 2048 字符的 path 不能静默跳到首页')
+assert.equal(isActivityPopupActionSupported({
+  ...customAction,
+  params: { ...customAction.params, path: `/${'😀'.repeat(ACTIVITY_POPUP_MINI_PROGRAM_PATH_MAX_LENGTH - 1)}` },
+}), true, '路径上限必须按 Unicode code point 计数，与后端 Go rune 对齐')
+assert.equal(isActivityPopupActionSupported({
+  ...customAction,
+  params: { ...customAction.params, path: `/${'😀'.repeat(ACTIVITY_POPUP_MINI_PROGRAM_PATH_MAX_LENGTH)}` },
+}), false, '超过 2048 个 Unicode code point 的 path 必须被拒绝')
+assert.deepEqual(
+  activityPopupMiniProgramAppIds().sort(),
+  [ACTIVITY_POPUP_CUSTOM_MINI_PROGRAM_APP_ID, 'wxactivitypopup'].sort(),
+  '运行时目标 AppID 与 app.config 静态名单必须来自同一注册表并去重',
+)
+
 const page = readFileSync(resolve(__dirname, '../src/pages/index/index.tsx'), 'utf8')
 const preloadAt = page.indexOf('await preloadActivityPopupImage(candidate.image_url)')
 const claimAt = page.indexOf('await claimActivityPopup(candidate.id)')
@@ -81,6 +154,7 @@ assert.match(page, /shouldReportActivityPopupClose\([\s\S]*?void closeActivityPo
 
 const appConfig = readFileSync(resolve(__dirname, '../src/app.config.ts'), 'utf8')
 assert.ok(appConfig.includes('navigateToMiniProgramAppIdList'), '外部目标必须进入小程序静态声明名单')
+assert.ok(appConfig.includes('activityPopupMiniProgramAppIds'), '外部跳转名单必须复用运行时注册表')
 
 console.log('activity popup smoke: ok')
 }
