@@ -461,6 +461,28 @@
   background: var(--campus-surface, #fff);
 }
 
+.carpool-group-card__state,
+.carpool-group-card__load-more {
+  display: flex;
+  min-height: 72rpx;
+  align-items: center;
+  justify-content: center;
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: 24rpx;
+}
+
+.carpool-group-card__state--error {
+  justify-content: space-between;
+  padding: 0 16rpx;
+  color: var(--campus-danger, #e5484d);
+}
+
+.carpool-group-card__state--error text:last-child,
+.carpool-group-card__load-more {
+  color: #008f82;
+  font-weight: 650;
+}
+
 .carpool-group__heading {
   display: flex;
   min-height: 58rpx;

@@ -764,6 +764,28 @@
 
 .carpool-nearby__list .carpool-card { background: var(--campus-surface-subtle, #f8fafc); }
 
+.carpool-nearby__state,
+.carpool-nearby__load-more {
+  display: flex;
+  min-height: 72rpx;
+  align-items: center;
+  justify-content: center;
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: 24rpx;
+}
+
+.carpool-nearby__state {
+  justify-content: space-between;
+  padding: 0 16rpx;
+  color: var(--campus-danger, #e5484d);
+}
+
+.carpool-nearby__state text:last-child,
+.carpool-nearby__load-more {
+  color: #008f82;
+  font-weight: 650;
+}
+
 .life-detail--carpool .detail-inline-action {
   border-color: #ccfbf1;
   background: var(--campus-surface-success, #f0fdfa);

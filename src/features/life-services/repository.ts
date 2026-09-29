@@ -86,6 +86,8 @@ export type CarpoolTripGroup = {
   departure_start: string
   departure_end: string
   trip_count: number
+  anchor_trip_id: number
+  has_more: boolean
   trips: CarpoolTripView[]
 }
 
@@ -616,6 +618,22 @@ export const lifeServicesRepository = {
     })
   },
 
+  listCarpoolGroupTrips(anchorId: number, search: CarpoolSearch = {}) {
+    return apiRequest<CarpoolTripViewPage>({
+      path: `/api/v1/carpool/trips/groups/${anchorId}/trips`,
+      query: {
+        keyword: search.keyword,
+        campus: search.campus,
+        origin: search.origin,
+        destination: search.destination,
+        departure_date: search.departureDate,
+        seats_needed: search.seatsNeeded,
+        page: search.page || 1,
+        page_size: search.pageSize || 10,
+      },
+    })
+  },
+
   listMyCarpoolTrips(search: MyCarpoolSearch = {}) {
     return apiRequest<CarpoolTripViewPage>({
       path: '/api/v1/carpool/trips/mine',
@@ -636,9 +654,13 @@ export const lifeServicesRepository = {
     })
   },
 
-  listNearbyCarpoolTrips(id: number) {
-    return apiRequest<{ items: CarpoolTripView[] }>({
+  listNearbyCarpoolTrips(id: number, search: PagingQuery = {}) {
+    return apiRequest<CarpoolTripViewPage>({
       path: `/api/v1/carpool/trips/${id}/nearby`,
+      query: {
+        page: search.page || 1,
+        page_size: search.pageSize || 10,
+      },
     })
   },
 

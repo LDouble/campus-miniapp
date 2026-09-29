@@ -61,7 +61,10 @@ export default function CarpoolDetailPage() {
   const [error, setError] = useState('')
   const [persistedContact, setPersistedContact] = useState<ParticipationContact | null>(null)
   const [nearbyTrips, setNearbyTrips] = useState<CarpoolTripView[]>([])
+  const [nearbyPage, setNearbyPage] = useState(0)
+  const [nearbyTotal, setNearbyTotal] = useState(0)
   const [nearbyLoading, setNearbyLoading] = useState(false)
+  const [nearbyError, setNearbyError] = useState('')
   const nearbyRequestSequence = useRef(0)
 
   const applyItem = async (nextItem: CarpoolTripView) => {
@@ -78,14 +81,22 @@ export default function CarpoolDetailPage() {
     return contact
   }
 
-  const loadNearby = async (tripId: number) => {
+  const loadNearby = async (tripId: number, nextPage = 1, append = false) => {
     const requestId = ++nearbyRequestSequence.current
     setNearbyLoading(true)
+    setNearbyError('')
     try {
-      const result = await lifeServicesRepository.listNearbyCarpoolTrips(tripId)
-      if (requestId === nearbyRequestSequence.current) setNearbyTrips(result.items)
+      const result = await lifeServicesRepository.listNearbyCarpoolTrips(tripId, { page: nextPage })
+      if (requestId === nearbyRequestSequence.current) {
+        setNearbyTrips((current) => append ? [...current, ...result.items] : result.items)
+        setNearbyPage(result.page)
+        setNearbyTotal(Number(result.total))
+      }
     } catch {
-      if (requestId === nearbyRequestSequence.current) setNearbyTrips([])
+      if (requestId === nearbyRequestSequence.current) {
+        if (!append) setNearbyTrips([])
+        setNearbyError('附近同行加载失败，请重试')
+      }
     } finally {
       if (requestId === nearbyRequestSequence.current) setNearbyLoading(false)
     }
@@ -230,6 +241,7 @@ export default function CarpoolDetailPage() {
     item?.contact,
     persistedContact,
   )
+  const canLoadMoreNearby = nearbyTrips.length < nearbyTotal
 
   const copyContact = () => {
     if (!displayedContact) {
@@ -337,7 +349,7 @@ export default function CarpoolDetailPage() {
               </View>
             )}
 
-            {(nearbyLoading || nearbyTrips.length > 0) && (
+            {(nearbyLoading || nearbyTrips.length > 0 || nearbyError) && (
               <View className='carpool-nearby'>
                 <View className='carpool-nearby__heading'>
                   <View>
@@ -353,6 +365,22 @@ export default function CarpoolDetailPage() {
                     {nearbyTrips.map((nearbyTrip) => (
                       <CarpoolCard key={nearbyTrip.id} item={nearbyTrip} />
                     ))}
+                    {nearbyError && (
+                      <View className='carpool-nearby__state'>
+                        <Text>{nearbyError}</Text>
+                        <Text onClick={() => void loadNearby(item.id, nearbyPage || 1, nearbyPage > 0)}>重新加载</Text>
+                      </View>
+                    )}
+                    {!nearbyError && canLoadMoreNearby && (
+                      <View
+                        className='carpool-nearby__load-more'
+                        ariaRole='button'
+                        ariaLabel='加载更多附近同行'
+                        onClick={() => void loadNearby(item.id, nearbyPage + 1, true)}
+                      >
+                        继续加载
+                      </View>
+                    )}
                   </View>
                 )}
               </View>

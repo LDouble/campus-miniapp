@@ -491,7 +491,20 @@ export default function LifeServiceListPanel({
         <View className='carpool-groups'>
           {carpoolGroups.map((group) => (
             group.trip_count > 1
-              ? <CarpoolGroupCard key={`${group.origin}-${group.destination}-${group.departure_start}`} group={group} />
+              ? (
+                <CarpoolGroupCard
+                  key={`${group.origin}-${group.destination}-${group.departure_start}`}
+                  group={group}
+                  search={{
+                    keyword,
+                    campus: campus || undefined,
+                    origin: carpoolFilters.origin,
+                    destination: carpoolFilters.destination,
+                    departureDate: carpoolFilters.departureDate,
+                    seatsNeeded: carpoolFilters.seatsNeeded,
+                  }}
+                />
+              )
               : <CarpoolCard key={group.trips[0].id} item={group.trips[0]} />
           ))}
         </View>
