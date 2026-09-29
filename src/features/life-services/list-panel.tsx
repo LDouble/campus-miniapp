@@ -9,20 +9,23 @@ import type {
 import { isApiError } from '../../api/client'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { useLoadMoreSignal } from '../../hooks/use-load-more-signal'
-import { apiDateTimeCampusParts } from '../../utils/date-time'
 import { lifeBusinessThemes } from './business-theme'
 import type { LifeHubSection } from './business-theme'
 import {
   openCourseMarketplacePublisher,
   type MarketplaceSearchPrefill,
 } from './marketplace-prefill'
-import { lifeServicesRepository } from './repository'
+import {
+  lifeServicesRepository,
+  type CarpoolTripGroup,
+} from './repository'
 import {
   getLifeHubRefreshRevision,
   isLifeHubCacheReusable,
   markLifeHubSectionFresh,
 } from './refresh-policy'
 import CarpoolCard from './components/carpool-card'
+import CarpoolGroupCard from './components/carpool-group-card'
 import type { CarpoolFilterValue } from './components/carpool-filters'
 import ErrandCard from './components/errand-card'
 import MarketplaceCard from './components/marketplace-card'
@@ -35,6 +38,7 @@ export type LifeServiceSection = Exclude<LifeHubSection, 'community'>
 type ServiceItem = ErrandView | MarketplaceListingView | CarpoolTripView
 type LifeServiceCacheEntry = {
   items: ServiceItem[]
+  carpoolGroups?: CarpoolTripGroup[]
   page: number
   total: number
   refreshedAt: number
@@ -72,25 +76,6 @@ const mergeUniqueItems = (current: ServiceItem[], incoming: ServiceItem[]) => {
   const byId = new Map(current.map((item) => [item.id, item]))
   incoming.forEach((item) => byId.set(item.id, item))
   return [...byId.values()]
-}
-
-const dateKey = (value?: string | null) => {
-  if (!value) return 'unknown'
-  const parts = apiDateTimeCampusParts(value)
-  return parts ? parts.date : value.slice(0, 10)
-}
-
-const dateGroupLabel = (key: string) => {
-  if (key === 'unknown') return '时间待确认'
-  const today = new Date()
-  const tomorrow = new Date()
-  tomorrow.setDate(today.getDate() + 1)
-  const localKey = (date: Date) => (
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-  )
-  if (key === localKey(today)) return '今天出发'
-  if (key === localKey(tomorrow)) return '明天出发'
-  return `${key.replace(/-/g, '.')} 出发`
 }
 
 const emptyCopy: Record<LifeServiceSection, { title: string; subtitle: string }> = {
@@ -138,6 +123,7 @@ export default function LifeServiceListPanel({
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
   const [items, setItems] = useState<ServiceItem[]>([])
+  const [carpoolGroups, setCarpoolGroups] = useState<CarpoolTripGroup[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -180,7 +166,7 @@ export default function LifeServiceListPanel({
             maxPriceCents: marketFilters.maxPriceCents,
             page: nextPage,
           })
-          : await lifeServicesRepository.listCarpool({
+          : await lifeServicesRepository.listCarpoolGroups({
             keyword,
             campus: campus || undefined,
             origin: carpoolFilters.origin,
@@ -192,19 +178,36 @@ export default function LifeServiceListPanel({
       if (requestId !== requestSequence.current) return
       const refreshedAt = Date.now()
       const revision = getLifeHubRefreshRevision(section)
-      setItems((current) => {
-        const nextItems = append
-          ? mergeUniqueItems(current, result.items)
-          : result.items
-        saveLifeServiceCache(queryKey, {
-          items: nextItems,
-          page: result.page,
-          total: Number(result.total),
-          refreshedAt,
-          revision,
+      if (section === 'carpool') {
+        setCarpoolGroups((current) => {
+          const nextGroups = append
+            ? [...current, ...(result as { items: CarpoolTripGroup[] }).items]
+            : (result as { items: CarpoolTripGroup[] }).items
+          saveLifeServiceCache(queryKey, {
+            items: [],
+            carpoolGroups: nextGroups,
+            page: result.page,
+            total: Number(result.total),
+            refreshedAt,
+            revision,
+          })
+          return nextGroups
         })
-        return nextItems
-      })
+      } else {
+        setItems((current) => {
+          const nextItems = append
+            ? mergeUniqueItems(current, result.items as ServiceItem[])
+            : result.items as ServiceItem[]
+          saveLifeServiceCache(queryKey, {
+            items: nextItems,
+            page: result.page,
+            total: Number(result.total),
+            refreshedAt,
+            revision,
+          })
+          return nextItems
+        })
+      }
       setPage(result.page)
       setTotal(Number(result.total))
       markLifeHubSectionFresh(section, refreshedAt)
@@ -241,6 +244,7 @@ export default function LifeServiceListPanel({
     requestSequence.current += 1
     loadingMoreRef.current = false
     setItems([])
+    setCarpoolGroups([])
     setPage(1)
     setTotal(0)
   }, [marketFilters.category])
@@ -249,6 +253,7 @@ export default function LifeServiceListPanel({
     setDraftKeyword('')
     setKeyword('')
     setItems([])
+    setCarpoolGroups([])
   }, [section])
 
   useEffect(() => {
@@ -262,6 +267,7 @@ export default function LifeServiceListPanel({
       )
     ) {
       setItems(cached.items)
+      setCarpoolGroups(cached.carpoolGroups || [])
       setPage(cached.page)
       setTotal(cached.total)
       setError('')
@@ -294,7 +300,7 @@ export default function LifeServiceListPanel({
     section,
   ])
 
-  const canLoadMore = items.length < total
+  const canLoadMore = (section === 'carpool' ? carpoolGroups.length : items.length) < total
   const loadNextPage = useCallback(() => {
     void load(page + 1, true)
   }, [load, page])
@@ -328,20 +334,6 @@ export default function LifeServiceListPanel({
       : section === 'market'
         ? marketFilters.intent === 'wanted' ? '最新求购' : marketFilters.intent === 'sell' ? '最新出售' : '最新交易'
         : '近期同行'
-
-  const carpoolGroups = useMemo(() => {
-    if (section !== 'carpool') return []
-    const groups = new Map<string, CarpoolTripView[]>()
-    ;(items as CarpoolTripView[]).forEach((item) => {
-      const key = dateKey(item.departure_at)
-      groups.set(key, [...(groups.get(key) || []), item])
-    })
-    return [...groups.entries()].map(([key, trips]) => ({
-      key,
-      label: dateGroupLabel(key),
-      trips,
-    }))
-  }, [items, section])
 
   const submitSearch = () => {
     const nextKeyword = draftKeyword.trim()
@@ -498,22 +490,14 @@ export default function LifeServiceListPanel({
       {!loading && !error && section === 'carpool' && (
         <View className='carpool-groups'>
           {carpoolGroups.map((group) => (
-            <View key={group.key} className='carpool-group'>
-              <View className='carpool-group__heading'>
-                <Text>{group.label}</Text>
-                <Text>{group.trips.length} 个计划</Text>
-              </View>
-              <View className='carpool-list'>
-                {group.trips.map((item) => (
-                  <CarpoolCard key={item.id} item={item} />
-                ))}
-              </View>
-            </View>
+            group.trip_count > 1
+              ? <CarpoolGroupCard key={`${group.origin}-${group.destination}-${group.departure_start}`} group={group} />
+              : <CarpoolCard key={group.trips[0].id} item={group.trips[0]} />
           ))}
         </View>
       )}
 
-      {!loading && !error && items.length === 0 && (
+      {!loading && !error && (section === 'carpool' ? carpoolGroups.length === 0 : items.length === 0) && (
         <View className={`life-state life-state--empty life-state--${section}`}>
           <View className='life-state__empty-mark'>
             <View />
@@ -561,7 +545,7 @@ export default function LifeServiceListPanel({
           {loadingMore ? '正在加载更多…' : '继续上滑加载更多'}
         </View>
       )}
-      {!loading && !error && items.length > 0 && !canLoadMore && (
+      {!loading && !error && (section === 'carpool' ? carpoolGroups.length > 0 : items.length > 0) && !canLoadMore && (
         <View className='life-load-more life-load-more--end' ariaRole='status'>
           没有更多了
         </View>

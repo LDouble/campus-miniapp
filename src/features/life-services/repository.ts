@@ -80,6 +80,22 @@ export type CarpoolSearch = PagingQuery & {
   seatsNeeded?: number
 }
 
+export type CarpoolTripGroup = {
+  origin: string
+  destination: string
+  departure_start: string
+  departure_end: string
+  trip_count: number
+  trips: CarpoolTripView[]
+}
+
+export type CarpoolTripGroupPage = {
+  items: CarpoolTripGroup[]
+  page: number
+  page_size: number
+  total: number
+}
+
 export type MyCarpoolSearch = PagingQuery & {
   relation?: 'organized' | 'joined' | 'all'
   status?: string
@@ -584,6 +600,22 @@ export const lifeServicesRepository = {
     })
   },
 
+  listCarpoolGroups(search: CarpoolSearch = {}) {
+    return apiRequest<CarpoolTripGroupPage>({
+      path: '/api/v1/carpool/trips/groups',
+      query: {
+        keyword: search.keyword,
+        campus: search.campus,
+        origin: search.origin,
+        destination: search.destination,
+        departure_date: search.departureDate,
+        seats_needed: search.seatsNeeded,
+        page: search.page || 1,
+        page_size: search.pageSize || 20,
+      },
+    })
+  },
+
   listMyCarpoolTrips(search: MyCarpoolSearch = {}) {
     return apiRequest<CarpoolTripViewPage>({
       path: '/api/v1/carpool/trips/mine',
@@ -601,6 +633,12 @@ export const lifeServicesRepository = {
   getCarpoolTrip(id: number) {
     return apiRequest<CarpoolTripView>({
       path: `/api/v1/carpool/trips/${id}`,
+    })
+  },
+
+  listNearbyCarpoolTrips(id: number) {
+    return apiRequest<{ items: CarpoolTripView[] }>({
+      path: `/api/v1/carpool/trips/${id}/nearby`,
     })
   },
 
