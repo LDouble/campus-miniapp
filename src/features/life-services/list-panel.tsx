@@ -124,6 +124,7 @@ export default function LifeServiceListPanel({
   const [keyword, setKeyword] = useState('')
   const [items, setItems] = useState<ServiceItem[]>([])
   const [carpoolGroups, setCarpoolGroups] = useState<CarpoolTripGroup[]>([])
+  const [carpoolLoadedAt, setCarpoolLoadedAt] = useState(0)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -179,6 +180,7 @@ export default function LifeServiceListPanel({
       const refreshedAt = Date.now()
       const revision = getLifeHubRefreshRevision(section)
       if (section === 'carpool') {
+        if (!append) setCarpoolLoadedAt(refreshedAt)
         setCarpoolGroups((current) => {
           const nextGroups = append
             ? [...current, ...(result as { items: CarpoolTripGroup[] }).items]
@@ -268,6 +270,7 @@ export default function LifeServiceListPanel({
     ) {
       setItems(cached.items)
       setCarpoolGroups(cached.carpoolGroups || [])
+      if (section === 'carpool') setCarpoolLoadedAt(cached.refreshedAt)
       setPage(cached.page)
       setTotal(cached.total)
       setError('')
@@ -493,7 +496,7 @@ export default function LifeServiceListPanel({
             group.trip_count > 1
               ? (
                 <CarpoolGroupCard
-                  key={`${group.origin}-${group.destination}-${group.departure_start}`}
+                  key={`${queryKey}-${carpoolLoadedAt}-${group.anchor_trip_id}`}
                   group={group}
                   search={{
                     keyword,
