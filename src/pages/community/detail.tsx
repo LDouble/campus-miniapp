@@ -448,6 +448,7 @@ export default function CommunityDetailPage() {
                   images={post.images}
                   pendingReview={post.viewer_relation === 'owner' && post.status === 'pending_review'}
                   preview
+                  preloadPreview={false}
                 />
               )}
 
