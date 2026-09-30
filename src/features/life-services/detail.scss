@@ -708,6 +708,84 @@
 
 .carpool-detail-route-card .detail-important-card__grid { margin-top: 18rpx; }
 
+.carpool-nearby {
+  margin-top: 28rpx;
+  padding-top: 28rpx;
+  border-top: 1rpx solid var(--campus-border, #e8edf4);
+}
+
+.carpool-nearby__heading {
+  display: flex;
+  min-height: 64rpx;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.carpool-nearby__heading > view {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.carpool-nearby__heading > view text:first-child {
+  color: var(--campus-text-heading, #1a2333);
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.carpool-nearby__heading > view text:last-child {
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: 23rpx;
+}
+
+.carpool-nearby__heading > text {
+  color: #008f82;
+  font-size: 24rpx;
+}
+
+.carpool-nearby__loading {
+  min-height: 104rpx;
+  margin-top: 16rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  border-radius: 24rpx;
+  background: var(--campus-surface-success, #f0fdfa);
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: 25rpx;
+}
+
+.carpool-nearby__list {
+  display: flex;
+  margin-top: 16rpx;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.carpool-nearby__list .carpool-card { background: var(--campus-surface-subtle, #f8fafc); }
+
+.carpool-nearby__state,
+.carpool-nearby__load-more {
+  display: flex;
+  min-height: 72rpx;
+  align-items: center;
+  justify-content: center;
+  color: var(--campus-text-secondary, #6b7a90);
+  font-size: 24rpx;
+}
+
+.carpool-nearby__state {
+  justify-content: space-between;
+  padding: 0 16rpx;
+  color: var(--campus-danger, #e5484d);
+}
+
+.carpool-nearby__state text:last-child,
+.carpool-nearby__load-more {
+  color: #008f82;
+  font-weight: 650;
+}
+
 .life-detail--carpool .detail-inline-action {
   border-color: #ccfbf1;
   background: var(--campus-surface-success, #f0fdfa);

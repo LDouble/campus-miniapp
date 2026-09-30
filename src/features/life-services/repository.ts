@@ -1,4 +1,4 @@
-import { apiRequest, createIdempotencyKey } from '../../api/client'
+import { apiRequest, createIdempotencyKey, isApiError } from '../../api/client'
 import type { operations } from '../../api/generated/schema'
 import type {
   CarpoolTripView,
@@ -78,6 +78,24 @@ export type CarpoolSearch = PagingQuery & {
   destination?: string
   departureDate?: string
   seatsNeeded?: number
+}
+
+export type CarpoolTripGroup = {
+  origin: string
+  destination: string
+  departure_start: string
+  departure_end: string
+  trip_count: number
+  anchor_trip_id: number
+  has_more: boolean
+  trips: CarpoolTripView[]
+}
+
+export type CarpoolTripGroupPage = {
+  items: CarpoolTripGroup[]
+  page: number
+  page_size: number
+  total: number
 }
 
 export type MyCarpoolSearch = PagingQuery & {
@@ -584,6 +602,59 @@ export const lifeServicesRepository = {
     })
   },
 
+  async listCarpoolGroups(search: CarpoolSearch = {}): Promise<CarpoolTripGroupPage> {
+    try {
+      return await apiRequest<CarpoolTripGroupPage>({
+        path: '/api/v1/carpool/trips/groups',
+        query: {
+          keyword: search.keyword,
+          campus: search.campus,
+          origin: search.origin,
+          destination: search.destination,
+          departure_date: search.departureDate,
+          seats_needed: search.seatsNeeded,
+          page: search.page || 1,
+          page_size: search.pageSize || 20,
+        },
+      })
+    } catch (error) {
+      // 旧后端会把 /trips/groups 匹配为 /trips/{id}，返回路径参数错误。
+      const missingGroupEndpoint = isApiError(error)
+        && (error.statusCode === 404 || (error.statusCode === 400 && error.code === 'invalid_parameter'))
+      if (!missingGroupEndpoint) throw error
+      const page = await lifeServicesRepository.listCarpool(search)
+      return {
+        ...page,
+        items: page.items.map((trip) => ({
+          origin: trip.origin,
+          destination: trip.destination,
+          departure_start: trip.departure_at,
+          departure_end: trip.departure_at,
+          trip_count: 1,
+          anchor_trip_id: trip.id,
+          has_more: false,
+          trips: [trip],
+        })),
+      }
+    }
+  },
+
+  listCarpoolGroupTrips(anchorId: number, search: CarpoolSearch = {}) {
+    return apiRequest<CarpoolTripViewPage>({
+      path: `/api/v1/carpool/trips/groups/${anchorId}/trips`,
+      query: {
+        keyword: search.keyword,
+        campus: search.campus,
+        origin: search.origin,
+        destination: search.destination,
+        departure_date: search.departureDate,
+        seats_needed: search.seatsNeeded,
+        page: search.page || 1,
+        page_size: search.pageSize || 10,
+      },
+    })
+  },
+
   listMyCarpoolTrips(search: MyCarpoolSearch = {}) {
     return apiRequest<CarpoolTripViewPage>({
       path: '/api/v1/carpool/trips/mine',
@@ -602,6 +673,21 @@ export const lifeServicesRepository = {
     return apiRequest<CarpoolTripView>({
       path: `/api/v1/carpool/trips/${id}`,
     })
+  },
+
+  async listNearbyCarpoolTrips(id: number, search: PagingQuery = {}): Promise<CarpoolTripViewPage> {
+    try {
+      return await apiRequest<CarpoolTripViewPage>({
+        path: `/api/v1/carpool/trips/${id}/nearby`,
+        query: {
+          page: search.page || 1,
+          page_size: search.pageSize || 10,
+        },
+      })
+    } catch (error) {
+      if (!isApiError(error) || error.statusCode !== 404) throw error
+      return { items: [], page: search.page || 1, page_size: search.pageSize || 10, total: 0 }
+    }
   },
 
   createCarpoolTrip(input: CreateCarpoolBody) {
