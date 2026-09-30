@@ -1134,6 +1134,39 @@
   }
 }
 
+.carpool-card {
+  padding: 20rpx 24rpx;
+  border-radius: 28rpx;
+}
+
+.carpool-card .business-card-avatar {
+  width: 52rpx;
+  height: 52rpx;
+  font-size: 22rpx;
+}
+
+.carpool-card .business-card-identity { margin-left: 14rpx; }
+
+.carpool-card .business-route {
+  margin-top: 12rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 20rpx;
+}
+
+.carpool-card .business-route__place > text:last-child { margin-top: 2rpx; }
+
+.carpool-card__footer {
+  min-height: 44rpx;
+  margin-top: 6rpx;
+  padding-top: 8rpx;
+}
+
+.carpool-group-card__summary { padding: 18rpx 22rpx; }
+.carpool-group-card__meta { min-height: 44rpx; margin-top: 10rpx; padding-top: 8rpx; }
+.carpool-group-card__toggle { min-height: 40rpx; margin-top: 0; }
+.carpool-group-card__trips { gap: 10rpx; padding: 0 12rpx 12rpx; }
+.carpool-group-card__trips .carpool-card { margin-top: 10rpx; }
+
 .marketplace-grid,
 .marketplace-grid__column { gap: 24rpx; }
 
