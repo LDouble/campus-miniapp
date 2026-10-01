@@ -9,6 +9,7 @@ import { mergeVisibleCats } from '../../features/cat-atlas/return-refresh'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { navigateToWithGuard } from '../../utils/navigation'
+import VariantImage from '../../components/variant-image'
 import './catalog.scss'
 
 const searchIcon = require('../../assets/cat-atlas/figma/search.svg')
@@ -24,12 +25,13 @@ const PAGE_SIZE = 30
 
 type LoadOptions = { page?: number; append?: boolean }
 
-function FeedPhoto({ source, name, onError }: { source: string; name: string; onError: () => void }) {
+function FeedPhoto({ source, thumbnailUrl, name, onError }: { source: string; thumbnailUrl?: string | null; name: string; onError: () => void }) {
   const [heightPercent, setHeightPercent] = useState(75)
   return <View className='cat-journal__photo-frame' style={{ paddingTop: `${heightPercent}%` }}>
-    <Image
+    <VariantImage
       className='cat-journal__photo'
-      src={source}
+      originalUrl={source}
+      thumbnailUrl={thumbnailUrl}
       mode='aspectFill'
       lazyLoad
       ariaLabel={`查看${name}的完整照片`}
@@ -98,7 +100,7 @@ function CatJournalCard({ cat }: { cat: CatView }) {
       <View className='cat-journal__detail-link' ariaRole='button' onClick={(event) => { event.stopPropagation(); goDetail() }}><Text>认识它</Text><Image src={chevronRightIcon} mode='aspectFit' /></View>
     </View>
     {photo && <View className='cat-journal__hero'>
-      <FeedPhoto source={photo} name={cat.name} onError={() => setPhotoBroken(true)} />
+      <FeedPhoto source={photo} thumbnailUrl={cat.cover_thumbnail_url} name={cat.name} onError={() => setPhotoBroken(true)} />
       <View className='cat-journal__hero-campus'><Text>{cat.campus || '校园'}</Text></View>
       <View className='cat-journal__hero-time'><Text>最后目击：{formatSeenAt(cat.last_seen_at)}</Text></View>
     </View>}

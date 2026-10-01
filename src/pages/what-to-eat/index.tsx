@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import VariantImage from '../../components/variant-image'
 import {
   enabledCampuses,
   getMiniappRuntimeConfig,
@@ -19,6 +20,7 @@ import './index.scss'
 const icon = require('../../assets/icons/what-to-eat.svg')
 
 const errorMessage = (error: unknown) => isApiError(error) ? error.message : '加载失败，请稍后再试'
+const thumbnailAt = (item: FoodListing, index: number) => (item as FoodListing & { thumbnail_urls?: Array<string | null> }).thumbnail_urls?.[index]
 
 export default function WhatToEatPage() {
   const bootstrap = getMiniappRuntimeConfig()
@@ -125,7 +127,7 @@ export default function WhatToEatPage() {
         </View>
         <View className='what-to-eat-result__content'>
           {randomResult.image_urls[0]
-            ? <Image className='what-to-eat-result__image' src={randomResult.image_urls[0]} mode='aspectFill' />
+            ? <VariantImage className='what-to-eat-result__image' originalUrl={randomResult.image_urls[0]} thumbnailUrl={thumbnailAt(randomResult, 0)} mode='aspectFill' />
             : <View className='what-to-eat-result__placeholder' aria-hidden><Image src={icon} mode='aspectFit' /></View>}
           <View className='what-to-eat-result__info'>
             <Text className='what-to-eat-result__name'>{randomResult.name}</Text>
@@ -195,7 +197,7 @@ export default function WhatToEatPage() {
         onClick={() => openDetail(item)}
       >
         {item.image_urls[0]
-          ? <Image className='what-to-eat-card__image' src={item.image_urls[0]} mode='aspectFill' />
+          ? <VariantImage className='what-to-eat-card__image' originalUrl={item.image_urls[0]} thumbnailUrl={thumbnailAt(item, 0)} mode='aspectFill' />
           : <View className='what-to-eat-card__placeholder' aria-hidden><Image src={icon} mode='aspectFit' /></View>}
         <View className='what-to-eat-card__body'>
           <View className='what-to-eat-card__main'>

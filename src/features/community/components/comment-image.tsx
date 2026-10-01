@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Image, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type { CommentImageView, PublicCommentImagePreview } from '../../../api/types'
+import VariantImage from '../../../components/variant-image'
 import { previewContentImages } from '../content-image-preview'
 import './comment-image.scss'
 
@@ -18,6 +19,7 @@ export default function CommentImage({
   label = '评论图片',
 }: CommentImageProps) {
   const url = image?.url?.trim() || ''
+  const thumbnailUrl = (image as (CommentImageData & { thumbnail_url?: string | null }) | null | undefined)?.thumbnail_url?.trim() || ''
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
@@ -42,8 +44,9 @@ export default function CommentImage({
       {failed ? (
         <Text>图片暂不可用</Text>
       ) : (
-        <Image
-          src={url}
+        <VariantImage
+          originalUrl={url}
+          thumbnailUrl={thumbnailUrl}
           mode='aspectFill'
           lazyLoad
           ariaLabel={label}

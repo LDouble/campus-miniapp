@@ -7,6 +7,7 @@ import { getCurrentIdentity, getCurrentUser } from '../../api/account'
 import { uploadMediaImage } from '../../api/media'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
+import VariantImage from '../../components/variant-image'
 import { openPublicProfile } from '../../features/profile/public-profile'
 import StickerContent from '../../components/sticker-content'
 import StickerPicker from '../../components/sticker-picker'
@@ -817,9 +818,10 @@ export default function DirectMessageChatPage() {
                               urls: [image.url],
                             })}
                           >
-                            <Image
+                            <VariantImage
                               className='direct-chat-message__image'
-                              src={image.url}
+                              originalUrl={image.url}
+                              thumbnailUrl={(image as typeof image & { thumbnail_url?: string | null }).thumbnail_url}
                               mode='aspectFill'
                               lazyLoad
                               onError={() => markMessageImageFailed(message.id)}
