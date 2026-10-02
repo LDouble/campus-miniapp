@@ -3,6 +3,7 @@ import Taro, { usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { ITouchEvent } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import VariantImage from '../../components/variant-image'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { isApiError } from '../../api/client'
 import { ensureClubEditorAccess } from '../../features/clubs/access'
@@ -463,13 +464,13 @@ export default function ClubsPage() {
             <View className='club-card__visual'>
               <View className='club-card__cover'>
                 {club.cover?.url
-                  ? <Image src={club.cover.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name}封面`} />
+                  ? <VariantImage originalUrl={club.cover.url} thumbnailUrl={(club.cover as typeof club.cover & { thumbnail_url?: string | null }).thumbnail_url} mode='aspectFill' lazyLoad ariaLabel={`${club.name}封面`} />
                   : <View className='club-card__placeholder'><Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认封面' /></View>}
               </View>
               <View className='club-card__visual-meta'>
                 <View className='club-card__logo'>
                   {club.logo?.url
-                    ? <Image className='club-card__logo-image' src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
+                    ? <VariantImage className='club-card__logo-image' originalUrl={club.logo.url} thumbnailUrl={(club.logo as typeof club.logo & { thumbnail_url?: string | null }).thumbnail_url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
                     : <Image className='club-card__logo-placeholder' src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
                 </View>
                 <Text className='club-card__category'>{club.category.name}</Text>
@@ -540,7 +541,7 @@ export default function ClubsPage() {
                       >
                         <View className='club-directory-row__logo'>
                           {club.logo?.url
-                            ? <Image className='club-directory-row__logo-image' src={club.logo.url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
+                            ? <VariantImage className='club-directory-row__logo-image' originalUrl={club.logo.url} thumbnailUrl={(club.logo as typeof club.logo & { thumbnail_url?: string | null }).thumbnail_url} mode='aspectFill' lazyLoad ariaLabel={`${club.name} Logo`} />
                             : <Image className='club-directory-row__logo-placeholder' src={require('../../assets/icons/clubs.svg')} mode='aspectFit' ariaLabel='社团默认图标' />}
                         </View>
                         <View className='club-directory-row__copy'>

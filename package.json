@@ -88,7 +88,7 @@
     "test:profile-username": "ts-node --transpile-only scripts/profile-username-smoke.ts",
     "test:profile-avatar-moderation": "ts-node --transpile-only scripts/profile-avatar-moderation-smoke.ts",
     "test:public-profile-campus": "ts-node --transpile-only scripts/public-profile-campus-smoke.ts",
-    "test:media-images": "ts-node --transpile-only scripts/media-images-smoke.ts",
+    "test:media-images": "ts-node --transpile-only scripts/media-images-smoke.ts && ts-node --transpile-only scripts/image-variants-smoke.ts && ts-node --transpile-only scripts/content-image-preview-smoke.ts",
     "test:share": "ts-node --transpile-only scripts/share-smoke.ts",
     "test:lottery": "ts-node --transpile-only scripts/lottery-smoke.ts",
     "test:dark-mode": "ts-node --transpile-only scripts/theme-runtime-smoke.ts && ts-node --transpile-only scripts/theme-build-smoke.ts && ts-node --transpile-only scripts/theme-page-style-smoke.ts && ts-node --transpile-only scripts/dark-mode-smoke.ts && ts-node --transpile-only scripts/cat-atlas-dark-mode-smoke.ts && ts-node --transpile-only scripts/lottery-dark-mode-smoke.ts",

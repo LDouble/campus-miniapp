@@ -6,6 +6,7 @@ import { getCat, listCatSightings, setSightingLiked, type CatView, type Sighting
 import { RequestState } from '../../features/cat-atlas/ui'
 import { catPhotoHeightPercent } from '../../features/cat-atlas/photo-layout'
 import { navigateToWithGuard } from '../../utils/navigation'
+import VariantImage from '../../components/variant-image'
 import './atlas.scss'
 import './sightings-journal.scss'
 
@@ -23,12 +24,12 @@ const formatTimelineTime = (value: string) => {
   return isToday ? clock : date.toDateString() === yesterday.toDateString() ? `昨天 ${clock}` : `${date.getMonth() + 1}/${date.getDate()} ${clock}`
 }
 
-function SightingPhoto({ source }: { source: string }) {
+function SightingPhoto({ source, thumbnailUrl }: { source: string; thumbnailUrl?: string | null }) {
   const [photoBroken, setPhotoBroken] = useState(false)
   const [heightPercent, setHeightPercent] = useState(75)
   if (photoBroken) return null
   return <View className='journal-photo' style={{ paddingTop: `${heightPercent}%` }} onClick={() => void Taro.previewImage({ current: source, urls: [source] })}>
-    <Image className='cat-stitch-feed-card__photo' src={source} mode='aspectFill' onLoad={(event) => setHeightPercent(catPhotoHeightPercent(Number(event.detail.width), Number(event.detail.height)))} onError={() => setPhotoBroken(true)} />
+    <VariantImage className='cat-stitch-feed-card__photo' originalUrl={source} thumbnailUrl={thumbnailUrl} mode='aspectFill' onLoad={(event) => setHeightPercent(catPhotoHeightPercent(Number(event.detail.width), Number(event.detail.height)))} onError={() => setPhotoBroken(true)} />
   </View>
 }
 
@@ -142,7 +143,7 @@ export default function CatSightingsPage() {
             <View className='journal-card__identity'><Text>{item.reporter_name || '匿名用户'}</Text><Text>{formatTimelineTime(item.created_at)}</Text></View>
             {item.activity && <View className='journal-card__activity'><Text>它在{item.activity}</Text></View>}
           </View>
-          {item.photo_url && <SightingPhoto source={item.photo_url} />}
+          {item.photo_url && <SightingPhoto source={item.photo_url} thumbnailUrl={item.photo_thumbnail_url} />}
           {item.note && <Text className='journal-card__note'>{item.note}</Text>}
           <View className='journal-card__footer'><View className='journal-card__location'><Image src={locationIcon} mode='aspectFit' /><Text>{item.area}</Text></View>
             <View className={`journal-card__like ${isLiked ? 'is-liked' : ''}`} ariaRole='button' ariaLabel={isLiked ? '取消点赞' : '点赞'} onClick={() => void toggleLike(item)}><Image src={heartIcon} mode='aspectFit' /><Text>{pendingLikes.has(item.id) ? '…' : item.like_count || '赞'}</Text></View>

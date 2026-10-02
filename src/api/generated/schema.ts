@@ -2565,6 +2565,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/carpool/trips/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 聚合搜索开放拼车行程 */
+        get: operations["ListCarpoolTripGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/carpool/trips/groups/{anchor_id}/trips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询聚合拼车行程组内行程 */
+        get: operations["ListCarpoolTripGroupTrips"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/carpool/trips/mine": {
         parameters: {
             query?: never;
@@ -2645,6 +2679,23 @@ export interface paths {
         put?: never;
         /** 退出拼车行程 */
         post: operations["LeaveCarpoolTrip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/carpool/trips/{id}/nearby": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询同路线附近同行 */
+        get: operations["ListNearbyCarpoolTrips"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3603,6 +3654,162 @@ export interface paths {
         put?: never;
         /** 撤回评论 */
         post: operations["WithdrawComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询社区内容 Hook 投递记录 */
+        get: operations["ListAdminCommunityContentHookDeliveries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-deliveries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看社区内容 Hook 投递详情 */
+        get: operations["GetAdminCommunityContentHookDelivery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-deliveries/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试社区内容 Hook 投递 */
+        post: operations["RetryAdminCommunityContentHookDelivery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-failed-link-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询尚未生成短链的失败内容 */
+        get: operations["ListAdminCommunityContentHookFailedLinkItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-failed-link-items/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试尚未生成短链的失败内容 */
+        post: operations["RetryAdminCommunityContentHookFailedLinkItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询社区内容 Hook 推送规则 */
+        get: operations["ListAdminCommunityContentHookRules"];
+        put?: never;
+        /** 创建社区内容 Hook 推送规则 */
+        post: operations["CreateAdminCommunityContentHookRule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看社区内容 Hook 推送规则 */
+        get: operations["GetAdminCommunityContentHookRule"];
+        /** 更新社区内容 Hook 推送规则 */
+        put: operations["UpdateAdminCommunityContentHookRule"];
+        post?: never;
+        /** 软删除社区内容 Hook 推送规则 */
+        delete: operations["DeleteAdminCommunityContentHookRule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules/{id}/enablement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 启用或停用社区内容 Hook 推送规则 */
+        post: operations["UpdateAdminCommunityContentHookRuleEnablement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules/{id}/test-deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发送社区内容 Hook 测试消息 */
+        post: operations["CreateAdminCommunityContentHookTestDelivery"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6750,6 +6957,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/wechat-article-export/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 生成公众号文章内容预览 */
+        post: operations["PreviewAdminWechatArticleExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/what-to-eat/listings": {
         parameters: {
             query?: never;
@@ -8534,6 +8758,7 @@ export interface components {
             type: components["schemas"]["ActivityPopupActionType"];
         };
         ActivityPopupActionOption: {
+            allowed_app_ids?: string[];
             allowed_params?: string[];
             label: string;
             target_key: string;
@@ -8560,6 +8785,8 @@ export interface components {
             /** Format: uint64 */
             id: number;
             image_url: string;
+            /** Format: uri */
+            thumbnail_url?: string | null;
         };
         ActivityPopupClaim: {
             /** Format: uuid */
@@ -8649,7 +8876,7 @@ export interface components {
             /** Format: uint64 */
             id: number;
             /** Format: uint64 */
-            image_media_id: number;
+            image_media_id: number | null;
             image_url: string | null;
             /** Format: int64 */
             max_shows: number;
@@ -8669,7 +8896,9 @@ export interface components {
             /** Format: date-time */
             end_at: string;
             /** Format: uint64 */
-            image_media_id: number;
+            image_media_id?: number | null;
+            /** Format: uri */
+            image_url?: string | null;
             /** Format: int64 */
             max_shows: number;
             /** Format: int64 */
@@ -8790,6 +9019,8 @@ export interface components {
             media_id?: number | null;
             /** Format: int64 */
             sort_order: number;
+            /** @description 社区列表使用的 CDN 缩略图；未启用图片处理时为空 */
+            thumbnail_url?: string | null;
             url: string;
         };
         CampusCirclePostPage: {
@@ -9215,6 +9446,37 @@ export interface components {
         CampusCircleViewerAction: "edit" | "withdraw" | "admin_withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic" | "pin" | "unpin";
         /** @enum {string} */
         CampusCircleViewerRelation: "anonymous" | "owner" | "other" | "admin";
+        CarpoolNearbyTripResponseBody: {
+            data: {
+                items: components["schemas"]["CarpoolTripView"][];
+            };
+            request_id: string;
+        };
+        CarpoolTripGroup: {
+            /** Format: uint64 */
+            anchor_trip_id: number;
+            /** Format: date-time */
+            departure_end: string;
+            /** Format: date-time */
+            departure_start: string;
+            destination: string;
+            has_more: boolean;
+            origin: string;
+            /** Format: int64 */
+            trip_count: number;
+            trips: components["schemas"]["CarpoolTripView"][];
+        };
+        CarpoolTripGroupPage: {
+            items: components["schemas"]["CarpoolTripGroup"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CarpoolTripGroupPageResponseBody: {
+            data: components["schemas"]["CarpoolTripGroupPage"];
+            request_id: string;
+        };
         CarpoolTripPageResponseBody: {
             data: components["schemas"]["CarpoolTripViewPage"];
             request_id: string;
@@ -9296,6 +9558,7 @@ export interface components {
         AdminSightingView: {
             activity: string;
             area: string;
+            cat_cover_thumbnail_url?: string | null;
             cat_cover_url?: string | null;
             /** Format: uint64 */
             cat_id: number;
@@ -9308,6 +9571,7 @@ export interface components {
             like_count: number;
             liked: boolean;
             note?: string | null;
+            photo_thumbnail_url?: string | null;
             photo_url?: string | null;
             rejection_reason?: string | null;
             reporter_avatar_url?: string | null;
@@ -9369,6 +9633,8 @@ export interface components {
             aliases: string[];
             campus: string;
             coat: string;
+            /** @description 图鉴列表使用的 CDN 缩略图；未启用时为空 */
+            cover_thumbnail_url?: string | null;
             cover_url?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -9481,6 +9747,8 @@ export interface components {
         SightingView: {
             activity: string;
             area: string;
+            /** @description 动态流使用的猫咪封面缩略图；未启用时为空 */
+            cat_cover_thumbnail_url?: string | null;
             cat_cover_url?: string | null;
             /** Format: uint64 */
             cat_id: number;
@@ -9493,6 +9761,8 @@ export interface components {
             like_count: number;
             liked: boolean;
             note?: string | null;
+            /** @description 动态流使用的照片缩略图；未启用时为空 */
+            photo_thumbnail_url?: string | null;
             photo_url?: string | null;
             reporter_avatar_url?: string | null;
             reporter_name: string;
@@ -9537,6 +9807,7 @@ export interface components {
             description?: string | null;
             /** Format: uint64 */
             id: number;
+            photo_thumbnail_url?: string | null;
             photo_url?: string | null;
             proposed_name?: string | null;
             rejection_reason?: string | null;
@@ -9872,6 +10143,8 @@ export interface components {
             media_id: number;
             /** Format: int64 */
             sort_order: number;
+            /** @description 社团目录和图库使用的 CDN 缩略图；未启用时为空 */
+            thumbnail_url?: string | null;
             url: string;
             /** Format: int64 */
             width: number;
@@ -10023,6 +10296,8 @@ export interface components {
             height: number;
             /** Format: uint64 */
             media_id: number;
+            /** @description 评论流中使用的 CDN 缩略图；未启用图片处理时为空 */
+            thumbnail_url?: string | null;
             url: string;
             /** Format: int64 */
             width: number;
@@ -10111,6 +10386,227 @@ export interface components {
         };
         /** @enum {string} */
         CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "like" | "unlike" | "pin_comment" | "unpin_comment" | "verify_academic";
+        /** @enum {string} */
+        CommunityContentHookAuthType: "none" | "bearer" | "hmac_sha256";
+        CommunityContentHookDelivery: {
+            /** Format: int32 */
+            attempt_count: number;
+            attempts?: components["schemas"]["CommunityContentHookDeliveryAttempt"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            is_test: boolean;
+            /** Format: int64 */
+            item_count: number;
+            items: components["schemas"]["CommunityContentHookDeliveryItem"][];
+            last_error_code?: string | null;
+            mode: components["schemas"]["CommunityContentHookMode"];
+            /** Format: date-time */
+            next_attempt_at?: string | null;
+            rendered_text?: string | null;
+            /** Format: uint64 */
+            rule_id: number;
+            rule_name: string;
+            rule_status: components["schemas"]["CommunityContentHookRuleStatus"];
+            status: components["schemas"]["CommunityContentHookDeliveryStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+            /** Format: date-time */
+            window_end?: string | null;
+            /** Format: date-time */
+            window_start?: string | null;
+        };
+        CommunityContentHookDeliveryAttempt: {
+            /** Format: int32 */
+            attempt_number: number;
+            /** Format: date-time */
+            completed_at?: string | null;
+            /** Format: int64 */
+            duration_ms?: number | null;
+            error_code?: string | null;
+            /** Format: int32 */
+            http_status?: number | null;
+            /** Format: date-time */
+            started_at: string;
+        };
+        CommunityContentHookDeliveryItem: {
+            mini_program_url_link?: string | null;
+            /** Format: uint64 */
+            resource_id: number;
+            skip_reason?: string | null;
+            source: components["schemas"]["CommunityContentHookSource"];
+            status: components["schemas"]["CommunityContentHookDeliveryStatus"];
+        };
+        CommunityContentHookDeliveryPage: {
+            items: components["schemas"]["CommunityContentHookDelivery"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CommunityContentHookDeliveryPageResponseBody: {
+            data: components["schemas"]["CommunityContentHookDeliveryPage"];
+            request_id: string;
+        };
+        CommunityContentHookDeliveryResponseBody: {
+            data: components["schemas"]["CommunityContentHookDelivery"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CommunityContentHookDeliveryStatus: "pending_link" | "pending_send" | "processing" | "succeeded" | "retry_wait" | "terminal_failed" | "skipped";
+        CommunityContentHookFailedLinkItem: {
+            /** Format: int32 */
+            attempts: number;
+            /** Format: uint64 */
+            id: number;
+            last_error?: string | null;
+            /** Format: date-time */
+            occurred_at: string;
+            /** Format: uint64 */
+            resource_id: number;
+            /** Format: uint64 */
+            retry_version: number;
+            /** Format: uint64 */
+            rule_id: number;
+            rule_name: string;
+            rule_status: components["schemas"]["CommunityContentHookRuleStatus"];
+            source: components["schemas"]["CommunityContentHookSource"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CommunityContentHookFailedLinkItemPage: {
+            items: components["schemas"]["CommunityContentHookFailedLinkItem"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CommunityContentHookFailedLinkItemPageResponseBody: {
+            data: components["schemas"]["CommunityContentHookFailedLinkItemPage"];
+            request_id: string;
+        };
+        CommunityContentHookFailedLinkItemResponseBody: {
+            data: components["schemas"]["CommunityContentHookFailedLinkItem"];
+            request_id: string;
+        };
+        /** @description 白名单筛选条件；条件之间取且，同一数组字段取或。字段只在对应内容来源上生效。 */
+        CommunityContentHookFilter: {
+            campus_circle_board_ids?: number[];
+            campuses?: string[];
+            /** Format: date-time */
+            carpool_depart_after?: string;
+            /** Format: date-time */
+            carpool_depart_before?: string;
+            carpool_departures?: string[];
+            carpool_destinations?: string[];
+            categories?: string[];
+            /** Format: int64 */
+            max_price_fen?: number;
+            /** Format: int64 */
+            max_reward_fen?: number;
+            /** Format: int64 */
+            min_price_fen?: number;
+            /** Format: int64 */
+            min_reward_fen?: number;
+        };
+        /** @enum {string} */
+        CommunityContentHookMode: "immediate" | "digest";
+        CommunityContentHookRetryFailedLinkItemInput: {
+            /** Format: uint64 */
+            expected_retry_version: number;
+        };
+        CommunityContentHookRetryInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CommunityContentHookRule: {
+            auth_type: components["schemas"]["CommunityContentHookAuthType"];
+            body_template?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            credential_configured: boolean;
+            /** Format: int32 */
+            digest_interval_minutes?: number | null;
+            enabled: boolean;
+            filter: components["schemas"]["CommunityContentHookFilter"];
+            /** Format: uint64 */
+            id: number;
+            /** Format: int32 */
+            max_items_per_delivery?: number | null;
+            mode: components["schemas"]["CommunityContentHookMode"];
+            name: string;
+            /** Format: date-time */
+            next_run_at?: string | null;
+            sources: components["schemas"]["CommunityContentHookSource"][];
+            status: components["schemas"]["CommunityContentHookRuleStatus"];
+            tail_text?: string;
+            target_url: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CommunityContentHookRuleEnablementInput: {
+            enabled: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CommunityContentHookRuleInput: {
+            auth_secret?: string;
+            auth_type: components["schemas"]["CommunityContentHookAuthType"];
+            body_template?: string;
+            /** Format: int32 */
+            digest_interval_minutes?: number | null;
+            enabled: boolean;
+            filter?: components["schemas"]["CommunityContentHookFilter"];
+            /** Format: int32 */
+            max_items_per_delivery?: number | null;
+            mode: components["schemas"]["CommunityContentHookMode"];
+            name: string;
+            sources: components["schemas"]["CommunityContentHookSource"][];
+            tail_text?: string;
+            /** Format: uri */
+            target_url: string;
+        };
+        CommunityContentHookRulePage: {
+            items: components["schemas"]["CommunityContentHookRule"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CommunityContentHookRulePageResponseBody: {
+            data: components["schemas"]["CommunityContentHookRulePage"];
+            request_id: string;
+        };
+        CommunityContentHookRuleResponseBody: {
+            data: components["schemas"]["CommunityContentHookRule"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CommunityContentHookRuleStatus: "enabled" | "disabled" | "deleted";
+        CommunityContentHookRuleUpdateInput: components["schemas"]["CommunityContentHookRuleInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        CommunityContentHookSource: "carpool" | "errand" | "marketplace" | "campus_circle";
+        CommunityContentHookTestDelivery: {
+            /** Format: uint64 */
+            delivery_id: number;
+            rendered_body: string;
+            status: components["schemas"]["CommunityContentHookDeliveryStatus"];
+        };
+        CommunityContentHookTestDeliveryInput: {
+            sample_text?: string;
+        };
+        CommunityContentHookTestDeliveryResponseBody: {
+            data: components["schemas"]["CommunityContentHookTestDelivery"];
+            request_id: string;
+        };
         ContentSegment: {
             nickname?: string | null;
             text: string;
@@ -11618,6 +12114,7 @@ export interface components {
         HomeFeedImageView: {
             /** Format: uint64 */
             media_id?: number | null;
+            thumbnail_url?: string | null;
             url: string;
         };
         HomeFeedItemView: {
@@ -11682,6 +12179,8 @@ export interface components {
             height: number;
             /** Format: uint64 */
             media_id: number;
+            /** @description 首页评论预览使用的 CDN 缩略图；未启用时为空 */
+            thumbnail_url?: string | null;
             url: string;
             /** Format: int64 */
             width: number;
@@ -12047,6 +12546,7 @@ export interface components {
             media_id?: number | null;
             /** Format: int64 */
             position: number;
+            thumbnail_url?: string | null;
             url: string;
         };
         MarketplaceListingPageResponseBody: {
@@ -12097,6 +12597,7 @@ export interface components {
             /** @enum {string} */
             source: "manual" | "course_selection" | "grade" | "schedule";
             status: string;
+            thumbnail_urls?: string[] | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -12577,6 +13078,11 @@ export interface components {
             height: number;
             /** Format: uint64 */
             media_id: number;
+            /**
+             * Format: uri
+             * @description 会话列表与消息流使用的短期 CDN 缩略图；未启用时为空
+             */
+            thumbnail_url?: string | null;
             /** Format: uri */
             url: string;
             /** Format: int64 */
@@ -13052,6 +13558,84 @@ export interface components {
             /** Format: uint64 */
             id: number;
         };
+        WechatArticleExportCarpool: {
+            /** Format: date-time */
+            departure_at: string;
+            description?: string | null;
+            destination: string;
+            origin: string;
+            /** Format: int64 */
+            remaining_seats: number;
+        };
+        WechatArticleExportErrand: {
+            category: string;
+            currency: string;
+            /** Format: date-time */
+            deadline: string;
+            description: string;
+            dropoff_location: string;
+            pickup_location: string;
+            /** Format: int64 */
+            reward_cents: number;
+        };
+        WechatArticleExportItem: {
+            carpool?: components["schemas"]["WechatArticleExportCarpool"];
+            /** Format: date-time */
+            created_at: string;
+            errand?: components["schemas"]["WechatArticleExportErrand"];
+            /** Format: uint64 */
+            id: number;
+            images: string[];
+            marketplace?: components["schemas"]["WechatArticleExportMarketplace"];
+            post?: components["schemas"]["WechatArticleExportPost"];
+            /** @enum {string} */
+            source_type: "post" | "marketplace" | "errand" | "carpool";
+        };
+        WechatArticleExportMarketplace: {
+            category: string;
+            currency: string;
+            description: string;
+            /** @enum {string} */
+            intent: "sell" | "wanted";
+            /** Format: int64 */
+            price_cents: number;
+        };
+        WechatArticleExportPost: {
+            content: string;
+            section_name: string;
+            topics: string[];
+            /** Format: uint64 */
+            view_count: number;
+        };
+        WechatArticleExportPreview: {
+            excluded_post_for_campus: boolean;
+            items: components["schemas"]["WechatArticleExportItem"][];
+            /** @enum {string} */
+            sort_by: "created_at" | "view_count";
+        };
+        WechatArticleExportPreviewRequest: {
+            campus?: string | null;
+            /** Format: date-time */
+            created_from?: string | null;
+            /** Format: date-time */
+            created_to?: string | null;
+            /**
+             * Format: int32
+             * @default 20
+             */
+            limit: number;
+            section_ids?: number[];
+            /**
+             * @default created_at
+             * @enum {string}
+             */
+            sort_by: "created_at" | "view_count";
+            source_types: ("post" | "marketplace" | "errand" | "carpool")[];
+        };
+        WechatArticleExportPreviewResponseBody: {
+            data: components["schemas"]["WechatArticleExportPreview"];
+            request_id: string;
+        };
         FoodListingAdminInput: components["schemas"]["FoodListingInput"] & {
             promoted?: boolean;
             /** Format: date-time */
@@ -13122,6 +13706,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             image_urls: string[];
+            thumbnail_urls?: string[] | null;
         };
         /** @enum {string} */
         FoodListingStatus: "pending" | "published" | "offline" | "rejected";
@@ -13164,6 +13749,7 @@ export interface components {
             /** Format: uint64 */
             submitted_by?: number | null;
             tags: string[];
+            thumbnail_urls?: string[] | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -14029,6 +14615,24 @@ export interface components {
                 "application/json": components["schemas"]["CampusCircleTopicResponseBody"];
             };
         };
+        /** @description 附近同行行程 */
+        CarpoolNearbyTripResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CarpoolNearbyTripResponseBody"];
+            };
+        };
+        /** @description 聚合后的拼车行程分页 */
+        CarpoolTripGroupPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CarpoolTripGroupPageResponseBody"];
+            };
+        };
         /** @description 拼车行程分页 */
         CarpoolTripPageResponse: {
             headers: {
@@ -14324,6 +14928,69 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CommentThreadResponseBody"];
+            };
+        };
+        /** @description Hook 投递记录分页 */
+        CommunityContentHookDeliveryPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookDeliveryPageResponseBody"];
+            };
+        };
+        /** @description Hook 投递详情 */
+        CommunityContentHookDeliveryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookDeliveryResponseBody"];
+            };
+        };
+        /** @description 短链生成失败内容分页 */
+        CommunityContentHookFailedLinkItemPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookFailedLinkItemPageResponseBody"];
+            };
+        };
+        /** @description 短链生成失败内容 */
+        CommunityContentHookFailedLinkItemResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookFailedLinkItemResponseBody"];
+            };
+        };
+        /** @description 社区内容 Hook 推送规则分页 */
+        CommunityContentHookRulePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRulePageResponseBody"];
+            };
+        };
+        /** @description 社区内容 Hook 推送规则 */
+        CommunityContentHookRuleResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleResponseBody"];
+            };
+        };
+        /** @description Hook 测试发送结果 */
+        CommunityContentHookTestDeliveryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookTestDeliveryResponseBody"];
             };
         };
         /** @description 举报工单分页 */
@@ -15224,6 +15891,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["UserLevelTaskListResponseBody"];
+            };
+        };
+        /** @description 公众号文章内容预览 */
+        WechatArticleExportPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatArticleExportPreviewResponseBody"];
             };
         };
         /** @description 餐饮项分页 */
@@ -18825,6 +19501,51 @@ export interface operations {
             201: components["responses"]["CarpoolTripResponse"];
         };
     };
+    ListCarpoolTripGroups: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                origin?: string;
+                destination?: string;
+                campus?: string;
+                departure_date?: string;
+                seats_needed?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CarpoolTripGroupPageResponse"];
+        };
+    };
+    ListCarpoolTripGroupTrips: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                origin?: string;
+                destination?: string;
+                campus?: string;
+                departure_date?: string;
+                seats_needed?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                anchor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CarpoolTripPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     ListMyCarpoolTrips: {
         parameters: {
             query?: {
@@ -18960,6 +19681,24 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["CarpoolTripResponse"];
+        };
+    };
+    ListNearbyCarpoolTrips: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CarpoolTripPageResponse"];
+            404: components["responses"]["Error"];
         };
     };
     SubmitCarpoolTripReview: {
@@ -20142,6 +20881,233 @@ export interface operations {
         responses: {
             200: components["responses"]["CommentResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCommunityContentHookDeliveries: {
+        parameters: {
+            query?: {
+                rule_id?: number;
+                status?: "pending_link" | "pending_send" | "processing" | "succeeded" | "retry_wait" | "terminal_failed" | "skipped";
+                is_test?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookDeliveryPageResponse"];
+        };
+    };
+    GetAdminCommunityContentHookDelivery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookDeliveryResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RetryAdminCommunityContentHookDelivery: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRetryInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["CommunityContentHookDeliveryResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCommunityContentHookFailedLinkItems: {
+        parameters: {
+            query?: {
+                rule_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookFailedLinkItemPageResponse"];
+        };
+    };
+    RetryAdminCommunityContentHookFailedLinkItem: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRetryFailedLinkItemInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["CommunityContentHookFailedLinkItemResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCommunityContentHookRules: {
+        parameters: {
+            query?: {
+                status?: "enabled" | "disabled" | "deleted";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookRulePageResponse"];
+        };
+    };
+    CreateAdminCommunityContentHookRule: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["CommunityContentHookRuleResponse"];
+        };
+    };
+    GetAdminCommunityContentHookRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminCommunityContentHookRule: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DeleteAdminCommunityContentHookRule: {
+        parameters: {
+            query: {
+                expected_version: number;
+            };
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminCommunityContentHookRuleEnablement: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleEnablementInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateAdminCommunityContentHookTestDelivery: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookTestDeliveryInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["CommunityContentHookTestDeliveryResponse"];
+            404: components["responses"]["Error"];
         };
     };
     ListAdminContentReportCases: {
@@ -24303,6 +25269,22 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["UserLevelResponse"];
+        };
+    };
+    PreviewAdminWechatArticleExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WechatArticleExportPreviewRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["WechatArticleExportPreviewResponse"];
         };
     };
     ListAdminWhatToEatListings: {

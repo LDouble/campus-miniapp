@@ -1,5 +1,6 @@
-import { Image, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type { ActivityPopupCandidate } from '../../api/activity-popups'
+import VariantImage from '../../components/variant-image'
 
 export type ActivityPopupState = {
   candidate: ActivityPopupCandidate
@@ -28,9 +29,10 @@ const ActivityPopup = ({ popup, onPresented, onClose, onClick, onImageError }: A
         ariaLabel='查看活动详情'
         onClick={onClick}
       >
-        <Image
+        <VariantImage
           className='activity-popup__image'
-          src={popup.candidate.image_url}
+          originalUrl={popup.candidate.image_url}
+          thumbnailUrl={(popup.candidate as ActivityPopupCandidate & { thumbnail_url?: string | null }).thumbnail_url}
           mode='widthFix'
           onLoad={onPresented}
           onError={onImageError}

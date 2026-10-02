@@ -72,6 +72,7 @@ const homeFeedItemToPost = (
     media_id: image.media_id,
     sort_order: index,
     url: image.url,
+    thumbnail_url: (image as typeof image & { thumbnail_url?: string | null }).thumbnail_url,
   })),
   is_featured: false,
   is_pinned: false,

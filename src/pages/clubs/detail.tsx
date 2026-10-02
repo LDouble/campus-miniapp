@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLoad } from '@tarojs/taro'
 import { Button, Image, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
+import VariantImage from '../../components/variant-image'
 import { isApiError } from '../../api/client'
 import { publicShareImage } from '../../features/clubs/model'
 import { clubsRepository } from '../../features/clubs/repository'
@@ -92,7 +93,7 @@ export default function ClubDetailPage() {
         <View className='club-detail'>
           <View className='club-detail__cover'>
             {club.cover?.url && !failedImages.cover
-              ? <Image src={club.cover.url} mode='aspectFill' onError={() => markImageFailed('cover')} />
+              ? <VariantImage originalUrl={club.cover.url} thumbnailUrl={(club.cover as typeof club.cover & { thumbnail_url?: string | null }).thumbnail_url} mode='aspectFill' onError={() => markImageFailed('cover')} />
               : <View className='club-detail__cover-placeholder'><Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' /></View>}
             <View className='club-detail__cover-shade' />
           </View>
@@ -149,7 +150,7 @@ export default function ClubDetailPage() {
                     onClick={() => previewGallery(index)}
                   >
                     {!failedImages[`gallery-${image.media_id}`]
-                      ? <Image src={image.url} mode='aspectFill' lazyLoad onError={() => markImageFailed(`gallery-${image.media_id}`)} />
+                      ? <VariantImage originalUrl={image.url} thumbnailUrl={(image as typeof image & { thumbnail_url?: string | null }).thumbnail_url} mode='aspectFill' lazyLoad onError={() => markImageFailed(`gallery-${image.media_id}`)} />
                       : <View className='club-gallery__fallback'><Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' /><Text>图片暂不可用</Text></View>}
                     <View className='club-gallery__index'>{index + 1}/{club.gallery.length}</View>
                     {!!image.caption && <Text className='club-gallery__caption'>{image.caption}</Text>}
