@@ -25,6 +25,8 @@ declare namespace NodeJS {
     TARO_APP_ID: string
     /** 当前构建版本；未配置时保持完整版本兼容行为。 */
     TARO_APP_EDITION?: 'full' | 'qualification'
+    /** 上传微信后台的小程序业务版本，需与后台模块版本开关配置一致。 */
+    TARO_APP_MINIAPP_VERSION?: string
     /** 仅显式启用时将微信 AI Skill 集成到完整版构建产物。 */
     TARO_APP_WECHAT_AI_ENABLED?: '0' | '1' | 'false' | 'true'
     /** 当前小程序登录所用 AppID，必须与 TARO_APP_ID 一致。 */

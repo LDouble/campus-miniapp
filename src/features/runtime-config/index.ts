@@ -14,6 +14,11 @@ import {
   normalizeMarketplaceCategories,
   type MarketplaceCategory,
 } from './marketplace-categories'
+import { getMiniappVersion, miniappVersionCacheScope } from '../../utils/miniapp-version'
+import { isMiniappModuleDisabledForVersion } from './module-version'
+import { invalidatePageFeedCaches } from '../../state/page-cache'
+import { clearBusinessDetailSnapshots } from '../life-services/business-detail-snapshot'
+import { clearCommunityDetailSnapshots } from '../community/detail-snapshot'
 
 export type { MarketplaceCategory } from './marketplace-categories'
 
@@ -78,6 +83,8 @@ export type MiniappModuleState = 'enabled' | 'maintenance' | 'hidden'
 export type MiniappModuleConfig = {
   state: MiniappModuleState
   message?: string
+  /** disabled_versions 命中后台指定的非空版本号时，已启用模块会对该版本隐藏。 */
+  disabled_versions?: string[]
 }
 
 export type MiniappRuntimeConfig = {
@@ -102,13 +109,13 @@ export type MiniappRuntimeConfig = {
 type RuntimeConfigView = components['schemas']['RuntimeConfig']
 
 type StoredRuntimeConfig = {
-  version: 1
+  version: 2
   serverVersion: number
   updatedAt: number
   value: MiniappRuntimeConfig
 }
 
-const CONFIG_STORAGE_KEY = 'campus.miniapp.runtimeConfig.v1'
+const CONFIG_STORAGE_KEY = () => `campus.miniapp.runtimeConfig.v2:${miniappVersionCacheScope()}`
 export const CAMPUS_STORAGE_KEY = 'campus.home.campus.v1'
 const CONFIG_FRESH_MS = 60_000
 
@@ -290,7 +297,22 @@ const isModuleConfig = (value: unknown): value is MiniappModuleConfig => (
   isRecord(value)
   && ['enabled', 'maintenance', 'hidden'].includes(String(value.state))
   && (value.message === undefined || typeof value.message === 'string')
+  && (value.disabled_versions === undefined || (
+    Array.isArray(value.disabled_versions)
+    && value.disabled_versions.every((version) => typeof version === 'string')
+  ))
 )
+
+const normalizeModuleConfig = (value: MiniappModuleConfig): MiniappModuleConfig => {
+  const disabledVersions = Array.from(new Set((value.disabled_versions || [])
+    .map((version) => version.trim())
+    .filter((version) => version.length > 0)))
+  return {
+    state: value.state,
+    ...(typeof value.message === 'string' ? { message: value.message } : {}),
+    ...(disabledVersions.length > 0 ? { disabled_versions: disabledVersions } : {}),
+  }
+}
 
 export const normalizeMiniappModules = (
   value: unknown,
@@ -298,7 +320,7 @@ export const normalizeMiniappModules = (
   if (!isRecord(value)) return conservativeModules
   return Object.fromEntries(MINIAPP_MODULE_KEYS.map((key) => [
     key,
-    isModuleConfig(value[key]) ? value[key] : conservativeModules[key],
+    isModuleConfig(value[key]) ? normalizeModuleConfig(value[key]) : conservativeModules[key],
   ])) as Record<MiniappModuleKey, MiniappModuleConfig>
 }
 
@@ -394,8 +416,8 @@ export const getMigrationGuideCopy = (
 
 const storedRuntimeConfig = (): StoredRuntimeConfig | null => {
   try {
-    const stored = Taro.getStorageSync<StoredRuntimeConfig>(CONFIG_STORAGE_KEY)
-    if (stored && stored.version === 1 && isRuntimeConfig(stored.value)) {
+    const stored = Taro.getStorageSync<StoredRuntimeConfig>(CONFIG_STORAGE_KEY())
+    if (stored && stored.version === 2 && isRuntimeConfig(stored.value)) {
       return {
         ...stored,
         value: normalizeRuntimeConfig(stored.value),
@@ -419,13 +441,23 @@ export const seedMiniappRuntimeConfig = (
   view: RuntimeConfigView,
 ): MiniappRuntimeConfig => {
   if (!isRuntimeConfig(view.value)) throw new Error('invalid miniapp runtime config')
+  const previous = storedRuntimeConfig()
   const value = normalizeRuntimeConfig(view.value)
-  Taro.setStorageSync(CONFIG_STORAGE_KEY, {
-    version: 1,
+  Taro.setStorageSync(CONFIG_STORAGE_KEY(), {
+    version: 2,
     serverVersion: Number(view.version) || 0,
     updatedAt: Date.now(),
     value,
   } as StoredRuntimeConfig)
+  if (
+    previous
+    && JSON.stringify(previous.value.modules) !== JSON.stringify(value.modules)
+  ) {
+    // 配置更新后，内存详情快照和持久化列表快照都不能恢复已关闭模块的旧内容。
+    clearBusinessDetailSnapshots()
+    clearCommunityDetailSnapshots()
+    invalidatePageFeedCaches(true)
+  }
   return value
 }
 
@@ -467,6 +499,9 @@ export const resolveMiniappModule = (
 ): MiniappModuleConfig => {
   const module = config.modules[key] || conservativeModules[key]
   if (module.state !== 'enabled') return module
+  if (isMiniappModuleDisabledForVersion(module.disabled_versions, getMiniappVersion())) {
+    return { state: 'hidden' }
+  }
   const features = config.campuses[campusName]?.features
   const legacyKey = legacyCampusFeatureKeys[key]
   if (

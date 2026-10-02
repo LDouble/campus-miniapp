@@ -9,6 +9,18 @@ import { loadApiEndpoints } from './api-endpoints'
 export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
   const requestedEdition = process.env.TARO_APP_EDITION
   const appEdition = requestedEdition || 'full'
+  const miniappVersion = process.env.TARO_APP_MINIAPP_VERSION?.trim() || ''
+  if (
+    miniappVersion
+    && (
+      miniappVersion.length > 64
+      || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(miniappVersion)
+    )
+  ) {
+    throw new Error(
+      'TARO_APP_MINIAPP_VERSION 必须匹配版本契约：以字母或数字开头，后续仅含字母、数字、点、下划线或连字符，且长度不超过 64。',
+    )
+  }
 
   if (appEdition !== 'full' && appEdition !== 'qualification') {
     throw new Error(
@@ -61,7 +73,16 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     ? [
         {
           from: 'src/ai-mode/skills',
-          to: `${outputRoot}/skills`
+          to: `${outputRoot}/skills`,
+          transform(content: Buffer, absoluteFrom: string) {
+            if (!absoluteFrom.endsWith(`${path.sep}utils${path.sep}miniapp-version.js`)) {
+              return content
+            }
+            return Buffer.from(content.toString().replace(
+              "'__CAMPUS_MINIAPP_VERSION__'",
+              JSON.stringify(miniappVersion),
+            ))
+          },
         },
         {
           from: 'src/ai-mode/page-meta.json',
@@ -105,6 +126,7 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       __CAMPUS_APP_RELEASE__: JSON.stringify(
         process.env.TARO_APP_RELEASE || process.env.npm_package_version || 'development',
       ),
+      __CAMPUS_MINIAPP_VERSION__: JSON.stringify(miniappVersion),
       __CAMPUS_APP_EDITION__: JSON.stringify(appEdition),
       __CAMPUS_WECHAT_AI_ENABLED__: JSON.stringify(wechatAiEnabled),
       __CAMPUS_TARGET_WECHAT_APP_ID__: JSON.stringify(targetWechatAppId),

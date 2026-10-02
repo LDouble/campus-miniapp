@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import Module = require('node:module')
 import { resolve } from 'node:path'
 import ts = require('typescript')
+import { createHomeFeedRequestCoordinator } from '../src/features/home/feed-request-coordinator'
 
 type Deferred<T> = {
   promise: Promise<T>
@@ -36,7 +37,7 @@ assert.match(pageSource, /const \[initialSnapshot\] = useState\(readHomeSnapshot
 assert.match(pageSource, /const accountPromise = settle\(getCurrentUser\(\{ force \}\)\)/)
 assert.match(pageSource, /refreshHomeSection\(\(\) => officialNoticesRepository\.feed/)
 assert.match(pageSource, /homeFeedItems\.length \? '更新失败，正在显示上次内容，点击重试'/)
-assert.match(pageSource, /key === homeCacheKey\(\)[\s\S]*homeFeedRequestId === homeFeedRequestSequence\.current/)
+assert.match(pageSource, /key === homeCacheKey\(\)[\s\S]*homeFeedRequests\.current\.isFeedCurrent\(homeFeedRequestId\)/)
 
 const enabledConfig = {
   campus_sections: {}, slogan_interval_ms: 3000, subscription_templates: [],
@@ -110,6 +111,7 @@ function createHarness(
     '@tarojs/taro': taro,
     '@tarojs/components': component,
     '../../features/home/page-cache': homeCache,
+    '../../features/home/feed-request-coordinator': { createHomeFeedRequestCoordinator },
     '../../state/page-cache': { getCachedPageUser: () => null, getCachedPageUserId: () => 1, getPageCacheScope: () => scope, subscribePageCacheScope: () => noOp },
     '../../features/life-services/repository': { lifeServicesRepository: { listHomeFeed: () => { homeFeedCalls++; return homeFeed.promise } } },
     '../../features/official-notices/repository': { officialNoticesRepository: { feed: () => notices.promise } },

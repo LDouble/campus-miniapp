@@ -394,7 +394,7 @@ assert.ok(!chatPage.includes("from '@tarojs/components'\nimport { Input"), '聊�
 assert.ok(subscriptionModule.includes("'private_message'"), '私信路由必须映射订阅模块')
 assert.ok(runtimeConfig.includes("'private_message'"), '运行时配置必须识别私信模块')
 assert.ok(runtimeConfig.includes("private_message: { state: 'hidden' }"), '未配置私信模块时必须默认隐藏')
-assert.ok(runtimeConfig.includes('isModuleConfig(value[key]) ? value[key] : conservativeModules[key]'), '缺失模块配置必须回退到保守默认值')
+assert.ok(runtimeConfig.includes('isModuleConfig(value[key]) ? normalizeModuleConfig(value[key]) : conservativeModules[key]'), '缺失模块配置必须回退到保守默认值')
 assert.ok(runtimeConfig.includes('subscriptionAlreadyRequested'), '模块导航必须跳过已在点击链路内发起的订阅')
 assert.ok(tabBar.includes('unreadCount > 0'), '消息 Tab 必须展示合并后的消息未读徽标')
 assert.ok(qualificationSmoke.includes("'pages/direct-messages/chat'"), '资格版构建检查必须排除私信详情页')

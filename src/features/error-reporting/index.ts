@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro'
 import { apiUrl } from '../../api/auth'
+import { getMiniappVersion } from '../../utils/miniapp-version'
 
 export type ClientErrorKind =
   | 'http_5xx'
@@ -76,6 +77,7 @@ export const reportClientError = async (input: ClientErrorInput) => {
       header: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
+        ...(getMiniappVersion() ? { 'X-Miniapp-Version': getMiniappVersion() } : {}),
       },
     })
   } catch {
