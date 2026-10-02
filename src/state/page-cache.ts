@@ -2,6 +2,7 @@ import Taro from '@tarojs/taro'
 import { resolveApiBaseUrl } from '../api/environment'
 import { invalidateSharedResourceGroup } from './shared-resource'
 import { subscribeLifeHubMutation } from '../features/life-services/refresh-policy'
+import { miniappVersionCacheScope } from '../utils/miniapp-version'
 
 // 只用于展示缓存，绝不作为服务端授权或写操作的依据。
 export type CachedPageUser = { id: number; username: string; avatar_url: string }
@@ -42,7 +43,7 @@ const persistSession = () => {
 export const getCachedPageUser = () => session.user
 export const getCachedPageUserId = () => session.user?.id || 0
 export const getPageSessionGeneration = () => session.generation
-export const getPageCacheScope = () => `${environment}:${session.generation}:${getCachedPageUserId()}`
+export const getPageCacheScope = () => `${environment}:${miniappVersionCacheScope()}:${session.generation}:${getCachedPageUserId()}`
 export const subscribePageCacheScope = (listener: () => void) => {
   listeners.add(listener)
   return () => { listeners.delete(listener) }

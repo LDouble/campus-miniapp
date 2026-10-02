@@ -15,6 +15,7 @@ import {
 } from '@tarojs/components'
 import { getCachedPageUser, getCachedPageUserId, getPageCacheScope, subscribePageCacheScope } from '../../state/page-cache'
 import { homeCacheKey, readHomeSnapshot, updateHomeSnapshot, refreshHomeSection } from '../../features/home/page-cache'
+import { createHomeFeedRequestCoordinator } from '../../features/home/feed-request-coordinator'
 
 import { getLifeHubRefreshRevision, markLifeHubSectionDirty } from '../../features/life-services/refresh-policy'
 import { allServices, serviceModules as serviceModuleKeys, migratedServiceKeys as migratedHomeServiceKeys } from '../../features/service-shortcuts/catalog'
@@ -210,6 +211,12 @@ const enabledHomeFeedItems = (
 ) => items.filter((item) => (
   resolveMiniappModule(config, homeFeedSourceModules[item.source_type]).state === 'enabled'
 ))
+
+const homeFeedModuleSignature = (config: MiniappRuntimeConfig) => (
+  ['community', 'marketplace', 'errand', 'carpool']
+    .map((key) => resolveMiniappModule(config, key as MiniappModuleKey).state)
+    .join(':')
+)
 
 const mergeHomeFeedItems = (
   current: HomeFeedItemView[],
@@ -438,7 +445,8 @@ function IndexContent() {
     loadCachedAcademicLabel,
   )
   const [bannerIndex, setBannerIndex] = useState(0)
-  const homeFeedRequestSequence = useRef(0)
+  const homeFeedRequests = useRef(createHomeFeedRequestCoordinator())
+  const loadHomeRef = useRef<((force?: boolean) => Promise<void>) | null>(null)
   const homeFeedLoadingMoreRef = useRef(false)
   const homeHasShown = useRef(false)
   const homeBackTopVisibleRef = useRef(false)
@@ -530,9 +538,10 @@ function IndexContent() {
   const loadHome = useCallback(async (force = false) => {
     const key = homeCacheKey()
     const requestScope = getPageCacheScope()
-    const homeFeedRequestId = ++homeFeedRequestSequence.current
+    const homeFeedRequestId = homeFeedRequests.current.beginFeed()
+    const homeConfigRequestId = homeFeedRequests.current.beginConfig()
     const isCurrent = () => mounted.current && key === homeCacheKey()
-      && homeFeedRequestId === homeFeedRequestSequence.current
+      && homeFeedRequests.current.isFeedCurrent(homeFeedRequestId)
     setQuickQuestionCourse(null)
     homeFeedLoadingMoreRef.current = false
     setHomeFeedLoadingMore(false)
@@ -570,12 +579,26 @@ function IndexContent() {
     }
     const jobs = [
       refreshHomeSection(() => loadMiniappRuntimeConfig({ force }), (config) => {
+        const modulesChanged = homeFeedModuleSignature(config)
+          !== homeFeedModuleSignature(latestRuntimeConfig)
         setRuntimeConfig(config)
         setCampusName(getSelectedCampus(config))
         setHomeFeedItems((items) => enabledHomeFeedItems(items, config))
-        if (!homeFeedEnabled) void refreshFeed(config)
+        if (modulesChanged) {
+          // 本地过滤可能减少当前页项目；在拿到服务端按版本过滤后的总数前，
+          // 不保留旧 total/page，避免触底持续请求空页。
+          setHomeFeedPage(0)
+          setHomeFeedTotal(0)
+          updateHomeSnapshot(key, { feed: undefined })
+          // 使本轮旧配置请求失效，再用新配置启动一次完整首页刷新。
+          // 这样迟到响应无法把旧 total/page 或已关闭来源重新写回页面。
+          homeFeedRequests.current.invalidateFeed()
+          void loadHomeRef.current?.(true)
+        } else if (!homeFeedEnabled) void refreshFeed(config)
+      // 配置落地不能受加载更多的 Feed 请求代次影响；否则加载更多先完成时，
+      // 新配置不会触发模块签名同步，也不会使旧来源响应失效。
       }, () => mounted.current && requestScope === getPageCacheScope()
-        && homeFeedRequestId === homeFeedRequestSequence.current),
+        && homeFeedRequests.current.isConfigCurrent(homeConfigRequestId)),
       refreshFeed(latestRuntimeConfig),
       refreshHomeSection(() => accountPromise, (account) => {
         if (!account.ok) return
@@ -659,9 +682,11 @@ function IndexContent() {
       }
     }
   }, [])
+  loadHomeRef.current = loadHome
 
   // 校区变化时立即换为对应缓存；返回详情不重置同校区分页。
   useEffect(() => {
+    const requests = homeFeedRequests.current
     const snapshot = readHomeSnapshot()
     setHomeFeedItems(enabledHomeFeedItems(snapshot.feed?.items || [], getMiniappRuntimeConfig()))
     setHomeFeedPage(snapshot.feed?.page || 1)
@@ -674,7 +699,7 @@ function IndexContent() {
     setHomeFeedError(false)
     setHomeFeedLoading(!snapshot.feed)
     void loadHome()
-    return () => { homeFeedRequestSequence.current += 1 }
+    return () => { requests.invalidateFeed() }
   }, [campusName, loadHome])
 
   const loadHomeFeedMore = useCallback(async () => {
@@ -687,7 +712,7 @@ function IndexContent() {
     ) return
 
     const key = homeCacheKey()
-    const requestId = ++homeFeedRequestSequence.current
+    const requestId = homeFeedRequests.current.beginFeed()
     homeFeedLoadingMoreRef.current = true
     setHomeFeedLoadingMore(true)
     setHomeFeedLoadMoreError(false)
@@ -697,7 +722,7 @@ function IndexContent() {
         page: homeFeedPage + 1,
         pageSize: HOME_FEED_PAGE_SIZE,
       })
-      if (!mounted.current || key !== homeCacheKey() || requestId !== homeFeedRequestSequence.current) return
+      if (!mounted.current || key !== homeCacheKey() || !homeFeedRequests.current.isFeedCurrent(requestId)) return
       setHomeFeedItems((current) => mergeHomeFeedItems(
         current,
         enabledHomeFeedItems(result.items, latestRuntimeConfig),
@@ -705,11 +730,11 @@ function IndexContent() {
       setHomeFeedPage(result.page)
       setHomeFeedTotal(Number(result.total))
     } catch {
-      if (requestId === homeFeedRequestSequence.current) {
+      if (homeFeedRequests.current.isFeedCurrent(requestId)) {
         setHomeFeedLoadMoreError(true)
       }
     } finally {
-      if (requestId === homeFeedRequestSequence.current) {
+      if (homeFeedRequests.current.isFeedCurrent(requestId)) {
         homeFeedLoadingMoreRef.current = false
         setHomeFeedLoadingMore(false)
       }

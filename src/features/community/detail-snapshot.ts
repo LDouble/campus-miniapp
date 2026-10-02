@@ -14,6 +14,9 @@ type CommunityDetailSnapshot = {
 
 const snapshots = new Map<number, CommunityDetailSnapshot>()
 
+/** clearCommunityDetailSnapshots 在社区模块配置变化后丢弃尚未消费的详情交接数据。 */
+export const clearCommunityDetailSnapshots = () => snapshots.clear()
+
 const discardExpiredSnapshots = (now: number) => {
   snapshots.forEach((snapshot, id) => {
     if (snapshot.expiresAt <= now) snapshots.delete(id)

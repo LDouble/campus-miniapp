@@ -1,5 +1,6 @@
 const { apiUrl } = require('./config.js')
 const { ensureAccessToken, refreshAccessToken } = require('./auth.js')
+const { withMiniappVersion } = require('./miniapp-version.js')
 
 const refreshableErrorCodes = new Set([
   'missing_token',
@@ -37,10 +38,10 @@ const send = async (path, query, token) => {
   const response = await requestRaw({
     url: `${apiUrl(path)}${toQueryString(query)}`,
     method: 'GET',
-    header: {
+    header: withMiniappVersion({
       Accept: 'application/json',
       Authorization: `Bearer ${token}`,
-    },
+    }),
   })
   if (response.statusCode < 200 || response.statusCode >= 300) throw errorFromResponse(response)
   if (!response.data || typeof response.data !== 'object' || !('data' in response.data)) {

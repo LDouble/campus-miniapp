@@ -12,6 +12,7 @@ import type {
 import { handleAcademicVerificationRequired } from '../features/academic-verification/guard'
 import { reportClientError } from '../features/error-reporting'
 import { invalidateSharedResourceGroup } from '../state/shared-resource'
+import { getMiniappVersion } from '../utils/miniapp-version'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -151,6 +152,7 @@ export const createIdempotencyKey = (scope: string) => {
 export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<ApiSuccessResponse<T>> {
   const method = options.method || 'GET'
   const token = options.anonymous ? '' : await ensureAccessToken()
+  const miniappVersion = getMiniappVersion()
   let response: Taro.request.SuccessCallbackResult<ApiSuccessEnvelope<T> | ApiErrorEnvelope>
   try {
     response = await Taro.request<ApiSuccessEnvelope<T> | ApiErrorEnvelope>({
@@ -161,6 +163,7 @@ export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<Ap
         Accept: 'application/json',
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(miniappVersion ? { 'X-Miniapp-Version': miniappVersion } : {}),
         ...(options.idempotencyKey
           ? { 'Idempotency-Key': options.idempotencyKey }
           : {}),

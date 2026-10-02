@@ -5,6 +5,7 @@ import { resolveApiBaseUrl } from './environment'
 import { invalidateSharedResourceGroup } from '../state/shared-resource'
 import { getLotteryShareAttributionToken } from './lottery-share-attribution'
 import { clearAllPendingLotteryDrawKeys } from '../features/lottery/draw-request'
+import { getMiniappVersion } from '../utils/miniapp-version'
 
 const readAuthStorage = <T,>(key: string): T | undefined => {
   try { return Taro.getStorageSync<T>(key) } catch { return undefined }
@@ -128,6 +129,7 @@ const wechatLogin = async () => {
     header: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...(getMiniappVersion() ? { 'X-Miniapp-Version': getMiniappVersion() } : {}),
     },
   })
   if (generation !== getPageSessionGeneration()) throw new Error('登录会话已切换，请重试')
@@ -184,6 +186,7 @@ export const refreshAccessToken = () => {
         header: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
+          ...(getMiniappVersion() ? { 'X-Miniapp-Version': getMiniappVersion() } : {}),
         },
       })
       if (generation !== getPageSessionGeneration()) throw new Error('登录会话已切换，请重试')

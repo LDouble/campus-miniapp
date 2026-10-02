@@ -46,6 +46,13 @@ import {
   subscribeCampusTheme,
   type CampusTheme,
 } from '../../features/system-theme'
+import {
+  getMiniappRuntimeConfig,
+  loadMiniappRuntimeConfig,
+  resolveMiniappModule,
+  type MiniappModuleKey,
+} from '../../features/runtime-config'
+import { availableLifeServicePublicationTypes } from '../../features/life-services/module-availability'
 import './index.scss'
 
 const icons = {
@@ -130,9 +137,17 @@ const menus = [
   },
 ] as const
 
-const visibleMenus = isQualificationEdition
+const editionVisibleMenus = isQualificationEdition
   ? menus.filter((item) => item.key === 'schedule')
   : menus
+
+const profileMenuModules: Partial<Record<typeof menus[number]['key'], MiniappModuleKey>> = {
+  schedule: 'academic_schedule',
+  materials: 'course_materials',
+  accepted: 'errand',
+  orders: 'marketplace',
+  carpool: 'carpool',
+}
 
 const identityMenu = {
   key: 'identity',
@@ -166,6 +181,7 @@ const avatarModerationNoticeCopy: Record<AvatarModerationNotice, string> = {
 }
 
 export default function ProfilePage() {
+  const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusTheme, setCampusTheme] = useState<CampusTheme>(getCampusTheme)
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -249,6 +265,7 @@ export default function ProfilePage() {
     setSavingAvatar(false)
     syncCustomTabBar('profile')
     setCheckinStatus(null)
+    void loadMiniappRuntimeConfig().then(setRuntimeConfig)
     void loadCurrentUser().then((account) => {
       if (
         !account
@@ -392,7 +409,21 @@ export default function ProfilePage() {
     profileVisible,
     updatePendingAvatarModeration,
   ])
+  const visibleMenus = editionVisibleMenus.filter((item) => {
+    if (item.key === 'published') return availableLifeServicePublicationTypes(runtimeConfig).length > 0
+    if (item.key === 'orders') return ['errand', 'marketplace'].some((key) => (
+      resolveMiniappModule(runtimeConfig, key as MiniappModuleKey).state === 'enabled'
+    ))
+    const module = profileMenuModules[item.key]
+    return !module || resolveMiniappModule(runtimeConfig, module).state !== 'hidden'
+  })
   const openMenu = (item: typeof menus[number] | typeof identityMenu) => {
+    if (item.key === 'published') {
+      const type = availableLifeServicePublicationTypes(runtimeConfig)[0]
+      if (!type) return
+      Taro.navigateTo({ url: `/pages/my-services/index?section=published&publishedType=${type}` })
+      return
+    }
     Taro.navigateTo({ url: item.route })
   }
   const openPrivacy = async () => {
