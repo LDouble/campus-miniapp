@@ -302,10 +302,12 @@ assert.match(
 )
 assert.ok(
   homeSource.includes("coursePreview.dayLabel === '假期' ? '假期安排'")
-    && homeSource.includes('`${holidayCountdown}天后开学`')
+    && homeSource.includes("coursePreview.dayLabel === '假期'\n    ? coursePreview.dateLabel")
+    && homeSource.includes("{coursePreview.dayLabel !== '假期' && <Text>{coursePreview.emptyHint}</Text>}")
     && !homeSource.includes("className='schedule-card__countdown'")
-    && !homeSource.includes('holidayCountdown ? coursePreview.dateLabel'),
-  '假期课程区必须把动态开学倒计时放在空态文案下方，并移除重复开学日期',
+    && !homeSource.includes('holidayCountdown ? coursePreview.dateLabel')
+    && !homeSource.includes('`${holidayCountdown}天后开学`'),
+  '假期课程区只在标题区展示开学信息，空态不再重复倒计时或具体日期',
 )
 assert.match(
   freshBarrageStyleSource,
