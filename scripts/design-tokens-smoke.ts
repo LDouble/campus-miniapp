@@ -16,6 +16,7 @@ const master = readFileSync(
   'utf8',
 )
 const agentRules = readFileSync(resolve(__dirname, '../AGENTS.md'), 'utf8')
+const uiDesignRules = readFileSync(resolve(__dirname, '../.agents/ui-design.md'), 'utf8')
 
 const expectedCssVariables: Record<string, string> = {
   '--ousea-lottery-accent': '#ea580c',
@@ -210,8 +211,8 @@ for (const [key, token] of Object.entries(todayHotShadows)) {
 
 assert.match(
   appStyle,
-  /\.campus-theme--dark\s*\{[\s\S]*--campus-today-hot-surface:\s*var\(--campus-surface\);[\s\S]*--campus-today-hot-label:\s*var\(--campus-text-heading\);[\s\S]*--campus-today-hot-muted:\s*var\(--campus-text-muted\);/u,
-  '暗色主题必须复用 Campus 表面、标题与辅助文字语义',
+  /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{[\s\S]*--campus-today-hot-surface:\s*var\(--campus-surface\);[\s\S]*--campus-today-hot-label:\s*var\(--campus-text-heading\);[\s\S]*--campus-today-hot-muted:\s*var\(--campus-text-muted\);/u,
+  '系统深色场景必须复用 Campus 表面、标题与辅助文字语义',
 )
 
 assert.match(
@@ -224,7 +225,16 @@ assert.match(master, /global\.shadow\.service/u)
 assert.match(master, /--campus-service-\*/u)
 assert.match(master, /Ousea \/ Global[^。]*唯一基础视觉源/u)
 assert.match(master, /不得新建[^。\n]*同义基础 Token/u)
-assert.match(agentRules, /All new miniapp UI[^.]*Ousea \/ Global[^.]*default design source/u)
+assert.match(
+  agentRules,
+  /Design Token、主题或共享组件：读取 \.agents\/ui-design\.md/u,
+  '根规则必须把 Design Token 与主题改动导向 UI 设计规则',
+)
+assert.match(
+  uiDesignRules,
+  /新增 UI、视觉重构、主题、Design Token 或共享组件时读取。[\s\S]*OUSea \/ Global 是默认设计源。/u,
+  '新增 UI 必须以 OUSea / Global 为默认设计源',
+)
 
 for (const [cat, global] of [['page', 'page'], ['surface', 'surface'], ['subtle', 'surface-subtle'], ['border', 'border']]) {
   assert.ok(appStyle.includes(`--campus-cat-${cat}: var(--campus-${global});`), '猫咪图鉴基础表面必须复用全局语义')

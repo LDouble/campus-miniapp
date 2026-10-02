@@ -1,5 +1,4 @@
 import { strict as assert } from 'node:assert'
-import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import Module = require('node:module')
 import { resolve } from 'node:path'
@@ -29,14 +28,10 @@ const tick = async () => {
 
 const pagePath = resolve(__dirname, '../src/pages/index/index.tsx')
 const pageSource = readFileSync(pagePath, 'utf8')
-const oldPageSource = execFileSync('git', ['show', 'HEAD:src/pages/index/index.tsx'], {
-  cwd: resolve(__dirname, '..'), encoding: 'utf8',
-})
 
-// 旧实现先 await 配置，再创建首页数据请求；配置悬挂时已缓存的动态也会被 loading 覆盖。
-assert.match(oldPageSource, /const latestRuntimeConfig = await loadMiniappRuntimeConfig\(\)/)
-assert.match(oldPageSource, /const \[\s*account,\s*homeFeed,\s*latestAcademic,/)
-
+// 首屏使用已同步的运行时配置，不能再 await 配置后才发起首页数据请求。
+assert.match(pageSource, /const latestRuntimeConfig = getMiniappRuntimeConfig\(\)/)
+assert.doesNotMatch(pageSource, /const latestRuntimeConfig = await loadMiniappRuntimeConfig\(\)/)
 assert.match(pageSource, /const \[initialSnapshot\] = useState\(readHomeSnapshot\)/)
 assert.match(pageSource, /const accountPromise = settle\(getCurrentUser\(\{ force \}\)\)/)
 assert.match(pageSource, /refreshHomeSection\(\(\) => officialNoticesRepository\.feed/)
@@ -205,14 +200,6 @@ async function verifyCachedFirstScreenAndIndependentRefresh() {
   assert.doesNotMatch(harness.text(), /正在加载校园动态/)
 }
 
-async function verifyOldConfigGate() {
-  const old = createHarness({}, oldPageSource)
-  old.render()
-  old.flushEffects()
-  await tick()
-  assert.equal(old.homeFeedCalls(), 0, '旧版在配置请求悬挂时尚未启动动态请求，复现了首屏被配置阻塞的问题')
-}
-
 async function verifyFailureAndEmptyResponse() {
   const failed = createHarness({ feed: feed('保留动态') })
   failed.render(); failed.flushEffects()
@@ -243,11 +230,10 @@ async function verifyScopeChangeRejectsLateResponse() {
 }
 
 async function main() {
-  await verifyOldConfigGate()
   await verifyCachedFirstScreenAndIndependentRefresh()
   await verifyFailureAndEmptyResponse()
   await verifyScopeChangeRejectsLateResponse()
-  process.stdout.write('home offline cache smoke: ok (旧实现：配置悬挂会阻塞首屏；现实现：缓存先展示且分区并发刷新)\\n')
+  process.stdout.write('home offline cache smoke: ok\n')
 }
 
 void main()
