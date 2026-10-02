@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import * as ts from 'typescript'
 import { normalizeRouteValues } from '../src/features/life-services/route-history-values'
 
 assert.deepEqual(
@@ -58,7 +59,17 @@ for (const path of [
   assert.ok(repository.includes(path), `个人主页仓储缺少 ${path}`)
 }
 
-assert.equal((repository.match(/campus: search\.campus/g) || []).length, 3)
+// 校区筛选按实际查询入口验证，新增同行分组接口不应改变其他查询的验收结果。
+const repositoryMethods = new Map<string, string>()
+const repositoryAst = ts.createSourceFile('repository.ts', repository, ts.ScriptTarget.Latest, true)
+const collectMethods = (node: ts.Node) => {
+  if (ts.isMethodDeclaration(node)) repositoryMethods.set(node.name.getText(repositoryAst), node.getText(repositoryAst))
+  ts.forEachChild(node, collectMethods)
+}
+collectMethods(repositoryAst)
+for (const method of ['listErrands', 'listMarketplace', 'listCarpool', 'listCarpoolGroups', 'listCarpoolGroupTrips']) {
+  assert.match(repositoryMethods.get(method) || '', /campus: search\.campus/u, `${method} 必须传递校区筛选`)
+}
 assert.ok(profile.includes("useState<ProfileTab>('community')"))
 assert.ok(profile.includes('tabs[activeTab].loaded'))
 assert.ok(profile.includes('tabState.page + 1'))
