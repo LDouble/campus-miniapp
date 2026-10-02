@@ -126,7 +126,7 @@ assert.match(imageGridSource, /previewContentImages\(originalUrl, previewUrls\)/
 assert.match(communityDetailSource, /preloadPreview=\{false\}/u)
 assert.match(imagePreviewSource, /Taro\.getImageInfo\(\{ src: url \}\)/u)
 assert.match(imagePreviewSource, /Taro\.previewImage\(\{ current: previewCurrent, urls: previewUrls \}\)/u)
-assert.match(imageGridSource, /if \(preview && preloadPreview && originalUrl\) warmContentImagePreview\(\[originalUrl\]\)/u)
+assert.match(imageGridSource, /if \(preview && preloadPreview && originalUrl && displayUrl === originalUrl\) warmContentImagePreview\(\[originalUrl\]\)/u)
 assert.match(imageGridSource, /setFallbackImages\(\(current\) => \(\{ \.\.\.current, \[imageKey\]: true \}\)\)/u)
 assert.match(imageGridStyleSource, /\.content-image-grid \{[\s\S]*?grid-template-columns: repeat\(3, 152rpx\);/u)
 assert.match(imageGridStyleSource, /\.content-image-grid--1 \{[\s\S]*?width: 424rpx;[\s\S]*?height: 212rpx;/u)

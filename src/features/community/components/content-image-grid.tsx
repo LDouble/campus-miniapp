@@ -71,7 +71,8 @@ export default function ContentImageGrid({
                     const height = Number(event.detail.height)
                     if (width > 0 && height > 0) setDimensions((current) => ({ ...current, [singleKey]: { width, height } }))
                   }
-                  if (preview && preloadPreview && originalUrl) warmContentImagePreview([originalUrl])
+                  // 缩略图展示时不预取原图；只有已经展示原图时才复用它的本地缓存。
+                  if (preview && preloadPreview && originalUrl && displayUrl === originalUrl) warmContentImagePreview([originalUrl])
                 }}
                 onError={() => {
                   if (thumbnailUrl && displayUrl === thumbnailUrl && originalUrl) {
