@@ -48,7 +48,7 @@ for (const source of [communityFeedSource, lifeListSource]) {
   assert.match(source, /useLoadMoreSignal\(\{/u)
   assert.match(source, /if \(append && loadingMoreRef\.current\) return/u)
   assert.match(source, /继续上滑加载更多/u)
-  assert.match(source, /items\.length > 0 && !canLoadMore|posts\.length > 0 && !canLoadMore/u)
+  assert.match(source, /items\.length > 0 && !canLoadMore|posts\.length > 0 && !canLoadMore|carpoolGroups\.length > 0 : items\.length > 0\) && !canLoadMore/u)
   assert.match(source, /没有更多了/u)
 }
 assert.doesNotMatch(

@@ -2,6 +2,12 @@ import { strict as assert } from 'node:assert'
 import { createCampusLocationPrompt } from '../src/features/campus-location/controller'
 import { identifyCampus, LAOSHAN_CAMPUS, WEST_COAST_CAMPUS, type CampusLocation } from '../src/features/campus-location/location'
 
+// runtime-config 会经 page-cache 读取构建期 API 端点；在 Node smoke 中显式提供与构建等价的值。
+Object.assign(global, {
+  __CAMPUS_REVIEW_API_BASE_URL__: 'https://review.example.invalid',
+  __CAMPUS_PRODUCTION_API_BASE_URL__: 'https://production.example.invalid',
+})
+
 const west = { latitude: 35.775004, longitude: 120.030367, accuracy: 20 }
 const laoshan = { latitude: 36.161293, longitude: 120.499037, accuracy: 20 }
 const deferred = <T>() => {
