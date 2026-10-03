@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import * as ts from 'typescript'
 import type {
   CarpoolTripView,
   ErrandView,
@@ -106,10 +107,30 @@ const myServicesSource = readFileSync(resolve(__dirname, '../src/pages/my-servic
 const marketplaceDetailSource = readFileSync(resolve(__dirname, '../src/pages/marketplace/detail.tsx'), 'utf8')
 assert.match(
   marketplaceDetailSource,
-  /\{item\.image_urls\.length > 0 && \([\s\S]*?<ContentImageGrid[\s\S]*?images=\{item\.image_urls\.map/u,
+  /\{item\.image_urls\.length > 0 && \([\s\S]*?<ContentImageGrid[\s\S]*?images=\{marketplaceContentImages\(item\)/u,
   'marketplace: only listings with real image URLs render the shared image grid',
 )
 assert.match(marketplaceDetailSource, /<ContentImageGrid[\s\S]*?preview/u)
+
+// 执行页面真实的图片转换函数，避免仅依赖 JSX 文本形状而漏掉字段转换回归。
+const marketplaceAst = ts.createSourceFile('detail.tsx', marketplaceDetailSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+const imageConverter = marketplaceAst.statements
+  .filter(ts.isVariableStatement)
+  .flatMap((statement) => Array.from(statement.declarationList.declarations))
+  .find((declaration) => declaration.name.getText(marketplaceAst) === 'marketplaceContentImages')
+assert.ok(imageConverter?.initializer, '商品详情必须提供图片转换函数')
+const converterCode = ts.transpileModule(`const convert = ${imageConverter.initializer.getText(marketplaceAst)}`, {
+  compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
+}).outputText
+const convertImages = new Function(`${converterCode}; return convert`)() as (item: Partial<MarketplaceListingView>) => unknown
+assert.deepEqual(convertImages({ image_urls: [] }), [], '文字商品不生成占位图片')
+assert.deepEqual(convertImages({ image_urls: ['https://example.invalid/one'], thumbnail_urls: ['https://example.invalid/thumb'] } as Partial<MarketplaceListingView>), [
+  { id: '0-https://example.invalid/one', url: 'https://example.invalid/one', thumbnail_url: 'https://example.invalid/thumb' },
+], '历史图片 URL 保留原图与缩略图')
+assert.deepEqual(convertImages({ image_urls: ['legacy'], images: [{ media_id: 42, url: 'https://example.invalid/media', thumbnail_url: 'https://example.invalid/media-thumb' }] } as unknown as Partial<MarketplaceListingView>), [
+  { id: 42, url: 'https://example.invalid/media', thumbnail_url: 'https://example.invalid/media-thumb' },
+], '媒体记录优先并保留媒体标识和缩略图')
+
 assert.doesNotMatch(
   marketplaceDetailSource,
   /market-detail-gallery__empty/u,
