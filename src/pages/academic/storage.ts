@@ -27,6 +27,70 @@ const SELECTION_SCHEDULE_CACHE_KEY_PREFIX = 'academic.courseSelectionScheduleCac
 const PERSONAL_COURSES_V1_KEY_PREFIX = 'academic.personalCourses.v1.'
 const PERSONAL_COURSES_V2_KEY_PREFIX = 'academic.personalCourses.v2.'
 
+/** CustomCoursesShareReadErrorKind 标识共享课表自定义课程读取失败原因。 */
+export type CustomCoursesShareReadErrorKind =
+  | 'invalid_scope'
+  | 'storage_read_failed'
+  | 'corrupt_scoped'
+  | 'corrupt_legacy'
+  | 'corrupt_legacy_owner'
+
+/** CustomCoursesShareReadError 表示共享课表读取自定义课程时遇到可恢复错误。 */
+export class CustomCoursesShareReadError extends Error {
+  readonly kind: CustomCoursesShareReadErrorKind
+
+  constructor(kind: CustomCoursesShareReadErrorKind) {
+    super({
+      invalid_scope: '无法确认当前账号，未同步本机自定义课程。',
+      storage_read_failed: '本机自定义课程暂时读取失败，原数据未更改；请重新读取后重试。',
+      corrupt_scoped: '自定义课程记录不完整，原数据已保留并暂停同步；请重新读取本人课表，若仍异常请联系校园支持。',
+      corrupt_legacy: '旧版自定义课程记录不完整，原数据已保留并暂停同步；请核对原账号后联系校园支持。',
+      corrupt_legacy_owner: '旧版课程归属记录异常，原数据已保留；请切回曾保存课程的账号核对后重试。',
+    }[kind])
+    Object.setPrototypeOf(this, CustomCoursesShareReadError.prototype)
+    this.name = 'CustomCoursesShareReadError'
+    this.kind = kind
+  }
+}
+
+/** CustomCoursesShareReadResult 区分可信课程、空缺记录与未确认归属的旧记录。 */
+export type CustomCoursesShareReadResult =
+  | {
+    status: 'ready'
+    courses: Course[]
+    source: 'scoped' | 'legacy'
+    ownership: 'scoped' | 'owner_key' | 'credential'
+  }
+  | {
+    status: 'missing_scoped'
+    courses: []
+    source: 'none'
+    ownership: 'none'
+  }
+  | {
+    status: 'legacy_unowned'
+    courses: []
+    source: 'legacy'
+    ownership: 'unconfirmed'
+    reason: 'owner_mismatch'
+    legacyOwnerUserId: number
+    ownerSource: 'owner_key' | 'credential'
+  }
+  | {
+    status: 'legacy_unowned'
+    courses: []
+    source: 'legacy'
+    ownership: 'unconfirmed'
+    reason: 'owner_unknown'
+  }
+
+/** CustomCoursesScheduleLoadResult 表示课表页已安全加载，或必须保护本机数据并暂停修改。 */
+export type CustomCoursesScheduleLoadResult =
+  | { status: 'ready'; courses: Course[] }
+  | { status: 'blocked'; courses: Course[]; message: string }
+
+type StoredValue = { present: false } | { present: true; value: unknown }
+
 export interface AcademicScheduleCache {
   version: 1
   platformUserId: number
@@ -47,12 +111,18 @@ const safeRead = <T>(key: string, fallback: T): T => {
   }
 }
 
-const safeWrite = <T>(key: string, value: T) => {
+const safeWriteWithResult = <T>(key: string, value: T): boolean => {
   try {
     Taro.setStorageSync(key, value)
-  } catch (error) {
+    return true
+  } catch {
     Taro.showToast({ title: '本地保存失败，请稍后重试', icon: 'none' })
+    return false
   }
+}
+
+const safeWrite = <T>(key: string, value: T) => {
+  safeWriteWithResult(key, value)
 }
 
 const getLocalDayKey = (date = new Date()) => [
@@ -96,6 +166,209 @@ const validCourse = (value: unknown): value is Course => {
     && typeof course.color === 'string'
     && course.source === 'official'
   )
+}
+
+const scopedCustomCoursesKey = (platformUserId: number) => (
+  `academic.customCourses.v2.${platformUserId}`
+)
+
+const readStrictStorageValue = (key: string): StoredValue => {
+  try {
+    const keys = Taro.getStorageInfoSync().keys
+    if (!Array.isArray(keys)) throw new Error('storage keys unavailable')
+    if (!keys.includes(key)) return { present: false }
+    return { present: true, value: Taro.getStorageSync<unknown>(key) }
+  } catch {
+    throw new CustomCoursesShareReadError('storage_read_failed')
+  }
+}
+
+const isNonEmptyString = (value: unknown): value is string => (
+  typeof value === 'string' && !!value.trim()
+)
+
+const validShareableCustomCourse = (value: unknown): value is Course => {
+  if (!value || typeof value !== 'object') return false
+  const course = value as Course
+  if (
+    !isNonEmptyString(course.id)
+    || !isNonEmptyString(course.periodId)
+    || course.source !== 'custom'
+  ) return false
+
+  return isNonEmptyString(course.name)
+    && typeof course.teacher === 'string'
+    && typeof course.location === 'string'
+    && (course.classNum === undefined || typeof course.classNum === 'string')
+    && (course.note === undefined || typeof course.note === 'string')
+    && (course.campus === undefined || typeof course.campus === 'string')
+    && Number.isInteger(course.weekday)
+    && course.weekday >= 1
+    && course.weekday <= 7
+    && Number.isInteger(course.startSection)
+    && Number.isInteger(course.endSection)
+    && course.startSection >= 1
+    && course.endSection <= 12
+    && course.startSection <= course.endSection
+    && Array.isArray(course.weeks)
+    && course.weeks.length > 0
+    && course.weeks.every((week) => Number.isInteger(week) && week >= 1 && week <= 30)
+    && typeof course.color === 'string'
+}
+
+const readCustomCoursesForSharing = (
+  platformUserId: number,
+): CustomCoursesShareReadResult => {
+  if (!Number.isSafeInteger(platformUserId) || platformUserId <= 0) {
+    throw new CustomCoursesShareReadError('invalid_scope')
+  }
+
+  const readCourses = (value: unknown, source: 'scoped' | 'legacy', ownership: 'scoped' | 'owner_key' | 'credential'):
+    CustomCoursesShareReadResult => {
+    const errorKind = source === 'scoped' ? 'corrupt_scoped' : 'corrupt_legacy'
+    if (!Array.isArray(value)) throw new CustomCoursesShareReadError(errorKind)
+
+    const customCourses: Course[] = []
+    const seenCourseIdsByPeriod = new Set<string>()
+    for (const item of value) {
+      if (!validShareableCustomCourse(item)) {
+        throw new CustomCoursesShareReadError(errorKind)
+      }
+      const idByPeriod = `${item.periodId}\u0000${item.id}`
+      if (seenCourseIdsByPeriod.has(idByPeriod)) throw new CustomCoursesShareReadError(errorKind)
+      seenCourseIdsByPeriod.add(idByPeriod)
+      customCourses.push(item)
+    }
+
+    return { status: 'ready', courses: customCourses, source, ownership }
+  }
+
+  const scoped = readStrictStorageValue(scopedCustomCoursesKey(platformUserId))
+  if (scoped.present) return readCourses(scoped.value, 'scoped', 'scoped')
+
+  const legacy = readStrictStorageValue(CUSTOM_COURSES_KEY)
+  if (!legacy.present) {
+    return { status: 'missing_scoped', courses: [], source: 'none', ownership: 'none' }
+  }
+
+  const owner = readStrictStorageValue(CUSTOM_COURSES_OWNER_KEY)
+  if (owner.present && owner.value !== 0) {
+    if (!Number.isSafeInteger(owner.value) || (owner.value as number) <= 0) {
+      throw new CustomCoursesShareReadError('corrupt_legacy_owner')
+    }
+    if (owner.value !== platformUserId) {
+      return {
+        status: 'legacy_unowned',
+        courses: [],
+        source: 'legacy',
+        ownership: 'unconfirmed',
+        reason: 'owner_mismatch',
+        legacyOwnerUserId: owner.value as number,
+        ownerSource: 'owner_key',
+      }
+    }
+    return readCourses(legacy.value, 'legacy', 'owner_key')
+  }
+
+  const credential = readStrictStorageValue('campus.academicCredential.v1')
+  if (credential.present && credential.value && typeof credential.value === 'object') {
+    const credentialUserId = (credential.value as { platformUserId?: unknown }).platformUserId
+    if (Number.isSafeInteger(credentialUserId) && (credentialUserId as number) > 0) {
+      if (credentialUserId === platformUserId) return readCourses(legacy.value, 'legacy', 'credential')
+      return {
+        status: 'legacy_unowned',
+        courses: [],
+        source: 'legacy',
+        ownership: 'unconfirmed',
+        reason: 'owner_mismatch',
+        legacyOwnerUserId: credentialUserId as number,
+        ownerSource: 'credential',
+      }
+    }
+  }
+
+  return {
+    status: 'legacy_unowned', courses: [], source: 'legacy', ownership: 'unconfirmed', reason: 'owner_unknown',
+  }
+}
+
+const loadCustomCoursesForSchedule = (platformUserId: number): CustomCoursesScheduleLoadResult => {
+  try {
+    const result = readCustomCoursesForSharing(platformUserId)
+    if (result.status === 'missing_scoped') {
+      if (!safeWriteWithResult(scopedCustomCoursesKey(platformUserId), [])) {
+        return {
+          status: 'blocked',
+          courses: [],
+          message: '本机暂时无法保存自定义课程，请点击重新读取后重试；未保存的数据不会同步。',
+        }
+      }
+      return { status: 'ready', courses: [] }
+    }
+
+    if (result.status === 'legacy_unowned') {
+      if (result.reason === 'owner_unknown') {
+        return {
+          status: 'blocked',
+          courses: [],
+          message: '旧版自定义课程归属无法确认，已保留本机数据；请切回原账号核对课程归属后再重试。',
+        }
+      }
+      if (
+        result.ownerSource === 'credential'
+        && !safeWriteWithResult(CUSTOM_COURSES_OWNER_KEY, result.legacyOwnerUserId)
+      ) {
+        return {
+          status: 'blocked',
+          courses: [],
+          message: '无法保存旧版课程归属信息，请点击重新读取后重试；原课程仍保留在本机。',
+        }
+      }
+      if (!safeWriteWithResult(scopedCustomCoursesKey(platformUserId), [])) {
+        return {
+          status: 'blocked',
+          courses: [],
+          message: '本机暂时无法保存当前账号的空自定义课表，请点击重新读取后重试；旧版课程未被改动。',
+        }
+      }
+      return { status: 'ready', courses: [] }
+    }
+
+    if (result.source === 'legacy') {
+      if (
+        result.ownership === 'credential'
+        && !safeWriteWithResult(CUSTOM_COURSES_OWNER_KEY, platformUserId)
+      ) {
+        return {
+          status: 'blocked',
+          courses: result.courses,
+          message: '旧版课程读取成功，但无法保存课程归属；课程已保留显示，请重新读取后再修改。',
+        }
+      }
+      if (!safeWriteWithResult(scopedCustomCoursesKey(platformUserId), result.courses)) {
+        return {
+          status: 'blocked',
+          courses: result.courses,
+          message: '旧版课程读取成功，但本机迁移保存失败；课程已保留显示，请重新读取后再修改。',
+        }
+      }
+    }
+
+    return { status: 'ready', courses: result.courses }
+  } catch (error) {
+    const message = error instanceof CustomCoursesShareReadError
+      ? error.kind === 'corrupt_scoped' || error.kind === 'corrupt_legacy'
+        ? '自定义课程记录不完整，原数据已保留并暂停修改；请重新打开本人课表尝试恢复，若仍异常请联系校园支持。'
+        : error.kind === 'corrupt_legacy_owner'
+          ? '旧版课程归属记录异常，原数据已保留；请切回曾保存课程的账号核对后重试。'
+          : '本机自定义课程暂时读取失败，原数据未更改；请点击重新读取后重试。'
+      : '本机自定义课程暂时读取失败，原数据未更改；请点击重新读取后重试。'
+    return {
+      status: 'blocked',
+      courses: [],
+      message,
+    }
+  }
 }
 
 const personalCoursesKey = (
@@ -367,25 +640,32 @@ export const academicStorage = {
   },
   getCustomCourses: (platformUserId?: number): Course[] => {
     if (platformUserId === undefined) return safeRead<Course[]>(CUSTOM_COURSES_KEY, [])
-    const key = `academic.customCourses.v2.${platformUserId}`
-    const scoped = safeRead<unknown>(key, null)
-    const sanitize = (value: unknown): Course[] => Array.isArray(value) ? value.filter((course) => (
-      course && course.source === 'custom' && validCourse({ ...course, source: 'official' })
-    )) : []
-    if (scoped !== null) return sanitize(scoped)
-    // 旧键没有账号信息，只在本机既有教务凭据能确认归属时迁移；不让另一账号认领。
-    const credential = safeRead<{ platformUserId?: number }>('campus.academicCredential.v1', {})
-    const owner = safeRead<number>(CUSTOM_COURSES_OWNER_KEY, 0)
-    if (platformUserId > 0 && credential.platformUserId === platformUserId && (!owner || owner === platformUserId)) {
-      const courses = sanitize(safeRead<unknown>(CUSTOM_COURSES_KEY, []))
-      safeWrite(CUSTOM_COURSES_OWNER_KEY, platformUserId)
-      safeWrite(key, courses)
-      return courses
+    try {
+      const result = readCustomCoursesForSharing(platformUserId)
+      return result.status === 'ready' ? result.courses : []
+    } catch (error) {
+      if (
+        error instanceof CustomCoursesShareReadError
+        && error.kind === 'corrupt_scoped'
+      ) {
+        const scoped = safeRead<unknown>(scopedCustomCoursesKey(platformUserId), null)
+        return Array.isArray(scoped) ? scoped.filter((course) => (
+          course && course.source === 'custom' && validCourse({ ...course, source: 'official' })
+        )) : []
+      }
+      return []
     }
-    return []
   },
+  /** loadCustomCoursesForSchedule 安全迁移可信旧记录，并为确实缺失的账号创建显式空列表。 */
+  loadCustomCoursesForSchedule,
+  /** readCustomCoursesForSharing 按账号只读并原子校验全部学期自定义课程；异常时抛错且不迁移或写回。 */
+  readCustomCoursesForSharing,
   setCustomCourses: (courses: Course[], platformUserId?: number) => safeWrite(
-    platformUserId === undefined ? CUSTOM_COURSES_KEY : `academic.customCourses.v2.${platformUserId}`, courses,
+    platformUserId === undefined ? CUSTOM_COURSES_KEY : scopedCustomCoursesKey(platformUserId), courses,
+  ),
+  /** trySetCustomCourses 持久化自定义课程并返回实际写入结果，供修改 UI 决定是否更新内存。 */
+  trySetCustomCourses: (courses: Course[], platformUserId?: number): boolean => safeWriteWithResult(
+    platformUserId === undefined ? CUSTOM_COURSES_KEY : scopedCustomCoursesKey(platformUserId), courses,
   ),
   getPreferences: (fallback: AcademicPreferences) => (
     safeRead<AcademicPreferences>(PREFERENCES_KEY, fallback)

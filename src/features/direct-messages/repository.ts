@@ -9,6 +9,7 @@ import type {
   DirectMessageReadWatermark,
 } from './types'
 import type { PrivateMessageUnreadCount } from '../../api/types'
+import { getPageCacheScope } from '../../state/page-cache'
 
 const privateMessagePath = (conversationId: number) => (
   `/api/v1/private-messages/conversations/${conversationId}`
@@ -21,11 +22,13 @@ export type DirectMessageCursorQuery = {
 }
 
 export const privateMessagesRepository = {
-  createConversation(peerId: number) {
+  createConversation(peerId: number, isScopeCurrent?: () => boolean) {
+    const requestScope = getPageCacheScope()
     return apiRequest<DirectMessageConversation>({
       path: '/api/v1/private-messages/conversations',
       method: 'POST',
       data: { peer_id: peerId },
+      isScopeCurrent: isScopeCurrent || (() => getPageCacheScope() === requestScope),
     })
   },
 

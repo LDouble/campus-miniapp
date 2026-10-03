@@ -6634,6 +6634,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/timetable-buddy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的课表搭子状态 */
+        get: operations["GetMyTimetableBuddy"];
+        put?: never;
+        post?: never;
+        /** 解除课表搭子连接 */
+        delete: operations["DeleteMyTimetableBuddy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/custom-courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 保存本人自定义课程补充 */
+        put: operations["SyncMyTimetableBuddyCustomCourses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建课表搭子邀请 */
+        post: operations["CreateTimetableBuddyInvitation"];
+        /** 撤销本人尚未接受的课表搭子邀请 */
+        delete: operations["RevokeTimetableBuddyInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接受课表搭子邀请 */
+        post: operations["AcceptTimetableBuddyInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/invitations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 预览课表搭子邀请 */
+        post: operations["PreviewTimetableBuddyInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我们的课表 */
+        get: operations["GetMyTimetableBuddySchedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 更新我的课表共享设置 */
+        patch: operations["UpdateMyTimetableBuddySettings"];
+        trace?: never;
+    };
     "/api/v1/orders": {
         parameters: {
             query?: never;
@@ -7452,6 +7573,7 @@ export interface components {
         RuntimeConfig: {
             group: string;
             key: string;
+            /** @description 配置文档。miniapp/bootstrap 的 modules.<key> 包含 state、可选 message 和可选 disabled_versions 字符串数组；关闭版本最多 50 项，元素匹配 ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$，不可重复。全局 hidden/maintenance 优先； enabled 且客户端版本精确命中列表时有效状态为 hidden。未配置列表保持既有行为。 */
             value: unknown;
             /** Format: uint64 */
             version: number;
@@ -13292,6 +13414,118 @@ export interface components {
             /** Format: uint64 */
             expected_version: number;
         };
+        TimetableBuddyBusySlot: {
+            /** Format: int64 */
+            section: number;
+            /** Format: int64 */
+            week: number;
+            /** Format: int64 */
+            weekday: number;
+        };
+        TimetableBuddyConnection: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            members: components["schemas"]["TimetableBuddyMember"][];
+            relation_type: components["schemas"]["TimetableBuddyRelationType"];
+        };
+        TimetableBuddyCourse: {
+            location?: string | null;
+            name: string;
+            sections: number[];
+            /** Format: int64 */
+            weekday: number;
+            weeks: number[];
+        };
+        /** @description 仅包含本地自定义课程，不包含官方课表或服务端蹭课 */
+        TimetableBuddyCustomCoursesInput: {
+            courses: components["schemas"]["TimetableBuddyCourse"][];
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            period_id: string;
+        };
+        TimetableBuddyCustomCoursesResponseBody: {
+            data: components["schemas"]["TimetableBuddyMemberSchedule"];
+            request_id: string;
+        };
+        TimetableBuddyInvitation: {
+            /** Format: date-time */
+            expires_at: string;
+            relation_type: components["schemas"]["TimetableBuddyRelationType"];
+            share_scope: components["schemas"]["TimetableBuddyShareScope"];
+            token: string;
+        };
+        TimetableBuddyInvitationPreview: {
+            creator_avatar_url?: string | null;
+            /** Format: uint64 */
+            creator_id: number;
+            creator_nickname: string;
+            /** Format: date-time */
+            expires_at: string;
+            relation_type: components["schemas"]["TimetableBuddyRelationType"];
+        };
+        TimetableBuddyInvitationPreviewResponseBody: {
+            data: components["schemas"]["TimetableBuddyInvitationPreview"];
+            request_id: string;
+        };
+        TimetableBuddyInvitationResponseBody: {
+            data: components["schemas"]["TimetableBuddyInvitation"];
+            request_id: string;
+        };
+        TimetableBuddyInvitationTokenInput: {
+            token: string;
+        };
+        TimetableBuddyMember: {
+            avatar_url?: string | null;
+            nickname?: string;
+            paused: boolean;
+            share_scope: components["schemas"]["TimetableBuddyShareScope"];
+            /** Format: uint64 */
+            user_id: number;
+        };
+        TimetableBuddyMemberSchedule: {
+            avatar_url?: string | null;
+            busy_slots: components["schemas"]["TimetableBuddyBusySlot"][];
+            courses: components["schemas"]["TimetableBuddyCourse"][];
+            /** @description 本人是否已明确保存当前学期的自定义课程补充 */
+            custom_courses_ready: boolean;
+            /** Format: date-time */
+            custom_courses_synced_at: string | null;
+            /** @enum {string} */
+            data_status: "ready" | "unavailable" | "incomplete" | "identity_unavailable";
+            nickname?: string;
+            paused: boolean;
+            share_scope: components["schemas"]["TimetableBuddyShareScope"];
+            /**
+             * Format: date-time
+             * @description 官方课表归档的最近观察时间
+             */
+            synced_at: string | null;
+            /** Format: uint64 */
+            user_id: number;
+        };
+        /** @enum {string} */
+        TimetableBuddyRelationType: "friend" | "study_partner" | "cp" | "unspecified";
+        TimetableBuddySchedule: {
+            buddy: components["schemas"]["TimetableBuddyMemberSchedule"];
+            common_free_slots: components["schemas"]["TimetableBuddyBusySlot"][] | null;
+            connection: components["schemas"]["TimetableBuddyConnection"];
+            me: components["schemas"]["TimetableBuddyMemberSchedule"];
+        };
+        TimetableBuddyScheduleResponseBody: {
+            data: components["schemas"]["TimetableBuddySchedule"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        TimetableBuddyShareScope: "busy" | "details";
+        TimetableBuddyState: {
+            connection?: components["schemas"]["TimetableBuddyConnection"];
+        };
+        TimetableBuddyStateResponseBody: {
+            data: components["schemas"]["TimetableBuddyState"];
+            request_id: string;
+        };
         TradeOrderPageResponseBody: {
             data: components["schemas"]["TradeOrderViewPage"];
             request_id: string;
@@ -15801,6 +16035,51 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ShuttleRouteResponseBody"];
+            };
+        };
+        /** @description 本人自定义课程补充保存结果 */
+        TimetableBuddyCustomCoursesResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyCustomCoursesResponseBody"];
+            };
+        };
+        /** @description 课表搭子邀请预览 */
+        TimetableBuddyInvitationPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationPreviewResponseBody"];
+            };
+        };
+        /** @description 课表搭子邀请 */
+        TimetableBuddyInvitationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationResponseBody"];
+            };
+        };
+        /** @description 双人课表 */
+        TimetableBuddyScheduleResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyScheduleResponseBody"];
+            };
+        };
+        /** @description 我的课表搭子状态 */
+        TimetableBuddyStateResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyStateResponseBody"];
             };
         };
         /** @description 交易订单分页 */
@@ -24952,6 +25231,179 @@ export interface operations {
             200: components["responses"]["ShuttleRouteResponse"];
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    GetMyTimetableBuddy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+        };
+    };
+    DeleteMyTimetableBuddy: {
+        parameters: {
+            query: {
+                expected_connection_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    SyncMyTimetableBuddyCustomCourses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyCustomCoursesInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyCustomCoursesResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    CreateTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    relation_type: "friend" | "study_partner" | "cp" | "unspecified";
+                    /** @enum {string} */
+                    share_scope: "busy" | "details";
+                    /** Format: int64 */
+                    expires_in_hours: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["TimetableBuddyInvitationResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RevokeTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationTokenInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
+    AcceptTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationTokenInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
+    PreviewTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationTokenInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyInvitationPreviewResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetMyTimetableBuddySchedule: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+                week: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["TimetableBuddyScheduleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+            504: components["responses"]["Error"];
+        };
+    };
+    UpdateMyTimetableBuddySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    share_scope: "busy" | "details";
+                    paused: boolean;
+                    /** Format: uint64 */
+                    expected_connection_id: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     ListMyTradeOrders: {

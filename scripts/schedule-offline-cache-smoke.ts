@@ -90,6 +90,13 @@ let scope = 'scope-A'
 let resolvePeriods: ((value: typeof periods) => void) | undefined
 let rejectPeriods: ((error: Error) => void) | undefined
 let scheduleWrites = 0
+let customCoursesLoadResult: { status: 'ready' | 'blocked'; courses: unknown[]; message?: string } = {
+  status: 'ready',
+  courses: [],
+}
+const customCoursesLoaderUserIds: number[] = []
+const customCoursesWrites: Array<{ userId: number; courses: unknown[] }> = []
+const toastTitles: string[] = []
 const deferredPeriods = () => new Promise<typeof periods>((resolvePromise, rejectPromise) => {
   resolvePeriods = resolvePromise
   rejectPeriods = rejectPromise
@@ -100,6 +107,14 @@ const academicStorage = {
   getPreferences: (fallback: unknown) => fallback,
   setPreferences: () => undefined,
   getCustomCourses: () => [], setCustomCourses: () => undefined,
+  loadCustomCoursesForSchedule: (userId: number) => {
+    customCoursesLoaderUserIds.push(userId)
+    return customCoursesLoadResult
+  },
+  trySetCustomCourses: (courses: unknown[], userId: number) => {
+    customCoursesWrites.push({ userId, courses })
+    return true
+  },
   getPersonalCourses: () => [], setPersonalCourses: () => undefined,
   getSelectionDraftCourses: () => [], setSelectionDraftCourses: () => undefined,
   getCourseSelectionScheduleCourses: () => [], setCourseSelectionScheduleCourses: () => undefined,
@@ -126,7 +141,8 @@ const react = {
 const proxy = new Proxy({}, { get: (_target, key) => key === '__esModule' ? false : () => undefined })
 const taroPage = {
   useRouter: () => ({ params: {} }), useDidShow: () => undefined, usePullDownRefresh: () => undefined,
-  showToast: () => undefined, nextTick: (callback: () => void) => callback(), createSelectorQuery: () => ({ select: () => ({ boundingClientRect: () => undefined }), exec: () => undefined }),
+  showToast: (options: { title?: string }) => { if (options.title) toastTitles.push(options.title) },
+  nextTick: (callback: () => void) => callback(), createSelectorQuery: () => ({ select: () => ({ boundingClientRect: () => undefined }), exec: () => undefined }),
 }
 require.extensions['.tsx'] = (module, filename) => {
   if (filename !== schedulePagePath || !originalTsx) return originalTsx?.(module, filename)
@@ -175,6 +191,31 @@ const renderSchedule = () => {
   hookIndex = 0
   return SchedulePageContent({ academicUserId: 41, pageCacheScope: 'scope-A' })
 }
+const findElement = (
+  value: unknown,
+  predicate: (candidate: { props?: Record<string, unknown> }) => boolean,
+): { props?: Record<string, unknown> } | null => {
+  if (!value || typeof value !== 'object') return null
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findElement(item, predicate)
+      if (found) return found
+    }
+    return null
+  }
+  const candidate = value as { props?: Record<string, unknown> }
+  if (predicate(candidate)) return candidate
+  for (const child of Object.values(candidate)) {
+    const found = findElement(child, predicate)
+    if (found) return found
+  }
+  return null
+}
+const containsText = (value: unknown, expected: string): boolean => {
+  if (typeof value === 'string') return value.includes(expected)
+  if (!value || typeof value !== 'object') return false
+  return Object.values(value as Record<string, unknown>).some((child) => containsText(child, expected))
+}
 const containsCachedCourse = (value: unknown): boolean => {
   if (Array.isArray(value)) return value.some(containsCachedCourse)
   if (!value || typeof value !== 'object') return false
@@ -199,6 +240,46 @@ rejectPeriods?.(new Error('authorization unavailable'))
 await Promise.resolve()
 renderSchedule()
 assert.ok(containsCachedCourse(hooks), '授权服务失败不得遮蔽已显示的课表缓存')
+
+customCoursesLoadResult = {
+  status: 'blocked',
+  courses: [],
+  message: '测试用自定义课程保护提示',
+}
+hooks.length = 0
+effects.length = 0
+renderSchedule()
+effects.filter((effect) => !effect.ran).forEach((effect) => { effect.ran = true; effect.run() })
+assert.ok(customCoursesLoaderUserIds.includes(41), '课表页必须按当前账号调用安全 loader')
+let blockedTree = renderSchedule()
+assert.ok(containsText(blockedTree, '测试用自定义课程保护提示'), '坏自定义课程必须展示保护提示')
+const addCustomCourse = findElement(
+  blockedTree,
+  (candidate) => candidate.props?.ariaLabel === '添加自定义课程',
+)
+assert.ok(addCustomCourse, '保护状态下仍能打开课程编辑界面以展示友好拦截')
+;(addCustomCourse.props?.onClick as (() => void) | undefined)?.()
+blockedTree = renderSchedule()
+const nameInput = findElement(
+  blockedTree,
+  (candidate) => candidate.props?.placeholder === '例如：专业学习小组',
+)
+assert.ok(nameInput, '课程表单应可达')
+;(nameInput.props?.onInput as ((event: { detail: { value: string } }) => void) | undefined)?.({
+  detail: { value: '保护状态测试课程' },
+})
+blockedTree = renderSchedule()
+const saveCustomCourse = findElement(
+  blockedTree,
+  (candidate) => typeof candidate.props?.className === 'string'
+    && (candidate.props.className as string).includes('academic-button--full')
+    && typeof candidate.props.onClick === 'function',
+)
+assert.ok(saveCustomCourse, '课程表单应提供保存操作')
+await (saveCustomCourse.props?.onClick as () => Promise<void>)()
+assert.deepEqual(customCoursesWrites, [], 'blocked loader 状态下不能持久化 filtered partial 或空列表')
+assert.ok(toastTitles.includes('自定义课程尚未安全读取，请先重新读取'), '被保护状态下保存应告知先重新读取')
+
 loader._load = originalLoader
 require.extensions['.tsx'] = originalTsx
 delete require.cache[schedulePagePath]

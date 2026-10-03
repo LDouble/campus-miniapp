@@ -5,6 +5,10 @@ const values = new Map<string, any>()
 let brokenRead = false
 let brokenWrite = false
 const taro = {
+  getStorageInfoSync: () => {
+    if (brokenRead) throw new Error('read')
+    return { keys: [...values.keys()], currentSize: 0, limitSize: 0 }
+  },
   getStorageSync: (key: string) => { if (brokenRead) throw new Error('read'); return values.get(key) },
   setStorageSync: (key: string, value: any) => { if (brokenWrite) throw new Error('quota'); values.set(key, JSON.parse(JSON.stringify(value))) },
   removeStorageSync: (key: string) => values.delete(key),
@@ -80,7 +84,21 @@ assert.deepEqual(academicStorage.getCustomCourses(8), [], '自定义课程不能
 values.set('academic.customCourses.v1', [custom])
 values.set('campus.academicCredential.v1', { platformUserId: 9 })
 assert.deepEqual(academicStorage.getCustomCourses(10), [], '未知归属不能被新账号认领')
-assert.deepEqual(academicStorage.getCustomCourses(9), [custom], '已知旧账号可迁移自定义课')
+assert.equal(values.has('academic.customCourses.v2.10'), false, '只读课表读取不能自动认领旧账号数据')
+assert.deepEqual(
+  academicStorage.loadCustomCoursesForSchedule(10),
+  { status: 'ready', courses: [] },
+  '归属已确认属于另一账号时，新账号可建立独立空课表',
+)
+assert.deepEqual(values.get('academic.customCourses.legacyOwner.v1'), 9, '创建新账号空课表时保留旧版课程归属')
+assert.deepEqual(values.get('academic.customCourses.v2.10'), [], '新账号只写入自己的空列表')
+assert.deepEqual(values.get('academic.customCourses.v1'), [custom], '新账号初始化不得覆盖旧版原始课程')
+assert.deepEqual(
+  academicStorage.loadCustomCoursesForSchedule(9),
+  { status: 'ready', courses: [custom] },
+  '已确认归属的旧账号可安全迁移完整自定义课',
+)
+assert.deepEqual(values.get('academic.customCourses.v2.9'), [custom])
 assert.ok(values.has('academic.customCourses.v1'), '迁移保留原始数据')
 loader._load = original
 console.log('page cache smoke: ok')

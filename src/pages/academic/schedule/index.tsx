@@ -88,6 +88,7 @@ const icons = {
   sync: require('../../../assets/icons/sync.svg'),
 }
 const classDiscussionEntryIcon = require('../../../assets/icons/class-discussion-entry.svg')
+const timetableBuddyEntryIcon = require('../../../assets/icons/timetable-buddy.svg')
 
 const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
 const SCHEDULE_NOTE_COPY_ID = 'academic-schedule-note-copy'
@@ -437,7 +438,9 @@ export function SchedulePageContent({
   const [officialCoursesByPeriod, setOfficialCoursesByPeriod] = useState<CoursesByPeriod>(
     initialCoursesByPeriod,
   )
-  const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses(academicUserId))
+  const [customCourses, setCustomCourses] = useState<Course[]>([])
+  const [customCoursesWritable, setCustomCoursesWritable] = useState(false)
+  const [customCoursesStorageMessage, setCustomCoursesStorageMessage] = useState('')
   const [educationLevel] = useState<AcademicEducationLevel>(() => (
     getDefaultEducationLevel(academicUserId)
   ))
@@ -760,12 +763,20 @@ export function SchedulePageContent({
   }, [initialized, isSimulation, loadPersonalCourses])
 
   useEffect(() => {
+    if (!isCurrentPageCacheScope()) return
+    const result = isSimulation
+      ? { status: 'ready' as const, courses: academicStorage.getCustomCourses(academicUserId) }
+      : academicStorage.loadCustomCoursesForSchedule(academicUserId)
+    setCustomCourses(result.courses)
+    setCustomCoursesWritable(!isSimulation && result.status === 'ready')
+    setCustomCoursesStorageMessage(result.status === 'blocked' ? result.message : '')
+  }, [academicUserId, isCurrentPageCacheScope, isSimulation])
+
+  useEffect(() => {
     academicStorage.setPreferences(isSimulation
       ? { ...preferences, scheduleView: storedPreferences.scheduleView }
       : preferences)
   }, [isSimulation, preferences, storedPreferences])
-  useEffect(() => academicStorage.setCustomCourses(customCourses, academicUserId), [academicUserId, customCourses])
-
   useEffect(() => {
     if (!showRefreshGuide || loading || sheet) return undefined
     const timer = setTimeout(() => {
@@ -1096,6 +1107,32 @@ export function SchedulePageContent({
     }
   }
 
+  const reloadCustomCourses = () => {
+    if (!isCurrentPageCacheScope()) return
+    const result = academicStorage.loadCustomCoursesForSchedule(academicUserId)
+    setCustomCourses(result.courses)
+    setCustomCoursesWritable(result.status === 'ready')
+    setCustomCoursesStorageMessage(result.status === 'blocked' ? result.message : '')
+    if (result.status === 'ready') {
+      Taro.showToast({ title: '自定义课程已重新读取', icon: 'success' })
+    }
+  }
+
+  const persistCustomCourses = (courses: Course[]) => {
+    if (!isCurrentPageCacheScope()) return false
+    if (!customCoursesWritable || isSimulation) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return false
+    }
+    if (!academicStorage.trySetCustomCourses(courses, academicUserId)) {
+      setCustomCoursesStorageMessage('本机保存失败，自定义课程未更新；请点击重新读取后重试。')
+      return false
+    }
+    setCustomCourses(courses)
+    setCustomCoursesStorageMessage('')
+    return true
+  }
+
   const openCourseForm = (course?: Course) => {
     setCourseDraft(course ? {
       id: course.id,
@@ -1122,6 +1159,10 @@ export function SchedulePageContent({
   }
 
   const saveCourse = async () => {
+    if (!customCoursesWritable || isSimulation) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return
+    }
     const name = courseDraft.name.trim()
     if (!name || !courseDraft.weeks.length) {
       Taro.showToast({ title: '请填写课程名并选择上课周次', icon: 'none' })
@@ -1151,9 +1192,10 @@ export function SchedulePageContent({
       location: courseDraft.location.trim(),
       source: 'custom',
     }
-    setCustomCourses((current) => courseDraft.id
-      ? current.map((course) => course.id === courseDraft.id ? record : course)
-      : [...current, record])
+    const nextCourses = courseDraft.id
+      ? customCourses.map((course) => course.id === courseDraft.id ? record : course)
+      : [...customCourses, record]
+    if (!persistCustomCourses(nextCourses)) return
     setActiveCourse(record)
     setActiveSlotCourses([record])
     setSheet('course-detail')
@@ -1162,6 +1204,10 @@ export function SchedulePageContent({
 
   const deleteCourse = async (course = activeCourse) => {
     if (!course || !isRemovableCourse(course) || courseMutationRef.current) return
+    if (course.source === 'custom' && !customCoursesWritable) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return
+    }
     const isAuditCourse = course.source === 'audit'
     const isSimulationCourse = course.source === 'simulation'
     const result = await Taro.showModal({
@@ -1194,7 +1240,8 @@ export function SchedulePageContent({
           return next
         })
       } else {
-        setCustomCourses((current) => current.filter((item) => item.id !== course.id))
+        const nextCourses = customCourses.filter((item) => item.id !== course.id)
+        if (!persistCustomCourses(nextCourses)) return
       }
       const remainingCourses = activeSlotCourses.filter((item) => (
         isAuditCourse
@@ -1239,6 +1286,10 @@ export function SchedulePageContent({
       Taro.showToast({ title: '模拟选课已清空', icon: 'success' })
       return
     }
+    if (!customCoursesWritable) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return
+    }
     const customCourseIds = customCourses
       .filter((course) => course.periodId === preferences.schedulePeriodId)
       .map((course) => course.id)
@@ -1262,15 +1313,16 @@ export function SchedulePageContent({
     if (!result.confirm) return
     courseMutationRef.current = true
     try {
+      const nextCustomCourses = customCourses.filter((course) => (
+        course.periodId !== preferences.schedulePeriodId || course.source !== 'custom'
+      ))
+      if (!persistCustomCourses(nextCustomCourses)) return
       const settled = await Promise.allSettled(auditItems.map(([itemId, version]) => (
         removePersonalTimetableItem(itemId, version)
       )))
       const removedAuditItemIds = new Set(auditItems
         .filter((_, index) => settled[index].status === 'fulfilled')
         .map(([itemId]) => itemId))
-      setCustomCourses((current) => current.filter((course) => (
-        course.periodId !== preferences.schedulePeriodId || course.source !== 'custom'
-      )))
       setPersonalCourses((current) => current.filter((course) => (
         course.periodId !== preferences.schedulePeriodId || !removedAuditItemIds.has(course.auditItemId || 0)
       )))
@@ -1336,6 +1388,10 @@ export function SchedulePageContent({
       )}
     </View>
   )
+
+  const openTimetableBuddy = () => {
+    void Taro.navigateTo({ url: '/pages/academic/timetable-buddy/index' })
+  }
 
   const renderWeekSchedule = () => (
     <View
@@ -1874,6 +1930,34 @@ export function SchedulePageContent({
             : '',
         ].filter(Boolean).join(' ')}
       >
+        {!isSimulation && (
+          <View
+            className='schedule-buddy-entry'
+            ariaRole='button'
+            ariaLabel='打开课表搭子'
+            onClick={openTimetableBuddy}
+          >
+            <View className='schedule-buddy-entry__icon-wrap' aria-hidden>
+              <Image className='schedule-buddy-entry__icon' src={timetableBuddyEntryIcon} mode='aspectFit' />
+            </View>
+            <View className='schedule-buddy-entry__copy'>
+              <Text className='schedule-buddy-entry__title'>课表搭子</Text>
+              <Text className='schedule-buddy-entry__description'>一起看看什么时候都有空</Text>
+            </View>
+            <Text className='schedule-buddy-entry__arrow' aria-hidden>›</Text>
+          </View>
+        )}
+        {!isSimulation && customCoursesStorageMessage && (
+          <View
+            className='schedule-note'
+            ariaRole='button'
+            ariaLabel={`自定义课程保护中：${customCoursesStorageMessage} 点击重新读取`}
+            onClick={reloadCustomCourses}
+          >
+            <Text className='schedule-note__label'>自定义课程保护中</Text>
+            <Text className='schedule-note__copy'>{customCoursesStorageMessage} 点击此处重新读取。</Text>
+          </View>
+        )}
         {showRefreshGuide && !loading && !sheet && (
           <View
             className='schedule-refresh-guide'

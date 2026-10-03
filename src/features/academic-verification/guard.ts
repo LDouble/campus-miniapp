@@ -32,6 +32,7 @@ const SAFE_PAGES = new Set([
     '/pages/clubs/mine',
   ] : []),
   '/pages/academic/schedule/index',
+  '/pages/academic/timetable-buddy/index',
   '/pages/academic/grades/index',
   '/pages/academic/exams/index',
   '/pages/academic/selection/index',
