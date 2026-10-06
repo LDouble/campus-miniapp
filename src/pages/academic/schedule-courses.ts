@@ -96,3 +96,41 @@ export const mergeSimulationCourses = (
     }),
   ]
 }
+
+/** getCourseDisplayGroups 以本周课程确定卡片范围，其他周课程仅补充详情。 */
+export const getCourseDisplayGroups = (courses: Course[], week: number) => {
+  const overlaps = (left: Course, right: Course) => (
+    left.weekday === right.weekday
+    && left.startSection <= right.endSection
+    && right.startSection <= left.endSection
+  )
+  const collectGroups = (items: Course[]) => {
+    let groups: Course[][] = []
+    items.forEach((item) => {
+      const touching = groups.filter((group) => group.some((member) => overlaps(member, item)))
+      groups = groups.filter((group) => !touching.includes(group))
+      groups.push([item, ...touching.flat()])
+    })
+    return groups
+  }
+  const currentCourses = getCoursesForWeek(courses, week)
+  const inactiveCourses = courses.filter((course) => !course.weeks.includes(week))
+  const currentGroups = collectGroups(currentCourses)
+  // 非本周课程不能把本周相邻的独立卡片连接起来，也不能扩大其占用节次。
+  const remainingInactive = inactiveCourses.filter((course) => (
+    !currentCourses.some((current) => overlaps(current, course))
+  ))
+  return [...currentGroups, ...collectGroups(remainingInactive)].map((members) => {
+    const primary = [...members].sort((left, right) => compareCoursesForDisplay(left, right, week))[0]
+    const relatedCourses = courses.filter((course) => (
+      members.some((member) => overlaps(member, course))
+    )).sort((left, right) => compareCoursesForDisplay(left, right, week))
+    return {
+      course: primary,
+      courses: relatedCourses,
+      ...getCourseDisplaySpan(members),
+    }
+  }).sort((left, right) => (
+    left.course.weekday - right.course.weekday || left.startSection - right.startSection
+  ))
+}
