@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import {
   compareCoursesForDisplay,
   getCourseDisplaySpan,
+  getCourseDisplayGroups,
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
@@ -70,6 +71,54 @@ assert.equal(
   auditLongCourse,
   '当前周课程应优先于其他周次的教务课程',
 )
+
+const fridayCourses: Course[] = [
+  { ...course('学术道德与规范', '秋季'), weekday: 5, endSection: 4, weeks: [2, 4] },
+  { ...course('极地海洋动力学', '秋季'), weekday: 5, weeks: Array.from({ length: 16 }, (_, i) => i + 5) },
+  { ...course('计算地球流体动力学', '秋季'), weekday: 5, startSection: 3, endSection: 4, weeks: Array.from({ length: 16 }, (_, i) => i + 5) },
+]
+const fridayCards = getCourseDisplayGroups(fridayCourses, 5)
+assert.deepEqual(
+  fridayCards.map((card) => [card.course.name, card.startSection, card.endSection]),
+  [['极地海洋动力学', 1, 2], ['计算地球流体动力学', 3, 4]],
+  '其他周的长课程不得扩展本周两张卡片并造成遮挡',
+)
+assert.ok(fridayCards.every((card) => card.courses.some((item) => item.name === '学术道德与规范')),
+  '其他周课程应保留在两个相关卡片的详情中')
+assert.deepEqual(
+  getCourseDisplayGroups(fridayCourses, 2).map((card) => [card.course.name, card.startSection, card.endSection]),
+  [['学术道德与规范', 1, 4]],
+  '第2周应展示学术道德课程，未来两门课程只作为相关课程',
+)
+assert.deepEqual(
+  getCourseDisplayGroups([auditLongCourse, officialShortCourse], 1).map((card) => [card.course.id, card.startSection, card.endSection]),
+  [['official-7-8', 5, 8]],
+  '同周真实冲突仍应优先教务课程并覆盖完整时段',
+)
+
+for (const week of [5, 20]) {
+  assert.deepEqual(
+    getCourseDisplayGroups([...fridayCourses].reverse(), week).map((card) => [card.course.name, card.startSection, card.endSection]),
+    [['极地海洋动力学', 1, 2], ['计算地球流体动力学', 3, 4]],
+    '课程返回顺序和学期末边界不能影响本周独立课程展示',
+  )
+}
+const chainCourses = [
+  { ...course('链首', '秋季'), endSection: 3 },
+  { ...course('链中', '秋季'), startSection: 3, endSection: 5 },
+  { ...course('链尾', '秋季'), startSection: 5, endSection: 7 },
+]
+const chainCards = getCourseDisplayGroups(chainCourses, 1)
+assert.equal(chainCards.length, 1, '传递重叠的本周课程必须归入同一卡片，避免重复覆盖')
+assert.deepEqual([chainCards[0].startSection, chainCards[0].endSection], [1, 7])
+assert.deepEqual(new Set(chainCards[0].courses.map((item) => item.id)), new Set(chainCourses.map((item) => item.id)),
+  '冲突详情必须包含完整传递冲突组')
+assert.deepEqual(getCourseDisplayGroups([], 1), [], '空课表不得生成无效卡片')
+assert.equal(getCourseDisplayGroups(fridayCourses, 1).length, 1, '无本周课程时保留未来课程预览')
+assert.equal(getCourseDisplayGroups([
+  fridayCourses[1],
+  { ...fridayCourses[2], weekday: 4 },
+], 5).length, 2, '不同星期的课程不得合并')
 
 const period = (id: string, startDate: string, isCurrent = false): AcademicPeriod => ({
   id,

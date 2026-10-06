@@ -46,7 +46,7 @@ import {
 import {
   CoursesByPeriod,
   compareCoursesForDisplay,
-  getCourseDisplaySpan,
+  getCourseDisplayGroups,
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
@@ -1013,9 +1013,9 @@ export function SchedulePageContent({
     && right.startSection <= left.endSection
   )
 
-  const openCourse = (course: Course) => {
+  const openCourse = (course: Course, relatedCourses?: Course[]) => {
     setActiveCourse(course)
-    setActiveSlotCourses(allCourses.filter((item) => isCourseOverlap(item, course))
+    setActiveSlotCourses((relatedCourses || allCourses.filter((item) => isCourseOverlap(item, course)))
       .sort((left, right) => compareCoursesForDisplay(left, right, preferences.week)))
     setSheet('course-detail')
   }
@@ -1400,13 +1400,9 @@ export function SchedulePageContent({
             />
           )
         })}
-        {allCourses.map((course) => {
-          const overlappingCourses = allCourses
-            .filter((item) => isCourseOverlap(item, course))
-            .sort((left, right) => compareCoursesForDisplay(left, right, preferences.week))
-          const primaryCourse = overlappingCourses[0]
-          if (course !== primaryCourse) return null
-          const displaySpan = getCourseDisplaySpan(overlappingCourses)
+        {getCourseDisplayGroups(allCourses, preferences.week).map((displayGroup) => {
+          const { course, courses: overlappingCourses } = displayGroup
+          const displaySpan = displayGroup
           const overlapCount = overlappingCourses.length
           const currentCourses = overlappingCourses.filter((item) => (
             isCourseInWeek(item, preferences.week)
@@ -1446,7 +1442,7 @@ export function SchedulePageContent({
                 : relatedCount > 0
                   ? `${course.name}，同一时段另有 ${relatedCount} 门其他周次课程`
                   : `${course.name}，第 ${course.startSection} 到 ${course.endSection} 节`}
-              onClick={() => openCourse(course)}
+              onClick={() => openCourse(course, overlappingCourses)}
               onLongPress={(event) => {
                 event.stopPropagation()
                 openTimeSlotActions(course.weekday, course.startSection)
