@@ -44,6 +44,13 @@ export type PersonalTimetableItemList = components['schemas']['PersonalTimetable
 export type PersonalTimetableItemView = components['schemas']['PersonalTimetableItemView']
 export type PersonalTimetableItemSlotView = components['schemas']['PersonalTimetableItemSlotView']
 export type PersonalTimetableSourceStatus = components['schemas']['PersonalTimetableSourceStatus']
+export type TimetableBuddyConnectionView = components['schemas']['TimetableBuddyConnection']
+export type TimetableBuddyCourseView = components['schemas']['TimetableBuddyCourse']
+export type TimetableBuddyInvitationView = components['schemas']['TimetableBuddyInvitation']
+export type TimetableBuddyInvitationPreviewView = components['schemas']['TimetableBuddyInvitationPreview']
+export type TimetableBuddyMemberScheduleView = components['schemas']['TimetableBuddyMemberSchedule']
+export type TimetableBuddyScheduleView = components['schemas']['TimetableBuddySchedule']
+export type TimetableBuddyStateView = components['schemas']['TimetableBuddyState']
 
 export type ErrandView = components['schemas']['ErrandView']
 export type ErrandViewPage = components['schemas']['ErrandViewPage']

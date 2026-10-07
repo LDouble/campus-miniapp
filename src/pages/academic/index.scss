@@ -245,6 +245,49 @@ page {
   }
 }
 
+.schedule-buddy-entry {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  min-height: 92rpx;
+  margin: 0 0 18rpx;
+  padding: 14rpx 18rpx;
+  background: var(--campus-surface, #fff);
+  border: 2rpx solid var(--campus-border, #e8edf4);
+  border-radius: 20rpx;
+
+  &__icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 56rpx;
+    height: 56rpx;
+    background: var(--ousea-ocean-50, #f2f7fe);
+    border-radius: 16rpx;
+  }
+
+  &__icon { width: 34rpx; height: 34rpx; }
+
+  &__copy { display: flex; flex: 1; flex-direction: column; gap: 3rpx; min-width: 0; }
+
+  &__title { color: var(--ousea-ink-900, #1a2333); font-size: 26rpx; font-weight: 600; }
+
+  &__description { color: var(--ousea-ink-500, #6b7a90); font-size: 21rpx; }
+
+  &__arrow { color: var(--ousea-ink-300, #a6b2c2); font-size: 34rpx; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .schedule-buddy-entry {
+    background: var(--campus-surface, #111827);
+    border-color: var(--campus-border, #243244);
+  }
+
+  .schedule-buddy-entry__icon-wrap { background: var(--campus-surface-primary, #172554); }
+  .schedule-buddy-entry__title { color: var(--campus-text-heading, #f8fafc); }
+}
+
 .academic-week-stepper {
   display: flex;
   align-items: center;

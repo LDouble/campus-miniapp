@@ -500,6 +500,15 @@ export default function DirectMessageChatPage() {
 
   useLoad((options) => {
     const id = parseDirectMessageConversationId(options.id)
+    const prefillSource = String(options.prefill_source || '')
+    const prefill = String(options.prefill || '').slice(0, 180)
+    if (
+      prefillSource === 'timetable-buddy'
+      && ['今天有空一起吃饭吗？', '找个共同空闲的时间一起自习吧？'].includes(prefill)
+    ) {
+      setDraft(prefill)
+      Taro.showToast({ title: '消息已预填，请检查后手动发送', icon: 'none' })
+    }
     void loadInitial(id)
   })
 
