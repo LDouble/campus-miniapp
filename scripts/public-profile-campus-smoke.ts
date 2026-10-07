@@ -44,6 +44,7 @@ const profileStyles = readFileSync(resolve(
 ), 'utf8')
 const profileEntry = readFileSync(resolve(__dirname, '../src/pages/profile/index.tsx'), 'utf8')
 const generatedSchema = readFileSync(resolve(__dirname, '../src/api/generated/schema.ts'), 'utf8')
+const blockRepository = readFileSync(resolve(__dirname, '../src/features/profile/user-block.ts'), 'utf8')
 const campusOptions = readFileSync(resolve(
   __dirname,
   '../src/features/life-services/campus.ts',
@@ -118,6 +119,20 @@ assert.ok(bottomSheet.includes("className='bottom-sheet-layer'"))
 assert.ok(profileEntry.includes('openPublicProfile(currentUser.user.id)'))
 assert.ok(generatedSchema.includes('UserProfile: {'))
 assert.ok(generatedSchema.includes('GetUserProfile: {'))
+assert.ok(generatedSchema.includes('is_blocked: boolean'), '主页契约必须返回当前用户的拉黑状态')
+assert.ok(generatedSchema.includes('SetUserBlock') && generatedSchema.includes('RemoveUserBlock'), '生成契约必须包含拉黑和取消拉黑操作')
+assert.ok(blockRepository.includes('/api/v1/users/${userId}/block'), '拉黑仓储必须使用用户拉黑契约')
+assert.ok(blockRepository.includes("method: 'PUT'"), '拉黑必须使用 PUT')
+assert.ok(blockRepository.includes("method: 'DELETE'"), '取消拉黑必须使用 DELETE')
+assert.ok(profile.includes('setBlockedByCurrentUser(loadedProfile.is_blocked)'), '主页必须使用既有资料响应恢复拉黑状态')
+assert.ok(profile.includes('if (!confirmation.confirm) return'), '取消确认后不得提交拉黑')
+assert.ok(profile.includes('setBlockedByCurrentUser(result.is_blocked)'), '操作成功后必须以服务端状态更新页面')
+assert.ok(profile.includes("!developmentPresentation && !profile.is_self"), '演示页和本人主页不得显示拉黑操作')
+assert.ok(profileStyles.includes('min-height: token.$touch-target-min;'), '主页操作按钮必须保留最小触控高度')
+const blockActionStart = profile.indexOf('const changeBlockStatus = async () =>')
+const blockActionEnd = profile.indexOf('const openCommunityComments', blockActionStart)
+assert.ok(blockActionStart >= 0 && blockActionEnd > blockActionStart)
+assert.equal(profile.slice(blockActionStart, blockActionEnd).includes('getUserProfile'), false, '拉黑成功后不应额外重拉主页')
 assert.equal((generatedSchema.match(/campus: string \| null;/g) || []).length >= 3, true)
 
 process.stdout.write('public profile and campus smoke: ok\n')
