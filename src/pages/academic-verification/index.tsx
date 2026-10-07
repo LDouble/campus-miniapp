@@ -16,8 +16,7 @@ import {
 } from '../../components/keyboard-safe-input'
 import { getCurrentIdentity } from '../../api/account'
 import {
-  isAcademicEducationLevel,
-  loadAcademicIdentity,
+  loadAcademicCredential,
   saveAcademicCredential,
 } from '../../api/academic-credential'
 import type { AcademicEducationLevel } from '../../api/academic-credential'
@@ -141,15 +140,7 @@ const credentialErrorMessage = (error: unknown) => {
   if (!isApiError(error)) {
     return error instanceof Error ? error.message : '信息门户认证失败，请稍后重试'
   }
-  if (error.code === 'invalid_academic_credentials' || error.code === 'credential_invalid') {
-    return '请访问信息门户确认或修改密码'
-  }
-  if (error.code === 'credential_verification_unavailable') return '信息门户认证服务暂不可用，请稍后重试'
-  if (error.code === 'provider_busy' || error.code === 'binding_rate_limited') {
-    return '验证请求较多，请稍后重试，避免连续提交'
-  }
-  if (error.code === 'credential_action_required') return '校方要求完成额外确认，请先在信息门户处理后重新绑定'
-  if (error.code === 'credential_identity_mismatch') return '学号或所选身份与教务档案不一致，请核对后重试'
+  if (error.code === 'invalid_academic_credentials') return '请访问信息门户确认或修改密码'
   if (error.code === 'academic_password_expired') return '请访问信息门户修改已过期密码'
   if (error.code === 'academic_account_restricted') return '请访问信息门户处理账号状态和密码'
   if (error.code === 'academic_credentials_limited') return '尝试次数过多，请稍后再试'
@@ -160,11 +151,6 @@ const credentialErrorMessage = (error: unknown) => {
   if (error.code === 'academic_challenge_required') return '校方要求验证码或设备确认，请等待 30 分钟后重试'
   return error.message
 }
-
-const isExplicitCredentialInvalid = (error: unknown) => (
-  isApiError(error)
-  && (error.code === 'invalid_academic_credentials' || error.code === 'credential_invalid')
-)
 
 export default function AcademicVerificationPage() {
   const {
@@ -218,9 +204,6 @@ export default function AcademicVerificationPage() {
       const identity = nextStatus.identity
       if (!studentNo) setStudentNo(identity?.student_no || request?.student_no || '')
       if (!realName) setRealName(identity?.real_name || request?.real_name || '')
-      if (!educationLevel && identity && isAcademicEducationLevel(identity.education_level)) {
-        setEducationLevel(identity.education_level)
-      }
       if (request?.method === 'student_card' && request.status !== 'approved') {
         setMethod('student_card')
       }
@@ -244,9 +227,8 @@ export default function AcademicVerificationPage() {
     void loadStatus()
     void getCurrentIdentity()
       .then((currentUser) => {
-        const identity = loadAcademicIdentity(currentUser.user_id)
-        setStudentNo((current) => current || identity.studentNo)
-        setEducationLevel((current) => current || identity.educationLevel)
+        const credential = loadAcademicCredential(currentUser.user_id)
+        setStudentNo((current) => current || credential.studentNo)
       })
       .catch(() => {
         // 未绑定或旧版本凭据由页面正常引导重新填写。
@@ -341,17 +323,13 @@ export default function AcademicVerificationPage() {
     }
 
     const completeCredentialAttempt = async (candidatePassword: string) => {
-      const attemptUser = await getCurrentIdentity()
       await verifyAcademicCredentials(
         normalizedStudentNo,
         candidatePassword,
         educationLevel,
       )
       const currentUser = await getCurrentIdentity()
-      if (currentUser.user_id !== attemptUser.user_id) {
-        throw new Error('登录状态已切换，请刷新后重新绑定教务账号')
-      }
-      saveAcademicCredential(attemptUser.user_id, {
+      saveAcademicCredential(currentUser.user_id, {
         studentNo: normalizedStudentNo,
         password: candidatePassword,
         educationLevel,
@@ -375,7 +353,8 @@ export default function AcademicVerificationPage() {
       let submitError: unknown = initialSubmitError
 
       if (
-        isExplicitCredentialInvalid(initialSubmitError)
+        isApiError(initialSubmitError)
+        && initialSubmitError.code === 'invalid_academic_credentials'
         && hasConvertibleAcademicPasswordSymbols(password)
       ) {
         let shouldRetryWithEnglishSymbols = false
@@ -411,7 +390,7 @@ export default function AcademicVerificationPage() {
       const submittedAttempt = { ...attempt, password: submittedPassword }
       if (isApiError(submitError)) {
         let rejectionReason: CredentialRejectionReason | null = null
-        if (submitError.code === 'invalid_academic_credentials' || submitError.code === 'credential_invalid') {
+        if (submitError.code === 'invalid_academic_credentials') {
           rejectionReason = 'invalid_credentials'
         } else if (submitError.code === 'academic_password_expired') {
           rejectionReason = 'password_expired'
@@ -819,9 +798,6 @@ export default function AcademicVerificationPage() {
                         </View>
                       </View>
                     </View>
-                    <Text className='verification-form__footnote'>
-                      教务账号和密码用于连接学校信息门户，支持课表、成绩、考试及选课查询。请在学校修改密码后重新绑定。
-                    </Text>
                     <View
                       className={`verification-primary ${working || !educationLevel ? 'verification-primary--disabled' : ''}`}
                       ariaRole='button'
@@ -830,6 +806,9 @@ export default function AcademicVerificationPage() {
                     >
                       {working && method === 'credentials' ? workingText : '验证并绑定'}
                     </View>
+                    <Text className='verification-form__footnote'>
+                      教务账号和密码保存在本机，查询时通过 HTTPS 提交；验证成功后，服务端会加密托管，供后台同步任务使用。在学校修改密码后，请重新验证。
+                    </Text>
                   </View>
                 )}
 

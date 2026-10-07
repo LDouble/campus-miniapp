@@ -4,7 +4,7 @@ import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { ITouchEvent } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import {
-  loadAcademicIdentity,
+  loadAcademicCredential,
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
 import {
@@ -205,7 +205,7 @@ const fallbackSimulationPeriods = (courses: Course[]): AcademicPeriod[] => {
 
 const getDefaultEducationLevel = (platformUserId: number): AcademicEducationLevel => {
   try {
-    return loadAcademicIdentity(platformUserId).educationLevel
+    return loadAcademicCredential(platformUserId).educationLevel
   } catch {
     return 'undergraduate'
   }

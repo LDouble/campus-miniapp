@@ -91,8 +91,7 @@ assert.ok(
 )
 assert.ok(!pageSource.includes('setStorage'), '被拒绝的密码和验证码冷却不得写入小程序存储')
 assert.ok(
-  pageSource.includes('isExplicitCredentialInvalid(initialSubmitError)')
-    && pageSource.includes("error.code === 'credential_invalid'"),
+  pageSource.includes("initialSubmitError.code === 'invalid_academic_credentials'"),
   '仅明确密码错误时允许提示转换符号',
 )
 assert.ok(

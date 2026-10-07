@@ -1,80 +1,34 @@
 import Taro from '@tarojs/taro'
-import type { AcademicCredential, AcademicIdentityMetadata } from './academic-credential'
+import type { AcademicCredential } from './academic-credential'
 
-export type StoredAcademicIdentity = {
-  version: 1
-  platformUserId: number
-  identity: AcademicIdentityMetadata
-}
-
-export type StoredAcademicPassword = {
-  version: 1
-  platformUserId: number
-  password: string
-}
-
-export type LegacyStoredAcademicCredential = {
+export type StoredAcademicCredential = {
   version: 1
   platformUserId: number
   credential: AcademicCredential
 }
 
-const IDENTITY_STORAGE_KEY = 'campus.academicIdentity.v1'
-const PASSWORD_STORAGE_KEY = 'campus.academicCredentialPassword.v1'
-const LEGACY_STORAGE_KEY = 'campus.academicCredential.v1'
+const STORAGE_KEY = 'campus.academicCredential.v1'
 
-const read = (key: string): unknown => {
+export const readStoredAcademicCredential = (): unknown => {
   try {
-    return Taro.getStorageSync<unknown>(key) || null
+    return Taro.getStorageSync<unknown>(STORAGE_KEY) || null
   } catch {
     return null
   }
 }
 
-export const readStoredAcademicIdentity = (): unknown => read(IDENTITY_STORAGE_KEY)
-
-export const readStoredAcademicPassword = (): unknown => read(PASSWORD_STORAGE_KEY)
-
-export const readLegacyStoredAcademicCredential = (): unknown => read(LEGACY_STORAGE_KEY)
-
-export const writeStoredAcademicIdentity = (value: StoredAcademicIdentity) => {
+export const writeStoredAcademicCredential = (value: StoredAcademicCredential) => {
   try {
-    Taro.setStorageSync(IDENTITY_STORAGE_KEY, value)
+    Taro.setStorageSync(STORAGE_KEY, value)
   } catch {
-    throw new Error('教务身份信息本机保存失败，请清理小程序存储空间后重试')
+    throw new Error('教务密码本机保存失败，请清理小程序存储空间后重试')
   }
 }
 
-export const writeStoredAcademicCredential = (
-  identity: StoredAcademicIdentity,
-  password: StoredAcademicPassword,
-) => {
+export const removeStoredAcademicCredential = () => {
   try {
-    Taro.setStorageSync(PASSWORD_STORAGE_KEY, password)
-    Taro.setStorageSync(IDENTITY_STORAGE_KEY, identity)
-    Taro.removeStorageSync(LEGACY_STORAGE_KEY)
+    Taro.removeStorageSync(STORAGE_KEY)
   } catch {
-    try { Taro.removeStorageSync(PASSWORD_STORAGE_KEY) } catch { /* 下次启动时仍按凭据缺失处理。 */ }
-    throw new Error('教务凭据本机保存失败，请清理小程序存储空间后重试')
-  }
-}
-
-export const removeStoredAcademicCredential = (platformUserId?: number) => {
-  const identity = readStoredAcademicIdentity() as Partial<StoredAcademicIdentity> | null
-  const storedPassword = readStoredAcademicPassword() as Partial<StoredAcademicPassword> | null
-  const legacy = readLegacyStoredAcademicCredential() as Partial<LegacyStoredAcademicCredential> | null
-  const shouldRemoveAll = platformUserId === undefined
-  try {
-    if (shouldRemoveAll || identity?.platformUserId === platformUserId) {
-      Taro.removeStorageSync(IDENTITY_STORAGE_KEY)
-    }
-    if (shouldRemoveAll || storedPassword?.platformUserId === platformUserId) {
-      Taro.removeStorageSync(PASSWORD_STORAGE_KEY)
-    }
-    if (shouldRemoveAll || legacy?.platformUserId === platformUserId) {
-      Taro.removeStorageSync(LEGACY_STORAGE_KEY)
-    }
-  } catch {
-    // 运行时凭据仍会被清理；存储异常不应阻断退出或注销流程。
+    // 运行时缓存仍会被清理；存储异常不应阻断退出或注销流程。
   }
 }

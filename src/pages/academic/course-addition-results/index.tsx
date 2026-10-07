@@ -3,7 +3,7 @@ import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import {
   getActiveAcademicUserId,
-  loadAcademicIdentity,
+  loadAcademicCredential,
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
 import { isApiError } from '../../../api/client'
@@ -36,7 +36,7 @@ const ACADEMIC_CHEVRON = require('../../../assets/icons/academic-chevron-down.sv
 const readCurrentIdentity = (): CourseAdditionIdentity => {
   const userId = getActiveAcademicUserId()
   try {
-    const credential = loadAcademicIdentity(userId)
+    const credential = loadAcademicCredential(userId)
     return {
       userId,
       studentNo: credential.studentNo,
