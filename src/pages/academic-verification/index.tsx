@@ -807,7 +807,7 @@ export default function AcademicVerificationPage() {
                       {working && method === 'credentials' ? workingText : '验证并绑定'}
                     </View>
                     <Text className='verification-form__footnote'>
-                      凭据仅保存在本机，查询时通过 HTTPS 提交；解绑后清除。
+                      教务账号和密码保存在本机，查询时通过 HTTPS 提交；验证成功后，服务端会加密托管，供后台同步任务使用。在学校修改密码后，请重新验证。
                     </Text>
                   </View>
                 )}
