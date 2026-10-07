@@ -374,9 +374,11 @@ export const academicStorage = {
     )) : []
     if (scoped !== null) return sanitize(scoped)
     // 旧键没有账号信息，只在本机既有教务凭据能确认归属时迁移；不让另一账号认领。
+    const identity = safeRead<{ platformUserId?: number }>('campus.academicIdentity.v1', {})
     const credential = safeRead<{ platformUserId?: number }>('campus.academicCredential.v1', {})
     const owner = safeRead<number>(CUSTOM_COURSES_OWNER_KEY, 0)
-    if (platformUserId > 0 && credential.platformUserId === platformUserId && (!owner || owner === platformUserId)) {
+    const storedOwner = identity.platformUserId || credential.platformUserId
+    if (platformUserId > 0 && storedOwner === platformUserId && (!owner || owner === platformUserId)) {
       const courses = sanitize(safeRead<unknown>(CUSTOM_COURSES_KEY, []))
       safeWrite(CUSTOM_COURSES_OWNER_KEY, platformUserId)
       safeWrite(key, courses)

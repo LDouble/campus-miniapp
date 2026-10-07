@@ -5,7 +5,7 @@ import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import { isApiError } from '../../../api/client'
 import {
   getActiveAcademicUserId,
-  loadAcademicCredential,
+  loadAcademicIdentity,
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
 import {
@@ -82,7 +82,7 @@ const routeCourseCatalogPeriodId = (params: Record<string, string | undefined>) 
 
 const getDefaultEducationLevel = (): AcademicEducationLevel => {
   try {
-    return loadAcademicCredential(getActiveAcademicUserId()).educationLevel
+    return loadAcademicIdentity(getActiveAcademicUserId()).educationLevel
   } catch {
     return 'undergraduate'
   }

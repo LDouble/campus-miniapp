@@ -47,6 +47,11 @@ const academicPost = createAcademicPost({
   ),
 })
 
+const academicQuery = <T>(
+  path: string,
+  periodId?: string,
+) => academicPost<T>(path, periodId)
+
 export const ACADEMIC_PERIODS_FRESH_MS = 30 * 60 * 1000
 
 const academicPeriodsResource = createSharedResource<AcademicPeriod[]>({
@@ -65,29 +70,29 @@ export const invalidateAcademicPeriods = () => {
   academicPeriodsResource.invalidate()
 }
 
-export const listAcademicCourses = (periodId: string) => academicPost<AcademicCourse>(
+export const listAcademicCourses = (periodId: string) => academicQuery<AcademicCourse>(
   '/api/v1/academic/courses',
   periodId,
 )
 
-export const listAcademicGrades = () => academicPost<AcademicGrade>(
+export const listAcademicGrades = () => academicQuery<AcademicGrade>(
   '/api/v1/academic/grades',
 )
 
-export const listAcademicExams = (periodId: string) => academicPost<AcademicExam>(
+export const listAcademicExams = (periodId: string) => academicQuery<AcademicExam>(
   '/api/v1/academic/exams',
   periodId,
 )
 
 export const listAcademicCourseSelections = (periodId: string) => (
-  academicPost<AcademicCourseSelection>(
+  academicQuery<AcademicCourseSelection>(
     '/api/v1/academic/course-selections',
     periodId,
   )
 )
 
 export const listAcademicCourseAdditionResults = (periodId: string) => (
-  academicPost<AcademicCourseAdditionResult>(
+  academicQuery<AcademicCourseAdditionResult>(
     '/api/v1/academic/course-addition-results',
     periodId,
   )
@@ -95,7 +100,7 @@ export const listAcademicCourseAdditionResults = (periodId: string) => (
 
 /** 获取教务系统已选课程的结构化课表；不会修改本地模拟选课草稿。 */
 export const listAcademicCourseSelectionSchedule = (periodId: string) => (
-  academicPost<AcademicCourse>(
+  academicQuery<AcademicCourse>(
     '/api/v1/academic/course-selection-schedule',
     periodId,
   )

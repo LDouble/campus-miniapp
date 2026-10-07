@@ -1,20 +1,28 @@
 import {
-  readStoredAcademicCredential,
+  readLegacyStoredAcademicCredential,
+  readStoredAcademicIdentity,
+  readStoredAcademicPassword,
   removeStoredAcademicCredential,
   writeStoredAcademicCredential,
-  type StoredAcademicCredential,
+  writeStoredAcademicIdentity,
+  type LegacyStoredAcademicCredential,
+  type StoredAcademicIdentity,
+  type StoredAcademicPassword,
 } from './academic-credential-storage'
 import { invalidateSharedResourceGroup } from '../state/shared-resource'
 
-export type AcademicCredential = {
+export type AcademicEducationLevel = 'undergraduate' | 'graduate'
+
+export type AcademicIdentityMetadata = {
   studentNo: string
-  password: string
   educationLevel: AcademicEducationLevel
-  /** 身份绑定随机 token，作为持久化缓存作用域，避免学号以明文持久化。旧数据可能缺失。 */
-  identityScopeToken?: string
+  /** 绑定身份的缓存作用域 token，不包含教务密码。 */
+  identityScopeToken: string
 }
 
-export type AcademicEducationLevel = 'undergraduate' | 'graduate'
+export type AcademicCredential = AcademicIdentityMetadata & {
+  password: string
+}
 
 export class AcademicCredentialMissingError extends Error {
   constructor() {
@@ -24,15 +32,17 @@ export class AcademicCredentialMissingError extends Error {
   }
 }
 
-const credentialsByUser = new Map<number, AcademicCredential>()
+const identitiesByUser = new Map<number, AcademicIdentityMetadata>()
+const passwordsByUser = new Map<number, string>()
 let activeUserId = 0
-// 凭证单调代际：每次保存或清除凭证时递增。发起请求时捕获该代际，返回
-// 认证失败时只在代际未变时清除，避免旧身份/旧密码请求清除刚保存的新凭证。
+// 凭据代际可阻止旧请求的失败响应清理之后刚绑定的新身份。
 let credentialRevision = 0
 
 export const getCredentialRevision = () => credentialRevision
 
-const validUserId = (value: number) => Number.isSafeInteger(value) && value > 0
+const validUserId = (value: unknown): value is number => (
+  typeof value === 'number' && Number.isSafeInteger(value) && value > 0
+)
 
 const generateIdentityScopeToken = (): string => {
   const now = Date.now().toString(36)
@@ -47,115 +57,152 @@ export const isAcademicEducationLevel = (
   value === 'undergraduate' || value === 'graduate'
 )
 
+const isIdentityMetadata = (value: unknown): value is AcademicIdentityMetadata => {
+  if (!value || typeof value !== 'object') return false
+  const identity = value as Partial<AcademicIdentityMetadata>
+  return (
+    typeof identity.studentNo === 'string'
+    && !!identity.studentNo.trim()
+    && isAcademicEducationLevel(identity.educationLevel)
+  )
+}
+
+const normalizeIdentity = (value: AcademicIdentityMetadata): AcademicIdentityMetadata => ({
+  studentNo: value.studentNo.trim(),
+  educationLevel: value.educationLevel,
+  identityScopeToken: value.identityScopeToken || generateIdentityScopeToken(),
+})
+
 const clearRuntimeCredentials = () => {
-  credentialsByUser.clear()
+  identitiesByUser.clear()
+  passwordsByUser.clear()
   activeUserId = 0
 }
 
-const isAcademicCredential = (value: unknown): value is AcademicCredential => {
-  if (!value || typeof value !== 'object') return false
-  const credential = value as Partial<AcademicCredential>
-  return (
-    typeof credential.studentNo === 'string'
-    && !!credential.studentNo.trim()
-    && typeof credential.password === 'string'
-    && !!credential.password
-    && isAcademicEducationLevel(credential.educationLevel)
-  )
-}
-
-const isStoredAcademicCredential = (
-  value: unknown,
-): value is StoredAcademicCredential => {
-  if (!value || typeof value !== 'object') return false
-  const stored = value as Partial<StoredAcademicCredential>
-  return (
-    stored.version === 1
-    && typeof stored.platformUserId === 'number'
-    && validUserId(stored.platformUserId)
-    && isAcademicCredential(stored.credential)
-  )
-}
-
-const restoreAcademicCredential = (platformUserId: number) => {
-  const stored = readStoredAcademicCredential()
-  if (!isStoredAcademicCredential(stored)) {
-    if (stored) removeStoredAcademicCredential()
-    return null
-  }
-  if (stored.platformUserId !== platformUserId) {
+const storedIdentityForUser = (platformUserId: number): AcademicIdentityMetadata | null => {
+  const stored = readStoredAcademicIdentity() as Partial<StoredAcademicIdentity> | null
+  if (stored) {
+    if (
+      stored.version === 1
+      && validUserId(stored.platformUserId)
+      && isIdentityMetadata(stored.identity)
+    ) {
+      if (stored.platformUserId !== platformUserId) return null
+      return normalizeIdentity(stored.identity)
+    }
     removeStoredAcademicCredential()
     return null
   }
 
-  const credential: AcademicCredential = {
-    studentNo: stored.credential.studentNo.trim(),
-    password: stored.credential.password,
-    educationLevel: stored.credential.educationLevel,
-    identityScopeToken: typeof stored.credential.identityScopeToken === 'string'
-      ? stored.credential.identityScopeToken
-      : '',
+  // 旧版凭据记录只在原平台账号下迁移，账号切换时保留原记录。
+  const legacy = readLegacyStoredAcademicCredential() as Partial<LegacyStoredAcademicCredential> | null
+  if (legacy) {
+    if (
+      legacy.version === 1
+      && validUserId(legacy.platformUserId)
+      && isIdentityMetadata(legacy.credential)
+      && typeof legacy.credential.password === 'string'
+      && !!legacy.credential.password
+    ) {
+      if (legacy.platformUserId !== platformUserId) return null
+      const identity = normalizeIdentity(legacy.credential)
+      writeStoredAcademicIdentity({ version: 1, platformUserId, identity })
+      return identity
+    }
+    removeStoredAcademicCredential()
   }
-  credentialsByUser.set(platformUserId, credential)
+  return null
+}
+
+const storedPasswordForUser = (platformUserId: number): string | null => {
+  const stored = readStoredAcademicPassword() as Partial<StoredAcademicPassword> | null
+  if (
+    stored?.version === 1
+    && stored.platformUserId === platformUserId
+    && validUserId(stored.platformUserId)
+    && typeof stored.password === 'string'
+    && !!stored.password
+  ) return stored.password
+
+  const legacy = readLegacyStoredAcademicCredential() as Partial<LegacyStoredAcademicCredential> | null
+  if (
+    legacy?.version === 1
+    && legacy.platformUserId === platformUserId
+    && validUserId(legacy.platformUserId)
+    && typeof legacy.credential?.password === 'string'
+    && !!legacy.credential.password
+  ) return legacy.credential.password
+  return null
+}
+
+export const loadAcademicIdentity = (platformUserId: number): AcademicIdentityMetadata => {
+  if (!validUserId(platformUserId)) throw new AcademicCredentialMissingError()
+  if (activeUserId && activeUserId !== platformUserId) {
+    clearRuntimeCredentials()
+    throw new AcademicCredentialMissingError()
+  }
+  const identity = identitiesByUser.get(platformUserId) || storedIdentityForUser(platformUserId)
+  if (!identity) throw new AcademicCredentialMissingError()
+  identitiesByUser.set(platformUserId, identity)
   activeUserId = platformUserId
-  return credential
+  return { ...identity }
 }
 
 export const getActiveAcademicUserId = () => (
-  activeUserId && credentialsByUser.has(activeUserId) ? activeUserId : 0
+  activeUserId && identitiesByUser.has(activeUserId) ? activeUserId : 0
 )
 
+/** 保存通过教务验证的账号凭据，供本机后续查询使用。 */
 export const saveAcademicCredential = (
   platformUserId: number,
-  credential: AcademicCredential,
+  credential: Omit<AcademicCredential, 'identityScopeToken'> & { identityScopeToken?: string },
 ) => {
-  if (!validUserId(platformUserId)) {
-    throw new Error('无法识别当前平台账号')
-  }
-  const studentNo = credential.studentNo.trim()
-  if (
-    !studentNo
-    || !credential.password
-    || !isAcademicEducationLevel(credential.educationLevel)
-  ) {
+  if (!validUserId(platformUserId)) throw new Error('无法识别当前平台账号')
+  if (!isIdentityMetadata(credential) || !credential.password) {
     throw new Error('教务账号、密码或学生类型无效')
   }
-
-  // 小程序运行期间若平台账号发生切换，不能让新账号复用旧账号的凭据。
-  if (activeUserId && activeUserId !== platformUserId) clearRuntimeCredentials()
-
-  const normalizedCredential: AcademicCredential = {
-    studentNo,
-    password: credential.password,
-    educationLevel: credential.educationLevel,
-    identityScopeToken: generateIdentityScopeToken(),
+  if (!activeUserId || activeUserId === platformUserId) {
+    let existingIdentity = identitiesByUser.get(platformUserId) || null
+    if (!existingIdentity) {
+      const storedIdentity = readStoredAcademicIdentity() as Partial<StoredAcademicIdentity> | null
+      const legacy = readLegacyStoredAcademicCredential() as Partial<LegacyStoredAcademicCredential> | null
+      if (storedIdentity?.platformUserId === platformUserId || (!storedIdentity && legacy?.platformUserId === platformUserId)) {
+        existingIdentity = storedIdentityForUser(platformUserId)
+      }
+    }
+    const existingPassword = passwordsByUser.get(platformUserId) || storedPasswordForUser(platformUserId)
+    if (
+      existingIdentity
+      && existingPassword
+      && existingIdentity.studentNo === credential.studentNo.trim()
+      && existingIdentity.educationLevel === credential.educationLevel
+      && existingPassword === credential.password
+    ) {
+      identitiesByUser.set(platformUserId, existingIdentity)
+      passwordsByUser.set(platformUserId, existingPassword)
+      activeUserId = platformUserId
+      return
+    }
   }
-  credentialsByUser.set(platformUserId, normalizedCredential)
+  if (activeUserId && activeUserId !== platformUserId) clearRuntimeCredentials()
+  const normalizedIdentity = normalizeIdentity({ ...credential, identityScopeToken: '' })
+  identitiesByUser.set(platformUserId, normalizedIdentity)
+  passwordsByUser.set(platformUserId, credential.password)
   activeUserId = platformUserId
-  writeStoredAcademicCredential({
-    version: 1,
-    platformUserId,
-    credential: normalizedCredential,
-  })
+  writeStoredAcademicCredential(
+    { version: 1, platformUserId, identity: normalizedIdentity },
+    { version: 1, platformUserId, password: credential.password },
+  )
   credentialRevision += 1
   invalidateSharedResourceGroup('academic', { clearData: false })
 }
 
 export const loadAcademicCredential = (platformUserId: number): AcademicCredential => {
-  if (!validUserId(platformUserId)) throw new AcademicCredentialMissingError()
-
-  if (activeUserId && activeUserId !== platformUserId) {
-    clearRuntimeCredentials()
-    removeStoredAcademicCredential()
-    throw new AcademicCredentialMissingError()
-  }
-
-  const credential = credentialsByUser.get(platformUserId)
-    || restoreAcademicCredential(platformUserId)
-  if (!credential) throw new AcademicCredentialMissingError()
-
-  activeUserId = platformUserId
-  return { ...credential }
+  const identity = loadAcademicIdentity(platformUserId)
+  const password = passwordsByUser.get(platformUserId) || storedPasswordForUser(platformUserId)
+  if (!password) throw new AcademicCredentialMissingError()
+  passwordsByUser.set(platformUserId, password)
+  return { ...identity, password }
 }
 
 export const hasAcademicCredential = (platformUserId: number) => {
@@ -176,15 +223,9 @@ export const clearAcademicCredential = (platformUserId?: number) => {
     return
   }
   if (!validUserId(platformUserId)) return
-
-  credentialsByUser.delete(platformUserId)
+  identitiesByUser.delete(platformUserId)
+  passwordsByUser.delete(platformUserId)
   if (activeUserId === platformUserId) activeUserId = 0
   credentialRevision += 1
-  const stored = readStoredAcademicCredential()
-  if (
-    !isStoredAcademicCredential(stored)
-    || stored.platformUserId === platformUserId
-  ) {
-    removeStoredAcademicCredential()
-  }
+  removeStoredAcademicCredential(platformUserId)
 }

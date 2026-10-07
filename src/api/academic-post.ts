@@ -22,7 +22,7 @@ export type AcademicPostDeps = {
   getCurrentIdentity: () => Promise<{ user_id: number }>
   loadCredential: (userId: number) => { studentNo: string; password: string }
   getCredentialRevision: () => number
-  clearCredential: () => void
+  clearCredential: (userId: number) => void
   requestEnvelope: <T>(options: { path: string; data: unknown }) => Promise<{
     data: T
     cache?: AcademicCacheMetadata
@@ -68,7 +68,7 @@ export const createAcademicPost = (deps: AcademicPostDeps) => {
       ) {
         // 只在凭证代际未变、且本请求比最新成功请求更新时才清除：旧请求
         // 返回失效不能清除已被更新的成功请求证明有效的凭证。
-        deps.clearCredential()
+        deps.clearCredential(currentUser.user_id)
         ;(error as { credentialInvalidated?: boolean }).credentialInvalidated = true
       }
       throw error
