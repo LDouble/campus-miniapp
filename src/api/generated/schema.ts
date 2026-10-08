@@ -591,6 +591,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/training-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 查询本人培养方案 */
+        post: operations["GetAcademicTrainingPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/academic-course-catalog/batches": {
         parameters: {
             query?: never;
@@ -6470,7 +6487,7 @@ export interface paths {
         /** 游标查询会话消息 */
         get: operations["ListPrivateMessages"];
         put?: never;
-        /** 发送一条文字或图片私信 */
+        /** 发送文字或图片私信；若对方已拉黑发送方则拒收 */
         post: operations["CreatePrivateMessage"];
         delete?: never;
         options?: never;
@@ -6507,6 +6524,24 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 拉黑用户 */
+        put: operations["SetUserBlock"];
+        post?: never;
+        /** 取消拉黑用户 */
+        delete: operations["RemoveUserBlock"];
         options?: never;
         head?: never;
         patch?: never;
@@ -7395,6 +7430,8 @@ export interface components {
         UserProfile: {
             user: components["schemas"]["UserPublicProfile"];
             is_self: boolean;
+            /** @description 当前用户是否已拉黑主页用户 */
+            is_blocked: boolean;
             counts: components["schemas"]["UserProfileCounts"];
         };
         MentionCandidate: {
@@ -7969,6 +8006,55 @@ export interface components {
          * @enum {string}
          */
         AcademicQueryCacheState: "fresh" | "stale";
+        AcademicTrainingPlan: {
+            /**
+             * Format: int32
+             * @description 入学届次年份（例如 2023 级）；无法可靠识别时为 null。
+             */
+            cohort_year: number | null;
+            course_groups: components["schemas"]["AcademicTrainingPlanCourseGroup"][];
+            /** @description 按动态体系名称和课程属性列出的要求学分，包括通识要求。 */
+            credit_requirements: components["schemas"]["AcademicTrainingPlanCreditRequirement"][];
+            description: string;
+            /** @description 从培养方案标题提取的专业名称；无法可靠识别时为 null。 */
+            major_name: string | null;
+            objectives: string;
+            title: string;
+            /** Format: double */
+            total_required_credit: number;
+        };
+        AcademicTrainingPlanCourse: {
+            course_attribute: string;
+            course_code: string;
+            course_name: string;
+            course_nature: string;
+            /** Format: double */
+            credit: number;
+            /** Format: double */
+            lecture_hours: number;
+            offered_terms: string[];
+            /** Format: double */
+            practice_hours: number;
+            selection_group: string;
+            /** Format: double */
+            total_hours: number;
+        };
+        AcademicTrainingPlanCourseGroup: {
+            courses: components["schemas"]["AcademicTrainingPlanCourse"][];
+            /** @description 课程明细因通识课程暂不展示时为 true。 */
+            courses_omitted: boolean;
+            name: string;
+        };
+        AcademicTrainingPlanCreditRequirement: {
+            course_attribute: string;
+            group_name: string;
+            /** Format: double */
+            required_credit: number;
+        };
+        AcademicTrainingPlanResponseBody: {
+            data: components["schemas"]["AcademicTrainingPlan"];
+            request_id: string;
+        };
         AcademicCourseCatalogBatch: {
             archive_reason?: string | null;
             archived: boolean;
@@ -13277,6 +13363,13 @@ export interface components {
             /** Format: uint64 */
             message_id: number;
         };
+        UserBlockResponseBody: {
+            data: components["schemas"]["UserBlockResult"];
+            request_id: string;
+        };
+        UserBlockResult: {
+            is_blocked: boolean;
+        };
         /** @enum {string} */
         ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
         ReactionState: {
@@ -14307,6 +14400,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["AcademicPeriodListResponseBody"];
+            };
+        };
+        /** @description 本人培养方案 */
+        AcademicTrainingPlanResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicTrainingPlanResponseBody"];
             };
         };
         /** @description 课程目录采集批次分页 */
@@ -16010,6 +16112,15 @@ export interface components {
                 "application/json": components["schemas"]["PrivateMessageUnreadCountResponseBody"];
             };
         };
+        /** @description 用户拉黑状态 */
+        UserBlockResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserBlockResponseBody"];
+            };
+        };
         /** @description 资源点赞状态 */
         ReactionStateResponse: {
             headers: {
@@ -17028,6 +17139,30 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AcademicPeriodListResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAcademicTrainingPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    student_no: string;
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicTrainingPlanResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -25001,6 +25136,7 @@ export interface operations {
         responses: {
             201: components["responses"]["PrivateMessageResponse"];
             400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };
     };
@@ -25034,6 +25170,38 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["PrivateMessageUnreadCountResponse"];
+        };
+    };
+    SetUserBlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserBlockResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RemoveUserBlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserBlockResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     LikeResource: {

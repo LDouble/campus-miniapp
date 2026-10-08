@@ -1,7 +1,7 @@
-import { legacySocialPages, legacySocialTargetUrl, normalizeLegacySocialPath } from '../src/features/legacy-social-routes'
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { legacySocialPages, legacySocialTargetUrl, normalizeLegacySocialPath } from '../src/features/legacy-social-routes'
 import {
   directMessageChatUrl,
   directMessagesListUrl,
@@ -26,6 +26,16 @@ import {
   privateMessageMediaReviewMessage,
   privateMessageMediaReviewState,
 } from '../src/features/direct-messages/media-review'
+import { privateMessageErrorMessage } from '../src/features/direct-messages/errors'
+
+assert.equal(
+  privateMessageErrorMessage(
+    Object.assign(new Error('服务端拦截文案'), { code: 'private_message_blocked' }),
+    '发送失败，请稍后重试',
+  ),
+  '对方暂不接收你的私信',
+  '拉黑拦截必须使用稳定的私信提示',
+)
 
 const root = resolve(__dirname, '..')
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8')
@@ -278,6 +288,8 @@ const authSource = read('src/api/auth.ts')
 const unreadSource = read('src/features/direct-messages/unread.ts')
 const mediaApi = read('src/api/media.ts')
 const mediaReview = read('src/features/direct-messages/media-review.ts')
+const messageErrors = read('src/features/direct-messages/errors.ts')
+const blockRepository = read('src/features/profile/user-block.ts')
 
 assert.match(
   authSource,
@@ -301,6 +313,12 @@ for (const path of [
 assert.ok(repository.includes('after_id: query.afterId'), '轮询必须使用 after_id 契约')
 assert.ok(repository.includes('idempotencyKey'), '发送消息必须带幂等键')
 assert.ok(repository.includes('media_id: payload.mediaId'), '图片消息必须仅提交 media_id')
+assert.ok(blockRepository.includes('UserBlockResult'), '拉黑操作必须消费生成的契约响应类型')
+assert.ok(blockRepository.includes("method: 'PUT'"), '拉黑操作必须使用 PUT')
+assert.ok(blockRepository.includes("method: 'DELETE'"), '取消拉黑操作必须使用 DELETE')
+assert.ok(!blockRepository.includes('data:'), '拉黑操作不得提交契约未定义的请求体')
+assert.ok(messageErrors.includes("error.code === 'private_message_blocked'"), '私信拦截必须识别稳定业务错误码')
+assert.ok(messageErrors.includes('对方暂不接收你的私信'), '私信拦截必须展示明确提示')
 assert.ok(generated.includes('GetPrivateMessageUnreadCount'), '生成类型缺少私信未读总数操作')
 assert.ok(generated.includes('ListPrivateMessages'), '生成类型缺少消息游标操作')
 assert.ok(generated.includes('PrivateMessageImage'), '生成类型缺少私信图片结构')
@@ -389,6 +407,14 @@ assert.ok(chatPage.includes('POLL_INTERVAL_MS = 4_000'), '聊天轮询间隔必�
 assert.ok(chatPage.includes('POLL_MAX_BACKOFF_MS'), '聊天轮询失败必须退避')
 assert.ok(chatPage.includes('historyPaginationFromDirectMessagePoll'), '首个轮询必须回填历史游标')
 assert.ok(chatPage.includes('pendingSendRef'), '发送失败必须保留待重试幂等键')
+assert.ok(chatPage.includes('privateMessageErrorMessage(sendError'), '文字私信拦截必须展示稳定业务提示')
+const textSendBody = chatPage.slice(chatPage.indexOf('const send = async ()'), chatPage.indexOf('const updateDraft'))
+const textSendCatch = textSendBody.slice(textSendBody.indexOf('} catch (sendError) {'))
+assert.ok(textSendCatch.includes('privateMessageErrorMessage(sendError'), '文字私信失败必须显示拦截提示')
+assert.equal(textSendCatch.includes('setDraft('), false, '文字私信拦截时必须保留输入内容')
+const imageSendBody = chatPage.slice(chatPage.indexOf('const sendUploadedImage'), chatPage.indexOf('const uploadSelectedImage'))
+assert.ok(imageSendBody.includes('imageErrorMessage(sendError'), '图片私信拦截必须进入图片失败反馈')
+assert.ok(imageSendBody.includes("status: 'failed'"), '图片私信拦截必须显示失败状态')
 assert.ok(chatPage.includes("requestWechatSubscriptionForModule('private_message')"), '发送按钮必须显式请求私信订阅')
 assert.ok(!chatPage.includes("from '@tarojs/components'\nimport { Input"), '聊天页不得直接使用原生 Input')
 assert.ok(subscriptionModule.includes("'private_message'"), '私信路由必须映射订阅模块')

@@ -30,6 +30,7 @@ import {
   resolvePendingDirectMessageSend,
   type PendingDirectMessageSend,
 } from '../../features/direct-messages/composer'
+import { privateMessageErrorMessage } from '../../features/direct-messages/errors'
 import {
   privateMessageImageFrameSize,
 } from '../../features/direct-messages/media-review'
@@ -57,9 +58,7 @@ const avatarFallback = (value: string, fallback = '海') => {
   return normalized ? normalized.slice(0, 1).toUpperCase() : fallback
 }
 
-const imageErrorMessage = (error: unknown, fallback: string) => (
-  isApiError(error) ? error.message : error instanceof Error ? error.message : fallback
-)
+const imageErrorMessage = privateMessageErrorMessage
 
 type ImageRecoveryAction = 'reupload' | 'send-image' | null
 
@@ -578,7 +577,7 @@ export default function DirectMessageChatPage() {
       })
     } catch (sendError) {
       Taro.showToast({
-        title: isApiError(sendError) ? sendError.message : '发送失败，请稍后重试',
+        title: privateMessageErrorMessage(sendError, '发送失败，请稍后重试'),
         icon: 'none',
       })
     } finally {
