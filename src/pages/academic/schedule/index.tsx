@@ -88,7 +88,6 @@ const icons = {
   sync: require('../../../assets/icons/sync.svg'),
 }
 const classDiscussionEntryIcon = require('../../../assets/icons/class-discussion-entry.svg')
-const timetableBuddyEntryIcon = require('../../../assets/icons/timetable-buddy.svg')
 
 const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
 const SCHEDULE_NOTE_COPY_ID = 'academic-schedule-note-copy'
@@ -461,6 +460,9 @@ export function SchedulePageContent({
   const [showSelectionGuide, setShowSelectionGuide] = useState(() => (
     isSimulation || !academicStorage.hasSeenScheduleSelectionGuideToday()
   ))
+  const [showBuddyGuide, setShowBuddyGuide] = useState(() => (
+    !isSimulation && !academicStorage.hasSeenScheduleBuddyGuideToday()
+  ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache
       ?.coursesUpdatedAtByPeriod[preferences.schedulePeriodId] || 0,
@@ -801,6 +803,18 @@ export function SchedulePageContent({
     return () => clearTimeout(timer)
   }, [isSimulation, loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
 
+  const buddyGuideVisible = showBuddyGuide && !loading && !sheet
+    && !showRefreshGuide && !showSelectionGuide
+
+  useEffect(() => {
+    if (!buddyGuideVisible) return undefined
+    const timer = setTimeout(() => {
+      setShowBuddyGuide(false)
+      academicStorage.markScheduleBuddyGuideSeenToday()
+    }, 4500)
+    return () => clearTimeout(timer)
+  }, [buddyGuideVisible])
+
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({
       ...current,
@@ -988,6 +1002,7 @@ export function SchedulePageContent({
   }, [academicUserId, isCurrentPageCacheScope, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
+    if (!isSimulation) setShowBuddyGuide(!academicStorage.hasSeenScheduleBuddyGuideToday())
     const config = getMiniappRuntimeConfig()
     setRuntimeConfig(config)
     setCampusName(getSelectedCampus(config))
@@ -1391,6 +1406,20 @@ export function SchedulePageContent({
 
   const openTimetableBuddy = () => {
     void Taro.navigateTo({ url: '/pages/academic/timetable-buddy/index' })
+  }
+
+  const openCourseTools = async () => {
+    setShowBuddyGuide(false)
+    academicStorage.markScheduleBuddyGuideSeenToday()
+    try {
+      const { tapIndex } = await Taro.showActionSheet({
+        itemList: ['添加自定义课程', '课表搭子 · 查看共同空闲'],
+      })
+      if (tapIndex === 0) openCourseForm()
+      if (tapIndex === 1) openTimetableBuddy()
+    } catch {
+      // 用户取消操作菜单时保持当前课表。
+    }
   }
 
   const renderWeekSchedule = () => (
@@ -1926,23 +1955,6 @@ export function SchedulePageContent({
             : '',
         ].filter(Boolean).join(' ')}
       >
-        {!isSimulation && (
-          <View
-            className='schedule-buddy-entry'
-            ariaRole='button'
-            ariaLabel='打开课表搭子'
-            onClick={openTimetableBuddy}
-          >
-            <View className='schedule-buddy-entry__icon-wrap' aria-hidden>
-              <Image className='schedule-buddy-entry__icon' src={timetableBuddyEntryIcon} mode='aspectFit' />
-            </View>
-            <View className='schedule-buddy-entry__copy'>
-              <Text className='schedule-buddy-entry__title'>课表搭子</Text>
-              <Text className='schedule-buddy-entry__description'>一起看看什么时候都有空</Text>
-            </View>
-            <Text className='schedule-buddy-entry__arrow' aria-hidden>›</Text>
-          </View>
-        )}
         {!isSimulation && customCoursesStorageMessage && (
           <View
             className='schedule-note'
@@ -2052,13 +2064,13 @@ export function SchedulePageContent({
         </View>
       ) : (
         <View
-          className='academic-fab'
+          className={`academic-fab ${buddyGuideVisible ? 'academic-fab--buddy-guide' : ''}`}
           ariaRole='button'
-          ariaLabel='添加自定义课程'
-          onClick={() => openCourseForm()}
+          ariaLabel='打开课表操作'
+          onClick={() => void openCourseTools()}
         >
           <Text className='academic-fab__plus'>＋</Text>
-          <Text>自定义课程</Text>
+          <Text>{buddyGuideVisible ? '课表搭子' : '课表操作'}</Text>
         </View>
       )}
       {renderSheet()}
