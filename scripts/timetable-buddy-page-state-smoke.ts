@@ -867,23 +867,17 @@ const testScheduleNotFoundRefreshesRelation = async () => {
   assert.equal(hasVisibleConnection(harness), false, '服务端关系已不存在时应清除陈旧连接页')
 }
 
-const testUnmountBlocksLateChatNavigationAndState = async () => {
+const testUnmountBlocksLateReadAndHasNoChat = async () => {
   const harness = await makeHarness(makeConnection())
-  const chatButton = harness.findByLabel('约饭并打开私信')
-  assert.ok(chatButton)
+  assert.equal(harness.findByLabel('约饭并打开私信'), null, '搭子页不再提供约饭私信入口')
+  assert.equal(harness.findByLabel('约自习并打开私信'), null, '搭子页不再提供自习私信入口')
   const staleRead = await startStaleRead(harness)
   const unmountedPageHost = harness.contentHost
-  const conversation = deferred<{ id: number }>()
-  harness.nextCreateConversation = conversation
-  chatButton?.props.onClick()
-  await harness.waitWithoutRender(() => harness.createConversationCalls === 1, '私信会话请求没有启动')
-  const opensBeforeUnmount = harness.openModuleCalls
   harness.unmount()
   staleRead.response.resolve({ connection: staleRead.snapshot })
-  conversation.resolve({ id: 99 })
   await harness.drainMicrotasks(20)
-  assert.equal(harness.openModuleCalls, opensBeforeUnmount, '页面卸载后迟到的会话响应不得继续导航')
-  assert.equal(unmountedPageHost.postUnmountStateUpdates, 0, '页面卸载后迟到的状态或会话响应不得再写入 React 状态')
+  assert.equal(harness.createConversationCalls, 0, '搭子页不得创建私信会话')
+  assert.equal(unmountedPageHost.postUnmountStateUpdates, 0, '页面卸载后迟到的状态响应不得再写入 React 状态')
 }
 
 const run = async () => {
@@ -900,7 +894,7 @@ const run = async () => {
   await testAcceptedOutgoingInvitationStopsSharingOldToken()
   await testFailedMutationAndCancelledDisconnectUnlock()
   await testScheduleNotFoundRefreshesRelation()
-  await testUnmountBlocksLateChatNavigationAndState()
+  await testUnmountBlocksLateReadAndHasNoChat()
   console.log('timetable buddy page state smoke: ok (legacy fault injection reproduced; production page flows passed)')
 }
 
