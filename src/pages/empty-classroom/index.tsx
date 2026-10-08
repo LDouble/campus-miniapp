@@ -20,10 +20,7 @@ import {
   type ClassroomView,
   type EmptyClassroomDayAvailability,
 } from '../../features/empty-classroom/repository'
-import {
-  getCalendarEducationLevel,
-  loadAcademicCalendar,
-} from '../../features/calendar/repository'
+import { loadAcademicCalendar } from '../../features/calendar/repository'
 import {
   academicWeekdayToDate,
   resolveAcademicCalendarState,
@@ -209,7 +206,7 @@ export default function EmptyClassroomPage() {
     let active = true
     Promise.all([
       loadMiniappRuntimeConfig().catch(() => getMiniappRuntimeConfig()),
-      loadAcademicCalendar(getCalendarEducationLevel()).catch(() => null),
+      loadAcademicCalendar('undergraduate').catch(() => null),
     ]).then(([next, calendarResult]) => {
       if (!active) return
       setConfig(next)
@@ -257,7 +254,7 @@ export default function EmptyClassroomPage() {
   usePullDownRefresh(async () => {
     try {
       if (!queryReady) return
-      const result = await loadAcademicCalendar(getCalendarEducationLevel(), { force: true })
+      const result = await loadAcademicCalendar('undergraduate', { force: true })
       const nextCalendar = result.calendar
       skipCalendarRefresh.current = true
       setCalendar(nextCalendar)
