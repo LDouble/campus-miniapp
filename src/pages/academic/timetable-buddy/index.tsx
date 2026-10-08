@@ -22,10 +22,6 @@ import {
 import { getCachedPageUserId, getPageCacheScope, subscribePageCacheScope } from '../../../state/page-cache'
 import CustomNavbar from '../../../components/custom-navbar'
 import { buildCampusShareMessage } from '../../../features/share'
-import { openMiniappModule, loadMiniappRuntimeConfig, resolveMiniappModule } from '../../../features/runtime-config'
-import { requestWechatSubscriptionForModule } from '../../../features/wechat-subscription'
-import { directMessageChatUrl, directMessagesListUrl } from '../../../features/direct-messages/navigation'
-import { privateMessagesRepository } from '../../../features/direct-messages/repository'
 import { timetableBuddyRepository } from '../../../api/timetable-buddy'
 import {
   timetableBuddyRelationLabel,
@@ -188,8 +184,6 @@ function TimetableBuddyPageContent({ userId, pageCacheScope }: { userId: number;
   } | null>(null)
   const [scheduleLoading, setScheduleLoading] = useState(false)
   const [scheduleError, setScheduleError] = useState('')
-  const [openingChat, setOpeningChat] = useState(false)
-  const [contactHint, setContactHint] = useState('')
   const [customSyncError, setCustomSyncError] = useState('')
   const [failedCustomSyncKey, setFailedCustomSyncKey] = useState('')
   const [educationLevel, setEducationLevel] = useState(() => currentEducationLevel(userId))
@@ -204,7 +198,6 @@ function TimetableBuddyPageContent({ userId, pageCacheScope }: { userId: number;
   const syncedCustomCoursesRef = useRef(new Map<string, string>())
   const customCoursesUploadRef = useRef(new Map<string, TimetableBuddyCustomCourseUploadFlight>())
   const shouldReloadAcademicContextRef = useRef(false)
-  const openingChatRef = useRef(false)
   const isCurrentPage = useCallback(() => mountedRef.current && getPageCacheScope() === pageCacheScope, [pageCacheScope])
   const currentSyncScopeRef = useRef({
     userId,
@@ -597,33 +590,6 @@ function TimetableBuddyPageContent({ userId, pageCacheScope }: { userId: number;
     }
   }
 
-  const openBuddyChat = async (kind: 'meal' | 'study') => {
-    if (!buddyMember || openingChatRef.current) return
-    openingChatRef.current = true
-    setOpeningChat(true)
-    try {
-      const config = await loadMiniappRuntimeConfig()
-      if (!isCurrentPage()) return
-      const module = resolveMiniappModule(config, 'private_message')
-      if (module.state !== 'enabled') {
-        await openMiniappModule('private_message', directMessagesListUrl, { config })
-        return
-      }
-      const subscriptionAlreadyRequested = requestWechatSubscriptionForModule('private_message', config)
-      const conversation = await privateMessagesRepository.createConversation(buddyMember.userId, isCurrentPage)
-      if (!isCurrentPage()) return
-      const message = kind === 'meal' ? '今天有空一起吃饭吗？' : '找个共同空闲的时间一起自习吧？'
-      const url = `${directMessageChatUrl(conversation.id)}&prefill=${encodeURIComponent(message)}&prefill_source=timetable-buddy`
-      const opened = await openMiniappModule('private_message', url, { config, subscriptionAlreadyRequested })
-      if (opened && isCurrentPage()) setContactHint('消息已预填，打开后请检查内容并手动发送。')
-    } catch (error) {
-      if (!isCurrentPage()) return
-      Taro.showToast({ title: errorMessage(error, '暂时无法打开私信，请稍后重试'), icon: 'none' })
-    } finally {
-      openingChatRef.current = false
-      if (isCurrentPage()) setOpeningChat(false)
-    }
-  }
 
   const customCoursesSyncPending = customCoursesPending || Boolean(
     selectedCustomCoursesKey && failedCustomSyncKey === selectedCustomCoursesKey,
@@ -1048,21 +1014,6 @@ function TimetableBuddyPageContent({ userId, pageCacheScope }: { userId: number;
                   ariaLabel={myMember.paused ? '恢复课表分享' : '暂停课表分享'}
                   onClick={() => void updateSettings({ paused: !myMember.paused })}
                 ><View /></View>
-              </View>
-              {contactHint && <Text className='timetable-buddy-contact-hint'>{contactHint}</Text>}
-              <View className='timetable-buddy-contact-actions'>
-                <View
-                  className={`timetable-buddy-contact-action ${openingChat ? 'timetable-buddy-contact-action--disabled' : ''}`}
-                  ariaRole='button'
-                  ariaLabel='约饭并打开私信'
-                  onClick={() => void openBuddyChat('meal')}
-                >约饭</View>
-                <View
-                  className={`timetable-buddy-contact-action ${openingChat ? 'timetable-buddy-contact-action--disabled' : ''}`}
-                  ariaRole='button'
-                  ariaLabel='约自习并打开私信'
-                  onClick={() => void openBuddyChat('study')}
-                >一起自习</View>
               </View>
               <View
                 className={`timetable-buddy-disconnect ${settingsBusy ? 'timetable-buddy-disconnect--disabled' : ''}`}

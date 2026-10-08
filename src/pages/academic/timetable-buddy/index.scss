@@ -678,33 +678,6 @@
   &--disabled { opacity: 0.5; }
 }
 
-.timetable-buddy-contact-hint {
-  display: block;
-  margin: 14rpx 0 8rpx;
-  color: var(--campus-success, #00BBA7);
-  font-size: 22rpx;
-}
-
-.timetable-buddy-contact-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14rpx;
-  margin-top: 18rpx;
-}
-
-.timetable-buddy-contact-action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 76rpx;
-  color: var(--ousea-ocean-600, #1D5FD6);
-  font-size: 25rpx;
-  background: var(--ousea-ocean-50, #F2F7FE);
-  border-radius: 18rpx;
-
-  &--disabled { opacity: 0.5; }
-}
-
 .timetable-buddy-disconnect {
   min-height: 72rpx;
   margin-top: 12rpx;
