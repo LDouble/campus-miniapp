@@ -87,7 +87,7 @@
     "e2e:life-services": "npm run build:weapp && bash scripts/e2e-life-services.sh",
     "e2e:personal-records": "bash scripts/e2e-personal-records.sh",
     "test:calendar": "ts-node --transpile-only scripts/test-calendar.ts",
-    "test:empty-classroom-day-view": "ts-node --transpile-only scripts/empty-classroom-day-view-smoke.ts",
+    "test:empty-classroom-day-view": "ts-node --transpile-only scripts/empty-classroom-day-view-smoke.ts && ts-node --transpile-only scripts/empty-classroom-calendar-smoke.ts",
     "test:daily-checkin": "ts-node --transpile-only scripts/daily-checkin-smoke.ts",
     "test:profile-username": "ts-node --transpile-only scripts/profile-username-smoke.ts",
     "test:profile-avatar-moderation": "ts-node --transpile-only scripts/profile-avatar-moderation-smoke.ts",
