@@ -7,11 +7,14 @@ export type AcademicRankingGroup = components['schemas']['AcademicRankingGroup']
 export type AcademicRankingMember = components['schemas']['AcademicRankingGroupMember']
 export type AcademicRankingGroupDetail = components['schemas']['AcademicRankingGroupDetail']
 export type AcademicRankingBatch = components['schemas']['AcademicRankingBatch']
+export type AcademicRankingGroupPage = components['schemas']['AcademicRankingGroupPage']
+export type AcademicRankingBatchPage = components['schemas']['AcademicRankingBatchPage']
 export type AcademicRankingRow = components['schemas']['AcademicRankingReportRow']
 export type AcademicRankingReport = components['schemas']['AcademicRankingReport']
 export type AcademicRankingGrant = components['schemas']['AcademicRankingGrant']
 
 const base = '/api/v1/academic/rankings'
+export const ACADEMIC_RANKING_PAGE_SIZE = 20
 
 export const listAcademicRankingRules = async () => (await apiRequest<components['schemas']['AcademicRankingRuleList']>({ path: `${base}/rules` })).items
 export const getAcademicRankingProfile = () => apiRequest<AcademicRankingProfile>({ path: `${base}/profile` })
@@ -19,7 +22,9 @@ export const syncAcademicRankingGrades = (password: string, periodIds: string[])
   path: `${base}/sync`, method: 'POST', data: { password, period_ids: periodIds },
   idempotencyKey: createIdempotencyKey('academic-ranking-sync'),
 })
-export const listAcademicRankingGroups = async () => (await apiRequest<components['schemas']['AcademicRankingGroupPage']>({ path: `${base}/groups` })).items
+export const listAcademicRankingGroups = (page = 1, pageSize = ACADEMIC_RANKING_PAGE_SIZE) => apiRequest<AcademicRankingGroupPage>({
+  path: `${base}/groups`, query: { page, page_size: pageSize },
+})
 export const createAcademicRankingGroup = (data: { name: string; education_level: string; period_ids: string[]; rule_key: string }) => apiRequest<AcademicRankingGroup>({
   path: `${base}/groups`, method: 'POST', data, idempotencyKey: createIdempotencyKey('academic-ranking-group'),
 })
@@ -34,7 +39,9 @@ export const leaveAcademicRankingGroup = (groupId: number) => apiRequest<void>({
 export const publishAcademicRankingGroup = (groupId: number, allowPartial: boolean) => apiRequest<AcademicRankingBatch>({
   path: `${base}/groups/${groupId}/publish`, method: 'POST', data: { allow_partial: allowPartial }, idempotencyKey: createIdempotencyKey('academic-ranking-publish'),
 })
-export const listAcademicRankingReports = async () => (await apiRequest<components['schemas']['AcademicRankingBatchPage']>({ path: `${base}/reports` })).items
+export const listAcademicRankingReports = (page = 1, pageSize = ACADEMIC_RANKING_PAGE_SIZE) => apiRequest<AcademicRankingBatchPage>({
+  path: `${base}/reports`, query: { page, page_size: pageSize },
+})
 export const getAcademicRankingReport = (id: number, view: 'personal' | 'shared') => apiRequest<AcademicRankingReport>({ path: `${base}/reports/${id}`, query: { view } })
 export const listAcademicRankingGrants = async (groupId: number) => (await apiRequest<components['schemas']['AcademicRankingGrantList']>({ path: `${base}/groups/${groupId}/grants` })).items
 export const putAcademicRankingGrant = (groupId: number, data: { recipient_student_no: string; include_details: boolean; expires_in_days: number }) => {

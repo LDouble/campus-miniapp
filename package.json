@@ -42,7 +42,7 @@
     "test:selection-sheet": "ts-node --transpile-only scripts/selection-sheet-flicker-smoke.ts",
     "test:academic-cache-metadata": "ts-node --transpile-only scripts/academic-cache-metadata-smoke.ts",
     "test:academic-statistics": "ts-node --transpile-only scripts/academic-statistics-smoke.ts",
-    "test:academic-ranking": "ts-node --transpile-only scripts/academic-ranking-smoke.ts",
+    "test:academic-ranking": "ts-node --transpile-only scripts/academic-ranking-smoke.ts && ts-node --transpile-only scripts/academic-ranking-pagination-smoke.ts",
     "test:service-shortcuts": "ts-node --transpile-only scripts/service-shortcuts-smoke.ts",
     "test:home-guest": "ts-node --transpile-only scripts/home-guest-smoke.ts",
     "test:home-notification-checkin": "ts-node --transpile-only scripts/home-notification-checkin-smoke.ts",
