@@ -20,11 +20,11 @@ export const syncAcademicRankingGrades = (password: string, periodIds: string[])
   idempotencyKey: createIdempotencyKey('academic-ranking-sync'),
 })
 export const listAcademicRankingGroups = async () => (await apiRequest<components['schemas']['AcademicRankingGroupPage']>({ path: `${base}/groups` })).items
-export const createAcademicRankingGroup = (data: { name: string; education_level: string; period_ids: string[]; rule_key: string }) => apiRequest<AcademicRankingGroupDetail>({
+export const createAcademicRankingGroup = (data: { name: string; education_level: string; period_ids: string[]; rule_key: string }) => apiRequest<AcademicRankingGroup>({
   path: `${base}/groups`, method: 'POST', data, idempotencyKey: createIdempotencyKey('academic-ranking-group'),
 })
 export const getAcademicRankingGroup = (id: number) => apiRequest<AcademicRankingGroupDetail>({ path: `${base}/groups/${id}` })
-export const joinAcademicRankingGroup = (invitationCode: string) => apiRequest<AcademicRankingGroupDetail>({
+export const joinAcademicRankingGroup = (invitationCode: string) => apiRequest<AcademicRankingGroup>({
   path: `${base}/groups/join`, method: 'POST', data: { invitation_code: invitationCode }, idempotencyKey: createIdempotencyKey('academic-ranking-join'),
 })
 export const reviewAcademicRankingMember = (groupId: number, memberId: number, status: 'approved' | 'rejected') => apiRequest<AcademicRankingGroupDetail>({

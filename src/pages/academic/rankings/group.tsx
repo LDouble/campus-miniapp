@@ -27,7 +27,28 @@ export default function AcademicRankingGroupPage() {
       {group.membership_status === 'approved' && <View className='ranking-card ranking-form'><Text className='ranking-section__title'>同步本人成绩</Text><KeyboardSafeInput password value={password} placeholder='本机已保存的教务密码' onInput={(e) => setPassword(e.detail.value)} /><Text className='ranking-copy'>将按 {group.period_ids.join('、')} 逐学期提交，避免单次请求超时；每期完成后由后台处理。本组只统计已确认且资料完整的成员。</Text><View className='ranking-primary' onClick={() => void syncOwnGrades()}>{busy ? '处理中…' : '同步本人成绩'}</View></View>}
       {group.is_owner && <View className='ranking-card ranking-form'><Text className='ranking-section__title'>发布排名</Text><View className='ranking-secondary' onClick={() => void action(() => publishAcademicRankingGroup(group.id, false).then((batch) => Taro.navigateTo({ url: `/pages/academic/rankings/report?id=${batch.id}&view=personal` })), '已发布排名')}>发布完整样本排名</View><View className='ranking-danger' onClick={() => void action(() => publishAcademicRankingGroup(group.id, true).then((batch) => Taro.navigateTo({ url: `/pages/academic/rankings/report?id=${batch.id}&view=personal` })), '缺数据时按现有样本发布')}>缺数据时按现有样本发布</View></View>}
       {group.is_owner && <View className='ranking-section'><Text className='ranking-section__title'>成员申请</Text>{detail.members.filter((member) => member.status === 'pending').length ? detail.members.filter((member) => member.status === 'pending').map((member) => <View className='ranking-row' key={member.id}><Text>{member.display_name}</Text><View className='ranking-inline-actions'><Text onClick={() => void action(() => reviewAcademicRankingMember(group.id, member.id, 'approved'), '已确认')}>确认</Text><Text onClick={() => void action(() => reviewAcademicRankingMember(group.id, member.id, 'rejected'), '已拒绝')}>拒绝</Text></View></View>) : <Text className='ranking-empty'>暂无待确认申请</Text>}</View>}
-      <View className='ranking-section'><Text className='ranking-section__title'>授权接收人</Text><View className='ranking-card ranking-form'><KeyboardSafeInput value={studentNo} placeholder='接收人的完整学号' onInput={(e) => setStudentNo(e.detail.value)} /><View className='ranking-period-list'>{[7, 30, 120].map((days) => <View key={days} className={expiresInDays === days ? 'is-selected' : ''} onClick={() => setExpiresInDays(days)}><Text>{days === 120 ? '约一学期' : `${days} 天`}</Text></View>)}</View><View className={includeDetails ? 'ranking-toggle is-active' : 'ranking-toggle'} onClick={() => setIncludeDetails(!includeDetails)}><Text>允许逐课明细</Text><Text>{includeDetails ? '已允许' : '仅汇总'}</Text></View><Text className='ranking-copy'>仅分享你本人在“{group.name}”所选 {group.period_ids.join('、')} 学期的排名数据给该完整学号。是否包含逐课明细由上方选项决定；这不会授予任何人查看其他同学成绩的权限。</Text><View className='ranking-primary' onClick={() => void action(() => putAcademicRankingGrant(group.id, { recipient_student_no: studentNo, include_details: includeDetails, expires_in_days: expiresInDays }), '授权已保存')}>保存授权</View></View>{grants.map((grant) => <View className='ranking-row' key={grant.id}><View><Text>{grant.recipient_label}</Text><Text>{grant.include_details ? '含逐课明细' : '仅汇总'} · {grant.status}</Text></View><Text className='ranking-link-danger' onClick={() => void action(() => deleteAcademicRankingGrant(grant.id), '已撤销')}>撤销</Text></View>)}</View>
+      {group.membership_status === 'approved' && (
+        <View className='ranking-section'>
+          <Text className='ranking-section__title'>授权接收人</Text>
+          <View className='ranking-card ranking-form'>
+            <KeyboardSafeInput value={studentNo} placeholder='接收人的完整学号' onInput={(e) => setStudentNo(e.detail.value)} />
+            <View className='ranking-period-list'>{[7, 30, 120].map((days) => <View key={days} className={expiresInDays === days ? 'is-selected' : ''} onClick={() => setExpiresInDays(days)}><Text>{days === 120 ? '约一学期' : `${days} 天`}</Text></View>)}</View>
+            <View className={includeDetails ? 'ranking-toggle is-active' : 'ranking-toggle'} onClick={() => setIncludeDetails(!includeDetails)}><Text>允许逐课明细</Text><Text>{includeDetails ? '已允许' : '仅汇总'}</Text></View>
+            <Text className='ranking-copy'>仅分享你本人在“{group.name}”所选 {group.period_ids.join('、')} 学期的排名数据给该完整学号。是否包含逐课明细由上方选项决定；这不会授予任何人查看其他同学成绩的权限。</Text>
+            <View className='ranking-primary' onClick={() => void action(() => putAcademicRankingGrant(group.id, { recipient_student_no: studentNo, include_details: includeDetails, expires_in_days: expiresInDays }), '授权已保存')}>保存授权</View>
+          </View>
+          {grants.map((grant) => <View className='ranking-row' key={grant.id}><View><Text>{grant.recipient_label}</Text><Text>{grant.include_details ? '含逐课明细' : '仅汇总'} · {grant.status}</Text></View><Text className='ranking-link-danger' onClick={() => void action(() => deleteAcademicRankingGrant(grant.id), '已撤销')}>撤销</Text></View>)}
+        </View>
+      )}
+      {group.membership_status === 'pending' && (
+        <View className='ranking-section'>
+          <Text className='ranking-section__title'>授权设置</Text>
+          <View className='ranking-card'>
+            <Text className='ranking-eyebrow'>申请待审核</Text>
+            <Text className='ranking-copy'>组主确认后，你可以在此设置谁能查看你的排名报告。</Text>
+          </View>
+        </View>
+      )}
       <View className='ranking-card'><Text className='ranking-copy'>{group.is_owner ? '解散后会关闭该排名组，并撤销全组现有授权；已发布报告会按服务端权限立即失效。' : '退出后会撤销你在本组的全部授权。你的成绩不再参与后续排名；组主仍不会因你曾加入而取得成绩查看权。'}</Text><View className='ranking-danger' onClick={() => void (async () => { const confirmed = await Taro.showModal({ title: group.is_owner ? '确认解散排名组？' : '确认退出排名组？', content: group.is_owner ? '解散后成员无法继续使用该组，且会撤销全组授权。' : '退出后会撤销你在该组的全部授权。', confirmText: group.is_owner ? '确认解散' : '确认退出', confirmColor: '#E5484D' }); if (!confirmed.confirm) return; await action(() => leaveAcademicRankingGroup(group.id).then(() => Taro.navigateBack()), group.is_owner ? '排名组已解散' : '已退出排名组') })()}>{group.is_owner ? '解散排名组' : '退出排名组'}</View></View>
     </>}
   </View></View>

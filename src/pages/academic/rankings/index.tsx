@@ -47,8 +47,8 @@ export default function AcademicRankingsPage() {
     if (!name.trim() || !ruleKey || !selectedPeriodIds.length || !profile) { Taro.showToast({ title: '请填写名称、学期和规则', icon: 'none' }); return }
     setSubmitting(true)
     try {
-      const detail = await createAcademicRankingGroup({ name: name.trim(), education_level: profile.education_level, period_ids: selectedPeriodIds, rule_key: ruleKey })
-      setMode('none'); void Taro.navigateTo({ url: `/pages/academic/rankings/group?id=${detail.group.id}` })
+      const group = await createAcademicRankingGroup({ name: name.trim(), education_level: profile.education_level, period_ids: selectedPeriodIds, rule_key: ruleKey })
+      setMode('none'); void Taro.navigateTo({ url: `/pages/academic/rankings/group?id=${group.id}` })
     } catch (requestError) { Taro.showToast({ title: errorMessage(requestError, '创建失败'), icon: 'none' }) }
     finally { setSubmitting(false) }
   }
@@ -57,8 +57,8 @@ export default function AcademicRankingsPage() {
     if (!inviteCode.trim()) { Taro.showToast({ title: '请输入邀请码', icon: 'none' }); return }
     setSubmitting(true)
     try {
-      const detail = await joinAcademicRankingGroup(inviteCode.trim())
-      setMode('none'); void Taro.navigateTo({ url: `/pages/academic/rankings/group?id=${detail.group.id}` })
+      const group = await joinAcademicRankingGroup(inviteCode.trim())
+      setMode('none'); void Taro.navigateTo({ url: `/pages/academic/rankings/group?id=${group.id}` })
     } catch (requestError) { Taro.showToast({ title: errorMessage(requestError, '申请加入失败'), icon: 'none' }) }
     finally { setSubmitting(false) }
   }
