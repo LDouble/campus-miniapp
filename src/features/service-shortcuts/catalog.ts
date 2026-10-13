@@ -12,6 +12,7 @@ export const serviceModules: Partial<Record<string, MiniappModuleKey>> = {
   schedule: 'academic_schedule',
   simulation: 'academic_schedule',
   grades: 'academic_grades',
+  'grade-ranking': 'academic_grades',
   exams: 'academic_exams',
   result: 'academic_selection',
   'pass-rate': 'academic_statistics',
@@ -43,6 +44,7 @@ export const serviceGroups: Array<{ title: string; subtitle: string; items: Serv
     items: [
       { key: 'schedule', name: '课程表', route: '/pages/academic/schedule/index' },
       { key: 'grades', name: '成绩单', route: '/pages/academic/grades/index' },
+      { key: 'grade-ranking', name: '成绩排名', route: '/pages/academic/rankings/index' },
       { key: 'exams', name: '考试安排', route: '/pages/academic/exams/index' },
       { key: 'result', name: '选课结果', route: '/pages/academic/selection/index' },
       { key: 'course-addition', name: '加课结果', route: '/pages/academic/course-addition-results/index' },

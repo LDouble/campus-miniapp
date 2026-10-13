@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/api/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 兼容旧客户端公开配置
+         * @description 原样返回配置中心 weouc.config 的公开非加密 JSON，不包装响应 envelope。缺失或非公开配置返回 404。
+         */
+        get: operations["LegacyWeoucConfig"];
+        put?: never;
+        /**
+         * 兼容旧客户端 POST 读取公开配置
+         * @description 原样返回配置中心 weouc.config 的公开非加密 JSON，不包装响应 envelope。缺失或非公开配置返回 404。
+         */
+        post: operations["LegacyWeoucConfigPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jw/bind": {
         parameters: {
             query?: never;
@@ -899,6 +923,384 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/credential-hosting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人教务凭据托管状态 */
+        get: operations["GetAcademicCredentialHosting"];
+        put?: never;
+        post?: never;
+        /** 撤销并删除本人教务凭据托管 */
+        delete: operations["DeleteAcademicCredentialHosting"];
+        options?: never;
+        head?: never;
+        /** 更新本人教务凭据托管的后台同步设置 */
+        patch: operations["UpdateAcademicCredentialHosting"];
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/intents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建一次性教务凭据托管绑定意图 */
+        post: operations["CreateAcademicCredentialHostingIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建一次教务只读查询任务 */
+        post: operations["CreateAcademicCredentialHostingTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人教务只读查询任务 */
+        get: operations["GetAcademicCredentialHostingTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-credential-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 枚举教务账号凭据元数据 */
+        get: operations["ListAdminAcademicCredentialAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-credential-accounts/{account_id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按版本禁用、启用或删除教务账号凭据 */
+        post: operations["UpdateAdminAcademicCredentialAccountState"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/grants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 撤销成绩排名报告查看授权 */
+        delete: operations["DeleteAcademicRankingGrant"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的成绩排名小组 */
+        get: operations["ListMyAcademicRankingGroups"];
+        put?: never;
+        /** 创建成绩排名小组 */
+        post: operations["CreateAcademicRankingGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/groups/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 通过邀请码加入成绩排名小组 */
+        post: operations["JoinAcademicRankingGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询成绩排名小组详情 */
+        get: operations["GetAcademicRankingGroup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/groups/{id}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的排名报告授权 */
+        get: operations["ListAcademicRankingGrants"];
+        /** 授予成绩排名报告查看权限（未指定到期时间时默认30天） */
+        put: operations["PutAcademicRankingGrant"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/groups/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 审核成绩排名小组成员 */
+        put: operations["ReviewAcademicRankingGroupMember"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/groups/{id}/membership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 退出成绩排名小组 */
+        delete: operations["LeaveAcademicRankingGroup"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/groups/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 计算并发布成绩排名 */
+        post: operations["PublishAcademicRankingGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的成绩排名资料概况 */
+        get: operations["GetAcademicRankingProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的成绩排名报告 */
+        get: operations["ListAcademicRankingReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/reports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询成绩排名报告详情 */
+        get: operations["GetAcademicRankingReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询可用成绩排名规则 */
+        get: operations["ListAcademicRankingRules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/rankings/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 同步我的成绩排名资料 */
+        post: operations["SyncAcademicRankingGrades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic/rankings/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询成绩排名批次 */
+        get: operations["ListAdminAcademicRankingBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic/rankings/batches/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理端撤回成绩排名批次 */
+        post: operations["WithdrawAcademicRankingBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic/rankings/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询成绩排名小组 */
+        get: operations["ListAdminAcademicRankingGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/pass-rates": {
         parameters: {
             query?: never;
@@ -995,6 +1397,126 @@ export interface paths {
         put?: never;
         /** 管理端手动触发学业统计重算 */
         post: operations["TriggerAdminAcademicStatisticsRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询教务同步批次 */
+        get: operations["ListAdminAcademicSyncBatches"];
+        put?: never;
+        /** 按候选学号创建教务同步批次 */
+        post: operations["CreateAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教务同步批次详情 */
+        get: operations["GetAdminAcademicSyncBatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消尚未完成的教务同步批次 */
+        post: operations["CancelAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/retry-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试批次内的失败子任务 */
+        post: operations["RetryFailedAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询批次子任务安全状态 */
+        get: operations["ListAdminAcademicSyncBatchTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/previews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建按教务账号候选的同步人数预演 */
+        post: operations["CreateAdminAcademicSyncPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/previews/{preview_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询候选人数预演进度 */
+        get: operations["GetAdminAcademicSyncPreview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8537,6 +9059,327 @@ export interface components {
             notice_url?: string | null;
             title: string;
         };
+        AcademicCredentialAccount: {
+            /** @description 独立教务账号 ID，十进制字符串防止客户端精度丢失 */
+            account_id: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            grant_epoch: string;
+            provider: string;
+            revision: string;
+            /** @enum {string} */
+            state: "none" | "active" | "reauth_required" | "action_required" | "disabled";
+            student_no: string;
+        };
+        AcademicCredentialAccountPage: {
+            has_more: boolean;
+            items: components["schemas"]["AcademicCredentialAccount"][];
+            max_account_id: string;
+            next_after_account_id: string;
+        };
+        AcademicCredentialAccountPageResponseBody: {
+            data: components["schemas"]["AcademicCredentialAccountPage"];
+            request_id: string;
+        };
+        AcademicCredentialAccountResponseBody: {
+            data: components["schemas"]["AcademicCredentialAccount"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingEducationLevel: "undergraduate" | "graduate";
+        AcademicCredentialHostingIntent: {
+            /** Format: date-time */
+            expires_at: string;
+            intent_id: string;
+            /** Format: uri */
+            submit_url: string;
+            token: string;
+        };
+        AcademicCredentialHostingIntentInput: {
+            /** @description 业务查询自动托管时为 true，遇在途绑定不覆盖；主动绑定省略或为 false，省略时按 false 处理 */
+            automatic?: boolean;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: uint64 */
+            expected_revision: number;
+        };
+        AcademicCredentialHostingIntentResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingIntent"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingPurpose: "courses" | "exams" | "grades" | "course_selections" | "selection_schedule" | "addition_results";
+        /** @enum {string} */
+        AcademicCredentialHostingState: "none" | "active" | "reauth_required" | "action_required" | "revoked";
+        AcademicCredentialHostingStatus: {
+            automatic_sync: boolean;
+            credential_id: string | null;
+            /** @description 当前身份版本绑定的已验证学校类型 */
+            education_level?: components["schemas"]["AcademicCredentialHostingEducationLevel"];
+            enabled: boolean;
+            last_error_code: string | null;
+            /** Format: date-time */
+            last_sync_at: string | null;
+            /** @description 服务端生效的托管策略版本，不表示用户另行授权 */
+            policy_version: string | null;
+            /** Format: uint64 */
+            revision: number;
+            revocation_pending: boolean;
+            state: components["schemas"]["AcademicCredentialHostingState"];
+        };
+        AcademicCredentialHostingStatusResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingStatus"];
+            request_id: string;
+        };
+        AcademicCredentialHostingTask: {
+            cache?: components["schemas"]["AcademicQueryCache"] | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            credential_revision: number;
+            error_code: string | null;
+            /** Format: uint64 */
+            grant_epoch: number;
+            period_id: string;
+            purpose: components["schemas"]["AcademicCredentialHostingPurpose"];
+            result: (components["schemas"]["AcademicCourse"][] | components["schemas"]["AcademicExam"][] | components["schemas"]["AcademicGrade"][] | components["schemas"]["AcademicCourseSelection"][] | components["schemas"]["AcademicCourse"][] | components["schemas"]["AcademicCourseAdditionResult"][]) | null;
+            schedule_note?: string | null;
+            state: components["schemas"]["AcademicCredentialHostingTaskState"];
+            task_id: string;
+        };
+        AcademicCredentialHostingTaskResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingTask"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingTaskState: "queued" | "leased" | "running" | "awaiting_archive" | "succeeded" | "failed" | "needs_attention" | "canceled";
+        CreateAcademicCredentialHostingTaskInput: {
+            idempotency_key: string;
+            /** @description grades 允许省略或为空，其余用途必填 */
+            period_id?: string;
+            purpose: components["schemas"]["AcademicCredentialHostingPurpose"];
+        };
+        DeleteAcademicCredentialHostingInput: {
+            /** Format: uint64 */
+            expected_revision: number;
+        };
+        UpdateAcademicCredentialAccountStateInput: {
+            /**
+             * @description 禁用阻止取用；删除清除密码并保持禁用；启用仅等待下一次有效凭据录制
+             * @enum {string}
+             */
+            action: "disable" | "enable" | "delete";
+            expected_revision: string;
+        };
+        UpdateAcademicCredentialHostingInput: {
+            automatic_sync: boolean;
+            /** Format: uint64 */
+            expected_revision: number;
+        };
+        AcademicRankingBatch: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            group_id: number;
+            group_name: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int64 */
+            member_count: number;
+            period_ids: string[];
+            rule_key: string;
+            /** Format: int64 */
+            sample_size: number;
+            /** Format: date-time */
+            source_cutoff_at: string;
+            status: string;
+        };
+        AcademicRankingBatchPage: {
+            items: components["schemas"]["AcademicRankingBatch"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicRankingBatchPageResponseBody: {
+            data: components["schemas"]["AcademicRankingBatchPage"];
+            request_id: string;
+        };
+        AcademicRankingBatchResponseBody: {
+            data: components["schemas"]["AcademicRankingBatch"];
+            request_id: string;
+        };
+        AcademicRankingGrant: {
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: uint64 */
+            group_id: number;
+            /** Format: uint64 */
+            id: number;
+            include_details: boolean;
+            recipient_label: string;
+            /** Format: uint64 */
+            recipient_user_id: number;
+            status: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        AcademicRankingGrantList: {
+            items: components["schemas"]["AcademicRankingGrant"][];
+        };
+        AcademicRankingGrantListResponseBody: {
+            data: components["schemas"]["AcademicRankingGrantList"];
+            request_id: string;
+        };
+        AcademicRankingGrantResponseBody: {
+            data: components["schemas"]["AcademicRankingGrant"];
+            request_id: string;
+        };
+        AcademicRankingGrantRevoke: {
+            revoked: boolean;
+        };
+        AcademicRankingGrantRevokeResponseBody: {
+            data: components["schemas"]["AcademicRankingGrantRevoke"];
+            request_id: string;
+        };
+        AcademicRankingGroup: {
+            education_level: string;
+            /** Format: uint64 */
+            id: number;
+            invitation_code: string | null;
+            is_owner: boolean;
+            /** Format: int64 */
+            member_count: number;
+            membership_status: string;
+            name: string;
+            /** Format: uint64 */
+            owner_user_id: number;
+            period_ids: string[];
+            rule_key: string;
+            status: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        AcademicRankingGroupDetail: {
+            group: components["schemas"]["AcademicRankingGroup"];
+            members: components["schemas"]["AcademicRankingGroupMember"][];
+        };
+        AcademicRankingGroupDetailResponseBody: {
+            data: components["schemas"]["AcademicRankingGroupDetail"];
+            request_id: string;
+        };
+        AcademicRankingGroupMember: {
+            display_name: string;
+            /** Format: uint64 */
+            id: number;
+            is_self: boolean;
+            status: string;
+            /** Format: uint64 */
+            user_id: number;
+        };
+        AcademicRankingGroupPage: {
+            items: components["schemas"]["AcademicRankingGroup"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicRankingGroupPageResponseBody: {
+            data: components["schemas"]["AcademicRankingGroupPage"];
+            request_id: string;
+        };
+        AcademicRankingGroupResponseBody: {
+            data: components["schemas"]["AcademicRankingGroup"];
+            request_id: string;
+        };
+        AcademicRankingMembershipLeave: {
+            left: boolean;
+        };
+        AcademicRankingMembershipLeaveResponseBody: {
+            data: components["schemas"]["AcademicRankingMembershipLeave"];
+            request_id: string;
+        };
+        AcademicRankingProfile: {
+            /** Format: int32 */
+            admission_year: number | null;
+            class_code: string;
+            class_name: string;
+            college_name: string;
+            education_level: string;
+            major_name: string;
+            /** Format: date-time */
+            observed_at: string | null;
+            provider: string;
+            student_no_masked: string;
+            synced_periods: string[];
+        };
+        AcademicRankingProfileResponseBody: {
+            data: components["schemas"]["AcademicRankingProfile"];
+            request_id: string;
+        };
+        AcademicRankingReport: {
+            /** Format: int64 */
+            authorized_count: number;
+            batch: components["schemas"]["AcademicRankingBatch"];
+            rows: components["schemas"]["AcademicRankingReportRow"][];
+            /** @enum {string} */
+            view: "personal" | "shared";
+        };
+        AcademicRankingReportResponseBody: {
+            data: components["schemas"]["AcademicRankingReport"];
+            request_id: string;
+        };
+        AcademicRankingReportRow: {
+            /** Format: int64 */
+            credit_x100: number;
+            details_json?: string;
+            display_name: string;
+            /** Format: int64 */
+            rank: number;
+            /** Format: int64 */
+            score_x100: number;
+            student_no_masked: string;
+            /** Format: int64 */
+            tied_count: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: uint64 */
+            user_id: number;
+        };
+        AcademicRankingRule: {
+            description: string;
+            key: string;
+            name: string;
+        };
+        AcademicRankingRuleList: {
+            items: components["schemas"]["AcademicRankingRule"][];
+        };
+        AcademicRankingRuleListResponseBody: {
+            data: components["schemas"]["AcademicRankingRuleList"];
+            request_id: string;
+        };
+        AcademicRankingSync: {
+            event_id: string;
+            /** Format: date-time */
+            observed_at: string;
+        };
+        AcademicRankingSyncResponseBody: {
+            data: components["schemas"]["AcademicRankingSync"];
+            request_id: string;
+        };
+        AcademicRankingWithdraw: {
+            withdrawn: boolean;
+        };
+        AcademicRankingWithdrawResponseBody: {
+            data: components["schemas"]["AcademicRankingWithdraw"];
+            request_id: string;
+        };
         AcademicCoursePassRatePage: {
             items: components["schemas"]["AcademicCoursePassRateView"][];
             metadata: components["schemas"]["AcademicStatisticsMetadata"];
@@ -8732,6 +9575,162 @@ export interface components {
         };
         /** @enum {string} */
         AcademicTeacherIdentityScope: "normalized_name";
+        AcademicSyncBatch: {
+            /** Format: uint64 */
+            awaiting_archive_count: number;
+            batch_id: string;
+            /** Format: date-time */
+            canceled_at: string | null;
+            /** Format: uint64 */
+            canceled_count: number;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            error_code: string | null;
+            /** Format: uint64 */
+            failed_count: number;
+            /** Format: uint64 */
+            needs_attention_count: number;
+            period_id: string | null;
+            /** Format: date-time */
+            prepared_at: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            /** Format: uint64 */
+            queued_count: number;
+            /** Format: uint64 */
+            running_count: number;
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** Format: uint64 */
+            skipped_count: number;
+            /** Format: date-time */
+            started_at: string | null;
+            state: components["schemas"]["AcademicSyncBatchState"];
+            /** Format: uint64 */
+            succeeded_count: number;
+            /** Format: uint64 */
+            total_count: number | null;
+            /** Format: uint64 */
+            version: number;
+        };
+        AcademicSyncBatchInput: {
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            /** @description 成绩可省略或为空表示全部学期，其余用途必填 */
+            period_id?: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** @description selected 范围必填；按字符串保留前导零，服务端规范化后去重 */
+            student_nos?: string[];
+            /**
+             * @deprecated
+             * @description 旧契约兼容字段，不再支持按平台用户创建新批次
+             */
+            user_ids?: number[];
+        };
+        AcademicSyncBatchPage: {
+            items: components["schemas"]["AcademicSyncBatch"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicSyncBatchPageResponseBody: {
+            data: components["schemas"]["AcademicSyncBatchPage"];
+            request_id: string;
+        };
+        AcademicSyncBatchResponseBody: {
+            data: components["schemas"]["AcademicSyncBatch"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncBatchState: "preparing" | "queued" | "running" | "awaiting_archive" | "partially_succeeded" | "succeeded" | "failed" | "canceling" | "canceled" | "needs_attention";
+        AcademicSyncCancelBatchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        AcademicSyncEducationLevel: "undergraduate" | "graduate";
+        AcademicSyncPreview: {
+            /** Format: uint64 */
+            candidate_count: number | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            error_code: string | null;
+            period_id: string | null;
+            preview_id: string;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            state: components["schemas"]["AcademicSyncPreviewState"];
+        };
+        AcademicSyncPreviewInput: {
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            /** @description 成绩可省略或为空表示全部学期，其余用途必填 */
+            period_id?: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** @description selected 范围必填；按字符串保留前导零，服务端规范化后去重 */
+            student_nos?: string[];
+            /**
+             * @deprecated
+             * @description 旧契约兼容字段，不再支持按平台用户创建新批次
+             */
+            user_ids?: number[];
+        };
+        AcademicSyncPreviewResponseBody: {
+            data: components["schemas"]["AcademicSyncPreview"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncPreviewState: "preparing" | "ready" | "failed";
+        /** @enum {string} */
+        AcademicSyncPurpose: "grades" | "course_selections" | "courses" | "exams";
+        AcademicSyncRetryBatchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        AcademicSyncScope: "all" | "selected";
+        AcademicSyncTask: {
+            /** @description 独立教务账号 ID，缺少托管记录的候选为零 */
+            account_id: string;
+            /** Format: uint64 */
+            attempt_count: number;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            error_code: string | null;
+            period_id: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            /** Format: date-time */
+            started_at: string | null;
+            state: components["schemas"]["AcademicSyncTaskState"];
+            student_no: string;
+            task_id: string;
+            /**
+             * Format: uint64
+             * @deprecated
+             * @description 旧用户任务兼容字段，新账号任务固定为零
+             */
+            user_id: number;
+        };
+        AcademicSyncTaskPage: {
+            items: components["schemas"]["AcademicSyncTask"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicSyncTaskPageResponseBody: {
+            data: components["schemas"]["AcademicSyncTaskPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncTaskState: "queued" | "running" | "awaiting_archive" | "succeeded" | "failed" | "skipped" | "canceled" | "needs_attention";
         AcademicIdentity: {
             /** Format: date-time */
             created_at: string;
@@ -14564,6 +15563,177 @@ export interface components {
                 "application/json": components["schemas"]["MemberGeneralEducationModuleListResponseBody"];
             };
         };
+        /** @description 教务账号凭据元数据游标分页 */
+        AcademicCredentialAccountPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialAccountPageResponseBody"];
+            };
+        };
+        /** @description 教务账号凭据元数据，不包含密码 */
+        AcademicCredentialAccountResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialAccountResponseBody"];
+            };
+        };
+        /** @description 一次性托管绑定意图和凭据入口票据 */
+        AcademicCredentialHostingIntentResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingIntentResponseBody"];
+            };
+        };
+        /** @description 本人教务凭据托管状态 */
+        AcademicCredentialHostingStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingStatusResponseBody"];
+            };
+        };
+        /** @description 教务凭据托管查询任务 */
+        AcademicCredentialHostingTaskResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingTaskResponseBody"];
+            };
+        };
+        /** @description 成绩排名批次分页 */
+        AcademicRankingBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingBatchPageResponseBody"];
+            };
+        };
+        /** @description 已发布排名批次 */
+        AcademicRankingBatchResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingBatchResponseBody"];
+            };
+        };
+        /** @description 排名报告查看授权列表 */
+        AcademicRankingGrantListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingGrantListResponseBody"];
+            };
+        };
+        /** @description 排名报告查看授权 */
+        AcademicRankingGrantResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingGrantResponseBody"];
+            };
+        };
+        /** @description 撤销授权结果 */
+        AcademicRankingGrantRevokeResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingGrantRevokeResponseBody"];
+            };
+        };
+        /** @description 成绩排名小组详情 */
+        AcademicRankingGroupDetailResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingGroupDetailResponseBody"];
+            };
+        };
+        /** @description 成绩排名小组分页 */
+        AcademicRankingGroupPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingGroupPageResponseBody"];
+            };
+        };
+        /** @description 成绩排名小组 */
+        AcademicRankingGroupResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingGroupResponseBody"];
+            };
+        };
+        /** @description 退出小组结果 */
+        AcademicRankingMembershipLeaveResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingMembershipLeaveResponseBody"];
+            };
+        };
+        /** @description 当前用户的教务身份与同步概况 */
+        AcademicRankingProfileResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingProfileResponseBody"];
+            };
+        };
+        /** @description 成绩排名报告 */
+        AcademicRankingReportResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingReportResponseBody"];
+            };
+        };
+        /** @description 可用成绩排名规则 */
+        AcademicRankingRuleListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingRuleListResponseBody"];
+            };
+        };
+        /** @description 成绩同步结果 */
+        AcademicRankingSyncResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingSyncResponseBody"];
+            };
+        };
+        /** @description 排名批次撤回结果 */
+        AcademicRankingWithdrawResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicRankingWithdrawResponseBody"];
+            };
+        };
         /** @description 课程通过率分页 */
         AcademicCoursePassRatePageResponse: {
             headers: {
@@ -14607,6 +15777,42 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["AcademicStatisticsRunAcceptedResponseBody"];
+            };
+        };
+        /** @description 教务同步批次分页 */
+        AcademicSyncBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchPageResponseBody"];
+            };
+        };
+        /** @description 教务同步批次 */
+        AcademicSyncBatchResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchResponseBody"];
+            };
+        };
+        /** @description 教务批次候选人数预演 */
+        AcademicSyncPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncPreviewResponseBody"];
+            };
+        };
+        /** @description 教务同步子任务分页 */
+        AcademicSyncTaskPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncTaskPageResponseBody"];
             };
         };
         /** @description 校园身份认证材料上传结果 */
@@ -16388,6 +17594,52 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    LegacyWeoucConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 配置 JSON 原文结构 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    LegacyWeoucConfigPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 配置 JSON 原文结构 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     LegacyWeoucBind: {
         parameters: {
             query?: never;
@@ -17546,6 +18798,473 @@ export interface operations {
             200: components["responses"]["MemberGeneralEducationModuleListResponse"];
         };
     };
+    GetAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    DeleteAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAcademicCredentialHostingInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAcademicCredentialHostingInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAcademicCredentialHostingIntent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingIntentInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicCredentialHostingIntentResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAcademicCredentialHostingTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAcademicCredentialHostingTaskInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicCredentialHostingTaskResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAcademicCredentialHostingTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingTaskResponse"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicCredentialAccounts: {
+        parameters: {
+            query?: {
+                after_account_id?: string;
+                max_account_id?: string;
+                page_size?: number;
+                provider?: string;
+                education_level?: "undergraduate" | "graduate";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialAccountPageResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminAcademicCredentialAccountState: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAcademicCredentialAccountStateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialAccountResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    DeleteAcademicRankingGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingGrantRevokeResponse"];
+        };
+    };
+    ListMyAcademicRankingGroups: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingGroupPageResponse"];
+        };
+    };
+    CreateAcademicRankingGroup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @enum {string} */
+                    education_level: "undergraduate" | "graduate";
+                    period_ids: string[];
+                    rule_key: string;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicRankingGroupResponse"];
+        };
+    };
+    JoinAcademicRankingGroup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    invitation_code: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicRankingGroupResponse"];
+        };
+    };
+    GetAcademicRankingGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingGroupDetailResponse"];
+        };
+    };
+    ListAcademicRankingGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingGrantListResponse"];
+        };
+    };
+    PutAcademicRankingGrant: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    recipient_student_no: string;
+                    include_details: boolean;
+                    /** Format: date-time */
+                    expires_at?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicRankingGrantResponse"];
+        };
+    };
+    ReviewAcademicRankingGroupMember: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    member_id: number;
+                    /** @enum {string} */
+                    status: "approved" | "rejected";
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicRankingGroupDetailResponse"];
+        };
+    };
+    LeaveAcademicRankingGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingMembershipLeaveResponse"];
+        };
+    };
+    PublishAcademicRankingGroup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    allow_partial: boolean;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicRankingBatchResponse"];
+        };
+    };
+    GetAcademicRankingProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingProfileResponse"];
+        };
+    };
+    ListAcademicRankingReports: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingBatchPageResponse"];
+        };
+    };
+    GetAcademicRankingReport: {
+        parameters: {
+            query?: {
+                view?: "personal" | "shared";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingReportResponse"];
+        };
+    };
+    ListAcademicRankingRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingRuleListResponse"];
+        };
+    };
+    SyncAcademicRankingGrades: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    password: string;
+                    period_ids: string[];
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicRankingSyncResponse"];
+        };
+    };
+    ListAdminAcademicRankingBatches: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingBatchPageResponse"];
+        };
+    };
+    WithdrawAcademicRankingBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingWithdrawResponse"];
+        };
+    };
+    ListAdminAcademicRankingGroups: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicRankingGroupPageResponse"];
+        };
+    };
     ListAcademicCoursePassRates: {
         parameters: {
             query?: {
@@ -17654,6 +19373,162 @@ export interface operations {
             202: components["responses"]["AcademicStatisticsRunAcceptedResponse"];
             400: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicSyncBatches: {
+        parameters: {
+            query?: {
+                purpose?: "grades" | "course_selections" | "courses" | "exams";
+                education_level?: "undergraduate" | "graduate";
+                state?: "preparing" | "queued" | "running" | "awaiting_archive" | "partially_succeeded" | "succeeded" | "failed" | "canceling" | "canceled" | "needs_attention";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncBatchPageResponse"];
+        };
+    };
+    CreateAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncBatchResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CancelAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncCancelBatchInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RetryFailedAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncRetryBatchInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicSyncBatchTasks: {
+        parameters: {
+            query?: {
+                state?: "queued" | "running" | "awaiting_archive" | "succeeded" | "failed" | "skipped" | "canceled" | "needs_attention";
+                user_id?: number;
+                account_id?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncTaskPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CreateAdminAcademicSyncPreview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncPreviewInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncPreviewResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAcademicSyncPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                preview_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncPreviewResponse"];
+            404: components["responses"]["Error"];
         };
     };
     GetAcademicVerification: {

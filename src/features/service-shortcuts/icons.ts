@@ -27,6 +27,12 @@ const serviceShortcutIcons: Record<string, ServiceShortcutIconVariants> = {
       dark: { src: require('../../assets/icons/services-stitch/grades-category-dark.svg'), tone: 'blue' },
     },
   },
+  'grade-ranking': {
+    category: {
+      light: { src: require('../../assets/icons/services-stitch/grades-category-light.svg'), tone: 'blue' },
+      dark: { src: require('../../assets/icons/services-stitch/grades-category-dark.svg'), tone: 'blue' },
+    },
+  },
   'exams': {
     category: {
       light: { src: require('../../assets/icons/services-stitch/exams-category-light.svg'), tone: 'blue' },
