@@ -34,6 +34,10 @@ const homeStyleSource = readFileSync(
   resolve(__dirname, '../src/pages/index/index.scss'),
   'utf8',
 )
+const courseCarouselSource = readFileSync(
+  resolve(__dirname, '../src/features/home/course-carousel.tsx'),
+  'utf8',
+)
 const feedAdapterSource = readFileSync(
   resolve(__dirname, '../src/features/home/feed-post-adapter.ts'),
   'utf8',
@@ -59,11 +63,9 @@ const freshBarrageStyleSource = readFileSync(
   'utf8',
 )
 const visibleHomeServicesSource = homeSource.match(
-  /const visibleHomeServices = quickServices\.filter\(\(service\) => \{([\s\S]*?)\n  \}\)/,
+  /const visibleHomeServices = shortcutKeys[\s\S]*?=> \{([\s\S]*?)\n  \}\)/,
 )?.[1] || ''
-const serviceModuleKeysSource = homeSource.match(
-  /const serviceModuleKeys:[\s\S]*?= \{([\s\S]*?)\n\}/,
-)?.[1] || ''
+const serviceModuleKeysSource = readFileSync(resolve(__dirname, '../src/features/service-shortcuts/catalog.ts'), 'utf8')
 
 assert.ok(
   !homeSource.includes('const homeServiceKeys')
@@ -77,7 +79,7 @@ assert.ok(
 )
 assert.ok(
   visibleHomeServicesSource.includes('const moduleKey = serviceModuleKeys[service.key]')
-    && visibleHomeServicesSource.includes("if (!moduleKey) return 'route' in service && Boolean(service.route)")
+    && visibleHomeServicesSource.includes("return !moduleKey || resolveMiniappModule")
     && visibleHomeServicesSource.includes(".state === 'enabled'"),
   '首页常用服务必须保留本地路由，并只展示运行时状态为 enabled 的受控入口',
 )
@@ -113,12 +115,13 @@ assert.ok(
   homeSource.includes("className='official-notices-home__heading'")
     && homeSource.includes("className='official-notices-home__heading-bar'")
     && homeSource.includes("className='official-notices-home__title'>全校通知"),
-  '全校通知必须使用 Figma 对齐的蓝色标题标记',
+  '全校通知必须保留标题和视觉标记',
 )
 assert.ok(
-  homeSource.includes("campaign: require('../../assets/icons/campaign.svg')")
-    && homeSource.includes("<Image src={icons.campaign} mode='aspectFit' />"),
-  '通知条目必须复用 Figma 对应的 campaign 矢量图标',
+  homeSource.includes('official-notices-home__source-badge')
+    && homeSource.includes('officialNoticeSourceLabels[item.source]')
+    && homeSource.includes('onClick={() => openOfficialNotice(item)}'),
+  '通知条目必须展示真实来源，并保留原通知详情入口',
 )
 assert.ok(
   homeSource.includes('const HOME_FEED_PAGE_SIZE = 8')
@@ -193,19 +196,19 @@ assert.ok(
 )
 assert.ok(
   homeSource.includes('academicStorage.getScheduleCache(')
-    && homeSource.includes('account.ok ? account.value.user.id : getActiveAcademicUserId()'),
+    && homeSource.includes('account.ok ? account.value.user.id : getCachedPageUserId()'),
   '首页课表预览应仅使用当前用户的本地缓存',
 )
 assert.ok(
-  homeSource.includes('!hasCachedCourses && hasCredential'),
+  homeSource.includes('&& hasCredential)') && !homeSource.includes('!hasCachedCourses && hasCredential'),
   '首页只有持有当前用户教务凭据时才可刷新课程，避免自动跳转重新绑定',
 )
 assert.ok(
-  homeSource.includes('getAcademicCalendarLabel(latestAcademic?.periods || [])'),
+  homeSource.includes('getAcademicCalendarLabel(cache?.periods || [])'),
   '首页标签必须与课表卡片使用同一次教务学期结果',
 )
 assert.ok(
-  homeSource.includes('setAcademicCalendarLabel(getAcademicCalendarLabel(latestAcademic?.periods || []))'),
+  homeSource.includes('setAcademicCalendarLabel(getAcademicCalendarLabel(cache?.periods || []))'),
   '首页学期标签不得改用公共校历数据源',
 )
 assert.ok(
@@ -217,7 +220,7 @@ assert.ok(
   '课程记录中的校区不得覆盖首页当前选择校区的时间表',
 )
 assert.ok(
-  homeSource.includes('第 {item.course.startSection}-{item.course.endSection} 节'),
+  readFileSync(resolve(__dirname, '../src/features/home/course-carousel.tsx'), 'utf8').includes('item.course.startSection === item.course.endSection'),
   '首页课程卡片必须展示具体节次',
 )
 assert.ok(
@@ -298,11 +301,12 @@ assert.match(
   '首页混排 Feed 双点入口尺寸必须与可见底板一致',
 )
 assert.ok(
-  homeSource.includes("coursePreview.dayLabel === '假期' ? '假期中'")
-    && homeSource.includes('`${holidayCountdown}天后开学`')
+  homeSource.includes("coursePreview.dayLabel === '假期' ? '假期安排'")
+    && /const scheduleCountLabel = coursePreview\.dayLabel === '假期'\s*\?\s*coursePreview\.dateLabel/u.test(homeSource)
+    && homeSource.includes("{coursePreview.dayLabel !== '假期' && <Text>{coursePreview.emptyHint}</Text>}")
     && !homeSource.includes("className='schedule-card__countdown'")
-    && !homeSource.includes('holidayCountdown ? coursePreview.dateLabel'),
-  '假期课表卡必须把动态开学倒计时放在主文案下方，并移除重复开学日期',
+    && !homeSource.includes('`${holidayCountdown}天后开学`'),
+  '假期课程区必须在标题区展示开学日期，空态不再重复倒计时或开学日期',
 )
 assert.match(
   freshBarrageStyleSource,
@@ -324,55 +328,15 @@ assert.match(
   /\.hero-card--notice \.hero-card__subtitle\s*\{[^}]*-webkit-line-clamp:\s*1;/u,
   '运营横幅副标题必须稳定为一行',
 )
-assert.match(
-  homeStyleSource,
-  /\.service-panel\s*\{\s*padding:\s*18rpx 20rpx 14rpx;[\s\S]{0,620}&__simple-head\s*\{[^}]*min-height:\s*88rpx;[^}]*padding:\s*0 12rpx 4rpx;[^}]*box-sizing:\s*border-box;/u,
-  '常用服务卡片必须使用紧凑外壳，并为标题操作保留安全热区',
+assert.ok(
+  homeSource.includes('const featuredHomeServices = visibleHomeServices')
+    && homeSource.includes("service-panel__grid-item--all")
+    && homeSource.includes('onClick={openAllServices}'),
+  '首页服务宫格必须保留受运行时开关控制的精选入口，并提供全部服务入口',
 )
-assert.match(
-  homeStyleSource,
-  /&__all\s*\{[^}]*min-width:\s*88rpx;[^}]*min-height:\s*88rpx;/u,
-  '常用服务“全部”入口必须保留 88rpx 触控热区',
-)
-assert.match(
-  homeStyleSource,
-  /&__heading-bar\s*\{[^}]*width:\s*8rpx;[^}]*height:\s*32rpx;[^}]*background:\s*linear-gradient\(180deg,\s*#2b7aef,\s*#38bdf8\);/u,
-  '常用服务标题必须保留 Ousea 海洋蓝渐变标记',
-)
-assert.match(
-  homeStyleSource,
-  /&__grid-icon,[\s\S]{0,520}&__grid-item--pink &__grid-icon\s*\{[^}]*width:\s*76rpx;[^}]*height:\s*76rpx;[^}]*margin-bottom:\s*8rpx;[^}]*background:\s*#f1f5f8;[^}]*border:\s*0;[^}]*border-radius:\s*20rpx;/u,
-  '常用服务图标必须统一使用低饱和底板与圆角',
-)
-assert.match(
-  homeStyleSource,
-  /&__home-grid\s*\{[^}]*gap:\s*8rpx 4rpx;[\s\S]{0,180}&__home-grid &__grid-item\s*\{[^}]*height:\s*132rpx;/u,
-  '常用服务宫格必须使用紧凑行距和 132rpx 安全触控高度',
-)
-assert.doesNotMatch(
-  homeStyleSource,
-  /\.service-panel__home-grid \.service-panel__grid-item\s*\{[^}]*height:\s*163rpx;/u,
-  '常用服务不得被后置样式重新拉高',
-)
-assert.doesNotMatch(
-  homeStyleSource,
-  /&__grid-icon image\s*\{\s*filter:\s*brightness\(0\) saturate\(100%\)[^;}]+;/u,
-  '常用服务预着色图标不得再叠加 CSS 滤镜',
-)
-assert.match(
-  homeStyleSource,
-  /Figma 14:726[\s\S]*?\.official-notices-home\s*\{[^}]*padding:\s*0 32rpx 16rpx;[^}]*border-radius:\s*var\(--ousea-radius-card-lg,[^}]*box-shadow:\s*0 8rpx 16rpx rgba\(29, 95, 214, 0\.05\);/u,
-  '全校通知卡必须匹配 Figma 14:726 的白底、圆角与轻蓝阴影',
-)
-assert.match(
-  homeStyleSource,
-  /&__icon\s*\{[^}]*width:\s*80rpx;[^}]*height:\s*80rpx;[^}]*background:\s*var\(--campus-surface-primary,[^}]*border-radius:\s*26rpx;/u,
-  '通知条目必须使用 Ousea 浅蓝图标底座',
-)
-assert.match(
-  homeStyleSource,
-  /&__copy-title\s*\{[^}]*display:\s*-webkit-box;[^}]*font-size:\s*var\(--ousea-font-size-label,[^}]*-webkit-line-clamp:\s*2;/u,
-  '通知标题必须支持两行并使用 Ousea label 字号',
+assert.ok(
+  courseCarouselSource.includes('onDiscussion(item.course)'),
+  '课程卡必须保留进入当前课堂讨论组的入口',
 )
 assert.match(
   homeStyleSource,

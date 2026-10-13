@@ -52,7 +52,11 @@ assert.doesNotMatch(detailStyle, /\.community-detail \.business-detail-comments/
 assert.doesNotMatch(detailStyle, /\.community-detail \.business-detail-comment/u)
 
 // 详情互动返回列表时，已有帖子必须保持可见，刷新请求不能重新切到首屏骨架。
-assert.match(feedSource, /const loadedQueryKeyRef = useRef<string \| null>\(null\)/u)
+assert.match(
+  feedSource,
+  /const initialFeedCacheKey = communityCacheKey\(`feed:\$\{initialQueryKey\}`\)[\s\S]*?const initialFeedCache = readPageCache\([\s\S]*?initialFeedCacheKey[\s\S]*?const loadedQueryKeyRef = useRef<string \| null>\(initialFeedCache \? initialQueryKey : null\)/u,
+  '持久化缓存命中时必须将当前查询标记为已加载，避免详情返回或后台刷新闪回骨架屏',
+)
 assert.match(feedSource, /loadedQueryKeyRef\.current = queryKey/u)
 assert.match(feedSource, /const isCurrentQueryLoaded = loadedQueryKeyRef\.current === queryKey/u)
 assert.match(feedSource, /const hasCurrentPosts = isCurrentQueryLoaded && posts\.length > 0/u)

@@ -1,5 +1,6 @@
-import { Image, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type { CatView } from '../../api/cat-atlas'
+import VariantImage from '../../components/variant-image'
 
 export const formatCatDate = (value?: string | null) => {
   if (!value) return '暂未记录'
@@ -8,7 +9,7 @@ export const formatCatDate = (value?: string | null) => {
 }
 
 export function CatCover({ cat, large = false }: { cat: CatView; large?: boolean }) {
-  if (cat.cover_url) return <Image className={`cat-cover ${large ? 'cat-cover--large' : ''}`} src={cat.cover_url} mode='aspectFill' />
+  if (cat.cover_url) return <VariantImage className={`cat-cover ${large ? 'cat-cover--large' : ''}`} originalUrl={cat.cover_url} thumbnailUrl={cat.cover_thumbnail_url} mode='aspectFill' />
   return <View className={`cat-cover cat-cover--placeholder ${large ? 'cat-cover--large' : ''}`} ariaLabel={`${cat.name}暂无真实图片`}>
     <Text className='cat-cover__name'>{cat.name.slice(0, 1)}</Text>
     <Text className='cat-cover__hint'>还没有照片</Text>

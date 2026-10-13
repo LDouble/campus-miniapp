@@ -13,6 +13,6 @@ assert.match(feed, /Math\.min\(3, posts\.length - 1\)/u, '随机卡应插入帖�
 assert.match(feed, /WhatToEatFeedCard/u, 'Feed 应渲染今天吃什么卡片')
 assert.match(card, /onPick/u, '推荐卡应支持换一个')
 assert.match(card, /openWhatToEatDetail/u, '推荐卡应支持进入详情')
-assert.match(style, /page\.dark|page\.theme-dark/u, '推荐卡应覆盖暗黑模式')
+assert.match(style, /@media\s*\(prefers-color-scheme:\s*dark\)/u, '推荐卡应覆盖系统深色模式')
 
 process.stdout.write('community what-to-eat smoke: ok\n')

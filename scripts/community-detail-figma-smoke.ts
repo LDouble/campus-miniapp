@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import * as ts from 'typescript'
 
 const readSource = (path: string) => readFileSync(resolve(__dirname, path), 'utf8')
 
@@ -22,8 +23,45 @@ assert.ok(
   '共享评论样式必须先于图片网格进入帖子详情，避免 common chunk 的 CSS 顺序冲突',
 )
 assert.match(detailSource, /<DetailComments[\s\S]*?targetType='campus_circle_post'[\s\S]*?targetId=\{post\.id\}[\s\S]*?initialCommentId=\{focusedCommentId\}[\s\S]*?showHeading=\{false\}/u)
-assert.match(detailSource, /onApprovedDelta=\{\(delta\) => setPost/u)
-assert.match(detailSource, /onMutation=\{\(\) => \{[\s\S]*?markLifeHubSectionDirty\('community'\)/u)
+// 执行真实 JSX 回调，检查用户可见计数和精选页返回状态，不约束箭头函数写法。
+const ast = ts.createSourceFile('detail.tsx', detailSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+const callbacks = new Map<string, string>()
+const visit = (node: ts.Node) => {
+  if (ts.isJsxAttribute(node) && node.initializer && ts.isJsxExpression(node.initializer) && node.initializer.expression) {
+    callbacks.set(node.name.getText(ast), node.initializer.expression.getText(ast))
+  }
+  ts.forEachChild(node, visit)
+}
+visit(ast)
+let currentPost = { id: 7, comment_count: 2 }
+const returned: unknown[] = []
+const dirty: string[] = []
+const returnRef = { current: true }
+const callback = (name: string) => {
+  assert.ok(callbacks.has(name), `缺少 ${name} 回调`)
+  const code = ts.transpile(`const handler = ${callbacks.get(name)}`, { target: ts.ScriptTarget.ES2020 })
+  return new Function('setPost', 'todayHotReturnRef', 'post', 'saveTodayHotDetailReturn', 'markLifeHubSectionDirty', `${code}; return handler`)(
+    (update: (post: typeof currentPost) => typeof currentPost) => { currentPost = update(currentPost) },
+    returnRef, currentPost,
+    (id: number, value: unknown) => returned.push({ id, value }),
+    (section: string) => dirty.push(section),
+  )
+}
+callback('onApprovedDelta')(1)
+assert.equal(currentPost.comment_count, 3)
+assert.deepEqual(returned.pop(), { id: 7, value: { approvedCommentDelta: 1 } })
+callback('onApprovedDelta')(-10)
+assert.equal(currentPost.comment_count, 0, '删除评论后计数不能为负')
+returned.length = 0
+returnRef.current = false
+callback('onApprovedDelta')(1)
+assert.equal(currentPost.comment_count, 1)
+assert.equal(returned.length, 0, '普通详情不能写入精选页返回状态')
+returnRef.current = true
+const comment = { id: 123 }
+callback('onMutation')({ type: 'create', comment })
+assert.deepEqual(dirty, ['community'])
+assert.deepEqual(returned.pop(), { id: 7, value: { comment } })
 assert.doesNotMatch(detailSource, /(?:CommunityDetailComments|CommunityComments|CommunityCommentComposer)/u)
 
 // Figma 详情主体只能展示真实帖子字段和真实操作，不能把示例社交数据写进页面。

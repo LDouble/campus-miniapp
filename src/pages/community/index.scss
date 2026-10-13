@@ -497,7 +497,8 @@ page {
   backdrop-filter: none;
 }
 
-.campus-theme--dark {
+@media (prefers-color-scheme: dark) {
+.campus-theme {
   .community-page__eyebrow,
   .life-primary-tabs__item--active {
     color: var(--campus-text-heading, #f8fafc);
@@ -520,4 +521,7 @@ page {
   .life-hub-navigation {
     box-shadow: 0 8rpx 22rpx rgba(0, 0, 0, 0.28);
   }
+}
+
+
 }

@@ -36,6 +36,8 @@
 
 猫猫图鉴沿用已确认 Figma 首页与详情的影集视觉：`cat.cream #FFFBEB`、`paper #FAF7F2`、`sand #F4E7D6`、`line #F5F5F4`、`cocoa #292524`、`muted #847971`、`caramel #C86230`。纸面仅用于猫图鉴页面，白卡复用全局 surface；其他模块不变。二级页导航为 24rpx 中等字重，页面卡片可使用与详情一致的 48rpx 圆角。详见 `pages/cat-atlas.md`。
 
+全部服务按 Stitch 项目 `3237828770888524086` 的五列新画板执行。该页专属颜色统一登记在 `global.color.service`、阴影登记在 `global.shadow.service`，运行时只通过 `--campus-service-*` 消费；它们只作用于全部服务页和首页服务快捷入口，不重映射 `--campus-page`、`--campus-surface` 等其他页面的全局颜色。浅色页面底色为 `service.page-base #F4F7FB`，卡片为白色与 `slate-100` 边框；暗色页面为 `#0F131D`，卡片为 `surface-container-low / 90%` 且无边框。卡片分隔线必须使用 `--campus-service-divider`。分类标题标记只能使用 `--campus-service-accent-blue/green/orange`，数量徽章文字使用相应的 `--campus-service-count-*`，不得以图标前景色代替。六组图标采用平面单色底板：保留 `*-start/end` 仅为兼容既有调用，两者均为同一 plate 值；图标使用 `*-border`、`*-foreground` 与相应阴影。常用区使用 `--campus-service-shadow-{tone}`，分类区使用更低强度的 `--campus-service-shadow-category-{tone}`；暗色模式保留新稿实际使用的低强度同色辉光，禁止沿用旧稿的大面积渐变或玻璃发光。
+
 ### 2.1 基础颜色
 
 | 令牌 | 色值 | 用途 |
@@ -82,7 +84,9 @@
 
 ### 2.4 暗色模式
 
-小程序默认跟随微信与系统主题，不在业务页面各自保存主题状态。原生导航、窗口和 TabBar 通过 [`src/theme.json`](../../src/theme.json) 切换；业务页面通过全局主题 class 与语义色令牌切换。主题读取和原生背景同步必须在 App 模块加载阶段执行，并在 App `onLaunch` 阶段预热下一个 WebView；构建阶段还必须为每个页面首节点注入与用户偏好同步的 `page-meta` 作为最终校准。禁止等页面挂载后再异步换色，也禁止用淡入遮罩掩盖白闪。
+小程序统一跟随微信主题，不提供手动深浅色选项，不读取或保存独立主题偏好。原生导航、窗口和 TabBar 使用 `darkmode: true` 与 `src/theme.json`；页面、加载态、自定义 TabBar 和 AI 卡片使用 `prefers-color-scheme` 媒体查询与语义颜色。`page` 自身也定义深色变量，使页面初始背景无需等待 JS 更新。
+
+`campus-theme` 仅是页面首根的静态样式作用域，不携带运行时深浅色状态。禁止为主题注入 page-meta、修改 Page 初始 data、包裹页面生命周期、维护存活页面集合、遍历页面执行主题 setData，或通过原生换色 API、重启和重新加载覆盖微信主题。图片资源确需切换时，使用 `src/features/system-theme.ts` 读取微信主题、订阅变化并在回前台时刷新；不得用它控制页面底色。媒体查询负责颜色，图片监听只负责资源选择。
 
 | 令牌 | 暗色色值 | 用途 |
 | --- | --- | --- |

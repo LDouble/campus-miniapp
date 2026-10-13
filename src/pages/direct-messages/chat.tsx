@@ -7,6 +7,7 @@ import { getCurrentIdentity, getCurrentUser } from '../../api/account'
 import { uploadMediaImage } from '../../api/media'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
 import UserAvatar from '../../components/user-avatar'
+import VariantImage from '../../components/variant-image'
 import { openPublicProfile } from '../../features/profile/public-profile'
 import StickerContent from '../../components/sticker-content'
 import StickerPicker from '../../components/sticker-picker'
@@ -29,6 +30,7 @@ import {
   resolvePendingDirectMessageSend,
   type PendingDirectMessageSend,
 } from '../../features/direct-messages/composer'
+import { privateMessageErrorMessage } from '../../features/direct-messages/errors'
 import {
   privateMessageImageFrameSize,
 } from '../../features/direct-messages/media-review'
@@ -56,9 +58,7 @@ const avatarFallback = (value: string, fallback = '海') => {
   return normalized ? normalized.slice(0, 1).toUpperCase() : fallback
 }
 
-const imageErrorMessage = (error: unknown, fallback: string) => (
-  isApiError(error) ? error.message : error instanceof Error ? error.message : fallback
-)
+const imageErrorMessage = privateMessageErrorMessage
 
 type ImageRecoveryAction = 'reupload' | 'send-image' | null
 
@@ -499,12 +499,21 @@ export default function DirectMessageChatPage() {
 
   useLoad((options) => {
     const id = parseDirectMessageConversationId(options.id)
+    const prefillSource = String(options.prefill_source || '')
+    const prefill = String(options.prefill || '').slice(0, 180)
+    if (
+      prefillSource === 'timetable-buddy'
+      && ['今天有空一起吃饭吗？', '找个共同空闲的时间一起自习吧？'].includes(prefill)
+    ) {
+      setDraft(prefill)
+      Taro.showToast({ title: '消息已预填，请检查后手动发送', icon: 'none' })
+    }
     void loadInitial(id)
   })
 
   useDidShow(() => {
     visibleRef.current = true
-    void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+    void refreshPrivateMessageUnreadCount().catch(() => undefined)
     schedulePolling()
   })
 
@@ -568,7 +577,7 @@ export default function DirectMessageChatPage() {
       })
     } catch (sendError) {
       Taro.showToast({
-        title: isApiError(sendError) ? sendError.message : '发送失败，请稍后重试',
+        title: privateMessageErrorMessage(sendError, '发送失败，请稍后重试'),
         icon: 'none',
       })
     } finally {
@@ -817,9 +826,10 @@ export default function DirectMessageChatPage() {
                               urls: [image.url],
                             })}
                           >
-                            <Image
+                            <VariantImage
                               className='direct-chat-message__image'
-                              src={image.url}
+                              originalUrl={image.url}
+                              thumbnailUrl={(image as typeof image & { thumbnail_url?: string | null }).thumbnail_url}
                               mode='aspectFill'
                               lazyLoad
                               onError={() => markMessageImageFailed(message.id)}

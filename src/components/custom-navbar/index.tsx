@@ -1,10 +1,7 @@
-import { useEffect, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import { getSystemState } from '../../state/system'
-import {
-  applyCampusThemeToNativeChrome,
-} from '../../features/theme-preference'
 import './index.scss'
 
 interface CustomNavbarProps {
@@ -85,10 +82,6 @@ function CustomNavbar({
   rightContent,
   rightContentClassName = '',
 }: CustomNavbarProps) {
-  useEffect(() => {
-    applyCampusThemeToNativeChrome()
-  }, [])
-
   const metrics = getNavbarMetrics()
   const navbarHeight = metrics.statusBarHeight + metrics.navigationBarHeight
   const goBack = () => {

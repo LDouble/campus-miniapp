@@ -1,4 +1,5 @@
 const { apiUrl, wechatAppId } = require('./config.js')
+const { withMiniappVersion } = require('./miniapp-version.js')
 
 // 与主包共享登录态；Skill 仍自行完成 wx.login，避免依赖主包模块运行状态。
 const ACCESS_TOKEN_KEY = 'campus.auth.accessToken.v1'
@@ -76,7 +77,7 @@ const login = () => {
         url: apiUrl('/api/v1/auth/wechat/login'),
         method: 'POST',
         data: { app_id: wechatAppId(), code },
-        header: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        header: withMiniappVersion({ Accept: 'application/json', 'Content-Type': 'application/json' }),
       })
       const body = responseData(response)
       if (response.statusCode < 200 || response.statusCode >= 300 || !body.data) {
@@ -106,7 +107,7 @@ const refreshAccessToken = (failedAccessToken = '') => {
           url: apiUrl('/api/v1/auth/refresh'),
           method: 'POST',
           data: { refresh_token: refreshToken },
-          header: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          header: withMiniappVersion({ Accept: 'application/json', 'Content-Type': 'application/json' }),
         })
         const body = responseData(response)
         if (response.statusCode >= 200 && response.statusCode < 300 && body.data) {

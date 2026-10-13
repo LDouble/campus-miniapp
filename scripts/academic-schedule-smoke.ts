@@ -2,6 +2,9 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
+  compareCoursesForDisplay,
+  getCourseDisplaySpan,
+  getCourseDisplayGroups,
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
@@ -34,6 +37,88 @@ const course = (id: string, periodId: string): Course => ({
   color: 'aqua',
   source: 'official',
 })
+
+const officialShortCourse: Course = {
+  ...course('official-7-8', '2026-fall'),
+  startSection: 7,
+  endSection: 8,
+}
+const auditLongCourse: Course = {
+  ...course('audit-5-8', '2026-fall'),
+  startSection: 5,
+  endSection: 8,
+  source: 'audit',
+}
+const overlappingCourses = [auditLongCourse, officialShortCourse]
+  .sort((left, right) => compareCoursesForDisplay(left, right, 1))
+assert.equal(overlappingCourses[0], officialShortCourse, '同周冲突应优先展示教务课程')
+assert.deepEqual(
+  getCourseDisplaySpan(overlappingCourses),
+  { startSection: 5, endSection: 8 },
+  '冲突卡片应覆盖 5–8 节，而非教务课程自身的 7–8 节',
+)
+assert.deepEqual(
+  getCourseDisplaySpan([
+    { ...officialShortCourse, startSection: 5 },
+    { ...auditLongCourse, startSection: 7 },
+  ]),
+  { startSection: 5, endSection: 8 },
+  '教务课程较长时仍应覆盖完整冲突时段',
+)
+assert.equal(
+  [auditLongCourse, { ...officialShortCourse, weeks: [2] }]
+    .sort((left, right) => compareCoursesForDisplay(left, right, 1))[0],
+  auditLongCourse,
+  '当前周课程应优先于其他周次的教务课程',
+)
+
+const fridayCourses: Course[] = [
+  { ...course('学术道德与规范', '秋季'), weekday: 5, endSection: 4, weeks: [2, 4] },
+  { ...course('极地海洋动力学', '秋季'), weekday: 5, weeks: Array.from({ length: 16 }, (_, i) => i + 5) },
+  { ...course('计算地球流体动力学', '秋季'), weekday: 5, startSection: 3, endSection: 4, weeks: Array.from({ length: 16 }, (_, i) => i + 5) },
+]
+const fridayCards = getCourseDisplayGroups(fridayCourses, 5)
+assert.deepEqual(
+  fridayCards.map((card) => [card.course.name, card.startSection, card.endSection]),
+  [['极地海洋动力学', 1, 2], ['计算地球流体动力学', 3, 4]],
+  '其他周的长课程不得扩展本周两张卡片并造成遮挡',
+)
+assert.ok(fridayCards.every((card) => card.courses.some((item) => item.name === '学术道德与规范')),
+  '其他周课程应保留在两个相关卡片的详情中')
+assert.deepEqual(
+  getCourseDisplayGroups(fridayCourses, 2).map((card) => [card.course.name, card.startSection, card.endSection]),
+  [['学术道德与规范', 1, 4]],
+  '第2周应展示学术道德课程，未来两门课程只作为相关课程',
+)
+assert.deepEqual(
+  getCourseDisplayGroups([auditLongCourse, officialShortCourse], 1).map((card) => [card.course.id, card.startSection, card.endSection]),
+  [['official-7-8', 5, 8]],
+  '同周真实冲突仍应优先教务课程并覆盖完整时段',
+)
+
+for (const week of [5, 20]) {
+  assert.deepEqual(
+    getCourseDisplayGroups([...fridayCourses].reverse(), week).map((card) => [card.course.name, card.startSection, card.endSection]),
+    [['极地海洋动力学', 1, 2], ['计算地球流体动力学', 3, 4]],
+    '课程返回顺序和学期末边界不能影响本周独立课程展示',
+  )
+}
+const chainCourses = [
+  { ...course('链首', '秋季'), endSection: 3 },
+  { ...course('链中', '秋季'), startSection: 3, endSection: 5 },
+  { ...course('链尾', '秋季'), startSection: 5, endSection: 7 },
+]
+const chainCards = getCourseDisplayGroups(chainCourses, 1)
+assert.equal(chainCards.length, 1, '传递重叠的本周课程必须归入同一卡片，避免重复覆盖')
+assert.deepEqual([chainCards[0].startSection, chainCards[0].endSection], [1, 7])
+assert.deepEqual(new Set(chainCards[0].courses.map((item) => item.id)), new Set(chainCourses.map((item) => item.id)),
+  '冲突详情必须包含完整传递冲突组')
+assert.deepEqual(getCourseDisplayGroups([], 1), [], '空课表不得生成无效卡片')
+assert.equal(getCourseDisplayGroups(fridayCourses, 1).length, 1, '无本周课程时保留未来课程预览')
+assert.equal(getCourseDisplayGroups([
+  fridayCourses[1],
+  { ...fridayCourses[2], weekday: 4 },
+], 5).length, 2, '不同星期的课程不得合并')
 
 const period = (id: string, startDate: string, isCurrent = false): AcademicPeriod => ({
   id,
@@ -338,6 +423,16 @@ assert.deepEqual(
   '同步课表应保留同一选课号的全部真实时段，仅隐藏选课号相同的本地草稿',
 )
 assert.match(
+  academicRepositorySource,
+  /mapPersonalTimetableItemCourses[\s\S]*?const classNum = item\.opening_code\?\.trim\(\) \|\| undefined[\s\S]*?\.\.\.\(classNum \? \{ classNum \} : \{\}\)/u,
+  '蹭课课表必须使用 opening_code 与正式课程按同一选课号关联',
+)
+assert.doesNotMatch(
+  academicRepositorySource,
+  /mapPersonalTimetableItemCourses[\s\S]*?classNum:\s*item\.(?:class_name|offering_id)/u,
+  '缺失 opening_code 时不能回退为班级名称或开课实例 ID',
+)
+assert.match(
   academicStyleSource,
   /详情卡片使用统一中性承载面[\s\S]*?\.course-float-card\s*\{[\s\S]*?background:\s*var\(--campus-surface/u,
   '课程详情浮层应使用统一中性承载面',
@@ -517,7 +612,9 @@ require.cache[taroPath] = { exports: { default: {
   getStorageSync: (key: string) => localValues.get(key),
   setStorageSync: (key: string, value: unknown) => localValues.set(key, value),
 } } } as NodeModule
-const { academicStorage } = require('../src/pages/academic/storage')
+
+const { academicStorage, migrateLegacyPersonalCourses } = require('../src/pages/academic/storage')
+
 const auditCourse = { ...course('audit-1', 'A'), source: 'audit' }
 academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [auditCourse])
 assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [auditCourse])
@@ -526,5 +623,29 @@ assert.deepEqual(academicStorage.getPersonalCourses(1, 'graduate', 'A'), [])
 assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'B'), [])
 academicStorage.setPersonalCourses(1, 'undergraduate', 'A', [])
 assert.deepEqual(academicStorage.getPersonalCourses(1, 'undergraduate', 'A'), [], '移除后不恢复旧缓存')
+const legacyAuditCourse = {
+  ...course('legacy-audit-1', 'legacy-period'),
+  classNum: '旧班级名称',
+  source: 'audit' as const,
+}
+localValues.set('academic.personalCourses.v1.3.undergraduate.legacy-period', [legacyAuditCourse])
+const migratedLegacyCourses = academicStorage.getPersonalCourses(3, 'undergraduate', 'legacy-period')
+assert.equal(migratedLegacyCourses.length, 1, 'v1 蹭课缓存必须保留课程展示')
+assert.equal(migratedLegacyCourses[0].classNum, undefined, 'v1 蹭课缓存必须移除非选课号 classNum')
+assert.equal(
+  migrateLegacyPersonalCourses([legacyAuditCourse], 'legacy-period')[0].classNum,
+  undefined,
+  '旧缓存迁移不得把 class_name 或 offering_id 作为课堂讨论关联字段',
+)
+const v2AuditCourse = {
+  ...legacyAuditCourse,
+  classNum: 'XK-1001',
+}
+localValues.set('academic.personalCourses.v2.3.undergraduate.legacy-period', [v2AuditCourse])
+assert.deepEqual(
+  academicStorage.getPersonalCourses(3, 'undergraduate', 'legacy-period'),
+  [v2AuditCourse],
+  'v2 缓存应优先保留服务端 opening_code 映射得到的选课号',
+)
 if (previousTaro) require.cache[taroPath] = previousTaro
 else delete require.cache[taroPath]

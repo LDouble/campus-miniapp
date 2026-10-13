@@ -12,6 +12,7 @@ import type {
   AcademicVerificationStatus,
   AcademicVerificationUploadTarget,
 } from './types'
+import { invalidateClientBootstrap } from './client-bootstrap'
 import type { operations } from './generated/schema'
 import {
   emptyAcademicVerificationStatus,
@@ -60,7 +61,10 @@ export const getAcademicVerificationStatus = (
   options: AcademicVerificationRequestOptions = {},
 ) => academicVerificationResource.ensure(requestAcademicVerificationStatus, options)
 
-export const invalidateAcademicVerificationStatus = () => academicVerificationResource.invalidate()
+export const invalidateAcademicVerificationStatus = () => {
+  academicVerificationResource.invalidate()
+  invalidateClientBootstrap()
+}
 
 export const seedAcademicVerificationStatus = (status: AcademicVerificationStatus) => (
   academicVerificationResource.seed(status)

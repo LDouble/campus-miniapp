@@ -1,5 +1,11 @@
 import type { LifeHubSection } from './business-theme'
 
+const mutationListeners = new Set<(section: LifeHubSection) => void>()
+export const subscribeLifeHubMutation = (listener: (section: LifeHubSection) => void) => {
+  mutationListeners.add(listener)
+  return () => { mutationListeners.delete(listener) }
+}
+
 export const LIFE_HUB_DATA_FRESH_MS = 90_000
 
 type RefreshState = {
@@ -25,7 +31,8 @@ export const getLifeHubRefreshRevision = (section: LifeHubSection) => (
   refreshStates[section].revision
 )
 
-export const markLifeHubSectionDirty = (section: LifeHubSection) => {
+export const markLifeHubSectionDirty = (section: LifeHubSection, clearPageCache = true) => {
+  if (clearPageCache) mutationListeners.forEach((listener) => listener(section))
   refreshStates[section].revision += 1
 }
 

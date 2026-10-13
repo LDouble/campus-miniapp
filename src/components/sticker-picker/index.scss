@@ -85,9 +85,13 @@
 }
 
 @media (prefers-color-scheme: dark) {
+.campus-theme {
   .sticker-picker__trigger-icon {
     filter: brightness(0) saturate(100%) invert(82%) sepia(26%) saturate(733%) hue-rotate(181deg) brightness(101%) contrast(98%);
   }
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {

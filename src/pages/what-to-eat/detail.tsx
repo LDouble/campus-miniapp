@@ -3,6 +3,7 @@ import Taro, { useRouter } from '@tarojs/taro'
 import { Button, Image, Text, View } from '@tarojs/components'
 import BottomSheet from '../../components/bottom-sheet'
 import CustomNavbar from '../../components/custom-navbar'
+import VariantImage from '../../components/variant-image'
 import MediaImageEditor from '../../components/media-image-editor'
 import { KeyboardSafeTextarea } from '../../components/keyboard-safe-input'
 import { getMiniappRuntimeConfig, getSelectedCampus } from '../../features/runtime-config'
@@ -75,6 +76,7 @@ export default function FoodDetailPage() {
   const reviewQueryHandledRef = useRef('')
   const listingId = Number(params.id)
   const listingImageUrls = item?.image_urls || []
+  const listingThumbnailUrls = (item as (FoodListing & { thumbnail_urls?: Array<string | null> }) | undefined)?.thumbnail_urls || []
   const selectedRatingOption = ratingScore > 0 ? RATING_OPTIONS[ratingScore - 1] : undefined
 
   useCampusShare(() => ({
@@ -254,9 +256,10 @@ export default function FoodDetailPage() {
         <>
           {listingImageUrls[0] && (
             <View className='food-detail-cover' ariaLabel={`${item.name}封面图片`}>
-              <Image
+              <VariantImage
                 className='food-detail-cover__image'
-                src={listingImageUrls[0]}
+                originalUrl={listingImageUrls[0]}
+                thumbnailUrl={listingThumbnailUrls[0]}
                 mode='aspectFill'
                 ariaLabel={`查看${item.name}封面图片`}
                 onClick={() => previewImages(listingImageUrls, listingImageUrls[0])}
@@ -437,6 +440,7 @@ export default function FoodDetailPage() {
 }
 
 function ReviewCard({ review }: { review: FoodListingReview }) {
+  const thumbnailUrls = (review as FoodListingReview & { thumbnail_urls?: Array<string | null> }).thumbnail_urls || []
   return (
     <View className='food-detail-review-card'>
       <View className='food-detail-review-card__head'>
@@ -454,9 +458,10 @@ function ReviewCard({ review }: { review: FoodListingReview }) {
       {review.image_urls.length > 0 && (
         <View className='food-detail-review-card__images'>
           {review.image_urls.map((imageUrl, index) => (
-            <Image
+            <VariantImage
               key={`${imageUrl}-${index}`}
-              src={imageUrl}
+              originalUrl={imageUrl}
+              thumbnailUrl={thumbnailUrls[index]}
               mode='aspectFill'
               ariaLabel={`评价图片 ${index + 1}`}
               onClick={() => previewImages(review.image_urls, imageUrl)}

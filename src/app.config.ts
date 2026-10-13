@@ -1,10 +1,12 @@
+import { activityPopupMiniProgramAppIds } from './features/activity-popup/mini-program-targets'
+
 const isQualificationEdition = __CAMPUS_APP_EDITION__ === 'qualification'
 const isWechatAiEnabled = __CAMPUS_WECHAT_AI_ENABLED__
 const fullPages = [
   'pages/index/index',
-  'pages/app-login/index',
   'pages/community/index',
   'pages/community/detail',
+  'pages/today-hot/index',
   'pages/community/topic/index',
   'pages/errands/detail',
   'pages/marketplace/detail',
@@ -24,6 +26,7 @@ const fullPages = [
   'pages/academic/grades/index',
   'pages/academic/exams/index',
   'pages/academic/selection/index',
+  'pages/academic/course-addition-results/index',
   'pages/academic/statistics/courses',
   'pages/academic/statistics/index',
   'pages/academic/general-education/index',
@@ -51,6 +54,7 @@ const fullPages = [
 const qualificationExcludedPages = new Set([
   'pages/community/index',
   'pages/community/detail',
+  'pages/today-hot/index',
   'pages/community/topic/index',
   'pages/errands/detail',
   'pages/marketplace/detail',
@@ -70,7 +74,6 @@ const qualificationExcludedPages = new Set([
 
 const mainPagePaths = new Set([
   'pages/index/index',
-  'pages/app-login/index',
   'pages/community/index',
   'pages/messages/index',
   'pages/profile/index',
@@ -80,6 +83,7 @@ const mainPages = fullPages.filter((page) => mainPagePaths.has(page))
 
 const socialMainPages = [
   'pages/community/detail',
+  'pages/today-hot/index',
   'pages/community/topic/index',
   'pages/publish/index',
   'pages/my-services/index',
@@ -96,7 +100,7 @@ const packageDefinitions = [
   {
     root: 'pages/academic',
     sourceRoot: 'pages/academic',
-    pages: ['schedule/index', 'grades/index', 'exams/index', 'selection/index', 'statistics/courses', 'statistics/index', 'course-catalog/index', 'general-education/index', 'rankings/index', 'rankings/group', 'rankings/report'],
+    pages: ['schedule/index', 'timetable-buddy/index', 'grades/index', 'exams/index', 'selection/index', 'course-addition-results/index', 'statistics/courses', 'statistics/index', 'course-catalog/index', 'general-education/index', 'rankings/index', 'rankings/group', 'rankings/report'],
   },
   { root: 'pages/clubs', sourceRoot: 'pages/clubs', pages: ['index', 'detail', 'edit', 'mine'] },
   { root: 'pages/shuttle', sourceRoot: 'pages/shuttle', pages: ['index', 'detail'] },
@@ -174,7 +178,7 @@ const preloadRule = Object.fromEntries(
   ]),
 )
 
-const targetMiniProgramAppId = __CAMPUS_TARGET_WECHAT_APP_ID__.trim()
+const navigateToMiniProgramAppIdList = activityPopupMiniProgramAppIds()
 
 const wechatAiModeConfig = isWechatAiEnabled
   ? {
@@ -208,11 +212,13 @@ export default defineAppConfig({
     navigationBarBackgroundColor: '@navigationBarBackgroundColor',
     navigationBarTitleText: 'OUSea',
     navigationBarTextStyle: '@navigationBarTextStyle' as 'black',
-    backgroundColor: '@backgroundColor'
+    backgroundColor: '@backgroundColor',
+    backgroundColorTop: '@backgroundColor',
+    backgroundColorBottom: '@backgroundColor'
   },
   permission: {
     'scope.userLocation': {
-      desc: '用于记录你遇到猫咪的地点'
+      desc: '用于识别所在校区并提醒切换校区与作息，以及记录遇到猫咪的地点'
     }
   },
   requiredPrivateInfos: ['choosePoi', 'getLocation'],
@@ -225,8 +231,8 @@ export default defineAppConfig({
     borderStyle: '@tabBarBorderStyle' as 'white',
     list: tabBarList
   },
-  ...(isQualificationEdition && targetMiniProgramAppId
-    ? { navigateToMiniProgramAppIdList: [targetMiniProgramAppId] }
+  ...(navigateToMiniProgramAppIdList.length
+    ? { navigateToMiniProgramAppIdList }
     : {}),
   ...wechatAiModeConfig
 })

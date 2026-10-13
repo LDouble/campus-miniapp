@@ -6,7 +6,7 @@ import { syncPrivateMessageUnreadBadge } from '../../utils/tabbar'
 import { privateMessagesRepository } from './repository'
 
 const unreadResource = createSharedResource<PrivateMessageUnreadCount>({
-  maxAgeMs: 45_000,
+  maxAgeMs: 15_000,
   group: 'session',
 })
 

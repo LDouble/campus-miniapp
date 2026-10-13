@@ -5,6 +5,11 @@ import { useViewPageVisible } from './use-view-page-visible'
 import type { CampusCirclePostView, CampusCircleSectionView } from '../../api/types'
 import { pickRandomFood, type FoodListing } from '../../api/what-to-eat'
 import { getMiniappRuntimeConfig, getSelectedCampus } from '../runtime-config'
+import {
+  communityCacheKey,
+  isCommunityFeedCache,
+  type CommunityFeedCacheEntry,
+} from './community-cache'
 import { isApiError } from '../../api/client'
 import { requestWechatSubscriptionForModule } from '../wechat-subscription'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
@@ -28,6 +33,12 @@ import {
   confirmCommunityPinAction,
   getCommunityPinAction,
 } from './pin-action'
+import {
+  getPageCacheScope,
+  readPageCache,
+  removePageCache,
+  writePageCache,
+} from '../../state/page-cache'
 import './feed-panel.scss'
 
 type Props = {
@@ -45,15 +56,20 @@ type Props = {
   onSelectSection?: (sectionId: number) => void
 }
 
-type CommunityFeedCacheEntry = {
-  posts: CampusCirclePostView[]
-  page: number
-  total: number
+type MemoryCommunityFeedCacheEntry = CommunityFeedCacheEntry & {
   refreshedAt: number
   revision: number
 }
 
-const communityFeedCache = new Map<string, CommunityFeedCacheEntry>()
+const isMemoryCommunityFeedCache = (
+  entry: CommunityFeedCacheEntry | MemoryCommunityFeedCacheEntry,
+): entry is MemoryCommunityFeedCacheEntry => (
+  'revision' in entry
+  && typeof entry.revision === 'number'
+  && typeof entry.refreshedAt === 'number'
+)
+
+const communityFeedCache = new Map<string, MemoryCommunityFeedCacheEntry>()
 const COMMUNITY_FEED_CACHE_LIMIT = 20
 const WHAT_TO_EAT_CACHE_KEY = 'community.what-to-eat-feed.v1'
 
@@ -81,7 +97,7 @@ const saveWhatToEatCache = (campus: string, item: FoodListing) => {
   }
 }
 
-const saveCommunityFeedCache = (key: string, entry: CommunityFeedCacheEntry) => {
+const saveCommunityFeedCache = (key: string, entry: MemoryCommunityFeedCacheEntry) => {
   communityFeedCache.delete(key)
   communityFeedCache.set(key, entry)
   if (communityFeedCache.size <= COMMUNITY_FEED_CACHE_LIMIT) return
@@ -117,12 +133,23 @@ export default function CommunityFeedPanel({
   onSelectSection,
 }: Props) {
   const viewPageVisible = useViewPageVisible()
+  const initialQueryKey = JSON.stringify({
+    activeSectionId: activeSection?.id,
+    activeParentSectionId: activeSection?.parent_id,
+    keyword: '',
+    sort: 'latest',
+  })
+  const initialFeedCacheKey = communityCacheKey(`feed:${initialQueryKey}`)
+  const initialFeedCache = readPageCache(
+    initialFeedCacheKey,
+    isCommunityFeedCache,
+  )
   const [draftKeyword, setDraftKeyword] = useState('')
   const [keyword, setKeyword] = useState('')
-  const [posts, setPosts] = useState<CampusCirclePostView[]>([])
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [posts, setPosts] = useState<CampusCirclePostView[]>(() => initialFeedCache?.posts || [])
+  const [page, setPage] = useState(() => initialFeedCache?.page || 1)
+  const [total, setTotal] = useState(() => initialFeedCache?.total || 0)
+  const [loading, setLoading] = useState(() => !initialFeedCache)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
@@ -135,10 +162,19 @@ export default function CommunityFeedPanel({
   const [whatToEatPicking, setWhatToEatPicking] = useState(false)
   const [whatToEatCampus, setWhatToEatCampus] = useState('')
   const requestSequence = useRef(0)
+  const mountedRef = useRef(true)
   const loadingMoreRef = useRef(false)
   const pendingPinnedPost = useRef<CampusCirclePostView | null>(null)
-  const loadedQueryKeyRef = useRef<string | null>(null)
+  const loadedQueryKeyRef = useRef<string | null>(initialFeedCache ? initialQueryKey : null)
+  const activeFeedCacheKeyRef = useRef<string | null>(
+    initialFeedCache ? initialFeedCacheKey : null,
+  )
   const lastOverlayDismissSignalRef = useRef(overlayDismissSignal)
+
+  useEffect(() => () => {
+    mountedRef.current = false
+    ++requestSequence.current
+  }, [])
 
   const pickWhatToEat = useCallback(async (force = false) => {
     const campus = getSelectedCampus(getMiniappRuntimeConfig())
@@ -207,11 +243,15 @@ export default function CommunityFeedPanel({
     keyword,
     sort: 'latest',
   }), [activeParentSectionId, activeSectionId, keyword])
+  const feedCacheKey = communityCacheKey(`feed:${queryKey}`)
   const load = useCallback(async (nextPage = 1, append = false) => {
     if (!activeSectionId) return
     if (append && loadingMoreRef.current) return
     if (append) loadingMoreRef.current = true
     const requestId = ++requestSequence.current
+    const scope = getPageCacheScope()
+    const requestCacheKey = feedCacheKey
+    const cacheRevision = getLifeHubRefreshRevision('community')
     append ? setLoadingMore(true) : setLoading(true)
     setError('')
     try {
@@ -223,7 +263,9 @@ export default function CommunityFeedPanel({
         sort: 'latest',
         page: nextPage,
       })
-      if (requestId !== requestSequence.current) return
+      if (!mountedRef.current || requestId !== requestSequence.current || scope !== getPageCacheScope()
+        || requestCacheKey !== communityCacheKey(`feed:${queryKey}`)
+        || cacheRevision !== getLifeHubRefreshRevision('community')) return
       const pinned = !append && nextPage === 1
         ? pendingPinnedPost.current
         : null
@@ -231,18 +273,23 @@ export default function CommunityFeedPanel({
         ? [pinned, ...result.items.filter((item) => item.id !== pinned.id)]
         : result.items
       const refreshedAt = Date.now()
-      const revision = getLifeHubRefreshRevision('community')
       loadedQueryKeyRef.current = queryKey
+      activeFeedCacheKeyRef.current = feedCacheKey
       setPosts((current) => {
         const nextPosts = append
           ? mergeUniquePosts(current, incoming)
           : incoming
-        saveCommunityFeedCache(queryKey, {
+        saveCommunityFeedCache(requestCacheKey, {
           posts: nextPosts,
           page: result.page,
           total: Number(result.total),
           refreshedAt,
-          revision,
+          revision: cacheRevision,
+        })
+        writePageCache(requestCacheKey, {
+          posts: nextPosts,
+          page: result.page,
+          total: Number(result.total),
         })
         return nextPosts
       })
@@ -251,29 +298,32 @@ export default function CommunityFeedPanel({
       setTotal(Number(result.total))
       markLifeHubSectionFresh('community', refreshedAt)
     } catch (loadError) {
-      if (requestId !== requestSequence.current) return
+      if (!mountedRef.current || requestId !== requestSequence.current || scope !== getPageCacheScope()) return
       setError(isApiError(loadError)
         ? loadError.message
         : '没有连接到校园社区，请稍后重试')
     } finally {
       if (append) loadingMoreRef.current = false
-      if (requestId === requestSequence.current) {
+      if (mountedRef.current && requestId === requestSequence.current) {
         setLoading(false)
         setLoadingMore(false)
       }
     }
-  }, [activeParentSectionId, activeSectionId, keyword, queryKey])
+  }, [activeParentSectionId, activeSectionId, feedCacheKey, keyword, queryKey])
 
   useEffect(() => {
     if (!sectionsReady || !activeSectionId) return
-    const cached = communityFeedCache.get(queryKey)
+    const cached = communityFeedCache.get(feedCacheKey)
+      || readPageCache(feedCacheKey, isCommunityFeedCache)
     if (
       cached
-      && isLifeHubCacheReusable(
-        'community',
-        cached.revision,
-        cached.refreshedAt,
-      )
+      && (isMemoryCommunityFeedCache(cached)
+        ? isLifeHubCacheReusable(
+          'community',
+          cached.revision,
+          cached.refreshedAt,
+        )
+        : true)
     ) {
       const pinned = pendingPinnedPost.current
       loadedQueryKeyRef.current = queryKey
@@ -285,11 +335,13 @@ export default function CommunityFeedPanel({
       setTotal(cached.total)
       setError('')
       setLoading(false)
-      markLifeHubSectionFresh('community', cached.refreshedAt)
-      return
+      activeFeedCacheKeyRef.current = feedCacheKey
+      if (isMemoryCommunityFeedCache(cached)) {
+        markLifeHubSectionFresh('community', cached.refreshedAt)
+      }
     }
     void load(1, false)
-  }, [activeSectionId, load, queryKey, refreshSignal, sectionsReady])
+  }, [activeSectionId, feedCacheKey, load, queryKey, refreshSignal, sectionsReady])
 
   useEffect(() => {
     if (searchFocusSignal > 0) setSearchFocused(true)
@@ -301,6 +353,7 @@ export default function CommunityFeedPanel({
         ? await lifeServicesRepository.unlikeCampusCirclePost(post.id)
         : await lifeServicesRepository.likeCampusCirclePost(post.id)
       setPosts((current) => current.map((item) => item.id === post.id ? updated : item))
+      if (activeFeedCacheKeyRef.current) removePageCache(activeFeedCacheKeyRef.current)
       markLifeHubSectionDirty('community')
     } catch (toggleError) {
       Taro.showToast({
@@ -321,6 +374,7 @@ export default function CommunityFeedPanel({
         pinned: action === 'pin',
       })
       setPosts((current) => current.map((item) => item.id === updated.id ? updated : item))
+      if (activeFeedCacheKeyRef.current) removePageCache(activeFeedCacheKeyRef.current)
       markLifeHubSectionDirty('community')
       Taro.showToast({ title: `${communityPinActionLabel(action)}成功`, icon: 'success' })
       await load(1, false)
@@ -390,6 +444,7 @@ export default function CommunityFeedPanel({
           }
         : item
     )))
+    if (activeFeedCacheKeyRef.current) removePageCache(activeFeedCacheKeyRef.current)
   }, [commentReplyTarget])
 
   const updateCommentCount = useCallback((postId: number, delta: number) => {
@@ -398,6 +453,7 @@ export default function CommunityFeedPanel({
         ? { ...item, comment_count: Math.max(0, item.comment_count + delta) }
         : item
     )))
+    if (activeFeedCacheKeyRef.current) removePageCache(activeFeedCacheKeyRef.current)
   }, [])
 
   const openAuthor = useCallback((post: CampusCirclePostView) => {
@@ -454,6 +510,7 @@ export default function CommunityFeedPanel({
   }
 
   const isCurrentQueryLoaded = loadedQueryKeyRef.current === queryKey
+    && activeFeedCacheKeyRef.current === feedCacheKey
   const hasCurrentPosts = isCurrentQueryLoaded && posts.length > 0
   const whatToEatInsertIndex = posts.length > 0 ? Math.min(3, posts.length - 1) : -1
   // 已有内容刷新时采用 stale-while-revalidate，避免返回详情页后先闪出骨架屏。
@@ -542,7 +599,7 @@ export default function CommunityFeedPanel({
           ))}
         </View>
       )}
-      {sectionsReady && !sectionsError && activeSection && !loading && error && (
+      {sectionsReady && !sectionsError && activeSection && !loading && error && !hasCurrentPosts && (
         <View className='api-community-state api-community-state--error'>
           <Text>{error}</Text>
           <View onClick={() => void load(1, false)}>重新加载</View>

@@ -27,7 +27,7 @@ assert.ok(!pageSource.includes('首图作为封面'), '二手发布不应重复�
 assert.ok(pageSource.includes('publisher-topic-trigger'), '动态编辑工具栏必须保留话题入口')
 assert.ok(pageSource.includes('publisher-topic-sheet'), '话题选择必须使用独立底部 Sheet')
 assert.ok(pageSource.includes('communityTopicNames'), '未收录话题必须随当前草稿保存')
-assert.match(pageSource, /topic_names:\s*normalizeTopicNames\(/u, '新增话题必须在发布时提交给服务端创建并关联')
+assert.match(pageSource, /topic_names:\s*classDiscussionTopicId > 0\s*\? undefined\s*: normalizeTopicNames\(/u, '新增话题必须在发布时提交给服务端创建并关联')
 
 for (const selector of [
   'publisher-content',

@@ -35,8 +35,8 @@ export const previewContentImages = (current: string, urls: string[]) => {
   const normalizedCurrent = current.trim()
   if (!normalizedCurrent || normalizedUrls.length === 0) return
 
-  const previewUrls = normalizedUrls.map((url) => localImagePaths.get(url) || url)
   const currentIndex = normalizedUrls.indexOf(normalizedCurrent)
+  const previewUrls = normalizedUrls.map((url) => localImagePaths.get(url) || url)
   const previewCurrent = currentIndex >= 0 ? previewUrls[currentIndex] : normalizedCurrent
   void Taro.previewImage({ current: previewCurrent, urls: previewUrls })
 }

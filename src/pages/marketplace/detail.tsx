@@ -49,6 +49,18 @@ const actionLabels: Record<string, string> = {
   verify_academic: '完成校园认证',
 }
 
+const marketplaceContentImages = (item: MarketplaceListingView) => {
+  if (item.images?.length) {
+    return item.images.map((image, index) => ({
+      id: image.media_id || `${index}-${image.url}`,
+      url: image.url,
+      thumbnail_url: (image as typeof image & { thumbnail_url?: string | null }).thumbnail_url,
+    }))
+  }
+  const thumbnails = (item as MarketplaceListingView & { thumbnail_urls?: Array<string | null> }).thumbnail_urls || []
+  return item.image_urls.map((url, index) => ({ id: `${index}-${url}`, url, thumbnail_url: thumbnails[index] }))
+}
+
 export default function MarketplaceDetailPage() {
   const [id, setId] = useState(0)
   const [item, setItem] = useState<MarketplaceListingView | null>(null)
@@ -313,7 +325,7 @@ export default function MarketplaceDetailPage() {
               </View>
               {item.image_urls.length > 0 && (
                 <ContentImageGrid
-                  images={item.image_urls.map((url, index) => ({ id: `${index}-${url}`, url }))}
+                  images={marketplaceContentImages(item)}
                   pendingReview={item.viewer_relation === 'owner' && item.status === 'pending_review'}
                   preview
                 />

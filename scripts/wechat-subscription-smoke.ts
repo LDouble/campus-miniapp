@@ -1,5 +1,7 @@
 import { parseWechatSubscribeTemplateIds } from '../src/features/wechat-subscription/template-ids'
 import { resolvePageSubscriptionModule } from '../src/features/wechat-subscription/module'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const assertEqual = (actual: string[], expected: string[], label: string) => {
   if (actual.length !== expected.length || actual.some((value, index) => value !== expected[index])) {
@@ -45,5 +47,30 @@ assertModule('packages/social/marketplace/detail', 'marketplace')
 assertModule('packages/social/carpool/detail', 'carpool')
 assertModule('packages/social/publish/index', 'marketplace', { section: 'market' })
 assertModule('packages/social/direct-messages/chat', 'private_message', { id: '123' })
+
+const subscriptionSource = readFileSync(
+  resolve(__dirname, '../src/features/wechat-subscription/index.ts'),
+  'utf8',
+)
+if (!subscriptionSource.includes('requestWechatSubscriptionForModuleWithResult')) {
+  throw new Error('缺少可返回用户授权结果的模块订阅入口')
+}
+if (!subscriptionSource.includes('config.subscription_templates[moduleKey]')) {
+  throw new Error('模块订阅结果入口必须复用运行时模板配置')
+}
+
+const requestSource = readFileSync(
+  resolve(__dirname, '../src/features/wechat-subscription/request.ts'),
+  'utf8',
+)
+if (!requestSource.includes('registered: boolean')) {
+  throw new Error('订阅结果必须区分微信授权和后端登记结果')
+}
+if (!requestSource.includes('retryRegistration')) {
+  throw new Error('订阅登记失败必须保留本地重试能力')
+}
+if (!requestSource.includes('idempotencyKey')) {
+  throw new Error('订阅登记重试必须复用幂等键')
+}
 
 console.log('wechat subscription configuration smoke test passed')

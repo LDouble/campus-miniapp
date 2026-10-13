@@ -1,7 +1,6 @@
 import Taro from '@tarojs/taro'
 import {
   apiUrl,
-  clearSession,
   ensureAccessToken,
   refreshAccessToken,
 } from './auth'
@@ -13,6 +12,7 @@ import type {
 import { handleAcademicVerificationRequired } from '../features/academic-verification/guard'
 import { reportClientError } from '../features/error-reporting'
 import { invalidateSharedResourceGroup } from '../state/shared-resource'
+import { getMiniappVersion } from '../utils/miniapp-version'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -25,6 +25,7 @@ type RequestOptions = {
   anonymous?: boolean
   retryAfterRefresh?: boolean
   skipAcademicVerificationGuard?: boolean
+  isScopeCurrent?: () => boolean
 }
 
 export type ApiSuccessResponse<T> = {
@@ -57,6 +58,20 @@ export class ApiError extends Error {
     this.requestId = requestId
     this.details = details
     this.retryAfterMs = retryAfterMs
+  }
+}
+
+export class RequestScopeChangedError extends Error {
+  constructor() {
+    super('登录会话已切换，请重试')
+    Object.setPrototypeOf(this, RequestScopeChangedError.prototype)
+    this.name = 'RequestScopeChangedError'
+  }
+}
+
+const assertRequestScopeCurrent = (options: RequestOptions) => {
+  if (options.isScopeCurrent && !options.isScopeCurrent()) {
+    throw new RequestScopeChangedError()
   }
 }
 
@@ -141,6 +156,7 @@ const throwApiError = async (error: ApiError, options: RequestOptions): Promise<
       // 导航失败不能覆盖后端的原始业务错误。
     }
   }
+  assertRequestScopeCurrent(options)
   throw error
 }
 
@@ -150,8 +166,11 @@ export const createIdempotencyKey = (scope: string) => {
 }
 
 export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<ApiSuccessResponse<T>> {
+  assertRequestScopeCurrent(options)
   const method = options.method || 'GET'
   const token = options.anonymous ? '' : await ensureAccessToken()
+  assertRequestScopeCurrent(options)
+  const miniappVersion = getMiniappVersion()
   let response: Taro.request.SuccessCallbackResult<ApiSuccessEnvelope<T> | ApiErrorEnvelope>
   try {
     response = await Taro.request<ApiSuccessEnvelope<T> | ApiErrorEnvelope>({
@@ -162,12 +181,14 @@ export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<Ap
         Accept: 'application/json',
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(miniappVersion ? { 'X-Miniapp-Version': miniappVersion } : {}),
         ...(options.idempotencyKey
           ? { 'Idempotency-Key': options.idempotencyKey }
           : {}),
       },
     })
   } catch (error) {
+    assertRequestScopeCurrent(options)
     void reportClientError({
       kind: 'network_error',
       route: options.path,
@@ -176,6 +197,7 @@ export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<Ap
     })
     throw error
   }
+  assertRequestScopeCurrent(options)
 
   if (response.statusCode >= 500) {
     const requestId = response.data && typeof response.data === 'object' && 'request_id' in response.data
@@ -200,12 +222,15 @@ export async function apiRequestEnvelope<T>(options: RequestOptions): Promise<Ap
     && !options.anonymous
     && options.retryAfterRefresh !== false
   ) {
+    assertRequestScopeCurrent(options)
     try {
       await refreshAccessToken()
-    } catch {
-      clearSession()
-      return throwApiError(responseError, options)
+    } catch (refreshError) {
+      // 网络失败不代表凭据失效；明确的 refresh 401 由认证层处理。
+      assertRequestScopeCurrent(options)
+      throw refreshError
     }
+    assertRequestScopeCurrent(options)
     return apiRequestEnvelope<T>({ ...options, retryAfterRefresh: false })
   }
 

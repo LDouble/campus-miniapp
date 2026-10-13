@@ -12,6 +12,7 @@ export type CatView = {
   resident_area: string
   first_recorded_at: string
   cover_url?: string | null
+  cover_thumbnail_url?: string | null
   sighting_count: number
   last_seen_at?: string | null
   favorited: boolean
@@ -28,6 +29,7 @@ export type SightingView = {
   activity: string
   note?: string | null
   photo_url?: string | null
+  photo_thumbnail_url?: string | null
   like_count: number
   liked: boolean
   created_at: string

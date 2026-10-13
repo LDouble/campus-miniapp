@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import Taro, { useLoad } from '@tarojs/taro'
+import Taro, { useDidShow, useLoad } from '@tarojs/taro'
 import { Image, Picker, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import MediaImageEditor from '../../components/media-image-editor'
@@ -27,6 +27,7 @@ import {
   type MarketplaceSource,
 } from '../../features/life-services/marketplace-prefill'
 import { lifeServicesRepository } from '../../features/life-services/repository'
+import { classDiscussionDraftKey, withClassQuickQuestionDraft } from '../../features/class-discussion/topic'
 import MentionPicker from '../../features/mentions/mention-picker'
 import {
   expandMentionDeletion,
@@ -71,6 +72,19 @@ import {
   extractCommunityTopicNames,
 } from '../../features/community/topic'
 import {
+  getMiniappRuntimeConfig,
+  loadMiniappRuntimeConfig,
+} from '../../features/runtime-config'
+import {
+  availableLifeServicePublicationTypes,
+  isLifeServicePublicationTypeAvailable,
+  type LifeServicePublicationType,
+} from '../../features/life-services/module-availability'
+import {
+  canPersistPublisherDraft,
+  resolvePublisherCreateSection,
+} from '../../features/life-services/publisher-create-state'
+import {
   apiDateTimeCampusParts,
   campusDateTimeToISOString,
 } from '../../utils/date-time'
@@ -78,6 +92,15 @@ import './index.scss'
 
 type PublishSection = 'community' | 'errands' | 'market' | 'carpool'
 type PublishMode = 'create' | 'edit' | 'resubmit'
+
+type CreateRestoreContext = {
+  intent: MarketplaceIntent
+  classTopicId: number
+  classQuestion?: string
+  communitySectionId: number
+  communityTopicId: number
+  coursePrefillPending: boolean
+}
 
 type PublisherForm = {
   content: string
@@ -130,6 +153,8 @@ const sectionOptions: Array<{
 const isSection = (value?: string): value is PublishSection => (
   sectionOptions.some((item) => item.key === value)
 )
+
+const publicationType = (section: PublishSection): LifeServicePublicationType => section
 
 const tomorrow = () => {
   const date = new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -304,20 +329,22 @@ const storedDrafts = () => {
   return migrated
 }
 
-const draftKey = (section: PublishSection, intent: MarketplaceIntent = 'sell') => (
-  section === 'market' ? `${section}:${intent}` : section
+const draftKey = (section: PublishSection, intent: MarketplaceIntent = 'sell', classTopicId = 0) => (
+  section === 'community' && classTopicId > 0
+    ? classDiscussionDraftKey(classTopicId)
+    : section === 'market' ? `${section}:${intent}` : section
 )
 
-const saveDraft = (section: PublishSection, form: PublisherForm) => {
+const saveDraft = (section: PublishSection, form: PublisherForm, classTopicId = 0) => {
   Taro.setStorageSync(DRAFT_KEY, {
     ...storedDrafts(),
-    [draftKey(section, form.marketIntent)]: form,
+    [draftKey(section, form.marketIntent, classTopicId)]: form,
   })
 }
 
-const clearDraft = (section: PublishSection, form: PublisherForm) => {
+const clearDraft = (section: PublishSection, form: PublisherForm, classTopicId = 0) => {
   const drafts = storedDrafts()
-  delete drafts[draftKey(section, form.marketIntent)]
+  delete drafts[draftKey(section, form.marketIntent, classTopicId)]
   if (Object.keys(drafts).length > 0) {
     Taro.setStorageSync(DRAFT_KEY, drafts)
   } else {
@@ -458,8 +485,13 @@ const SectionHeading = ({
 
 export default function PublishPage() {
   const [section, setSection] = useState<PublishSection>('community')
+  const sectionRef = useRef<PublishSection>('community')
+  const runtimeConfigRef = useRef(getMiniappRuntimeConfig())
+  const [runtimeConfig, setRuntimeConfig] = useState(() => runtimeConfigRef.current)
   const [mode, setMode] = useState<PublishMode>('create')
+  const modeRef = useRef<PublishMode>('create')
   const [resourceId, setResourceId] = useState(0)
+  const resourceIdRef = useRef(0)
   const [form, setForm] = useState<PublisherForm>(emptyForm)
   const [sections, setSections] = useState<CampusCircleSectionView[]>([])
   const [sectionsReady, setSectionsReady] = useState(false)
@@ -468,9 +500,13 @@ export default function PublishPage() {
   const [topicKeyword, setTopicKeyword] = useState('')
   const [topicSearchLoading, setTopicSearchLoading] = useState(false)
   const [topicSearchError, setTopicSearchError] = useState(false)
+  const [classDiscussionTopicId, setClassDiscussionTopicId] = useState(0)
+  const classDiscussionTopicIdRef = useRef(0)
   const [requestedCommunitySectionId, setRequestedCommunitySectionId] = useState(0)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [restoringCreateDefaults, setRestoringCreateDefaults] = useState(true)
+  const [createReady, setCreateReady] = useState(false)
+  const createReadyRef = useRef(false)
   const [submitting, setSubmitting] = useState(false)
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
   const [mentionPickerOpen, setMentionPickerOpen] = useState(false)
@@ -485,16 +521,56 @@ export default function PublishPage() {
   const identityUserIdRef = useRef(0)
   const rememberedContactRef = useRef<PublisherContact | null>(null)
   const topicSearchRequestRef = useRef(0)
+  const publisherLoadEpoch = useRef(0)
+  const editLoadedRef = useRef(false)
+  const editLoadingRef = useRef(false)
+  const createRestoringRef = useRef(false)
+  const communityMetadataEpoch = useRef(0)
+  const communityMetadataLoadingRef = useRef(false)
+  const communityMetadataLoadedRef = useRef(false)
+  const createContextRef = useRef<CreateRestoreContext>({
+    intent: 'sell', classTopicId: 0, communitySectionId: 0, communityTopicId: 0, coursePrefillPending: false,
+  })
   const {
     keyboardHeight,
     onKeyboardVisibilityChange,
   } = useKeyboardInset()
+
+  const availableSectionOptions = sectionOptions.filter((item) => (
+    availableLifeServicePublicationTypes(runtimeConfig).includes(publicationType(item.key))
+  ))
+  const sectionAvailable = isLifeServicePublicationTypeAvailable(
+    publicationType(section),
+    runtimeConfig,
+  )
 
   useEffect(() => {
     if (keyboardHeight > 0) setStickerPickerOpen(false)
   }, [keyboardHeight])
 
   const loadingForm = loadingEdit || restoringCreateDefaults
+  const formReady = mode === 'create' ? createReady : editLoadedRef.current
+  const setCreateRestoreReady = (ready: boolean) => {
+    createReadyRef.current = ready
+    setCreateReady(ready)
+  }
+  const persistDraft = (
+    targetSection: PublishSection,
+    draft: PublisherForm,
+    classTopicId = 0,
+  ) => {
+    if (
+      modeRef.current !== 'create'
+      || targetSection !== sectionRef.current
+      || !canPersistPublisherDraft(
+        createReadyRef.current,
+        isLifeServicePublicationTypeAvailable(publicationType(targetSection), runtimeConfigRef.current),
+      )
+      || classTopicId !== createContextRef.current.classTopicId
+    ) return false
+    saveDraft(targetSection, draft, classTopicId)
+    return true
+  }
   const update = <K extends keyof PublisherForm>(key: K, value: PublisherForm[K]) => {
     setForm((draft) => ({ ...draft, [key]: value }))
   }
@@ -502,6 +578,7 @@ export default function PublishPage() {
   const selectedTopicCount = form.communityTopicIds.length + form.communityTopicNames.length
 
   const changeTopicPickerOpen = (open: boolean) => {
+    if (classDiscussionTopicId > 0) return
     if (open) {
       contentFocusRequestRef.current += 1
       setContentInputFocused(false)
@@ -518,6 +595,7 @@ export default function PublishPage() {
   }
 
   const toggleCommunityTopic = (topicId: number) => {
+    if (classDiscussionTopicId > 0) return
     if (!Number.isInteger(topicId) || topicId <= 0) return
     const selected = form.communityTopicIds.includes(topicId)
     if (!selected && selectedTopicCount >= 3) {
@@ -544,6 +622,7 @@ export default function PublishPage() {
   }
 
   const addCommunityTopicName = () => {
+    if (classDiscussionTopicId > 0) return
     const name = normalizeTopicName(topicKeyword)
     if (!isCreatableTopicName(name)) {
       Taro.showToast({ title: '话题仅支持中文、字母、数字或下划线', icon: 'none' })
@@ -569,6 +648,7 @@ export default function PublishPage() {
   }
 
   const removeCommunityTopicName = (name: string) => {
+    if (classDiscussionTopicId > 0) return
     setForm((current) => ({
       ...current,
       communityTopicNames: current.communityTopicNames.filter(
@@ -705,20 +785,31 @@ export default function PublishPage() {
   }
 
   const loadEdit = async (targetSection: PublishSection, id: number) => {
+    const epoch = ++publisherLoadEpoch.current
+    editLoadedRef.current = false
+    if (!isLifeServicePublicationTypeAvailable(
+      publicationType(targetSection),
+      runtimeConfigRef.current,
+    )) {
+      setLoadingEdit(false)
+      return
+    }
+    editLoadingRef.current = true
     setLoadingEdit(true)
     try {
+      let nextForm: PublisherForm
       if (targetSection === 'errands') {
-        setForm(mapErrand(await lifeServicesRepository.getErrand(id)))
+        nextForm = mapErrand(await lifeServicesRepository.getErrand(id))
       } else if (targetSection === 'market') {
-        setForm(mapMarketplace(await lifeServicesRepository.getMarketplaceListing(id)))
+        nextForm = mapMarketplace(await lifeServicesRepository.getMarketplaceListing(id))
       } else if (targetSection === 'carpool') {
-        setForm(mapCarpool(await lifeServicesRepository.getCarpoolTrip(id)))
+        nextForm = mapCarpool(await lifeServicesRepository.getCarpoolTrip(id))
       } else {
         const post = await lifeServicesRepository.getCampusCirclePost(id)
         const postTopics = communityPostTopics(post)
         const postTopicIds = postTopics.map((topic) => topic.id).slice(0, 3)
         const primaryTopicId = post.primary_topic?.id || post.topic?.id || postTopicIds[0] || 0
-        setForm({
+        nextForm = {
           ...emptyForm(),
           content: restoreStickerContent(post.content),
           mentionCandidates: mentionCandidatesFromSegments(post.content_segments),
@@ -730,17 +821,118 @@ export default function PublishPage() {
           communityTopicId: primaryTopicId,
           communityTopicIds: postTopicIds.length > 0 ? postTopicIds : primaryTopicId > 0 ? [primaryTopicId] : [],
           version: post.version,
-        })
+        }
       }
+      if (
+        epoch !== publisherLoadEpoch.current
+        || sectionRef.current !== targetSection
+        || modeRef.current === 'create'
+        || !isLifeServicePublicationTypeAvailable(publicationType(targetSection), runtimeConfigRef.current)
+      ) return
+      setForm(nextForm)
+      editLoadedRef.current = true
     } catch (error) {
+      if (epoch !== publisherLoadEpoch.current) return
       if (isApiError(error) && error.code === 'academic_verification_required') return
       Taro.showToast({
         title: isApiError(error) ? error.message : '原内容加载失败',
         icon: 'none',
       })
     } finally {
-      setLoadingEdit(false)
+      if (epoch === publisherLoadEpoch.current) {
+        editLoadingRef.current = false
+        setLoadingEdit(false)
+      }
     }
+  }
+
+  const restoreCreateDraft = (targetSection: PublishSection) => {
+    const context = createContextRef.current
+    const epoch = ++publisherLoadEpoch.current
+    createRestoringRef.current = true
+    setCreateRestoreReady(false)
+    setRestoringCreateDefaults(true)
+    void loadRememberedContact().then((remembered) => {
+      if (
+        epoch !== publisherLoadEpoch.current
+        || sectionRef.current !== targetSection
+        || modeRef.current !== 'create'
+        || !isLifeServicePublicationTypeAvailable(publicationType(targetSection), runtimeConfigRef.current)
+      ) return
+      const draft = storedDrafts()[draftKey(targetSection, context.intent, context.classTopicId)]
+        || emptyForm(context.intent)
+      const questionDraft = targetSection === 'community' && context.classTopicId > 0
+        ? withClassQuickQuestionDraft(draft, context.classQuestion)
+        : draft
+      const initialForm = targetSection === 'community'
+        ? questionDraft
+        : withRememberedPublisherContact(draft, remembered)
+      const prefill = targetSection === 'market' && context.coursePrefillPending
+        ? consumeMarketplacePublishPrefill()
+        : null
+      context.coursePrefillPending = false
+      const nextForm = prefill ? {
+        ...initialForm,
+        marketIntent: prefill.intent,
+        content: prefill.description,
+        marketCategory: 'course_material' as const,
+        courseName: prefill.courseName,
+        courseCode: prefill.courseCode,
+        academicPeriodId: prefill.academicPeriodId,
+        academicPeriodLabel: prefill.academicPeriodLabel,
+        marketSource: prefill.source,
+      } : initialForm
+      if (targetSection === 'market') createContextRef.current.intent = nextForm.marketIntent
+      setForm(targetSection === 'community'
+        ? {
+          ...nextForm,
+          communitySectionId: context.communitySectionId || nextForm.communitySectionId,
+          communityTopicId: context.classTopicId || context.communityTopicId || nextForm.communityTopicId,
+          communityTopicIds: context.classTopicId > 0
+            ? [context.classTopicId]
+            : context.communityTopicId > 0 ? [context.communityTopicId] : nextForm.communityTopicIds,
+          communityTopicNames: context.classTopicId > 0 ? [] : nextForm.communityTopicNames,
+        }
+        : nextForm)
+      setCreateRestoreReady(true)
+    }).finally(() => {
+      if (epoch === publisherLoadEpoch.current) {
+        createRestoringRef.current = false
+        setRestoringCreateDefaults(false)
+      }
+    })
+  }
+
+  const loadCommunityMetadata = () => {
+    if (
+      !isLifeServicePublicationTypeAvailable('community', runtimeConfigRef.current)
+      || communityMetadataLoadingRef.current
+      || communityMetadataLoadedRef.current
+    ) return
+    const epoch = ++communityMetadataEpoch.current
+    communityMetadataLoadingRef.current = true
+    const classTopicId = createContextRef.current.classTopicId
+    const initialTopics = classTopicId > 0
+      ? lifeServicesRepository.getCampusCircleTopic(classTopicId).then((topic) => [topic])
+      : lifeServicesRepository.listCampusCircleTopics({ pageSize: 50 }).then((result) => result.items)
+    void Promise.allSettled([
+      lifeServicesRepository.listCampusCircleSections(),
+      initialTopics,
+    ]).then(([sectionResult, topicResult]) => {
+      if (
+        epoch !== communityMetadataEpoch.current
+        || !isLifeServicePublicationTypeAvailable('community', runtimeConfigRef.current)
+      ) return
+      setSections(sectionResult.status === 'fulfilled' ? sectionResult.value.items : [])
+      setTopics(topicResult.status === 'fulfilled'
+        ? topicResult.value.filter((item) => item.status === 'active')
+        : [])
+      setSectionsReady(true)
+      // 两项都成功才缓存为已加载，避免重新开放时接口短暂失败后永远不再重试。
+      communityMetadataLoadedRef.current = sectionResult.status === 'fulfilled' && topicResult.status === 'fulfilled'
+    }).finally(() => {
+      if (epoch === communityMetadataEpoch.current) communityMetadataLoadingRef.current = false
+    })
   }
 
   useLoad((options) => {
@@ -754,7 +946,27 @@ export default function PublishPage() {
     const initialId = Number(options.id || 0)
     const initialCommunitySectionId = Number(options.community_section_id || 0)
     const initialCommunityTopicId = Number(options.community_topic_id || 0)
-    setSection(initialSection)
+    const initialClassDiscussionTopicId = Number(options.class_discussion_topic_id || 0)
+    const lockedClassDiscussionTopicId = Number.isInteger(initialClassDiscussionTopicId)
+      && initialClassDiscussionTopicId > 0
+      ? initialClassDiscussionTopicId
+      : 0
+    const initialAvailable = isLifeServicePublicationTypeAvailable(
+      publicationType(initialSection),
+      runtimeConfigRef.current,
+    )
+    const normalizedInitial = resolvePublisherCreateSection(
+      publicationType(initialSection),
+      lockedClassDiscussionTopicId > 0,
+      runtimeConfigRef.current,
+    )
+    const effectiveInitialSection = initialMode === 'create'
+      ? lockedClassDiscussionTopicId > 0 ? 'community' : normalizedInitial || initialSection
+      : initialSection
+    sectionRef.current = effectiveInitialSection
+    modeRef.current = initialMode
+    resourceIdRef.current = initialId
+    setSection(effectiveInitialSection)
     setMode(initialMode)
     setResourceId(initialId)
     setRequestedCommunitySectionId(
@@ -762,54 +974,87 @@ export default function PublishPage() {
         ? initialCommunitySectionId
         : 0,
     )
+    setClassDiscussionTopicId(lockedClassDiscussionTopicId)
+    classDiscussionTopicIdRef.current = lockedClassDiscussionTopicId
+    createContextRef.current = {
+      intent: initialIntent,
+      classTopicId: lockedClassDiscussionTopicId,
+      classQuestion: options.class_question,
+      communitySectionId: Number.isFinite(initialCommunitySectionId) && initialCommunitySectionId > 0
+        ? initialCommunitySectionId : 0,
+      communityTopicId: Number.isFinite(initialCommunityTopicId) && initialCommunityTopicId > 0
+        ? initialCommunityTopicId : 0,
+      coursePrefillPending: options.course_prefill === '1',
+    }
+    loadCommunityMetadata()
+    const initialCreateAvailable = Boolean(normalizedInitial)
+    if ((initialMode !== 'create' && !initialAvailable) || (initialMode === 'create' && !initialCreateAvailable)) {
+      setLoadingEdit(false)
+      setRestoringCreateDefaults(false)
+      setCreateRestoreReady(false)
+      return
+    }
     if (initialMode !== 'create' && initialId > 0) {
       setRestoringCreateDefaults(false)
-      void loadEdit(initialSection, initialId)
+      void loadEdit(effectiveInitialSection, initialId)
     } else {
-      setRestoringCreateDefaults(true)
-      void loadRememberedContact().then((remembered) => {
-        const draft = storedDrafts()[draftKey(initialSection, initialIntent)]
-          || emptyForm(initialIntent)
-        const initialForm = initialSection === 'community'
-          ? draft
-          : withRememberedPublisherContact(draft, remembered)
-        const prefill = initialSection === 'market' && options.course_prefill === '1'
-          ? consumeMarketplacePublishPrefill()
-          : null
-        const nextForm = prefill ? {
-          ...initialForm,
-          marketIntent: prefill.intent,
-          content: prefill.description,
-          marketCategory: 'course_material' as const,
-          courseName: prefill.courseName,
-          courseCode: prefill.courseCode,
-          academicPeriodId: prefill.academicPeriodId,
-          academicPeriodLabel: prefill.academicPeriodLabel,
-          marketSource: prefill.source,
-        } : initialForm
-        setForm(initialSection === 'community'
-          ? {
-            ...nextForm,
-            communitySectionId: Number.isInteger(initialCommunitySectionId) && initialCommunitySectionId > 0
-              ? initialCommunitySectionId
-              : nextForm.communitySectionId,
-            communityTopicId: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
-              ? initialCommunityTopicId
-              : nextForm.communityTopicId,
-            communityTopicIds: Number.isInteger(initialCommunityTopicId) && initialCommunityTopicId > 0
-              ? [initialCommunityTopicId]
-              : nextForm.communityTopicIds,
-          }
-          : nextForm)
-      }).finally(() => setRestoringCreateDefaults(false))
+      restoreCreateDraft(effectiveInitialSection)
     }
-    void lifeServicesRepository.listCampusCircleSections()
-      .then((result) => setSections(result.items))
-      .catch(() => setSections([]))
-      .finally(() => setSectionsReady(true))
-    void lifeServicesRepository.listCampusCircleTopics({ pageSize: 50 })
-      .then((result) => setTopics(result.items.filter((item) => item.status === 'active')))
-      .catch(() => setTopics([]))
+  })
+
+  const applyRuntimeConfig = (config: typeof runtimeConfigRef.current) => {
+    const communityWasEnabled = isLifeServicePublicationTypeAvailable('community', runtimeConfigRef.current)
+    const communityEnabled = isLifeServicePublicationTypeAvailable('community', config)
+    runtimeConfigRef.current = config
+    setRuntimeConfig(config)
+    if (!communityEnabled) {
+      communityMetadataEpoch.current += 1
+      communityMetadataLoadingRef.current = false
+      communityMetadataLoadedRef.current = false
+      setSections([])
+      setTopics([])
+      setSectionsReady(false)
+    } else if (!communityWasEnabled || !communityMetadataLoadedRef.current) {
+      loadCommunityMetadata()
+    }
+    const currentSection = sectionRef.current
+    if (isLifeServicePublicationTypeAvailable(publicationType(currentSection), config)) {
+      if (modeRef.current === 'create' && !createReady && !createRestoringRef.current) {
+        restoreCreateDraft(currentSection)
+        return
+      }
+      if (
+        modeRef.current !== 'create'
+        && resourceIdRef.current > 0
+        && !editLoadedRef.current
+        && !editLoadingRef.current
+      ) {
+        void loadEdit(currentSection, resourceIdRef.current)
+      }
+      return
+    }
+
+    publisherLoadEpoch.current += 1
+    editLoadedRef.current = false
+    editLoadingRef.current = false
+    setLoadingEdit(false)
+    setRestoringCreateDefaults(false)
+    setCreateRestoreReady(false)
+    createRestoringRef.current = false
+    if (modeRef.current !== 'create') return
+    const fallback = resolvePublisherCreateSection(
+      publicationType(currentSection),
+      classDiscussionTopicIdRef.current > 0,
+      config,
+    )
+    if (!fallback) return
+    sectionRef.current = fallback
+    setSection(fallback)
+    restoreCreateDraft(fallback)
+  }
+
+  useDidShow(() => {
+    void loadMiniappRuntimeConfig().then(applyRuntimeConfig)
   })
 
   const normalizedTopicKeyword = normalizeTopicName(topicKeyword)
@@ -873,7 +1118,7 @@ export default function PublishPage() {
       return {
         id,
         key: `id:${id}`,
-        name: topic?.name || '已选话题',
+        name: topic?.name || (id === classDiscussionTopicId ? '课堂讨论' : '已选话题'),
         pending: false,
       }
     })
@@ -884,7 +1129,17 @@ export default function PublishPage() {
       pending: true,
     }))
     return [...selectedIds, ...pendingNames]
-  }, [form.communityTopicIds, form.communityTopicNames, topics])
+  }, [classDiscussionTopicId, form.communityTopicIds, form.communityTopicNames, topics])
+
+  useEffect(() => {
+    if (!classDiscussionTopicId) return
+    setForm((current) => ({
+      ...current,
+      communityTopicId: classDiscussionTopicId,
+      communityTopicIds: [classDiscussionTopicId],
+      communityTopicNames: [],
+    }))
+  }, [classDiscussionTopicId])
 
   useEffect(() => {
     if (section !== 'community' || mode !== 'create' || !sectionsReady) return
@@ -911,24 +1166,37 @@ export default function PublishPage() {
   ])
 
   useEffect(() => {
-    if (mode !== 'create' || loadingEdit || restoringCreateDefaults) return
-    const timer = setTimeout(() => saveDraft(section, form), 350)
+    if (
+      mode !== 'create'
+      || loadingEdit
+      || restoringCreateDefaults
+      || !canPersistPublisherDraft(createReady, sectionAvailable)
+    ) return
+    const timer = setTimeout(() => persistDraft(section, form, classDiscussionTopicId), 350)
     return () => clearTimeout(timer)
-  }, [form, loadingEdit, mode, restoringCreateDefaults, section])
+  }, [classDiscussionTopicId, createReady, form, loadingEdit, mode, restoringCreateDefaults, section, sectionAvailable])
 
   const selectSection = (next: PublishSection) => {
-    if (mode !== 'create' || next === section || restoringCreateDefaults) return
+    if (mode !== 'create' || next === section || restoringCreateDefaults || classDiscussionTopicId > 0) return
+    if (!isLifeServicePublicationTypeAvailable(publicationType(next), runtimeConfigRef.current)) {
+      Taro.showToast({ title: '该发布类型暂未开放', icon: 'none' })
+      return
+    }
     if (form.images.some((image) => image.status === 'uploading')) {
       Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
       return
     }
     requestWechatSubscriptionForPublishSection(next)
-    saveDraft(section, form)
+    persistDraft(section, form, classDiscussionTopicId)
+    publisherLoadEpoch.current += 1
+    sectionRef.current = next
     setSection(next)
     const nextForm = storedDrafts()[draftKey(next)] || emptyForm()
+    if (next === 'market') createContextRef.current.intent = nextForm.marketIntent
     setForm(next === 'community'
       ? nextForm
       : withRememberedPublisherContact(nextForm, rememberedContactRef.current))
+    setCreateRestoreReady(true)
   }
 
   const selectMarketIntent = (intent: MarketplaceIntent) => {
@@ -938,7 +1206,8 @@ export default function PublishPage() {
       return
     }
     if (mode === 'create') {
-      saveDraft(section, form)
+      persistDraft(section, form, classDiscussionTopicId)
+      createContextRef.current.intent = intent
       const nextForm = storedDrafts()[draftKey('market', intent)] || emptyForm(intent)
       setForm(withRememberedPublisherContact(nextForm, rememberedContactRef.current))
       return
@@ -1096,7 +1365,7 @@ export default function PublishPage() {
   }, [communitySectionOptions, contentMaxLength, form, section, sectionsReady, serializedContent])
 
   const navigateAfterSubmit = async (id: number) => {
-    clearDraft(section, form)
+    clearDraft(section, form, classDiscussionTopicId)
     Taro.showToast({ title: '已提交审核', icon: 'success' })
     await new Promise((resolve) => setTimeout(resolve, 450))
     if (section === 'errands') {
@@ -1111,6 +1380,10 @@ export default function PublishPage() {
   }
 
   const submit = async () => {
+    if (!isLifeServicePublicationTypeAvailable(publicationType(section), runtimeConfigRef.current)) {
+      Taro.showToast({ title: '该发布类型暂未开放', icon: 'none' })
+      return
+    }
     if (validationError) {
       Taro.showToast({ title: validationError, icon: 'none' })
       return
@@ -1130,13 +1403,17 @@ export default function PublishPage() {
           media_ids: form.images.flatMap((image) => image.mediaId ? [image.mediaId] : []),
           image_urls: form.images.flatMap((image) => image.legacyUrl ? [image.legacyUrl] : []),
           mention_user_ids: form.mentionCandidates.map((candidate) => candidate.id),
-          topic_id: form.communityTopicId || undefined,
-          topic_ids: form.communityTopicIds.length > 0 ? form.communityTopicIds : undefined,
-          primary_topic_id: form.communityTopicId || undefined,
-          topic_names: normalizeTopicNames([
-            ...form.communityTopicNames,
-            ...extractCommunityTopicNames(form.content),
-          ]),
+          topic_id: classDiscussionTopicId || form.communityTopicId || undefined,
+          topic_ids: classDiscussionTopicId > 0
+            ? [classDiscussionTopicId]
+            : form.communityTopicIds.length > 0 ? form.communityTopicIds : undefined,
+          primary_topic_id: classDiscussionTopicId || form.communityTopicId || undefined,
+          topic_names: classDiscussionTopicId > 0
+            ? undefined
+            : normalizeTopicNames([
+              ...form.communityTopicNames,
+              ...extractCommunityTopicNames(form.content),
+            ]),
         }
         if (mode === 'create') {
           id = (await lifeServicesRepository.createCampusCirclePost(input)).id
@@ -1249,14 +1526,14 @@ export default function PublishPage() {
       Taro.showToast({ title: '请等待图片上传完成', icon: 'none' })
       return
     }
-    saveDraft(section, form)
+    if (!persistDraft(section, form, classDiscussionTopicId)) return
     Taro.showToast({ title: '草稿已保存', icon: 'success' })
     setTimeout(() => Taro.navigateBack(), 350)
   }
 
   const navbarTitle = section === 'market'
     ? form.marketIntent === 'wanted' ? '发布求购' : '出售闲置'
-    : section === 'community' ? '发布动态'
+    : section === 'community' ? classDiscussionTopicId > 0 ? '课堂提问' : '发布动态'
       : section === 'errands' ? '发布跑腿'
         : '发布同行'
   return (
@@ -1273,7 +1550,7 @@ export default function PublishPage() {
       >
         <View className='publisher-type-panel'>
           <View className='publisher-types' ariaRole='tablist'>
-            {sectionOptions.map((item) => (
+            {availableSectionOptions.filter((item) => !classDiscussionTopicId || item.key === 'community').map((item) => (
               <View
                 key={item.key}
                 className={`publisher-type ${section === item.key ? 'publisher-type--active' : ''} ${mode !== 'create' ? 'publisher-type--locked' : ''}`}
@@ -1287,7 +1564,11 @@ export default function PublishPage() {
           </View>
         </View>
 
-        {loadingForm ? (
+        {!sectionAvailable ? (
+          <View className='publisher-loading'>
+            {availableSectionOptions.length ? '该发布类型暂未开放' : '当前没有可用的发布类型'}
+          </View>
+        ) : loadingForm ? (
           <View className='publisher-loading'>
             {loadingEdit ? '正在加载原内容' : '正在恢复发布信息'}
           </View>
@@ -1416,23 +1697,28 @@ export default function PublishPage() {
                       {selectedTopicEntries.map((topic) => (
                         <View
                           key={topic.key}
-                          className='publisher-composer-topic'
-                          ariaRole='button'
-                          ariaLabel={`移除话题${topic.name}`}
+                          className={topic.id === classDiscussionTopicId
+                            ? 'publisher-composer-topic publisher-composer-topic--locked'
+                            : 'publisher-composer-topic'}
+                          ariaRole={topic.id === classDiscussionTopicId ? undefined : 'button'}
+                          ariaLabel={topic.id === classDiscussionTopicId
+                            ? `课堂讨论已关联：${topic.name}`
+                            : `移除话题${topic.name}`}
                           onClick={() => {
+                            if (topic.id === classDiscussionTopicId) return
                             if (topic.pending) removeCommunityTopicName(topic.name)
                             else toggleCommunityTopic(topic.id)
                           }}
                         >
                           <Text>#{topic.name}</Text>
-                          <Text>×</Text>
+                          <Text>{topic.id === classDiscussionTopicId ? '课堂讨论' : '×'}</Text>
                         </View>
                       ))}
                     </View>
                   )}
                   <View className='publisher-composer-toolbar'>
                     <View className='publisher-composer-toolbar__tools'>
-                      {section === 'community' && (
+                      {section === 'community' && classDiscussionTopicId === 0 && (
                         <View
                           id='publisher-topic-trigger'
                           className={topicPickerOpen
@@ -1800,7 +2086,7 @@ export default function PublishPage() {
         </View>
       )}
 
-      {!loadingForm && (
+      {!loadingForm && sectionAvailable && formReady && (
         <View className={`publisher-actions ${keyboardHeight > 0 ? 'publisher-actions--keyboard' : ''}`}>
           {validationError && (
             <View className='publisher-actions__status'>

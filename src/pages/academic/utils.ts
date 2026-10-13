@@ -104,6 +104,17 @@ export const resolveDefaultPeriodId = (periods: AcademicPeriod[]) => {
   ))[0]?.id || ''
 }
 
+/** 保留仍存在于学期列表中的当前选择；只有选择已失效时才回退到默认学期。 */
+export const resolveRetainedPeriodId = (
+  periods: AcademicPeriod[],
+  currentSelection: string,
+) => {
+  if (currentSelection && periods.some((period) => period.id === currentSelection)) {
+    return currentSelection
+  }
+  return resolveDefaultPeriodId(periods)
+}
+
 /** 模拟选课默认选择当前学期的下一学期，无法前进时保留现有默认学期。 */
 export const resolveNextPeriodId = (periods: AcademicPeriod[]) => {
   const currentId = resolveDefaultPeriodId(periods)

@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve as resolvePath } from 'node:path'
 import {
   createSharedResource,
   invalidateSharedResourceGroup,
@@ -85,14 +85,33 @@ const run = async () => {
   }
   assert.notEqual(forKey('undergraduate'), forKey('graduate'), '不同资源键不得错误合并')
 
-  const appSource = readFileSync(resolve(__dirname, '../src/app.ts'), 'utf8')
-  const homeSource = readFileSync(resolve(__dirname, '../src/pages/index/index.tsx'), 'utf8')
-  const academicSource = readFileSync(resolve(__dirname, '../src/api/academic.ts'), 'utf8')
-  const authSource = readFileSync(resolve(__dirname, '../src/api/auth.ts'), 'utf8')
+  const appSource = readFileSync(resolvePath(__dirname, '../src/app.ts'), 'utf8')
+  const homeSource = readFileSync(resolvePath(__dirname, '../src/pages/index/index.tsx'), 'utf8')
+  const academicSource = readFileSync(resolvePath(__dirname, '../src/api/academic.ts'), 'utf8')
+  const verificationSource = readFileSync(resolvePath(__dirname, '../src/api/academic-verification.ts'), 'utf8')
+  const checkinSource = readFileSync(resolvePath(__dirname, '../src/api/daily-checkins.ts'), 'utf8')
+  const authSource = readFileSync(resolvePath(__dirname, '../src/api/auth.ts'), 'utf8')
+  const bootstrapSource = readFileSync(resolvePath(__dirname, '../src/api/client-bootstrap.ts'), 'utf8')
+  const publicDataSource = readFileSync(resolvePath(__dirname, '../src/state/public-data.ts'), 'utf8')
+  const timetableSource = readFileSync(resolvePath(__dirname, '../src/api/personal-timetable.ts'), 'utf8')
+  const privateUnreadSource = readFileSync(resolvePath(__dirname, '../src/features/direct-messages/unread.ts'), 'utf8')
   assert.ok(appSource.includes('void preloadPublicData()'), 'App 启动与前台恢复必须预热公共状态')
   assert.ok(homeSource.includes('void loadHome(true)'), '首页下拉刷新必须强制更新公共状态')
   assert.ok(academicSource.includes("group: 'academic'"), '学期必须使用共享 academic 资源')
   assert.ok(authSource.includes("invalidateSharedResourceGroup('session')"), '会话清理必须失效共享状态')
+  assert.ok(bootstrapSource.includes("'/api/v1/me/bootstrap'"), '客户端初始化必须优先请求聚合接口')
+  assert.ok(bootstrapSource.includes('invalidateClientBootstrap'), '聚合缓存必须提供写操作后的统一失效入口')
+  assert.ok(verificationSource.includes('invalidateClientBootstrap()'), '认证状态变更必须失效聚合缓存')
+  assert.ok(checkinSource.includes('invalidateClientBootstrap()'), '签到成功必须失效聚合缓存')
+  assert.ok(publicDataSource.includes('getClientBootstrap()'), '公共状态预热必须接入聚合接口')
+  assert.ok(publicDataSource.includes('const accountPromise = settle(getCurrentUser())'), '账户请求必须与聚合请求并行')
+  assert.ok(appSource.includes('preloadPublicData(bootstrap)'), '完整公共数据预热必须复用同一聚合请求')
+  assert.ok(appSource.includes('void bootstrap.then('), '运行时配置不得等待完整公共数据预热')
+  assert.ok(publicDataSource.includes('getAcademicVerificationStatus()'), '聚合接口降级时必须保留旧认证状态接口兜底')
+  assert.ok(timetableSource.includes('PERSONAL_TIMETABLE_FRESH_MS = 30_000'), '课表本地缓存必须为 30 秒')
+  assert.ok(timetableSource.includes("group: 'session'"), '课表缓存必须随用户会话失效')
+  assert.ok(privateUnreadSource.includes('maxAgeMs: 15_000'), '私信未读数本地缓存必须为 15 秒')
+  assert.ok(!appSource.includes('refreshPrivateMessageUnreadCount(true)'), 'App 生命周期刷新不得绕过私信未读缓存')
 
   process.stdout.write('public request state smoke: ok\n')
 }

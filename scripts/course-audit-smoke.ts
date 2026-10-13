@@ -12,7 +12,7 @@ const coursePassRateSheetStyle = read('src/features/academic-statistics/course-p
 const academicRepository = read('src/pages/academic/repository.ts')
 const schedulePage = read('src/pages/academic/schedule/index.tsx')
 const appConfig = read('src/app.config.ts')
-const servicesPage = read('src/pages/services/index.tsx')
+const servicesPage = read('src/features/service-shortcuts/catalog.ts')
 const homePage = read('src/pages/index/index.tsx')
 
 assert.match(
@@ -82,9 +82,8 @@ assert.match(appConfig, /course-catalog\/index/u, '课程检索页必须注册�
 assert.match(servicesPage, /course-audit/u, '服务页必须提供蹭课检索入口')
 assert.match(servicesPage, /simulation: 'academic_schedule'/u, '模拟选课入口应复用课表模块配置')
 assert.match(servicesPage, /key: 'simulation', name: '模拟选课',[\s\S]*schedule\/index\?mode=simulation/u, '全部服务应提供模拟选课入口')
-assert.match(homePage, /key: 'errands',[\s\S]*key: 'course-audit', name: '课程查询',[\s\S]*key: 'classroom'/u, '首页常用服务应在找同行原位置提供课程查询入口')
-assert.match(homePage, /key: 'result',[\s\S]*key: 'simulation', name: '模拟选课',[\s\S]*schedule\/index\?mode=simulation/u, '首页常用服务必须提供模拟选课入口')
-assert.doesNotMatch(homePage, /key: 'carpool', name: '找同行'/u, '首页常用服务不应继续展示找同行入口')
-assert.match(homePage, /if \(!moduleKey\) return 'route' in service/u, '本地页面路由入口不应因缺少运行时模块配置被隐藏')
+assert.match(homePage, /allServices/u, '首页必须复用可自定义的服务目录')
+assert.match(servicesPage, /key: 'course-audit'/u, '课程查询必须可加入首页')
+assert.match(homePage, /return !moduleKey \|\| resolveMiniappModule/u, '本地页面路由入口不应因缺少运行时模块配置被隐藏')
 
 process.stdout.write('course audit smoke: ok\n')

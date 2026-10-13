@@ -4,7 +4,6 @@ import UserAvatar from '../../../components/user-avatar'
 import StickerContent from '../../../components/sticker-content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
 import BusinessRoute from './business-route'
-import { campusLabel } from '../campus'
 import { saveBusinessDetailSnapshot } from '../business-detail-snapshot'
 import { navigateToWithGuard } from '../../../utils/navigation'
 import {
@@ -21,18 +20,9 @@ const openDetail = (item: CarpoolTripView) => {
   void navigateToWithGuard(`/pages/carpool/detail?id=${item.id}&snapshot=1`)
 }
 
-const timeParts = (value: string) => {
-  const formatted = formatDateTime(value)
-  const parts = formatted.split(' ')
-  return {
-    date: parts[0] || formatted,
-    time: parts.slice(1).join(' ') || '待确认',
-  }
-}
-
 export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
   const seats = remainingSeats(item.total_seats, item.occupied_seats)
-  const departure = timeParts(item.departure_at)
+  const departure = formatDateTime(item.departure_at)
   const authorName = item.author_nickname?.trim() || `发起人 #${item.organizer_id}`
   const authorInitial = authorName.trim().slice(0, 1) || '同'
 
@@ -58,7 +48,6 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
               {formatStatus(item.status, item.review_status)}
             </Text>
           </View>
-          <Text>{departure.date} {departure.time}</Text>
         </View>
         <Image className='business-card-more' src={moreIcon} mode='aspectFit' />
       </View>
@@ -78,7 +67,7 @@ export default function CarpoolCard({ item }: { item: CarpoolTripView }) {
       />
 
       <View className='carpool-card__footer'>
-        <Text>{campusLabel(item.campus)} · {departure.date} {departure.time}</Text>
+        <Text>{departure} 出发</Text>
         <Text>{seats} 人可同行</Text>
       </View>
     </View>

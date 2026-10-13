@@ -22,6 +22,7 @@ import {
   communityPinActionLabel,
   getCommunityPinAction,
 } from './pin-action'
+import ClassDiscussionPostActions from '../class-discussion/post-actions'
 
 const communityIcons = {
   comment: require('../../assets/community/comment.svg'),
@@ -65,6 +66,7 @@ const formatCommunityPostTime = (value?: string | null, now = Date.now()) => {
 type Props = {
   post: CampusCirclePostView
   sectionName: string
+  hiddenTopicId?: number
   ariaLabel?: string
   motionDelay?: number
   timeFormatter?: (value?: string | null) => string
@@ -77,7 +79,7 @@ type Props = {
   onCloseActions?: () => void
   onOpenAuthor?: (post: CampusCirclePostView) => void
   onSelectSection?: (sectionId: number) => void
-  variant?: 'community' | 'marketplace' | 'errand' | 'carpool'
+  variant?: 'community' | 'classroom' | 'marketplace' | 'errand' | 'carpool'
   instanceKey?: string
   businessPreview?: { title: string; meta: string }
   trailingAction?: ReactNode
@@ -104,6 +106,7 @@ export type CommunityPostCommentPreview = {
 function CommunityPostCard({
   post,
   sectionName,
+  hiddenTopicId,
   ariaLabel,
   motionDelay = 0,
   timeFormatter,
@@ -156,7 +159,7 @@ function CommunityPostCard({
   const readableContent = plainStickerContent(post.content || '')
   const contentParts = parseStickerContent(post.content || '')
   const contentIsClamped = readableContent.length > 90
-  const topicLinks = communityPostTopics(post)
+  const topicLinks = communityPostTopics(post).filter((topic) => topic.id !== hiddenTopicId)
   const operationBadges = [
     post.is_pinned && '置顶',
     post.is_featured && '精选',
@@ -284,7 +287,7 @@ function CommunityPostCard({
                 leading={topicLinks.map((topic) => (
                   <View
                     key={topic.id}
-                    className='community-post__topic-link community-post__topic-link--content'
+                    className={`community-post__topic-link community-post__topic-link--content${variant === 'classroom' ? ' community-post__topic-link--classroom' : ''}`}
                     ariaRole='button'
                     ariaLabel={`查看话题：${topic.name}`}
                     onClick={(event) => {
@@ -299,7 +302,7 @@ function CommunityPostCard({
               {contentIsClamped && <Text className='community-post__expand'>全文</Text>}
             </View>
           )}
-          {businessPreview && variant !== 'community' && (
+          {businessPreview && variant !== 'community' && variant !== 'classroom' && (
             <View className={`community-post__business-preview community-post__business-preview--${variant}`}>
               <View className='community-post__business-icon'>
                 <Image src={communityIcons[variant]} mode='aspectFit' />
@@ -441,9 +444,9 @@ function CommunityPostCard({
           </View>
         </View>
 
-        {(likedByCopy || commentPreviews.length > 0 || post.comment_count > 3) && (
+        {((variant !== 'classroom' && likedByCopy) || commentPreviews.length > 0 || post.comment_count > 3) && (
           <View className='community-post__engagement'>
-            {likedByCopy && (
+            {variant !== 'classroom' && likedByCopy && (
               <View className='community-post__liked-by'>
                 <Image src={communityIcons.heart} mode='aspectFit' />
                 <Text>{likedByCopy}</Text>
@@ -504,12 +507,23 @@ function CommunityPostCard({
                       onOpen(post)
                     }}
                   >
-                    查看全部 {post.comment_count} 条评论
+                    {variant === 'classroom'
+                      ? <>查看全部 {post.comment_count} 条讨论回复 &gt;</>
+                      : <>查看全部 {post.comment_count} 条评论</>}
                   </View>
                 )}
               </View>
             )}
           </View>
+        )}
+        {variant === 'classroom' && (
+          <ClassDiscussionPostActions
+            post={post}
+            sectionName={sectionName}
+            shareTitle={readableContent}
+            onToggleLike={onToggleLike}
+            onOpenComments={onOpenComments}
+          />
         )}
       </View>
     </View>

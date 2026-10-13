@@ -356,10 +356,14 @@ page {
 }
 
 @media (prefers-color-scheme: dark) {
+.campus-theme {
   .direct-chat-composer__sticker-icon,
   .direct-chat-composer__image-trigger-icon {
     filter: brightness(0) saturate(100%) invert(82%) sepia(26%) saturate(733%) hue-rotate(181deg) brightness(101%) contrast(98%);
   }
+}
+
+
 }
 
 .direct-chat-composer__send--pressed {
@@ -727,7 +731,8 @@ page {
   }
 }
 
-.campus-theme--dark {
+@media (prefers-color-scheme: dark) {
+.campus-theme {
   .direct-chat-page__scroll,
   .direct-chat-message__content,
   .direct-chat-message__image-fallback,
@@ -750,6 +755,9 @@ page {
   .direct-chat-composer__field {
     background: token.$color-surface-subtle;
   }
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {

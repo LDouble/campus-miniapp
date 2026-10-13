@@ -30,6 +30,9 @@ export const resolvePageSubscriptionModule = (
   if (route.startsWith('pages/errands/')) return 'errand'
   if (route.startsWith('pages/marketplace/')) return 'marketplace'
   if (route.startsWith('pages/carpool/')) return 'carpool'
+  if (route === 'pages/my-services/index' && page.options?.section === 'carpool') {
+    return 'carpool'
+  }
   if (route.startsWith('pages/academic/schedule/')) return 'academic_schedule'
   if (route.startsWith('pages/academic/grades/')) return 'academic_grades'
   if (route.startsWith('pages/academic/exams/')) return 'academic_exams'

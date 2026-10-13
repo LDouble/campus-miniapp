@@ -6,6 +6,7 @@ import { getCat, listCatSightings, type CatView, type SightingView } from '../..
 import { formatCatDate, RequestState } from '../../features/cat-atlas/ui'
 import { useCollapsingHeader } from '../../hooks/use-collapsing-header'
 import { navigateToWithGuard } from '../../utils/navigation'
+import VariantImage from '../../components/variant-image'
 import './atlas.scss'
 
 const detailMoreIcon = require('../../assets/cat-atlas/figma/detail-more.svg')
@@ -33,7 +34,17 @@ const formatTimelineTime = (value: string) => {
   return `${date.getMonth() + 1}/${date.getDate()} ${clock}`
 }
 
-const uniquePhotos = (photos: Array<string | null | undefined>) => Array.from(new Set(photos.filter((photo): photo is string => Boolean(photo))))
+type CatPhoto = { url: string; thumbnail_url?: string | null }
+
+const uniquePhotos = (photos: Array<CatPhoto | null | undefined>) => {
+  const seen = new Set<string>()
+  return photos.reduce<CatPhoto[]>((result, photo) => {
+    if (!photo?.url || seen.has(photo.url)) return result
+    seen.add(photo.url)
+    result.push(photo)
+    return result
+  }, [])
+}
 
 function HeaderActions({ onClose }: { onClose: () => void }) {
   return <View className='cat-detail-nav-pill'>
@@ -48,7 +59,7 @@ export default function CatDetailPage() {
   const id = params.id || ''
   const [cat, setCat] = useState<CatView | null>(null)
   const [sightings, setSightings] = useState<SightingView[]>([])
-  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([])
+  const [galleryPhotos, setGalleryPhotos] = useState<CatPhoto[]>([])
   const [activePhoto, setActivePhoto] = useState(0)
   const [brokenPhotos, setBrokenPhotos] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,7 +79,10 @@ export default function CatDetailPage() {
       const [profile, feed] = await Promise.all([getCat(id), listCatSightings(id)])
       setCat(profile)
       setSightings(feed.items.slice(0, 2))
-      setGalleryPhotos(uniquePhotos([profile.cover_url, ...feed.items.map((item) => item.photo_url)]))
+      setGalleryPhotos(uniquePhotos([
+        profile.cover_url ? { url: profile.cover_url, thumbnail_url: profile.cover_thumbnail_url } : null,
+        ...feed.items.map((item) => item.photo_url ? { url: item.photo_url, thumbnail_url: item.photo_thumbnail_url } : null),
+      ]))
       setBrokenPhotos([])
       setActivePhoto(0)
     } catch (loadError) {
@@ -81,7 +95,7 @@ export default function CatDetailPage() {
   useDidShow(() => { void load() })
 
   const visiblePhotos = useMemo(
-    () => galleryPhotos.filter((photo) => !brokenPhotos.includes(photo)),
+    () => galleryPhotos.filter((photo) => !brokenPhotos.includes(photo.url)),
     [brokenPhotos, galleryPhotos],
   )
   const hasPhotos = visiblePhotos.length > 0
@@ -119,18 +133,19 @@ export default function CatDetailPage() {
       <View className={`cat-detail-visual-card ${hasPhotos ? 'cat-detail-visual-card--photo' : 'cat-detail-visual-card--empty'}`}>
         {hasPhotos ? <>
           <View className='cat-detail-media'>
-            <Image
+            <VariantImage
               className='cat-detail-media__image'
-              src={selectedPhoto}
+              originalUrl={selectedPhoto.url}
+              thumbnailUrl={selectedPhoto.thumbnail_url}
               mode='aspectFill'
-              onError={() => markPhotoBroken(selectedPhoto)}
-              onClick={() => void Taro.previewImage({ urls: visiblePhotos, current: selectedPhoto })}
+              onError={() => markPhotoBroken(selectedPhoto.url)}
+              onClick={() => void Taro.previewImage({ urls: visiblePhotos.map((photo) => photo.url), current: selectedPhoto.url })}
             />
             <View className='cat-detail-media__gradient' />
             <View className='cat-detail-media__status'><View /><Text>在校活动中</Text></View>
             <View className='cat-detail-media__footer'>
               <View className='cat-detail-media__dots'>
-                {visiblePhotos.slice(0, 4).map((photo, index) => <View key={photo} className={index === activePhoto ? 'is-active' : ''} />)}
+                {visiblePhotos.slice(0, 4).map((photo, index) => <View key={photo.url} className={index === activePhoto ? 'is-active' : ''} />)}
               </View>
               <View className='cat-detail-media__counter'><Image src={detailPhotoIcon} mode='aspectFit' /><Text>{Math.min(activePhoto + 1, visiblePhotos.length)}/{visiblePhotos.length} 照</Text></View>
             </View>
@@ -138,12 +153,12 @@ export default function CatDetailPage() {
           <View className='cat-detail-album'>
             <View className='cat-detail-album__head'>
               <View><Image src={detailAlbumIcon} mode='aspectFit' /><Text>相册精选 ({visiblePhotos.length})</Text></View>
-              <Text onClick={() => void Taro.previewImage({ urls: visiblePhotos, current: selectedPhoto })}>查看图集 <Text>›</Text></Text>
+              <Text onClick={() => void Taro.previewImage({ urls: visiblePhotos.map((photo) => photo.url), current: selectedPhoto.url })}>查看图集 <Text>›</Text></Text>
             </View>
             <View className='cat-detail-album__grid'>
-              {visiblePhotos.slice(0, visiblePhotos.length > 4 ? 3 : 4).map((photo, index) => <View key={photo} className={`cat-detail-album__thumb ${index === activePhoto ? 'is-active' : ''}`} onClick={() => setActivePhoto(index)}><Image src={photo} mode='aspectFill' onError={() => markPhotoBroken(photo)} /></View>)}
-              {visiblePhotos.length > 4 && <View className='cat-detail-album__thumb cat-detail-album__thumb--more' onClick={() => void Taro.previewImage({ urls: visiblePhotos, current: selectedPhoto })}>
-                <Image src={visiblePhotos[3]} mode='aspectFill' />
+              {visiblePhotos.slice(0, visiblePhotos.length > 4 ? 3 : 4).map((photo, index) => <View key={photo.url} className={`cat-detail-album__thumb ${index === activePhoto ? 'is-active' : ''}`} onClick={() => setActivePhoto(index)}><VariantImage originalUrl={photo.url} thumbnailUrl={photo.thumbnail_url} mode='aspectFill' onError={() => markPhotoBroken(photo.url)} /></View>)}
+              {visiblePhotos.length > 4 && <View className='cat-detail-album__thumb cat-detail-album__thumb--more' onClick={() => void Taro.previewImage({ urls: visiblePhotos.map((photo) => photo.url), current: selectedPhoto.url })}>
+                <VariantImage originalUrl={visiblePhotos[3].url} thumbnailUrl={visiblePhotos[3].thumbnail_url} mode='aspectFill' />
                 <View><Text>+{visiblePhotos.length - 3}</Text><Text>全部</Text></View>
               </View>}
             </View>
@@ -191,7 +206,7 @@ export default function CatDetailPage() {
             <View className='cat-detail-sighting-card__meta'><Text>{item.reporter_name || '匿名同学'}</Text><Text>{compactArea(item.area) || '暂无地点'} · {formatTimelineTime(item.created_at)}</Text></View>
             {item.activity && <View className='cat-detail-sighting-card__activity cat-detail-live-preview__activity'><Text>它在{item.activity}</Text></View>}
             {item.note && <Text className='cat-detail-sighting-card__note'>{item.note}</Text>}
-            {item.photo_url && <View className='cat-detail-sighting-card__photos'><Image src={item.photo_url} mode='aspectFill' onError={() => markPhotoBroken(item.photo_url!)} /></View>}
+            {item.photo_url && <View className='cat-detail-sighting-card__photos'><VariantImage originalUrl={item.photo_url} thumbnailUrl={item.photo_thumbnail_url} mode='aspectFill' onError={() => markPhotoBroken(item.photo_url!)} /></View>}
           </View>)}
           {!sightings.length && <View className='cat-detail-sightings-empty'><Text>还没有新的相遇记录</Text><Text>成为第一个记录它的人吧</Text></View>}
           <View className='cat-detail-sighting-compose cat-detail-live-preview__compose' onClick={() => void navigateToWithGuard(reportPath)}>

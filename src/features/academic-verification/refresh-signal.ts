@@ -3,6 +3,7 @@ export const ACADEMIC_REFRESH_ROUTES = [
   '/pages/academic/schedule/index',
   '/pages/academic/exams/index',
   '/pages/academic/selection/index',
+  '/pages/academic/course-addition-results/index',
   '/pages/academic/statistics/courses',
   '/pages/academic/statistics/index',
 ] as const

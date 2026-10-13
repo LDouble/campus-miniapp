@@ -5,6 +5,7 @@ import { getMyCatCatalog, type CatCatalog, type CatView } from '../../api/cat-at
 import { RequestState } from '../../features/cat-atlas/ui'
 import { navigateToWithGuard } from '../../utils/navigation'
 import CustomNavbar from '../../components/custom-navbar'
+import VariantImage from '../../components/variant-image'
 import './atlas.scss'
 
 function CatalogCat({ cat, locked }: { cat: CatView; locked: boolean }) {
@@ -17,7 +18,7 @@ function CatalogCat({ cat, locked }: { cat: CatView; locked: boolean }) {
   }
   return <View className={`catalog-grid__item ${locked ? 'catalog-grid__item--locked' : ''}`} onClick={handleClick}>
     <View className={`catalog-grid__photo ${photo ? '' : 'catalog-grid__photo--empty'}`}>
-      {photo ? <Image src={photo} mode='aspectFill' onError={() => setPhotoBroken(true)} /> : <Text>暂无照片</Text>}
+      {photo ? <VariantImage originalUrl={photo} thumbnailUrl={cat.cover_thumbnail_url} mode='aspectFill' onError={() => setPhotoBroken(true)} /> : <Text>暂无照片</Text>}
       {locked && <View className='catalog-grid__lock'><Text>?</Text></View>}
     </View>
     <Text>{locked ? '未解锁' : cat.name}</Text>

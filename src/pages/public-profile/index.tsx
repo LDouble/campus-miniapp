@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidShow, useLoad, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import type {
@@ -29,6 +29,7 @@ import {
   directMessagesListUrl,
 } from '../../features/direct-messages/navigation'
 import { privateMessagesRepository } from '../../features/direct-messages/repository'
+import { blockUser, unblockUser } from '../../features/profile/user-block'
 import { isQualificationEdition } from '../../features/app-edition'
 import { requestWechatSubscriptionForModule } from '../../features/wechat-subscription'
 import {
@@ -38,6 +39,7 @@ import {
   resolveMiniappModule,
 } from '../../features/runtime-config'
 import { useCampusShare } from '../../features/share'
+import { availableLifeServicePublicationTypes } from '../../features/life-services/module-availability'
 import '../../features/life-services/list-panel.scss'
 import './index.scss'
 
@@ -112,12 +114,22 @@ export default function PublicProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>('community')
   const [tabs, setTabs] = useState<Record<ProfileTab, TabState>>(initialTabs)
   const [openingConversation, setOpeningConversation] = useState(false)
+  const [blockedByCurrentUser, setBlockedByCurrentUser] = useState(false)
+  const [changingBlockStatus, setChangingBlockStatus] = useState(false)
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [commentPost, setCommentPost] = useState<CampusCirclePostView | null>(null)
   const [commentReplyTarget, setCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
   const [commentSubmitting, setCommentSubmitting] = useState(false)
   const [commentDismissSignal, setCommentDismissSignal] = useState(0)
   const [openActionPostId, setOpenActionPostId] = useState<number | null>(null)
+  const tabEpoch = useRef(0)
+  const blockActionPendingRef = useRef(false)
+  const profileRequestVersionRef = useRef(0)
+  const visibleTabOptions = tabOptions.filter((tab) => (
+    availableLifeServicePublicationTypes(runtimeConfig).includes(
+      tab.key === 'marketplace' ? 'market' : tab.key,
+    )
+  ))
 
   useCampusShare((event) => {
     const dataset = event.target?.dataset || {}
@@ -151,29 +163,38 @@ export default function PublicProfilePage() {
   }, [])
 
   const loadProfile = async (id: number) => {
+    if (blockActionPendingRef.current) return
     if (!id) {
       setProfileLoading(false)
       setProfileError('用户参数无效')
       return
     }
+    const requestVersion = profileRequestVersionRef.current + 1
+    profileRequestVersionRef.current = requestVersion
     setProfileLoading(true)
     setProfileError('')
     try {
-      setProfile(await lifeServicesRepository.getUserProfile(id))
+      const loadedProfile = await lifeServicesRepository.getUserProfile(id)
+      if (requestVersion !== profileRequestVersionRef.current) return
+      setProfile(loadedProfile)
+      setBlockedByCurrentUser(loadedProfile.is_blocked)
     } catch (error) {
+      if (requestVersion !== profileRequestVersionRef.current) return
       setProfileError(isApiError(error) ? error.message : '个人主页加载失败')
     } finally {
-      setProfileLoading(false)
+      if (requestVersion === profileRequestVersionRef.current) setProfileLoading(false)
     }
   }
 
   const loadTab = useCallback(async (tab: ProfileTab, page = 1, append = false) => {
-    if (!userId) return
+    if (!userId || !visibleTabOptions.some((item) => item.key === tab)) return
+    const epoch = tabEpoch.current
     updateTab(tab, append
       ? { loadingMore: true, error: '' }
       : { loading: true, error: '' })
     try {
       const result = await requestTab(tab, userId, page)
+      if (epoch !== tabEpoch.current) return
       setTabs((current) => ({
         ...current,
         [tab]: {
@@ -190,6 +211,7 @@ export default function PublicProfilePage() {
         },
       }))
     } catch (error) {
+      if (epoch !== tabEpoch.current) return
       updateTab(tab, {
         loaded: true,
         loading: false,
@@ -197,7 +219,7 @@ export default function PublicProfilePage() {
         error: isApiError(error) ? error.message : '内容加载失败，请稍后重试',
       })
     }
-  }, [updateTab, userId])
+  }, [updateTab, userId, visibleTabOptions])
 
   useLoad((options) => {
     const id = parseUserId(options.id)
@@ -206,14 +228,27 @@ export default function PublicProfilePage() {
   })
 
   useDidShow(() => {
-    void loadMiniappRuntimeConfig().then(setRuntimeConfig)
+    void loadMiniappRuntimeConfig().then((config) => {
+      if (JSON.stringify(config.modules) !== JSON.stringify(runtimeConfig.modules)) {
+        tabEpoch.current += 1
+        setTabs(initialTabs())
+      }
+      setRuntimeConfig(config)
+    })
   })
 
   useEffect(() => {
+    const fallback = visibleTabOptions[0]?.key
+    if (fallback && !visibleTabOptions.some((tab) => tab.key === activeTab)) {
+      setActiveTab(fallback)
+      return
+    }
+    if (!fallback) return
     if (!userId || tabs[activeTab].loaded || tabs[activeTab].loading) return
     void loadTab(activeTab)
-  }, [activeTab, loadTab, tabs, userId])
+  }, [activeTab, loadTab, tabs, userId, visibleTabOptions])
 
+  const activeTabAvailable = visibleTabOptions.some((tab) => tab.key === activeTab)
   usePullDownRefresh(() => {
     if (!userId) {
       Taro.stopPullDownRefresh()
@@ -221,7 +256,7 @@ export default function PublicProfilePage() {
     }
     void Promise.all([
       loadProfile(userId),
-      loadTab(activeTab),
+      ...(activeTabAvailable ? [loadTab(activeTab)] : []),
     ]).finally(() => Taro.stopPullDownRefresh())
   })
 
@@ -279,6 +314,43 @@ export default function PublicProfilePage() {
     )
     void openPrivateConversation(subscriptionAlreadyRequested)
   }
+
+  const changeBlockStatus = async () => {
+    if (!profile || profile.is_self || developmentPresentation || blockActionPendingRef.current) return
+    blockActionPendingRef.current = true
+    const nextBlockedStatus = !blockedByCurrentUser
+    try {
+      if (nextBlockedStatus) {
+        const confirmation = await Taro.showModal({
+          title: '确认拉黑',
+          content: `拉黑后，${profile.user.nickname}将无法向你发送私信。`,
+          confirmText: '拉黑',
+          confirmColor: '#e5484d',
+        })
+        if (!confirmation.confirm) return
+      }
+      profileRequestVersionRef.current += 1
+      setProfileLoading(false)
+      setChangingBlockStatus(true)
+      const result = nextBlockedStatus
+        ? await blockUser(profile.user.id)
+        : await unblockUser(profile.user.id)
+      setBlockedByCurrentUser(result.is_blocked)
+      Taro.showToast({
+        title: result.is_blocked ? '已拉黑' : '已取消拉黑',
+        icon: 'success',
+      })
+    } catch (error) {
+      Taro.showToast({
+        title: isApiError(error) ? error.message : '操作失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      blockActionPendingRef.current = false
+      setChangingBlockStatus(false)
+    }
+  }
+
   const openCommunityComments = useCallback((post: CampusCirclePostView) => {
     setOpenActionPostId(null)
     setCommentSubmitting(false)
@@ -461,25 +533,45 @@ export default function PublicProfilePage() {
                     ? '这里展示你未删除的校园发布'
                     : '仅展示对你公开可见的校园内容'}
                 </Text>
-                {!isQualificationEdition
-                  && !developmentPresentation
-                  && !profile.is_self
-                  && resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden'
-                  && (
-                  <View
-                    className='public-profile-hero__message-action'
-                    ariaRole='button'
-                    ariaLabel={`给${profile.user.nickname}发私信`}
-                    onClick={beginPrivateConversation}
-                  >
-                    {openingConversation ? '正在打开' : '发私信'}
+                {!developmentPresentation && !profile.is_self && (
+                  <View className='public-profile-hero__actions'>
+                    {!isQualificationEdition
+                      && resolveMiniappModule(runtimeConfig, 'private_message').state !== 'hidden'
+                      && (
+                      <View
+                        className='public-profile-hero__message-action'
+                        ariaRole='button'
+                        ariaLabel={`给${profile.user.nickname}发私信`}
+                        onClick={beginPrivateConversation}
+                      >
+                        {openingConversation ? '正在打开' : '发私信'}
+                      </View>
+                    )}
+                    <View
+                      className={[
+                        'public-profile-hero__block-action',
+                        blockedByCurrentUser ? 'public-profile-hero__block-action--blocked' : '',
+                        changingBlockStatus ? 'public-profile-hero__block-action--pending' : '',
+                      ].filter(Boolean).join(' ')}
+                      ariaRole='button'
+                      ariaLabel={changingBlockStatus
+                        ? '拉黑状态更新中'
+                        : blockedByCurrentUser
+                          ? `取消拉黑${profile.user.nickname}`
+                          : `拉黑${profile.user.nickname}`}
+                      onClick={() => void changeBlockStatus()}
+                    >
+                      {changingBlockStatus
+                        ? '正在处理'
+                        : blockedByCurrentUser ? '取消拉黑' : '拉黑'}
+                    </View>
                   </View>
                 )}
               </View>
             </View>
 
             <View className='public-profile-tabs' ariaRole='tablist'>
-              {tabOptions.map((tab) => (
+              {visibleTabOptions.map((tab) => (
                 <View
                   key={tab.key}
                   className={activeTab === tab.key
@@ -495,31 +587,31 @@ export default function PublicProfilePage() {
               ))}
             </View>
 
-            <View className='public-profile-section-heading'>
+            {activeTabAvailable && <View className='public-profile-section-heading'>
               <View>
-                <Text>{tabOptions.find((tab) => tab.key === activeTab)?.label}</Text>
+                <Text>{visibleTabOptions.find((tab) => tab.key === activeTab)?.label}</Text>
                 <Text>{profile.is_self ? '我的发布与进度' : '公开可见的发布'}</Text>
               </View>
               <Text>{tabState.loaded ? `${tabState.total} 条` : '待加载'}</Text>
-            </View>
+            </View>}
 
-            {tabState.loading && (
-              <View className='public-profile-state'>正在加载{tabOptions.find((tab) => tab.key === activeTab)?.label}内容</View>
+            {activeTabAvailable && tabState.loading && (
+              <View className='public-profile-state'>正在加载{visibleTabOptions.find((tab) => tab.key === activeTab)?.label}内容</View>
             )}
-            {!tabState.loading && tabState.error && (
+            {activeTabAvailable && !tabState.loading && tabState.error && (
               <View className='public-profile-state public-profile-state--error'>
                 <Text>{tabState.error}</Text>
                 <View onClick={() => void loadTab(activeTab)}>重新加载</View>
               </View>
             )}
-            {!tabState.loading && !tabState.error && renderItems()}
-            {!tabState.loading && !tabState.error && tabState.loaded && tabState.items.length === 0 && (
+            {activeTabAvailable && !tabState.loading && !tabState.error && renderItems()}
+            {activeTabAvailable && !tabState.loading && !tabState.error && tabState.loaded && tabState.items.length === 0 && (
               <View className='public-profile-state public-profile-state--empty'>
-                <Text>还没有可展示的{tabOptions.find((tab) => tab.key === activeTab)?.label}内容</Text>
+                <Text>还没有可展示的{visibleTabOptions.find((tab) => tab.key === activeTab)?.label}内容</Text>
                 <Text>{profile.is_self ? '发布后就会出现在这里' : '去其他分类看看吧'}</Text>
               </View>
             )}
-            {!tabState.loading && !tabState.error && tabState.items.length < tabState.total && (
+            {activeTabAvailable && !tabState.loading && !tabState.error && tabState.items.length < tabState.total && (
               <View
                 className='public-profile-load-more'
                 onClick={() => !tabState.loadingMore && void loadTab(activeTab, tabState.page + 1, true)}

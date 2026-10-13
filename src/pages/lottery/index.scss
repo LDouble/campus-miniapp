@@ -23,7 +23,13 @@ page { background: token.$color-page; }
   &__action { flex:none; padding:8rpx 24rpx; border-radius:token.$ousea-radius-pill; color:token.$color-on-accent; background:linear-gradient(90deg,token.$ousea-lottery-orange,token.$ousea-lottery-golden); font-size:24rpx; line-height:1.4; }
   &--ended { border-color:token.$color-border; box-shadow:none; .lottery-campaign-card__status { color:token.$color-text-muted; } .lottery-campaign-card__action { color:token.$color-text-secondary; background:transparent; } }
 }
-.campus-theme--dark .lottery-campaign-card { border-color:token.$color-border; box-shadow:none; }
-.campus-theme--dark .lottery-campaign-card:not(.lottery-campaign-card--ended) .lottery-campaign-card__action { color:token.$color-on-accent; background:var(--campus-surface-errand); }
+@media (prefers-color-scheme: dark) {
+.campus-theme .lottery-campaign-card { border-color:token.$color-border; box-shadow:none; }
+
+}
+@media (prefers-color-scheme: dark) {
+.campus-theme .lottery-campaign-card:not(.lottery-campaign-card--ended) .lottery-campaign-card__action { color:token.$color-on-accent; background:var(--campus-surface-errand); }
+
+}
 @media (max-width:340px) { .lottery-campaign-card { padding:24rpx; &__main { gap:20rpx; } &__cover { width:136rpx; height:136rpx; } &__footer { flex-wrap:wrap; } } }
 @media (prefers-reduced-motion:reduce) { .lottery-campaign-card { transition:none; } }

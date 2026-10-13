@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { FoodListing } from '../../api/what-to-eat'
+import VariantImage from '../../components/variant-image'
 import './what-to-eat-feed-card.scss'
 
 const icon = require('../../assets/icons/what-to-eat.svg')
@@ -13,6 +14,7 @@ type Props = {
 }
 
 export default function WhatToEatFeedCard({ item, picking = false, onPick, onOpen }: Props) {
+  const thumbnailUrls = (item as FoodListing & { thumbnail_urls?: Array<string | null> }).thumbnail_urls || []
   return (
     <View className='what-to-eat-feed-card' role='button' onClick={onOpen}>
       <View className='what-to-eat-feed-card__head'>
@@ -24,7 +26,7 @@ export default function WhatToEatFeedCard({ item, picking = false, onPick, onOpe
       </View>
       <View className='what-to-eat-feed-card__body'>
         {item.image_urls[0]
-          ? <Image className='what-to-eat-feed-card__image' src={item.image_urls[0]} mode='aspectFill' />
+          ? <VariantImage className='what-to-eat-feed-card__image' originalUrl={item.image_urls[0]} thumbnailUrl={thumbnailUrls[0]} mode='aspectFill' />
           : <View className='what-to-eat-feed-card__placeholder' aria-hidden><Image src={icon} mode='aspectFit' /></View>}
         <View className='what-to-eat-feed-card__info'>
           <Text className='what-to-eat-feed-card__name'>{item.name}</Text>

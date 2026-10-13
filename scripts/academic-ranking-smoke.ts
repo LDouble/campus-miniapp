@@ -14,6 +14,10 @@ const groupPage = readFileSync(
   resolve(__dirname, '../src/pages/academic/rankings/group.tsx'),
   'utf8',
 )
+const serviceCatalog = readFileSync(
+  resolve(__dirname, '../src/features/service-shortcuts/catalog.ts'),
+  'utf8',
+)
 
 const createdGroup = { id: 73, name: '测试排名组' }
 const joinedGroup = { id: 91, name: '受邀排名组' }
@@ -49,5 +53,6 @@ assert.match(approvedGrantBlock, /putAcademicRankingGrant/u)
 const pendingGrantNotice = groupPage.slice(pendingStart)
 assert.match(pendingGrantNotice, /申请待审核/u, 'pending applicants need a clear authorization status')
 assert.match(pendingGrantNotice, /组主确认后/u)
+assert.match(serviceCatalog, /key: 'grade-ranking', name: '成绩排名', route: '\/pages\/academic\/rankings\/index'/u, '成绩排名必须能从新版服务目录打开')
 
 process.stdout.write('academic ranking smoke: ok\n')

@@ -95,20 +95,46 @@ page {
   line-height: 1.5;
 }
 
-.public-profile-hero__message-action {
-  display: inline-flex;
-  min-height: 60rpx;
-  padding: 0 20rpx;
+.public-profile-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: token.$space-1;
   margin-top: 16rpx;
+}
+
+.public-profile-hero__message-action,
+.public-profile-hero__block-action {
+  display: inline-flex;
+  min-height: token.$touch-target-min;
+  padding: 0 20rpx;
   align-items: center;
   justify-content: center;
   border: 2rpx solid token.$color-border-strong;
   border-radius: token.$radius-md;
-  background: token.$color-surface-primary;
-  color: token.$color-primary-strong;
   font-size: 23rpx;
   font-weight: 720;
   transition: opacity token.$motion-press ease, transform token.$motion-press ease;
+}
+
+.public-profile-hero__message-action {
+  background: token.$color-surface-primary;
+  color: token.$color-primary-strong;
+}
+
+.public-profile-hero__block-action {
+  border-color: token.$color-border;
+  background: token.$color-surface;
+  color: token.$color-text-secondary;
+}
+
+.public-profile-hero__block-action--blocked {
+  border-color: var(--campus-danger, #e5484d);
+  background: var(--campus-surface-danger, #fdecec);
+  color: var(--campus-danger, #e5484d);
+}
+
+.public-profile-hero__block-action--pending {
+  opacity: .68;
 }
 
 .public-profile-hero__message-action--pressed {

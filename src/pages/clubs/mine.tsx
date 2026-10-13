@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
+import VariantImage from '../../components/variant-image'
 import { isApiError } from '../../api/client'
 import { ensureClubEditorAccess } from '../../features/clubs/access'
 import {
@@ -137,7 +138,7 @@ export default function MyClubsPage() {
               <View className='my-club-card__head'>
                 <View className='my-club-card__logo'>
                   {revision?.logo.url
-                    ? <Image src={revision.logo.url} mode='aspectFill' />
+                    ? <VariantImage originalUrl={revision.logo.url} thumbnailUrl={(revision.logo as typeof revision.logo & { thumbnail_url?: string | null }).thumbnail_url} mode='aspectFill' />
                     : <Image src={require('../../assets/icons/clubs.svg')} mode='aspectFit' />}
                 </View>
                 <View className='my-club-card__identity'>

@@ -346,8 +346,9 @@
   text-align: center;
 }
 
-.cat-report-journal.campus-theme--dark,
-.campus-theme--dark .cat-report-journal {
+@media (prefers-color-scheme: dark) {
+.cat-report-journal.campus-theme,
+.campus-theme .cat-report-journal {
   --campus-cat-page: var(--campus-page);
   --campus-cat-surface: var(--campus-surface);
   --campus-cat-subtle: var(--campus-surface-subtle);
@@ -357,6 +358,9 @@
   --campus-cat-primary: var(--campus-errand);
 
   .cat-report__submit { background: var(--campus-surface-errand); color: #fff; }
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -61,21 +61,26 @@ const blockerMeta: Record<BlockerModule, {
     icon: icons.carpool,
   },
   settlement: {
-    label: '结算处理中',
+    label: '待处理的交易结算',
     route: '/pages/my-services/index?section=orders&relation=all',
     icon: icons.market,
   },
   withdrawal: {
-    label: '提现处理中',
-    route: '/pages/profile/index',
-    icon: icons.identity,
+    label: '待处理的提现申请',
+    route: '/pages/my-services/index?section=orders&relation=all',
+    icon: icons.market,
   },
 }
 
 const qualificationBlockerRoute = (module: BlockerModule) => {
-  if (module === 'settlement' || module === 'withdrawal') return '/pages/profile/index'
+  // 资格版尚无结算/提现迁移模块，不能把它们伪装为二手模块。
+  if (module === 'settlement' || module === 'withdrawal') return '/pages/my-services/index'
   return featureMigratedUrl({ module: module === 'trade_order' ? 'marketplace' : module })
 }
+
+const isFinancialBlocker = (module: BlockerModule) => (
+  module === 'settlement' || module === 'withdrawal'
+)
 
 const preflightFromError = (error: ApiError) => {
   const details = error.details
@@ -130,6 +135,19 @@ export default function AccountCancellationPage() {
         icon: 'none',
       })
     }
+  }
+
+  const openBlocker = async (module: BlockerModule, route: string) => {
+    if (isQualificationEdition && isFinancialBlocker(module)) {
+      const result = await Taro.showModal({
+        title: '请前往新版校园服务处理',
+        content: '当前版本不提供收益结算和提现处理，请在新版校园服务完成处理后再返回注销检查。',
+        confirmText: '前往新版',
+        cancelText: '暂不处理',
+      })
+      if (!result.confirm) return
+    }
+    await Taro.navigateTo({ url: route })
   }
 
   const cancelAccount = async () => {
@@ -281,11 +299,12 @@ export default function AccountCancellationPage() {
                 </View>
                 <View
                   className='cancellation-blocker__action'
-                  onClick={() => Taro.navigateTo({
-                    url: isQualificationEdition
+                  onClick={() => void openBlocker(
+                    blocker.module,
+                    isQualificationEdition
                       ? qualificationBlockerRoute(blocker.module)
                       : meta.route,
-                  })}
+                  )}
                 >
                   <Text>去处理</Text><Image src={icons.arrow} mode='aspectFit' />
                 </View>

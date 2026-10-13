@@ -1,10 +1,6 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../features/app-edition'
 import type { LifeHubSection } from '../features/life-services/business-theme'
-import {
-  applyCampusThemeToCurrentPage,
-  getCampusTheme,
-} from '../features/theme-preference'
 
 export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
 
@@ -34,7 +30,6 @@ interface CustomTabBarInstance {
   setData: (data: {
     selected?: number
     hidden?: boolean
-    darkMode?: boolean
     publishSection?: LifeHubSection
     unreadCount?: number
   }) => void
@@ -83,13 +78,11 @@ const getStoredTotalUnreadCount = () => (
  * 页面显示时只同步当前页面所属的原生组件实例。
  */
 export function syncCustomTabBar(page: TabBarPage) {
-  applyCampusThemeToCurrentPage()
   const selected = tabBarIndex(page)
   if (selected < 0) return
   getCustomTabBar()?.setData({
     selected,
     hidden: false,
-    darkMode: getCampusTheme() === 'dark',
     unreadCount: getStoredTotalUnreadCount(),
   })
 }

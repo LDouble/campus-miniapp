@@ -1,6 +1,5 @@
 const atomicApi = 'findEmptyClassrooms'
 const componentName = 'empty-classroom-list'
-const { getCampusTheme, subscribeCampusTheme } = require('../../utils/theme')
 
 const normalizeText = (value) => typeof value === 'string' ? value.trim() : ''
 
@@ -36,7 +35,6 @@ const normalizeRooms = (groups) => {
 
 Component({
   data: {
-    darkMode: getCampusTheme() === 'dark',
     campus: '',
     serviceDate: '',
     sectionText: '',
@@ -103,15 +101,6 @@ Component({
         )
       })
       console.info(`[ai-mode] ${componentName} overflow monitor=on`)
-    },
-    attached() {
-      console.info(`[ai-mode] ${componentName} attached`)
-      this.unsubscribeCampusTheme = subscribeCampusTheme((theme) => {
-        this.setData({ darkMode: theme === 'dark' })
-      })
-    },
-    detached() {
-      if (this.unsubscribeCampusTheme) this.unsubscribeCampusTheme()
     },
   },
 })

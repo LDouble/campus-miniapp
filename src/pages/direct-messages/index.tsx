@@ -116,7 +116,7 @@ export default function DirectMessagesPage() {
     } else {
       void syncOpenedConversation()
     }
-    void refreshPrivateMessageUnreadCount(true).catch(() => undefined)
+    void refreshPrivateMessageUnreadCount().catch(() => undefined)
   })
 
   usePullDownRefresh(() => {

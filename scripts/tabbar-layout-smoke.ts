@@ -36,7 +36,11 @@ assert.match(rule('.tab-bar__publish-button'), /transform:\s*translateY\(-16rpx\
 assert.doesNotMatch(tabBarStyle, /border-radius:\s*38rpx/u)
 assert.doesNotMatch(tabBarStyle, /backdrop-filter:/u)
 assert.doesNotMatch(tabBarStyle, /linear-gradient/u)
-assert.match(tabBarStyle, /\.tab-bar--dark \.tab-bar__dock/u)
+assert.match(
+  tabBarStyle,
+  /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{[\s\S]*\.tab-bar__dock/u,
+  '底栏深色外观必须由系统深色媒体查询驱动',
+)
 
 for (const path of [
   'src/pages/index/index.scss',

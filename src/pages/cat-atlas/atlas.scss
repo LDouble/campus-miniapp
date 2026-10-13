@@ -236,7 +236,10 @@
 .report-options > .is-active, .cat-profile-suggestion-page__fields > .is-active { border-color: var(--campus-cat-primary); color: var(--campus-cat-heading); }
 .cat-detail-profile-head__tags text { border-radius: 12rpx; }
 .report-heading__title { color: var(--campus-cat-heading); }
-.campus-theme--dark .atlas-intro__art, .campus-theme--dark .catalog-summary__art { opacity: .8; }
+@media (prefers-color-scheme: dark) {
+.campus-theme .atlas-intro__art, .campus-theme .catalog-summary__art { opacity: .8; }
+
+}
 .atlas-intro__art { width: 256rpx; height: 220rpx; }
 .atlas-eyebrow { color: var(--ousea-cat-sage); }
 .atlas-record-id { display: block; margin-bottom: 10rpx; color: var(--campus-cat-secondary); font-size: 20rpx; letter-spacing: 2rpx; }
@@ -305,7 +308,10 @@
 .cat-list-v2__title { font-size: 34rpx; }
 .cat-list-v2__tags { margin: 0 0 14rpx; font-size: 24rpx; }
 .cat-list-v2__meta { font-size: 24rpx; }
-.campus-theme--dark .atlas-eyebrow, .campus-theme--dark .atlas-encounter-count { color: var(--campus-text-secondary); }
+@media (prefers-color-scheme: dark) {
+.campus-theme .atlas-eyebrow, .campus-theme .atlas-encounter-count { color: var(--campus-text-secondary); }
+
+}
 @media (prefers-reduced-motion: reduce) {
   .cat-list-v2__card { transition: none; }
   .cat-list-v2__card--pressed { transform: none; }
@@ -561,10 +567,11 @@
 .report-footer, .cat-profile-suggestion-page__footer { padding: 16rpx 28rpx calc(16rpx + env(safe-area-inset-bottom)); border-top: 1rpx solid rgba(234, 223, 210, .85); background: rgba(255, 253, 249, .95); box-shadow: 0 -12rpx 28rpx rgba(91, 64, 44, .055); backdrop-filter: blur(22rpx); }
 .report-footer > text, .cat-profile-suggestion-page__footer > text { color: #a08b79; }
 
+@media (prefers-color-scheme: dark) {
 /* Keep the dark theme readable without changing the warm product identity. */
-.campus-theme--dark .cat-page,
-.campus-theme--dark .atlas-form-page,
-.campus-theme--dark .catalog-page {
+.campus-theme .cat-page,
+.campus-theme .atlas-form-page,
+.campus-theme .catalog-page {
   --campus-cat-page: #211b17;
   --campus-cat-surface: #2b241f;
   --campus-cat-subtle: #382e27;
@@ -574,6 +581,9 @@
   --campus-cat-primary: #e28b5d;
   --cat-atlas-cream: #463328;
   --cat-atlas-shadow: rgba(0, 0, 0, .2);
+}
+
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1508,14 +1518,15 @@
   height: 32rpx;
 }
 
+@media (prefers-color-scheme: dark) {
 /* The runtime applies the theme class to the same element as the page root.
  * These selectors deliberately support both root and ancestor placement. */
-.cat-page.campus-theme--dark,
-.atlas-form-page.campus-theme--dark,
-.catalog-page.campus-theme--dark,
-.campus-theme--dark .cat-page,
-.campus-theme--dark .atlas-form-page,
-.campus-theme--dark .catalog-page {
+.cat-page.campus-theme,
+.atlas-form-page.campus-theme,
+.catalog-page.campus-theme,
+.campus-theme .cat-page,
+.campus-theme .atlas-form-page,
+.campus-theme .catalog-page {
   --campus-cat-page: var(--campus-page);
   --campus-cat-surface: var(--campus-surface);
   --campus-cat-subtle: var(--campus-surface-subtle);
@@ -1564,8 +1575,12 @@
   .cat-profile-suggestion-page__footer { border-top-color: var(--campus-border); background: var(--campus-surface-glass); }
 }
 
-.cat-detail-page.campus-theme--dark,
-.campus-theme--dark .cat-detail-page {
+
+}
+
+@media (prefers-color-scheme: dark) {
+.cat-detail-page.campus-theme,
+.campus-theme .cat-detail-page {
   --figma-paper: var(--campus-page);
   --figma-surface: var(--campus-surface);
   --figma-ink: var(--campus-text-heading);
@@ -1600,4 +1615,7 @@
   .cat-detail-bottom { border-top-color: var(--campus-border); background: var(--campus-surface-glass); }
   .cat-detail-bottom__button--activity { border-color: var(--campus-border); background: var(--campus-surface-subtle); color: var(--campus-text-heading); }
   .cat-detail-bottom__button--report { background: var(--campus-surface-errand); color: #fff; }
+}
+
+
 }

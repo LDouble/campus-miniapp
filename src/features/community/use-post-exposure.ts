@@ -15,6 +15,8 @@ export type UsePostExposureOptions = {
   bottomInset?: number
   topOccluderSelector?: string
   bottomOccluderSelector?: string
+  /** 可见状态供不计阅读量的模块控制播放等交互；不影响曝光上报。 */
+  onVisibilityChange?: (visible: boolean) => void
 }
 
 type Viewport = { top: number; bottom: number; left: number; right: number }
@@ -38,6 +40,7 @@ export const usePostExposure = ({
   bottomInset = 0,
   topOccluderSelector,
   bottomOccluderSelector,
+  onVisibilityChange,
 }: UsePostExposureOptions) => {
   const onExposureRef = useRef(onExposure)
   const enabledRef = useRef(enabled)
@@ -46,11 +49,13 @@ export const usePostExposure = ({
   const restartRef = useRef<() => void>(() => undefined)
   const stopRef = useRef<() => void>(() => undefined)
   const initializedEnabledEffectRef = useRef(false)
+  const onVisibilityChangeRef = useRef(onVisibilityChange)
   const pageRef = useRef(enabled ? getCurrentInstance().page : null)
   const controllerRef = useRef<ReturnType<typeof createPostExposureController>>()
 
   onExposureRef.current = onExposure
   enabledRef.current = enabled
+  onVisibilityChangeRef.current = onVisibilityChange
 
   useEffect(() => {
     let page = pageRef.current
@@ -111,6 +116,7 @@ export const usePostExposure = ({
       generation += 1
       disconnect()
       controller.updateVisible(false)
+      onVisibilityChangeRef.current?.(false)
     }
 
     start = () => {
@@ -144,9 +150,13 @@ export const usePostExposure = ({
             // 部分微信基础库的 boundingClientRect 是空对象，不能据此判定不可见。
             // 原生相交比例已经包含 relativeToViewport 的遮挡边界；到期仍用 selector query 复核。
             const ratio = result.intersectionRatio
-            controller.updateVisible(typeof ratio === 'number' && Number.isFinite(ratio) && ratio >= threshold)
+            const visible = typeof ratio === 'number' && Number.isFinite(ratio) && ratio >= threshold
+            controller.updateVisible(visible)
+            onVisibilityChangeRef.current?.(visible)
           })
-          controller.updateVisible(isPostExposed(card, viewport))
+          const visible = isPostExposed(card, viewport)
+          controller.updateVisible(visible)
+          onVisibilityChangeRef.current?.(visible)
         }).catch(() => {
           if (run === generation) controller.updateVisible(false)
         })
@@ -173,7 +183,10 @@ export const usePostExposure = ({
       return
     }
     if (enabled) restartRef.current()
-    else stopRef.current()
+    else {
+      stopRef.current()
+      onVisibilityChangeRef.current?.(false)
+    }
   }, [enabled])
 
   useDidHide(() => {

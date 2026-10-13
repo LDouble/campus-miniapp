@@ -1,6 +1,5 @@
 const MAX_VISIBLE_ITEMS = 3
 const atomicApi = 'queryShuttleSchedule'
-const { getCampusTheme, subscribeCampusTheme } = require('../../utils/theme')
 
 const asText = (value) => (typeof value === 'string' ? value.trim() : '')
 
@@ -40,7 +39,6 @@ const normalizeRoute = (item) => {
 
 Component({
   data: {
-    darkMode: getCampusTheme() === 'dark',
     visibleItems: [],
     totalCount: 0,
     omittedCount: 0,
@@ -93,15 +91,6 @@ Component({
         console.info(`[ai-mode] shuttle-route-list overflow overflowed=${overflowed} data=${JSON.stringify(data)}`)
       })
       console.info('[ai-mode] shuttle-route-list overflow monitor=on')
-    },
-    attached() {
-      console.info('[ai-mode] shuttle-route-list attached')
-      this.unsubscribeCampusTheme = subscribeCampusTheme((theme) => {
-        this.setData({ darkMode: theme === 'dark' })
-      })
-    },
-    detached() {
-      if (this.unsubscribeCampusTheme) this.unsubscribeCampusTheme()
     },
   },
 })

@@ -1,6 +1,7 @@
-import { Image, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import type { MarketplaceListingView } from '../../../api/types'
 import UserAvatar from '../../../components/user-avatar'
+import VariantImage from '../../../components/variant-image'
 import StickerContent from '../../../components/sticker-content'
 import { plainStickerContent } from '../../stickers/content'
 import { requestWechatSubscriptionForModule } from '../../wechat-subscription'
@@ -22,7 +23,9 @@ type Props = {
 }
 
 export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
-  const cover = item.image_urls?.[0]
+  const firstImage = item.images?.[0]
+  const cover = firstImage?.url || item.image_urls?.[0]
+  const coverThumbnail = (firstImage as typeof firstImage & { thumbnail_url?: string | null } | undefined)?.thumbnail_url
   const placeholderTone = Math.abs(item.id) % 4
   const isWanted = item.intent === 'wanted'
   const isPendingOwner = item.viewer_relation === 'owner' && item.status === 'pending_review'
@@ -45,7 +48,7 @@ export default function MarketplaceCard({ item, variant = 'grid' }: Props) {
     >
       <View className={`marketplace-card__cover ${cover ? '' : 'marketplace-card__cover--placeholder'}`}>
         {cover ? (
-          <Image src={cover} mode='aspectFill' lazyLoad />
+          <VariantImage originalUrl={cover} thumbnailUrl={coverThumbnail} mode='aspectFill' lazyLoad />
         ) : (
           <View className={`marketplace-card__placeholder marketplace-card__placeholder--tone-${placeholderTone}`}>
             <Text className='marketplace-card__placeholder-kicker'>CAMPUS MARKET</Text>

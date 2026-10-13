@@ -4,10 +4,14 @@ import { Image, ScrollView, Text, View } from '@tarojs/components'
 import type { ITouchEvent } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
 import {
-  getActiveAcademicUserId,
   loadAcademicCredential,
   type AcademicEducationLevel,
 } from '../../../api/academic-credential'
+import {
+  getCachedPageUserId,
+  getPageCacheScope,
+  subscribePageCacheScope,
+} from '../../../state/page-cache'
 import type { AcademicCacheMetadata, AcademicCalendar } from '../../../api/types'
 import {
   listPersonalTimetableItems,
@@ -27,6 +31,8 @@ import {
   openCourseMarketplaceSearch,
 } from '../../../features/life-services/marketplace-prefill'
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
+import { getClassDiscussionContext } from '../../../features/class-discussion/context'
+import { openClassDiscussion } from '../../../features/class-discussion/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
 import { loadAcademicCalendar } from '../../../features/calendar/repository'
@@ -39,6 +45,8 @@ import {
 } from '../repository'
 import {
   CoursesByPeriod,
+  compareCoursesForDisplay,
+  getCourseDisplayGroups,
   getCourseScheduleKey,
   getCoursesForPeriod,
   getCoursesForWeek,
@@ -79,6 +87,7 @@ const icons = {
   semester: require('../../../assets/icons/calendar.svg'),
   sync: require('../../../assets/icons/sync.svg'),
 }
+const classDiscussionEntryIcon = require('../../../assets/icons/class-discussion-entry.svg')
 
 const SCHEDULE_NOTE_VIEWPORT_ID = 'academic-schedule-note-viewport'
 const SCHEDULE_NOTE_COPY_ID = 'academic-schedule-note-copy'
@@ -194,9 +203,9 @@ const fallbackSimulationPeriods = (courses: Course[]): AcademicPeriod[] => {
   }))
 }
 
-const getDefaultEducationLevel = (): AcademicEducationLevel => {
+const getDefaultEducationLevel = (platformUserId: number): AcademicEducationLevel => {
   try {
-    return loadAcademicCredential(getActiveAcademicUserId()).educationLevel
+    return loadAcademicCredential(platformUserId).educationLevel
   } catch {
     return 'undergraduate'
   }
@@ -211,6 +220,8 @@ interface CourseDetailCardProps {
   onDelete?: () => void
   onWanted: () => void
   onFindMaterials: () => void
+  onOpenDiscussion: () => void
+  discussionOpening?: boolean
 }
 
 const isCourseInWeek = (course: Course, week: number) => course.weeks.includes(week)
@@ -251,10 +262,13 @@ function CourseDetailCard({
   onDelete,
   onWanted,
   onFindMaterials,
+  onOpenDiscussion,
+  discussionOpening = false,
 }: CourseDetailCardProps) {
   const isCurrentWeek = isCourseInWeek(course, currentWeek)
   const courseNote = course.note?.trim() || ''
   const classNum = course.classNum?.trim() || ''
+  const classDiscussionAvailable = !!getClassDiscussionContext(course)
   const selectionState = simulationMode ? getSimulationSelectionState(course) : null
   return (
     <View className={[
@@ -296,8 +310,8 @@ function CourseDetailCard({
             <Text className='course-conflict-card__note-label'>排课提示</Text>
             <Text className='course-conflict-card__note-copy'>
               {course.auditStatus === 'withdrawn'
-                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“蹭课检索”。'
-                : '课程目录已有更新，请到“蹭课检索”同步最新安排。'}
+                ? '课程已从当前目录下架，课表暂保留原安排；如需移除请到“课程查询”。'
+                : '课程目录已有更新，请到“课程查询”同步最新安排。'}
             </Text>
           </View>
         )}
@@ -320,16 +334,43 @@ function CourseDetailCard({
           </View>
         )}
         <View className='course-resource-actions course-resource-actions--course-card'>
-          <View className='course-resource-actions__primary' onClick={onFindMaterials}>
-            <View>
-              <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
-              <Text>{isQualificationEdition ? '课程相关生活服务已迁移' : '按课程与当前学期为你筛选'}</Text>
+          <View
+            className={[
+              'course-resource-actions__discussion',
+              !classDiscussionAvailable || discussionOpening ? 'course-resource-actions__action--disabled' : '',
+            ].filter(Boolean).join(' ')}
+            ariaRole='button'
+            ariaLabel={classDiscussionAvailable ? '进入课堂讨论' : '当前课程缺少选课号或学年学期，无法进入课堂讨论'}
+            onClick={() => {
+              if (discussionOpening) return
+              onOpenDiscussion()
+            }}
+          >
+            <View className='course-resource-actions__discussion-icon-wrap' aria-hidden>
+              <Image className='course-resource-actions__discussion-icon' src={classDiscussionEntryIcon} mode='aspectFit' />
             </View>
-            <Text>去发现 ›</Text>
+            <View className='course-resource-actions__discussion-copy'>
+              <Text className='course-resource-actions__discussion-label'>
+                {discussionOpening ? '正在打开讨论…' : classDiscussionAvailable ? '课堂讨论' : '暂不能进入讨论'}
+              </Text>
+              <Text className='course-resource-actions__discussion-description'>
+                {classDiscussionAvailable ? '和同学聊聊作业与资料' : '补充选课号和学年学期后开启'}
+              </Text>
+            </View>
+            <Text className='course-resource-actions__discussion-chevron' aria-hidden>›</Text>
           </View>
-          {!isQualificationEdition && <View className='course-resource-actions__secondary course-resource-actions__secondary--single'>
-            <View onClick={onWanted}>求购课本</View>
-          </View>}
+          <View className={`course-resource-actions__secondary ${isQualificationEdition ? 'course-resource-actions__secondary--single' : 'course-resource-actions__secondary--two'}`}>
+            <View className='course-resource-actions__secondary-item' ariaRole='button' ariaLabel={isQualificationEdition ? '打开新版课程服务' : '发现课程资料'} onClick={onFindMaterials}>
+              <Text>{isQualificationEdition ? '新版课程服务' : '发现资料'}</Text>
+              <Text aria-hidden>›</Text>
+            </View>
+            {!isQualificationEdition && (
+              <View className='course-resource-actions__secondary-item' ariaRole='button' ariaLabel='求购课本' onClick={onWanted}>
+                <Text>求购课本</Text>
+                <Text aria-hidden>›</Text>
+              </View>
+            )}
+          </View>
         </View>
         {isRemovableCourse(course) && onDelete && (
           <View className='course-conflict-card__danger-action' onClick={onDelete}>
@@ -342,12 +383,33 @@ function CourseDetailCard({
 }
 
 export default function SchedulePage() {
+  const [pageCacheScope, setPageCacheScope] = useState(getPageCacheScope)
+
+  useEffect(() => subscribePageCacheScope(() => {
+    setPageCacheScope(getPageCacheScope())
+  }), [])
+
+  return (
+    <SchedulePageContent
+      key={pageCacheScope}
+      academicUserId={getCachedPageUserId()}
+      pageCacheScope={pageCacheScope}
+    />
+  )
+}
+
+export function SchedulePageContent({
+  academicUserId,
+  pageCacheScope,
+}: {
+  academicUserId: number
+  pageCacheScope: string
+}) {
   const isSimulation = Taro.useRouter().params.mode === 'simulation'
   const [runtimeConfig, setRuntimeConfig] = useState(getMiniappRuntimeConfig)
   const [campusName, setCampusName] = useState(() => (
     getSelectedCampus(getMiniappRuntimeConfig())
   ))
-  const [academicUserId] = useState(getActiveAcademicUserId)
   const [initialScheduleCache] = useState(() => (
     academicStorage.getScheduleCache(academicUserId)
   ))
@@ -375,8 +437,12 @@ export default function SchedulePage() {
   const [officialCoursesByPeriod, setOfficialCoursesByPeriod] = useState<CoursesByPeriod>(
     initialCoursesByPeriod,
   )
-  const [customCourses, setCustomCourses] = useState<Course[]>(academicStorage.getCustomCourses())
-  const [educationLevel] = useState<AcademicEducationLevel>(getDefaultEducationLevel)
+  const [customCourses, setCustomCourses] = useState<Course[]>([])
+  const [customCoursesWritable, setCustomCoursesWritable] = useState(false)
+  const [customCoursesStorageMessage, setCustomCoursesStorageMessage] = useState('')
+  const [educationLevel] = useState<AcademicEducationLevel>(() => (
+    getDefaultEducationLevel(academicUserId)
+  ))
   const [personalCourses, setPersonalCourses] = useState<Course[]>(() => academicStorage.getPersonalCourses(academicUserId, educationLevel, preferences.schedulePeriodId))
   const [simulationCourses, setSimulationCourses] = useState<Course[]>(() => academicStorage.getSelectionDraftCourses())
   const [selectedScheduleCourses, setSelectedScheduleCourses] = useState<Course[]>(() => (
@@ -394,6 +460,9 @@ export default function SchedulePage() {
   const [showSelectionGuide, setShowSelectionGuide] = useState(() => (
     isSimulation || !academicStorage.hasSeenScheduleSelectionGuideToday()
   ))
+  const [showBuddyGuide, setShowBuddyGuide] = useState(() => (
+    !isSimulation && !academicStorage.hasSeenScheduleBuddyGuideToday()
+  ))
   const [cacheUpdatedAt, setCacheUpdatedAt] = useState(
     initialScheduleCache
       ?.coursesUpdatedAtByPeriod[preferences.schedulePeriodId] || 0,
@@ -409,6 +478,7 @@ export default function SchedulePage() {
   const [courseDraft, setCourseDraft] = useState<CustomCourseDraft>(
     emptyDraft(preferences.schedulePeriodId),
   )
+  const [discussionOpening, setDiscussionOpening] = useState(false)
   const scheduleRequestRef = useRef(0)
   const simulationPeriodsRequestRef = useRef(0)
   const personalTimetableRequestRef = useRef(0)
@@ -416,6 +486,10 @@ export default function SchedulePage() {
   const firstPageShowRef = useRef(true)
   const weekTouchStartRef = useRef<{ x: number; y: number } | null>(null)
   const dayTouchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const isCurrentPageCacheScope = useCallback(
+    () => getPageCacheScope() === pageCacheScope,
+    [pageCacheScope],
+  )
 
   const dismissSelectionGuide = () => {
     setShowSelectionGuide(false)
@@ -478,14 +552,14 @@ export default function SchedulePage() {
     setPersonalCourses(academicStorage.getPersonalCourses(academicUserId, educationLevel, nextPeriodId))
     try {
       const result = await listPersonalTimetableItems(educationLevel, nextPeriodId)
-      if (personalTimetableRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || personalTimetableRequestRef.current !== requestId) return
       const courses = result.items.flatMap(mapPersonalTimetableItemCourses)
       academicStorage.setPersonalCourses(academicUserId, educationLevel, nextPeriodId, courses)
       setPersonalCourses(courses)
     } catch {
       // 请求失败保留当前用户、学历和学期的本地蹭课缓存。
     }
-  }, [academicUserId, educationLevel, preferences.schedulePeriodId])
+  }, [academicUserId, educationLevel, isCurrentPageCacheScope, preferences.schedulePeriodId])
 
   useEffect(() => {
     let active = true
@@ -578,7 +652,7 @@ export default function SchedulePage() {
     let active = true
     academicRepository.getPeriods()
       .then((records) => {
-        if (!active) return
+        if (!active || !isCurrentPageCacheScope()) return
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         academicStorage.setScheduleCache(
           academicUserId,
@@ -590,7 +664,7 @@ export default function SchedulePage() {
         applyPeriods(records)
       })
       .catch((error) => {
-        if (!active) return
+        if (!active || !isCurrentPageCacheScope()) return
         if (initialScheduleCache && initialScheduleCache.periods.length) {
           applyPeriods(initialScheduleCache.periods)
           setUsingCache(true)
@@ -605,7 +679,7 @@ export default function SchedulePage() {
     return () => {
       active = false
     }
-  }, [academicUserId, initialScheduleCache, isSimulation, loadSimulationPeriods])
+  }, [academicUserId, initialScheduleCache, isCurrentPageCacheScope, isSimulation, loadSimulationPeriods])
 
   useEffect(() => {
     if (!initialized || isSimulation) return
@@ -637,7 +711,7 @@ export default function SchedulePage() {
     setLoadError(null)
     academicRepository.getCourses(periodId)
       .then((result) => {
-        if (!active || scheduleRequestRef.current !== requestId) return
+        if (!active || !isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
         const courses = requireCoursesForPeriod(result.records, periodId)
         const currentCache = academicStorage.getScheduleCache(academicUserId)
         const updatedAt = Date.now()
@@ -668,7 +742,7 @@ export default function SchedulePage() {
         setServerCache(result.cache || null)
       })
       .catch((error) => {
-        if (!active || scheduleRequestRef.current !== requestId) return
+        if (!active || !isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
         if (hasCachedCourses) {
           setUsingCache(true)
           setLoadError(error)
@@ -678,12 +752,12 @@ export default function SchedulePage() {
         }
       })
       .finally(() => {
-        if (active && scheduleRequestRef.current === requestId) setLoading(false)
+        if (active && isCurrentPageCacheScope() && scheduleRequestRef.current === requestId) setLoading(false)
       })
     return () => {
       active = false
     }
-  }, [academicUserId, initialized, isSimulation, periods, preferences.schedulePeriodId])
+  }, [academicUserId, initialized, isCurrentPageCacheScope, isSimulation, periods, preferences.schedulePeriodId])
 
   useEffect(() => {
     if (isSimulation) return
@@ -691,12 +765,20 @@ export default function SchedulePage() {
   }, [initialized, isSimulation, loadPersonalCourses])
 
   useEffect(() => {
+    if (!isCurrentPageCacheScope()) return
+    const result = isSimulation
+      ? { status: 'ready' as const, courses: academicStorage.getCustomCourses(academicUserId) }
+      : academicStorage.loadCustomCoursesForSchedule(academicUserId)
+    setCustomCourses(result.courses)
+    setCustomCoursesWritable(!isSimulation && result.status === 'ready')
+    setCustomCoursesStorageMessage(result.status === 'blocked' ? result.message : '')
+  }, [academicUserId, isCurrentPageCacheScope, isSimulation])
+
+  useEffect(() => {
     academicStorage.setPreferences(isSimulation
       ? { ...preferences, scheduleView: storedPreferences.scheduleView }
       : preferences)
   }, [isSimulation, preferences, storedPreferences])
-  useEffect(() => academicStorage.setCustomCourses(customCourses), [customCourses])
-
   useEffect(() => {
     if (!showRefreshGuide || loading || sheet) return undefined
     const timer = setTimeout(() => {
@@ -720,6 +802,18 @@ export default function SchedulePage() {
     }, isSimulation ? 3000 : 5200)
     return () => clearTimeout(timer)
   }, [isSimulation, loadError, loading, sheet, showRefreshGuide, showSelectionGuide, usingCache])
+
+  const buddyGuideVisible = showBuddyGuide && !loading && !sheet
+    && !showRefreshGuide && !showSelectionGuide
+
+  useEffect(() => {
+    if (!buddyGuideVisible) return undefined
+    const timer = setTimeout(() => {
+      setShowBuddyGuide(false)
+      academicStorage.markScheduleBuddyGuideSeenToday()
+    }, 4500)
+    return () => clearTimeout(timer)
+  }, [buddyGuideVisible])
 
   const updatePreferences = (patch: Partial<AcademicPreferences>) => {
     setPreferences((current) => ({
@@ -792,6 +886,7 @@ export default function SchedulePage() {
     setSyncingSelectedCourses(true)
     try {
       const result = await academicRepository.getCourseSelectionSchedule(periodId)
+      if (!isCurrentPageCacheScope()) return
       const courses = requireCoursesForPeriod(result.records, periodId)
       const cachedCourses = academicStorage.getCourseSelectionScheduleCourses(academicUserId)
       const nextCourses = [
@@ -805,10 +900,11 @@ export default function SchedulePage() {
         icon: 'none',
       })
     } catch {
+      if (!isCurrentPageCacheScope()) return
       // 失败时保留上次已成功同步的教务课表和全部本地模拟草稿。
       Taro.showToast({ title: '同步失败，已保留当前模拟课表', icon: 'none' })
     } finally {
-      setSyncingSelectedCourses(false)
+      if (isCurrentPageCacheScope()) setSyncingSelectedCourses(false)
     }
   }
 
@@ -833,13 +929,13 @@ export default function SchedulePage() {
     setUsingCache(hasCachedCourses)
     try {
       const records = await academicRepository.getPeriods({ force: true })
-      if (scheduleRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
       const schedulePeriodId = resolvePeriodId(records, preferences.schedulePeriodId)
       const resolvedPeriod = records.find((period) => period.id === schedulePeriodId)
       const courseResult = schedulePeriodId
         ? await academicRepository.getCourses(schedulePeriodId)
         : undefined
-      if (scheduleRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
       const courses = courseResult
         ? requireCoursesForPeriod(courseResult.records, schedulePeriodId)
         : []
@@ -889,7 +985,7 @@ export default function SchedulePage() {
       }))
       Taro.showToast({ title: '课程表已刷新', icon: 'success' })
     } catch (error) {
-      if (scheduleRequestRef.current !== requestId) return
+      if (!isCurrentPageCacheScope() || scheduleRequestRef.current !== requestId) return
       if (hasCachedCourses) {
         setUsingCache(true)
         setLoadError(error)
@@ -898,14 +994,18 @@ export default function SchedulePage() {
         setLoadError(error)
       }
     } finally {
-      if (scheduleRequestRef.current === requestId) {
+      if (isCurrentPageCacheScope() && scheduleRequestRef.current === requestId) {
         setLoading(false)
         setRetrying(false)
       }
     }
-  }, [academicUserId, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
+  }, [academicUserId, isCurrentPageCacheScope, isSimulation, loadSimulationPeriods, preferences.schedulePeriodId])
 
   Taro.useDidShow(() => {
+    if (!isSimulation) setShowBuddyGuide(!academicStorage.hasSeenScheduleBuddyGuideToday())
+    const config = getMiniappRuntimeConfig()
+    setRuntimeConfig(config)
+    setCampusName(getSelectedCampus(config))
     if (isSimulation) {
       setSimulationCourses(academicStorage.getSelectionDraftCourses())
       setShowSelectionGuide(true)
@@ -939,9 +1039,10 @@ export default function SchedulePage() {
     && right.startSection <= left.endSection
   )
 
-  const openCourse = (course: Course) => {
+  const openCourse = (course: Course, relatedCourses?: Course[]) => {
     setActiveCourse(course)
-    setActiveSlotCourses(allCourses.filter((item) => isCourseOverlap(item, course)))
+    setActiveSlotCourses((relatedCourses || allCourses.filter((item) => isCourseOverlap(item, course)))
+      .sort((left, right) => compareCoursesForDisplay(left, right, preferences.week)))
     setSheet('course-detail')
   }
 
@@ -950,11 +1051,7 @@ export default function SchedulePage() {
       course.weekday === weekday
       && course.startSection <= section
       && course.endSection >= section
-    )).sort((left, right) => (
-      Number(isCourseInWeek(right, preferences.week))
-        - Number(isCourseInWeek(left, preferences.week))
-      || left.id.localeCompare(right.id)
-    ))
+    )).sort((left, right) => compareCoursesForDisplay(left, right, preferences.week))
     if (!slotCourses.length) return
     setActiveCourse(slotCourses[0])
     setActiveSlotCourses(slotCourses)
@@ -1015,6 +1112,42 @@ export default function SchedulePage() {
     void openCourseMaterials(context)
   }
 
+  const openCourseDiscussion = async (course: Course) => {
+    if (discussionOpening) return
+    setDiscussionOpening(true)
+    try {
+      await openClassDiscussion(course, runtimeConfig)
+    } finally {
+      setDiscussionOpening(false)
+    }
+  }
+
+  const reloadCustomCourses = () => {
+    if (!isCurrentPageCacheScope()) return
+    const result = academicStorage.loadCustomCoursesForSchedule(academicUserId)
+    setCustomCourses(result.courses)
+    setCustomCoursesWritable(result.status === 'ready')
+    setCustomCoursesStorageMessage(result.status === 'blocked' ? result.message : '')
+    if (result.status === 'ready') {
+      Taro.showToast({ title: '自定义课程已重新读取', icon: 'success' })
+    }
+  }
+
+  const persistCustomCourses = (courses: Course[]) => {
+    if (!isCurrentPageCacheScope()) return false
+    if (!customCoursesWritable || isSimulation) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return false
+    }
+    if (!academicStorage.trySetCustomCourses(courses, academicUserId)) {
+      setCustomCoursesStorageMessage('本机保存失败，自定义课程未更新；请点击重新读取后重试。')
+      return false
+    }
+    setCustomCourses(courses)
+    setCustomCoursesStorageMessage('')
+    return true
+  }
+
   const openCourseForm = (course?: Course) => {
     setCourseDraft(course ? {
       id: course.id,
@@ -1041,6 +1174,10 @@ export default function SchedulePage() {
   }
 
   const saveCourse = async () => {
+    if (!customCoursesWritable || isSimulation) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return
+    }
     const name = courseDraft.name.trim()
     if (!name || !courseDraft.weeks.length) {
       Taro.showToast({ title: '请填写课程名并选择上课周次', icon: 'none' })
@@ -1070,9 +1207,10 @@ export default function SchedulePage() {
       location: courseDraft.location.trim(),
       source: 'custom',
     }
-    setCustomCourses((current) => courseDraft.id
-      ? current.map((course) => course.id === courseDraft.id ? record : course)
-      : [...current, record])
+    const nextCourses = courseDraft.id
+      ? customCourses.map((course) => course.id === courseDraft.id ? record : course)
+      : [...customCourses, record]
+    if (!persistCustomCourses(nextCourses)) return
     setActiveCourse(record)
     setActiveSlotCourses([record])
     setSheet('course-detail')
@@ -1081,6 +1219,10 @@ export default function SchedulePage() {
 
   const deleteCourse = async (course = activeCourse) => {
     if (!course || !isRemovableCourse(course) || courseMutationRef.current) return
+    if (course.source === 'custom' && !customCoursesWritable) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return
+    }
     const isAuditCourse = course.source === 'audit'
     const isSimulationCourse = course.source === 'simulation'
     const result = await Taro.showModal({
@@ -1113,7 +1255,8 @@ export default function SchedulePage() {
           return next
         })
       } else {
-        setCustomCourses((current) => current.filter((item) => item.id !== course.id))
+        const nextCourses = customCourses.filter((item) => item.id !== course.id)
+        if (!persistCustomCourses(nextCourses)) return
       }
       const remainingCourses = activeSlotCourses.filter((item) => (
         isAuditCourse
@@ -1158,6 +1301,10 @@ export default function SchedulePage() {
       Taro.showToast({ title: '模拟选课已清空', icon: 'success' })
       return
     }
+    if (!customCoursesWritable) {
+      Taro.showToast({ title: '自定义课程尚未安全读取，请先重新读取', icon: 'none' })
+      return
+    }
     const customCourseIds = customCourses
       .filter((course) => course.periodId === preferences.schedulePeriodId)
       .map((course) => course.id)
@@ -1181,15 +1328,16 @@ export default function SchedulePage() {
     if (!result.confirm) return
     courseMutationRef.current = true
     try {
+      const nextCustomCourses = customCourses.filter((course) => (
+        course.periodId !== preferences.schedulePeriodId || course.source !== 'custom'
+      ))
+      if (!persistCustomCourses(nextCustomCourses)) return
       const settled = await Promise.allSettled(auditItems.map(([itemId, version]) => (
         removePersonalTimetableItem(itemId, version)
       )))
       const removedAuditItemIds = new Set(auditItems
         .filter((_, index) => settled[index].status === 'fulfilled')
         .map(([itemId]) => itemId))
-      setCustomCourses((current) => current.filter((course) => (
-        course.periodId !== preferences.schedulePeriodId || course.source !== 'custom'
-      )))
       setPersonalCourses((current) => current.filter((course) => (
         course.periodId !== preferences.schedulePeriodId || !removedAuditItemIds.has(course.auditItemId || 0)
       )))
@@ -1256,6 +1404,24 @@ export default function SchedulePage() {
     </View>
   )
 
+  const openTimetableBuddy = () => {
+    void Taro.navigateTo({ url: '/pages/academic/timetable-buddy/index' })
+  }
+
+  const openCourseTools = async () => {
+    setShowBuddyGuide(false)
+    academicStorage.markScheduleBuddyGuideSeenToday()
+    try {
+      const { tapIndex } = await Taro.showActionSheet({
+        itemList: ['添加自定义课程', '课表搭子 · 查看共同空闲'],
+      })
+      if (tapIndex === 0) openCourseForm()
+      if (tapIndex === 1) openTimetableBuddy()
+    } catch {
+      // 用户取消操作菜单时保持当前课表。
+    }
+  }
+
   const renderWeekSchedule = () => (
     <View
       className='timetable'
@@ -1319,25 +1485,9 @@ export default function SchedulePage() {
             />
           )
         })}
-        {allCourses.map((course) => {
-          const overlappingCourses = allCourses
-            .filter((item) => isCourseOverlap(item, course))
-            .sort((left, right) => {
-              const leftCurrent = isCourseInWeek(left, preferences.week)
-              const rightCurrent = isCourseInWeek(right, preferences.week)
-              if (leftCurrent !== rightCurrent) return Number(rightCurrent) - Number(leftCurrent)
-              const leftNextWeek = Math.min(
-                ...left.weeks.filter((week) => week >= preferences.week),
-                Number.POSITIVE_INFINITY,
-              )
-              const rightNextWeek = Math.min(
-                ...right.weeks.filter((week) => week >= preferences.week),
-                Number.POSITIVE_INFINITY,
-              )
-              return leftNextWeek - rightNextWeek || left.id.localeCompare(right.id)
-            })
-          const primaryCourse = overlappingCourses[0]
-          if (course !== primaryCourse) return null
+        {getCourseDisplayGroups(allCourses, preferences.week).map((displayGroup) => {
+          const { course, courses: overlappingCourses } = displayGroup
+          const displaySpan = displayGroup
           const overlapCount = overlappingCourses.length
           const currentCourses = overlappingCourses.filter((item) => (
             isCourseInWeek(item, preferences.week)
@@ -1353,6 +1503,9 @@ export default function SchedulePage() {
           const selectionState = isSimulation
             ? getSimulationSelectionState(course)
             : null
+          const hasPreviewHeader = selectionState === 'not-selected'
+            || (!isCurrentWeek && Number.isFinite(nextCourseWeek))
+            || (isCurrentWeek && relatedCount > 0)
           return (
             <View
               key={getCourseScheduleKey(course)}
@@ -1366,7 +1519,7 @@ export default function SchedulePage() {
               ].filter(Boolean).join(' ')}
               style={{
                 gridColumn: String(course.weekday + 1),
-                gridRow: `${course.startSection} / span ${course.endSection - course.startSection + 1}`,
+                gridRow: `${displaySpan.startSection} / span ${displaySpan.endSection - displaySpan.startSection + 1}`,
               }}
               ariaRole='button'
               ariaLabel={hasConflict
@@ -1374,7 +1527,7 @@ export default function SchedulePage() {
                 : relatedCount > 0
                   ? `${course.name}，同一时段另有 ${relatedCount} 门其他周次课程`
                   : `${course.name}，第 ${course.startSection} 到 ${course.endSection} 节`}
-              onClick={() => openCourse(course)}
+              onClick={() => openCourse(course, overlappingCourses)}
               onLongPress={(event) => {
                 event.stopPropagation()
                 openTimeSlotActions(course.weekday, course.startSection)
@@ -1391,7 +1544,7 @@ export default function SchedulePage() {
                 </>
               ) : (
                 <>
-                  <View className='timetable-course__preview-head'>
+                  {hasPreviewHeader && <View className='timetable-course__preview-head'>
                     {selectionState === 'not-selected' && (
                       <Text className={`timetable-course__selection-status timetable-course__selection-status--${selectionState}`}>
                         待教务选
@@ -1405,7 +1558,7 @@ export default function SchedulePage() {
                     ) : isCurrentWeek && relatedCount > 0 ? (
                       <Text className='timetable-course__related-count'>+{relatedCount}</Text>
                     ) : null}
-                  </View>
+                  </View>}
                   <Text className='timetable-course__name'>{course.name}</Text>
                   {isSimulation ? (
                     <Text className='timetable-course__class-num'>
@@ -1589,6 +1742,8 @@ export default function SchedulePage() {
                   onEdit={() => openCourseForm(activeCourse)}
                   onWanted={() => openCourseTrade(activeCourse)}
                   onFindMaterials={() => openCourseMaterialPage(activeCourse)}
+                  onOpenDiscussion={() => void openCourseDiscussion(activeCourse)}
+                  discussionOpening={discussionOpening}
                 />
               </View>
             </View>
@@ -1800,6 +1955,17 @@ export default function SchedulePage() {
             : '',
         ].filter(Boolean).join(' ')}
       >
+        {!isSimulation && customCoursesStorageMessage && (
+          <View
+            className='schedule-note'
+            ariaRole='button'
+            ariaLabel={`自定义课程保护中：${customCoursesStorageMessage} 点击重新读取`}
+            onClick={reloadCustomCourses}
+          >
+            <Text className='schedule-note__label'>自定义课程保护中</Text>
+            <Text className='schedule-note__copy'>{customCoursesStorageMessage} 点击此处重新读取。</Text>
+          </View>
+        )}
         {showRefreshGuide && !loading && !sheet && (
           <View
             className='schedule-refresh-guide'
@@ -1898,13 +2064,13 @@ export default function SchedulePage() {
         </View>
       ) : (
         <View
-          className='academic-fab'
+          className={`academic-fab ${buddyGuideVisible ? 'academic-fab--buddy-guide' : ''}`}
           ariaRole='button'
-          ariaLabel='添加自定义课程'
-          onClick={() => openCourseForm()}
+          ariaLabel='打开课表操作'
+          onClick={() => void openCourseTools()}
         >
           <Text className='academic-fab__plus'>＋</Text>
-          <Text>自定义课程</Text>
+          <Text>{buddyGuideVisible ? '课表搭子' : '课表操作'}</Text>
         </View>
       )}
       {renderSheet()}

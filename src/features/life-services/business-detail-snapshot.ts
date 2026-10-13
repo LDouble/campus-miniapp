@@ -28,6 +28,9 @@ type BusinessDetailSnapshot = {
 
 const snapshots = new Map<string, BusinessDetailSnapshot>()
 
+/** clearBusinessDetailSnapshots 在功能配置变化后丢弃尚未消费的详情交接数据。 */
+export const clearBusinessDetailSnapshots = () => snapshots.clear()
+
 const snapshotKey = (type: BusinessDetailType, id: number) => `${type}:${id}`
 
 const discardExpiredSnapshots = (now: number) => {

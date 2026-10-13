@@ -39,6 +39,16 @@ import { saveBusinessDetailSnapshot } from '../../features/life-services/busines
 import { plainStickerContent } from '../../features/stickers/content'
 import { directMessageChatUrl } from '../../features/direct-messages/navigation'
 import { privateMessagesRepository } from '../../features/direct-messages/repository'
+import { getMiniappRuntimeConfig, loadMiniappRuntimeConfig, resolveMiniappModule } from '../../features/runtime-config'
+import {
+  availableLifeServicePublicationTypes,
+  availableLifeServiceOrderTypes,
+  normalizeLifeServicePublicationType,
+  resolveLifeServicePublicationTarget,
+  lifeServiceModuleAvailabilitySignature,
+  type LifeServicePublicationType,
+} from '../../features/life-services/module-availability'
+import { resolveMyServicesDidShowRefresh } from '../../features/life-services/my-services-refresh'
 import './index.scss'
 
 type Section = 'published' | 'errands' | 'orders' | 'carpool'
@@ -78,6 +88,13 @@ type FilterStripProps<TKey extends string> = {
 }
 
 const PAGE_SIZE = 20
+
+const sameView = (left: ViewQuery, right: ViewQuery) => (
+  left.section === right.section
+  && left.relation === right.relation
+  && left.publishedType === right.publishedType
+  && left.orderType === right.orderType
+)
 
 const sections: Array<{ key: Section; label: string }> = [
   { key: 'published', label: '发布' },
@@ -156,6 +173,7 @@ const defaultRelation = (section: Section) => {
 
 const parseInitialView = (options: Record<string, string | undefined>): ViewQuery => {
   const requested = options.section
+  const requestedPublishedType = options.publishedType
   if (requested === 'community' || requested === 'market') {
     return {
       section: 'published',
@@ -178,7 +196,11 @@ const parseInitialView = (options: Record<string, string | undefined>): ViewQuer
   return {
     section,
     relation,
-    publishedType: requested === 'errands' ? 'errands' : 'community',
+    publishedType: requestedPublishedType === 'community' || requestedPublishedType === 'errands'
+      || requestedPublishedType === 'market' || requestedPublishedType === 'carpool'
+      ? requestedPublishedType
+      : requested === 'errands' || requested === 'market' || requested === 'carpool'
+        ? requested as PublishedType : 'community',
     orderType: 'all',
   }
 }
@@ -294,6 +316,8 @@ export default function MyServicesPage() {
     orderType: 'all',
   }
   const [view, setView] = useState<ViewQuery>(initialView)
+  const runtimeConfigRef = useRef(getMiniappRuntimeConfig())
+  const [runtimeConfig, setRuntimeConfig] = useState(() => runtimeConfigRef.current)
   const viewRef = useRef(initialView)
   const [items, setItems] = useState<RecordItem[]>([])
   const [page, setPage] = useState(0)
@@ -307,9 +331,71 @@ export default function MyServicesPage() {
   const [actionOrderId, setActionOrderId] = useState(0)
   const [contactUserId, setContactUserId] = useState(0)
   const requestVersion = useRef(0)
+  const moduleSignatureRef = useRef(lifeServiceModuleAvailabilitySignature(runtimeConfigRef.current))
   const firstDidShow = useRef(true)
+  const resetUnavailableView = () => {
+    requestVersion.current += 1
+    viewRef.current = initialView
+    pageRef.current = 0
+    totalRef.current = 0
+    setView(initialView)
+    setItems([])
+    setPage(0)
+    setTotal(0)
+    setError('')
+    setKeyword('')
+    setLoading(false)
+    setLoadingMore(false)
+  }
+
+  const availablePublishedTypes = availableLifeServicePublicationTypes(runtimeConfig) as PublishedType[]
+  const visibleSections = sections.filter((item) => (
+    item.key === 'published'
+      ? availablePublishedTypes.length > 0
+      : item.key === 'errands'
+        ? resolveMiniappModule(runtimeConfig, 'errand').state === 'enabled'
+        : item.key === 'orders'
+          ? ['errand', 'marketplace'].some((key) => resolveMiniappModule(runtimeConfig, key as 'errand' | 'marketplace').state === 'enabled')
+          : resolveMiniappModule(runtimeConfig, 'carpool').state === 'enabled'
+  ))
+  const visiblePublishedTypes = publishedTypes.filter((item) => availablePublishedTypes.includes(item.key))
+  const availableOrderTypes = orderTypes.filter((item) => availableLifeServiceOrderTypes(runtimeConfig).includes(item.key))
+  const sectionAvailable = (section: Section, config = runtimeConfigRef.current) => (
+    section === 'published'
+      ? availableLifeServicePublicationTypes(config).length > 0
+      : section === 'errands'
+        ? resolveMiniappModule(config, 'errand').state === 'enabled'
+        : section === 'orders'
+          ? ['errand', 'marketplace'].some((key) => resolveMiniappModule(config, key as 'errand' | 'marketplace').state === 'enabled')
+          : resolveMiniappModule(config, 'carpool').state === 'enabled'
+  )
+  const normalizeView = (candidate: ViewQuery): ViewQuery | null => {
+    const publication = normalizeLifeServicePublicationType(candidate.publishedType as LifeServicePublicationType, runtimeConfigRef.current)
+    if (candidate.section === 'published') return publication ? { ...candidate, publishedType: publication } : null
+    if (!sectionAvailable(candidate.section)) {
+      return publication ? { ...candidate, section: 'published', relation: 'all', publishedType: publication } : null
+    }
+    if (candidate.section === 'orders') {
+      const allowedOrderTypes = availableLifeServiceOrderTypes(runtimeConfigRef.current)
+      const orderType = allowedOrderTypes.includes(candidate.orderType)
+        ? candidate.orderType
+        : allowedOrderTypes[0] || 'all'
+      return { ...candidate, orderType }
+    }
+    return candidate
+  }
 
   const load = async (target = viewRef.current, reset = true) => {
+    const normalizedTarget = normalizeView(target)
+    if (!normalizedTarget) {
+      resetUnavailableView()
+      return
+    }
+    if (normalizedTarget !== target) {
+      viewRef.current = normalizedTarget
+      setView(normalizedTarget)
+      target = normalizedTarget
+    }
     if (!reset && (loadingMore || items.length >= totalRef.current)) return
     const targetPage = reset ? 1 : pageRef.current + 1
     const version = reset ? requestVersion.current + 1 : requestVersion.current
@@ -342,6 +428,12 @@ export default function MyServicesPage() {
   }
 
   const changeView = (next: ViewQuery) => {
+    const normalized = normalizeView(next)
+    if (!normalized) {
+      resetUnavailableView()
+      return
+    }
+    next = normalized
     viewRef.current = next
     setView(next)
     setKeyword('')
@@ -358,11 +450,28 @@ export default function MyServicesPage() {
   })
 
   useDidShow(() => {
-    if (firstDidShow.current) {
-      firstDidShow.current = false
-      return
-    }
-    void load(viewRef.current, true)
+    const isFirstDidShow = firstDidShow.current
+    firstDidShow.current = false
+    void loadMiniappRuntimeConfig().then((config) => {
+      const modulesChanged = moduleSignatureRef.current !== lifeServiceModuleAvailabilitySignature(config)
+      moduleSignatureRef.current = lifeServiceModuleAvailabilitySignature(config)
+      runtimeConfigRef.current = config
+      setRuntimeConfig(config)
+      const next = normalizeView(viewRef.current)
+      const action = resolveMyServicesDidShowRefresh(
+        isFirstDidShow,
+        modulesChanged,
+        Boolean(next && !sameView(next, viewRef.current)),
+      )
+      if (action === 'skip') return
+      if (!next) {
+        resetUnavailableView()
+      } else if (action === 'normalize') {
+        changeView(next)
+      } else {
+        void load(next, true)
+      }
+    })
   })
 
   usePullDownRefresh(() => {
@@ -388,13 +497,23 @@ export default function MyServicesPage() {
   }
 
   const openPublish = () => {
-    const section = view.section === 'published'
+    const available = availableLifeServicePublicationTypes(runtimeConfigRef.current)
+    if (available.length === 0) {
+      Taro.showToast({ title: '暂无可发布的内容类型', icon: 'none' })
+      return
+    }
+    const requestedSection = view.section === 'published'
       ? view.publishedType
       : view.section === 'errands'
         ? 'errands'
         : view.section === 'carpool'
           ? 'carpool'
           : 'market'
+    const section = resolveLifeServicePublicationTarget(
+      requestedSection as LifeServicePublicationType,
+      runtimeConfigRef.current,
+    )
+    if (!section) return
     requestWechatSubscriptionForPublishSection(section)
     Taro.navigateTo({ url: `/pages/publish/index?section=${section}` })
   }
@@ -453,6 +572,13 @@ export default function MyServicesPage() {
       Taro.showToast({ title: '暂时没有可联系的对方', icon: 'none' })
       return
     }
+    const config = await loadMiniappRuntimeConfig({ force: true })
+    runtimeConfigRef.current = config
+    setRuntimeConfig(config)
+    if (resolveMiniappModule(config, 'private_message').state !== 'enabled') {
+      Taro.showToast({ title: '私信功能暂未开放', icon: 'none' })
+      return
+    }
     setContactUserId(peerId)
     try {
       const conversation = await privateMessagesRepository.createConversation(peerId)
@@ -468,7 +594,9 @@ export default function MyServicesPage() {
   }
 
   const canContact = (item: RecordItem) => (
-    !developmentPresentation && contactUserIdFor(item) > 0
+    !developmentPresentation
+    && resolveMiniappModule(runtimeConfig, 'private_message').state === 'enabled'
+    && contactUserIdFor(item) > 0
   )
 
   const emptyCopy = view.section === 'errands'
@@ -494,9 +622,9 @@ export default function MyServicesPage() {
           <View className='my-services-hero__copy'>
             <Text className='my-services-hero__eyebrow'>CAMPUS ACTIVITY</Text>
             <Text className='my-services-hero__title'>我的校园足迹</Text>
-            <Text className='my-services-hero__summary'>{heroSummary}</Text>
+            <Text className='my-services-hero__summary'>{availablePublishedTypes.length ? heroSummary : '当前没有可用的内容服务'}</Text>
           </View>
-          <View
+          {availablePublishedTypes.length > 0 && <View
             className='my-services-hero__publish'
             ariaRole='button'
             ariaLabel='发布新内容'
@@ -504,12 +632,12 @@ export default function MyServicesPage() {
           >
             <View className='my-services-hero__publish-icon' />
             <Text>发布</Text>
-          </View>
+          </View>}
         </View>
 
         <ScrollView className='my-services-tabs' scrollX enhanced showScrollbar={false}>
           <View className='my-services-tabs__inner'>
-            {sections.map((item) => (
+            {visibleSections.map((item) => (
               <View
                 key={item.key}
                 className={`my-services-tabs__item my-services-tabs__item--${item.key} ${view.section === item.key ? 'my-services-tabs__item--active' : ''}`}
@@ -526,7 +654,7 @@ export default function MyServicesPage() {
         {view.section === 'published' && (
           <FilterStrip
             label='发布类型'
-            options={publishedTypes}
+            options={visiblePublishedTypes}
             value={view.publishedType}
             onChange={(publishedType) => changeView({ ...viewRef.current, publishedType })}
           />
@@ -544,7 +672,7 @@ export default function MyServicesPage() {
         {view.section === 'orders' && (
           <FilterStrip
             label='订单类型'
-            options={orderTypes}
+            options={availableOrderTypes}
             value={view.orderType}
             secondary
             onChange={(orderType) => changeView({ ...viewRef.current, orderType })}

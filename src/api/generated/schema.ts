@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/api/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 兼容旧客户端公开配置
+         * @description 原样返回配置中心 weouc.config 的公开非加密 JSON，不包装响应 envelope。缺失或非公开配置返回 404。
+         */
+        get: operations["LegacyWeoucConfig"];
+        put?: never;
+        /**
+         * 兼容旧客户端 POST 读取公开配置
+         * @description 原样返回配置中心 weouc.config 的公开非加密 JSON，不包装响应 envelope。缺失或非公开配置返回 404。
+         */
+        post: operations["LegacyWeoucConfigPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jw/bind": {
         parameters: {
             query?: never;
@@ -472,6 +496,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/course-addition-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 查询本人指定学期加课申请结果 */
+        post: operations["ListAcademicCourseAdditionResults"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/course-selection-schedule": {
         parameters: {
             query?: never;
@@ -568,6 +609,23 @@ export interface paths {
         put?: never;
         /** 查询当前身份可用教务学期 */
         post: operations["ListAcademicPeriods"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/training-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 查询本人培养方案 */
+        post: operations["GetAcademicTrainingPlan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -865,6 +923,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/credential-hosting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人教务凭据托管状态 */
+        get: operations["GetAcademicCredentialHosting"];
+        put?: never;
+        post?: never;
+        /** 撤销并删除本人教务凭据托管 */
+        delete: operations["DeleteAcademicCredentialHosting"];
+        options?: never;
+        head?: never;
+        /** 更新本人教务凭据托管的后台同步设置 */
+        patch: operations["UpdateAcademicCredentialHosting"];
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/intents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建一次性教务凭据托管绑定意图 */
+        post: operations["CreateAcademicCredentialHostingIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建一次教务只读查询任务 */
+        post: operations["CreateAcademicCredentialHostingTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人教务只读查询任务 */
+        get: operations["GetAcademicCredentialHostingTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-credential-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 枚举教务账号凭据元数据 */
+        get: operations["ListAdminAcademicCredentialAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-credential-accounts/{account_id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按版本禁用、启用或删除教务账号凭据 */
+        post: operations["UpdateAdminAcademicCredentialAccountState"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/rankings/grants/{id}": {
         parameters: {
             query?: never;
@@ -943,7 +1105,7 @@ export interface paths {
         };
         /** 查询我的排名报告授权 */
         get: operations["ListAcademicRankingGrants"];
-        /** 授予成绩排名报告查看权限 */
+        /** 授予成绩排名报告查看权限（未指定到期时间时默认30天） */
         put: operations["PutAcademicRankingGrant"];
         post?: never;
         delete?: never;
@@ -1235,6 +1397,126 @@ export interface paths {
         put?: never;
         /** 管理端手动触发学业统计重算 */
         post: operations["TriggerAdminAcademicStatisticsRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询教务同步批次 */
+        get: operations["ListAdminAcademicSyncBatches"];
+        put?: never;
+        /** 按候选学号创建教务同步批次 */
+        post: operations["CreateAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教务同步批次详情 */
+        get: operations["GetAdminAcademicSyncBatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消尚未完成的教务同步批次 */
+        post: operations["CancelAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/retry-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试批次内的失败子任务 */
+        post: operations["RetryFailedAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询批次子任务安全状态 */
+        get: operations["ListAdminAcademicSyncBatchTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/previews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建按教务账号候选的同步人数预演 */
+        post: operations["CreateAdminAcademicSyncPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/previews/{preview_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询候选人数预演进度 */
+        get: operations["GetAdminAcademicSyncPreview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1756,6 +2038,212 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/activity-popups/candidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取当前可尝试展示的活动弹框 */
+        get: operations["GetActivityPopupCandidate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/displays/{display_id}/click": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 记录活动弹框点击 */
+        post: operations["ClickActivityPopupDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/displays/{display_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 记录活动弹框关闭 */
+        post: operations["CloseActivityPopupDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/displays/{display_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 确认活动弹框已展示 */
+        post: operations["ConfirmActivityPopupDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activity-popups/{id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 原子预占活动弹框展示资格 */
+        post: operations["ClaimActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询活动弹框 */
+        get: operations["ListAdminActivityPopups"];
+        put?: never;
+        /** 创建活动弹框草稿 */
+        post: operations["CreateAdminActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/action-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询活动跳转目标目录 */
+        get: operations["ListActivityPopupActionOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/media/upload-target": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建活动图片直传目标 */
+        post: operations["CreateActivityPopupMediaUploadTarget"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/media/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 完成活动图片上传 */
+        post: operations["CompleteActivityPopupMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询活动弹框详情 */
+        get: operations["GetAdminActivityPopup"];
+        /** 更新活动弹框草稿 */
+        put: operations["UpdateAdminActivityPopup"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 暂停活动弹框 */
+        post: operations["PauseAdminActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activity-popups/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布活动弹框 */
+        post: operations["PublishAdminActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/calendar/reminders": {
         parameters: {
             query?: never;
@@ -1786,6 +2274,40 @@ export interface paths {
         post?: never;
         /** 取消我的校历事件提醒 */
         delete: operations["DeleteMyCalendarReminder"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/class-discussions/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 输入课程名或选课号按需搜索课堂，可精确筛选学期，不预加载全量候选 */
+        get: operations["SearchAdminCampusCircleClassCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/class-discussions/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 管理员按选课号和学年学期创建或定位课堂讨论 */
+        post: operations["ResolveAdminCampusCircleClassDiscussion"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1871,6 +2393,24 @@ export interface paths {
         /** 撤销校园圈帖子审核结果 */
         post: operations["RevokeCampusCirclePostReview"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/posts/{id}/today-hot-override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 创建或更新今日上头推荐或排除项；排除优先于推荐 */
+        put: operations["UpsertAdminCampusCircleTodayHotOverride"];
+        post?: never;
+        /** 删除今日上头运营项并记录审计 */
+        delete: operations["DeleteAdminCampusCircleTodayHotOverride"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1962,6 +2502,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/today-hot/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询今日上头配置、运营项和刷新操作审计 */
+        get: operations["ListAdminCampusCircleTodayHotAudits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取今日上头配置 */
+        get: operations["GetAdminCampusCircleTodayHotConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 更新今日上头配置并记录审计 */
+        patch: operations["UpdateAdminCampusCircleTodayHotConfig"];
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询今日上头推荐和排除运营项 */
+        get: operations["ListAdminCampusCircleTodayHotOverrides"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 请求异步刷新已启用的今日上头；重复请求合并到同一任务 */
+        post: operations["RefreshAdminCampusCircleTodayHot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/campus-circle/today-hot/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取今日上头任务和当前快照状态 */
+        get: operations["GetAdminCampusCircleTodayHotStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/topics": {
         parameters: {
             query?: never;
@@ -2015,6 +2641,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/campus-circle/topics/{id}/announcement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 管理员保存、发布或撤回当前课堂公告，草稿仅后台可见 */
+        patch: operations["UpdateCampusCircleClassAnnouncement"];
+        trace?: never;
+    };
     "/api/v1/admin/campus-circle/topics/{id}/archive": {
         parameters: {
             query?: never;
@@ -2060,6 +2703,57 @@ export interface paths {
         put?: never;
         /** 管理端将一个校园话题合并到另一个话题 */
         post: operations["MergeAdminCampusCircleTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/class-discussions/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按选课号和学年学期获取或创建公开课堂讨论，不校验教学班归属 */
+        post: operations["ResolveCampusCircleClassDiscussion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/class-discussions/{id}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置当前用户已参与课堂的站内消息提醒 */
+        put: operations["UpdateCampusCircleClassNotifications"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/class-discussions/{id}/participation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 首次进入课堂记录去重参与人数，默认开启提醒，重复进入保留设置 */
+        post: operations["RecordCampusCircleClassParticipation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2256,6 +2950,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/campus-circle/today-hot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取首页今日上头轮播；功能关闭、无有效或过期快照时返回禁用且不返回内容 */
+        get: operations["GetCampusCircleTodayHot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/campus-circle/today-hot/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 基于固定快照分页读取今日上头帖子，并在读取时重新检查公开可见性 */
+        get: operations["ListCampusCircleTodayHotPosts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/campus-circle/topics": {
         parameters: {
             query?: never;
@@ -2376,6 +3104,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/carpool/trips/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 聚合搜索开放拼车行程 */
+        get: operations["ListCarpoolTripGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/carpool/trips/groups/{anchor_id}/trips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询聚合拼车行程组内行程 */
+        get: operations["ListCarpoolTripGroupTrips"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/carpool/trips/mine": {
         parameters: {
             query?: never;
@@ -2456,6 +3218,23 @@ export interface paths {
         put?: never;
         /** 退出拼车行程 */
         post: operations["LeaveCarpoolTrip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/carpool/trips/{id}/nearby": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询同路线附近同行 */
+        get: operations["ListNearbyCarpoolTrips"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2795,6 +3574,109 @@ export interface paths {
         };
         /** 查询我的猫咪图鉴 */
         get: operations["GetMyCatCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digest/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课堂讨论分析记录 */
+        get: operations["ListAdminClassDiscussionDigestAnalysisAudits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digest/analyses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看课堂讨论分析详情和尝试记录 */
+        get: operations["GetAdminClassDiscussionDigestAnalysisAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digest/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看课堂讨论分析提示词配置 */
+        get: operations["GetAdminClassDiscussionDigestClassifierConfig"];
+        /** 更新课堂讨论分析提示词配置 */
+        put: operations["UpdateAdminClassDiscussionDigestClassifierConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询课堂精选预演记录 */
+        get: operations["ListAdminClassDiscussionDigestPreviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/class-discussion-digests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看课堂精选预演详情 */
+        get: operations["GetAdminClassDiscussionDigestPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 聚合当前用户的小程序初始化数据 */
+        get: operations["GetClientBootstrap"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3311,6 +4193,162 @@ export interface paths {
         put?: never;
         /** 撤回评论 */
         post: operations["WithdrawComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询社区内容 Hook 投递记录 */
+        get: operations["ListAdminCommunityContentHookDeliveries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-deliveries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看社区内容 Hook 投递详情 */
+        get: operations["GetAdminCommunityContentHookDelivery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-deliveries/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试社区内容 Hook 投递 */
+        post: operations["RetryAdminCommunityContentHookDelivery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-failed-link-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询尚未生成短链的失败内容 */
+        get: operations["ListAdminCommunityContentHookFailedLinkItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-failed-link-items/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试尚未生成短链的失败内容 */
+        post: operations["RetryAdminCommunityContentHookFailedLinkItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询社区内容 Hook 推送规则 */
+        get: operations["ListAdminCommunityContentHookRules"];
+        put?: never;
+        /** 创建社区内容 Hook 推送规则 */
+        post: operations["CreateAdminCommunityContentHookRule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看社区内容 Hook 推送规则 */
+        get: operations["GetAdminCommunityContentHookRule"];
+        /** 更新社区内容 Hook 推送规则 */
+        put: operations["UpdateAdminCommunityContentHookRule"];
+        post?: never;
+        /** 软删除社区内容 Hook 推送规则 */
+        delete: operations["DeleteAdminCommunityContentHookRule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules/{id}/enablement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 启用或停用社区内容 Hook 推送规则 */
+        post: operations["UpdateAdminCommunityContentHookRuleEnablement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/community-content-hook-rules/{id}/test-deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发送社区内容 Hook 测试消息 */
+        post: operations["CreateAdminCommunityContentHookTestDelivery"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3854,6 +4892,23 @@ export interface paths {
         };
         /** 查询学生提交但尚未归一的课程名称 */
         get: operations["ListMaterialCourseCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/material-course-catalog-sync-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询资料课程自动建档的进度与结果 */
+        get: operations["ListMaterialCourseCatalogSyncRuns"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5954,7 +7009,7 @@ export interface paths {
         /** 游标查询会话消息 */
         get: operations["ListPrivateMessages"];
         put?: never;
-        /** 发送一条文字或图片私信 */
+        /** 发送文字或图片私信；若对方已拉黑发送方则拒收 */
         post: operations["CreatePrivateMessage"];
         delete?: never;
         options?: never;
@@ -5991,6 +7046,24 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 拉黑用户 */
+        put: operations["SetUserBlock"];
+        post?: never;
+        /** 取消拉黑用户 */
+        delete: operations["RemoveUserBlock"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6116,6 +7189,127 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我的课表搭子状态 */
+        get: operations["GetMyTimetableBuddy"];
+        put?: never;
+        post?: never;
+        /** 解除课表搭子连接 */
+        delete: operations["DeleteMyTimetableBuddy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/custom-courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 保存本人自定义课程补充 */
+        put: operations["SyncMyTimetableBuddyCustomCourses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建课表搭子邀请 */
+        post: operations["CreateTimetableBuddyInvitation"];
+        /** 撤销本人尚未接受的课表搭子邀请 */
+        delete: operations["RevokeTimetableBuddyInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 接受课表搭子邀请 */
+        post: operations["AcceptTimetableBuddyInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/invitations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 预览课表搭子邀请 */
+        post: operations["PreviewTimetableBuddyInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询我们的课表 */
+        get: operations["GetMyTimetableBuddySchedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/timetable-buddy/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 更新我的课表共享设置 */
+        patch: operations["UpdateMyTimetableBuddySettings"];
         trace?: never;
     };
     "/api/v1/orders": {
@@ -6441,6 +7635,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/wechat-article-export/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 生成公众号文章内容预览 */
+        post: operations["PreviewAdminWechatArticleExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/what-to-eat/listings": {
         parameters: {
             query?: never;
@@ -6741,6 +7952,8 @@ export interface components {
         UserProfile: {
             user: components["schemas"]["UserPublicProfile"];
             is_self: boolean;
+            /** @description 当前用户是否已拉黑主页用户 */
+            is_blocked: boolean;
             counts: components["schemas"]["UserProfileCounts"];
         };
         MentionCandidate: {
@@ -6919,6 +8132,7 @@ export interface components {
         RuntimeConfig: {
             group: string;
             key: string;
+            /** @description 配置文档。miniapp/bootstrap 的 modules.<key> 包含 state、可选 message 和可选 disabled_versions 字符串数组；关闭版本最多 50 项，元素匹配 ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$，不可重复。全局 hidden/maintenance 优先； enabled 且客户端版本精确命中列表时有效状态为 hidden。未配置列表保持既有行为。 */
             value: unknown;
             /** Format: uint64 */
             version: number;
@@ -7183,6 +8397,21 @@ export interface components {
             weekday: number;
             weeks: number[];
         };
+        AcademicCourseAdditionResult: {
+            audit_text: string;
+            course_code: string;
+            course_name: string;
+            id: string;
+            period_id: string;
+            period_name: string;
+            selection_code: string;
+            teacher: string;
+            teaching_class: string;
+        };
+        AcademicCourseAdditionResultListResponseBody: {
+            data: components["schemas"]["AcademicCourseAdditionResult"][];
+            request_id: string;
+        };
         AcademicCourseListResponseBody: {
             cache?: components["schemas"]["AcademicQueryCache"] | null;
             data: components["schemas"]["AcademicCourse"][];
@@ -7299,6 +8528,55 @@ export interface components {
          * @enum {string}
          */
         AcademicQueryCacheState: "fresh" | "stale";
+        AcademicTrainingPlan: {
+            /**
+             * Format: int32
+             * @description 入学届次年份（例如 2023 级）；无法可靠识别时为 null。
+             */
+            cohort_year: number | null;
+            course_groups: components["schemas"]["AcademicTrainingPlanCourseGroup"][];
+            /** @description 按动态体系名称和课程属性列出的要求学分，包括通识要求。 */
+            credit_requirements: components["schemas"]["AcademicTrainingPlanCreditRequirement"][];
+            description: string;
+            /** @description 从培养方案标题提取的专业名称；无法可靠识别时为 null。 */
+            major_name: string | null;
+            objectives: string;
+            title: string;
+            /** Format: double */
+            total_required_credit: number;
+        };
+        AcademicTrainingPlanCourse: {
+            course_attribute: string;
+            course_code: string;
+            course_name: string;
+            course_nature: string;
+            /** Format: double */
+            credit: number;
+            /** Format: double */
+            lecture_hours: number;
+            offered_terms: string[];
+            /** Format: double */
+            practice_hours: number;
+            selection_group: string;
+            /** Format: double */
+            total_hours: number;
+        };
+        AcademicTrainingPlanCourseGroup: {
+            courses: components["schemas"]["AcademicTrainingPlanCourse"][];
+            /** @description 课程明细因通识课程暂不展示时为 true。 */
+            courses_omitted: boolean;
+            name: string;
+        };
+        AcademicTrainingPlanCreditRequirement: {
+            course_attribute: string;
+            group_name: string;
+            /** Format: double */
+            required_credit: number;
+        };
+        AcademicTrainingPlanResponseBody: {
+            data: components["schemas"]["AcademicTrainingPlan"];
+            request_id: string;
+        };
         AcademicCourseCatalogBatch: {
             archive_reason?: string | null;
             archived: boolean;
@@ -7781,6 +9059,125 @@ export interface components {
             notice_url?: string | null;
             title: string;
         };
+        AcademicCredentialAccount: {
+            /** @description 独立教务账号 ID，十进制字符串防止客户端精度丢失 */
+            account_id: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            grant_epoch: string;
+            provider: string;
+            revision: string;
+            /** @enum {string} */
+            state: "none" | "active" | "reauth_required" | "action_required" | "disabled";
+            student_no: string;
+        };
+        AcademicCredentialAccountPage: {
+            has_more: boolean;
+            items: components["schemas"]["AcademicCredentialAccount"][];
+            max_account_id: string;
+            next_after_account_id: string;
+        };
+        AcademicCredentialAccountPageResponseBody: {
+            data: components["schemas"]["AcademicCredentialAccountPage"];
+            request_id: string;
+        };
+        AcademicCredentialAccountResponseBody: {
+            data: components["schemas"]["AcademicCredentialAccount"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingEducationLevel: "undergraduate" | "graduate";
+        AcademicCredentialHostingIntent: {
+            /** Format: date-time */
+            expires_at: string;
+            intent_id: string;
+            /** Format: uri */
+            submit_url: string;
+            token: string;
+        };
+        AcademicCredentialHostingIntentInput: {
+            /** @description 业务查询自动托管时为 true，遇在途绑定不覆盖；主动绑定省略或为 false，省略时按 false 处理 */
+            automatic?: boolean;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: uint64 */
+            expected_revision: number;
+        };
+        AcademicCredentialHostingIntentResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingIntent"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingPurpose: "courses" | "exams" | "grades" | "course_selections" | "selection_schedule" | "addition_results";
+        /** @enum {string} */
+        AcademicCredentialHostingState: "none" | "active" | "reauth_required" | "action_required" | "revoked";
+        AcademicCredentialHostingStatus: {
+            automatic_sync: boolean;
+            credential_id: string | null;
+            /** @description 当前身份版本绑定的已验证学校类型 */
+            education_level?: components["schemas"]["AcademicCredentialHostingEducationLevel"];
+            enabled: boolean;
+            last_error_code: string | null;
+            /** Format: date-time */
+            last_sync_at: string | null;
+            /** @description 服务端生效的托管策略版本，不表示用户另行授权 */
+            policy_version: string | null;
+            /** Format: uint64 */
+            revision: number;
+            revocation_pending: boolean;
+            state: components["schemas"]["AcademicCredentialHostingState"];
+        };
+        AcademicCredentialHostingStatusResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingStatus"];
+            request_id: string;
+        };
+        AcademicCredentialHostingTask: {
+            cache?: components["schemas"]["AcademicQueryCache"] | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            credential_revision: number;
+            error_code: string | null;
+            /** Format: uint64 */
+            grant_epoch: number;
+            period_id: string;
+            purpose: components["schemas"]["AcademicCredentialHostingPurpose"];
+            result: (components["schemas"]["AcademicCourse"][] | components["schemas"]["AcademicExam"][] | components["schemas"]["AcademicGrade"][] | components["schemas"]["AcademicCourseSelection"][] | components["schemas"]["AcademicCourse"][] | components["schemas"]["AcademicCourseAdditionResult"][]) | null;
+            schedule_note?: string | null;
+            state: components["schemas"]["AcademicCredentialHostingTaskState"];
+            task_id: string;
+        };
+        AcademicCredentialHostingTaskResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingTask"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingTaskState: "queued" | "leased" | "running" | "awaiting_archive" | "succeeded" | "failed" | "needs_attention" | "canceled";
+        CreateAcademicCredentialHostingTaskInput: {
+            idempotency_key: string;
+            /** @description grades 允许省略或为空，其余用途必填 */
+            period_id?: string;
+            purpose: components["schemas"]["AcademicCredentialHostingPurpose"];
+        };
+        DeleteAcademicCredentialHostingInput: {
+            /** Format: uint64 */
+            expected_revision: number;
+        };
+        UpdateAcademicCredentialAccountStateInput: {
+            /**
+             * @description 禁用阻止取用；删除清除密码并保持禁用；启用仅等待下一次有效凭据录制
+             * @enum {string}
+             */
+            action: "disable" | "enable" | "delete";
+            expected_revision: string;
+        };
+        UpdateAcademicCredentialHostingInput: {
+            automatic_sync: boolean;
+            /** Format: uint64 */
+            expected_revision: number;
+        };
         AcademicRankingBatch: {
             /** Format: date-time */
             created_at: string;
@@ -8178,6 +9575,162 @@ export interface components {
         };
         /** @enum {string} */
         AcademicTeacherIdentityScope: "normalized_name";
+        AcademicSyncBatch: {
+            /** Format: uint64 */
+            awaiting_archive_count: number;
+            batch_id: string;
+            /** Format: date-time */
+            canceled_at: string | null;
+            /** Format: uint64 */
+            canceled_count: number;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            error_code: string | null;
+            /** Format: uint64 */
+            failed_count: number;
+            /** Format: uint64 */
+            needs_attention_count: number;
+            period_id: string | null;
+            /** Format: date-time */
+            prepared_at: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            /** Format: uint64 */
+            queued_count: number;
+            /** Format: uint64 */
+            running_count: number;
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** Format: uint64 */
+            skipped_count: number;
+            /** Format: date-time */
+            started_at: string | null;
+            state: components["schemas"]["AcademicSyncBatchState"];
+            /** Format: uint64 */
+            succeeded_count: number;
+            /** Format: uint64 */
+            total_count: number | null;
+            /** Format: uint64 */
+            version: number;
+        };
+        AcademicSyncBatchInput: {
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            /** @description 成绩可省略或为空表示全部学期，其余用途必填 */
+            period_id?: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** @description selected 范围必填；按字符串保留前导零，服务端规范化后去重 */
+            student_nos?: string[];
+            /**
+             * @deprecated
+             * @description 旧契约兼容字段，不再支持按平台用户创建新批次
+             */
+            user_ids?: number[];
+        };
+        AcademicSyncBatchPage: {
+            items: components["schemas"]["AcademicSyncBatch"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicSyncBatchPageResponseBody: {
+            data: components["schemas"]["AcademicSyncBatchPage"];
+            request_id: string;
+        };
+        AcademicSyncBatchResponseBody: {
+            data: components["schemas"]["AcademicSyncBatch"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncBatchState: "preparing" | "queued" | "running" | "awaiting_archive" | "partially_succeeded" | "succeeded" | "failed" | "canceling" | "canceled" | "needs_attention";
+        AcademicSyncCancelBatchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        AcademicSyncEducationLevel: "undergraduate" | "graduate";
+        AcademicSyncPreview: {
+            /** Format: uint64 */
+            candidate_count: number | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            error_code: string | null;
+            period_id: string | null;
+            preview_id: string;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            state: components["schemas"]["AcademicSyncPreviewState"];
+        };
+        AcademicSyncPreviewInput: {
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            /** @description 成绩可省略或为空表示全部学期，其余用途必填 */
+            period_id?: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** @description selected 范围必填；按字符串保留前导零，服务端规范化后去重 */
+            student_nos?: string[];
+            /**
+             * @deprecated
+             * @description 旧契约兼容字段，不再支持按平台用户创建新批次
+             */
+            user_ids?: number[];
+        };
+        AcademicSyncPreviewResponseBody: {
+            data: components["schemas"]["AcademicSyncPreview"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncPreviewState: "preparing" | "ready" | "failed";
+        /** @enum {string} */
+        AcademicSyncPurpose: "grades" | "course_selections" | "courses" | "exams";
+        AcademicSyncRetryBatchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        AcademicSyncScope: "all" | "selected";
+        AcademicSyncTask: {
+            /** @description 独立教务账号 ID，缺少托管记录的候选为零 */
+            account_id: string;
+            /** Format: uint64 */
+            attempt_count: number;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            error_code: string | null;
+            period_id: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            /** Format: date-time */
+            started_at: string | null;
+            state: components["schemas"]["AcademicSyncTaskState"];
+            student_no: string;
+            task_id: string;
+            /**
+             * Format: uint64
+             * @deprecated
+             * @description 旧用户任务兼容字段，新账号任务固定为零
+             */
+            user_id: number;
+        };
+        AcademicSyncTaskPage: {
+            items: components["schemas"]["AcademicSyncTask"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicSyncTaskPageResponseBody: {
+            data: components["schemas"]["AcademicSyncTaskPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncTaskState: "queued" | "running" | "awaiting_archive" | "succeeded" | "failed" | "skipped" | "canceled" | "needs_attention";
         AcademicIdentity: {
             /** Format: date-time */
             created_at: string;
@@ -8404,6 +9957,165 @@ export interface components {
             registration_version: number;
             status: string;
         };
+        ActivityPopupAction: {
+            params: {
+                [key: string]: string;
+            };
+            target_key: string;
+            type: components["schemas"]["ActivityPopupActionType"];
+        };
+        ActivityPopupActionOption: {
+            allowed_app_ids?: string[];
+            allowed_params?: string[];
+            label: string;
+            target_key: string;
+            type: components["schemas"]["ActivityPopupActionType"];
+        };
+        ActivityPopupActionOptions: {
+            items: components["schemas"]["ActivityPopupActionOption"][];
+        };
+        ActivityPopupActionOptionsResponseBody: {
+            data: components["schemas"]["ActivityPopupActionOptions"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ActivityPopupActionType: "internal_page" | "mini_program";
+        ActivityPopupCandidate: {
+            activity: components["schemas"]["ActivityPopupCandidateView"];
+        };
+        ActivityPopupCandidateResponseBody: {
+            data: components["schemas"]["ActivityPopupCandidate"];
+            request_id: string;
+        };
+        ActivityPopupCandidateView: {
+            action: components["schemas"]["ActivityPopupAction"];
+            /** Format: uint64 */
+            id: number;
+            image_url: string;
+            /** Format: uri */
+            thumbnail_url?: string | null;
+        };
+        ActivityPopupClaim: {
+            /** Format: uuid */
+            display_id: string;
+            /** Format: date-time */
+            lease_expires_at: string;
+        };
+        ActivityPopupClaimResponseBody: {
+            data: components["schemas"]["ActivityPopupClaim"];
+            request_id: string;
+        };
+        ActivityPopupMedia: {
+            /** Format: int64 */
+            height: number;
+            /** Format: uint64 */
+            id: number;
+            moderation_status: string;
+            status: string;
+            /** Format: uint64 */
+            version: number;
+            /** Format: int64 */
+            width: number;
+        };
+        ActivityPopupMediaResponseBody: {
+            data: components["schemas"]["ActivityPopupMedia"];
+            request_id: string;
+        };
+        ActivityPopupMediaUploadInput: {
+            /** @enum {string} */
+            mime_type: "image/jpeg" | "image/png";
+            /** Format: int64 */
+            size: number;
+        };
+        ActivityPopupMediaUploadTarget: {
+            /** Format: date-time */
+            expires_at: string;
+            /** @enum {string} */
+            file_field: "file";
+            form_fields: {
+                [key: string]: string;
+            };
+            headers: {
+                [key: string]: string;
+            };
+            /** Format: uint64 */
+            media_id: number;
+            /** @enum {string} */
+            upload_method: "POST";
+            /** Format: uri */
+            upload_url: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        ActivityPopupMediaUploadTargetResponseBody: {
+            data: components["schemas"]["ActivityPopupMediaUploadTarget"];
+            request_id: string;
+        };
+        ActivityPopupPage: {
+            items: components["schemas"]["ActivityPopupView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ActivityPopupPageResponseBody: {
+            data: components["schemas"]["ActivityPopupPage"];
+            request_id: string;
+        };
+        ActivityPopupResponseBody: {
+            data: components["schemas"]["ActivityPopupView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        ActivityPopupStatus: "draft" | "published" | "paused";
+        ActivityPopupUpdateRequest: components["schemas"]["ActivityPopupWriteRequest"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        ActivityPopupVersionRequest: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        ActivityPopupView: {
+            action: components["schemas"]["ActivityPopupAction"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: uint64 */
+            image_media_id: number | null;
+            image_url: string | null;
+            /** Format: int64 */
+            max_shows: number;
+            /** Format: int64 */
+            min_interval_hours: number;
+            name: string;
+            /** Format: int64 */
+            priority: number;
+            /** Format: date-time */
+            start_at: string;
+            status: components["schemas"]["ActivityPopupStatus"];
+            /** Format: uint64 */
+            version: number;
+        };
+        ActivityPopupWriteRequest: {
+            action: components["schemas"]["ActivityPopupAction"];
+            /** Format: date-time */
+            end_at: string;
+            /** Format: uint64 */
+            image_media_id?: number | null;
+            /** Format: uri */
+            image_url?: string | null;
+            /** Format: int64 */
+            max_shows: number;
+            /** Format: int64 */
+            min_interval_hours: number;
+            name: string;
+            /** Format: int64 */
+            priority: number;
+            /** Format: date-time */
+            start_at: string;
+        };
         CalendarReminderList: {
             items: components["schemas"]["CalendarReminderView"][];
         };
@@ -8438,6 +10150,49 @@ export interface components {
             /** Format: int64 */
             view_count?: number;
         };
+        CampusCircleClassAnnouncement: {
+            content: string;
+            published: boolean;
+            /** Format: date-time */
+            published_at?: string | null;
+            title: string;
+        };
+        CampusCircleClassCandidate: {
+            class_num: string;
+            course_code?: string;
+            course_name: string;
+            education_level: string;
+            /** Format: uint64 */
+            id: number;
+            period_id: string;
+            teachers?: string | null;
+        };
+        CampusCircleClassCandidatePage: {
+            items: components["schemas"]["CampusCircleClassCandidate"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleClassCandidatePageResponseBody: {
+            data: components["schemas"]["CampusCircleClassCandidatePage"];
+            request_id: string;
+        };
+        CampusCircleClassDiscussionContext: {
+            class_num: string;
+            course_code?: string;
+            course_name: string;
+            period_id: string;
+        };
+        CampusCircleClassParticipation: {
+            notifications_enabled: boolean;
+            /** Format: int64 */
+            participant_count: number;
+        };
+        CampusCircleClassParticipationResponseBody: {
+            data: components["schemas"]["CampusCircleClassParticipation"];
+            request_id: string;
+        };
         CampusCircleCurationInput: {
             /** Format: uint64 */
             expected_version: number;
@@ -8471,6 +10226,8 @@ export interface components {
             media_id?: number | null;
             /** Format: int64 */
             sort_order: number;
+            /** @description 社区列表使用的 CDN 缩略图；未启用图片处理时为空 */
+            thumbnail_url?: string | null;
             url: string;
         };
         CampusCirclePostPage: {
@@ -8616,6 +10373,163 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        CampusCircleTodayHotAudit: {
+            action: string;
+            /** Format: uint64 */
+            actor_id: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            payload?: string | null;
+            /** Format: uint64 */
+            post_id?: number | null;
+        };
+        CampusCircleTodayHotAuditPage: {
+            items: components["schemas"]["CampusCircleTodayHotAudit"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTodayHotAuditPageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotAuditPage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotCarousel: {
+            carousel_interval_seconds: number;
+            enabled: boolean;
+            /** Format: date-time */
+            generated_at?: string | null;
+            items: components["schemas"]["CampusCircleTodayHotItem"][];
+            /** Format: uint64 */
+            snapshot_id?: number | null;
+        };
+        CampusCircleTodayHotCarouselResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotCarousel"];
+            request_id: string;
+        };
+        CampusCircleTodayHotConfig: {
+            candidate_window_hours: number;
+            carousel_interval_seconds: number;
+            carousel_limit: number;
+            /** Format: double */
+            comment_weight: number;
+            enabled: boolean;
+            exploration_ratio_basis_points: number;
+            /** Format: double */
+            like_weight: number;
+            signal_window_hours: number;
+            snapshot_limit: number;
+            /** Format: uint64 */
+            version: number;
+            /** Format: double */
+            view_weight: number;
+        };
+        CampusCircleTodayHotConfigInput: {
+            candidate_window_hours: number;
+            carousel_interval_seconds: number;
+            carousel_limit: number;
+            /** Format: double */
+            comment_weight: number;
+            enabled: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+            exploration_ratio_basis_points: number;
+            /** Format: double */
+            like_weight: number;
+            signal_window_hours: number;
+            snapshot_limit: number;
+            /** Format: double */
+            view_weight: number;
+        };
+        CampusCircleTodayHotConfigResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotConfig"];
+            request_id: string;
+        };
+        CampusCircleTodayHotItem: {
+            content: string;
+            images: string[];
+            /** Format: uint64 */
+            post_id: number;
+            section_name: string;
+        };
+        CampusCircleTodayHotOverride: {
+            /** Format: date-time */
+            ends_at?: string | null;
+            kind: components["schemas"]["CampusCircleTodayHotOverrideKind"];
+            /** Format: uint64 */
+            post_id: number;
+            reason: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: uint64 */
+            updated_by: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        CampusCircleTodayHotOverrideInput: {
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** Format: uint64 */
+            expected_version: number;
+            kind: components["schemas"]["CampusCircleTodayHotOverrideKind"];
+            reason: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+        };
+        /** @enum {string} */
+        CampusCircleTodayHotOverrideKind: "recommend" | "exclude";
+        CampusCircleTodayHotOverridePage: {
+            items: components["schemas"]["CampusCircleTodayHotOverride"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CampusCircleTodayHotOverridePageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotOverridePage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotOverrideResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotOverride"];
+            request_id: string;
+        };
+        CampusCircleTodayHotPage: {
+            context_unavailable: boolean;
+            /** Format: date-time */
+            generated_at: string;
+            has_more: boolean;
+            items: components["schemas"]["CampusCirclePostView"][];
+            next_cursor?: string | null;
+            /** Format: uint64 */
+            snapshot_id: number;
+        };
+        CampusCircleTodayHotPageResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotPage"];
+            request_id: string;
+        };
+        CampusCircleTodayHotStatus: {
+            /** Format: int64 */
+            candidate_count: number;
+            /** Format: uint64 */
+            current_snapshot_id: number | null;
+            enabled: boolean;
+            failure_reason?: string | null;
+            /** Format: int64 */
+            last_duration_ms?: number | null;
+            /** Format: date-time */
+            last_failure_at?: string | null;
+            /** Format: date-time */
+            last_success_at: string | null;
+            refresh_queued: boolean;
+            stale: boolean;
+            warmup: boolean;
+        };
+        CampusCircleTodayHotStatusResponseBody: {
+            data: components["schemas"]["CampusCircleTodayHotStatus"];
+            request_id: string;
+        };
         CampusCircleTopicAuditPage: {
             items: components["schemas"]["CampusCircleTopicAuditView"][];
             page: number;
@@ -8704,8 +10618,10 @@ export interface components {
         } | null;
         CampusCircleTopicView: {
             aliases?: string[];
+            announcement?: components["schemas"]["CampusCircleClassAnnouncement"];
             auto_association_enabled?: boolean;
             auto_created?: boolean;
+            class_discussion?: components["schemas"]["CampusCircleClassDiscussionContext"];
             cover_url: string | null;
             /** Format: date-time */
             created_at: string;
@@ -8737,6 +10653,37 @@ export interface components {
         CampusCircleViewerAction: "edit" | "withdraw" | "admin_withdraw" | "submit_review" | "like" | "unlike" | "comment" | "verify_academic" | "pin" | "unpin";
         /** @enum {string} */
         CampusCircleViewerRelation: "anonymous" | "owner" | "other" | "admin";
+        CarpoolNearbyTripResponseBody: {
+            data: {
+                items: components["schemas"]["CarpoolTripView"][];
+            };
+            request_id: string;
+        };
+        CarpoolTripGroup: {
+            /** Format: uint64 */
+            anchor_trip_id: number;
+            /** Format: date-time */
+            departure_end: string;
+            /** Format: date-time */
+            departure_start: string;
+            destination: string;
+            has_more: boolean;
+            origin: string;
+            /** Format: int64 */
+            trip_count: number;
+            trips: components["schemas"]["CarpoolTripView"][];
+        };
+        CarpoolTripGroupPage: {
+            items: components["schemas"]["CarpoolTripGroup"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CarpoolTripGroupPageResponseBody: {
+            data: components["schemas"]["CarpoolTripGroupPage"];
+            request_id: string;
+        };
         CarpoolTripPageResponseBody: {
             data: components["schemas"]["CarpoolTripViewPage"];
             request_id: string;
@@ -8818,6 +10765,7 @@ export interface components {
         AdminSightingView: {
             activity: string;
             area: string;
+            cat_cover_thumbnail_url?: string | null;
             cat_cover_url?: string | null;
             /** Format: uint64 */
             cat_id: number;
@@ -8830,6 +10778,7 @@ export interface components {
             like_count: number;
             liked: boolean;
             note?: string | null;
+            photo_thumbnail_url?: string | null;
             photo_url?: string | null;
             rejection_reason?: string | null;
             reporter_avatar_url?: string | null;
@@ -8891,6 +10840,8 @@ export interface components {
             aliases: string[];
             campus: string;
             coat: string;
+            /** @description 图鉴列表使用的 CDN 缩略图；未启用时为空 */
+            cover_thumbnail_url?: string | null;
             cover_url?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -9003,6 +10954,8 @@ export interface components {
         SightingView: {
             activity: string;
             area: string;
+            /** @description 动态流使用的猫咪封面缩略图；未启用时为空 */
+            cat_cover_thumbnail_url?: string | null;
             cat_cover_url?: string | null;
             /** Format: uint64 */
             cat_id: number;
@@ -9015,6 +10968,8 @@ export interface components {
             like_count: number;
             liked: boolean;
             note?: string | null;
+            /** @description 动态流使用的照片缩略图；未启用时为空 */
+            photo_thumbnail_url?: string | null;
             photo_url?: string | null;
             reporter_avatar_url?: string | null;
             reporter_name: string;
@@ -9059,12 +11014,214 @@ export interface components {
             description?: string | null;
             /** Format: uint64 */
             id: number;
+            photo_thumbnail_url?: string | null;
             photo_url?: string | null;
             proposed_name?: string | null;
             rejection_reason?: string | null;
             status: components["schemas"]["SubmissionStatus"];
             /** Format: uint64 */
             version: number;
+        };
+        ClassDiscussionDigestAnalysisAudit: {
+            answered: boolean;
+            /** Format: int32 */
+            attempt_count: number;
+            attempts: components["schemas"]["ClassDiscussionDigestAnalysisAuditAttempt"][];
+            category: string;
+            class_num: string;
+            /** Format: uint64 */
+            classroom_topic_id: number;
+            /** Format: double */
+            confidence: number;
+            /** Format: uint64 */
+            config_version: number;
+            /** @enum {string} */
+            content_kind: "post" | "comment";
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uint64 */
+            id: number;
+            immediate_useful: boolean;
+            input_sha256: string;
+            /** Format: date-time */
+            input_snapshot_expires_at: string | null;
+            last_error_code: string;
+            latest_input_excerpt: string;
+            /** Format: date-time */
+            next_attempt_at?: string | null;
+            /** Format: date-time */
+            observed_at: string;
+            period_id: string;
+            /** Format: int32 */
+            prompt_attempt_count: number;
+            prompt_sha256: string;
+            /** Format: uint64 */
+            publication_version: number;
+            reason: string;
+            /** Format: double */
+            relevance: number;
+            /** Format: uint64 */
+            root_post_id: number;
+            /** Format: uint64 */
+            source_id: number;
+            /** @enum {string} */
+            status: "pending" | "processing" | "ready" | "retry_wait" | "terminal_failed" | "failed";
+            summary: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: double */
+            value: number;
+        };
+        ClassDiscussionDigestAnalysisAuditAttempt: {
+            answered: boolean;
+            /** Format: int32 */
+            attempt_number: number;
+            category: string;
+            classifier_prompt: string;
+            /** Format: date-time */
+            completed_at?: string | null;
+            /** Format: double */
+            confidence: number;
+            /** Format: uint64 */
+            config_version: number;
+            error_code: string;
+            /** Format: uint64 */
+            id: number;
+            immediate_useful: boolean;
+            input_sha256: string;
+            input_snapshot: string | null;
+            /** Format: date-time */
+            input_snapshot_expires_at?: string | null;
+            /** Format: date-time */
+            next_attempt_at?: string | null;
+            prompt_sha256: string;
+            reason: string;
+            /** Format: double */
+            relevance: number;
+            /** Format: date-time */
+            started_at: string;
+            /** @enum {string} */
+            status: "processing" | "retry_wait" | "ready" | "failed" | "abandoned";
+            summary: string;
+            /** Format: double */
+            value: number;
+        };
+        ClassDiscussionDigestAnalysisAuditPage: {
+            items: components["schemas"]["ClassDiscussionDigestAnalysisAudit"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassDiscussionDigestAnalysisAuditPageResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestAnalysisAuditPage"];
+            request_id: string;
+        };
+        ClassDiscussionDigestAnalysisAuditResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestAnalysisAudit"];
+            request_id: string;
+        };
+        ClassDiscussionDigestClassifierConfig: {
+            classifier_prompt: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        ClassDiscussionDigestClassifierConfigResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestClassifierConfig"];
+            request_id: string;
+        };
+        ClassDiscussionDigestExclusionSummary: {
+            [key: string]: number;
+        };
+        /** @enum {string} */
+        ClassDiscussionDigestMode: "preview" | "formal";
+        ClassDiscussionDigestPreviewPage: {
+            items: components["schemas"]["ClassDiscussionDigestPreviewView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ClassDiscussionDigestPreviewPageResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestPreviewPage"];
+            request_id: string;
+        };
+        ClassDiscussionDigestPreviewResponseBody: {
+            data: components["schemas"]["ClassDiscussionDigestPreviewView"];
+            request_id: string;
+        };
+        ClassDiscussionDigestPreviewView: {
+            action_path: string;
+            /** Format: int32 */
+            candidate_count: number;
+            class_num: string;
+            /** Format: uint64 */
+            config_version: number;
+            /** Format: date-time */
+            created_at: string;
+            exclusions: components["schemas"]["ClassDiscussionDigestExclusionSummary"];
+            /** Format: date-time */
+            expires_at: string;
+            feature_enabled: boolean;
+            fingerprint: string;
+            /** Format: uint64 */
+            id: number;
+            /** Format: int32 */
+            matched_count: number;
+            mode: components["schemas"]["ClassDiscussionDigestMode"];
+            period_id: string;
+            proposed_summary: string;
+            proposed_title: string;
+            topics: components["schemas"]["ClassDiscussionDigestTopic"][];
+            wechat_send_enabled: boolean;
+            window_key: string;
+        };
+        ClassDiscussionDigestTopic: {
+            answered: boolean;
+            /** @enum {string} */
+            category: "question" | "share" | "answer";
+            /** Format: uint64 */
+            classroom_topic_id: number;
+            /** Format: uint64 */
+            content_id: number;
+            /** @enum {string} */
+            content_kind: "post" | "comment";
+            key: string;
+            /** Format: date-time */
+            published_at: string;
+            reason: string;
+            /** Format: uint64 */
+            root_post_id: number;
+            summary: string;
+        };
+        UpdateClassDiscussionDigestClassifierConfigRequest: {
+            classifier_prompt: string;
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        ClientBootstrap: {
+            academic_verification?: components["schemas"]["AcademicVerificationStatus"] | null;
+            checkin?: components["schemas"]["DailyCheckinStatus"] | null;
+            errors: {
+                [key: string]: components["schemas"]["ClientBootstrapSectionError"];
+            };
+            notice_subscription?: components["schemas"]["NoticeSubscriptionBootstrap"] | null;
+            runtime_config?: components["schemas"]["RuntimeConfig"] | null;
+            /** Format: int32 */
+            schema_version: number;
+        };
+        ClientBootstrapResponseBody: {
+            data: components["schemas"]["ClientBootstrap"];
+            request_id: string;
+        };
+        ClientBootstrapSectionError: {
+            code: string;
+        };
+        NoticeSubscriptionBootstrap: {
+            available: boolean;
+            template_ids: string[];
         };
         /** @enum {string} */
         ClubAvailableAction: "edit" | "submit_review" | "verify_academic";
@@ -9193,6 +11350,8 @@ export interface components {
             media_id: number;
             /** Format: int64 */
             sort_order: number;
+            /** @description 社团目录和图库使用的 CDN 缩略图；未启用时为空 */
+            thumbnail_url?: string | null;
             url: string;
             /** Format: int64 */
             width: number;
@@ -9344,6 +11503,8 @@ export interface components {
             height: number;
             /** Format: uint64 */
             media_id: number;
+            /** @description 评论流中使用的 CDN 缩略图；未启用图片处理时为空 */
+            thumbnail_url?: string | null;
             url: string;
             /** Format: int64 */
             width: number;
@@ -9432,6 +11593,227 @@ export interface components {
         };
         /** @enum {string} */
         CommentViewerAction: "edit" | "withdraw" | "submit_review" | "reply" | "like" | "unlike" | "pin_comment" | "unpin_comment" | "verify_academic";
+        /** @enum {string} */
+        CommunityContentHookAuthType: "none" | "bearer" | "hmac_sha256";
+        CommunityContentHookDelivery: {
+            /** Format: int32 */
+            attempt_count: number;
+            attempts?: components["schemas"]["CommunityContentHookDeliveryAttempt"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            is_test: boolean;
+            /** Format: int64 */
+            item_count: number;
+            items: components["schemas"]["CommunityContentHookDeliveryItem"][];
+            last_error_code?: string | null;
+            mode: components["schemas"]["CommunityContentHookMode"];
+            /** Format: date-time */
+            next_attempt_at?: string | null;
+            rendered_text?: string | null;
+            /** Format: uint64 */
+            rule_id: number;
+            rule_name: string;
+            rule_status: components["schemas"]["CommunityContentHookRuleStatus"];
+            status: components["schemas"]["CommunityContentHookDeliveryStatus"];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+            /** Format: date-time */
+            window_end?: string | null;
+            /** Format: date-time */
+            window_start?: string | null;
+        };
+        CommunityContentHookDeliveryAttempt: {
+            /** Format: int32 */
+            attempt_number: number;
+            /** Format: date-time */
+            completed_at?: string | null;
+            /** Format: int64 */
+            duration_ms?: number | null;
+            error_code?: string | null;
+            /** Format: int32 */
+            http_status?: number | null;
+            /** Format: date-time */
+            started_at: string;
+        };
+        CommunityContentHookDeliveryItem: {
+            mini_program_url_link?: string | null;
+            /** Format: uint64 */
+            resource_id: number;
+            skip_reason?: string | null;
+            source: components["schemas"]["CommunityContentHookSource"];
+            status: components["schemas"]["CommunityContentHookDeliveryStatus"];
+        };
+        CommunityContentHookDeliveryPage: {
+            items: components["schemas"]["CommunityContentHookDelivery"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CommunityContentHookDeliveryPageResponseBody: {
+            data: components["schemas"]["CommunityContentHookDeliveryPage"];
+            request_id: string;
+        };
+        CommunityContentHookDeliveryResponseBody: {
+            data: components["schemas"]["CommunityContentHookDelivery"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CommunityContentHookDeliveryStatus: "pending_link" | "pending_send" | "processing" | "succeeded" | "retry_wait" | "terminal_failed" | "skipped";
+        CommunityContentHookFailedLinkItem: {
+            /** Format: int32 */
+            attempts: number;
+            /** Format: uint64 */
+            id: number;
+            last_error?: string | null;
+            /** Format: date-time */
+            occurred_at: string;
+            /** Format: uint64 */
+            resource_id: number;
+            /** Format: uint64 */
+            retry_version: number;
+            /** Format: uint64 */
+            rule_id: number;
+            rule_name: string;
+            rule_status: components["schemas"]["CommunityContentHookRuleStatus"];
+            source: components["schemas"]["CommunityContentHookSource"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CommunityContentHookFailedLinkItemPage: {
+            items: components["schemas"]["CommunityContentHookFailedLinkItem"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CommunityContentHookFailedLinkItemPageResponseBody: {
+            data: components["schemas"]["CommunityContentHookFailedLinkItemPage"];
+            request_id: string;
+        };
+        CommunityContentHookFailedLinkItemResponseBody: {
+            data: components["schemas"]["CommunityContentHookFailedLinkItem"];
+            request_id: string;
+        };
+        /** @description 白名单筛选条件；条件之间取且，同一数组字段取或。字段只在对应内容来源上生效。 */
+        CommunityContentHookFilter: {
+            campus_circle_board_ids?: number[];
+            campuses?: string[];
+            /** Format: date-time */
+            carpool_depart_after?: string;
+            /** Format: date-time */
+            carpool_depart_before?: string;
+            carpool_departures?: string[];
+            carpool_destinations?: string[];
+            categories?: string[];
+            /** Format: int64 */
+            max_price_fen?: number;
+            /** Format: int64 */
+            max_reward_fen?: number;
+            /** Format: int64 */
+            min_price_fen?: number;
+            /** Format: int64 */
+            min_reward_fen?: number;
+        };
+        /** @enum {string} */
+        CommunityContentHookMode: "immediate" | "digest";
+        CommunityContentHookRetryFailedLinkItemInput: {
+            /** Format: uint64 */
+            expected_retry_version: number;
+        };
+        CommunityContentHookRetryInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CommunityContentHookRule: {
+            auth_type: components["schemas"]["CommunityContentHookAuthType"];
+            body_template?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            credential_configured: boolean;
+            /** Format: int32 */
+            digest_interval_minutes?: number | null;
+            enabled: boolean;
+            filter: components["schemas"]["CommunityContentHookFilter"];
+            /** Format: uint64 */
+            id: number;
+            /** Format: int32 */
+            max_items_per_delivery?: number | null;
+            mode: components["schemas"]["CommunityContentHookMode"];
+            name: string;
+            /** Format: date-time */
+            next_run_at?: string | null;
+            sources: components["schemas"]["CommunityContentHookSource"][];
+            status: components["schemas"]["CommunityContentHookRuleStatus"];
+            tail_text?: string;
+            target_url: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        CommunityContentHookRuleEnablementInput: {
+            enabled: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        CommunityContentHookRuleInput: {
+            auth_secret?: string;
+            auth_type: components["schemas"]["CommunityContentHookAuthType"];
+            body_template?: string;
+            /** Format: int32 */
+            digest_interval_minutes?: number | null;
+            enabled: boolean;
+            filter?: components["schemas"]["CommunityContentHookFilter"];
+            /** Format: int32 */
+            max_items_per_delivery?: number | null;
+            mode: components["schemas"]["CommunityContentHookMode"];
+            name: string;
+            sources: components["schemas"]["CommunityContentHookSource"][];
+            tail_text?: string;
+            /** Format: uri */
+            target_url: string;
+        };
+        CommunityContentHookRulePage: {
+            items: components["schemas"]["CommunityContentHookRule"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CommunityContentHookRulePageResponseBody: {
+            data: components["schemas"]["CommunityContentHookRulePage"];
+            request_id: string;
+        };
+        CommunityContentHookRuleResponseBody: {
+            data: components["schemas"]["CommunityContentHookRule"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        CommunityContentHookRuleStatus: "enabled" | "disabled" | "deleted";
+        CommunityContentHookRuleUpdateInput: components["schemas"]["CommunityContentHookRuleInput"] & {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        CommunityContentHookSource: "carpool" | "errand" | "marketplace" | "campus_circle";
+        CommunityContentHookTestDelivery: {
+            /** Format: uint64 */
+            delivery_id: number;
+            rendered_body: string;
+            status: components["schemas"]["CommunityContentHookDeliveryStatus"];
+        };
+        CommunityContentHookTestDeliveryInput: {
+            sample_text?: string;
+        };
+        CommunityContentHookTestDeliveryResponseBody: {
+            data: components["schemas"]["CommunityContentHookTestDelivery"];
+            request_id: string;
+        };
         ContentSegment: {
             nickname?: string | null;
             text: string;
@@ -9994,6 +12376,8 @@ export interface components {
         CourseMaterialView: {
             candidate_course_name?: string | null;
             course?: components["schemas"]["MaterialCourseView"];
+            /** @description 跨学期关联课程，首项为兼容主课程 */
+            courses?: components["schemas"]["MaterialCourseView"][];
             /** Format: date-time */
             created_at: string;
             description?: string | null;
@@ -10025,6 +12409,8 @@ export interface components {
             candidate_course_name?: string | null;
             /** Format: uint64 */
             course_id?: number | null;
+            /** @description 有序课程集合，去重后最多十门，不区分学期 */
+            course_ids?: number[];
             description?: string | null;
             files: components["schemas"]["MaterialUploadFileInput"][];
             material_type: components["schemas"]["MaterialType"];
@@ -10033,6 +12419,42 @@ export interface components {
         };
         /** @enum {string} */
         EducationLevel: "undergraduate" | "graduate" | "general";
+        MaterialCourseCatalogSyncPage: {
+            items: components["schemas"]["MaterialCourseCatalogSyncView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MaterialCourseCatalogSyncPageResponseBody: {
+            data: components["schemas"]["MaterialCourseCatalogSyncPage"];
+            request_id: string;
+        };
+        MaterialCourseCatalogSyncView: {
+            /** Format: int64 */
+            attempts: number;
+            /** Format: uint64 */
+            batch_id: number;
+            /** Format: int64 */
+            created_course_count: number;
+            /** Format: date-time */
+            finished_at?: string | null;
+            /** Format: uint64 */
+            last_entry_id: number;
+            last_error?: string | null;
+            /** Format: int64 */
+            linked_existing_count: number;
+            /** Format: int64 */
+            processed_entries: number;
+            /** Format: int64 */
+            skipped_entry_count: number;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** @enum {string} */
+            status: "queued" | "running" | "succeeded" | "failed";
+            /** Format: uint64 */
+            version: number;
+        };
         MaterialCoursePage: {
             items: components["schemas"]["MaterialCourseView"][];
             page: number;
@@ -10060,6 +12482,8 @@ export interface components {
             name: string;
             /** Format: int64 */
             sort_order: number;
+            /** @description 含已合并课程的稳定来源代码，用于课程上下文精确匹配 */
+            source_course_codes?: string[];
             /** @enum {string} */
             status: "enabled" | "disabled";
             /** Format: uint64 */
@@ -10897,6 +13321,7 @@ export interface components {
         HomeFeedImageView: {
             /** Format: uint64 */
             media_id?: number | null;
+            thumbnail_url?: string | null;
             url: string;
         };
         HomeFeedItemView: {
@@ -10961,6 +13386,8 @@ export interface components {
             height: number;
             /** Format: uint64 */
             media_id: number;
+            /** @description 首页评论预览使用的 CDN 缩略图；未启用时为空 */
+            thumbnail_url?: string | null;
             url: string;
             /** Format: int64 */
             width: number;
@@ -11326,6 +13753,7 @@ export interface components {
             media_id?: number | null;
             /** Format: int64 */
             position: number;
+            thumbnail_url?: string | null;
             url: string;
         };
         MarketplaceListingPageResponseBody: {
@@ -11376,6 +13804,7 @@ export interface components {
             /** @enum {string} */
             source: "manual" | "course_selection" | "grade" | "schedule";
             status: string;
+            thumbnail_urls?: string[] | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -11445,7 +13874,7 @@ export interface components {
         /** @enum {string} */
         MarketplaceViewerAction: "edit" | "submit_review" | "withdraw" | "purchase" | "respond" | "verify_academic";
         /** @enum {string} */
-        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat" | "cat_atlas";
+        MediaPurpose: "community" | "marketplace" | "avatar" | "private_message" | "comment" | "what_to_eat" | "cat_atlas" | "activity_popup";
         MediaResponseBody: {
             data: components["schemas"]["MediaView"];
             request_id: string;
@@ -11856,6 +14285,11 @@ export interface components {
             height: number;
             /** Format: uint64 */
             media_id: number;
+            /**
+             * Format: uri
+             * @description 会话列表与消息流使用的短期 CDN 缩略图；未启用时为空
+             */
+            thumbnail_url?: string | null;
             /** Format: uri */
             url: string;
             /** Format: int64 */
@@ -11927,6 +14361,13 @@ export interface components {
         UpdatePrivateConversationReadInput: {
             /** Format: uint64 */
             message_id: number;
+        };
+        UserBlockResponseBody: {
+            data: components["schemas"]["UserBlockResult"];
+            request_id: string;
+        };
+        UserBlockResult: {
+            is_blocked: boolean;
         };
         /** @enum {string} */
         ReactionResourceType: "campus_circle_post" | "marketplace" | "errand" | "carpool" | "comment" | "cat_sighting";
@@ -12064,6 +14505,118 @@ export interface components {
         ShuttleVersionInput: {
             /** Format: uint64 */
             expected_version: number;
+        };
+        TimetableBuddyBusySlot: {
+            /** Format: int64 */
+            section: number;
+            /** Format: int64 */
+            week: number;
+            /** Format: int64 */
+            weekday: number;
+        };
+        TimetableBuddyConnection: {
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            id: number;
+            members: components["schemas"]["TimetableBuddyMember"][];
+            relation_type: components["schemas"]["TimetableBuddyRelationType"];
+        };
+        TimetableBuddyCourse: {
+            location?: string | null;
+            name: string;
+            sections: number[];
+            /** Format: int64 */
+            weekday: number;
+            weeks: number[];
+        };
+        /** @description 仅包含本地自定义课程，不包含官方课表或服务端蹭课 */
+        TimetableBuddyCustomCoursesInput: {
+            courses: components["schemas"]["TimetableBuddyCourse"][];
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            period_id: string;
+        };
+        TimetableBuddyCustomCoursesResponseBody: {
+            data: components["schemas"]["TimetableBuddyMemberSchedule"];
+            request_id: string;
+        };
+        TimetableBuddyInvitation: {
+            /** Format: date-time */
+            expires_at: string;
+            relation_type: components["schemas"]["TimetableBuddyRelationType"];
+            share_scope: components["schemas"]["TimetableBuddyShareScope"];
+            token: string;
+        };
+        TimetableBuddyInvitationPreview: {
+            creator_avatar_url?: string | null;
+            /** Format: uint64 */
+            creator_id: number;
+            creator_nickname: string;
+            /** Format: date-time */
+            expires_at: string;
+            relation_type: components["schemas"]["TimetableBuddyRelationType"];
+        };
+        TimetableBuddyInvitationPreviewResponseBody: {
+            data: components["schemas"]["TimetableBuddyInvitationPreview"];
+            request_id: string;
+        };
+        TimetableBuddyInvitationResponseBody: {
+            data: components["schemas"]["TimetableBuddyInvitation"];
+            request_id: string;
+        };
+        TimetableBuddyInvitationTokenInput: {
+            token: string;
+        };
+        TimetableBuddyMember: {
+            avatar_url?: string | null;
+            nickname?: string;
+            paused: boolean;
+            share_scope: components["schemas"]["TimetableBuddyShareScope"];
+            /** Format: uint64 */
+            user_id: number;
+        };
+        TimetableBuddyMemberSchedule: {
+            avatar_url?: string | null;
+            busy_slots: components["schemas"]["TimetableBuddyBusySlot"][];
+            courses: components["schemas"]["TimetableBuddyCourse"][];
+            /** @description 本人是否已明确保存当前学期的自定义课程补充 */
+            custom_courses_ready: boolean;
+            /** Format: date-time */
+            custom_courses_synced_at: string | null;
+            /** @enum {string} */
+            data_status: "ready" | "unavailable" | "incomplete" | "identity_unavailable";
+            nickname?: string;
+            paused: boolean;
+            share_scope: components["schemas"]["TimetableBuddyShareScope"];
+            /**
+             * Format: date-time
+             * @description 官方课表归档的最近观察时间
+             */
+            synced_at: string | null;
+            /** Format: uint64 */
+            user_id: number;
+        };
+        /** @enum {string} */
+        TimetableBuddyRelationType: "friend" | "study_partner" | "cp" | "unspecified";
+        TimetableBuddySchedule: {
+            buddy: components["schemas"]["TimetableBuddyMemberSchedule"];
+            common_free_slots: components["schemas"]["TimetableBuddyBusySlot"][] | null;
+            connection: components["schemas"]["TimetableBuddyConnection"];
+            me: components["schemas"]["TimetableBuddyMemberSchedule"];
+        };
+        TimetableBuddyScheduleResponseBody: {
+            data: components["schemas"]["TimetableBuddySchedule"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        TimetableBuddyShareScope: "busy" | "details";
+        TimetableBuddyState: {
+            connection?: components["schemas"]["TimetableBuddyConnection"];
+        };
+        TimetableBuddyStateResponseBody: {
+            data: components["schemas"]["TimetableBuddyState"];
+            request_id: string;
         };
         TradeOrderPageResponseBody: {
             data: components["schemas"]["TradeOrderViewPage"];
@@ -12331,6 +14884,84 @@ export interface components {
             /** Format: uint64 */
             id: number;
         };
+        WechatArticleExportCarpool: {
+            /** Format: date-time */
+            departure_at: string;
+            description?: string | null;
+            destination: string;
+            origin: string;
+            /** Format: int64 */
+            remaining_seats: number;
+        };
+        WechatArticleExportErrand: {
+            category: string;
+            currency: string;
+            /** Format: date-time */
+            deadline: string;
+            description: string;
+            dropoff_location: string;
+            pickup_location: string;
+            /** Format: int64 */
+            reward_cents: number;
+        };
+        WechatArticleExportItem: {
+            carpool?: components["schemas"]["WechatArticleExportCarpool"];
+            /** Format: date-time */
+            created_at: string;
+            errand?: components["schemas"]["WechatArticleExportErrand"];
+            /** Format: uint64 */
+            id: number;
+            images: string[];
+            marketplace?: components["schemas"]["WechatArticleExportMarketplace"];
+            post?: components["schemas"]["WechatArticleExportPost"];
+            /** @enum {string} */
+            source_type: "post" | "marketplace" | "errand" | "carpool";
+        };
+        WechatArticleExportMarketplace: {
+            category: string;
+            currency: string;
+            description: string;
+            /** @enum {string} */
+            intent: "sell" | "wanted";
+            /** Format: int64 */
+            price_cents: number;
+        };
+        WechatArticleExportPost: {
+            content: string;
+            section_name: string;
+            topics: string[];
+            /** Format: uint64 */
+            view_count: number;
+        };
+        WechatArticleExportPreview: {
+            excluded_post_for_campus: boolean;
+            items: components["schemas"]["WechatArticleExportItem"][];
+            /** @enum {string} */
+            sort_by: "created_at" | "view_count";
+        };
+        WechatArticleExportPreviewRequest: {
+            campus?: string | null;
+            /** Format: date-time */
+            created_from?: string | null;
+            /** Format: date-time */
+            created_to?: string | null;
+            /**
+             * Format: int32
+             * @default 20
+             */
+            limit: number;
+            section_ids?: number[];
+            /**
+             * @default created_at
+             * @enum {string}
+             */
+            sort_by: "created_at" | "view_count";
+            source_types: ("post" | "marketplace" | "errand" | "carpool")[];
+        };
+        WechatArticleExportPreviewResponseBody: {
+            data: components["schemas"]["WechatArticleExportPreview"];
+            request_id: string;
+        };
         FoodListingAdminInput: components["schemas"]["FoodListingInput"] & {
             promoted?: boolean;
             /** Format: date-time */
@@ -12401,6 +15032,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             image_urls: string[];
+            thumbnail_urls?: string[] | null;
         };
         /** @enum {string} */
         FoodListingStatus: "pending" | "published" | "offline" | "rejected";
@@ -12443,6 +15075,7 @@ export interface components {
             /** Format: uint64 */
             submitted_by?: number | null;
             tags: string[];
+            thumbnail_urls?: string[] | null;
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
@@ -12714,6 +15347,15 @@ export interface components {
                 "application/json": components["schemas"]["AcademicCalendarResponseBody"];
             };
         };
+        /** @description 本人指定学期加课申请结果 */
+        AcademicCourseAdditionResultListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCourseAdditionResultListResponseBody"];
+            };
+        };
         /** @description 本人指定学期课程 */
         AcademicCourseListResponse: {
             headers: {
@@ -12757,6 +15399,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["AcademicPeriodListResponseBody"];
+            };
+        };
+        /** @description 本人培养方案 */
+        AcademicTrainingPlanResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicTrainingPlanResponseBody"];
             };
         };
         /** @description 课程目录采集批次分页 */
@@ -12910,6 +15561,51 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MemberGeneralEducationModuleListResponseBody"];
+            };
+        };
+        /** @description 教务账号凭据元数据游标分页 */
+        AcademicCredentialAccountPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialAccountPageResponseBody"];
+            };
+        };
+        /** @description 教务账号凭据元数据，不包含密码 */
+        AcademicCredentialAccountResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialAccountResponseBody"];
+            };
+        };
+        /** @description 一次性托管绑定意图和凭据入口票据 */
+        AcademicCredentialHostingIntentResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingIntentResponseBody"];
+            };
+        };
+        /** @description 本人教务凭据托管状态 */
+        AcademicCredentialHostingStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingStatusResponseBody"];
+            };
+        };
+        /** @description 教务凭据托管查询任务 */
+        AcademicCredentialHostingTaskResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingTaskResponseBody"];
             };
         };
         /** @description 成绩排名批次分页 */
@@ -13083,6 +15779,42 @@ export interface components {
                 "application/json": components["schemas"]["AcademicStatisticsRunAcceptedResponseBody"];
             };
         };
+        /** @description 教务同步批次分页 */
+        AcademicSyncBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchPageResponseBody"];
+            };
+        };
+        /** @description 教务同步批次 */
+        AcademicSyncBatchResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchResponseBody"];
+            };
+        };
+        /** @description 教务批次候选人数预演 */
+        AcademicSyncPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncPreviewResponseBody"];
+            };
+        };
+        /** @description 教务同步子任务分页 */
+        AcademicSyncTaskPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncTaskPageResponseBody"];
+            };
+        };
         /** @description 校园身份认证材料上传结果 */
         AcademicVerificationMaterialResponse: {
             headers: {
@@ -13173,6 +15905,69 @@ export interface components {
                 "application/json": components["schemas"]["ActivityResponseBody"];
             };
         };
+        /** @description 活动跳转目标目录 */
+        ActivityPopupActionOptionsResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupActionOptionsResponseBody"];
+            };
+        };
+        /** @description 当前候选活动弹框 */
+        ActivityPopupCandidateResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupCandidateResponseBody"];
+            };
+        };
+        /** @description 活动弹框展示资格 */
+        ActivityPopupClaimResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupClaimResponseBody"];
+            };
+        };
+        /** @description 活动图片 */
+        ActivityPopupMediaResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupMediaResponseBody"];
+            };
+        };
+        /** @description 活动图片直传目标 */
+        ActivityPopupMediaUploadTargetResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupMediaUploadTargetResponseBody"];
+            };
+        };
+        /** @description 活动弹框分页 */
+        ActivityPopupPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupPageResponseBody"];
+            };
+        };
+        /** @description 活动弹框 */
+        ActivityPopupResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ActivityPopupResponseBody"];
+            };
+        };
         /** @description 我的校历事件提醒 */
         CalendarReminderListResponse: {
             headers: {
@@ -13189,6 +15984,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CalendarReminderResponseBody"];
+            };
+        };
+        /** @description 按需搜索的课堂候选，每页最多20条 */
+        CampusCircleClassCandidatePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleClassCandidatePageResponseBody"];
+            };
+        };
+        /** @description 当前用户课堂参与状态与去重人数 */
+        CampusCircleClassParticipationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleClassParticipationResponseBody"];
             };
         };
         /** @description 校园圈首页运营聚合 */
@@ -13254,6 +16067,69 @@ export interface components {
                 "application/json": components["schemas"]["CampusCircleSectionTreeResponseBody"];
             };
         };
+        /** @description 今日上头运营审计分页 */
+        CampusCircleTodayHotAuditPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotAuditPageResponseBody"];
+            };
+        };
+        /** @description 首页今日上头轮播数据 */
+        CampusCircleTodayHotCarouselResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotCarouselResponseBody"];
+            };
+        };
+        /** @description 今日上头运营配置 */
+        CampusCircleTodayHotConfigResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotConfigResponseBody"];
+            };
+        };
+        /** @description 今日上头运营覆盖项分页 */
+        CampusCircleTodayHotOverridePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverridePageResponseBody"];
+            };
+        };
+        /** @description 今日上头运营覆盖项 */
+        CampusCircleTodayHotOverrideResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverrideResponseBody"];
+            };
+        };
+        /** @description 固定快照的今日上头帖子页 */
+        CampusCircleTodayHotPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotPageResponseBody"];
+            };
+        };
+        /** @description 今日上头任务运行状态 */
+        CampusCircleTodayHotStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotStatusResponseBody"];
+            };
+        };
         /** @description 校园圈话题自动关联审计记录 */
         CampusCircleTopicAuditPageResponse: {
             headers: {
@@ -13279,6 +16155,24 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CampusCircleTopicResponseBody"];
+            };
+        };
+        /** @description 附近同行行程 */
+        CarpoolNearbyTripResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CarpoolNearbyTripResponseBody"];
+            };
+        };
+        /** @description 聚合后的拼车行程分页 */
+        CarpoolTripGroupPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CarpoolTripGroupPageResponseBody"];
             };
         };
         /** @description 拼车行程分页 */
@@ -13396,6 +16290,60 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["SubmissionResponseBody"];
+            };
+        };
+        /** @description 课堂讨论内容分析记录分页 */
+        ClassDiscussionDigestAnalysisAuditPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestAnalysisAuditPageResponseBody"];
+            };
+        };
+        /** @description 课堂讨论内容分析记录详情 */
+        ClassDiscussionDigestAnalysisAuditResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestAnalysisAuditResponseBody"];
+            };
+        };
+        /** @description 课堂讨论内容分析配置 */
+        ClassDiscussionDigestClassifierConfigResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestClassifierConfigResponseBody"];
+            };
+        };
+        /** @description 课堂精选预演列表 */
+        ClassDiscussionDigestPreviewPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestPreviewPageResponseBody"];
+            };
+        };
+        /** @description 课堂精选预演详情 */
+        ClassDiscussionDigestPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClassDiscussionDigestPreviewResponseBody"];
+            };
+        };
+        /** @description 当前用户的小程序初始化数据 */
+        ClientBootstrapResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ClientBootstrapResponseBody"];
             };
         };
         /** @description 社团分类列表 */
@@ -13522,6 +16470,69 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CommentThreadResponseBody"];
+            };
+        };
+        /** @description Hook 投递记录分页 */
+        CommunityContentHookDeliveryPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookDeliveryPageResponseBody"];
+            };
+        };
+        /** @description Hook 投递详情 */
+        CommunityContentHookDeliveryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookDeliveryResponseBody"];
+            };
+        };
+        /** @description 短链生成失败内容分页 */
+        CommunityContentHookFailedLinkItemPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookFailedLinkItemPageResponseBody"];
+            };
+        };
+        /** @description 短链生成失败内容 */
+        CommunityContentHookFailedLinkItemResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookFailedLinkItemResponseBody"];
+            };
+        };
+        /** @description 社区内容 Hook 推送规则分页 */
+        CommunityContentHookRulePageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRulePageResponseBody"];
+            };
+        };
+        /** @description 社区内容 Hook 推送规则 */
+        CommunityContentHookRuleResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleResponseBody"];
+            };
+        };
+        /** @description Hook 测试发送结果 */
+        CommunityContentHookTestDeliveryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookTestDeliveryResponseBody"];
             };
         };
         /** @description 举报工单分页 */
@@ -13675,6 +16686,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["CourseMaterialResponseBody"];
+            };
+        };
+        /** @description 资料课程目录同步记录 */
+        MaterialCourseCatalogSyncPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialCourseCatalogSyncPageResponseBody"];
             };
         };
         /** @description 课程分类分页 */
@@ -14298,6 +17318,15 @@ export interface components {
                 "application/json": components["schemas"]["PrivateMessageUnreadCountResponseBody"];
             };
         };
+        /** @description 用户拉黑状态 */
+        UserBlockResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["UserBlockResponseBody"];
+            };
+        };
         /** @description 资源点赞状态 */
         ReactionStateResponse: {
             headers: {
@@ -14323,6 +17352,51 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ShuttleRouteResponseBody"];
+            };
+        };
+        /** @description 本人自定义课程补充保存结果 */
+        TimetableBuddyCustomCoursesResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyCustomCoursesResponseBody"];
+            };
+        };
+        /** @description 课表搭子邀请预览 */
+        TimetableBuddyInvitationPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationPreviewResponseBody"];
+            };
+        };
+        /** @description 课表搭子邀请 */
+        TimetableBuddyInvitationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationResponseBody"];
+            };
+        };
+        /** @description 双人课表 */
+        TimetableBuddyScheduleResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyScheduleResponseBody"];
+            };
+        };
+        /** @description 我的课表搭子状态 */
+        TimetableBuddyStateResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyStateResponseBody"];
             };
         };
         /** @description 交易订单分页 */
@@ -14413,6 +17487,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["UserLevelTaskListResponseBody"];
+            };
+        };
+        /** @description 公众号文章内容预览 */
+        WechatArticleExportPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["WechatArticleExportPreviewResponseBody"];
             };
         };
         /** @description 餐饮项分页 */
@@ -14511,6 +17594,52 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    LegacyWeoucConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 配置 JSON 原文结构 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    LegacyWeoucConfigPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 配置 JSON 原文结构 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     LegacyWeoucBind: {
         parameters: {
             query?: never;
@@ -15102,6 +18231,31 @@ export interface operations {
             503: components["responses"]["Error"];
         };
     };
+    ListAcademicCourseAdditionResults: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    student_no: string;
+                    password: string;
+                    period_id: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCourseAdditionResultListResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     GetAcademicCourseSelectionSchedule: {
         parameters: {
             query?: never;
@@ -15237,6 +18391,30 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AcademicPeriodListResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAcademicTrainingPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    student_no: string;
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicTrainingPlanResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -15620,6 +18798,164 @@ export interface operations {
             200: components["responses"]["MemberGeneralEducationModuleListResponse"];
         };
     };
+    GetAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    DeleteAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAcademicCredentialHostingInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAcademicCredentialHostingInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAcademicCredentialHostingIntent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingIntentInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicCredentialHostingIntentResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAcademicCredentialHostingTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAcademicCredentialHostingTaskInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicCredentialHostingTaskResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAcademicCredentialHostingTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingTaskResponse"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicCredentialAccounts: {
+        parameters: {
+            query?: {
+                after_account_id?: string;
+                max_account_id?: string;
+                page_size?: number;
+                provider?: string;
+                education_level?: "undergraduate" | "graduate";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialAccountPageResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminAcademicCredentialAccountState: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAcademicCredentialAccountStateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialAccountResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     DeleteAcademicRankingGrant: {
         parameters: {
             query?: never;
@@ -15690,7 +19026,7 @@ export interface operations {
             };
         };
         responses: {
-            200: components["responses"]["AcademicRankingMembershipLeaveResponse"];
+            200: components["responses"]["AcademicRankingGroupResponse"];
         };
     };
     GetAcademicRankingGroup: {
@@ -16037,6 +19373,162 @@ export interface operations {
             202: components["responses"]["AcademicStatisticsRunAcceptedResponse"];
             400: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicSyncBatches: {
+        parameters: {
+            query?: {
+                purpose?: "grades" | "course_selections" | "courses" | "exams";
+                education_level?: "undergraduate" | "graduate";
+                state?: "preparing" | "queued" | "running" | "awaiting_archive" | "partially_succeeded" | "succeeded" | "failed" | "canceling" | "canceled" | "needs_attention";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncBatchPageResponse"];
+        };
+    };
+    CreateAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncBatchResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CancelAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncCancelBatchInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RetryFailedAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncRetryBatchInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicSyncBatchTasks: {
+        parameters: {
+            query?: {
+                state?: "queued" | "running" | "awaiting_archive" | "succeeded" | "failed" | "skipped" | "canceled" | "needs_attention";
+                user_id?: number;
+                account_id?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncTaskPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CreateAdminAcademicSyncPreview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncPreviewInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncPreviewResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAcademicSyncPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                preview_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncPreviewResponse"];
+            404: components["responses"]["Error"];
         };
     };
     GetAcademicVerification: {
@@ -16825,6 +20317,241 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    GetActivityPopupCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupCandidateResponse"];
+        };
+    };
+    ClickActivityPopupDisplay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                display_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CloseActivityPopupDisplay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                display_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ConfirmActivityPopupDisplay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                display_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Success"];
+            404: components["responses"]["Error"];
+        };
+    };
+    ClaimActivityPopup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupClaimResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminActivityPopups: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupPageResponse"];
+        };
+    };
+    CreateAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupWriteRequest"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ActivityPopupResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    ListActivityPopupActionOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupActionOptionsResponse"];
+        };
+    };
+    CreateActivityPopupMediaUploadTarget: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupMediaUploadInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["ActivityPopupMediaUploadTargetResponse"];
+        };
+    };
+    CompleteActivityPopupMedia: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupVersionRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupMediaResponse"];
+        };
+    };
+    GetAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupUpdateRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PauseAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupVersionRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    PublishAdminActivityPopup: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityPopupVersionRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ActivityPopupResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
     ListMyCalendarReminders: {
         parameters: {
             query?: never;
@@ -16874,6 +20601,52 @@ export interface operations {
         responses: {
             200: components["responses"]["CalendarReminderResponse"];
             404: components["responses"]["Error"];
+        };
+    };
+    SearchAdminCampusCircleClassCandidates: {
+        parameters: {
+            query: {
+                keyword: string;
+                period_id?: string;
+                education_level?: "undergraduate" | "graduate";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleClassCandidatePageResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ResolveAdminCampusCircleClassDiscussion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    class_num: string;
+                    period_id: string;
+                    course_name?: string;
+                    course_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     ListAdminCampusCirclePosts: {
@@ -16984,6 +20757,53 @@ export interface operations {
         responses: {
             200: components["responses"]["CampusCirclePostResponse"];
             400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpsertAdminCampusCircleTodayHotOverride: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotOverrideInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotOverrideResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DeleteAdminCampusCircleTodayHotOverride: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            204: components["responses"]["Success"];
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -17136,6 +20956,94 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    ListAdminCampusCircleTodayHotAudits: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotAuditPageResponse"];
+        };
+    };
+    GetAdminCampusCircleTodayHotConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotConfigResponse"];
+        };
+    };
+    UpdateAdminCampusCircleTodayHotConfig: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampusCircleTodayHotConfigInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotConfigResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCampusCircleTodayHotOverrides: {
+        parameters: {
+            query?: {
+                kind?: "recommend" | "exclude";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotOverridePageResponse"];
+        };
+    };
+    RefreshAdminCampusCircleTodayHot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: components["responses"]["CampusCircleTodayHotStatusResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    GetAdminCampusCircleTodayHotStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotStatusResponse"];
+        };
+    };
     ListAdminCampusCircleTopics: {
         parameters: {
             query?: {
@@ -17235,6 +21143,35 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    UpdateCampusCircleClassAnnouncement: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    content: string;
+                    published: boolean;
+                    /** Format: uint64 */
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
     ArchiveAdminCampusCircleTopic: {
         parameters: {
             query?: never;
@@ -17298,6 +21235,66 @@ export interface operations {
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    ResolveCampusCircleClassDiscussion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    class_num: string;
+                    period_id: string;
+                    course_name?: string;
+                    course_code?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleTopicResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    UpdateCampusCircleClassNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    notifications_enabled: boolean;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["CampusCircleClassParticipationResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RecordCampusCircleClassParticipation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleClassParticipationResponse"];
+            404: components["responses"]["Error"];
         };
     };
     GetCampusCircleHome: {
@@ -17589,6 +21586,39 @@ export interface operations {
             200: components["responses"]["CampusCircleSectionTreeResponse"];
         };
     };
+    GetCampusCircleTodayHot: {
+        parameters: {
+            query?: {
+                window?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotCarouselResponse"];
+        };
+    };
+    ListCampusCircleTodayHotPosts: {
+        parameters: {
+            query?: {
+                snapshot_id?: number;
+                cursor?: string;
+                context_post_id?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CampusCircleTodayHotPageResponse"];
+            404: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
     ListCampusCircleTopics: {
         parameters: {
             query?: {
@@ -17760,6 +21790,51 @@ export interface operations {
             201: components["responses"]["CarpoolTripResponse"];
         };
     };
+    ListCarpoolTripGroups: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                origin?: string;
+                destination?: string;
+                campus?: string;
+                departure_date?: string;
+                seats_needed?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CarpoolTripGroupPageResponse"];
+        };
+    };
+    ListCarpoolTripGroupTrips: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                origin?: string;
+                destination?: string;
+                campus?: string;
+                departure_date?: string;
+                seats_needed?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                anchor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CarpoolTripPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     ListMyCarpoolTrips: {
         parameters: {
             query?: {
@@ -17895,6 +21970,24 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["CarpoolTripResponse"];
+        };
+    };
+    ListNearbyCarpoolTrips: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CarpoolTripPageResponse"];
+            404: components["responses"]["Error"];
         };
     };
     SubmitCarpoolTripReview: {
@@ -18274,6 +22367,114 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CatalogResponse"];
+        };
+    };
+    ListAdminClassDiscussionDigestAnalysisAudits: {
+        parameters: {
+            query?: {
+                period_id?: string;
+                class_num?: string;
+                status?: "pending" | "processing" | "ready" | "retry_wait" | "terminal_failed" | "failed";
+                content_kind?: "post" | "comment";
+                source_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestAnalysisAuditPageResponse"];
+        };
+    };
+    GetAdminClassDiscussionDigestAnalysisAudit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestAnalysisAuditResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetAdminClassDiscussionDigestClassifierConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestClassifierConfigResponse"];
+        };
+    };
+    UpdateAdminClassDiscussionDigestClassifierConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateClassDiscussionDigestClassifierConfigRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestClassifierConfigResponse"];
+        };
+    };
+    ListAdminClassDiscussionDigestPreviews: {
+        parameters: {
+            query?: {
+                period_id?: string;
+                class_num?: string;
+                mode?: "preview" | "formal";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestPreviewPageResponse"];
+        };
+    };
+    GetAdminClassDiscussionDigestPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClassDiscussionDigestPreviewResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetClientBootstrap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ClientBootstrapResponse"];
         };
     };
     ListAdminClubCategories: {
@@ -18971,6 +23172,233 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    ListAdminCommunityContentHookDeliveries: {
+        parameters: {
+            query?: {
+                rule_id?: number;
+                status?: "pending_link" | "pending_send" | "processing" | "succeeded" | "retry_wait" | "terminal_failed" | "skipped";
+                is_test?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookDeliveryPageResponse"];
+        };
+    };
+    GetAdminCommunityContentHookDelivery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookDeliveryResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RetryAdminCommunityContentHookDelivery: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRetryInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["CommunityContentHookDeliveryResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCommunityContentHookFailedLinkItems: {
+        parameters: {
+            query?: {
+                rule_id?: number;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookFailedLinkItemPageResponse"];
+        };
+    };
+    RetryAdminCommunityContentHookFailedLinkItem: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRetryFailedLinkItemInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["CommunityContentHookFailedLinkItemResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminCommunityContentHookRules: {
+        parameters: {
+            query?: {
+                status?: "enabled" | "disabled" | "deleted";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookRulePageResponse"];
+        };
+    };
+    CreateAdminCommunityContentHookRule: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["CommunityContentHookRuleResponse"];
+        };
+    };
+    GetAdminCommunityContentHookRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminCommunityContentHookRule: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    DeleteAdminCommunityContentHookRule: {
+        parameters: {
+            query: {
+                expected_version: number;
+            };
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminCommunityContentHookRuleEnablement: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookRuleEnablementInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CommunityContentHookRuleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    CreateAdminCommunityContentHookTestDelivery: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContentHookTestDeliveryInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["CommunityContentHookTestDeliveryResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
     ListAdminContentReportCases: {
         parameters: {
             query?: {
@@ -19493,6 +23921,7 @@ export interface operations {
                     action: "keep" | "correct_course" | "take_down" | "reject";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     resolution_note: string;
                 };
             };
@@ -19576,6 +24005,7 @@ export interface operations {
                     action: "approve" | "reject";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     create_course_name?: string;
                     create_course_code?: string;
                     /** @enum {string} */
@@ -19654,6 +24084,21 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    ListMaterialCourseCatalogSyncRuns: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialCourseCatalogSyncPageResponse"];
         };
     };
     ListAdminMaterialCourses: {
@@ -19892,6 +24337,7 @@ export interface operations {
                     material_type: "slides" | "notes" | "exam" | "homework" | "review" | "other";
                     /** Format: uint64 */
                     course_id?: number;
+                    course_ids?: number[];
                     candidate_course_name?: string;
                     period_id?: string;
                     description?: string;
@@ -22565,6 +27011,7 @@ export interface operations {
         responses: {
             201: components["responses"]["PrivateMessageResponse"];
             400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };
     };
@@ -22598,6 +27045,38 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["PrivateMessageUnreadCountResponse"];
+        };
+    };
+    SetUserBlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserBlockResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    RemoveUserBlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["UserBlockResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     LikeResource: {
@@ -22795,6 +27274,179 @@ export interface operations {
             200: components["responses"]["ShuttleRouteResponse"];
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    GetMyTimetableBuddy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+        };
+    };
+    DeleteMyTimetableBuddy: {
+        parameters: {
+            query: {
+                expected_connection_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    SyncMyTimetableBuddyCustomCourses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyCustomCoursesInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyCustomCoursesResponse"];
+            400: components["responses"]["Error"];
+        };
+    };
+    CreateTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    relation_type: "friend" | "study_partner" | "cp" | "unspecified";
+                    /** @enum {string} */
+                    share_scope: "busy" | "details";
+                    /** Format: int64 */
+                    expires_in_hours: number;
+                };
+            };
+        };
+        responses: {
+            201: components["responses"]["TimetableBuddyInvitationResponse"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RevokeTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationTokenInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
+    AcceptTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationTokenInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
+    PreviewTimetableBuddyInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimetableBuddyInvitationTokenInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyInvitationPreviewResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    GetMyTimetableBuddySchedule: {
+        parameters: {
+            query: {
+                education_level: "undergraduate" | "graduate";
+                period_id: string;
+                week: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["TimetableBuddyScheduleResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+            504: components["responses"]["Error"];
+        };
+    };
+    UpdateMyTimetableBuddySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    share_scope: "busy" | "details";
+                    paused: boolean;
+                    /** Format: uint64 */
+                    expected_connection_id: number;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["TimetableBuddyStateResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     ListMyTradeOrders: {
@@ -23112,6 +27764,22 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["UserLevelResponse"];
+        };
+    };
+    PreviewAdminWechatArticleExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WechatArticleExportPreviewRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["WechatArticleExportPreviewResponse"];
         };
     };
     ListAdminWhatToEatListings: {

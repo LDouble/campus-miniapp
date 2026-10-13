@@ -105,7 +105,8 @@
   gap: var(--ousea-space-1, 16rpx);
 }
 
-.campus-theme--dark {
+@media (prefers-color-scheme: dark) {
+.campus-theme {
   .detail-author-header__avatar,
   .detail-author-header__avatar-image {
     background: var(--campus-surface-primary, #172554);
@@ -117,4 +118,7 @@
     border-color: var(--campus-border, #243244);
     color: var(--campus-text-secondary, #aab8ca);
   }
+}
+
+
 }

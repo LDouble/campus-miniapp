@@ -74,6 +74,13 @@ const resolveUpcomingPeriod = (
   ))
   .sort((left, right) => left.startsAt.getTime() - right.startsAt.getTime())[0] || null
 
+export const tomorrowStartingPeriod = (periods: AcademicPeriod[], now = new Date()) => {
+  const upcoming = resolveUpcomingPeriod(periods, now)
+  return upcoming?.startsAt.getTime() === offsetDay(now, 1).getTime()
+    ? upcoming.period
+    : null
+}
+
 const clockOnDate = (date: Date, clock: string) => {
   const [hours, minutes] = clock.split(':').map(Number)
   const result = startOfDay(date)
@@ -202,6 +209,13 @@ export const resolveCoursePreview = (
     const daysUntilStart = Math.max(1, Math.round(
       (upcomingPeriod.startsAt.getTime() - today.getTime()) / 86400000,
     ))
+    if (daysUntilStart === 1) {
+      const result = coursesOnDate(cache, customCourses, config, selectedCampus, tomorrow)
+      return buildCoursePreview(
+        tomorrow, '明天', result.hasPeriod, result.items, now, limit,
+        Object.prototype.hasOwnProperty.call(cache.coursesByPeriod, upcomingPeriod.period.id),
+      )
+    }
     return {
       targetDate: upcomingPeriod.startsAt,
       dayLabel: '假期',

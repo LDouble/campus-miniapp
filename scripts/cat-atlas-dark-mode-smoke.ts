@@ -13,18 +13,17 @@ const report = source('../src/pages/cat-atlas/report-journal.scss')
 const sightings = source('../src/pages/cat-atlas/sightings-journal.scss')
 
 for (const [name, styles] of Object.entries({ catalog, atlas, report, sightings })) {
-  assert.match(styles, /\.campus-theme--dark/u, `${name} must provide a dark-mode override`)
+  assert.match(styles, /@media\s*\(prefers-color-scheme:\s*dark\)/u, `${name} must provide a system dark-mode override`)
   assert.match(styles, /var\(--campus-page\)/u, `${name} must use the semantic page surface in dark mode`)
   assert.match(styles, /var\(--campus-surface\)/u, `${name} must use the semantic card surface in dark mode`)
   assert.match(styles, /var\(--campus-text-heading\)/u, `${name} must use the semantic heading colour in dark mode`)
   assert.match(styles, /var\(--campus-border\)/u, `${name} must use the semantic border colour in dark mode`)
 }
 
-assert.match(catalog, /\.cat-journal\.campus-theme--dark/u, '图鉴列表必须匹配页面根元素自身的主题类')
-assert.match(atlas, /\.cat-page\.campus-theme--dark/u, '详情、地图和档案页必须匹配页面根元素自身的主题类')
-assert.match(atlas, /\.cat-detail-page\.campus-theme--dark/u, '详情页的 Figma 局部令牌必须在深色模式覆盖')
-assert.match(report, /\.cat-report-journal\.campus-theme--dark/u, '上报页必须匹配页面根元素自身的主题类')
-assert.match(sightings, /\.cat-journal-page\.campus-theme--dark/u, '动态页必须匹配页面根元素自身的主题类')
+assert.match(catalog, /@media\s*\(prefers-color-scheme:\s*dark\)/u, '图鉴列表必须在系统深色场景覆盖')
+assert.match(atlas, /@media\s*\(prefers-color-scheme:\s*dark\)/u, '详情、地图和档案页必须在系统深色场景覆盖')
+assert.match(report, /@media\s*\(prefers-color-scheme:\s*dark\)/u, '上报页必须在系统深色场景覆盖')
+assert.match(sightings, /@media\s*\(prefers-color-scheme:\s*dark\)/u, '动态页必须在系统深色场景覆盖')
 assert.match(atlas, /\.cat-detail-bottom \{ border-top-color: var\(--campus-border\)/u, '详情底栏在深色模式必须使用语义边框')
 assert.match(atlas, /\.cat-map-canvas \{ border-color: var\(--campus-border\)/u, '地图画布在深色模式不得保留浅色描边')
 assert.match(atlas, /&\.atlas-form-page,\s*&\.catalog-page \{ background: var\(--campus-page\); \}/u, '档案建议与我的图鉴根节点必须覆盖浅色背景')
@@ -36,12 +35,12 @@ assert.match(atlas, /--figma-accent: var\(--campus-errand\);/u, '详情暖色小
 
 const compiledAtlas = postcss.parse(compile(resolve(__dirname, '../src/pages/cat-atlas/atlas.scss'), { logger: { warn() {}, debug() {} } }).css)
 const rootFor = (pageClass: 'catalog-page' | 'atlas-form-page') => selectOne('view', parseDocument(
-  `<page><view class="campus-theme campus-theme--dark ${pageClass}"></view></page>`,
+  `<page><view class="campus-theme ${pageClass}"></view></page>`,
 ).children)!
 const matchingBackgrounds = (pageClass: 'catalog-page' | 'atlas-form-page') => {
   const backgrounds: string[] = []
   compiledAtlas.walkRules(rule => {
-    if (rule.parent?.type === 'atrule') return
+    if (rule.parent?.type === 'atrule' && (rule.parent.name !== 'media' || !/prefers-color-scheme:\s*dark/u.test(rule.parent.params))) return
     if (!rule.selectors.some(selector => !selector.includes('::') && is(rootFor(pageClass), selector))) return
     rule.walkDecls('background', decl => { backgrounds.push(decl.value) })
   })
@@ -56,7 +55,7 @@ for (const pageClass of ['catalog-page', 'atlas-form-page'] as const) {
   )
 }
 
-const detachedRoot = selectOne('view', parseDocument('<page><view class="campus-theme--dark catalog-page"></view></page>').children)!
-assert.equal(is(detachedRoot, '.campus-theme--dark .catalog-page'), false, '祖先选择器不能代替页面根节点自身选择器')
+const detachedRoot = selectOne('view', parseDocument('<page><view class="campus-theme catalog-page"></view></page>').children)!
+assert.equal(is(detachedRoot, '.campus-theme .catalog-page'), false, '祖先选择器不能代替页面根节点自身选择器')
 
 process.stdout.write('cat atlas dark mode smoke: ok\n')

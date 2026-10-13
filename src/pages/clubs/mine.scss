@@ -345,7 +345,7 @@ page {
 .my-club-card--skeleton > view {
   height: 30rpx;
   margin: 20rpx 0;
-  background: linear-gradient(90deg, #e9eee9 25%, #f6f7f3 37%, #e9eee9 63%);
+  background: linear-gradient(90deg, var(--campus-border) 25%, var(--campus-surface-subtle) 37%, var(--campus-border) 63%);
   background-size: 400% 100%;
   border-radius: 10rpx;
   animation: my-clubs-loading 1.4s ease infinite;

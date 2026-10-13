@@ -9,7 +9,10 @@ import {
   resolvePageSubscriptionModule,
   type CurrentMiniappPage,
 } from './module'
-import { requestWechatSubscription } from './request'
+import {
+  requestWechatSubscription,
+  requestWechatSubscriptionWithResult,
+} from './request'
 
 export type SubscriptionPublishSection = 'community' | 'errands' | 'market' | 'carpool'
 
@@ -24,6 +27,12 @@ export const requestWechatSubscriptionForModule = (
   moduleKey: MiniappModuleKey,
   config: MiniappRuntimeConfig = getMiniappRuntimeConfig(),
 ) => requestWechatSubscription(config.subscription_templates[moduleKey])
+
+// 需要向用户呈现授权结果的入口复用同一份模块模板配置，且仍在点击同步链路中发起系统请求。
+export const requestWechatSubscriptionForModuleWithResult = (
+  moduleKey: MiniappModuleKey,
+  config: MiniappRuntimeConfig = getMiniappRuntimeConfig(),
+) => requestWechatSubscriptionWithResult(config.subscription_templates[moduleKey])
 
 export const requestWechatSubscriptionForPublishSection = (
   section: SubscriptionPublishSection,

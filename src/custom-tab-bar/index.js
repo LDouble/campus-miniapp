@@ -2,7 +2,6 @@ import {
   requestWechatSubscriptionForModule,
   requestWechatSubscriptionForPublishSection
 } from '../features/wechat-subscription'
-import { getCampusTheme, subscribeCampusTheme } from '../features/theme-preference'
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
 const unreadCountStorageKey = 'campus.messages.unread-count.v1'
@@ -47,7 +46,6 @@ Component({
   data: {
     selected: 0,
     hidden: false,
-    darkMode: getCampusTheme() === 'dark',
     unreadCount: getStoredUnreadCount(),
     publishSection: 'community',
     qualification,
@@ -56,13 +54,7 @@ Component({
 
   lifetimes: {
     attached() {
-      this.unsubscribeCampusTheme = subscribeCampusTheme((theme) => {
-        this.setData({ darkMode: theme === 'dark' })
-      })
       this.syncSelected()
-    },
-    detached() {
-      if (this.unsubscribeCampusTheme) this.unsubscribeCampusTheme()
     }
   },
 
@@ -82,14 +74,10 @@ Component({
         ? pages[pages.length - 1].route.replace(/^\//, '')
         : ''
       const selected = this.data.list.findIndex(item => item.pagePath === route)
-      const darkMode = getCampusTheme() === 'dark'
       const nextData = {}
 
       if (selected >= 0 && selected !== this.data.selected) {
         nextData.selected = selected
-      }
-      if (darkMode !== this.data.darkMode) {
-        nextData.darkMode = darkMode
       }
       const unreadCount = getStoredUnreadCount()
       if (unreadCount !== this.data.unreadCount) {
