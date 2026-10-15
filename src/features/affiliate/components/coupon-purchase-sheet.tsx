@@ -29,7 +29,7 @@ const formatExpireTime = (value: string | null) => {
   const day = String(date.getDate()).padStart(2, '0')
   const hour = String(date.getHours()).padStart(2, '0')
   const minute = String(date.getMinutes()).padStart(2, '0')
-  return `有效至 ${month}-${day} ${hour}:${minute}`
+  return `${month}-${day} ${hour}:${minute} 后需重新核验优惠`
 }
 
 export default function CouponPurchaseSheet({ product, onClose }: CouponPurchaseSheetProps) {

@@ -1,7 +1,10 @@
 import type { AffiliateGoodsSearchFilters } from '../../api/affiliate'
+import type { AffiliateGoodsSearchCategoryId } from './search-categories'
+import { isAffiliateGoodsSearchCategoryId } from './search-categories'
 
 export type AffiliateSearchFilterDraft = {
   hasCouponOnly: boolean
+  categoryId?: AffiliateGoodsSearchCategoryId
   minPrice: string
   maxPrice: string
 }
@@ -9,7 +12,7 @@ export type AffiliateSearchFilterDraft = {
 export type AffiliateSearchFilterValidation = {
   valid: boolean
   message: string
-  filters: Pick<AffiliateGoodsSearchFilters, 'has_coupon' | 'min_price' | 'max_price'>
+  filters: Pick<AffiliateGoodsSearchFilters, 'category_id' | 'has_coupon' | 'min_price' | 'max_price'>
 }
 
 const normalizePrice = (value: string) => value.trim()
@@ -25,7 +28,15 @@ export const validateAffiliateSearchFilter = (
 ): AffiliateSearchFilterValidation => {
   const minPrice = normalizePrice(draft.minPrice)
   const maxPrice = normalizePrice(draft.maxPrice)
-  const pricePattern = /^\d{1,13}(?:\.\d{1,2})?$/
+  const pricePattern = /^(?:0|[1-9]\d{0,8})(?:\.\d{1,2})?$/
+
+  if (draft.categoryId !== undefined && !isAffiliateGoodsSearchCategoryId(draft.categoryId)) {
+    return {
+      valid: false,
+      message: '请选择有效的商品分类。',
+      filters: {},
+    }
+  }
 
   if (minPrice && !pricePattern.test(minPrice)) {
     return {
@@ -53,6 +64,7 @@ export const validateAffiliateSearchFilter = (
     valid: true,
     message: '',
     filters: {
+      ...(draft.categoryId ? { category_id: draft.categoryId } : {}),
       ...(draft.hasCouponOnly ? { has_coupon: true } : {}),
       ...(minPrice ? { min_price: minPrice } : {}),
       ...(maxPrice ? { max_price: maxPrice } : {}),

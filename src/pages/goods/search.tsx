@@ -19,6 +19,10 @@ import AffiliateProductCard from '../../features/affiliate/components/product-ca
 import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purchase-sheet'
 import { cacheAffiliateGoods } from '../../features/affiliate/session-cache'
 import { validateAffiliateSearchFilter } from '../../features/affiliate/search-filters'
+import {
+  AFFILIATE_GOODS_SEARCH_CATEGORIES,
+  type AffiliateGoodsSearchCategoryId,
+} from '../../features/affiliate/search-categories'
 import { shouldContinueAffiliateSearch } from '../../features/affiliate/search-pagination'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
@@ -62,6 +66,7 @@ export default function AffiliateSearchPage() {
   const [searchFilters, setSearchFilters] = useState<AffiliateGoodsSearchFilters>({ sort: 'comprehensive' })
   const [filterExpanded, setFilterExpanded] = useState(false)
   const [draftHasCoupon, setDraftHasCoupon] = useState(false)
+  const [draftCategoryId, setDraftCategoryId] = useState<AffiliateGoodsSearchCategoryId | undefined>()
   const [draftMinPrice, setDraftMinPrice] = useState('')
   const [draftMaxPrice, setDraftMaxPrice] = useState('')
   const [filterMessage, setFilterMessage] = useState('')
@@ -154,6 +159,7 @@ export default function AffiliateSearchPage() {
   const openFilterPanel = () => {
     if (!filterExpanded) {
       setDraftHasCoupon(searchFilters.has_coupon === true)
+      setDraftCategoryId(searchFilters.category_id)
       setDraftMinPrice(searchFilters.min_price || '')
       setDraftMaxPrice(searchFilters.max_price || '')
       setFilterMessage('')
@@ -181,6 +187,7 @@ export default function AffiliateSearchPage() {
     }
     const validation = validateAffiliateSearchFilter({
       hasCouponOnly: draftHasCoupon,
+      categoryId: draftCategoryId,
       minPrice: draftMinPrice,
       maxPrice: draftMaxPrice,
     })
@@ -208,6 +215,7 @@ export default function AffiliateSearchPage() {
 
   const resetFilters = () => {
     setDraftHasCoupon(false)
+    setDraftCategoryId(undefined)
     setDraftMinPrice('')
     setDraftMaxPrice('')
     setFilterMessage('')
@@ -340,7 +348,7 @@ export default function AffiliateSearchPage() {
             ))}
           </View>
           <View
-            className={`affiliate-search__filter-toggle ${filterExpanded || searchFilters.has_coupon || searchFilters.min_price || searchFilters.max_price ? 'affiliate-search__filter-toggle--active' : ''}`}
+            className={`affiliate-search__filter-toggle ${filterExpanded || searchFilters.category_id || searchFilters.has_coupon || searchFilters.min_price || searchFilters.max_price ? 'affiliate-search__filter-toggle--active' : ''}`}
             ariaRole='button'
             ariaLabel='打开筛选条件'
             onClick={openFilterPanel}
@@ -350,6 +358,29 @@ export default function AffiliateSearchPage() {
           </View>
           {filterExpanded && (
             <View className='affiliate-search__filter-panel'>
+              <View className='affiliate-search__filter-label'>商品分类</View>
+              <View className='affiliate-search__category-grid' ariaLabel='选择商品一级分类'>
+                <View
+                  className={`affiliate-search__category-option ${draftCategoryId === undefined ? 'affiliate-search__category-option--selected' : ''}`}
+                  ariaRole='radio'
+                  ariaLabel={`全部分类，${draftCategoryId === undefined ? '已选中' : '未选中'}`}
+                  onClick={() => setDraftCategoryId(undefined)}
+                >
+                  <Text>全部</Text>
+                </View>
+                {AFFILIATE_GOODS_SEARCH_CATEGORIES.map((category) => (
+                  <View
+                    key={category.id}
+                    className={`affiliate-search__category-option ${draftCategoryId === category.id ? 'affiliate-search__category-option--selected' : ''}`}
+                    ariaRole='radio'
+                    ariaLabel={`${category.label}，${draftCategoryId === category.id ? '已选中' : '未选中'}`}
+                    onClick={() => setDraftCategoryId(category.id)}
+                  >
+                    <Text>{category.label}</Text>
+                  </View>
+                ))}
+              </View>
+              <View className='affiliate-search__filter-label affiliate-search__filter-label--coupon'>优惠条件</View>
               <View
                 className={`affiliate-search__coupon-option ${draftHasCoupon ? 'affiliate-search__coupon-option--selected' : ''}`}
                 ariaRole='checkbox'

@@ -33,6 +33,11 @@ page { background: var(--ousea-bg-page, #f5f8fc); }
   &__filter-toggle--active { border-color: var(--ousea-ocean-200, #cce1ff); color: var(--ousea-ocean-600, #1d5fd6); background: var(--ousea-ocean-50, #f2f7fe); }
   &__filter-chevron { font-size: 24rpx; line-height: 1; }
   &__filter-panel { display: flex; width: 100%; padding: 22rpx; flex-direction: column; box-sizing: border-box; border: 1rpx solid var(--ousea-bg-line, #e8edf4); border-radius: var(--ousea-radius-card, 32rpx); background: var(--campus-surface, #fff); }
+  &__filter-label { margin: 0 0 12rpx; color: var(--ousea-ink-500, #6b7a90); font-size: 21rpx; }
+  &__filter-label--coupon { margin: 22rpx 0 12rpx; }
+  &__category-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8rpx; }
+  &__category-option { display: flex; min-width: 0; min-height: 88rpx; padding: 0 4rpx; align-items: center; justify-content: center; box-sizing: border-box; border: 1rpx solid var(--ousea-bg-line, #e8edf4); border-radius: var(--ousea-radius-input, 18rpx); color: var(--ousea-ink-700, #3a4759); background: var(--ousea-bg-page, #f5f8fc); font-size: 20rpx; text-align: center; }
+  &__category-option--selected { border-color: var(--ousea-ocean-400, #4c96f5); color: var(--ousea-ocean-600, #1d5fd6); background: var(--ousea-ocean-50, #f2f7fe); font-weight: var(--ousea-font-weight-semibold, 600); }
   &__coupon-option { display: flex; width: fit-content; min-height: 48rpx; align-items: center; gap: 12rpx; color: var(--ousea-ink-700, #3a4759); font-size: 23rpx; }
   &__coupon-option--selected { color: var(--ousea-ocean-600, #1d5fd6); }
   &__checkbox { display: flex; width: 32rpx; height: 32rpx; align-items: center; justify-content: center; box-sizing: border-box; border: 1rpx solid var(--ousea-ink-300, #bdc8d8); border-radius: 8rpx; color: #fff; font-size: 22rpx; }
@@ -73,6 +78,8 @@ page { background: var(--ousea-bg-page, #f5f8fc); }
     &__retry { background: #172554; color: #8ec5ff; }
     &__filter-toggle,
     &__filter-panel { border-color: #2e3a4e; background: #111827; }
+    &__category-option { border-color: #2e3a4e; color: #aab8ca; background: #0b1220; }
+    &__category-option--selected { border-color: #4c96f5; color: #8ec5ff; background: #172554; }
     &__sort-option,
     &__coupon-option { color: #aab8ca; }
     &__sort-option--active,

@@ -20459,6 +20459,7 @@ export interface operations {
                 keyword: string;
                 page?: number;
                 page_size?: number;
+                category_id?: number;
                 has_coupon?: boolean;
                 min_price?: string;
                 max_price?: string;
@@ -20652,6 +20653,7 @@ export interface operations {
                 keyword: string;
                 page?: number;
                 page_size?: number;
+                category_id?: number;
                 has_coupon?: boolean;
                 min_price?: string;
                 max_price?: string;

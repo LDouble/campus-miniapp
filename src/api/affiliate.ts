@@ -1,5 +1,6 @@
 import { apiRequest } from './client'
 import type { components, operations } from './generated/schema'
+import type { AffiliateGoodsSearchCategoryId } from '../features/affiliate/search-categories'
 
 export type AffiliateProduct = components['schemas']['AffiliateProductView']
 export type AffiliateProductPage = components['schemas']['AffiliateProductPage']
@@ -11,8 +12,8 @@ export type AffiliateResolveResult = components['schemas']['AffiliateResolveResu
 export type AffiliateGoodsSearchSort = NonNullable<operations['SearchAffiliateGoods']['parameters']['query']['sort']>
 export type AffiliateGoodsSearchFilters = Pick<
   operations['SearchAffiliateGoods']['parameters']['query'],
-  'has_coupon' | 'min_price' | 'max_price' | 'sort'
->
+  'category_id' | 'has_coupon' | 'min_price' | 'max_price' | 'sort'
+> & { category_id?: AffiliateGoodsSearchCategoryId }
 
 export type AffiliateProductQuery = {
   page?: number
@@ -59,6 +60,7 @@ export const searchAffiliateGoods = (
       keyword: keyword.trim(),
       page: normalizePage(page),
       page_size: 20,
+      category_id: filters.category_id,
       has_coupon: filters.has_coupon,
       min_price: filters.min_price,
       max_price: filters.max_price,
