@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import Module = require('node:module')
+import { runAffiliateSearchQueryIdentitySmoke } from './affiliate-search-query-identity-smoke'
 import { validateAffiliateSearchFilter } from '../src/features/affiliate/search-filters'
 import {
   AFFILIATE_GOODS_SEARCH_CATEGORIES,
@@ -124,14 +125,11 @@ assert.deepEqual(emptyFirstRequestedPages, [2, 3, 4, 5], '首个响应 0/20 但 
 assert.ok(emptyFirstGoods.includes('recovered-goods'), '第一页空结果后应展示后续页商品')
 
 const searchPageSource = readFileSync('src/pages/goods/search.tsx', 'utf8')
-assert.match(searchPageSource, /runSearch\(keyword, page \+ 1\)/u, '加载失败后重试必须重新请求未提交的下一页')
-assert.match(searchPageSource, /else setLoadMoreError\(true\)/u, '下一页失败应保留当前页并显示可重试状态')
-assert.match(searchPageSource, /new Map\(current\.map\(\(item\) => \[item\.goods_id, item\]\)\)/u, '下一页恢复时仍按 goods_id 去重')
 assert.match(searchPageSource, /items\.length === 0 && !hasMore/u, '仍有后页时不显示最终无结果提示')
 assert.match(searchPageSource, /useReachBottom\(\(\) => loadNextPage\(\)\)/u, '保留触底加载并复用同一分页入口')
 assert.match(searchPageSource, /onClick=\{\(\) => loadNextPage\(\)\}/u, '后页入口应支持点击，覆盖内容不足一屏的情况')
 assert.match(searchPageSource, /onClick=\{\(\) => loadNextPage\(true\)\}/u, '加载失败入口应复用分页请求并允许显式重试')
-assert.match(searchPageSource, /!canUseAffiliateCapability\(capabilities, 'search'\)[\s\S]*?loadingRef\.current[\s\S]*?loadMoreError/u, '分页入口需保护能力关闭、进行中的请求和错误自动重试')
+assert.match(searchPageSource, /onClick=\{retrySearch\}/u, '第一页失败入口应使用提交查询身份重试')
 
 async function verifyAffiliateSearchQuery() {
   const originalLoad = (Module as any)._load
@@ -179,7 +177,10 @@ async function verifyAffiliateSearchQuery() {
   }
 }
 
-void verifyAffiliateSearchQuery().then(() => {
+void Promise.all([
+  verifyAffiliateSearchQuery(),
+  runAffiliateSearchQueryIdentitySmoke(),
+]).then(() => {
   console.log('Affiliate search filter and pagination smoke passed')
 }).catch((error) => {
   console.error(error)

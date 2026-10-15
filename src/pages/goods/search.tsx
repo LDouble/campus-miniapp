@@ -47,6 +47,19 @@ const mergeGoods = (current: AffiliateGoods[], incoming: AffiliateGoods[]) => {
   return Array.from(items.values())
 }
 
+type AffiliateSearchQuery = {
+  keyword: string
+  filters: AffiliateGoodsSearchFilters
+}
+
+type AffiliateSearchResult = {
+  query: AffiliateSearchQuery | null
+  items: AffiliateGoods[]
+  page: number
+  total: number
+  hasMore: boolean
+}
+
 const sortOptions: Array<{ label: string; value: AffiliateGoodsSearchSort }> = [
   { label: '综合', value: 'comprehensive' },
   { label: '销量', value: 'sales' },
@@ -58,11 +71,14 @@ export default function AffiliateSearchPage() {
   const capabilitySnapshot = useAffiliateCapabilities()
   const capabilities = capabilitySnapshot.capabilities
   const [keyword, setKeyword] = useState('')
-  const [items, setItems] = useState<AffiliateGoods[]>([])
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [hasMore, setHasMore] = useState(false)
-  const [searched, setSearched] = useState(false)
+  const [submittedQuery, setSubmittedQuery] = useState<AffiliateSearchQuery | null>(null)
+  const [searchResult, setSearchResult] = useState<AffiliateSearchResult>({
+    query: null,
+    items: [],
+    page: 0,
+    total: 0,
+    hasMore: false,
+  })
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState('')
@@ -80,52 +96,63 @@ export default function AffiliateSearchPage() {
   const [filterMessage, setFilterMessage] = useState('')
   const previousCapabilities = useRef(capabilities)
   const searchRevision = useRef(0)
+  const submittedQueryRef = useRef<AffiliateSearchQuery | null>(null)
   const handledCapabilityRevision = useRef(0)
   const resolveRevision = useRef(0)
   const loadingRef = useRef(false)
   const resolveInFlightRef = useRef(false)
   const initialSearchPending = useRef(false)
 
+  const hasCurrentResults = submittedQuery !== null && searchResult.query === submittedQuery
+  const searched = submittedQuery !== null
+  const items = hasCurrentResults ? searchResult.items : []
+  const page = hasCurrentResults ? searchResult.page : 0
+  const total = hasCurrentResults ? searchResult.total : 0
+  const hasMore = hasCurrentResults && searchResult.hasMore
+
   const runSearch = useCallback(async (
-    searchKeyword: string,
+    query: AffiliateSearchQuery,
     nextPage = 1,
-    filters: AffiliateGoodsSearchFilters = searchFilters,
   ) => {
-    const normalizedKeyword = searchKeyword.trim()
+    const normalizedKeyword = query.keyword.trim()
     if (!normalizedKeyword) {
       Taro.showToast({ title: '先输入商品关键词', icon: 'none' })
       return
     }
     if (loadingRef.current) return
     loadingRef.current = true
-    const latestCapabilities = await refreshAffiliateCapabilities()
-    if (!canUseAffiliateCapability(latestCapabilities.capabilities, 'search')) {
-      loadingRef.current = false
-      setLoading(false)
-      setLoadingMore(false)
-      setLoadError('商品搜索功能暂不可用，请稍后再试。')
-      return
-    }
     const revision = searchRevision.current + 1
     searchRevision.current = revision
-    setSearched(true)
     setLoadError('')
     setLoadMoreError(false)
     if (nextPage === 1) setLoading(true)
     else setLoadingMore(true)
     try {
-      const result = await searchAffiliateGoods(normalizedKeyword, nextPage, filters)
+      const latestCapabilities = await refreshAffiliateCapabilities()
+      if (searchRevision.current !== revision) return
+      if (!canUseAffiliateCapability(latestCapabilities.capabilities, 'search')) {
+        setLoadError('商品搜索功能暂不可用，请稍后再试。')
+        return
+      }
+      const result = await searchAffiliateGoods(normalizedKeyword, nextPage, query.filters)
       if (searchRevision.current !== revision
+        || submittedQueryRef.current !== query
         || !getAffiliateCapabilitySnapshot().capabilities.search_enabled) return
-      setKeyword(normalizedKeyword)
-      setItems((current) => nextPage === 1 ? mergeGoods([], result.items) : mergeGoods(current, result.items))
-      setPage(result.page)
-      setTotal(result.total)
-      setHasMore(shouldContinueAffiliateSearch(
-        result.page,
-        result.page_size,
-        result.total,
-      ))
+      setSearchResult((current) => {
+        if (searchRevision.current !== revision || submittedQueryRef.current !== query) return current
+        if (nextPage !== 1 && current.query !== query) return current
+        return {
+          query,
+          items: nextPage === 1 ? mergeGoods([], result.items) : mergeGoods(current.items, result.items),
+          page: result.page,
+          total: result.total,
+          hasMore: shouldContinueAffiliateSearch(
+            result.page,
+            result.page_size,
+            result.total,
+          ),
+        }
+      })
     } catch (error) {
       if (searchRevision.current !== revision) return
       if (nextPage === 1) setLoadError(error instanceof Error ? error.message : '搜索失败，请稍后重试')
@@ -137,7 +164,7 @@ export default function AffiliateSearchPage() {
         setLoadingMore(false)
       }
     }
-  }, [searchFilters])
+  }, [])
 
   const runSearchRef = useRef(runSearch)
   runSearchRef.current = runSearch
@@ -159,11 +186,9 @@ export default function AffiliateSearchPage() {
       loadingRef.current = false
       setLoading(false)
       setLoadingMore(false)
-      setItems([])
-      setPage(1)
-      setTotal(0)
-      setHasMore(false)
-      setSearched(false)
+      submittedQueryRef.current = null
+      setSubmittedQuery(null)
+      setSearchResult({ query: null, items: [], page: 0, total: 0, hasMore: false })
       setLoadError('')
       setLoadMoreError(false)
     }
@@ -179,9 +204,12 @@ export default function AffiliateSearchPage() {
       && canUseAffiliateCapability(capabilities, 'search')
       && keyword.trim()) {
       initialSearchPending.current = false
-      void runSearchRef.current(keyword, 1)
+      const query = { keyword: keyword.trim(), filters: { ...searchFilters } }
+      submittedQueryRef.current = query
+      setSubmittedQuery(query)
+      void runSearchRef.current(query, 1)
     }
-  }, [capabilitySnapshot.loaded, capabilitySnapshot.revision, capabilities, keyword])
+  }, [capabilitySnapshot.loaded, capabilitySnapshot.revision, capabilities, keyword, searchFilters])
 
   useLoad((options) => {
     const initialKeyword = typeof options.keyword === 'string' ? options.keyword.trim() : ''
@@ -201,14 +229,17 @@ export default function AffiliateSearchPage() {
   useDidHide(() => setCustomTabBarHidden(false))
 
   const loadNextPage = (retryAfterError = false) => {
+    const query = submittedQueryRef.current
     if (!canUseAffiliateCapability(capabilities, 'search')
       || loadingRef.current
       || (!retryAfterError && loadMoreError)
+      || !query
+      || query !== submittedQuery
+      || !hasCurrentResults
       || !hasMore
       || !searched
-      || !keyword.trim()
       || page <= 0) return
-    void runSearch(keyword, page + 1)
+    void runSearch(query, page + 1)
   }
 
   useReachBottom(() => loadNextPage())
@@ -216,6 +247,11 @@ export default function AffiliateSearchPage() {
   const handleSearch = () => {
     if (!canUseAffiliateCapability(capabilities, 'search')) {
       Taro.showToast({ title: '商品搜索功能暂不可用', icon: 'none' })
+      return
+    }
+    const normalizedKeyword = keyword.trim()
+    if (!normalizedKeyword) {
+      Taro.showToast({ title: '先输入商品关键词', icon: 'none' })
       return
     }
     initialSearchPending.current = false
@@ -227,12 +263,19 @@ export default function AffiliateSearchPage() {
     setLoadingMore(false)
     setResolvedGoods(null)
     setResolveMessage('')
-    setItems([])
-    setPage(1)
-    setTotal(0)
-    setHasMore(false)
     setFilterMessage('')
-    void runSearch(keyword)
+    const query = { keyword: normalizedKeyword, filters: { ...searchFilters } }
+    submittedQueryRef.current = query
+    setSubmittedQuery(query)
+    setLoadError('')
+    setLoadMoreError(false)
+    void runSearch(query)
+  }
+
+  const retrySearch = () => {
+    const query = submittedQueryRef.current
+    if (!query || query !== submittedQuery || !canUseAffiliateCapability(capabilities, 'search')) return
+    void runSearch(query, 1)
   }
 
   const openFilterPanel = () => {
@@ -250,12 +293,14 @@ export default function AffiliateSearchPage() {
     if (loadingRef.current || searchFilters.sort === sort) return
     const nextFilters = { ...searchFilters, sort }
     setSearchFilters(nextFilters)
-    if (searched && keyword.trim()) {
-      setItems([])
-      setPage(1)
-      setTotal(0)
-      setHasMore(false)
-      void runSearch(keyword, 1, nextFilters)
+    const currentQuery = submittedQueryRef.current
+    if (currentQuery) {
+      const query = { keyword: currentQuery.keyword, filters: nextFilters }
+      submittedQueryRef.current = query
+      setSubmittedQuery(query)
+      setLoadError('')
+      setLoadMoreError(false)
+      void runSearch(query)
     }
   }
 
@@ -281,14 +326,14 @@ export default function AffiliateSearchPage() {
     setSearchFilters(nextFilters)
     setFilterMessage('')
     setFilterExpanded(false)
-    if (searched && keyword.trim()) {
-      setItems([])
-      setPage(1)
-      setTotal(0)
-      setHasMore(false)
+    const currentQuery = submittedQueryRef.current
+    if (currentQuery) {
+      const query = { keyword: currentQuery.keyword, filters: nextFilters }
+      submittedQueryRef.current = query
+      setSubmittedQuery(query)
       setLoadError('')
       setLoadMoreError(false)
-      void runSearch(keyword, 1, nextFilters)
+      void runSearch(query)
     }
   }
 
@@ -444,9 +489,9 @@ export default function AffiliateSearchPage() {
       {searchEnabled && <>
       <View className='affiliate-search__results-heading'>
         <Text>搜索结果</Text>
-        {searched && <Text>{total} 件商品</Text>}
+        {hasCurrentResults && <Text>{total} 件商品</Text>}
       </View>
-      {searched && keyword.trim() && (
+      {searched && (
         <View className='affiliate-search__controls'>
           <View className='affiliate-search__sort-row' ariaLabel='商品排序'>
             {sortOptions.map((option) => (
@@ -540,7 +585,7 @@ export default function AffiliateSearchPage() {
       {!loading && loadError && (
         <View className='affiliate-search__state affiliate-search__state--error'>
           <Text>{loadError}</Text>
-          <View className='affiliate-search__retry' ariaRole='button' onClick={handleSearch}>重新搜索</View>
+          <View className='affiliate-search__retry' ariaRole='button' onClick={retrySearch}>重新搜索</View>
         </View>
       )}
       {!loading && searched && !loadError && items.length === 0 && !hasMore && (
