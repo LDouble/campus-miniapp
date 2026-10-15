@@ -102,7 +102,8 @@ export default function AffiliateProductDetailPage() {
       setRoute({ id, goodsId: '' })
       return
     }
-    const goodsId = typeof options.goods_id === 'string' ? options.goods_id.trim() : ''
+    const rawGoodsId = typeof options.goods_id === 'string' ? options.goods_id : ''
+    const goodsId = rawGoodsId.trim() ? rawGoodsId : ''
     setRoute({ id: 0, goodsId })
   })
 

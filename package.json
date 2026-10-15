@@ -86,7 +86,7 @@
     "test:coupon-purchase-workflow": "ts-node --transpile-only scripts/coupon-purchase-workflow-smoke.ts",
     "test:affiliate-capabilities": "ts-node --transpile-only scripts/affiliate-capabilities-smoke.ts",
     "test:affiliate-search-filter": "ts-node --transpile-only scripts/affiliate-search-filter-smoke.ts",
-    "test:affiliate-ui-regressions": "ts-node --transpile-only scripts/affiliate-tabbar-visibility-smoke.ts && ts-node --transpile-only scripts/affiliate-image-fallback-smoke.ts && ts-node --transpile-only scripts/affiliate-product-card-ui-smoke.ts",
+    "test:affiliate-ui-regressions": "ts-node --transpile-only scripts/affiliate-tabbar-visibility-smoke.ts && ts-node --transpile-only scripts/affiliate-image-fallback-smoke.ts && ts-node --transpile-only scripts/affiliate-product-card-ui-smoke.ts && ts-node --transpile-only scripts/affiliate-goods-id-route-smoke.ts",
     "e2e:community": "npm run build:weapp && bash scripts/e2e-community.sh",
     "e2e:clubs": "npm run build:weapp && bash scripts/e2e-clubs.sh",
     "e2e:life-services": "npm run build:weapp && bash scripts/e2e-life-services.sh",
