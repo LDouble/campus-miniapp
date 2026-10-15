@@ -4,6 +4,9 @@ const isQualificationEdition = __CAMPUS_APP_EDITION__ === 'qualification'
 const isWechatAiEnabled = __CAMPUS_WECHAT_AI_ENABLED__
 const fullPages = [
   'pages/index/index',
+  'pages/goods/index',
+  'pages/goods/search',
+  'pages/goods/detail',
   'pages/community/index',
   'pages/community/detail',
   'pages/today-hot/index',
@@ -74,6 +77,9 @@ const qualificationExcludedPages = new Set([
 
 const mainPagePaths = new Set([
   'pages/index/index',
+  'pages/goods/index',
+  'pages/goods/search',
+  'pages/goods/detail',
   'pages/community/index',
   'pages/messages/index',
   'pages/profile/index',
@@ -148,6 +154,12 @@ const fullTabBarList = [
     text: '社区',
     iconPath: 'assets/tabbar/community.png',
     selectedIconPath: 'assets/tabbar/community-active.png'
+  },
+  {
+    pagePath: 'pages/goods/index',
+    text: '好物',
+    iconPath: 'assets/tabbar/goods.png',
+    selectedIconPath: 'assets/tabbar/goods-active.png'
   },
   {
     pagePath: 'pages/messages/index',

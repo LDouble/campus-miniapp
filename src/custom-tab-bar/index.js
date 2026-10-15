@@ -29,6 +29,12 @@ const fullTabs = [
     selectedIconPath: '/assets/tabbar/community-active.png'
   },
   {
+    pagePath: 'pages/goods/index',
+    text: '好物',
+    iconPath: '/assets/tabbar/goods.png',
+    selectedIconPath: '/assets/tabbar/goods-active.png'
+  },
+  {
     pagePath: 'pages/messages/index',
     text: '消息',
     iconPath: '/assets/tabbar/messages.png',
@@ -95,7 +101,7 @@ Component({
       if (!item) return
 
       if (index === this.data.selected) {
-        if (item.pagePath === 'pages/community/index') {
+        if (item.pagePath === 'pages/community/index' || item.pagePath === 'pages/goods/index') {
           wx.pageScrollTo({ scrollTop: 0, duration: 240 })
         }
         return

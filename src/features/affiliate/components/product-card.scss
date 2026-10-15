@@ -1,0 +1,153 @@
+.affiliate-product-card {
+  padding: 24rpx;
+  border: 1rpx solid var(--ousea-bg-line, #e8edf4);
+  border-radius: var(--ousea-radius-card, 32rpx);
+  background: var(--campus-surface, #fff);
+
+  &__main {
+    display: flex;
+    min-width: 0;
+    gap: 20rpx;
+
+    &--link:active { opacity: .76; }
+  }
+
+  &__image-wrap,
+  &__image-placeholder {
+    width: 196rpx;
+    height: 196rpx;
+    flex: none;
+    overflow: hidden;
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+    background: var(--ousea-ocean-50, #f2f7fe);
+  }
+
+  &__image { width: 100%; height: 100%; }
+
+  &__image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__bag-icon {
+    position: relative;
+    width: 48rpx;
+    height: 42rpx;
+    border: 4rpx solid var(--ousea-ocean-400, #4c96f5);
+    border-radius: 8rpx;
+
+    &::before {
+      position: absolute;
+      top: -20rpx;
+      left: 10rpx;
+      width: 20rpx;
+      height: 20rpx;
+      border: 4rpx solid var(--ousea-ocean-400, #4c96f5);
+      border-bottom: 0;
+      border-radius: 14rpx 14rpx 0 0;
+      content: '';
+    }
+  }
+
+  &__copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  &__eyebrow {
+    margin-bottom: 6rpx;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__title {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--ousea-ink-900, #1a2333);
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-medium, 500);
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  &__reason,
+  &__shop {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--ousea-ink-500, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  &__reason { margin-top: 6rpx; }
+  &__shop { margin-top: auto; padding-top: 8rpx; }
+
+  &__price-row {
+    display: flex;
+    min-height: 72rpx;
+    margin-top: 20rpx;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12rpx;
+  }
+
+  &__price-copy { min-width: 0; }
+  &__prices,
+  &__coupon-line { display: flex; align-items: baseline; gap: 12rpx; }
+  &__actual-price { color: var(--ousea-danger-500, #e5484d); font-size: 32rpx; font-weight: var(--ousea-font-weight-bold, 700); }
+  &__actual-price--muted { color: var(--ousea-ink-700, #3a4759); }
+  &__original-price { color: var(--ousea-ink-300, #a6b2c2); font-size: var(--ousea-font-size-caption, 24rpx); text-decoration: line-through; }
+  &__coupon-line { margin-top: 4rpx; flex-wrap: wrap; }
+  &__coupon-amount { color: var(--ousea-danger-500, #e5484d); font-size: var(--ousea-font-size-caption, 24rpx); font-weight: var(--ousea-font-weight-semibold, 600); }
+  &__coupon-status,
+  &__coupon-condition { color: var(--ousea-ink-500, #6b7a90); font-size: 21rpx; line-height: 1.4; }
+  &__coupon-condition { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  &__buy {
+    display: flex;
+    min-width: 154rpx;
+    height: 64rpx;
+    padding: 0 22rpx;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: var(--ousea-ocean-500, #2b7aef);
+    color: #fff;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: 1;
+
+    &:active { background: var(--ousea-ocean-600, #1d5fd6); }
+    &--disabled { background: var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .affiliate-product-card {
+    border-color: #2e3a4e;
+    background: #111827;
+
+    &__image-wrap,
+    &__image-placeholder { background: #172554; }
+    &__bag-icon { border-color: #4c96f5; &::before { border-color: #4c96f5; border-bottom: 0; } }
+    &__title { color: #f8fafc; }
+    &__reason,
+    &__shop,
+    &__coupon-status,
+    &__coupon-condition,
+    &__original-price { color: #aab8ca; }
+    &__actual-price--muted { color: #d7e0ec; }
+    &__buy--disabled { background: #273448; color: #aab8ca; }
+  }
+}

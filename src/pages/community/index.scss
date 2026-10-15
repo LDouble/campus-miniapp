@@ -90,6 +90,10 @@ page {
   }
 }
 
+.community-page--publish-fab {
+  padding-bottom: calc(224rpx + env(safe-area-inset-bottom));
+}
+
 .community-content-anchor {
   min-height: 45vh;
   padding-top: 24rpx;

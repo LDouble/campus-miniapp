@@ -54,6 +54,7 @@ import type {
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
+import PublishFloatingButton from '../../components/publish-floating-button'
 import BottomSheet from '../../components/bottom-sheet'
 import UserAvatar from '../../components/user-avatar'
 import CommunityCommentSheet from '../../features/community/comment-sheet'
@@ -1229,7 +1230,7 @@ function IndexContent() {
 
   return (
     <View
-      className='campus campus--course-home'
+      className={`campus campus--course-home${isQualificationEdition ? '' : ' campus--publish-fab'}`}
       onTouchStart={markActivityPopupInteraction}
     >
       <CustomNavbar
@@ -1725,6 +1726,7 @@ function IndexContent() {
         />
       )}
       </>)}
+      <PublishFloatingButton />
 
     </View>
   )

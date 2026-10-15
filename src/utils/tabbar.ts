@@ -2,7 +2,7 @@ import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../features/app-edition'
 import type { LifeHubSection } from '../features/life-services/business-theme'
 
-export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
+export type TabBarPage = 'home' | 'community' | 'goods' | 'messages' | 'profile'
 
 const TAB_BAR_NOTICE_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
 const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v1'
@@ -10,14 +10,16 @@ const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v
 const fullTabIndexes: Record<TabBarPage, number> = {
   home: 0,
   community: 1,
-  messages: 2,
-  profile: 3,
+  goods: 2,
+  messages: 3,
+  profile: 4,
 }
 
 const qualificationTabIndexes: Partial<Record<TabBarPage, number>> = {
   home: 0,
-  messages: 1,
-  profile: 2,
+  goods: 1,
+  messages: 2,
+  profile: 3,
 }
 
 export const tabBarIndex = (page: TabBarPage) => (
@@ -33,6 +35,7 @@ interface CustomTabBarInstance {
     publishSection?: LifeHubSection
     unreadCount?: number
   }) => void
+  publish?: () => void
 }
 
 type TabBarPageInstance = {
@@ -41,11 +44,15 @@ type TabBarPageInstance = {
 
 const getCustomTabBar = () => {
   const instancePage = Taro.getCurrentInstance().page as TabBarPageInstance | undefined
-  if (instancePage?.getTabBar) return instancePage.getTabBar()
+  const instanceTabBar = instancePage?.getTabBar?.()
+  if (instanceTabBar) return instanceTabBar
 
   const pages = Taro.getCurrentPages() as TabBarPageInstance[]
-  const page = pages[pages.length - 1]
-  return page?.getTabBar?.()
+  for (let index = pages.length - 1; index >= 0; index -= 1) {
+    const tabBar = pages[index].getTabBar?.()
+    if (tabBar) return tabBar
+  }
+  return undefined
 }
 
 const normalizeUnreadCount = (value: unknown) => {
@@ -75,7 +82,7 @@ const getStoredTotalUnreadCount = () => (
 
 /**
  * 微信运行时会为每个 Tab 页创建一个自定义 TabBar 实例。
- * 页面显示时只同步当前页面所属的原生组件实例。
+ * 页面显示时同步当前页面组件；子路由会回退到页面栈最近的 TabBar。
  */
 export function syncCustomTabBar(page: TabBarPage) {
   const selected = tabBarIndex(page)
@@ -105,6 +112,17 @@ export function setCustomTabBarHidden(hidden: boolean) {
 
 export function setCustomTabBarPublishSection(publishSection: LifeHubSection) {
   getCustomTabBar()?.setData({ publishSection })
+}
+
+/** 复用自定义 TabBar 上的原有发布入口及其订阅、发布类型与认证流程。 */
+export function openCustomTabBarPublish() {
+  const tabBar = getCustomTabBar()
+  if (!tabBar?.publish) {
+    Taro.showToast({ title: '发布入口暂不可用，请稍后重试', icon: 'none' })
+    return false
+  }
+  tabBar.publish()
+  return true
 }
 
 export function syncPrivateMessageUnreadBadge(count: number) {
