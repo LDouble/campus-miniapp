@@ -4,6 +4,7 @@ import {
   DISABLED_AFFILIATE_CAPABILITIES,
   hasAffiliateCapabilitiesChanged,
   normalizeAffiliateCapabilities,
+  shouldClearAffiliateGoodsCache,
   type AffiliateCapabilities,
 } from './capability-policy'
 import { clearAffiliateGoodsCache } from './session-cache'
@@ -29,12 +30,17 @@ const updateSnapshot = (value: ClientBootstrap['affiliate'] | null | undefined) 
     || hasAffiliateCapabilitiesChanged(snapshot.capabilities, capabilities)
   if (!changed) return snapshot
 
+  const shouldClearGoods = shouldClearAffiliateGoodsCache(
+    snapshot.capabilities,
+    capabilities,
+    snapshot.loaded,
+  )
   snapshot = {
     loaded: true,
     capabilities,
     revision: snapshot.revision + 1,
   }
-  clearAffiliateGoodsCache()
+  if (shouldClearGoods) clearAffiliateGoodsCache()
   listeners.forEach((listener) => listener(snapshot))
   return snapshot
 }

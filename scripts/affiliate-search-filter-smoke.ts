@@ -1,6 +1,8 @@
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import Module = require('node:module')
+import { runAffiliateHomePaginationSmoke } from './affiliate-home-pagination-smoke'
+import './affiliate-input-cache-policy-smoke'
 import { runAffiliateSearchQueryIdentitySmoke } from './affiliate-search-query-identity-smoke'
 import { validateAffiliateSearchFilter } from '../src/features/affiliate/search-filters'
 import {
@@ -183,6 +185,11 @@ void Promise.all([
 ]).then(() => {
   console.log('Affiliate search filter and pagination smoke passed')
 }).catch((error) => {
+  console.error(error)
+  process.exitCode = 1
+})
+
+void runAffiliateHomePaginationSmoke().catch((error) => {
   console.error(error)
   process.exitCode = 1
 })

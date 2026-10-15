@@ -42,6 +42,77 @@ export const isAffiliateCopyFallbackUsable = (
 /** AffiliatePurchaseCopyOutcome 表示确认与复制流程的最终状态。 */
 export type AffiliatePurchaseCopyOutcome = 'copied' | 'cancelled' | 'stale' | 'refreshed' | 'refreshed-expired' | 'unavailable'
 
+/** AffiliateCopySessionIdentity 标识复制流程所属的商品、能力快照和弹层代次。 */
+export type AffiliateCopySessionIdentity = {
+  generation: number
+  goodsId: string | null | undefined
+  capabilityRevision: number
+}
+
+/** AffiliateCopyOperationLock 保存当前复制流程的唯一所有者。 */
+export type AffiliateCopyOperationLock = {
+  nextOwnerId: number
+  owner: { id: number; identity: AffiliateCopySessionIdentity } | null
+}
+
+/** createAffiliateCopyOperationLock 创建同步可抢占且代次安全的复制锁。 */
+export const createAffiliateCopyOperationLock = (): AffiliateCopyOperationLock => ({
+  nextOwnerId: 0,
+  owner: null,
+})
+
+/** runAffiliateCopyOperationExclusive 为完整复制流程加锁，并只允许所有者释放忙碌状态。 */
+export const runAffiliateCopyOperationExclusive = async <T>(
+  lock: AffiliateCopyOperationLock,
+  identity: AffiliateCopySessionIdentity,
+  isCurrentSession: (identity: AffiliateCopySessionIdentity) => boolean,
+  onLockChange: (identity: AffiliateCopySessionIdentity | null) => void,
+  operation: () => Promise<T>,
+): Promise<{ started: boolean; value?: T }> => {
+  if (lock.owner && isCurrentSession(lock.owner.identity)) return { started: false }
+
+  const owner = { id: lock.nextOwnerId + 1, identity }
+  lock.nextOwnerId = owner.id
+  lock.owner = owner
+  onLockChange(identity)
+
+  try {
+    return { started: true, value: await operation() }
+  } finally {
+    if (lock.owner?.id === owner.id) {
+      lock.owner = null
+      onLockChange(null)
+    }
+  }
+}
+
+/** AffiliateConversionIdentity 标识能力刷新后仍可发起转链请求的商品请求。 */
+export type AffiliateConversionIdentity = {
+  requestRevision: number
+  capabilityRevision: number
+  goodsId: string | null | undefined
+}
+
+/** runAffiliateConversionAfterRefresh 只在刷新期间商品、请求和能力代次均未变化时调用转链接口。 */
+export const runAffiliateConversionAfterRefresh = async <T, TCapabilities>(options: {
+  captured: AffiliateConversionIdentity
+  getCurrent: () => AffiliateConversionIdentity
+  refreshCapabilities: () => Promise<TCapabilities>
+  canConvert: (capabilities: TCapabilities) => boolean
+  convert: () => Promise<T>
+}): Promise<{ kind: 'converted'; value: T } | { kind: 'stale' } | { kind: 'unavailable' }> => {
+  const capabilities = await options.refreshCapabilities()
+  const current = options.getCurrent()
+  const identityIsCurrent = current.requestRevision === options.captured.requestRevision
+    && current.capabilityRevision === options.captured.capabilityRevision
+    && current.goodsId === options.captured.goodsId
+    && current.goodsId !== null
+    && current.goodsId !== undefined
+  if (!identityIsCurrent) return { kind: 'stale' }
+  if (!options.canConvert(capabilities)) return { kind: 'unavailable' }
+  return { kind: 'converted', value: await options.convert() }
+}
+
 type AffiliatePurchaseCopyWorkflow = {
   result: AffiliateConvertResult
   requiresConfirmation: boolean

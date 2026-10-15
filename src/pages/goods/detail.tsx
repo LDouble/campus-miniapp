@@ -19,6 +19,8 @@ import {
   refreshAffiliateCapabilities,
 } from '../../features/affiliate/capabilities'
 import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilities'
+import { createAffiliateImageFallbackState } from '../../features/affiliate/image-fallback'
+import { getAffiliateProductDetailMetadata } from '../../features/affiliate/detail-metadata'
 import { useCampusShare } from '../../features/share'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
 import './detail.scss'
@@ -49,6 +51,8 @@ export default function AffiliateProductDetailPage() {
   const [error, setError] = useState('')
   const [missingGoodsContext, setMissingGoodsContext] = useState(false)
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
+  const [imageFallback] = useState(createAffiliateImageFallbackState)
+  const [, setImageRenderRevision] = useState(0)
   const requestRevision = useRef(0)
 
   const loadProduct = useCallback(async (id: number) => {
@@ -164,6 +168,11 @@ export default function AffiliateProductDetailPage() {
   const recommendationReason = product && 'recommendation_reason' in product
     ? product.recommendation_reason
     : undefined
+  const imageSourceKey = product
+    ? `${'id' in product ? `product:${product.id}` : `goods:${product.goods_id}`}|${product.image_url || ''}`
+    : ''
+  const imageToken = imageFallback.select(imageSourceKey)
+  const detailMetadata = product ? getAffiliateProductDetailMetadata(product) : []
 
   return (
     <View className='affiliate-detail'>
@@ -218,7 +227,21 @@ export default function AffiliateProductDetailPage() {
         <>
           <View className='affiliate-detail__image-wrap'>
             {product.image_url ? (
-              <Image className='affiliate-detail__image' src={product.image_url} mode='aspectFill' />
+              !imageFallback.isFailed(imageToken) ? (
+                <Image
+                  key={imageToken}
+                  className='affiliate-detail__image'
+                  src={product.image_url}
+                  mode='aspectFill'
+                  onError={() => {
+                    if (imageFallback.markFailed(imageToken)) {
+                      setImageRenderRevision((revision) => revision + 1)
+                    }
+                  }}
+                />
+              ) : (
+                <View className='affiliate-detail__image-placeholder' />
+              )
             ) : (
               <View className='affiliate-detail__image-placeholder' />
             )}
@@ -256,6 +279,12 @@ export default function AffiliateProductDetailPage() {
                   <Text>¥{product.original_price}</Text>
                 </View>
               )}
+              {detailMetadata.map((item) => (
+                <View className='affiliate-detail__metadata-row' key={item.key}>
+                  <Text>{item.label}</Text>
+                  <Text>{item.value}</Text>
+                </View>
+              ))}
             </View>
             <Text className='affiliate-detail__disclaimer'>商品价格和优惠以淘宝商品页面为准；下单前请核对优惠条件。</Text>
           </View>

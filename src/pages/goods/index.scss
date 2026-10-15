@@ -1,11 +1,11 @@
-page { background: var(--ousea-bg-page, #f5f8fc); }
+page { background: var(--campus-page, #f5f8fc); }
 
 .affiliate-home {
   min-height: 100vh;
   padding-bottom: calc(96rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   color: var(--ousea-ink-900, #1a2333);
-  background: var(--ousea-bg-page, #f5f8fc);
+  background: var(--campus-page, #f5f8fc);
 
   &__search-row { display: flex; padding: 12rpx 28rpx 20rpx; align-items: center; gap: 12rpx; background: var(--campus-surface, #fff); }
   &__search { display: flex; min-width: 0; height: 76rpx; padding: 0 24rpx; flex: 1; align-items: center; gap: 14rpx; box-sizing: border-box; border-radius: var(--ousea-radius-pill, 999rpx); background: var(--ousea-bg-page, #f5f8fc); color: var(--ousea-ink-500, #6b7a90); font-size: var(--ousea-font-size-label, 27rpx); }

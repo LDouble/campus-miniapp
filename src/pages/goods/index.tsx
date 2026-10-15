@@ -47,6 +47,7 @@ export default function GoodsHomePage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
+  const [loadMoreError, setLoadMoreError] = useState('')
   const [taxonomyError, setTaxonomyError] = useState('')
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
   const requestRevision = useRef(0)
@@ -79,10 +80,12 @@ export default function GoodsHomePage() {
     filters: { category?: number; topic?: number } = { category: categoryId, topic: topicId },
   ) => {
     if (!getAffiliateCapabilitySnapshot().capabilities.enabled) return
-    if (loadingRef.current) return
+    // 主动刷新取代旧翻页，只有追加请求需要等待当前请求完成。
+    if (loadingRef.current && nextPage !== 1) return
     loadingRef.current = true
     const revision = requestRevision.current + 1
     requestRevision.current = revision
+    setLoadMoreError('')
     if (nextPage === 1) {
       setLoading(true)
       setLoadingMore(false)
@@ -107,7 +110,9 @@ export default function GoodsHomePage() {
       loadedRef.current = true
     } catch (loadError) {
       if (requestRevision.current !== revision) return
-      if (nextPage === 1) setError(loadError instanceof Error ? loadError.message : '好物加载失败，请重试')
+      const message = loadError instanceof Error ? loadError.message : '好物加载失败，请重试'
+      if (nextPage === 1) setError(message)
+      else setLoadMoreError(message)
     } finally {
       if (requestRevision.current === revision) {
         loadingRef.current = false
@@ -136,6 +141,7 @@ export default function GoodsHomePage() {
         setLoading(false)
         setLoadingMore(false)
         setError('')
+        setLoadMoreError('')
         return
       }
       void loadTaxonomies()
@@ -153,7 +159,7 @@ export default function GoodsHomePage() {
   })
 
   useReachBottom(() => {
-    if (!capabilities.enabled || loadingRef.current || products.length >= total || !loaded) return
+    if (!capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
     void loadProducts(page + 1)
   })
 
@@ -181,6 +187,10 @@ export default function GoodsHomePage() {
 
   const retry = () => {
     if (capabilities.enabled) void loadProducts(1)
+  }
+
+  const retryMore = () => {
+    if (capabilities.enabled && !loadingRef.current) void loadProducts(page + 1)
   }
 
   if (!capabilitySnapshot.loaded) {
@@ -339,10 +349,16 @@ export default function GoodsHomePage() {
           ))}
         </View>
         {loadingMore && <View className='affiliate-home__load-more' ariaRole='status'>正在加载更多…</View>}
-        {!loadingMore && products.length > 0 && products.length < total && (
+        {!loadingMore && loadMoreError && (
+          <View className='affiliate-home__load-more' ariaRole='alert'>
+            <Text>{loadMoreError}</Text>
+            <View className='affiliate-home__retry' ariaRole='button' onClick={retryMore}>重试加载更多</View>
+          </View>
+        )}
+        {!loadingMore && !loading && !error && !loadMoreError && products.length > 0 && products.length < total && (
           <View className='affiliate-home__load-more'>继续上滑查看更多</View>
         )}
-        {!loadingMore && products.length > 0 && products.length >= total && (
+        {!loadingMore && !loading && !error && !loadMoreError && products.length > 0 && products.length >= total && (
           <View className='affiliate-home__load-more'>已经到底了</View>
         )}
       </View>

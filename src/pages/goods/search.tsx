@@ -20,6 +20,10 @@ import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purc
 import { cacheAffiliateGoods } from '../../features/affiliate/session-cache'
 import { validateAffiliateSearchFilter } from '../../features/affiliate/search-filters'
 import {
+  classifyAffiliateSearchInput,
+  dispatchAffiliateSearchInput,
+} from '../../features/affiliate/search-input-policy'
+import {
   AFFILIATE_GOODS_SEARCH_CATEGORIES,
   type AffiliateGoodsSearchCategoryId,
 } from '../../features/affiliate/search-categories'
@@ -51,6 +55,17 @@ type AffiliateSearchQuery = {
   keyword: string
   filters: AffiliateGoodsSearchFilters
 }
+
+const sameAffiliateSearchQuery = (
+  left: AffiliateSearchQuery | null,
+  right: AffiliateSearchQuery,
+) => left !== null
+  && left.keyword === right.keyword
+  && left.filters.category_id === right.filters.category_id
+  && left.filters.has_coupon === right.filters.has_coupon
+  && left.filters.min_price === right.filters.min_price
+  && left.filters.max_price === right.filters.max_price
+  && left.filters.sort === right.filters.sort
 
 type AffiliateSearchResult = {
   query: AffiliateSearchQuery | null
@@ -109,6 +124,7 @@ export default function AffiliateSearchPage() {
   const page = hasCurrentResults ? searchResult.page : 0
   const total = hasCurrentResults ? searchResult.total : 0
   const hasMore = hasCurrentResults && searchResult.hasMore
+  const searchInputRoute = classifyAffiliateSearchInput(keyword)
 
   const runSearch = useCallback(async (
     query: AffiliateSearchQuery,
@@ -214,8 +230,14 @@ export default function AffiliateSearchPage() {
   useLoad((options) => {
     const initialKeyword = typeof options.keyword === 'string' ? options.keyword.trim() : ''
     if (initialKeyword) {
+      const initialRoute = classifyAffiliateSearchInput(initialKeyword)
       setKeyword(initialKeyword)
-      initialSearchPending.current = true
+      initialSearchPending.current = initialRoute.type === 'keyword'
+      if (initialRoute.type === 'resolve') {
+        setResolveMessage('已识别为商品链接或分享内容，请点击“解析内容”查券；不会按关键词搜索。')
+      } else if (initialRoute.type === 'too_long' && initialRoute.reason === 'content') {
+        setResolveMessage('输入内容过长，请缩短分享文案后再试。')
+      }
     }
     if (options.mode === 'resolve') {
       setResolveMessage('粘贴淘宝或天猫商品链接、淘口令后，系统会为你查询商品优惠。')
@@ -257,31 +279,64 @@ export default function AffiliateSearchPage() {
   useReachBottom(() => loadNextPage())
 
   const handleSearch = () => {
-    if (!canUseAffiliateCapability(capabilities, 'search')) {
-      Taro.showToast({ title: '商品搜索功能暂不可用', icon: 'none' })
-      return
-    }
-    const normalizedKeyword = keyword.trim()
-    if (!normalizedKeyword) {
+    const route = dispatchAffiliateSearchInput(keyword, {
+      search: (normalizedKeyword) => {
+        if (!canUseAffiliateCapability(capabilities, 'search')) {
+          Taro.showToast({ title: '商品搜索功能暂不可用', icon: 'none' })
+          return
+        }
+        const query = { keyword: normalizedKeyword, filters: { ...searchFilters } }
+        if (loadingRef.current && sameAffiliateSearchQuery(submittedQueryRef.current, query)) return
+        initialSearchPending.current = false
+        searchRevision.current += 1
+        loadingRef.current = false
+        resolveRevision.current += 1
+        resolveInFlightRef.current = false
+        setResolveLoading(false)
+        setLoadingMore(false)
+        setResolvedGoods(null)
+        setResolveMessage('')
+        setFilterMessage('')
+        submittedQueryRef.current = query
+        setSubmittedQuery(query)
+        setLoadError('')
+        setLoadMoreError(false)
+        void runSearch(query)
+      },
+      resolve: (content) => {
+        if (resolveInFlightRef.current) return
+        initialSearchPending.current = false
+        const latestCapabilities = getAffiliateCapabilitySnapshot().capabilities
+        if (!canUseAffiliateCapability(capabilities, 'resolve')
+          || !canUseAffiliateCapability(latestCapabilities, 'resolve')) {
+          void handlePasteAndResolve(content)
+          return
+        }
+        searchRevision.current += 1
+        loadingRef.current = false
+        setLoading(false)
+        setLoadingMore(false)
+        submittedQueryRef.current = null
+        setSubmittedQuery(null)
+        setSearchResult({ query: null, items: [], page: 0, total: 0, hasMore: false })
+        setLoadError('')
+        setLoadMoreError(false)
+        resolveRevision.current += 1
+        setResolveLoading(false)
+        setResolvedGoods(null)
+        setResolveMessage('')
+        setFilterMessage('')
+        void handlePasteAndResolve(content)
+      },
+    })
+    if (route.type === 'empty') {
       Taro.showToast({ title: '先输入商品关键词', icon: 'none' })
-      return
     }
-    initialSearchPending.current = false
-    searchRevision.current += 1
-    loadingRef.current = false
-    resolveRevision.current += 1
-    resolveInFlightRef.current = false
-    setResolveLoading(false)
-    setLoadingMore(false)
-    setResolvedGoods(null)
-    setResolveMessage('')
-    setFilterMessage('')
-    const query = { keyword: normalizedKeyword, filters: { ...searchFilters } }
-    submittedQueryRef.current = query
-    setSubmittedQuery(query)
-    setLoadError('')
-    setLoadMoreError(false)
-    void runSearch(query)
+    if (route.type === 'too_long') {
+      setResolveMessage(route.reason === 'keyword'
+        ? '关键词最多100个字符；请缩短后再搜索。'
+        : '分享内容最多2048个字符，请缩短后再解析。')
+    }
   }
 
   const retrySearch = () => {
@@ -357,14 +412,14 @@ export default function AffiliateSearchPage() {
     setFilterMessage('')
   }
 
-  const handlePasteAndResolve = async () => {
+  const handlePasteAndResolve = async (contentOverride?: string) => {
     const capabilitySnapshotAtStart = getAffiliateCapabilitySnapshot()
     if (!canUseAffiliateCapability(capabilities, 'resolve')
       || !canUseAffiliateCapability(capabilitySnapshotAtStart.capabilities, 'resolve')) {
       setResolveMessage('链接解析功能暂不可用，请稍后再试。')
       return
     }
-    if (resolveInFlightRef.current || resolveLoading) return
+    if (resolveInFlightRef.current) return
     const revision = resolveRevision.current + 1
     resolveRevision.current = revision
     const capabilityRevision = capabilitySnapshotAtStart.revision
@@ -382,22 +437,26 @@ export default function AffiliateSearchPage() {
 
     let content = ''
     try {
-      let clipboard: Awaited<ReturnType<typeof Taro.getClipboardData>>
-      try {
-        clipboard = await Taro.getClipboardData()
-      } catch {
-        if (isCurrentOperation()) {
-          setResolveMessage('读取剪贴板失败，请确认已复制商品链接或淘口令。')
+      if (contentOverride !== undefined) {
+        content = contentOverride.trim()
+      } else {
+        let clipboard: Awaited<ReturnType<typeof Taro.getClipboardData>>
+        try {
+          clipboard = await Taro.getClipboardData()
+        } catch {
+          if (isCurrentOperation()) {
+            setResolveMessage('读取剪贴板失败，请确认已复制商品链接或淘口令。')
+          }
+          return
         }
-        return
+        if (!isCurrentOperation()) return
+        content = String(clipboard.data || '').trim()
       }
-      if (!isCurrentOperation()) return
-      content = String(clipboard.data || '').trim()
       if (!content) {
         setResolveMessage('剪贴板里没有内容，请先复制淘宝或天猫商品链接、淘口令。')
         return
       }
-      if (content.length > 2048) {
+      if (Array.from(content).length > 2048) {
         setResolveMessage('剪贴板内容过长，请只复制商品链接或淘口令后重试。')
         return
       }
@@ -470,9 +529,9 @@ export default function AffiliateSearchPage() {
           <KeyboardSafeInput
             className='affiliate-search__input'
             value={keyword}
-            maxlength={100}
+            maxlength={2048}
             confirmType='search'
-            placeholder='输入商品名称，比如「宿舍收纳」'
+            placeholder='搜索商品库，或粘贴淘宝链接/淘口令'
             onInput={(event) => setKeyword(event.detail.value)}
             onConfirm={handleSearch}
           />
@@ -485,9 +544,24 @@ export default function AffiliateSearchPage() {
             >×</View>
           )}
         </View>
-        <View className='affiliate-search__submit' ariaRole='button' onClick={handleSearch}>搜索</View>
+        <View className='affiliate-search__submit' ariaRole='button' onClick={handleSearch}>
+          {searchInputRoute.type === 'resolve'
+            ? '解析内容'
+            : searchInputRoute.type === 'too_long' ? '超出长度' : '搜索'}
+        </View>
       </View> : (
         <View className='affiliate-search__state'>商品搜索功能暂不可用。</View>
+      )}
+      {searchEnabled && <Text className='affiliate-search__scope-note'>搜索范围：仅限已接入商品库，不代表淘宝全站商品。</Text>}
+      {searchEnabled && searchInputRoute.type === 'resolve' && (
+        <Text className='affiliate-search__input-route-note'>已识别为商品链接或分享内容，点击“解析内容”查券；不会作为关键词搜索。</Text>
+      )}
+      {searchEnabled && searchInputRoute.type === 'too_long' && (
+        <Text className='affiliate-search__input-route-note'>
+          {searchInputRoute.reason === 'keyword'
+            ? '关键词最多100个字符。'
+            : '分享内容最多2048个字符。'}
+        </Text>
       )}
 
       {resolveEnabled ? <View className='affiliate-search__resolve-panel'>

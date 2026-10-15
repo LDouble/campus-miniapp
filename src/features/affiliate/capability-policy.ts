@@ -111,6 +111,18 @@ export const hasAffiliateCapabilitiesChanged = (
   || previous.convert_enabled !== next.convert_enabled
 )
 
+/** shouldClearAffiliateGoodsCache 保留可展示的商品快照，仅总开关、搜索或解析权限变化时失效。 */
+export const shouldClearAffiliateGoodsCache = (
+  previous: AffiliateCapabilities,
+  next: AffiliateCapabilities,
+  previousLoaded: boolean,
+) => (
+  !previousLoaded
+  || previous.enabled !== next.enabled
+  || previous.search_enabled !== next.search_enabled
+  || previous.resolve_enabled !== next.resolve_enabled
+)
+
 /** resolveAffiliateTabIndex 按实际显示的 Tab 列表计算选中索引。 */
 export const resolveAffiliateTabIndex = (
   page: AffiliateTabPage,

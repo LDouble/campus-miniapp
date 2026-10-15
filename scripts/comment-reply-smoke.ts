@@ -212,8 +212,8 @@ assert.match(detailCommentsSource, /onSubmittingChange\?\.\(true\)/u)
 assert.match(detailCommentsSource, /onSubmittingChange\?\.\(false\)/u)
 assert.match(
   communityCommentSheetSource,
-  /setCustomTabBarHidden\(true\)[\s\S]*return \(\) => setCustomTabBarHidden\(false\)/u,
-  '列表评论框打开时必须隐藏自定义 TabBar，并在关闭后恢复',
+  /acquireCustomTabBarHidden\(\)/u,
+  '列表评论框应持有独立 TabBar 隐藏租约，关闭时只释放自身状态',
 )
 assert.doesNotMatch(communityCommentSheetSource, /listComments|business-detail-comments/u)
 assert.match(

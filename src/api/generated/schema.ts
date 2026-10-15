@@ -2074,6 +2074,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/affiliate/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 解析商品分享内容并返回来源标识用于管理端建档，不保存原始内容 */
+        post: operations["ResolveAdminAffiliateContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/affiliate/search": {
         parameters: {
             query?: never;
@@ -9986,6 +10003,14 @@ export interface components {
             source_provider: string;
             status: components["schemas"]["AffiliateProductStatus"];
         };
+        AffiliateAdminResolveResponseBody: {
+            data: components["schemas"]["AffiliateAdminResolveResult"];
+            request_id: string;
+        };
+        AffiliateAdminResolveResult: {
+            product?: components["schemas"]["AffiliateAdminGoodsView"];
+            status: components["schemas"]["AffiliateResolveStatus"];
+        };
         AffiliateAdminTaxonomyCreateInput: {
             enabled: boolean;
             kind: components["schemas"]["AffiliateTaxonomyKind"];
@@ -15938,6 +15963,15 @@ export interface components {
                 "application/json": components["schemas"]["AffiliateAdminProductResponseBody"];
             };
         };
+        /** @description 管理端解析商品分享内容并返回可用于选品的来源标识 */
+        AffiliateAdminResolveResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminResolveResponseBody"];
+            };
+        };
         /** @description 管理端分类或专题分页 */
         AffiliateAdminTaxonomyPageResponse: {
             headers: {
@@ -20311,6 +20345,7 @@ export interface operations {
         parameters: {
             query?: {
                 keyword?: string;
+                goods_id?: string;
                 category_id?: number;
                 topic_id?: number;
                 status?: "draft" | "published" | "paused";
@@ -20466,6 +20501,29 @@ export interface operations {
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ResolveAdminAffiliateContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    content: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateAdminResolveResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             429: components["responses"]["Error"];
             502: components["responses"]["Error"];
             503: components["responses"]["Error"];

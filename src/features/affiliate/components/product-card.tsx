@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Image, Text, View } from '@tarojs/components'
 import type { AffiliateGoods, AffiliateProduct } from '../../../api/affiliate'
+import { createAffiliateImageFallbackState } from '../image-fallback'
 import './product-card.scss'
 
 export type AffiliatePurchaseProduct = Pick<
@@ -45,8 +46,12 @@ export default function AffiliateProductCard({
   onOpen,
   onBuy,
 }: ProductCardProps) {
-  const [imageFailed, setImageFailed] = useState(false)
-  const hasImage = Boolean(product.image_url) && !imageFailed
+  const [imageFallback] = useState(createAffiliateImageFallbackState)
+  const [, setImageRenderRevision] = useState(0)
+  const imageIdentity = 'id' in product ? `product:${product.id}` : `goods:${product.goods_id}`
+  const imageSourceKey = `${imageIdentity}|${product.image_url || ''}`
+  const imageToken = imageFallback.select(imageSourceKey)
+  const hasImage = Boolean(product.image_url) && !imageFallback.isFailed(imageToken)
   const recommendationTitle = 'recommendation_title' in product
     ? product.recommendation_title
     : undefined
@@ -54,8 +59,6 @@ export default function AffiliateProductCard({
     ? product.recommendation_reason
     : undefined
   const canPurchase = canConvert && product.availability === 'valid'
-
-  useEffect(() => setImageFailed(false), [product.image_url])
 
   return (
     <View className='affiliate-product-card'>
@@ -68,11 +71,16 @@ export default function AffiliateProductCard({
         <View className='affiliate-product-card__image-wrap'>
           {hasImage ? (
             <Image
+              key={imageToken}
               className='affiliate-product-card__image'
               src={product.image_url || ''}
               mode='aspectFill'
               lazyLoad
-              onError={() => setImageFailed(true)}
+              onError={() => {
+                if (imageFallback.markFailed(imageToken)) {
+                  setImageRenderRevision((revision) => revision + 1)
+                }
+              }}
             />
           ) : (
             <View className='affiliate-product-card__image-placeholder'>
@@ -81,6 +89,7 @@ export default function AffiliateProductCard({
           )}
         </View>
         <View className='affiliate-product-card__copy'>
+          <View className='affiliate-product-card__promotion'>推广</View>
           {recommendation && recommendationTitle && (
             <Text className='affiliate-product-card__eyebrow'>{recommendationTitle}</Text>
           )}

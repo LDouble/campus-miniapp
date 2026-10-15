@@ -115,7 +115,7 @@ Component({
       const selected = this.data.list.findIndex(item => item.pagePath === route)
       const nextData = {}
 
-      if (selected >= 0 && selected !== this.data.selected) {
+      if (selected !== this.data.selected) {
         nextData.selected = selected
       }
       const unreadCount = getStoredUnreadCount()

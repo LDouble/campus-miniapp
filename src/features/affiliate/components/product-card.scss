@@ -66,6 +66,16 @@
     line-height: var(--ousea-line-height-ui, 1.4);
   }
 
+  &__promotion {
+    margin-bottom: 6rpx;
+    padding: 4rpx 10rpx;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: var(--ousea-ocean-50, #f2f7fe);
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.4;
+  }
+
   &__title {
     display: -webkit-box;
     overflow: hidden;
@@ -140,6 +150,7 @@
 
     &__image-wrap,
     &__image-placeholder { background: #172554; }
+    &__promotion { background: var(--campus-surface-primary, #172554); color: var(--ousea-ocean-400, #4c96f5); }
     &__bag-icon { border-color: #4c96f5; &::before { border-color: #4c96f5; border-bottom: 0; } }
     &__title { color: #f8fafc; }
     &__reason,

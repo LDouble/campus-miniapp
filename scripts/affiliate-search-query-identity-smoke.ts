@@ -2,6 +2,7 @@ import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 import ts = require('typescript')
 import { canUseAffiliateCapability } from '../src/features/affiliate/capability-policy'
+import { dispatchAffiliateSearchInput } from '../src/features/affiliate/search-input-policy'
 import { validateAffiliateSearchFilter } from '../src/features/affiliate/search-filters'
 import { shouldContinueAffiliateSearch } from '../src/features/affiliate/search-pagination'
 
@@ -62,6 +63,8 @@ assert.ok(hideCallback && ts.isArrowFunction(hideCallback), '隐藏处理应为�
 
 const mergeGoodsDeclaration = findVariable(sourceFile, 'mergeGoods')
 assert.ok(mergeGoodsDeclaration.initializer, '应在生产搜索页找到商品合并实现')
+const sameSearchQueryDeclaration = findVariable(sourceFile, 'sameAffiliateSearchQuery')
+assert.ok(sameSearchQueryDeclaration.initializer, '应在生产搜索页找到查询身份比较实现')
 const handlerNames = [
   'runSearch',
   'loadNextPage',
@@ -73,6 +76,7 @@ const handlerNames = [
 ]
 const extractedSource = [
   `const mergeGoods = ${mergeGoodsDeclaration.initializer!.getText(sourceFile)}`,
+  `const sameAffiliateSearchQuery = ${sameSearchQueryDeclaration.initializer!.getText(sourceFile)}`,
   ...handlerNames.map((name) => `const ${name} = ${extractHandler(name)}`),
   `const handlePageHide = ${hideCallback!.getText(sourceFile)}`,
   `return { ${handlerNames.join(', ')}, handlePageHide }`,
@@ -206,6 +210,7 @@ const createHarness = (options: {
       refreshAffiliateCapabilities: options.refreshCapabilities || (async () => ({ capabilities: capabilitySnapshot.capabilities })),
       getAffiliateCapabilitySnapshot: () => capabilitySnapshot,
       canUseAffiliateCapability,
+      dispatchAffiliateSearchInput,
       shouldContinueAffiliateSearch,
       validateAffiliateSearchFilter,
       searchAffiliateGoods: async (query: string | SearchQuery, page: number, filters?: SearchFilters) => {
@@ -333,6 +338,59 @@ const verifySubmittingNewKeywordReplacesResults = async () => {
   assert.equal(harness.state.searchResult.query?.keyword, '杯子')
   assert.deepEqual(harness.state.searchResult.items.map(({ goods_id }) => goods_id), ['cup-1'])
   assert.equal(harness.state.searchResult.total, 1)
+}
+
+const verifyDoubleSubmitDoesNotDuplicateInFlightQuery = async () => {
+  const bootstrap = deferred<{ capabilities: typeof enabledCapabilities }>()
+  let bootstrapRequests = 0
+  const harness = createHarness({
+    draftKeyword: '宿舍收纳盒',
+    submittedKeyword: '旧查询',
+    currentItems: [],
+    refreshCapabilities: () => {
+      bootstrapRequests += 1
+      return bootstrap.promise
+    },
+  })
+
+  harness.render().handleSearch()
+  assert.equal(bootstrapRequests, 1, '第一次同词提交应开始刷新能力')
+  harness.render().handleSearch()
+  assert.equal(bootstrapRequests, 1, '同关键词和筛选的并发提交应复用进行中的请求')
+
+  bootstrap.resolve({ capabilities: harness.capabilitySnapshot.capabilities })
+  await waitForAsyncHandlers()
+  assert.deepEqual(harness.requests, [
+    { keyword: '宿舍收纳盒', page: 1, filters: { sort: 'comprehensive' } },
+  ], '等待能力刷新时重复提交同一查询只能发出一次商品搜索')
+}
+
+const verifyNewKeywordSupersedesPendingSearch = async () => {
+  const firstBootstrap = deferred<{ capabilities: typeof enabledCapabilities }>()
+  let bootstrapRequests = 0
+  const harness = createHarness({
+    draftKeyword: '纸巾',
+    submittedKeyword: '旧查询',
+    currentItems: [],
+    refreshCapabilities: () => {
+      bootstrapRequests += 1
+      return bootstrapRequests === 1
+        ? firstBootstrap.promise
+        : Promise.resolve({ capabilities: harness.capabilitySnapshot.capabilities })
+    },
+  })
+
+  harness.render().handleSearch()
+  harness.state.keyword = '杯子'
+  harness.render().handleSearch()
+  assert.equal(bootstrapRequests, 2, '新关键词应取代正在等待能力刷新的旧关键词')
+  await waitForAsyncHandlers()
+  firstBootstrap.resolve({ capabilities: harness.capabilitySnapshot.capabilities })
+  await waitForAsyncHandlers()
+  assert.deepEqual(harness.requests, [
+    { keyword: '杯子', page: 1, filters: { sort: 'comprehensive' } },
+  ], '新关键词提交后，旧查询不得继续请求商品搜索')
+  assert.equal(harness.state.searchResult.query?.keyword, '杯子')
 }
 
 const verifyFirstPageRetryStaysOnSubmittedQuery = async () => {
@@ -469,6 +527,32 @@ const verifyDoublePasteDoesNotDuplicateResolve = async () => {
   assert.deepEqual(harness.state.resolvedGoods, { goods_id: 'resolved-goods', title: '已核验商品' })
   assert.equal(harness.state.resolveLoading, false)
   assert.equal(harness.refs.resolveInFlightRef.current, false)
+}
+
+const verifyDoubleInputResolveDoesNotDuplicateWhileRefreshingCapabilities = async () => {
+  const bootstrap = deferred<{ capabilities: typeof enabledCapabilities }>()
+  let bootstrapRequests = 0
+  const harness = createHarness({
+    draftKeyword: 'https://item.taobao.com/item.htm?id=123',
+    submittedKeyword: '',
+    currentItems: [],
+    refreshCapabilities: () => {
+      bootstrapRequests += 1
+      return bootstrap.promise
+    },
+  })
+
+  harness.render().handleSearch()
+  assert.equal(bootstrapRequests, 1, '第一次分享链接提交应开始刷新能力')
+  assert.equal(harness.refs.resolveInFlightRef.current, true)
+  harness.render().handleSearch()
+  assert.equal(bootstrapRequests, 1, '能力刷新等待期间再次提交同一链接不得释放解析锁')
+
+  bootstrap.resolve({ capabilities: harness.capabilitySnapshot.capabilities })
+  await waitForAsyncHandlers()
+  assert.equal(harness.resolveRequests.length, 1, '重复提交链接只能发出一次解析 POST')
+  assert.deepEqual(harness.resolveRequests, ['https://item.taobao.com/item.htm?id=123'])
+  assert.equal(harness.requests.length, 0, '链接解析不得误发商品关键词搜索')
 }
 
 const verifyStaleResolveCannotCrossPageOrCapabilityGeneration = async () => {
@@ -656,10 +740,13 @@ export const runAffiliateSearchQueryIdentitySmoke = async () => {
   await verifyDraftEditsAndRetryStayOnSubmittedQuery()
   await verifyClearedDraftDoesNotBlockSubmittedPagination()
   await verifySubmittingNewKeywordReplacesResults()
+  await verifyDoubleSubmitDoesNotDuplicateInFlightQuery()
+  await verifyNewKeywordSupersedesPendingSearch()
   await verifyFirstPageRetryStaysOnSubmittedQuery()
   await verifySortAndFiltersUseSubmittedKeyword()
   await verifyOldResponseCannotReplaceNewQuery()
   await verifyDoublePasteDoesNotDuplicateResolve()
+  await verifyDoubleInputResolveDoesNotDuplicateWhileRefreshingCapabilities()
   await verifyStaleResolveCannotCrossPageOrCapabilityGeneration()
   await verifyPageHidePreservesCompletedResolveState()
   await verifyResolveFailurePathsReleaseOperation()

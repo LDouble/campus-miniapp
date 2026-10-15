@@ -3,6 +3,7 @@ import { isQualificationEdition } from '../features/app-edition'
 import { getAffiliateCapabilitySnapshot } from '../features/affiliate/capabilities'
 import { resolveAffiliateTabIndex } from '../features/affiliate/capability-policy'
 import type { LifeHubSection } from '../features/life-services/business-theme'
+import { createCustomTabBarVisibilityController } from './tabbar-visibility'
 
 export type TabBarPage = 'home' | 'community' | 'goods' | 'messages' | 'profile'
 
@@ -42,6 +43,11 @@ const getCustomTabBar = () => {
   return undefined
 }
 
+const customTabBarVisibility = createCustomTabBarVisibilityController(
+  getCustomTabBar,
+  (tabBar, hidden) => tabBar.setData({ hidden }),
+)
+
 const normalizeUnreadCount = (value: unknown) => {
   const count = Number(value)
   return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
@@ -74,9 +80,12 @@ const getStoredTotalUnreadCount = () => (
 export function syncCustomTabBar(page: TabBarPage) {
   const selected = tabBarIndex(page)
   if (selected < 0) return
-  getCustomTabBar()?.setData({
+  const tabBar = getCustomTabBar()
+  if (!tabBar) return
+  customTabBarVisibility.resetPageHidden(tabBar)
+  tabBar.setData({
     selected,
-    hidden: false,
+    hidden: customTabBarVisibility.isHidden(tabBar),
     unreadCount: getStoredTotalUnreadCount(),
   })
 }
@@ -94,7 +103,12 @@ export function setCustomTabBarUnreadCount(count: number) {
 }
 
 export function setCustomTabBarHidden(hidden: boolean) {
-  getCustomTabBar()?.setData({ hidden })
+  customTabBarVisibility.setPageHidden(hidden)
+}
+
+/** acquireCustomTabBarHidden 为临时浮层申请独立隐藏租约。 */
+export function acquireCustomTabBarHidden() {
+  return customTabBarVisibility.acquire()
 }
 
 export function setCustomTabBarPublishSection(publishSection: LifeHubSection) {

@@ -14,7 +14,10 @@ import {
   isAffiliateCopyFallbackUsable,
   isAffiliateLinkExpired,
   runAffiliatePurchaseCopyWorkflow,
+  createAffiliateCopyOperationLock,
+  runAffiliateCopyOperationExclusive,
   type AffiliateCopyFallback,
+  type AffiliateCopySessionIdentity,
 } from '../src/features/affiliate/purchase-policy'
 
 const baseProduct: AffiliatePurchaseProduct = {
@@ -73,6 +76,8 @@ const findComponentVariable = (name: string) => {
 }
 
 const extractedCopyHandlerSource = [
+  `const getCurrentCopySession = ${findComponentVariable('getCurrentCopySession')}`,
+  `const isCurrentCopySession = ${findComponentVariable('isCurrentCopySession')}`,
   `const getCurrentCopyIdentity = ${findComponentVariable('getCurrentCopyIdentity')}`,
   `const isCurrentCopyOperation = ${findComponentVariable('isCurrentCopyOperation')}`,
   `const copyConvertedLink = ${findComponentVariable('copyConvertedLink')}`,
@@ -94,6 +99,11 @@ const createCopyHandler = new Function(
   'getAffiliateCapabilitySnapshot',
   'requestRevision',
   'currentGoodsIdRef',
+  'copySessionRef',
+  'copyOperationLockRef',
+  'setCopyInFlightSession',
+  'createAffiliateCopyOperationLock',
+  'runAffiliateCopyOperationExclusive',
   'isCurrentAffiliateCopyOperation',
   'refreshAffiliateCapabilities',
   'runAffiliatePurchaseCopyWorkflow',
@@ -192,6 +202,8 @@ const createActualCopyHandlerHarness = (options: {
   product?: AffiliatePurchaseProduct
   clipboard?: (text: string) => Promise<unknown>
   convert?: (goodsId: string) => Promise<AffiliateConvertResult | null>
+  refreshCapabilities?: () => Promise<unknown>
+  confirm?: () => Promise<{ confirm: boolean }>
 } = {}) => {
   const result = options.result || baseResult
   const product = options.product || baseProduct
@@ -199,10 +211,20 @@ const createActualCopyHandlerHarness = (options: {
   let capabilityRevision = copyIdentity.capabilityRevision
   const requestRevision = { current: copyIdentity.requestRevision }
   const currentGoodsIdRef: { current: string | undefined } = { current: product.goods_id }
+  const copySessionRef: { current: AffiliateCopySessionIdentity } = {
+    current: {
+      generation: 0,
+      goodsId: product.goods_id,
+      capabilityRevision,
+    },
+  }
+  const copyOperationLockRef = { current: createAffiliateCopyOperationLock() }
+  let copyInFlightSession: AffiliateCopySessionIdentity | null = null
   let copyFallback: AffiliateCopyFallback | null = null
   let refreshConfirmationRequired = false
   const toasts: Array<{ title: string; icon: string }> = []
   const clipboardTexts: string[] = []
+  let modalCount = 0
   let closeCount = 0
   let error = ''
   const handlerFactory = createCopyHandler as (...args: unknown[]) => {
@@ -215,8 +237,13 @@ const createActualCopyHandlerHarness = (options: {
     () => ({ revision: capabilityRevision, capabilities: currentCapabilities }),
     requestRevision,
     currentGoodsIdRef,
+    copySessionRef,
+    copyOperationLockRef,
+    (identity: AffiliateCopySessionIdentity | null) => { copyInFlightSession = identity },
+    createAffiliateCopyOperationLock,
+    runAffiliateCopyOperationExclusive,
     isCurrentAffiliateCopyOperation,
-    async () => undefined,
+    options.refreshCapabilities || (async () => undefined),
     runAffiliatePurchaseCopyWorkflow,
     hasAffiliateOfferChanged,
     false,
@@ -225,7 +252,10 @@ const createActualCopyHandlerHarness = (options: {
         clipboardTexts.push(data)
         return options.clipboard ? options.clipboard(data) : Promise.resolve()
       },
-      showModal: async () => ({ confirm: true }),
+      showModal: async () => {
+        modalCount += 1
+        return options.confirm ? options.confirm() : { confirm: true }
+      },
     },
     options.convert || (async () => null),
     (required: boolean) => { refreshConfirmationRequired = required },
@@ -261,6 +291,8 @@ const createActualCopyHandlerHarness = (options: {
     get refreshConfirmationRequired() { return refreshConfirmationRequired },
     get closeCount() { return closeCount },
     get error() { return error },
+    get copyInFlightSession() { return copyInFlightSession },
+    get modalCount() { return modalCount },
     set capability(value: typeof currentCapabilities) { currentCapabilities = value },
     set capabilityRevision(value: number) { capabilityRevision = value },
     set goodsId(value: string | undefined) { currentGoodsIdRef.current = value },
@@ -375,6 +407,48 @@ const testActualCopyHandlerFallback = async () => {
   }
 }
 
+const testActualCopyHandlerSingleFlight = async () => {
+  const confirmation = deferred<{ confirm: boolean }>()
+  const confirmationStarted = deferred<void>()
+  const clipboard = deferred<unknown>()
+  const clipboardStarted = deferred<void>()
+  let refreshCount = 0
+  const duplicate = createActualCopyHandlerHarness({
+    product: { ...baseProduct, actual_price: '21.00' },
+    refreshCapabilities: async () => { refreshCount += 1 },
+    confirm: () => { confirmationStarted.resolve(); return confirmation.promise },
+    clipboard: async () => { clipboardStarted.resolve(); return clipboard.promise },
+  })
+  const first = duplicate.copy()
+  const repeated = duplicate.copy()
+  assert.equal(refreshCount, 1, '首次点击同步加锁后，第二次点击不能并行刷新能力')
+  assert.ok(duplicate.copyInFlightSession, '刷新、确认和剪贴板期间应保留可见忙碌状态')
+  await confirmationStarted.promise
+  const duringConfirmation = duplicate.copy()
+  assert.equal(duplicate.modalCount, 1, '优惠确认等待期间重复点击不能再次展示确认')
+  confirmation.resolve({ confirm: true })
+  await clipboardStarted.promise
+  const duringClipboard = duplicate.copy()
+  assert.equal(refreshCount, 1, '剪贴板等待期间重复点击不能再次刷新能力')
+  assert.equal(duplicate.modalCount, 1, '剪贴板等待期间重复点击不能再次确认')
+  assert.deepEqual(duplicate.clipboardTexts, ['口令'], '连续点击只能执行一次剪贴板副作用')
+  clipboard.resolve(undefined)
+  await Promise.all([first, repeated, duringConfirmation, duringClipboard])
+  assert.equal(duplicate.closeCount, 1)
+  assert.equal(duplicate.copyInFlightSession, null, '成功结束后应释放可见忙碌状态')
+
+  const failedRefresh = deferred<unknown>()
+  const retryable = createActualCopyHandlerHarness({
+    refreshCapabilities: () => failedRefresh.promise,
+  })
+  const failed = retryable.copy()
+  assert.ok(retryable.copyInFlightSession)
+  failedRefresh.reject(new Error('bootstrap failed'))
+  await failed
+  assert.equal(retryable.copyInFlightSession, null, '能力刷新异常也必须走 finally 释放锁')
+  assert.ok(retryable.toasts.some(({ title }) => title === '复制失败，请重试'))
+}
+
 const testExpiredDuringConfirmation = async () => {
   let currentTime = now
   const originalNow = Date.now
@@ -470,7 +544,7 @@ const testExpiredDuringConfirmation = async () => {
   }
 }
 
-void testExpiredDuringConfirmation().then(testActualCopyHandlerFallback).then(() => {
+void testExpiredDuringConfirmation().then(testActualCopyHandlerFallback).then(testActualCopyHandlerSingleFlight).then(() => {
   console.log('affiliate purchase policy and confirmation workflow smoke passed')
 }).catch((error: unknown) => {
   console.error(error)
