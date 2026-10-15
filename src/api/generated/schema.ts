@@ -20326,6 +20326,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AffiliateAdminProductPageResponse"];
+            400: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -20348,6 +20349,7 @@ export interface operations {
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             502: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
@@ -20364,6 +20366,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
@@ -20410,6 +20413,7 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
             503: components["responses"]["Error"];
@@ -20433,8 +20437,11 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -20456,8 +20463,10 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
             502: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
@@ -20482,6 +20491,7 @@ export interface operations {
         responses: {
             200: components["responses"]["AffiliateAdminGoodsPageResponse"];
             400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             429: components["responses"]["Error"];
             502: components["responses"]["Error"];
             503: components["responses"]["Error"];
@@ -20500,6 +20510,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AffiliateAdminTaxonomyPageResponse"];
+            400: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -20536,6 +20547,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AffiliateAdminTaxonomyResponse"];
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
@@ -20594,6 +20606,7 @@ export interface operations {
         responses: {
             200: components["responses"]["AffiliateConvertResponse"];
             400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
             429: components["responses"]["Error"];
             502: components["responses"]["Error"];
@@ -20615,6 +20628,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AffiliateProductPageResponse"];
+            400: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };
@@ -20630,6 +20644,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AffiliateProductResponse"];
+            400: components["responses"]["Error"];
             404: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
@@ -20651,6 +20666,7 @@ export interface operations {
         responses: {
             200: components["responses"]["AffiliateResolveResponse"];
             400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             429: components["responses"]["Error"];
             502: components["responses"]["Error"];
             503: components["responses"]["Error"];
@@ -20676,6 +20692,7 @@ export interface operations {
         responses: {
             200: components["responses"]["AffiliateGoodsPageResponse"];
             400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             429: components["responses"]["Error"];
             502: components["responses"]["Error"];
             503: components["responses"]["Error"];
