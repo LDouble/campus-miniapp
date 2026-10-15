@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidHide, useDidShow, useLoad } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import {
@@ -10,6 +10,15 @@ import CustomNavbar from '../../components/custom-navbar'
 import type { AffiliatePurchaseProduct } from '../../features/affiliate/components/product-card'
 import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purchase-sheet'
 import { getCachedAffiliateGoods } from '../../features/affiliate/session-cache'
+import {
+  applyAffiliateRequestIfCurrent,
+  canUseAffiliateCapability,
+} from '../../features/affiliate/capability-policy'
+import {
+  getAffiliateCapabilitySnapshot,
+  refreshAffiliateCapabilities,
+} from '../../features/affiliate/capabilities'
+import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilities'
 import { useCampusShare } from '../../features/share'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
 import './detail.scss'
@@ -32,46 +41,106 @@ const purchaseLabel = (couponStatus: AffiliateGoods['coupon_status']) => {
 }
 
 export default function AffiliateProductDetailPage() {
+  const capabilitySnapshot = useAffiliateCapabilities()
+  const capabilities = capabilitySnapshot.capabilities
   const [product, setProduct] = useState<ProductDetail | null>(null)
-  const [productId, setProductId] = useState(0)
+  const [route, setRoute] = useState<{ id: number; goodsId: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [missingGoodsContext, setMissingGoodsContext] = useState(false)
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
+  const requestRevision = useRef(0)
 
-  const loadProduct = async (id: number) => {
+  const loadProduct = useCallback(async (id: number) => {
+    const revision = requestRevision.current + 1
+    requestRevision.current = revision
+    const capabilityRevision = getAffiliateCapabilitySnapshot().revision
     setLoading(true)
     setError('')
     setMissingGoodsContext(false)
     try {
-      setProduct(await getAffiliateProduct(id))
+      const result = await getAffiliateProduct(id)
+      const latest = getAffiliateCapabilitySnapshot()
+      applyAffiliateRequestIfCurrent(
+        requestRevision.current,
+        revision,
+        latest.revision,
+        capabilityRevision,
+        latest.capabilities,
+        () => setProduct(result),
+      )
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : '商品详情加载失败，请稍后重试')
+      const latest = getAffiliateCapabilitySnapshot()
+      applyAffiliateRequestIfCurrent(
+        requestRevision.current,
+        revision,
+        latest.revision,
+        capabilityRevision,
+        latest.capabilities,
+        () => setError(loadError instanceof Error ? loadError.message : '商品详情加载失败，请稍后重试'),
+      )
     } finally {
-      setLoading(false)
+      const latest = getAffiliateCapabilitySnapshot()
+      applyAffiliateRequestIfCurrent(
+        requestRevision.current,
+        revision,
+        latest.revision,
+        capabilityRevision,
+        latest.capabilities,
+        () => setLoading(false),
+      )
     }
-  }
+  }, [])
 
   useLoad((options) => {
     const id = Number(options.id)
     if (Number.isSafeInteger(id) && id > 0) {
-      setProductId(id)
-      void loadProduct(id)
+      setRoute({ id, goodsId: '' })
       return
     }
     const goodsId = typeof options.goods_id === 'string' ? options.goods_id.trim() : ''
-    if (goodsId) {
-      const cachedProduct = getCachedAffiliateGoods(goodsId)
-      if (cachedProduct) setProduct(cachedProduct)
-      else setMissingGoodsContext(true)
+    setRoute({ id: 0, goodsId })
+  })
+
+  useEffect(() => {
+    if (!route || !capabilitySnapshot.loaded) return
+    if (!capabilities.enabled) {
+      requestRevision.current += 1
+      setProduct(null)
+      setPurchaseProduct(null)
+      setError('')
+      setMissingGoodsContext(false)
       setLoading(false)
       return
     }
+    if (route.id > 0) {
+      void loadProduct(route.id)
+      return () => { requestRevision.current += 1 }
+    }
+    if (route.goodsId) {
+      requestRevision.current += 1
+      const cachedProduct = getCachedAffiliateGoods(route.goodsId)
+      if (cachedProduct) {
+        setProduct(cachedProduct)
+        setMissingGoodsContext(false)
+      } else {
+        setProduct(null)
+        setMissingGoodsContext(true)
+      }
+      setError('')
+      setLoading(false)
+      return () => { requestRevision.current += 1 }
+    }
+    requestRevision.current += 1
     setError('商品链接无效')
     setLoading(false)
-  })
+    return () => { requestRevision.current += 1 }
+  }, [capabilitySnapshot.loaded, capabilitySnapshot.revision, capabilities.enabled, loadProduct, route])
 
-  useDidShow(() => setCustomTabBarHidden(true))
+  useDidShow(() => {
+    setCustomTabBarHidden(true)
+    void refreshAffiliateCapabilities()
+  })
   useDidHide(() => setCustomTabBarHidden(false))
 
   useCampusShare(() => {
@@ -87,6 +156,8 @@ export default function AffiliateProductDetailPage() {
   })
 
   const showProduct = product !== null
+  const convertEnabled = canUseAffiliateCapability(capabilities, 'convert')
+  const resolveEnabled = canUseAffiliateCapability(capabilities, 'resolve')
   const recommendationTitle = product && 'recommendation_title' in product
     ? product.recommendation_title
     : undefined
@@ -98,16 +169,26 @@ export default function AffiliateProductDetailPage() {
     <View className='affiliate-detail'>
       <CustomNavbar title='好物详情' showBack />
 
+      {!capabilitySnapshot.loaded && (
+        <View className='affiliate-detail__state' ariaRole='status'>正在检查好物服务…</View>
+      )}
+      {capabilitySnapshot.loaded && !capabilities.enabled && (
+        <View className='affiliate-detail__state'>
+          <Text className='affiliate-detail__missing-title'>好物服务暂时关闭</Text>
+          <Text className='affiliate-detail__missing-note'>当前无法查询优惠或生成推广链接，请稍后再试。</Text>
+        </View>
+      )}
+      {capabilitySnapshot.loaded && capabilities.enabled && <>
       {loading && <View className='affiliate-detail__state' ariaRole='status'>正在加载商品详情…</View>}
       {!loading && error && (
         <View className='affiliate-detail__state affiliate-detail__state--error'>
           <Text>{error}</Text>
-          {productId > 0 && (
-            <View className='affiliate-detail__retry' ariaRole='button' onClick={() => void loadProduct(productId)}>
+          {route?.id && route.id > 0 && (
+            <View className='affiliate-detail__retry' ariaRole='button' onClick={() => void loadProduct(route.id)}>
               重新加载
             </View>
           )}
-          {productId === 0 && (
+          {route?.id === 0 && resolveEnabled && (
             <View
               className='affiliate-detail__retry'
               ariaRole='button'
@@ -116,6 +197,7 @@ export default function AffiliateProductDetailPage() {
               粘贴商品链接查券
             </View>
           )}
+          {route?.id === 0 && !resolveEnabled && <Text>链接解析功能暂不可用。</Text>}
         </View>
       )}
       {!loading && !error && missingGoodsContext && (
@@ -123,13 +205,13 @@ export default function AffiliateProductDetailPage() {
           <View className='affiliate-detail__missing-icon' />
           <Text className='affiliate-detail__missing-title'>暂时无法显示这个商品详情</Text>
           <Text className='affiliate-detail__missing-note'>商品来自外部 goods_id 链接，重新粘贴淘宝商品链接后即可核验优惠。</Text>
-          <View
+          {resolveEnabled ? <View
             className='affiliate-detail__retry'
             ariaRole='button'
             onClick={() => Taro.navigateTo({ url: '/pages/goods/search?mode=resolve' })}
           >
             粘贴链接查券
-          </View>
+          </View> : <Text>链接解析功能暂不可用。</Text>}
         </View>
       )}
       {!loading && !error && showProduct && product && (
@@ -180,14 +262,16 @@ export default function AffiliateProductDetailPage() {
 
           <View className='affiliate-detail__footer'>
             <View
-              className={`affiliate-detail__buy ${product.availability !== 'valid' ? 'affiliate-detail__buy--disabled' : ''}`}
+              className={`affiliate-detail__buy ${!convertEnabled || product.availability !== 'valid' ? 'affiliate-detail__buy--disabled' : ''}`}
               ariaRole='button'
-              ariaLabel={product.availability === 'valid' ? '领券购买商品' : '商品暂不可购买'}
+              ariaLabel={!convertEnabled ? '推广购买暂不可用' : product.availability === 'valid' ? '领券购买商品' : '商品暂不可购买'}
               onClick={() => {
-                if (product.availability === 'valid') setPurchaseProduct(product)
+                if (convertEnabled && product.availability === 'valid') setPurchaseProduct(product)
               }}
             >
-              {product.availability === 'valid'
+              {!convertEnabled
+                ? '推广暂不可用'
+                : product.availability === 'valid'
                 ? purchaseLabel(product.coupon_status)
                 : '商品暂不可购买'}
             </View>
@@ -198,6 +282,7 @@ export default function AffiliateProductDetailPage() {
       {purchaseProduct && (
         <CouponPurchaseSheet product={purchaseProduct} onClose={() => setPurchaseProduct(null)} />
       )}
+      </>}
     </View>
   )
 }

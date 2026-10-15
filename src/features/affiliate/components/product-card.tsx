@@ -14,6 +14,7 @@ export type AffiliatePurchaseProduct = Pick<
 type ProductCardProps = {
   product: AffiliateProduct | AffiliateGoods
   recommendation?: boolean
+  canConvert: boolean
   onOpen?: () => void
   onBuy: (product: AffiliatePurchaseProduct) => void
 }
@@ -40,6 +41,7 @@ const purchaseLabel = (couponStatus: AffiliateGoods['coupon_status']) => {
 export default function AffiliateProductCard({
   product,
   recommendation = false,
+  canConvert,
   onOpen,
   onBuy,
 }: ProductCardProps) {
@@ -51,6 +53,7 @@ export default function AffiliateProductCard({
   const recommendationReason = 'recommendation_reason' in product
     ? product.recommendation_reason
     : undefined
+  const canPurchase = canConvert && product.availability === 'valid'
 
   useEffect(() => setImageFailed(false), [product.image_url])
 
@@ -119,14 +122,16 @@ export default function AffiliateProductCard({
           </View>
         </View>
         <View
-          className={`affiliate-product-card__buy ${product.availability !== 'valid' ? 'affiliate-product-card__buy--disabled' : ''}`}
+          className={`affiliate-product-card__buy ${canPurchase ? '' : 'affiliate-product-card__buy--disabled'}`}
           ariaRole='button'
-          ariaLabel={product.availability === 'valid' ? '生成推广链接' : '商品暂不可购买'}
+          ariaLabel={canPurchase ? '生成推广链接' : canConvert ? '商品暂不可购买' : '推广购买暂不可用'}
           onClick={() => {
-            if (product.availability === 'valid') onBuy(product)
+            if (canPurchase) onBuy(product)
           }}
         >
-          {product.availability === 'valid'
+          {!canConvert
+            ? '推广暂不可用'
+            : product.availability === 'valid'
             ? purchaseLabel(product.coupon_status)
             : '暂不可购'}
         </View>

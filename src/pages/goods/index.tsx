@@ -12,6 +12,12 @@ import type { AffiliatePurchaseProduct } from '../../features/affiliate/componen
 import AffiliateProductCard from '../../features/affiliate/components/product-card'
 import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purchase-sheet'
 import CustomNavbar from '../../components/custom-navbar'
+import {
+  getAffiliateCapabilitySnapshot,
+  refreshAffiliateCapabilities,
+} from '../../features/affiliate/capabilities'
+import { canUseAffiliateCapability } from '../../features/affiliate/capability-policy'
+import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilities'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import './index.scss'
 
@@ -28,6 +34,8 @@ const openGoodsSearch = (mode?: 'resolve') => {
 }
 
 export default function GoodsHomePage() {
+  const capabilitySnapshot = useAffiliateCapabilities()
+  const capabilities = capabilitySnapshot.capabilities
   const [products, setProducts] = useState<AffiliateProduct[]>([])
   const [categories, setCategories] = useState<AffiliateTaxonomy[]>([])
   const [topics, setTopics] = useState<AffiliateTaxonomy[]>([])
@@ -42,10 +50,13 @@ export default function GoodsHomePage() {
   const [taxonomyError, setTaxonomyError] = useState('')
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
   const requestRevision = useRef(0)
+  const handledCapabilityRevision = useRef(0)
   const taxonomyRequested = useRef(false)
   const loadingRef = useRef(false)
+  const loadedRef = useRef(false)
 
   const loadTaxonomies = useCallback(async (force = false) => {
+    if (!getAffiliateCapabilitySnapshot().capabilities.enabled) return
     if (taxonomyRequested.current && !force) return
     taxonomyRequested.current = true
     try {
@@ -53,6 +64,7 @@ export default function GoodsHomePage() {
         listAffiliateCategories(),
         listAffiliateTopics(),
       ])
+      if (!getAffiliateCapabilitySnapshot().capabilities.enabled) return
       setCategories(categoryResult.items)
       setTopics(topicResult.items)
       setTaxonomyError('')
@@ -66,6 +78,7 @@ export default function GoodsHomePage() {
     nextPage = 1,
     filters: { category?: number; topic?: number } = { category: categoryId, topic: topicId },
   ) => {
+    if (!getAffiliateCapabilitySnapshot().capabilities.enabled) return
     if (loadingRef.current) return
     loadingRef.current = true
     const revision = requestRevision.current + 1
@@ -84,13 +97,14 @@ export default function GoodsHomePage() {
         categoryId: filters.category,
         topicId: filters.topic,
       })
-      if (requestRevision.current !== revision) return
+      if (requestRevision.current !== revision || !getAffiliateCapabilitySnapshot().capabilities.enabled) return
       setProducts((current) => nextPage === 1
         ? appendUniqueProducts([], result.items)
         : appendUniqueProducts(current, result.items))
       setPage(result.page)
       setTotal(result.total)
       setLoaded(true)
+      loadedRef.current = true
     } catch (loadError) {
       if (requestRevision.current !== revision) return
       if (nextPage === 1) setError(loadError instanceof Error ? loadError.message : '好物加载失败，请重试')
@@ -105,18 +119,41 @@ export default function GoodsHomePage() {
 
   useDidShow(() => {
     syncCustomTabBar('goods')
-    void loadTaxonomies()
-    if (!loaded) void loadProducts(1)
+    void refreshAffiliateCapabilities().then((snapshot) => {
+      if (handledCapabilityRevision.current !== snapshot.revision) {
+        handledCapabilityRevision.current = snapshot.revision
+        requestRevision.current += 1
+        loadingRef.current = false
+        loadedRef.current = false
+        taxonomyRequested.current = false
+        setProducts([])
+        setCategories([])
+        setTopics([])
+        setLoaded(false)
+        setPurchaseProduct(null)
+      }
+      if (!snapshot.capabilities.enabled) {
+        setLoading(false)
+        setLoadingMore(false)
+        setError('')
+        return
+      }
+      void loadTaxonomies()
+      if (!loadedRef.current) void loadProducts(1)
+    })
   })
 
   usePullDownRefresh(() => {
-    void Promise.all([loadTaxonomies(true), loadProducts(1)]).finally(() => {
+    void refreshAffiliateCapabilities().then((snapshot) => {
+      if (!snapshot.capabilities.enabled) return
+      return Promise.all([loadTaxonomies(true), loadProducts(1)])
+    }).finally(() => {
       Taro.stopPullDownRefresh()
     })
   })
 
   useReachBottom(() => {
-    if (loadingRef.current || products.length >= total || !loaded) return
+    if (!capabilities.enabled || loadingRef.current || products.length >= total || !loaded) return
     void loadProducts(page + 1)
   })
 
@@ -142,14 +179,41 @@ export default function GoodsHomePage() {
     void loadProducts(1, { category: undefined, topic: nextTopicId })
   }
 
-  const retry = () => void loadProducts(1)
+  const retry = () => {
+    if (capabilities.enabled) void loadProducts(1)
+  }
+
+  if (!capabilitySnapshot.loaded) {
+    return (
+      <View className='affiliate-home'>
+        <CustomNavbar title='好物' />
+        <View className='affiliate-home__state' ariaRole='status'>正在检查好物服务…</View>
+      </View>
+    )
+  }
+
+  if (!capabilities.enabled) {
+    return (
+      <View className='affiliate-home'>
+        <CustomNavbar title='好物' />
+        <View className='affiliate-home__state'>
+          <Text>好物服务暂时关闭</Text>
+          <Text>当前暂不能查询优惠或生成推广链接，请稍后再试。</Text>
+        </View>
+      </View>
+    )
+  }
+
+  const searchEnabled = canUseAffiliateCapability(capabilities, 'search')
+  const resolveEnabled = canUseAffiliateCapability(capabilities, 'resolve')
+  const convertEnabled = canUseAffiliateCapability(capabilities, 'convert')
 
   return (
     <View className='affiliate-home'>
       <CustomNavbar title='好物' />
 
-      <View className='affiliate-home__search-row'>
-        <View
+      {(searchEnabled || resolveEnabled) && <View className='affiliate-home__search-row'>
+        {searchEnabled && <View
           className='affiliate-home__search'
           ariaRole='button'
           ariaLabel='搜索商品和优惠券'
@@ -157,16 +221,16 @@ export default function GoodsHomePage() {
         >
           <Image className='affiliate-home__search-icon' src={require('../../assets/community/topbar-search.svg')} mode='aspectFit' />
           <Text>搜商品、优惠券</Text>
-        </View>
-        <View
+        </View>}
+        {resolveEnabled && <View
           className='affiliate-home__paste'
           ariaRole='button'
           ariaLabel='粘贴淘宝链接查券'
           onClick={() => openGoodsSearch('resolve')}
         >
           <Text>粘贴查券</Text>
-        </View>
-      </View>
+        </View>}
+      </View>}
 
       <View className='affiliate-home__hero'>
         <View className='affiliate-home__hero-copy'>
@@ -255,9 +319,11 @@ export default function GoodsHomePage() {
           <View className='affiliate-home__state'>
             <View className='affiliate-home__empty-icon' />
             <Text>这里还没有好物，先去搜搜优惠吧</Text>
-            <View className='affiliate-home__retry' ariaRole='button' onClick={() => openGoodsSearch()}>
-              搜索商品
-            </View>
+            {searchEnabled && (
+              <View className='affiliate-home__retry' ariaRole='button' onClick={() => openGoodsSearch()}>
+                搜索商品
+              </View>
+            )}
           </View>
         )}
         <View className='affiliate-home__product-list'>
@@ -268,6 +334,7 @@ export default function GoodsHomePage() {
               recommendation
               onOpen={() => Taro.navigateTo({ url: `/pages/goods/detail?id=${product.id}` })}
               onBuy={setPurchaseProduct}
+              canConvert={convertEnabled}
             />
           ))}
         </View>

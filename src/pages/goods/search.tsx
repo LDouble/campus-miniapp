@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, {
   useDidHide,
   useDidShow,
@@ -24,6 +24,12 @@ import {
   type AffiliateGoodsSearchCategoryId,
 } from '../../features/affiliate/search-categories'
 import { shouldContinueAffiliateSearch } from '../../features/affiliate/search-pagination'
+import {
+  getAffiliateCapabilitySnapshot,
+  refreshAffiliateCapabilities,
+} from '../../features/affiliate/capabilities'
+import { canUseAffiliateCapability } from '../../features/affiliate/capability-policy'
+import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilities'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
 import './search.scss'
@@ -49,6 +55,8 @@ const sortOptions: Array<{ label: string; value: AffiliateGoodsSearchSort }> = [
 ]
 
 export default function AffiliateSearchPage() {
+  const capabilitySnapshot = useAffiliateCapabilities()
+  const capabilities = capabilitySnapshot.capabilities
   const [keyword, setKeyword] = useState('')
   const [items, setItems] = useState<AffiliateGoods[]>([])
   const [page, setPage] = useState(1)
@@ -70,10 +78,13 @@ export default function AffiliateSearchPage() {
   const [draftMinPrice, setDraftMinPrice] = useState('')
   const [draftMaxPrice, setDraftMaxPrice] = useState('')
   const [filterMessage, setFilterMessage] = useState('')
+  const previousCapabilities = useRef(capabilities)
   const searchRevision = useRef(0)
+  const handledCapabilityRevision = useRef(0)
   const resolveRevision = useRef(0)
   const loadingRef = useRef(false)
   const resolveInFlightRef = useRef(false)
+  const initialSearchPending = useRef(false)
 
   const runSearch = useCallback(async (
     searchKeyword: string,
@@ -87,6 +98,14 @@ export default function AffiliateSearchPage() {
     }
     if (loadingRef.current) return
     loadingRef.current = true
+    const latestCapabilities = await refreshAffiliateCapabilities()
+    if (!canUseAffiliateCapability(latestCapabilities.capabilities, 'search')) {
+      loadingRef.current = false
+      setLoading(false)
+      setLoadingMore(false)
+      setLoadError('商品搜索功能暂不可用，请稍后再试。')
+      return
+    }
     const revision = searchRevision.current + 1
     searchRevision.current = revision
     setSearched(true)
@@ -96,7 +115,8 @@ export default function AffiliateSearchPage() {
     else setLoadingMore(true)
     try {
       const result = await searchAffiliateGoods(normalizedKeyword, nextPage, filters)
-      if (searchRevision.current !== revision) return
+      if (searchRevision.current !== revision
+        || !getAffiliateCapabilitySnapshot().capabilities.search_enabled) return
       setKeyword(normalizedKeyword)
       setItems((current) => nextPage === 1 ? mergeGoods([], result.items) : mergeGoods(current, result.items))
       setPage(result.page)
@@ -120,18 +140,65 @@ export default function AffiliateSearchPage() {
     }
   }, [searchFilters])
 
+  const runSearchRef = useRef(runSearch)
+  runSearchRef.current = runSearch
+
+  useEffect(() => {
+    if (!capabilitySnapshot.loaded || handledCapabilityRevision.current === capabilitySnapshot.revision) return
+    handledCapabilityRevision.current = capabilitySnapshot.revision
+    const previous = previousCapabilities.current
+    const searchChanged = previous.enabled !== capabilities.enabled
+      || previous.search_enabled !== capabilities.search_enabled
+    const resolveChanged = previous.enabled !== capabilities.enabled
+      || previous.resolve_enabled !== capabilities.resolve_enabled
+    const convertChanged = previous.enabled !== capabilities.enabled
+      || previous.convert_enabled !== capabilities.convert_enabled
+    previousCapabilities.current = capabilities
+
+    if (searchChanged) {
+      searchRevision.current += 1
+      loadingRef.current = false
+      setLoading(false)
+      setLoadingMore(false)
+      setItems([])
+      setPage(1)
+      setTotal(0)
+      setHasMore(false)
+      setSearched(false)
+      setLoadError('')
+      setLoadMoreError(false)
+    }
+    if (resolveChanged) {
+      resolveRevision.current += 1
+      resolveInFlightRef.current = false
+      setResolveLoading(false)
+      setResolvedGoods(null)
+      setResolveMessage('')
+    }
+    if (convertChanged) setPurchaseProduct(null)
+    if (initialSearchPending.current
+      && canUseAffiliateCapability(capabilities, 'search')
+      && keyword.trim()) {
+      initialSearchPending.current = false
+      void runSearchRef.current(keyword, 1)
+    }
+  }, [capabilitySnapshot.loaded, capabilitySnapshot.revision, capabilities, keyword])
+
   useLoad((options) => {
     const initialKeyword = typeof options.keyword === 'string' ? options.keyword.trim() : ''
     if (initialKeyword) {
       setKeyword(initialKeyword)
-      void runSearch(initialKeyword)
+      initialSearchPending.current = true
     }
     if (options.mode === 'resolve') {
       setResolveMessage('粘贴淘宝或天猫商品链接、淘口令后，系统会为你查询商品优惠。')
     }
   })
 
-  useDidShow(() => setCustomTabBarHidden(true))
+  useDidShow(() => {
+    setCustomTabBarHidden(true)
+    void refreshAffiliateCapabilities()
+  })
   useDidHide(() => setCustomTabBarHidden(false))
 
   useReachBottom(() => {
@@ -140,6 +207,11 @@ export default function AffiliateSearchPage() {
   })
 
   const handleSearch = () => {
+    if (!canUseAffiliateCapability(capabilities, 'search')) {
+      Taro.showToast({ title: '商品搜索功能暂不可用', icon: 'none' })
+      return
+    }
+    initialSearchPending.current = false
     searchRevision.current += 1
     loadingRef.current = false
     resolveRevision.current += 1
@@ -222,6 +294,10 @@ export default function AffiliateSearchPage() {
   }
 
   const handlePasteAndResolve = async () => {
+    if (!canUseAffiliateCapability(capabilities, 'resolve')) {
+      setResolveMessage('链接解析功能暂不可用，请稍后再试。')
+      return
+    }
     if (resolveInFlightRef.current || resolveLoading) return
     let content = ''
     try {
@@ -239,6 +315,11 @@ export default function AffiliateSearchPage() {
       setResolveMessage('剪贴板内容过长，请只复制商品链接或淘口令后重试。')
       return
     }
+    const latestCapabilities = await refreshAffiliateCapabilities()
+    if (!canUseAffiliateCapability(latestCapabilities.capabilities, 'resolve')) {
+      setResolveMessage('链接解析功能暂不可用，请稍后再试。')
+      return
+    }
     const revision = resolveRevision.current + 1
     resolveRevision.current = revision
     resolveInFlightRef.current = true
@@ -247,7 +328,8 @@ export default function AffiliateSearchPage() {
     setResolvedGoods(null)
     try {
       const result = await resolveAffiliateContent(content)
-      if (resolveRevision.current !== revision) return
+      if (resolveRevision.current !== revision
+        || !getAffiliateCapabilitySnapshot().capabilities.resolve_enabled) return
       if (result.status === 'resolved' && result.product) {
         cacheAffiliateGoods(result.product)
         setResolvedGoods(result.product)
@@ -272,14 +354,41 @@ export default function AffiliateSearchPage() {
   }
 
   const retryLoadMore = () => {
-    if (!loadingRef.current && page > 0) void runSearch(keyword, page + 1)
+    if (canUseAffiliateCapability(capabilities, 'search') && !loadingRef.current && page > 0) {
+      void runSearch(keyword, page + 1)
+    }
   }
+
+  if (!capabilitySnapshot.loaded) {
+    return (
+      <View className='affiliate-search'>
+        <CustomNavbar title='搜索优惠券' showBack />
+        <View className='affiliate-search__state' ariaRole='status'>正在检查好物服务…</View>
+      </View>
+    )
+  }
+
+  if (!capabilities.enabled) {
+    return (
+      <View className='affiliate-search'>
+        <CustomNavbar title='搜索优惠券' showBack />
+        <View className='affiliate-search__state'>
+          <Text>好物服务暂时关闭</Text>
+          <Text>当前无法查询商品优惠或生成推广链接，请稍后再试。</Text>
+        </View>
+      </View>
+    )
+  }
+
+  const searchEnabled = canUseAffiliateCapability(capabilities, 'search')
+  const resolveEnabled = canUseAffiliateCapability(capabilities, 'resolve')
+  const convertEnabled = canUseAffiliateCapability(capabilities, 'convert')
 
   return (
     <View className='affiliate-search'>
       <CustomNavbar title='搜索优惠券' showBack />
 
-      <View className='affiliate-search__form'>
+      {searchEnabled ? <View className='affiliate-search__form'>
         <View className='affiliate-search__input-wrap'>
           <Image className='affiliate-search__search-icon' src={require('../../assets/community/topbar-search.svg')} mode='aspectFit' />
           <KeyboardSafeInput
@@ -301,9 +410,11 @@ export default function AffiliateSearchPage() {
           )}
         </View>
         <View className='affiliate-search__submit' ariaRole='button' onClick={handleSearch}>搜索</View>
-      </View>
+      </View> : (
+        <View className='affiliate-search__state'>商品搜索功能暂不可用。</View>
+      )}
 
-      <View className='affiliate-search__resolve-panel'>
+      {resolveEnabled ? <View className='affiliate-search__resolve-panel'>
         <View className='affiliate-search__resolve-copy'>
           <Text className='affiliate-search__resolve-title'>复制商品链接，快速查券</Text>
           <Text className='affiliate-search__resolve-note'>支持淘宝、天猫链接或淘口令</Text>
@@ -322,10 +433,14 @@ export default function AffiliateSearchPage() {
             product={resolvedGoods}
             onOpen={() => openGoodsDetail(resolvedGoods)}
             onBuy={setPurchaseProduct}
+            canConvert={convertEnabled}
           />
         )}
-      </View>
+      </View> : (
+        <View className='affiliate-search__state'>链接解析功能暂不可用。</View>
+      )}
 
+      {searchEnabled && <>
       <View className='affiliate-search__results-heading'>
         <Text>搜索结果</Text>
         {searched && <Text>{total} 件商品</Text>}
@@ -440,6 +555,7 @@ export default function AffiliateSearchPage() {
             product={item}
             onOpen={() => openGoodsDetail(item)}
             onBuy={setPurchaseProduct}
+            canConvert={convertEnabled}
           />
         ))}
       </View>
@@ -455,6 +571,7 @@ export default function AffiliateSearchPage() {
       {items.length > 0 && !hasMore && !loadMoreError && (
         <View className='affiliate-search__load-more'>已经到底了</View>
       )}
+      </>}
 
       {purchaseProduct && (
         <CouponPurchaseSheet product={purchaseProduct} onClose={() => setPurchaseProduct(null)} />

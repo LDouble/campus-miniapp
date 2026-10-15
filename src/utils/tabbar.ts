@@ -1,5 +1,7 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../features/app-edition'
+import { getAffiliateCapabilitySnapshot } from '../features/affiliate/capabilities'
+import { resolveAffiliateTabIndex } from '../features/affiliate/capability-policy'
 import type { LifeHubSection } from '../features/life-services/business-theme'
 
 export type TabBarPage = 'home' | 'community' | 'goods' | 'messages' | 'profile'
@@ -7,25 +9,10 @@ export type TabBarPage = 'home' | 'community' | 'goods' | 'messages' | 'profile'
 const TAB_BAR_NOTICE_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
 const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v1'
 
-const fullTabIndexes: Record<TabBarPage, number> = {
-  home: 0,
-  community: 1,
-  goods: 2,
-  messages: 3,
-  profile: 4,
-}
-
-const qualificationTabIndexes: Partial<Record<TabBarPage, number>> = {
-  home: 0,
-  goods: 1,
-  messages: 2,
-  profile: 3,
-}
-
-export const tabBarIndex = (page: TabBarPage) => (
-  isQualificationEdition
-    ? qualificationTabIndexes[page] ?? -1
-    : fullTabIndexes[page]
+export const tabBarIndex = (page: TabBarPage) => resolveAffiliateTabIndex(
+  page,
+  isQualificationEdition,
+  getAffiliateCapabilitySnapshot().capabilities,
 )
 
 interface CustomTabBarInstance {

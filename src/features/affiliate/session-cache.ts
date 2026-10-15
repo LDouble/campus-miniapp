@@ -15,3 +15,6 @@ export const cacheAffiliateGoods = (goods: AffiliateGoods) => {
 
 /** 读取当前会话的商品详情缓存；冷启动外部深链不依赖该缓存。 */
 export const getCachedAffiliateGoods = (goodsId: string) => goodsById.get(goodsId)
+
+/** clearAffiliateGoodsCache 避免功能开关变化后继续展示关闭前的会话商品快照。 */
+export const clearAffiliateGoodsCache = () => goodsById.clear()

@@ -9979,6 +9979,8 @@ export interface components {
         AffiliateAdminProductView: components["schemas"]["AffiliateProductView"] & {
             /** @description 上游佣金率原始文本，仅管理端返回 */
             commission_rate: string | null;
+            /** @description 上游曾明确失效，须管理员重新核验发布后才公开 */
+            requires_review: boolean;
             /** @description 大淘客商品记录标识，与 goods_id 分开保存 */
             source_id: string;
             source_provider: string;
@@ -11261,8 +11263,15 @@ export interface components {
             /** Format: uint64 */
             expected_version: number;
         };
+        AffiliateClientCapabilities: {
+            convert_enabled: boolean;
+            enabled: boolean;
+            resolve_enabled: boolean;
+            search_enabled: boolean;
+        };
         ClientBootstrap: {
             academic_verification?: components["schemas"]["AcademicVerificationStatus"] | null;
+            affiliate?: components["schemas"]["AffiliateClientCapabilities"];
             checkin?: components["schemas"]["DailyCheckinStatus"] | null;
             errors: {
                 [key: string]: components["schemas"]["ClientBootstrapSectionError"];

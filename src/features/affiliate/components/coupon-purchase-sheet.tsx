@@ -3,7 +3,18 @@ import Taro, { showToast } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import BottomSheet from '../../../components/bottom-sheet'
 import { convertAffiliateGoods, type AffiliateConvertResult } from '../../../api/affiliate'
+import {
+  canUseAffiliateCapability,
+  isCurrentAffiliateCopyOperation,
+  runAffiliateCopyIfCurrent,
+  type AffiliateCopyOperationIdentity,
+} from '../capability-policy'
 import { hasAffiliateOfferChanged, isAffiliateLinkExpired } from '../purchase-policy'
+import {
+  getAffiliateCapabilitySnapshot,
+  refreshAffiliateCapabilities,
+} from '../capabilities'
+import { useAffiliateCapabilities } from '../use-capabilities'
 import type { AffiliatePurchaseProduct } from './product-card'
 import './coupon-purchase-sheet.scss'
 
@@ -33,12 +44,37 @@ const formatExpireTime = (value: string | null) => {
 }
 
 export default function CouponPurchaseSheet({ product, onClose }: CouponPurchaseSheetProps) {
+  const capabilitySnapshot = useAffiliateCapabilities()
+  const convertEnabled = canUseAffiliateCapability(capabilitySnapshot.capabilities, 'convert')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AffiliateConvertResult | null>(null)
   const [error, setError] = useState('')
   const [refreshConfirmationRequired, setRefreshConfirmationRequired] = useState(false)
   const requestRevision = useRef(0)
   const currentGoodsId = product?.goods_id
+  const currentGoodsIdRef = useRef<string | undefined>(currentGoodsId)
+  currentGoodsIdRef.current = currentGoodsId
+
+  const getCurrentCopyIdentity = () => {
+    const latest = getAffiliateCapabilitySnapshot()
+    return {
+      identity: {
+        requestRevision: requestRevision.current,
+        capabilityRevision: latest.revision,
+        goodsId: currentGoodsIdRef.current,
+      },
+      capabilities: latest.capabilities,
+    }
+  }
+
+  const isCurrentCopyOperation = (captured: AffiliateCopyOperationIdentity) => {
+    const latest = getCurrentCopyIdentity()
+    return isCurrentAffiliateCopyOperation(
+      latest.identity,
+      captured,
+      latest.capabilities,
+    )
+  }
 
   const convert = async (goodsId: string): Promise<AffiliateConvertResult | null> => {
     const revision = requestRevision.current + 1
@@ -48,8 +84,16 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
     setResult(null)
     setRefreshConfirmationRequired(false)
     try {
+      const latestCapabilities = await refreshAffiliateCapabilities()
+      if (!canUseAffiliateCapability(latestCapabilities.capabilities, 'convert')) {
+        if (requestRevision.current === revision) {
+          setError('推广购买功能暂不可用，请稍后再试。')
+        }
+        return null
+      }
       const response = await convertAffiliateGoods(goodsId)
-      if (requestRevision.current === revision) setResult(response)
+      if (requestRevision.current === revision
+        && getAffiliateCapabilitySnapshot().capabilities.convert_enabled) setResult(response)
       return response
     } catch (convertError) {
       if (requestRevision.current === revision) {
@@ -62,16 +106,40 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
   }
 
   useEffect(() => {
-    if (!currentGoodsId) return undefined
+    if (!currentGoodsId || !capabilitySnapshot.loaded) return undefined
+    if (!convertEnabled) {
+      requestRevision.current += 1
+      setLoading(false)
+      setResult(null)
+      setError('推广购买功能暂不可用，请稍后再试。')
+      setRefreshConfirmationRequired(false)
+      return undefined
+    }
     void convert(currentGoodsId)
     return () => { requestRevision.current += 1 }
-  }, [currentGoodsId])
+  }, [capabilitySnapshot.loaded, capabilitySnapshot.revision, convertEnabled, currentGoodsId])
 
   const copyConvertedLink = async () => {
     if (!result || loading || !product) return
-    if (isAffiliateLinkExpired(result.expires_at)) {
-      const refreshed = await convert(product.goods_id)
-      if (!refreshed) return
+    const capturedResult = result
+    const capturedProduct = product
+    const capturedGoodsId = product.goods_id
+    const capturedCapabilityRevision = getAffiliateCapabilitySnapshot().revision
+    let capturedRequestRevision = requestRevision.current
+    const capturedIdentity = (): AffiliateCopyOperationIdentity => ({
+      requestRevision: capturedRequestRevision,
+      capabilityRevision: capturedCapabilityRevision,
+      goodsId: capturedGoodsId,
+    })
+
+    await refreshAffiliateCapabilities()
+    if (!isCurrentCopyOperation(capturedIdentity())) return
+
+    if (isAffiliateLinkExpired(capturedResult.expires_at)) {
+      const refreshedRequest = convert(capturedGoodsId)
+      capturedRequestRevision = requestRevision.current
+      const refreshed = await refreshedRequest
+      if (!refreshed || !isCurrentCopyOperation(capturedIdentity())) return
       if (isAffiliateLinkExpired(refreshed.expires_at)) {
         showToast({ title: '新推广链接已过期，请稍后重试', icon: 'none' })
         return
@@ -81,7 +149,7 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
       return
     }
 
-    if (refreshConfirmationRequired || hasAffiliateOfferChanged(product, result)) {
+    if (refreshConfirmationRequired || hasAffiliateOfferChanged(capturedProduct, capturedResult)) {
       try {
         const confirmation = await Taro.showModal({
           title: '优惠信息已更新',
@@ -91,22 +159,37 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
         })
         if (!confirmation.confirm) return
       } catch {
-        showToast({ title: '请确认当前优惠信息后再复制', icon: 'none' })
+        if (isCurrentCopyOperation(capturedIdentity())) {
+          showToast({ title: '请确认当前优惠信息后再复制', icon: 'none' })
+        }
         return
       }
     }
 
-    const clipboardText = result.taobao_password || result.coupon_url || result.share_url
+    if (!isCurrentCopyOperation(capturedIdentity())) return
+
+    const clipboardText = capturedResult.taobao_password || capturedResult.coupon_url || capturedResult.share_url
     if (!clipboardText) {
       showToast({ title: '暂时没有可复制的推广链接', icon: 'none' })
       return
     }
     try {
-      await Taro.setClipboardData({ data: clipboardText })
-      showToast({ title: result.taobao_password ? '淘口令已复制' : '购买链接已复制', icon: 'success' })
+      const latest = getCurrentCopyIdentity()
+      const clipboardOperation = runAffiliateCopyIfCurrent(
+        latest.identity,
+        capturedIdentity(),
+        latest.capabilities,
+        () => Taro.setClipboardData({ data: clipboardText }),
+      )
+      if (!clipboardOperation) return
+      await clipboardOperation
+      if (!isCurrentCopyOperation(capturedIdentity())) return
+      showToast({ title: capturedResult.taobao_password ? '淘口令已复制' : '购买链接已复制', icon: 'success' })
       onClose()
     } catch {
-      showToast({ title: '复制失败，请重试', icon: 'none' })
+      if (isCurrentCopyOperation(capturedIdentity())) {
+        showToast({ title: '复制失败，请重试', icon: 'none' })
+      }
     }
   }
 
@@ -119,10 +202,12 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
       onClose={onClose}
       footer={(
         <View
-          className={`coupon-purchase-sheet__primary ${!result || loading ? 'coupon-purchase-sheet__primary--disabled' : ''}`}
+          className={`coupon-purchase-sheet__primary ${!result || loading || !convertEnabled ? 'coupon-purchase-sheet__primary--disabled' : ''}`}
           ariaRole='button'
           ariaLabel={result
-            ? hasAffiliateOfferChanged(product, result) || refreshConfirmationRequired
+            ? !convertEnabled
+              ? '推广购买暂不可用'
+              : hasAffiliateOfferChanged(product, result) || refreshConfirmationRequired
               ? '确认优惠信息后复制推广口令或链接'
               : '复制推广口令或链接'
             : '推广链接暂不可用'}
@@ -136,10 +221,14 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
         <Text className='coupon-purchase-sheet__title'>{product.title}</Text>
         {product.shop_name && <Text className='coupon-purchase-sheet__shop'>{product.shop_name}</Text>}
 
+        {capabilitySnapshot.loaded && !convertEnabled && (
+          <View className='coupon-purchase-sheet__error' ariaRole='status'>推广购买功能暂不可用，请稍后再试。</View>
+        )}
+
         {loading && (
           <View className='coupon-purchase-sheet__state' ariaRole='status'>正在生成推广链接…</View>
         )}
-        {error && (
+        {error && convertEnabled && (
           <View className='coupon-purchase-sheet__error'>
             <Text>{error}</Text>
             <View
@@ -151,7 +240,7 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
             </View>
           </View>
         )}
-        {result && (
+        {result && convertEnabled && (
           <View className='coupon-purchase-sheet__result'>
             {(refreshConfirmationRequired || hasAffiliateOfferChanged(product, result)) && (
               <View className='coupon-purchase-sheet__updated' ariaRole='status'>优惠信息已更新，请确认后复制。</View>
