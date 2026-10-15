@@ -1,5 +1,7 @@
 export default definePageConfig({
+  enableShareAppMessage: true,
+  enableShareTimeline: true,
   navigationStyle: 'custom',
   navigationBarTitleText: '好物详情',
-  backgroundTextStyle: 'dark',
+  backgroundTextStyle: '@backgroundTextStyle' as 'dark',
 })
