@@ -9,7 +9,10 @@ import {
   runAffiliateCopyIfCurrent,
   type AffiliateCopyOperationIdentity,
 } from '../capability-policy'
-import { hasAffiliateOfferChanged, isAffiliateLinkExpired } from '../purchase-policy'
+import {
+  hasAffiliateOfferChanged,
+  runAffiliatePurchaseCopyWorkflow,
+} from '../purchase-policy'
 import {
   getAffiliateCapabilitySnapshot,
   refreshAffiliateCapabilities,
@@ -135,57 +138,60 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
     await refreshAffiliateCapabilities()
     if (!isCurrentCopyOperation(capturedIdentity())) return
 
-    if (isAffiliateLinkExpired(capturedResult.expires_at)) {
-      const refreshedRequest = convert(capturedGoodsId)
-      capturedRequestRevision = requestRevision.current
-      const refreshed = await refreshedRequest
-      if (!refreshed || !isCurrentCopyOperation(capturedIdentity())) return
-      if (isAffiliateLinkExpired(refreshed.expires_at)) {
-        showToast({ title: '新推广链接已过期，请稍后重试', icon: 'none' })
-        return
-      }
-      setRefreshConfirmationRequired(true)
-      showToast({ title: '优惠已刷新，请确认后复制', icon: 'none' })
-      return
-    }
-
-    if (refreshConfirmationRequired || hasAffiliateOfferChanged(capturedProduct, capturedResult)) {
-      try {
-        const confirmation = await Taro.showModal({
-          title: '优惠信息已更新',
-          content: '优惠信息已更新，请确认后复制。',
-          confirmText: '确认并复制',
-          cancelText: '取消',
-        })
-        if (!confirmation.confirm) return
-      } catch {
-        if (isCurrentCopyOperation(capturedIdentity())) {
-          showToast({ title: '请确认当前优惠信息后再复制', icon: 'none' })
-        }
-        return
-      }
-    }
-
-    if (!isCurrentCopyOperation(capturedIdentity())) return
-
-    const clipboardText = capturedResult.taobao_password || capturedResult.coupon_url || capturedResult.share_url
-    if (!clipboardText) {
-      showToast({ title: '暂时没有可复制的推广链接', icon: 'none' })
-      return
-    }
     try {
-      const latest = getCurrentCopyIdentity()
-      const clipboardOperation = runAffiliateCopyIfCurrent(
-        latest.identity,
-        capturedIdentity(),
-        latest.capabilities,
-        () => Taro.setClipboardData({ data: clipboardText }),
-      )
-      if (!clipboardOperation) return
-      await clipboardOperation
-      if (!isCurrentCopyOperation(capturedIdentity())) return
-      showToast({ title: capturedResult.taobao_password ? '淘口令已复制' : '购买链接已复制', icon: 'success' })
-      onClose()
+      const outcome = await runAffiliatePurchaseCopyWorkflow({
+        result: capturedResult,
+        requiresConfirmation: refreshConfirmationRequired || hasAffiliateOfferChanged(capturedProduct, capturedResult),
+        isCurrent: () => isCurrentCopyOperation(capturedIdentity()),
+        confirm: async () => {
+          try {
+            const confirmation = await Taro.showModal({
+              title: '优惠信息已更新',
+              content: '优惠信息已更新，请确认后复制。',
+              confirmText: '确认并复制',
+              cancelText: '取消',
+            })
+            return confirmation.confirm
+          } catch {
+            if (isCurrentCopyOperation(capturedIdentity())) {
+              showToast({ title: '请确认当前优惠信息后再复制', icon: 'none' })
+            }
+            return false
+          }
+        },
+        refresh: async () => {
+          const refreshedRequest = convert(capturedGoodsId)
+          capturedRequestRevision = requestRevision.current
+          const refreshed = await refreshedRequest
+          return refreshed && isCurrentCopyOperation(capturedIdentity()) ? refreshed : null
+        },
+        onRefreshed: () => {
+          setRefreshConfirmationRequired(true)
+          showToast({ title: '优惠已刷新，请确认后复制', icon: 'none' })
+        },
+        onRefreshExpired: () => showToast({ title: '新推广链接已过期，请稍后重试', icon: 'none' }),
+        copy: async (copyResult) => {
+          const clipboardText = copyResult.taobao_password || copyResult.coupon_url || copyResult.share_url
+          if (!clipboardText) {
+            showToast({ title: '暂时没有可复制的推广链接', icon: 'none' })
+            return false
+          }
+          const latest = getCurrentCopyIdentity()
+          const clipboardOperation = runAffiliateCopyIfCurrent(
+            latest.identity,
+            capturedIdentity(),
+            latest.capabilities,
+            () => Taro.setClipboardData({ data: clipboardText }),
+          )
+          if (!clipboardOperation) return false
+          await clipboardOperation
+          return isCurrentCopyOperation(capturedIdentity())
+        },
+      })
+      if (outcome === 'copied' && isCurrentCopyOperation(capturedIdentity())) {
+        showToast({ title: capturedResult.taobao_password ? '淘口令已复制' : '购买链接已复制', icon: 'success' })
+        onClose()
+      }
     } catch {
       if (isCurrentCopyOperation(capturedIdentity())) {
         showToast({ title: '复制失败，请重试', icon: 'none' })

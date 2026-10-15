@@ -125,7 +125,6 @@ export default function AffiliateSearchPage() {
         result.page,
         result.page_size,
         result.total,
-        result.items.length,
       ))
     } catch (error) {
       if (searchRevision.current !== revision) return
@@ -201,10 +200,18 @@ export default function AffiliateSearchPage() {
   })
   useDidHide(() => setCustomTabBarHidden(false))
 
-  useReachBottom(() => {
-    if (loadingRef.current || !hasMore || !searched || !keyword) return
+  const loadNextPage = (retryAfterError = false) => {
+    if (!canUseAffiliateCapability(capabilities, 'search')
+      || loadingRef.current
+      || (!retryAfterError && loadMoreError)
+      || !hasMore
+      || !searched
+      || !keyword.trim()
+      || page <= 0) return
     void runSearch(keyword, page + 1)
-  })
+  }
+
+  useReachBottom(() => loadNextPage())
 
   const handleSearch = () => {
     if (!canUseAffiliateCapability(capabilities, 'search')) {
@@ -351,12 +358,6 @@ export default function AffiliateSearchPage() {
   const openGoodsDetail = (goods: AffiliateGoods) => {
     cacheAffiliateGoods(goods)
     Taro.navigateTo({ url: `/pages/goods/detail?goods_id=${encodeURIComponent(goods.goods_id)}` })
-  }
-
-  const retryLoadMore = () => {
-    if (canUseAffiliateCapability(capabilities, 'search') && !loadingRef.current && page > 0) {
-      void runSearch(keyword, page + 1)
-    }
   }
 
   if (!capabilitySnapshot.loaded) {
@@ -542,7 +543,7 @@ export default function AffiliateSearchPage() {
           <View className='affiliate-search__retry' ariaRole='button' onClick={handleSearch}>重新搜索</View>
         </View>
       )}
-      {!loading && searched && !loadError && items.length === 0 && (
+      {!loading && searched && !loadError && items.length === 0 && !hasMore && (
         <View className='affiliate-search__state'>没有找到相关商品，换个关键词试试。</View>
       )}
       {!searched && !resolveMessage && (
@@ -560,13 +561,13 @@ export default function AffiliateSearchPage() {
         ))}
       </View>
       {loadingMore && <View className='affiliate-search__load-more' ariaRole='status'>正在加载更多…</View>}
-      {!loadingMore && loadMoreError && (
-        <View className='affiliate-search__load-more affiliate-search__load-more--retry' ariaRole='button' onClick={retryLoadMore}>
+      {!loadingMore && loadMoreError && searchEnabled && (
+        <View className='affiliate-search__load-more affiliate-search__load-more--retry' ariaRole='button' onClick={() => loadNextPage(true)}>
           加载失败，点此重试
         </View>
       )}
-      {!loadingMore && hasMore && !loadMoreError && (
-        <View className='affiliate-search__load-more'>继续上滑查看更多</View>
+      {!loadingMore && hasMore && !loadMoreError && searchEnabled && (
+        <View className='affiliate-search__load-more' ariaRole='button' onClick={() => loadNextPage()}>继续上滑或点击查看更多</View>
       )}
       {items.length > 0 && !hasMore && !loadMoreError && (
         <View className='affiliate-search__load-more'>已经到底了</View>

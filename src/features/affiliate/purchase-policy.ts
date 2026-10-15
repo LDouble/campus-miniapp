@@ -14,6 +14,49 @@ export const isAffiliateLinkExpired = (expiresAt: string | null, now = Date.now(
   return !Number.isFinite(timestamp) || timestamp <= now
 }
 
+/** AffiliatePurchaseCopyOutcome 表示确认与复制流程的最终状态。 */
+export type AffiliatePurchaseCopyOutcome = 'copied' | 'cancelled' | 'stale' | 'refreshed' | 'refreshed-expired' | 'unavailable'
+
+type AffiliatePurchaseCopyWorkflow = {
+  result: AffiliateConvertResult
+  requiresConfirmation: boolean
+  isCurrent: () => boolean
+  confirm: () => Promise<boolean>
+  refresh: () => Promise<AffiliateConvertResult | null>
+  onRefreshed: () => void
+  onRefreshExpired: () => void
+  copy: (result: AffiliateConvertResult) => Promise<boolean>
+}
+
+/** runAffiliatePurchaseCopyWorkflow 在每个异步边界核验代次与有效期，过期刷新后必须由用户再次确认。 */
+export const runAffiliatePurchaseCopyWorkflow = async (
+  workflow: AffiliatePurchaseCopyWorkflow,
+): Promise<AffiliatePurchaseCopyOutcome> => {
+  const refreshExpiredResult = async (): Promise<AffiliatePurchaseCopyOutcome> => {
+    const refreshed = await workflow.refresh()
+    if (!refreshed || !workflow.isCurrent()) return 'stale'
+    if (isAffiliateLinkExpired(refreshed.expires_at)) {
+      workflow.onRefreshExpired()
+      return 'refreshed-expired'
+    }
+    workflow.onRefreshed()
+    return 'refreshed'
+  }
+
+  if (!workflow.isCurrent()) return 'stale'
+  if (isAffiliateLinkExpired(workflow.result.expires_at)) return refreshExpiredResult()
+
+  if (workflow.requiresConfirmation && !(await workflow.confirm())) return 'cancelled'
+
+  if (!workflow.isCurrent()) return 'stale'
+  if (isAffiliateLinkExpired(workflow.result.expires_at)) return refreshExpiredResult()
+  if (!workflow.isCurrent()) return 'stale'
+
+  const copied = await workflow.copy(workflow.result)
+  if (!copied) return 'unavailable'
+  return workflow.isCurrent() ? 'copied' : 'stale'
+}
+
 /** 比较页面展示的旧优惠与转链时服务端返回的新优惠。 */
 export const hasAffiliateOfferChanged = (
   product: AffiliatePurchaseProduct,

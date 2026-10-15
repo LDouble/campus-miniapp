@@ -1,4 +1,5 @@
 import { strict as assert } from 'node:assert'
+import { readFileSync } from 'node:fs'
 import Module = require('node:module')
 import { validateAffiliateSearchFilter } from '../src/features/affiliate/search-filters'
 import {
@@ -80,11 +81,57 @@ assert.equal(largestInteger.valid, true, '后端允许的最大九位整数和�
 const leadingZero = validateAffiliateSearchFilter({ hasCouponOnly: false, minPrice: '01.00', maxPrice: '' })
 assert.equal(leadingZero.valid, false, '金额不得使用后端不接受的前导零')
 
-assert.equal(shouldContinueAffiliateSearch(1, 20, 45, 20), true)
-assert.equal(shouldContinueAffiliateSearch(2, 20, 45, 20), true)
-assert.equal(shouldContinueAffiliateSearch(3, 20, 45, 5), false)
-assert.equal(shouldContinueAffiliateSearch(2, 20, 40, 20), false)
-assert.equal(shouldContinueAffiliateSearch(2, 20, 80, 0), false)
+assert.equal(shouldContinueAffiliateSearch(1, 20, 45), true)
+assert.equal(shouldContinueAffiliateSearch(2, 20, 45), true)
+assert.equal(shouldContinueAffiliateSearch(3, 20, 45), false)
+assert.equal(shouldContinueAffiliateSearch(2, 20, 40), false)
+const pageFixtures = new Map([
+  [1, { page: 1, pageSize: 20, total: 100, items: Array.from({ length: 19 }, (_, index) => `first-${index}`) }],
+  [2, { page: 2, pageSize: 20, total: 100, items: [] as string[] }],
+  [3, { page: 3, pageSize: 20, total: 100, items: ['recovered-goods'] }],
+  [4, { page: 4, pageSize: 20, total: 100, items: [] as string[] }],
+  [5, { page: 5, pageSize: 20, total: 100, items: [] as string[] }],
+])
+let currentPage = pageFixtures.get(1)!
+const requestedPages: number[] = []
+const searchedGoods = [...currentPage.items]
+while (shouldContinueAffiliateSearch(currentPage.page, currentPage.pageSize, currentPage.total)) {
+  assert.ok(requestedPages.length < 5, '分页必须受上游 total 的页数边界限制')
+  const nextPage = currentPage.page + 1
+  requestedPages.push(nextPage)
+  const result = pageFixtures.get(nextPage)
+  assert.ok(result, `应请求第 ${nextPage} 页`)
+  currentPage = result
+  searchedGoods.push(...result.items)
+}
+assert.deepEqual(requestedPages, [2, 3, 4, 5], '19/20 与 0/20 的短页仍应访问后续页，并在终页停止')
+assert.ok(searchedGoods.includes('recovered-goods'), '空页后的正常下一页结果应恢复显示')
+assert.equal(shouldContinueAffiliateSearch(currentPage.page, currentPage.pageSize, currentPage.total), false)
+
+let emptyFirstPage = { page: 1, pageSize: 20, total: 100, items: [] as string[] }
+const emptyFirstRequestedPages: number[] = []
+const emptyFirstGoods: string[] = []
+while (shouldContinueAffiliateSearch(emptyFirstPage.page, emptyFirstPage.pageSize, emptyFirstPage.total)) {
+  assert.ok(emptyFirstRequestedPages.length < 5, '第一页为空时也必须受上游 total 的页数边界限制')
+  const nextPage = emptyFirstPage.page + 1
+  emptyFirstRequestedPages.push(nextPage)
+  const result = pageFixtures.get(nextPage)
+  assert.ok(result, `第一页为空时应请求第 ${nextPage} 页`)
+  emptyFirstPage = result
+  emptyFirstGoods.push(...result.items)
+}
+assert.deepEqual(emptyFirstRequestedPages, [2, 3, 4, 5], '首个响应 0/20 但 total=100 时仍应继续请求')
+assert.ok(emptyFirstGoods.includes('recovered-goods'), '第一页空结果后应展示后续页商品')
+
+const searchPageSource = readFileSync('src/pages/goods/search.tsx', 'utf8')
+assert.match(searchPageSource, /runSearch\(keyword, page \+ 1\)/u, '加载失败后重试必须重新请求未提交的下一页')
+assert.match(searchPageSource, /else setLoadMoreError\(true\)/u, '下一页失败应保留当前页并显示可重试状态')
+assert.match(searchPageSource, /new Map\(current\.map\(\(item\) => \[item\.goods_id, item\]\)\)/u, '下一页恢复时仍按 goods_id 去重')
+assert.match(searchPageSource, /items\.length === 0 && !hasMore/u, '仍有后页时不显示最终无结果提示')
+assert.match(searchPageSource, /useReachBottom\(\(\) => loadNextPage\(\)\)/u, '保留触底加载并复用同一分页入口')
+assert.match(searchPageSource, /onClick=\{\(\) => loadNextPage\(\)\}/u, '后页入口应支持点击，覆盖内容不足一屏的情况')
+assert.match(searchPageSource, /onClick=\{\(\) => loadNextPage\(true\)\}/u, '加载失败入口应复用分页请求并允许显式重试')
+assert.match(searchPageSource, /!canUseAffiliateCapability\(capabilities, 'search'\)[\s\S]*?loadingRef\.current[\s\S]*?loadMoreError/u, '分页入口需保护能力关闭、进行中的请求和错误自动重试')
 
 async function verifyAffiliateSearchQuery() {
   const originalLoad = (Module as any)._load
