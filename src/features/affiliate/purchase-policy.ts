@@ -21,10 +21,11 @@ export const hasAffiliateOfferChanged = (
 ) => {
   const priceChanged = product.actual_price != null
     && normalizeAmount(product.actual_price) !== normalizeAmount(result.actual_price)
+  const couponStatusChanged = product.coupon_status !== result.coupon_status
   const couponAmountChanged = product.coupon_amount != null
     && normalizeAmount(product.coupon_amount) !== normalizeAmount(result.coupon_amount)
   const couponConditionChanged = product.coupon_condition != null
     && product.coupon_condition.trim() !== (result.coupon_condition?.trim() || '')
 
-  return priceChanged || couponAmountChanged || couponConditionChanged
+  return priceChanged || couponStatusChanged || couponAmountChanged || couponConditionChanged
 }

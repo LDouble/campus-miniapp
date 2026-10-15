@@ -39,6 +39,13 @@ assert.equal(hasAffiliateOfferChanged(baseProduct, baseResult), false)
 assert.equal(hasAffiliateOfferChanged(baseProduct, { ...baseResult, actual_price: '18.90' }), true)
 assert.equal(hasAffiliateOfferChanged(baseProduct, { ...baseResult, coupon_amount: '4.00' }), true)
 assert.equal(hasAffiliateOfferChanged(baseProduct, { ...baseResult, coupon_condition: '满 30 元可用' }), true)
+for (const couponStatus of ['sold_out', 'expired', 'none', 'unknown'] as const) {
+  assert.equal(
+    hasAffiliateOfferChanged(baseProduct, { ...baseResult, coupon_status: couponStatus }),
+    true,
+    `active → ${couponStatus} must require offer confirmation even when amounts match`,
+  )
+}
 assert.equal(
   hasAffiliateOfferChanged({ ...baseProduct, actual_price: undefined }, baseResult),
   false,
