@@ -26,6 +26,9 @@
   &__price-row { display: flex; min-height: 72rpx; margin-top: 12rpx; align-items: center; justify-content: space-between; border-top: 1rpx solid var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); font-size: var(--ousea-font-size-caption, 24rpx); }
   &__price { color: var(--ousea-danger-500, #e5484d); font-size: var(--ousea-font-size-title, 33rpx); font-weight: var(--ousea-font-weight-bold, 700); }
   &__hint { display: block; margin-top: 18rpx; color: var(--ousea-ink-500, #6b7a90); font-size: 22rpx; line-height: 1.5; }
+  &__copy-fallback { margin-top: 20rpx; padding: 20rpx; border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4)); border-radius: var(--ousea-radius-control, 20rpx); background: var(--campus-surface, #fff); }
+  &__copy-fallback-label { display: block; margin-bottom: 12rpx; color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90)); font-size: var(--ousea-font-size-caption, 24rpx); line-height: 1.5; }
+  &__copy-fallback-text { display: block; overflow-wrap: anywhere; color: var(--campus-text-primary, var(--ousea-ink-900, #1a2333)); font-size: var(--ousea-font-size-body, 32rpx); line-height: 1.6; user-select: text; }
 
   &__primary {
     display: flex;

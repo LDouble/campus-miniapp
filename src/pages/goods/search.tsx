@@ -226,7 +226,19 @@ export default function AffiliateSearchPage() {
     setCustomTabBarHidden(true)
     void refreshAffiliateCapabilities()
   })
-  useDidHide(() => setCustomTabBarHidden(false))
+  useDidHide(() => {
+    setCustomTabBarHidden(false)
+    const wasResolving = resolveInFlightRef.current
+    resolveRevision.current += 1
+    resolveInFlightRef.current = false
+    setResolveLoading(false)
+    if (wasResolving) setResolveMessage('当前页面已离开，查询已取消。')
+  })
+
+  useEffect(() => () => {
+    resolveRevision.current += 1
+    resolveInFlightRef.current = false
+  }, [])
 
   const loadNextPage = (retryAfterError = false) => {
     const query = submittedQueryRef.current
@@ -346,42 +358,59 @@ export default function AffiliateSearchPage() {
   }
 
   const handlePasteAndResolve = async () => {
-    if (!canUseAffiliateCapability(capabilities, 'resolve')) {
+    const capabilitySnapshotAtStart = getAffiliateCapabilitySnapshot()
+    if (!canUseAffiliateCapability(capabilities, 'resolve')
+      || !canUseAffiliateCapability(capabilitySnapshotAtStart.capabilities, 'resolve')) {
       setResolveMessage('链接解析功能暂不可用，请稍后再试。')
       return
     }
     if (resolveInFlightRef.current || resolveLoading) return
-    let content = ''
-    try {
-      const clipboard = await Taro.getClipboardData()
-      content = String(clipboard.data || '').trim()
-    } catch {
-      setResolveMessage('读取剪贴板失败，请确认已复制商品链接或淘口令。')
-      return
-    }
-    if (!content) {
-      setResolveMessage('剪贴板里没有内容，请先复制淘宝或天猫商品链接、淘口令。')
-      return
-    }
-    if (content.length > 2048) {
-      setResolveMessage('剪贴板内容过长，请只复制商品链接或淘口令后重试。')
-      return
-    }
-    const latestCapabilities = await refreshAffiliateCapabilities()
-    if (!canUseAffiliateCapability(latestCapabilities.capabilities, 'resolve')) {
-      setResolveMessage('链接解析功能暂不可用，请稍后再试。')
-      return
-    }
     const revision = resolveRevision.current + 1
     resolveRevision.current = revision
+    const capabilityRevision = capabilitySnapshotAtStart.revision
+    const isCurrentOperation = () => {
+      const currentCapabilities = getAffiliateCapabilitySnapshot()
+      return resolveRevision.current === revision
+        && currentCapabilities.revision === capabilityRevision
+        && canUseAffiliateCapability(currentCapabilities.capabilities, 'resolve')
+    }
+
     resolveInFlightRef.current = true
     setResolveLoading(true)
     setResolveMessage('正在核验商品和优惠信息…')
     setResolvedGoods(null)
+
+    let content = ''
     try {
+      let clipboard: Awaited<ReturnType<typeof Taro.getClipboardData>>
+      try {
+        clipboard = await Taro.getClipboardData()
+      } catch {
+        if (isCurrentOperation()) {
+          setResolveMessage('读取剪贴板失败，请确认已复制商品链接或淘口令。')
+        }
+        return
+      }
+      if (!isCurrentOperation()) return
+      content = String(clipboard.data || '').trim()
+      if (!content) {
+        setResolveMessage('剪贴板里没有内容，请先复制淘宝或天猫商品链接、淘口令。')
+        return
+      }
+      if (content.length > 2048) {
+        setResolveMessage('剪贴板内容过长，请只复制商品链接或淘口令后重试。')
+        return
+      }
+
+      const latestCapabilities = await refreshAffiliateCapabilities()
+      if (!isCurrentOperation()) return
+      if (!canUseAffiliateCapability(latestCapabilities.capabilities, 'resolve')) {
+        setResolveMessage('链接解析功能暂不可用，请稍后再试。')
+        return
+      }
+
       const result = await resolveAffiliateContent(content)
-      if (resolveRevision.current !== revision
-        || !getAffiliateCapabilitySnapshot().capabilities.resolve_enabled) return
+      if (!isCurrentOperation()) return
       if (result.status === 'resolved' && result.product) {
         cacheAffiliateGoods(result.product)
         setResolvedGoods(result.product)
@@ -390,12 +419,13 @@ export default function AffiliateSearchPage() {
         setResolveMessage(resolveStatusText[result.status])
       }
     } catch (error) {
-      if (resolveRevision.current !== revision) return
+      if (!isCurrentOperation()) return
       setResolveMessage(error instanceof Error ? error.message : '解析失败，请稍后重试。')
     } finally {
       if (resolveRevision.current === revision) {
         resolveInFlightRef.current = false
         setResolveLoading(false)
+        if (!isCurrentOperation()) setResolveMessage('查询已中断，请重试。')
       }
     }
   }

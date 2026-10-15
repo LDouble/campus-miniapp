@@ -1,4 +1,9 @@
 import type { AffiliateConvertResult } from '../../api/affiliate'
+import {
+  isCurrentAffiliateCopyOperation,
+  type AffiliateCopyOperationIdentity,
+  type AffiliateCapabilities,
+} from './capability-policy'
 import type { AffiliatePurchaseProduct } from './components/product-card'
 
 const normalizeAmount = (value: string | null | undefined) => {
@@ -13,6 +18,26 @@ export const isAffiliateLinkExpired = (expiresAt: string | null, now = Date.now(
   const timestamp = Date.parse(expiresAt)
   return !Number.isFinite(timestamp) || timestamp <= now
 }
+
+/** AffiliateCopyFallback 保存复制失败后供用户手动选择的文本及其身份。 */
+export type AffiliateCopyFallback = {
+  text: string
+  expiresAt: string | null
+  identity: AffiliateCopyOperationIdentity
+}
+
+/** isAffiliateCopyFallbackUsable 仅允许当前商品、请求代和能力代的未过期文本进入回退视图。 */
+export const isAffiliateCopyFallbackUsable = (
+  fallback: AffiliateCopyFallback | null,
+  current: AffiliateCopyOperationIdentity,
+  capabilities: AffiliateCapabilities,
+  now = Date.now(),
+) => Boolean(
+  fallback
+  && fallback.text.trim()
+  && isCurrentAffiliateCopyOperation(current, fallback.identity, capabilities)
+  && !isAffiliateLinkExpired(fallback.expiresAt, now),
+)
 
 /** AffiliatePurchaseCopyOutcome 表示确认与复制流程的最终状态。 */
 export type AffiliatePurchaseCopyOutcome = 'copied' | 'cancelled' | 'stale' | 'refreshed' | 'refreshed-expired' | 'unavailable'

@@ -10,8 +10,11 @@ import {
   type AffiliateCopyOperationIdentity,
 } from '../capability-policy'
 import {
+  isAffiliateCopyFallbackUsable,
+  isAffiliateLinkExpired,
   hasAffiliateOfferChanged,
   runAffiliatePurchaseCopyWorkflow,
+  type AffiliateCopyFallback,
 } from '../purchase-policy'
 import {
   getAffiliateCapabilitySnapshot,
@@ -53,6 +56,7 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
   const [result, setResult] = useState<AffiliateConvertResult | null>(null)
   const [error, setError] = useState('')
   const [refreshConfirmationRequired, setRefreshConfirmationRequired] = useState(false)
+  const [copyFallback, setCopyFallback] = useState<AffiliateCopyFallback | null>(null)
   const requestRevision = useRef(0)
   const currentGoodsId = product?.goods_id
   const currentGoodsIdRef = useRef<string | undefined>(currentGoodsId)
@@ -85,6 +89,7 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
     setLoading(true)
     setError('')
     setResult(null)
+    setCopyFallback(null)
     setRefreshConfirmationRequired(false)
     try {
       const latestCapabilities = await refreshAffiliateCapabilities()
@@ -114,6 +119,7 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
       requestRevision.current += 1
       setLoading(false)
       setResult(null)
+      setCopyFallback(null)
       setError('推广购买功能暂不可用，请稍后再试。')
       setRefreshConfirmationRequired(false)
       return undefined
@@ -121,6 +127,24 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
     void convert(currentGoodsId)
     return () => { requestRevision.current += 1 }
   }, [capabilitySnapshot.loaded, capabilitySnapshot.revision, convertEnabled, currentGoodsId])
+
+  useEffect(() => {
+    if (!copyFallback?.expiresAt) return undefined
+    const expiresAt = Date.parse(copyFallback.expiresAt)
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      setCopyFallback(null)
+      return undefined
+    }
+    const timeout = setTimeout(() => setCopyFallback(null), expiresAt - Date.now())
+    return () => clearTimeout(timeout)
+  }, [copyFallback])
+
+  const latestCopyIdentity = getCurrentCopyIdentity()
+  const visibleCopyFallback = isAffiliateCopyFallbackUsable(
+    copyFallback,
+    latestCopyIdentity.identity,
+    latestCopyIdentity.capabilities,
+  ) ? copyFallback : null
 
   const copyConvertedLink = async () => {
     if (!result || loading || !product) return
@@ -177,14 +201,47 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
             return false
           }
           const latest = getCurrentCopyIdentity()
-          const clipboardOperation = runAffiliateCopyIfCurrent(
-            latest.identity,
-            capturedIdentity(),
-            latest.capabilities,
-            () => Taro.setClipboardData({ data: clipboardText }),
-          )
-          if (!clipboardOperation) return false
-          await clipboardOperation
+          try {
+            const clipboardOperation = runAffiliateCopyIfCurrent(
+              latest.identity,
+              capturedIdentity(),
+              latest.capabilities,
+              () => Taro.setClipboardData({ data: clipboardText }),
+            )
+            if (!clipboardOperation) return false
+            await clipboardOperation
+          } catch {
+            if (!isCurrentCopyOperation(capturedIdentity())) return false
+            if (isAffiliateLinkExpired(copyResult.expires_at)) {
+              const refreshedRequest = convert(capturedGoodsId)
+              capturedRequestRevision = requestRevision.current
+              const refreshed = await refreshedRequest
+              if (refreshed && isCurrentCopyOperation(capturedIdentity())) {
+                if (isAffiliateLinkExpired(refreshed.expires_at)) {
+                  showToast({ title: '新推广链接已过期，请稍后重试', icon: 'none' })
+                } else {
+                  setRefreshConfirmationRequired(true)
+                  showToast({ title: '优惠已刷新，请确认后复制', icon: 'none' })
+                }
+              }
+              return false
+            }
+            const fallback: AffiliateCopyFallback = {
+              text: clipboardText,
+              expiresAt: copyResult.expires_at,
+              identity: capturedIdentity(),
+            }
+            const current = getCurrentCopyIdentity()
+            if (!isAffiliateCopyFallbackUsable(
+              fallback,
+              current.identity,
+              current.capabilities,
+            )) return false
+            setCopyFallback(fallback)
+            showToast({ title: '复制失败，可长按选择文本手动复制', icon: 'none' })
+            return false
+          }
+          setCopyFallback(null)
           return isCurrentCopyOperation(capturedIdentity())
         },
       })
@@ -270,6 +327,14 @@ export default function CouponPurchaseSheet({ product, onClose }: CouponPurchase
               <Text className='coupon-purchase-sheet__expires'>{formatExpireTime(result.expires_at)}</Text>
             )}
             <Text className='coupon-purchase-sheet__hint'>打开淘宝后按页面提示领取优惠并下单</Text>
+            {visibleCopyFallback && (
+              <View className='coupon-purchase-sheet__copy-fallback' ariaRole='status'>
+                <Text className='coupon-purchase-sheet__copy-fallback-label'>复制失败，可长按选择下方文本手动复制</Text>
+                <Text className='coupon-purchase-sheet__copy-fallback-text' selectable>
+                  {visibleCopyFallback.text}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </View>

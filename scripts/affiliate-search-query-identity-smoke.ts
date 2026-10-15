@@ -10,6 +10,7 @@ type SearchFilters = Record<string, unknown>
 type SearchQuery = { keyword: string; filters: SearchFilters }
 type SearchResponse = { page: number; page_size: number; total: number; items: SearchItem[] }
 type SearchRequest = { keyword: string; page: number; filters: SearchFilters }
+type ResolveResponse = { status: string; product?: SearchItem }
 
 const source = readFileSync('src/pages/goods/search.tsx', 'utf8')
 const sourceFile = ts.createSourceFile('search.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
@@ -49,13 +50,32 @@ const extractHandler = (name: string): string => {
   return initializer.getText(sourceFile)
 }
 
+const hideHook = (component as ts.FunctionDeclaration).body!.statements.find((statement) => (
+  ts.isExpressionStatement(statement)
+  && ts.isCallExpression(statement.expression)
+  && ts.isIdentifier(statement.expression.expression)
+  && statement.expression.expression.text === 'useDidHide'
+)) as ts.ExpressionStatement | undefined
+assert.ok(hideHook && ts.isCallExpression(hideHook.expression), '应能提取生产页面的隐藏回调')
+const hideCallback = (hideHook!.expression as ts.CallExpression).arguments[0]
+assert.ok(hideCallback && ts.isArrowFunction(hideCallback), '隐藏处理应为实际生命周期回调')
+
 const mergeGoodsDeclaration = findVariable(sourceFile, 'mergeGoods')
 assert.ok(mergeGoodsDeclaration.initializer, '应在生产搜索页找到商品合并实现')
-const handlerNames = ['runSearch', 'loadNextPage', 'handleSearch', 'retrySearch', 'applySort', 'applyFilters']
+const handlerNames = [
+  'runSearch',
+  'loadNextPage',
+  'handleSearch',
+  'retrySearch',
+  'applySort',
+  'applyFilters',
+  'handlePasteAndResolve',
+]
 const extractedSource = [
   `const mergeGoods = ${mergeGoodsDeclaration.initializer!.getText(sourceFile)}`,
   ...handlerNames.map((name) => `const ${name} = ${extractHandler(name)}`),
-  `return { ${handlerNames.join(', ')} }`,
+  `const handlePageHide = ${hideCallback!.getText(sourceFile)}`,
+  `return { ${handlerNames.join(', ')}, handlePageHide }`,
 ].join('\n')
 const extractedJavaScript = ts.transpileModule(extractedSource, {
   compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
@@ -82,6 +102,9 @@ const createHarness = (options: {
   hasMore?: boolean
   response?: SearchResponse
   request?: (request: SearchRequest, index: number) => Promise<SearchResponse>
+  clipboard?: () => Promise<{ data?: string }>
+  refreshCapabilities?: () => Promise<{ capabilities: typeof enabledCapabilities }>
+  resolveContent?: (content: string) => Promise<ResolveResponse>
   draftHasCoupon?: boolean
   draftCategoryId?: number
   draftMinPrice?: string
@@ -105,6 +128,9 @@ const createHarness = (options: {
     loadingMore: false,
     loadError: '',
     loadMoreError: false,
+    resolveLoading: false,
+    resolveMessage: '',
+    resolvedGoods: null as SearchItem | null,
     searchFilters: { sort: 'comprehensive' } as SearchFilters,
     filterMessage: '',
     filterExpanded: false,
@@ -123,6 +149,9 @@ const createHarness = (options: {
     resolveInFlightRef: { current: false },
   }
   const requests: SearchRequest[] = []
+  const capabilitySnapshot = { capabilities: { ...enabledCapabilities }, revision: 1 }
+  const clipboardReads: string[] = []
+  const resolveRequests: string[] = []
   const defaultResponse = options.response || {
     page: 2,
     page_size: 20,
@@ -163,11 +192,19 @@ const createHarness = (options: {
       draftCategoryId: state.draftCategoryId,
       draftMinPrice: state.draftMinPrice,
       draftMaxPrice: state.draftMaxPrice,
-      capabilities: enabledCapabilities,
+      capabilities: capabilitySnapshot.capabilities,
+      resolveLoading: state.resolveLoading,
+      setCustomTabBarHidden: () => undefined,
       useCallback: (callback: (...args: any[]) => unknown) => callback,
-      Taro: { showToast: () => undefined },
-      refreshAffiliateCapabilities: async () => ({ capabilities: enabledCapabilities }),
-      getAffiliateCapabilitySnapshot: () => ({ capabilities: enabledCapabilities }),
+      Taro: {
+        showToast: () => undefined,
+        getClipboardData: () => {
+          clipboardReads.push('read')
+          return options.clipboard ? options.clipboard() : Promise.resolve({ data: 'https://item.taobao.com/item.htm?id=123' })
+        },
+      },
+      refreshAffiliateCapabilities: options.refreshCapabilities || (async () => ({ capabilities: capabilitySnapshot.capabilities })),
+      getAffiliateCapabilitySnapshot: () => capabilitySnapshot,
       canUseAffiliateCapability,
       shouldContinueAffiliateSearch,
       validateAffiliateSearchFilter,
@@ -192,9 +229,23 @@ const createHarness = (options: {
       setSearchFilters: (value: SearchFilters) => { state.searchFilters = value },
       setFilterMessage: (value: string) => { state.filterMessage = value },
       setFilterExpanded: (value: boolean) => { state.filterExpanded = value },
-      setResolveLoading: () => undefined,
-      setResolvedGoods: () => undefined,
-      setResolveMessage: () => undefined,
+      resolveStatusText: {
+        unsupported_format: '不支持',
+        not_found: '未找到',
+        unavailable: '暂不可用',
+        resolved: '已核验',
+      },
+      resolveAffiliateContent: async (content: string) => {
+        resolveRequests.push(content)
+        return options.resolveContent ? options.resolveContent(content) : {
+          status: 'resolved',
+          product: { goods_id: 'resolved-goods', title: '已核验商品' },
+        }
+      },
+      cacheAffiliateGoods: () => undefined,
+      setResolveLoading: (value: boolean) => { state.resolveLoading = value },
+      setResolvedGoods: (value: SearchItem | null) => { state.resolvedGoods = value },
+      setResolveMessage: (value: string) => { state.resolveMessage = value },
     }
     const keys = Object.keys(env)
     const factory = new Function(...keys, extractedJavaScript.outputText) as (...values: unknown[]) => Record<string, (...args: any[]) => any>
@@ -202,7 +253,19 @@ const createHarness = (options: {
     refs.runSearchRef.current = handlers.runSearch
     return handlers
   }
-  return { state, refs, requests, render }
+  return {
+    state,
+    refs,
+    requests,
+    clipboardReads,
+    resolveRequests,
+    capabilitySnapshot,
+    setCapabilities: (next: Partial<typeof enabledCapabilities>) => {
+      Object.assign(capabilitySnapshot.capabilities, next)
+      capabilitySnapshot.revision += 1
+    },
+    render,
+  }
 }
 
 const waitForAsyncHandlers = async () => new Promise<void>((resolve) => setTimeout(resolve, 0))
@@ -370,6 +433,225 @@ const verifyOldResponseCannotReplaceNewQuery = async () => {
   assert.equal(harness.state.searchResult.total, 1, '旧响应不能覆盖新查询的 total')
 }
 
+const verifyDoublePasteDoesNotDuplicateResolve = async () => {
+  const clipboard = deferred<{ data: string }>()
+  const bootstrap = deferred<{ capabilities: typeof enabledCapabilities }>()
+  let bootstrapRequests = 0
+  const harness = createHarness({
+    draftKeyword: '',
+    submittedKeyword: '',
+    currentItems: [],
+    clipboard: () => clipboard.promise,
+    refreshCapabilities: () => {
+      bootstrapRequests += 1
+      return bootstrap.promise
+    },
+  })
+
+  const handlers = harness.render()
+  const firstResolve = handlers.handlePasteAndResolve()
+  const secondResolve = handlers.handlePasteAndResolve()
+  assert.equal(
+    harness.clipboardReads.length,
+    1,
+    '剪贴板读取挂起期间的第二次点击必须在发起异步操作前被占用状态拦截',
+  )
+  assert.equal(harness.refs.resolveInFlightRef.current, true)
+
+  clipboard.resolve({ data: 'https://item.taobao.com/item.htm?id=123' })
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.equal(bootstrapRequests, 1, '同一次粘贴操作只能刷新一次能力快照')
+
+  bootstrap.resolve({ capabilities: harness.capabilitySnapshot.capabilities })
+  await Promise.all([firstResolve, secondResolve])
+  assert.equal(harness.resolveRequests.length, 1, '同一次粘贴操作只能提交一次解析 POST')
+  assert.deepEqual(harness.state.resolvedGoods, { goods_id: 'resolved-goods', title: '已核验商品' })
+  assert.equal(harness.state.resolveLoading, false)
+  assert.equal(harness.refs.resolveInFlightRef.current, false)
+}
+
+const verifyStaleResolveCannotCrossPageOrCapabilityGeneration = async () => {
+  const leftPageClipboard = deferred<{ data: string }>()
+  const currentPageClipboard = deferred<{ data: string }>()
+  const clipboardResults = [leftPageClipboard, currentPageClipboard]
+  let clipboardIndex = 0
+  let refreshRequests = 0
+  const harness = createHarness({
+    draftKeyword: '',
+    submittedKeyword: '',
+    currentItems: [],
+    clipboard: () => clipboardResults[clipboardIndex++].promise,
+    refreshCapabilities: async () => {
+      refreshRequests += 1
+      return { capabilities: { ...enabledCapabilities } }
+    },
+  })
+
+  const oldPageOperation = harness.render().handlePasteAndResolve()
+  harness.render().handlePageHide()
+  harness.setCapabilities({ resolve_enabled: false })
+  harness.setCapabilities({ resolve_enabled: true })
+
+  const currentPageOperation = harness.render().handlePasteAndResolve()
+  leftPageClipboard.resolve({ data: 'https://old.example/item' })
+  await oldPageOperation
+  assert.equal(harness.refs.resolveInFlightRef.current, true, '旧操作结束不得释放新一代操作的占用状态')
+  assert.equal(harness.state.resolveMessage, '正在核验商品和优惠信息…', '旧操作不得覆盖新页面的状态')
+  assert.equal(refreshRequests, 0, '离开页面且能力代次改变后，旧剪贴板内容不得刷新配置或发出解析请求')
+  assert.equal(harness.resolveRequests.length, 0)
+
+  currentPageClipboard.resolve({ data: 'https://current.example/item' })
+  await currentPageOperation
+  assert.equal(refreshRequests, 1)
+  assert.deepEqual(harness.resolveRequests, ['https://current.example/item'])
+  assert.deepEqual(harness.state.resolvedGoods, { goods_id: 'resolved-goods', title: '已核验商品' })
+  assert.equal(harness.refs.resolveInFlightRef.current, false)
+}
+
+const verifyPageHidePreservesCompletedResolveState = async () => {
+  const completed = createHarness({ draftKeyword: '', submittedKeyword: '', currentItems: [] })
+  await completed.render().handlePasteAndResolve()
+  const completedMessage = completed.state.resolveMessage
+  const completedProduct = completed.state.resolvedGoods
+  completed.render().handlePageHide()
+  assert.equal(completed.state.resolveMessage, completedMessage, '查看商品详情后返回，不得把已完成解析误报为取消')
+  assert.equal(completed.state.resolvedGoods, completedProduct, '离页不得清除已完成解析的商品')
+  assert.equal(completed.state.resolveLoading, false)
+  assert.equal(completed.refs.resolveInFlightRef.current, false)
+
+  for (const message of ['', '解析服务失败']) {
+    const idle = createHarness({ draftKeyword: '', submittedKeyword: '', currentItems: [] })
+    idle.state.resolveMessage = message
+    idle.render().handlePageHide()
+    assert.equal(idle.state.resolveMessage, message, '没有进行中操作时应保留空态或失败原因')
+  }
+
+  const clipboard = deferred<{ data: string }>()
+  const pending = createHarness({
+    draftKeyword: '', submittedKeyword: '', currentItems: [], clipboard: () => clipboard.promise,
+  })
+  const operation = pending.render().handlePasteAndResolve()
+  pending.render().handlePageHide()
+  assert.equal(pending.state.resolveMessage, '当前页面已离开，查询已取消。', '进行中的解析离页时应提示取消')
+  assert.equal(pending.state.resolveLoading, false)
+  assert.equal(pending.refs.resolveInFlightRef.current, false)
+  clipboard.resolve({ data: 'https://old.example/item' })
+  await operation
+  assert.equal(pending.resolveRequests.length, 0, '取消后的剪贴板回包不得提交解析')
+  assert.equal(pending.state.resolveMessage, '当前页面已离开，查询已取消。', '旧操作结束不得覆盖取消提示')
+}
+
+const verifyResolveFailurePathsReleaseOperation = async () => {
+  const scenarios: Array<{
+    name: string
+    clipboard: () => Promise<{ data?: string }>
+    refreshCapabilities?: () => Promise<{ capabilities: typeof enabledCapabilities }>
+    resolveContent?: (content: string) => Promise<ResolveResponse>
+    message: RegExp
+    expectedPosts: number
+  }> = [
+    {
+      name: '剪贴板读取失败',
+      clipboard: async () => { throw new Error('clipboard denied') },
+      message: /读取剪贴板失败/u,
+      expectedPosts: 0,
+    },
+    {
+      name: '空剪贴板',
+      clipboard: async () => ({ data: '  ' }),
+      message: /剪贴板里没有内容/u,
+      expectedPosts: 0,
+    },
+    {
+      name: '超长剪贴板',
+      clipboard: async () => ({ data: 'x'.repeat(2049) }),
+      message: /内容过长/u,
+      expectedPosts: 0,
+    },
+    {
+      name: '刷新能力后解析关闭',
+      clipboard: async () => ({ data: 'https://item.taobao.com/item.htm?id=123' }),
+      refreshCapabilities: async () => ({
+        capabilities: { ...enabledCapabilities, resolve_enabled: false },
+      }),
+      message: /暂不可用/u,
+      expectedPosts: 0,
+    },
+    {
+      name: '解析请求失败',
+      clipboard: async () => ({ data: 'https://item.taobao.com/item.htm?id=123' }),
+      resolveContent: async () => { throw new Error('解析服务失败') },
+      message: /解析服务失败/u,
+      expectedPosts: 1,
+    },
+  ]
+
+  for (const scenario of scenarios) {
+    const harness = createHarness({
+      draftKeyword: '',
+      submittedKeyword: '',
+      currentItems: [],
+      clipboard: scenario.clipboard,
+      refreshCapabilities: scenario.refreshCapabilities,
+      resolveContent: scenario.resolveContent,
+    })
+    await harness.render().handlePasteAndResolve()
+    assert.match(harness.state.resolveMessage, scenario.message, `${scenario.name} 应保留具体错误状态`)
+    assert.equal(harness.resolveRequests.length, scenario.expectedPosts, `${scenario.name} 的 POST 数量应符合预期`)
+    assert.equal(harness.state.resolveLoading, false, `${scenario.name} 后应关闭加载状态`)
+    assert.equal(harness.refs.resolveInFlightRef.current, false, `${scenario.name} 后应释放操作占用`)
+  }
+}
+
+const verifyUnrelatedCapabilityChangeLeavesResolveRetryable = async () => {
+  const bootstrap = deferred<{ capabilities: typeof enabledCapabilities }>()
+  const bootstrapStarted = deferred<void>()
+  let bootstrapRequests = 0
+  const harness = createHarness({
+    draftKeyword: '',
+    submittedKeyword: '',
+    currentItems: [],
+    clipboard: async () => ({ data: 'https://item.taobao.com/item.htm?id=123' }),
+    refreshCapabilities: () => {
+      bootstrapRequests += 1
+      if (bootstrapRequests === 1) {
+        bootstrapStarted.resolve()
+        return bootstrap.promise
+      }
+      return Promise.resolve({ capabilities: { ...harness.capabilitySnapshot.capabilities } })
+    },
+  })
+
+  const interruptedResolve = harness.render().handlePasteAndResolve()
+  await bootstrapStarted.promise
+  harness.setCapabilities({ convert_enabled: false })
+  bootstrap.resolve({ capabilities: { ...enabledCapabilities } })
+  await interruptedResolve
+
+  assert.equal(harness.resolveRequests.length, 0, '其他推广能力变化后，旧解析代次不得提交 POST')
+  assert.equal(harness.state.resolveLoading, false, '被能力代次中断后应结束加载')
+  assert.equal(harness.refs.resolveInFlightRef.current, false, '被能力代次中断后应释放占用')
+  assert.equal(harness.state.resolveMessage, '查询已中断，请重试。', '其他能力变化后不得残留“正在核验”状态')
+
+  await harness.render().handlePasteAndResolve()
+  assert.equal(harness.resolveRequests.length, 1, '能力变更后用户可重新触发链接解析')
+  assert.equal(harness.resolveRequests[0], 'https://item.taobao.com/item.htm?id=123')
+  assert.equal(harness.state.resolveLoading, false)
+  assert.equal(harness.refs.resolveInFlightRef.current, false)
+}
+
+assert.match(
+  source,
+  /useDidHide\(\(\) => \{\s*setCustomTabBarHidden\(false\)[\s\S]*?resolveRevision\.current \+= 1[\s\S]*?resolveInFlightRef\.current = false/u,
+  '页面离开时必须让尚未完成的解析失效并释放占用状态',
+)
+assert.match(
+  source,
+  /useEffect\(\(\) => \(\) => \{\s*resolveRevision\.current \+= 1[\s\S]*?resolveInFlightRef\.current = false[\s\S]*?\}, \[\]\)/u,
+  '页面卸载时必须让尚未完成的解析失效',
+)
+
 export const runAffiliateSearchQueryIdentitySmoke = async () => {
   await verifyDraftEditsAndRetryStayOnSubmittedQuery()
   await verifyClearedDraftDoesNotBlockSubmittedPagination()
@@ -377,6 +659,11 @@ export const runAffiliateSearchQueryIdentitySmoke = async () => {
   await verifyFirstPageRetryStaysOnSubmittedQuery()
   await verifySortAndFiltersUseSubmittedKeyword()
   await verifyOldResponseCannotReplaceNewQuery()
+  await verifyDoublePasteDoesNotDuplicateResolve()
+  await verifyStaleResolveCannotCrossPageOrCapabilityGeneration()
+  await verifyPageHidePreservesCompletedResolveState()
+  await verifyResolveFailurePathsReleaseOperation()
+  await verifyUnrelatedCapabilityChangeLeavesResolveRetryable()
 }
 
 if (require.main === module) {
