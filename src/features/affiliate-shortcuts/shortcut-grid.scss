@@ -52,26 +52,7 @@
     background: var(--ousea-ocean-50, #f2f7fe);
   }
 
-  &__fallback-mark {
-    position: relative;
-    width: 32rpx;
-    height: 32rpx;
-    box-sizing: border-box;
-    border: 4rpx solid var(--ousea-ocean-500, #2b7aef);
-    border-radius: 9rpx;
-    &::before,
-    &::after {
-      position: absolute;
-      top: 9rpx;
-      width: 4rpx;
-      height: 4rpx;
-      border-radius: 50%;
-      background: var(--ousea-ocean-500, #2b7aef);
-      content: '';
-    }
-    &::before { left: 5rpx; }
-    &::after { right: 5rpx; }
-  }
+  &__fallback-icon { width: 64rpx; height: 64rpx; }
 
   &__badge {
     position: absolute;
@@ -111,12 +92,6 @@
     &__icon-fallback {
       border-color: rgba(96, 165, 250, .22);
       background: var(--ousea-ocean-50, #172554);
-    }
-
-    &__fallback-mark {
-      border-color: var(--ousea-ocean-500, #60a5fa);
-      &::before,
-      &::after { background: var(--ousea-ocean-500, #60a5fa); }
     }
 
     &__title { color: var(--campus-text-body, #d7e0ec); }

@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import type { AffiliateShortcutItem } from './config'
 import { isAffiliateShortcutActive, isSafeAffiliateShortcutImage } from './config'
+import { getAffiliateShortcutIconPresentation } from './icon-policy'
 import './shortcut-grid.scss'
 
 type ShortcutIconProps = {
@@ -13,13 +14,18 @@ type ShortcutIconProps = {
 function ShortcutIcon({ title, url }: ShortcutIconProps) {
   const [failed, setFailed] = useState(false)
   const safeUrl = isSafeAffiliateShortcutImage(url) ? url : ''
+  const presentation = getAffiliateShortcutIconPresentation(url, failed)
 
   useEffect(() => setFailed(false), [safeUrl])
 
-  if (!safeUrl || failed) {
+  if (presentation.isFallback) {
     return (
       <View className='affiliate-shortcuts__icon-fallback' ariaLabel={`${title}图标`}>
-        <View className='affiliate-shortcuts__fallback-mark' />
+        <Image
+          className='affiliate-shortcuts__icon affiliate-shortcuts__fallback-icon'
+          src={presentation.src}
+          mode='aspectFit'
+        />
       </View>
     )
   }
@@ -27,7 +33,7 @@ function ShortcutIcon({ title, url }: ShortcutIconProps) {
   return (
     <Image
       className='affiliate-shortcuts__icon'
-      src={safeUrl}
+      src={presentation.src}
       mode='aspectFit'
       lazyLoad
       onError={() => setFailed(true)}

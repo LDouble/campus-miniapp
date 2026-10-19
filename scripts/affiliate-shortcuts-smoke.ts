@@ -10,6 +10,7 @@ import {
   createAffiliateShortcutPageSession,
   runAffiliateShortcutCopy,
 } from '../src/features/affiliate-shortcuts/page-session'
+import { getAffiliateShortcutIconPresentation } from '../src/features/affiliate-shortcuts/icon-policy'
 
 const miniProgramAction = {
   type: 'mini_program',
@@ -92,6 +93,21 @@ assert.equal(isSafeAffiliateShortcutImage('https://cdn.example.com/icon.png'), t
 assert.equal(isSafeAffiliateShortcutImage('http://cdn.example.com/icon.png'), false)
 assert.equal(isSafeAffiliateShortcutImage('javascript:alert(1)'), false)
 assert.equal(isSafeAffiliateShortcutImage('https:///missing-host.png'), false)
+assert.equal(
+  getAffiliateShortcutIconPresentation('javascript:alert(1)', false).src,
+  `${process.cwd()}/src/assets/tabbar/goods-active.png`,
+  '无效入口图标实际渲染本地好物 PNG 兜底资源',
+)
+assert.equal(
+  getAffiliateShortcutIconPresentation('https://cdn.example.com/icon.png', true).src,
+  `${process.cwd()}/src/assets/tabbar/goods-active.png`,
+  '远程入口图标加载失败时 Image src 切换为本地 PNG',
+)
+assert.equal(
+  getAffiliateShortcutIconPresentation('https://cdn.example.com/icon.png', false).src,
+  'https://cdn.example.com/icon.png',
+  '安全的远程入口图标继续作为 Image src 渲染',
+)
 
 const thirtyItems = Array.from({ length: 30 }, (_, index) => item(`entry-${index}`, index))
 assert.equal(

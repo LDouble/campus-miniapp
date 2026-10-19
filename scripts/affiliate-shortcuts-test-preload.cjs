@@ -12,4 +12,8 @@ Object.assign(global, {
   __CAMPUS_TARGET_MINIAPP_ENV_VERSION__: 'release',
 })
 
+require.extensions['.png'] = (loadedModule, filename) => {
+  loadedModule.exports = filename
+}
+
 require('./mock-taro.cjs')
