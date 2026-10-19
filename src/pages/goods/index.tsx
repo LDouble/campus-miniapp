@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
+import Taro, { useDidHide, useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import {
   listAffiliateCategories,
@@ -19,6 +19,14 @@ import {
 import { canUseAffiliateCapability } from '../../features/affiliate/capability-policy'
 import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilities'
 import { syncCustomTabBar } from '../../utils/tabbar'
+import AffiliateShortcutGrid from '../../features/affiliate-shortcuts/shortcut-grid'
+import {
+  loadAffiliateShortcutDocument,
+  nextAffiliateShortcutBoundary,
+  visibleAffiliateShortcuts,
+  type AffiliateShortcutDocument,
+  type AffiliateShortcutItem,
+} from '../../features/affiliate-shortcuts/config'
 import './index.scss'
 
 const PAGE_SIZE = 20
@@ -49,8 +57,12 @@ export default function GoodsHomePage() {
   const [error, setError] = useState('')
   const [loadMoreError, setLoadMoreError] = useState('')
   const [taxonomyError, setTaxonomyError] = useState('')
+  const [shortcuts, setShortcuts] = useState<AffiliateShortcutItem[]>([])
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
   const requestRevision = useRef(0)
+  const shortcutRequestRevision = useRef(0)
+  const shortcutDocumentRef = useRef<AffiliateShortcutDocument | null>(null)
+  const shortcutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const handledCapabilityRevision = useRef(0)
   const taxonomyRequested = useRef(false)
   const loadingRef = useRef(false)
@@ -122,8 +134,45 @@ export default function GoodsHomePage() {
     }
   }, [categoryId, topicId])
 
+  const showShortcutsForCurrentTime = useCallback((document: AffiliateShortcutDocument | null) => {
+    shortcutDocumentRef.current = document
+    setShortcuts(visibleAffiliateShortcuts(document))
+    if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+    shortcutTimerRef.current = null
+
+    const scheduleNextBoundary = () => {
+      const boundary = nextAffiliateShortcutBoundary(document)
+      if (boundary === null) return
+      const delay = Math.max(1, Math.min(boundary - Date.now(), 2_147_000_000))
+      shortcutTimerRef.current = setTimeout(() => {
+        if (shortcutDocumentRef.current !== document) return
+        setShortcuts(visibleAffiliateShortcuts(document))
+        scheduleNextBoundary()
+      }, delay)
+    }
+    scheduleNextBoundary()
+  }, [])
+
+  const loadShortcuts = useCallback(async () => {
+    const revision = shortcutRequestRevision.current + 1
+    shortcutRequestRevision.current = revision
+    if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+    shortcutTimerRef.current = null
+    shortcutDocumentRef.current = null
+    setShortcuts([])
+    try {
+      const document = await loadAffiliateShortcutDocument()
+      if (shortcutRequestRevision.current !== revision) return
+      showShortcutsForCurrentTime(document)
+    } catch {
+      // 快捷入口配置读取失败只隐藏入口，不影响推荐商品和筛选加载。
+      if (shortcutRequestRevision.current === revision) showShortcutsForCurrentTime(null)
+    }
+  }, [showShortcutsForCurrentTime])
+
   useDidShow(() => {
     syncCustomTabBar('goods')
+    void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
       if (handledCapabilityRevision.current !== snapshot.revision) {
         handledCapabilityRevision.current = snapshot.revision
@@ -149,7 +198,15 @@ export default function GoodsHomePage() {
     })
   })
 
+  useDidHide(() => {
+    shortcutRequestRevision.current += 1
+    shortcutDocumentRef.current = null
+    if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+    shortcutTimerRef.current = null
+  })
+
   usePullDownRefresh(() => {
+    void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
       if (!snapshot.capabilities.enabled) return
       return Promise.all([loadTaxonomies(true), loadProducts(1)])
@@ -241,6 +298,8 @@ export default function GoodsHomePage() {
           <Text>粘贴查券</Text>
         </View>}
       </View>}
+
+      <AffiliateShortcutGrid items={shortcuts} />
 
       <View className='affiliate-home__hero'>
         <View className='affiliate-home__hero-copy'>

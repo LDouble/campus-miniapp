@@ -2229,6 +2229,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/affiliate/resolve/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 使用解析时签发的短期凭据重新解析并生成当前推广位链接 */
+        post: operations["ConvertResolvedAffiliateContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/affiliate/search": {
         parameters: {
             query?: never;
@@ -10177,10 +10194,12 @@ export interface components {
         };
         AffiliateResolveResult: {
             product?: components["schemas"]["AffiliateGoodsView"];
+            /** @description 短期有效的服务端加密解析凭据，仅用于本次商品转链 */
+            resolution_token?: string | null;
             status: components["schemas"]["AffiliateResolveStatus"];
         };
         /** @enum {string} */
-        AffiliateResolveStatus: "resolved" | "unsupported_format" | "not_found" | "unavailable";
+        AffiliateResolveStatus: "resolved" | "unsupported_format" | "unsupported_type" | "not_found" | "unavailable";
         /** @enum {string} */
         AffiliateRuntimeStatus: "not_configured" | "disabled" | "ready" | "degraded";
         /** @enum {string} */
@@ -10202,6 +10221,62 @@ export interface components {
             priority: number;
             /** Format: uint64 */
             version: number;
+        };
+        AffiliateShortcutAction: components["schemas"]["AffiliateShortcutCopyTokenAction"] | components["schemas"]["AffiliateShortcutMiniProgramAction"];
+        AffiliateShortcutCopy: {
+            button_text: string;
+            content: string;
+            description?: string;
+            /** Format: uri */
+            hero_image_url?: string;
+            page_title: string;
+            steps: string[];
+            success_text: string;
+            target_app: string;
+            title: string;
+        };
+        AffiliateShortcutCopyTokenAction: {
+            copy: components["schemas"]["AffiliateShortcutCopy"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "copy_token";
+        };
+        AffiliateShortcutDocument: {
+            items: components["schemas"]["AffiliateShortcutItem"][];
+            /**
+             * Format: int32
+             * @enum {integer}
+             */
+            schema_version: 1;
+        };
+        AffiliateShortcutItem: {
+            action: components["schemas"]["AffiliateShortcutAction"];
+            badge?: string;
+            enabled: boolean;
+            /** Format: date-time */
+            end_at?: string;
+            /** Format: uri */
+            icon_url: string;
+            id: string;
+            /** Format: int32 */
+            priority: number;
+            /** Format: date-time */
+            start_at?: string;
+            title: string;
+        };
+        AffiliateShortcutMiniProgramAction: {
+            app_id: string;
+            /** @enum {string} */
+            env_version: "develop" | "trial" | "release";
+            /** @description 相对小程序页面路径，可带 query，不得包含 scheme、fragment 或反斜杠；服务端另行校验这些语义约束。 */
+            path: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "mini_program";
         };
         CalendarReminderList: {
             items: components["schemas"]["CalendarReminderView"][];
@@ -20725,6 +20800,30 @@ export interface operations {
             200: components["responses"]["AffiliateResolveResponse"];
             400: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ConvertResolvedAffiliateContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    resolution_token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateConvertResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             429: components["responses"]["Error"];
             502: components["responses"]["Error"];
             503: components["responses"]["Error"];

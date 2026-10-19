@@ -6,12 +6,17 @@ import { dispatchAffiliateSearchInput } from '../src/features/affiliate/search-i
 import { validateAffiliateSearchFilter } from '../src/features/affiliate/search-filters'
 import { shouldContinueAffiliateSearch } from '../src/features/affiliate/search-pagination'
 
-type SearchItem = { goods_id: string; title: string }
+type SearchItem = {
+  goods_id: string
+  title: string
+  resolution_token?: string | null
+  requires_resolution_token?: boolean
+}
 type SearchFilters = Record<string, unknown>
 type SearchQuery = { keyword: string; filters: SearchFilters }
 type SearchResponse = { page: number; page_size: number; total: number; items: SearchItem[] }
 type SearchRequest = { keyword: string; page: number; filters: SearchFilters }
-type ResolveResponse = { status: string; product?: SearchItem }
+type ResolveResponse = { status: string; product?: SearchItem; resolution_token?: string | null }
 
 const source = readFileSync('src/pages/goods/search.tsx', 'utf8')
 const sourceFile = ts.createSourceFile('search.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
@@ -524,7 +529,12 @@ const verifyDoublePasteDoesNotDuplicateResolve = async () => {
   bootstrap.resolve({ capabilities: harness.capabilitySnapshot.capabilities })
   await Promise.all([firstResolve, secondResolve])
   assert.equal(harness.resolveRequests.length, 1, '同一次粘贴操作只能提交一次解析 POST')
-  assert.deepEqual(harness.state.resolvedGoods, { goods_id: 'resolved-goods', title: '已核验商品' })
+  assert.deepEqual(harness.state.resolvedGoods, {
+    goods_id: 'resolved-goods',
+    title: '已核验商品',
+    resolution_token: undefined,
+    requires_resolution_token: true,
+  })
   assert.equal(harness.state.resolveLoading, false)
   assert.equal(harness.refs.resolveInFlightRef.current, false)
 }
@@ -589,7 +599,12 @@ const verifyStaleResolveCannotCrossPageOrCapabilityGeneration = async () => {
   await currentPageOperation
   assert.equal(refreshRequests, 1)
   assert.deepEqual(harness.resolveRequests, ['https://current.example/item'])
-  assert.deepEqual(harness.state.resolvedGoods, { goods_id: 'resolved-goods', title: '已核验商品' })
+  assert.deepEqual(harness.state.resolvedGoods, {
+    goods_id: 'resolved-goods',
+    title: '已核验商品',
+    resolution_token: undefined,
+    requires_resolution_token: true,
+  })
   assert.equal(harness.refs.resolveInFlightRef.current, false)
 }
 

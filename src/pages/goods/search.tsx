@@ -9,6 +9,7 @@ import { Image, Text, View } from '@tarojs/components'
 import {
   resolveAffiliateContent,
   searchAffiliateGoods,
+  type AffiliateResolveResult,
   type AffiliateGoodsSearchFilters,
   type AffiliateGoodsSearchSort,
   type AffiliateGoods,
@@ -18,6 +19,7 @@ import type { AffiliatePurchaseProduct } from '../../features/affiliate/componen
 import AffiliateProductCard from '../../features/affiliate/components/product-card'
 import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purchase-sheet'
 import { cacheAffiliateGoods } from '../../features/affiliate/session-cache'
+import type { AffiliateResolutionGoods } from '../../features/affiliate/resolution-ticket'
 import { validateAffiliateSearchFilter } from '../../features/affiliate/search-filters'
 import {
   classifyAffiliateSearchInput,
@@ -38,8 +40,9 @@ import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
 import './search.scss'
 
-const resolveStatusText = {
+const resolveStatusText: Record<AffiliateResolveResult['status'], string> = {
   unsupported_format: '暂不支持这种内容，请粘贴淘宝或天猫商品链接、淘口令。',
+  unsupported_type: '当前内容不是可推广的商品，请粘贴淘宝或天猫商品链接、淘口令。',
   not_found: '没有找到对应商品，请检查链接或口令后重试。',
   unavailable: '商品信息暂时无法核验，请稍后再试。',
   resolved: '商品信息已核验。',
@@ -100,7 +103,7 @@ export default function AffiliateSearchPage() {
   const [loadMoreError, setLoadMoreError] = useState(false)
   const [resolveLoading, setResolveLoading] = useState(false)
   const [resolveMessage, setResolveMessage] = useState('')
-  const [resolvedGoods, setResolvedGoods] = useState<AffiliateGoods | null>(null)
+  const [resolvedGoods, setResolvedGoods] = useState<AffiliateResolutionGoods | null>(null)
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
   const [searchFilters, setSearchFilters] = useState<AffiliateGoodsSearchFilters>({ sort: 'comprehensive' })
   const [filterExpanded, setFilterExpanded] = useState(false)
@@ -471,9 +474,16 @@ export default function AffiliateSearchPage() {
       const result = await resolveAffiliateContent(content)
       if (!isCurrentOperation()) return
       if (result.status === 'resolved' && result.product) {
-        cacheAffiliateGoods(result.product)
-        setResolvedGoods(result.product)
-        setResolveMessage(resolveStatusText.resolved)
+        const resolvedProduct: AffiliateResolutionGoods = {
+          ...result.product,
+          resolution_token: result.resolution_token,
+          requires_resolution_token: true,
+        }
+        cacheAffiliateGoods(resolvedProduct)
+        setResolvedGoods(resolvedProduct)
+        setResolveMessage(result.resolution_token
+          ? resolveStatusText.resolved
+          : '商品信息已解析，但本次没有可用的推广凭证；重新粘贴后再试。')
       } else {
         setResolveMessage(resolveStatusText[result.status])
       }
@@ -489,7 +499,7 @@ export default function AffiliateSearchPage() {
     }
   }
 
-  const openGoodsDetail = (goods: AffiliateGoods) => {
+  const openGoodsDetail = (goods: AffiliateGoods | AffiliateResolutionGoods) => {
     cacheAffiliateGoods(goods)
     Taro.navigateTo({ url: `/pages/goods/detail?goods_id=${encodeURIComponent(goods.goods_id)}` })
   }
@@ -724,7 +734,22 @@ export default function AffiliateSearchPage() {
       </>}
 
       {purchaseProduct && (
-        <CouponPurchaseSheet product={purchaseProduct} onClose={() => setPurchaseProduct(null)} />
+        <CouponPurchaseSheet
+          product={purchaseProduct}
+          onClose={() => setPurchaseProduct(null)}
+          onRepaste={() => {
+            setPurchaseProduct(null)
+            void handlePasteAndResolve()
+          }}
+          onResolutionTokenInvalid={() => {
+            const invalidToken = purchaseProduct.resolution_token
+            if (invalidToken) {
+              setResolvedGoods((current) => current?.resolution_token === invalidToken
+                ? { ...current, resolution_token: undefined, requires_resolution_token: true }
+                : current)
+            }
+          }}
+        />
       )}
     </View>
   )

@@ -78,6 +78,15 @@ export const resolveAffiliateContent = (content: string) => (
   })
 )
 
+/** 使用当前解析结果对应的短期凭证生成推广链接。 */
+export const convertAffiliateResolution = (resolutionToken: string) => (
+  apiRequest<AffiliateConvertResult>({
+    path: '/api/v1/affiliate/resolve/convert',
+    method: 'POST',
+    data: { resolution_token: resolutionToken },
+  })
+)
+
 /** 使用服务端当前推广位生成商品推广链接。 */
 export const convertAffiliateGoods = (goodsId: string) => (
   apiRequest<AffiliateConvertResult>({

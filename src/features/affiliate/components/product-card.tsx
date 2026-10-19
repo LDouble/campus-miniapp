@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Image, Text, View } from '@tarojs/components'
 import type { AffiliateGoods, AffiliateProduct } from '../../../api/affiliate'
 import { createAffiliateImageFallbackState } from '../image-fallback'
+import type { AffiliateResolutionGoods } from '../resolution-ticket'
 import './product-card.scss'
 
 export type AffiliatePurchaseProduct = Pick<
@@ -11,9 +12,10 @@ export type AffiliatePurchaseProduct = Pick<
   AffiliateGoods,
   'image_url' | 'shop_name' | 'original_price' | 'actual_price' | 'coupon_amount' | 'coupon_condition'
 >>
+& Pick<AffiliateResolutionGoods, 'resolution_token' | 'requires_resolution_token'>
 
 type ProductCardProps = {
-  product: AffiliateProduct | AffiliateGoods
+  product: AffiliateProduct | AffiliateResolutionGoods
   recommendation?: boolean
   canConvert: boolean
   onOpen?: () => void
@@ -59,6 +61,9 @@ export default function AffiliateProductCard({
     ? product.recommendation_reason
     : undefined
   const canPurchase = canConvert && product.availability === 'valid'
+  const resolutionTokenMissing = 'requires_resolution_token' in product
+    && product.requires_resolution_token === true
+    && (typeof product.resolution_token !== 'string' || !product.resolution_token.trim())
 
   return (
     <View className='affiliate-product-card'>
@@ -133,7 +138,9 @@ export default function AffiliateProductCard({
         <View
           className={`affiliate-product-card__buy ${canPurchase ? '' : 'affiliate-product-card__buy--disabled'}`}
           ariaRole='button'
-          ariaLabel={canPurchase ? '生成推广链接' : canConvert ? '商品暂不可购买' : '推广购买暂不可用'}
+          ariaLabel={resolutionTokenMissing
+            ? '解析凭证不可用，重新解析后购买'
+            : canPurchase ? '生成推广链接' : canConvert ? '商品暂不可购买' : '推广购买暂不可用'}
           onClick={() => {
             if (canPurchase) onBuy(product)
           }}
@@ -141,7 +148,7 @@ export default function AffiliateProductCard({
           {!canConvert
             ? '推广暂不可用'
             : product.availability === 'valid'
-            ? purchaseLabel(product.coupon_status)
+            ? resolutionTokenMissing ? '重新解析' : purchaseLabel(product.coupon_status)
             : '暂不可购'}
         </View>
       </View>

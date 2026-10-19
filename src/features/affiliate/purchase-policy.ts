@@ -47,6 +47,8 @@ export type AffiliateCopySessionIdentity = {
   generation: number
   goodsId: string | null | undefined
   capabilityRevision: number
+  resolutionToken?: string | null
+  requiresResolutionToken?: boolean
 }
 
 /** AffiliateCopyOperationLock 保存当前复制流程的唯一所有者。 */
@@ -91,6 +93,8 @@ export type AffiliateConversionIdentity = {
   requestRevision: number
   capabilityRevision: number
   goodsId: string | null | undefined
+  resolutionToken?: string | null
+  requiresResolutionToken?: boolean
 }
 
 /** runAffiliateConversionAfterRefresh 只在刷新期间商品、请求和能力代次均未变化时调用转链接口。 */
@@ -106,6 +110,8 @@ export const runAffiliateConversionAfterRefresh = async <T, TCapabilities>(optio
   const identityIsCurrent = current.requestRevision === options.captured.requestRevision
     && current.capabilityRevision === options.captured.capabilityRevision
     && current.goodsId === options.captured.goodsId
+    && current.resolutionToken === options.captured.resolutionToken
+    && current.requiresResolutionToken === options.captured.requiresResolutionToken
     && current.goodsId !== null
     && current.goodsId !== undefined
   if (!identityIsCurrent) return { kind: 'stale' }

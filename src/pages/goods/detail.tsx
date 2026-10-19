@@ -10,6 +10,7 @@ import CustomNavbar from '../../components/custom-navbar'
 import type { AffiliatePurchaseProduct } from '../../features/affiliate/components/product-card'
 import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purchase-sheet'
 import { getCachedAffiliateGoods } from '../../features/affiliate/session-cache'
+import type { AffiliateResolutionGoods } from '../../features/affiliate/resolution-ticket'
 import {
   applyAffiliateRequestIfCurrent,
   canUseAffiliateCapability,
@@ -25,7 +26,7 @@ import { useCampusShare } from '../../features/share'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
 import './detail.scss'
 
-type ProductDetail = AffiliateProduct | AffiliateGoods
+type ProductDetail = AffiliateProduct | AffiliateResolutionGoods
 
 const couponStatusText: Record<AffiliateGoods['coupon_status'], string> = {
   unknown: '优惠信息待核验',
@@ -174,6 +175,10 @@ export default function AffiliateProductDetailPage() {
     : ''
   const imageToken = imageFallback.select(imageSourceKey)
   const detailMetadata = product ? getAffiliateProductDetailMetadata(product) : []
+  const resolutionTokenMissing = product
+    && 'requires_resolution_token' in product
+    && product.requires_resolution_token === true
+    && (typeof product.resolution_token !== 'string' || !product.resolution_token.trim())
 
   return (
     <View className='affiliate-detail'>
@@ -294,13 +299,19 @@ export default function AffiliateProductDetailPage() {
             <View
               className={`affiliate-detail__buy ${!convertEnabled || product.availability !== 'valid' ? 'affiliate-detail__buy--disabled' : ''}`}
               ariaRole='button'
-              ariaLabel={!convertEnabled ? '推广购买暂不可用' : product.availability === 'valid' ? '领券购买商品' : '商品暂不可购买'}
+              ariaLabel={!convertEnabled
+                ? '推广购买暂不可用'
+                : resolutionTokenMissing
+                ? '解析凭证不可用，重新解析后购买'
+                : product.availability === 'valid' ? '领券购买商品' : '商品暂不可购买'}
               onClick={() => {
                 if (convertEnabled && product.availability === 'valid') setPurchaseProduct(product)
               }}
             >
               {!convertEnabled
                 ? '推广暂不可用'
+                : resolutionTokenMissing
+                ? '重新解析'
                 : product.availability === 'valid'
                 ? purchaseLabel(product.coupon_status)
                 : '商品暂不可购买'}
@@ -310,7 +321,24 @@ export default function AffiliateProductDetailPage() {
       )}
 
       {purchaseProduct && (
-        <CouponPurchaseSheet product={purchaseProduct} onClose={() => setPurchaseProduct(null)} />
+        <CouponPurchaseSheet
+          product={purchaseProduct}
+          onClose={() => setPurchaseProduct(null)}
+          onRepaste={() => {
+            setPurchaseProduct(null)
+            Taro.navigateTo({ url: '/pages/goods/search?mode=resolve' })
+          }}
+          onResolutionTokenInvalid={() => {
+            const invalidToken = purchaseProduct.resolution_token
+            if (!invalidToken) return
+            setProduct((current) => current
+              && current.goods_id === purchaseProduct.goods_id
+              && 'resolution_token' in current
+              && current.resolution_token === invalidToken
+              ? { ...current, resolution_token: undefined, requires_resolution_token: true }
+              : current)
+          }}
+        />
       )}
       </>}
     </View>

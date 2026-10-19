@@ -54,6 +54,7 @@ const harness = () => {
       capabilities: { enabled: true },
       getAffiliateCapabilitySnapshot: () => ({ capabilities: { enabled: true } }),
       refreshAffiliateCapabilities: async () => ({ capabilities: { enabled: true } }),
+      loadShortcuts: () => undefined,
       loadTaxonomies: async () => undefined,
       Taro: { stopPullDownRefresh: () => { stopped += 1 } },
       useCallback: (callback: unknown) => callback,

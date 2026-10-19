@@ -99,6 +99,8 @@ const createCopyHandler = new Function(
   'getAffiliateCapabilitySnapshot',
   'requestRevision',
   'currentGoodsIdRef',
+  'currentResolutionTokenRef',
+  'requiresResolutionTokenRef',
   'copySessionRef',
   'copyOperationLockRef',
   'setCopyInFlightSession',
@@ -134,7 +136,7 @@ assert.match(couponPurchaseSheetSource, /copyResult\.taobao_password \|\| copyRe
 assert.match(couponPurchaseSheetSource, /if \(outcome === 'copied' && isCurrentCopyOperation\(capturedIdentity\(\)\)\)/u)
 assert.match(couponPurchaseSheetSource, /复制失败，可长按选择文本手动复制/u)
 assert.match(couponPurchaseSheetSource, /try \{\s*const clipboardOperation = runAffiliateCopyIfCurrent/u)
-assert.match(couponPurchaseSheetSource, /if \(isAffiliateLinkExpired\(copyResult\.expires_at\)\)[\s\S]*?const refreshedRequest = convert\(capturedGoodsId\)/u)
+assert.match(couponPurchaseSheetSource, /if \(isAffiliateLinkExpired\(copyResult\.expires_at\)\)[\s\S]*?const refreshedRequest = convert\(capturedProduct\)/u)
 
 const copyIdentity = { requestRevision: 4, capabilityRevision: 8, goodsId: 'goods-1' }
 const copyFallback = {
@@ -201,7 +203,7 @@ const createActualCopyHandlerHarness = (options: {
   result?: AffiliateConvertResult
   product?: AffiliatePurchaseProduct
   clipboard?: (text: string) => Promise<unknown>
-  convert?: (goodsId: string) => Promise<AffiliateConvertResult | null>
+  convert?: (purchaseProduct: AffiliatePurchaseProduct) => Promise<AffiliateConvertResult | null>
   refreshCapabilities?: () => Promise<unknown>
   confirm?: () => Promise<{ confirm: boolean }>
 } = {}) => {
@@ -211,6 +213,8 @@ const createActualCopyHandlerHarness = (options: {
   let capabilityRevision = copyIdentity.capabilityRevision
   const requestRevision = { current: copyIdentity.requestRevision }
   const currentGoodsIdRef: { current: string | undefined } = { current: product.goods_id }
+  const currentResolutionTokenRef: { current: string | null | undefined } = { current: product.resolution_token }
+  const requiresResolutionTokenRef = { current: product.requires_resolution_token === true }
   const copySessionRef: { current: AffiliateCopySessionIdentity } = {
     current: {
       generation: 0,
@@ -237,6 +241,8 @@ const createActualCopyHandlerHarness = (options: {
     () => ({ revision: capabilityRevision, capabilities: currentCapabilities }),
     requestRevision,
     currentGoodsIdRef,
+    currentResolutionTokenRef,
+    requiresResolutionTokenRef,
     copySessionRef,
     copyOperationLockRef,
     (identity: AffiliateCopySessionIdentity | null) => { copyInFlightSession = identity },
@@ -273,6 +279,8 @@ const createActualCopyHandlerHarness = (options: {
       requestRevision: requestRevision.current,
       capabilityRevision,
       goodsId: currentGoodsIdRef.current,
+      resolutionToken: currentResolutionTokenRef.current,
+      requiresResolutionToken: requiresResolutionTokenRef.current,
     },
     capabilities: currentCapabilities,
   })
@@ -385,8 +393,8 @@ const testActualCopyHandlerFallback = async () => {
         pendingStarted.resolve()
         return pendingClipboard.promise
       },
-      convert: async (goodsId) => {
-        assert.equal(goodsId, baseProduct.goods_id)
+      convert: async (purchaseProduct) => {
+        assert.equal(purchaseProduct.goods_id, baseProduct.goods_id)
         convertCount += 1
         return refreshedResult
       },
