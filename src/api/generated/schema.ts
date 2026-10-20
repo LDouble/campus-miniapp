@@ -10205,6 +10205,7 @@ export interface components {
             image_url?: string | null;
             /** @description 人民币十进制金额字符串；缺失时为 null，不以 0 代替 */
             original_price?: string | null;
+            promotion?: components["schemas"]["AffiliatePromotionView"];
             shop_name?: string | null;
             /** Format: date-time */
             snapshot_at?: string | null;
@@ -10278,6 +10279,7 @@ export interface components {
             original_price?: string | null;
             /** Format: int64 */
             priority: number;
+            promotion?: components["schemas"]["AffiliatePromotionView"];
             recommendation_reason?: string | null;
             recommendation_title?: string | null;
             shop_name?: string | null;
@@ -10289,6 +10291,23 @@ export interface components {
             updated_at: string;
             /** Format: uint64 */
             version: number;
+        };
+        /** @enum {string} */
+        AffiliatePromotionDiscountType: "shopping_allowance" | "cross_store_reduction";
+        /** @enum {string} */
+        AffiliatePromotionType: "flash_sale" | "group_purchase" | "campaign";
+        AffiliatePromotionView: {
+            /** @description 满减优惠金额，人民币十进制字符串 */
+            discount_cut?: string | null;
+            /** @description 满减门槛金额，人民币十进制字符串 */
+            discount_full?: string | null;
+            discount_type?: components["schemas"]["AffiliatePromotionDiscountType"];
+            /** Format: date-time */
+            end_at: string;
+            name?: string | null;
+            /** Format: date-time */
+            start_at: string;
+            type: components["schemas"]["AffiliatePromotionType"];
         };
         AffiliateResolveResponseBody: {
             data: components["schemas"]["AffiliateResolveResult"];

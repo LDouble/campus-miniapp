@@ -387,6 +387,7 @@ export default function AffiliateCatalogSection({
               product={item.goods}
               recommendation
               layout='tile'
+              clockRefreshKey={active}
               salesLabel={formatAffiliateCatalogMonthSales(item.month_sales)}
               onOpen={() => {
                 cacheAffiliateGoods(item.goods)
