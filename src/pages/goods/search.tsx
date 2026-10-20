@@ -105,7 +105,7 @@ export default function AffiliateSearchPage() {
   const [resolveMessage, setResolveMessage] = useState('')
   const [resolvedGoods, setResolvedGoods] = useState<AffiliateResolutionGoods | null>(null)
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
-  const [searchFilters, setSearchFilters] = useState<AffiliateGoodsSearchFilters>({ sort: 'comprehensive' })
+  const [searchFilters, setSearchFilters] = useState<AffiliateGoodsSearchFilters>({ sort: 'sales' })
   const [filterExpanded, setFilterExpanded] = useState(false)
   const [draftHasCoupon, setDraftHasCoupon] = useState(false)
   const [draftCategoryId, setDraftCategoryId] = useState<AffiliateGoodsSearchCategoryId | undefined>()
@@ -391,7 +391,7 @@ export default function AffiliateSearchPage() {
     }
     const nextFilters: AffiliateGoodsSearchFilters = {
       ...validation.filters,
-      sort: searchFilters.sort || 'comprehensive',
+      sort: searchFilters.sort || 'sales',
     }
     setSearchFilters(nextFilters)
     setFilterMessage('')
