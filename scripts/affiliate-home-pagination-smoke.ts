@@ -43,7 +43,7 @@ const deferred = <T>() => {
 }
 const flush = async () => { for (let i = 0; i < 10; i += 1) await Promise.resolve() }
 const harness = () => {
-  const state = { products: [{ id: 1 }] as Product[], page: 1, total: 60, loading: false, loadingMore: false, loaded: true, error: '', loadMoreError: '' }
+  const state = { products: [{ id: 1 }] as Product[], page: 1, total: 60, loading: false, loadingMore: false, loaded: true, error: '', loadMoreError: '', rankingRefreshToken: 0 }
   const refs = { loadingRef: { current: false }, requestRevision: { current: 0 }, loadedRef: { current: true } }
   const requests: { page: number; result: ReturnType<typeof deferred<Page>> }[] = []
   let stopped = 0
@@ -54,6 +54,7 @@ const harness = () => {
       capabilities: { enabled: true },
       getAffiliateCapabilitySnapshot: () => ({ capabilities: { enabled: true } }),
       refreshAffiliateCapabilities: async () => ({ capabilities: { enabled: true } }),
+      setRankingRefreshToken: (value: number | ((current: number) => number)) => { state.rankingRefreshToken = typeof value === 'function' ? value(state.rankingRefreshToken) : value },
       loadShortcuts: () => undefined,
       loadTaxonomies: async () => undefined,
       Taro: { stopPullDownRefresh: () => { stopped += 1 } },

@@ -20,6 +20,7 @@ import { canUseAffiliateCapability } from '../../features/affiliate/capability-p
 import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilities'
 import { syncCustomTabBar } from '../../utils/tabbar'
 import AffiliateShortcutGrid from '../../features/affiliate-shortcuts/shortcut-grid'
+import AffiliateRankingSection from '../../features/affiliate/rankings/ranking-section'
 import {
   loadAffiliateShortcutDocument,
   nextAffiliateShortcutBoundary,
@@ -68,6 +69,9 @@ export default function GoodsHomePage() {
   const [taxonomyError, setTaxonomyError] = useState('')
   const [shortcuts, setShortcuts] = useState<AffiliateShortcutItem[]>([])
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
+  const [pageActive, setPageActive] = useState(false)
+  const [rankingRefreshToken, setRankingRefreshToken] = useState(0)
+  const [rankingsEnabled, setRankingsEnabled] = useState<boolean | null>(null)
   const requestRevision = useRef(0)
   const shortcutRequestRevision = useRef(0)
   const shortcutDocumentRef = useRef<AffiliateShortcutDocument | null>(null)
@@ -180,6 +184,7 @@ export default function GoodsHomePage() {
   }, [showShortcutsForCurrentTime])
 
   useDidShow(() => {
+    setPageActive(true)
     syncCustomTabBar('goods')
     void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
@@ -208,6 +213,7 @@ export default function GoodsHomePage() {
   })
 
   useDidHide(() => {
+    setPageActive(false)
     shortcutRequestRevision.current += 1
     shortcutDocumentRef.current = null
     if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
@@ -218,6 +224,7 @@ export default function GoodsHomePage() {
     void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
       if (!snapshot.capabilities.enabled) return
+      setRankingRefreshToken((revision) => revision + 1)
       return Promise.all([loadTaxonomies(true), loadProducts(1)])
     }).finally(() => {
       Taro.stopPullDownRefresh()
@@ -310,6 +317,15 @@ export default function GoodsHomePage() {
 
       <AffiliateShortcutGrid items={shortcuts} />
 
+      <AffiliateRankingSection
+        active={pageActive}
+        capabilityEnabled={capabilities.enabled}
+        canConvert={convertEnabled}
+        refreshToken={rankingRefreshToken}
+        onEnabledChange={setRankingsEnabled}
+        onBuy={setPurchaseProduct}
+      />
+
       {categories.length > 0 && (
         <ScrollView className='affiliate-home__taxonomy-scroll' scrollX enhanced showScrollbar={false}>
           <View className='affiliate-home__taxonomy-list'>
@@ -363,7 +379,7 @@ export default function GoodsHomePage() {
       <View className='affiliate-home__feed'>
         <View className='affiliate-home__section-heading'>
           <View>
-            <Text>为你推荐</Text>
+            <Text>{rankingsEnabled ? '人工精选' : '为你推荐'}</Text>
             {loaded && <Text>{total} 件好物</Text>}
           </View>
           {taxonomyError && (
@@ -384,7 +400,7 @@ export default function GoodsHomePage() {
             <View className='affiliate-home__retry' ariaRole='button' onClick={retry}>重新加载</View>
           </View>
         )}
-        {!loading && !error && loaded && products.length === 0 && (
+        {!loading && !error && loaded && products.length === 0 && rankingsEnabled !== true && (
           <View className='affiliate-home__state'>
             <View className='affiliate-home__empty-icon' />
             <Text>这里还没有好物，先去搜搜优惠吧</Text>

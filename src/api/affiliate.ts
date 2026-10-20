@@ -6,6 +6,9 @@ export type AffiliateProduct = components['schemas']['AffiliateProductView']
 export type AffiliateProductPage = components['schemas']['AffiliateProductPage']
 export type AffiliateGoods = components['schemas']['AffiliateGoodsView']
 export type AffiliateGoodsPage = components['schemas']['AffiliateGoodsPage']
+export type AffiliateRankingPage = components['schemas']['AffiliateRankingPage']
+export type AffiliateRankingItem = components['schemas']['AffiliateRankingItem']
+export type AffiliateRankingCategory = components['schemas']['AffiliateRankingCategory']
 export type AffiliateTaxonomy = components['schemas']['AffiliateTaxonomyView']
 export type AffiliateConvertResult = components['schemas']['AffiliateConvertResult']
 export type AffiliateResolveResult = components['schemas']['AffiliateResolveResult']
@@ -21,6 +24,11 @@ export type AffiliateProductQuery = {
   categoryId?: number
   topicId?: number
 }
+
+export type AffiliateRankingQuery = Pick<
+  NonNullable<operations['ListAffiliateRankings']['parameters']['query']>,
+  'category_id' | 'page' | 'page_size' | 'snapshot_id'
+>
 
 const normalizePage = (value?: number) => (
   Number.isInteger(value) && value && value > 0 ? value : 1
@@ -39,6 +47,19 @@ export const listAffiliateProducts = (query: AffiliateProductQuery = {}) => (
       page_size: normalizePageSize(query.pageSize),
       category_id: query.categoryId,
       topic_id: query.topicId,
+    },
+  })
+)
+
+/** 查询启用的分类近2小时热销榜单，并用快照标识保持分页一致。 */
+export const listAffiliateRankings = (query: AffiliateRankingQuery = {}) => (
+  apiRequest<AffiliateRankingPage>({
+    path: '/api/v1/affiliate/rankings',
+    query: {
+      category_id: query.category_id,
+      page: normalizePage(query.page),
+      page_size: normalizePageSize(query.page_size),
+      snapshot_id: query.snapshot_id,
     },
   })
 )

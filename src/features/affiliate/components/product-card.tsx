@@ -15,9 +15,10 @@ export type AffiliatePurchaseProduct = Pick<
 & Pick<AffiliateResolutionGoods, 'resolution_token' | 'requires_resolution_token'>
 
 type ProductCardProps = {
-  product: AffiliateProduct | AffiliateResolutionGoods
+  product: AffiliateProduct | AffiliateGoods | AffiliateResolutionGoods
   layout?: 'list' | 'tile'
   recommendation?: boolean
+  salesLabel?: string
   canConvert: boolean
   onOpen?: () => void
   onBuy: (product: AffiliatePurchaseProduct) => void
@@ -46,6 +47,7 @@ export default function AffiliateProductCard({
   product,
   recommendation = false,
   layout = 'list',
+  salesLabel,
   canConvert,
   onOpen,
   onBuy,
@@ -101,6 +103,7 @@ export default function AffiliateProductCard({
             <Text className='affiliate-product-card__eyebrow'>{recommendationTitle}</Text>
           )}
           <Text className='affiliate-product-card__title'>{product.title}</Text>
+          {salesLabel && <Text className='affiliate-product-card__sales-label'>{salesLabel}</Text>}
           {recommendation && recommendationReason && (
             <Text className='affiliate-product-card__reason'>{recommendationReason}</Text>
           )}
