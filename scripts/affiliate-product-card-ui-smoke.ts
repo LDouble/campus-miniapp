@@ -42,6 +42,8 @@ try {
       coupon_status: 'active',
       coupon_amount: '10',
       coupon_condition: '满 100 元可用',
+      coupon_start_at: '2000-01-01T00:00:00Z',
+      coupon_end_at: '2999-01-01T00:00:00Z',
       actual_price: '29.90',
       original_price: '39.90',
       availability: 'valid',
@@ -55,7 +57,17 @@ try {
   assert.ok(markup.includes('src="https://img.example/product.jpg"'), '商品卡应继续展示有效商品图片')
   const tile = (overrides: Record<string, unknown> = {}, canConvert = true) => renderToStaticMarkup(React.createElement(AffiliateProductCard, {
     layout: 'tile',
-    product: { title: '双列商品', goods_id: '123', availability: 'valid', coupon_status: 'active', coupon_amount: '20', actual_price: '39.9', ...overrides },
+    product: {
+      title: '双列商品',
+      goods_id: '123',
+      availability: 'valid',
+      coupon_status: 'active',
+      coupon_amount: '20',
+      coupon_start_at: '2000-01-01T00:00:00Z',
+      coupon_end_at: '2999-01-01T00:00:00Z',
+      actual_price: '39.9',
+      ...overrides,
+    },
     canConvert,
     onBuy: () => undefined,
   }))
@@ -64,6 +76,10 @@ try {
   assert.ok(!compactTile.includes('测试店铺'), '首页卡片不额外堆叠店铺行，详情仍保留完整信息')
   assert.ok(!compactTile.includes('满100元可用'), '首页卡片不额外堆叠券门槛行')
   assert.ok(compactTile.includes('affiliate-product-card__price-prefix'), '有效券显示券后价格语义')
+  const missingCouponDates = tile({ coupon_start_at: undefined, original_price: '50.00', actual_price: '39.90' })
+  assert.ok(!missingCouponDates.includes('>券后</span>'), '缺少优惠券有效期时不宣称券后价')
+  assert.ok(missingCouponDates.includes('>¥50.00</span>'), '缺少优惠券有效期时回退商品原价')
+  assert.ok(!missingCouponDates.includes('affiliate-product-card__original-price'), '缺少优惠券有效期时不保留可能失效的券后价划线')
   assert.ok(tile().includes('>+</div>'), '可购双列卡片显示紧凑购买按钮')
   assert.ok(tile().includes('>推广</div>'), '双列布局保留推广披露')
   assert.ok(tile({ coupon_status: 'unknown', coupon_amount: undefined }).includes('优惠待核验'), '未知券状态不能被样式隐藏')

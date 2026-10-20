@@ -18,7 +18,18 @@ page { background: var(--campus-page, #f5f8fc); }
   &__recommendation-label { flex: none; color: var(--ousea-ocean-600, #1d5fd6); font-size: 22rpx; font-weight: var(--ousea-font-weight-semibold, 600); }
   &__recommendation-copy { color: var(--ousea-ink-700, #3a4759); font-size: var(--ousea-font-size-caption, 24rpx); line-height: 1.55; }
   &__price-card { margin-top: 24rpx; padding: 22rpx 24rpx; border: 1rpx solid var(--ousea-bg-line, #e8edf4); border-radius: var(--ousea-radius-card, 32rpx); background: var(--campus-surface, #fff); }
+  &__promotion-card { display: flex; margin-bottom: 16rpx; padding: 18rpx; flex-direction: column; gap: 12rpx; border: 1rpx solid var(--ousea-danger-50, #fdecec); border-radius: var(--ousea-radius-card-sm, 24rpx); background: var(--ousea-lottery-warm, #fff7ed); }
+  &__promotion-heading { display: flex; min-width: 0; align-items: center; gap: 12rpx; }
+  &__promotion-kind { padding: 5rpx 10rpx; flex: none; border-radius: 5rpx; background: linear-gradient(110deg, var(--ousea-affiliate-action-start), var(--ousea-affiliate-action-end)); color: #fff; font-size: 20rpx; font-weight: var(--ousea-font-weight-semibold, 600); line-height: 1.4; }
+  &__promotion-title { overflow: hidden; min-width: 0; color: var(--ousea-ink-900, #1a2333); font-size: var(--ousea-font-size-label, 27rpx); font-weight: var(--ousea-font-weight-semibold, 600); text-overflow: ellipsis; white-space: nowrap; }
+  &__promotion-discount { color: var(--ousea-danger-500, #e5484d); font-size: var(--ousea-font-size-body, 32rpx); font-weight: var(--ousea-font-weight-bold, 700); line-height: 1.4; }
+  &__promotion-time,
+  &__coupon-time { display: flex; min-width: 0; justify-content: space-between; gap: 12rpx; color: var(--ousea-ink-500, #6b7a90); font-size: 21rpx; line-height: 1.5; }
+  &__promotion-time { padding-top: 10rpx; border-top: 1rpx solid var(--ousea-danger-50, #fdecec); }
+  &__promotion-time-value,
+  &__coupon-time-value { min-width: 0; flex: 1; text-align: right; overflow-wrap: anywhere; }
   &__coupon-row { display: flex; min-height: 66rpx; align-items: center; justify-content: space-between; gap: 12rpx; flex-wrap: wrap; }
+  &__coupon-time { margin: 0 0 12rpx; }
   &__coupon-amount { color: var(--ousea-danger-500, #e5484d); font-size: 30rpx; font-weight: var(--ousea-font-weight-bold, 700); }
   &__coupon-status { color: var(--ousea-ink-700, #3a4759); font-size: var(--ousea-font-size-label, 27rpx); font-weight: var(--ousea-font-weight-semibold, 600); }
   &__condition { color: var(--ousea-ink-500, #6b7a90); font-size: 22rpx; }
@@ -28,7 +39,7 @@ page { background: var(--campus-page, #f5f8fc); }
   &__metadata-row { display: flex; min-height: 54rpx; align-items: center; justify-content: space-between; gap: 12rpx; border-top: 1rpx solid var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); font-size: 22rpx; }
   &__disclaimer { display: block; margin: 18rpx 4rpx 36rpx; color: var(--ousea-ink-500, #6b7a90); font-size: 22rpx; line-height: 1.55; }
   &__footer { position: fixed; right: 0; bottom: 0; left: 0; z-index: 20; padding: 16rpx 28rpx calc(20rpx + env(safe-area-inset-bottom)); border-top: 1rpx solid var(--ousea-bg-line, #e8edf4); background: var(--campus-surface, #fff); }
-  &__buy { display: flex; min-height: 88rpx; align-items: center; justify-content: center; border-radius: var(--ousea-radius-pill, 999rpx); background: var(--ousea-ocean-500, #2b7aef); color: #fff; font-size: var(--ousea-font-size-body, 32rpx); font-weight: var(--ousea-font-weight-semibold, 600); &--disabled { background: var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); } }
+  &__buy { display: flex; min-height: 88rpx; align-items: center; justify-content: center; border-radius: var(--ousea-radius-pill, 999rpx); background: linear-gradient(110deg, var(--ousea-affiliate-action-start), var(--ousea-affiliate-action-end)); color: #fff; font-size: var(--ousea-font-size-body, 32rpx); font-weight: var(--ousea-font-weight-semibold, 600); &--disabled { background: var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); } }
   &__state { display: flex; min-height: 60vh; padding: 32rpx; align-items: center; justify-content: center; gap: 16rpx; flex-direction: column; box-sizing: border-box; color: var(--ousea-ink-500, #6b7a90); font-size: var(--ousea-font-size-caption, 24rpx); text-align: center; }
   &__state--error { color: var(--ousea-ink-700, #3a4759); }
   &__missing-title { color: var(--ousea-ink-900, #1a2333); font-size: var(--ousea-font-size-label, 27rpx); font-weight: var(--ousea-font-weight-semibold, 600); }
@@ -55,6 +66,11 @@ page { background: var(--campus-page, #f5f8fc); }
     &__state,
     &__missing-note { color: #aab8ca; }
     &__recommendation { background: #172554; }
+    &__promotion-card { border-color: var(--campus-border, #243244); background: var(--ousea-service-dark-orange-start, rgba(251, 191, 36, .1)); }
+    &__promotion-kind { background: var(--ousea-service-dark-orange-start, rgba(251, 191, 36, .1)); color: var(--ousea-service-dark-count-orange, #fcd34d); }
+    &__promotion-title { color: var(--campus-text-primary, #eef2f8); }
+    &__promotion-discount { color: var(--ousea-service-dark-count-orange, #fcd34d); }
+    &__promotion-time { border-color: var(--campus-border, #243244); }
     &__price-row { border-color: #2e3a4e; }
     &__metadata-row { border-color: #2e3a4e; }
     &__buy--disabled { background: #273448; color: #aab8ca; }

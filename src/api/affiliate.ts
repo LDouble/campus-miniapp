@@ -9,6 +9,11 @@ export type AffiliateGoodsPage = components['schemas']['AffiliateGoodsPage']
 export type AffiliateRankingPage = components['schemas']['AffiliateRankingPage']
 export type AffiliateRankingItem = components['schemas']['AffiliateRankingItem']
 export type AffiliateRankingCategory = components['schemas']['AffiliateRankingCategory']
+export type AffiliateCatalogPage = components['schemas']['AffiliateCatalogPage']
+export type AffiliateCatalogItem = components['schemas']['AffiliateCatalogItem']
+export type AffiliateCatalogGroup = components['schemas']['AffiliateCatalogGroup']
+export type AffiliateCatalogTag = components['schemas']['AffiliateCatalogTag']
+export type AffiliateCatalogGroupKey = 'food' | 'beauty' | 'daily'
 export type AffiliateTaxonomy = components['schemas']['AffiliateTaxonomyView']
 export type AffiliateConvertResult = components['schemas']['AffiliateConvertResult']
 export type AffiliateResolveResult = components['schemas']['AffiliateResolveResult']
@@ -28,6 +33,10 @@ export type AffiliateProductQuery = {
 export type AffiliateRankingQuery = Pick<
   NonNullable<operations['ListAffiliateRankings']['parameters']['query']>,
   'category_id' | 'page' | 'page_size' | 'snapshot_id'
+>
+export type AffiliateCatalogQuery = Pick<
+  NonNullable<operations['ListAffiliateCatalog']['parameters']['query']>,
+  'group' | 'tag' | 'page' | 'page_size' | 'snapshot_id'
 >
 
 const normalizePage = (value?: number) => (
@@ -57,6 +66,20 @@ export const listAffiliateRankings = (query: AffiliateRankingQuery = {}) => (
     path: '/api/v1/affiliate/rankings',
     query: {
       category_id: query.category_id,
+      page: normalizePage(query.page),
+      page_size: normalizePageSize(query.page_size),
+      snapshot_id: query.snapshot_id,
+    },
+  })
+)
+
+/** 查询已同步的推荐商品库，并用快照标识保持分类筛选和分页一致。 */
+export const listAffiliateCatalog = (query: AffiliateCatalogQuery = {}) => (
+  apiRequest<AffiliateCatalogPage>({
+    path: '/api/v1/affiliate/catalog',
+    query: {
+      group: query.group,
+      tag: query.tag,
       page: normalizePage(query.page),
       page_size: normalizePageSize(query.page_size),
       snapshot_id: query.snapshot_id,

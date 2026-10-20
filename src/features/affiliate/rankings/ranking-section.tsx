@@ -357,6 +357,7 @@ export default function AffiliateRankingSection({
               product={item.goods}
               recommendation
               layout='tile'
+              clockRefreshKey={active}
               salesLabel={item.two_hours_sales === null
                 ? undefined
                 : `2小时售${item.two_hours_sales}`}
