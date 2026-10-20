@@ -9,6 +9,8 @@ export type AffiliateCopyOperationIdentity = {
   requestRevision: number
   capabilityRevision: number
   goodsId: string | null | undefined
+  resolutionToken?: string | null
+  requiresResolutionToken?: boolean
 }
 
 export const DISABLED_AFFILIATE_CAPABILITIES: AffiliateCapabilities = {
@@ -84,6 +86,8 @@ export const isCurrentAffiliateCopyOperation = (
   current.requestRevision === captured.requestRevision
   && current.capabilityRevision === captured.capabilityRevision
   && current.goodsId === captured.goodsId
+  && current.resolutionToken === captured.resolutionToken
+  && current.requiresResolutionToken === captured.requiresResolutionToken
   && current.goodsId !== null
   && current.goodsId !== undefined
   && canUseAffiliateCapability(capabilities, 'convert')

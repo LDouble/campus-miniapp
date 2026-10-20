@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { Image, Text, View } from '@tarojs/components'
 import type { AffiliateGoods, AffiliateProduct } from '../../../api/affiliate'
 import { createAffiliateImageFallbackState } from '../image-fallback'
+import {
+  getAffiliateCouponStatusForDisplay,
+  getAffiliateReferencePrice,
+  getAffiliatePurchaseLabel,
+  getAffiliatePromotionDisplay,
+  hasCurrentAffiliateCoupon,
+  useAffiliateOfferClock,
+  type AffiliateOfferData,
+} from '../promotions'
+import type { AffiliateResolutionGoods } from '../resolution-ticket'
 import './product-card.scss'
 
 export type AffiliatePurchaseProduct = Pick<
@@ -11,10 +21,15 @@ export type AffiliatePurchaseProduct = Pick<
   AffiliateGoods,
   'image_url' | 'shop_name' | 'original_price' | 'actual_price' | 'coupon_amount' | 'coupon_condition'
 >>
+& Pick<AffiliateGoods, 'promotion'>
+& Pick<AffiliateResolutionGoods, 'resolution_token' | 'requires_resolution_token'>
 
 type ProductCardProps = {
-  product: AffiliateProduct | AffiliateGoods
+  product: AffiliateProduct | AffiliateGoods | AffiliateResolutionGoods
+  layout?: 'list' | 'tile'
   recommendation?: boolean
+  salesLabel?: string
+  clockRefreshKey?: string | number | boolean
   canConvert: boolean
   onOpen?: () => void
   onBuy: (product: AffiliatePurchaseProduct) => void
@@ -33,21 +48,24 @@ const formatPrice = (value?: string | null) => (
   value ? `¥${value}` : '价格暂缺'
 )
 
-const purchaseLabel = (couponStatus: AffiliateGoods['coupon_status']) => {
-  if (couponStatus === 'active') return '领券购买'
-  if (couponStatus === 'unknown' || couponStatus === 'not_started') return '查看优惠'
-  return '购买商品'
-}
-
 export default function AffiliateProductCard({
   product,
   recommendation = false,
+  layout = 'list',
+  salesLabel,
+  clockRefreshKey,
   canConvert,
   onOpen,
   onBuy,
 }: ProductCardProps) {
   const [imageFallback] = useState(createAffiliateImageFallbackState)
   const [, setImageRenderRevision] = useState(0)
+  const offer = product as AffiliateOfferData
+  const offerNow = useAffiliateOfferClock(offer, clockRefreshKey)
+  const activeCoupon = hasCurrentAffiliateCoupon(offer, offerNow)
+  const couponStatus = getAffiliateCouponStatusForDisplay(offer, offerNow)
+  const promotion = getAffiliatePromotionDisplay(offer.promotion, offerNow)
+  const referencePrice = getAffiliateReferencePrice(offer, product.actual_price, product.original_price, offerNow)
   const imageIdentity = 'id' in product ? `product:${product.id}` : `goods:${product.goods_id}`
   const imageSourceKey = `${imageIdentity}|${product.image_url || ''}`
   const imageToken = imageFallback.select(imageSourceKey)
@@ -59,9 +77,16 @@ export default function AffiliateProductCard({
     ? product.recommendation_reason
     : undefined
   const canPurchase = canConvert && product.availability === 'valid'
+  const showOriginalPrice = referencePrice.canStrikeOriginalPrice
+  const hasVerifiedActualPrice = Boolean(product.actual_price) && (activeCoupon || product.coupon_status === 'none')
+  const showCouponStatus = !promotion && (layout !== 'tile' || couponStatus !== 'none')
+  const purchaseText = getAffiliatePurchaseLabel(activeCoupon, Boolean(promotion), couponStatus)
+  const resolutionTokenMissing = 'requires_resolution_token' in product
+    && product.requires_resolution_token === true
+    && (typeof product.resolution_token !== 'string' || !product.resolution_token.trim())
 
   return (
-    <View className='affiliate-product-card'>
+    <View className={`affiliate-product-card ${layout === 'tile' ? 'affiliate-product-card--tile' : ''}`}>
       <View
         className={`affiliate-product-card__main ${onOpen ? 'affiliate-product-card__main--link' : ''}`}
         ariaRole={onOpen ? 'button' : undefined}
@@ -94,10 +119,26 @@ export default function AffiliateProductCard({
             <Text className='affiliate-product-card__eyebrow'>{recommendationTitle}</Text>
           )}
           <Text className='affiliate-product-card__title'>{product.title}</Text>
+          {promotion && (
+            <View className='affiliate-product-card__offer-badges'>
+              <View className='affiliate-product-card__activity-badge'>
+                <Text className='affiliate-product-card__activity-kind'>{promotion.typeLabel}</Text>
+                {promotion.title !== promotion.typeLabel && (
+                  <Text className='affiliate-product-card__activity-title'>{promotion.title}</Text>
+                )}
+              </View>
+              {promotion.discountLabel && (
+                <View className='affiliate-product-card__discount-badge'>
+                  <Text>{promotion.discountLabel}</Text>
+                </View>
+              )}
+            </View>
+          )}
+          {salesLabel && layout !== 'tile' && <Text className='affiliate-product-card__sales-label'>{salesLabel}</Text>}
           {recommendation && recommendationReason && (
             <Text className='affiliate-product-card__reason'>{recommendationReason}</Text>
           )}
-          {product.shop_name && (
+          {product.shop_name && layout !== 'tile' && (
             <Text className='affiliate-product-card__shop'>{product.shop_name}</Text>
           )}
         </View>
@@ -106,26 +147,26 @@ export default function AffiliateProductCard({
       <View className='affiliate-product-card__price-row'>
         <View className='affiliate-product-card__price-copy'>
           <View className='affiliate-product-card__prices'>
-            {product.actual_price ? (
-              <Text className='affiliate-product-card__actual-price'>{formatPrice(product.actual_price)}</Text>
-            ) : (
-              <Text className='affiliate-product-card__actual-price affiliate-product-card__actual-price--muted'>
-                {formatPrice(product.original_price)}
-              </Text>
-            )}
-            {product.original_price && product.actual_price && (
+            <Text className={`affiliate-product-card__actual-price ${hasVerifiedActualPrice ? '' : 'affiliate-product-card__actual-price--muted'}`}>
+              {referencePrice.isCouponPrice
+                  ? <Text className='affiliate-product-card__price-prefix'>券后</Text>
+                  : promotion && <Text className='affiliate-product-card__price-prefix'>活动参考</Text>}
+              {formatPrice(referencePrice.value)}
+            </Text>
+            {showOriginalPrice && (
               <Text className='affiliate-product-card__original-price'>¥{product.original_price}</Text>
             )}
           </View>
           <View className='affiliate-product-card__coupon-line'>
-            {product.coupon_status === 'active' && product.coupon_amount ? (
+            {activeCoupon && product.coupon_amount ? (
               <Text className='affiliate-product-card__coupon-amount'>券 ¥{product.coupon_amount}</Text>
-            ) : (
-              <Text className={`affiliate-product-card__coupon-status affiliate-product-card__coupon-status--${product.coupon_status}`}>
-                {couponLabels[product.coupon_status]}
+            ) : showCouponStatus ? (
+              <Text className={`affiliate-product-card__coupon-status affiliate-product-card__coupon-status--${couponStatus}`}>
+                {couponLabels[couponStatus]}
               </Text>
-            )}
-            {product.coupon_condition && (
+            ) : null}
+            {salesLabel && layout === 'tile' && <Text className='affiliate-product-card__sales-label'>{salesLabel}</Text>}
+            {activeCoupon && product.coupon_condition && layout !== 'tile' && (
               <Text className='affiliate-product-card__coupon-condition'>{product.coupon_condition}</Text>
             )}
           </View>
@@ -133,15 +174,17 @@ export default function AffiliateProductCard({
         <View
           className={`affiliate-product-card__buy ${canPurchase ? '' : 'affiliate-product-card__buy--disabled'}`}
           ariaRole='button'
-          ariaLabel={canPurchase ? '生成推广链接' : canConvert ? '商品暂不可购买' : '推广购买暂不可用'}
+          ariaLabel={resolutionTokenMissing
+            ? '解析凭证不可用，重新解析后购买'
+            : canPurchase ? `${purchaseText}商品` : canConvert ? '商品暂不可购买' : '推广购买暂不可用'}
           onClick={() => {
             if (canPurchase) onBuy(product)
           }}
         >
-          {!canConvert
+          {layout === 'tile' && canPurchase && !resolutionTokenMissing ? '+' : !canConvert
             ? '推广暂不可用'
             : product.availability === 'valid'
-            ? purchaseLabel(product.coupon_status)
+            ? resolutionTokenMissing ? '重新解析' : purchaseText
             : '暂不可购'}
         </View>
       </View>

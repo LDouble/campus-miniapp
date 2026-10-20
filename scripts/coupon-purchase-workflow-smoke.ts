@@ -49,11 +49,15 @@ const extractedConvert = ts.transpileModule(
   { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None } },
 )
 const createConvert = new Function(
+  'useCallback',
   'requestRevision',
   'getAffiliateCapabilitySnapshot',
   'currentGoodsIdRef',
+  'currentResolutionTokenRef',
+  'requiresResolutionTokenRef',
   'setLoading',
   'setError',
+  'setResolutionTicketFailure',
   'setResult',
   'setCopyFallback',
   'setRefreshConfirmationRequired',
@@ -61,6 +65,11 @@ const createConvert = new Function(
   'canUseAffiliateCapability',
   'refreshAffiliateCapabilities',
   'convertAffiliateGoods',
+  'convertAffiliateResolution',
+  'getAffiliateResolutionTicketFailure',
+  'getAffiliateResolutionTicketMessage',
+  'clearAffiliateGoodsResolutionToken',
+  'onResolutionTokenInvalidRef',
   extractedConvert.outputText,
 )
 
@@ -289,14 +298,20 @@ const createActualConvertHarness = (refreshCapabilities: () => Promise<Capabilit
   }
   const requestRevision = { current: 0 }
   const currentGoodsIdRef: { current: string | undefined } = { current: 'goods-a' }
+  const currentResolutionTokenRef: { current: string | null | undefined } = { current: undefined }
+  const requiresResolutionTokenRef = { current: false }
   const convertedGoods: string[] = []
   const state = { loading: false, error: '', result: null as string | null }
-  const convertHandler = (createConvert as (...args: unknown[]) => (goodsId: string) => Promise<string | null>)(
+  const convertHandler = (createConvert as (...args: unknown[]) => (product: { goods_id: string }) => Promise<string | null>)(
+    <T,>(callback: T) => callback,
     requestRevision,
     () => snapshot,
     currentGoodsIdRef,
+    currentResolutionTokenRef,
+    requiresResolutionTokenRef,
     (value: boolean) => { state.loading = value },
     (value: string) => { state.error = value },
+    () => undefined,
     (value: string) => { state.result = value },
     () => undefined,
     () => undefined,
@@ -307,9 +322,15 @@ const createActualConvertHarness = (refreshCapabilities: () => Promise<Capabilit
       convertedGoods.push(goodsId)
       return convert ? convert(goodsId) : 'converted'
     },
+    async () => 'resolution-converted',
+    () => null,
+    () => 'repaste',
+    () => false,
+    { current: undefined },
   )
+  const runConvert = (goodsId: string) => convertHandler({ goods_id: goodsId })
   return {
-    convert: convertHandler,
+    convert: runConvert,
     convertedGoods,
     state,
     requestRevision,

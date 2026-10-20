@@ -6,6 +6,14 @@ export type AffiliateProduct = components['schemas']['AffiliateProductView']
 export type AffiliateProductPage = components['schemas']['AffiliateProductPage']
 export type AffiliateGoods = components['schemas']['AffiliateGoodsView']
 export type AffiliateGoodsPage = components['schemas']['AffiliateGoodsPage']
+export type AffiliateRankingPage = components['schemas']['AffiliateRankingPage']
+export type AffiliateRankingItem = components['schemas']['AffiliateRankingItem']
+export type AffiliateRankingCategory = components['schemas']['AffiliateRankingCategory']
+export type AffiliateCatalogPage = components['schemas']['AffiliateCatalogPage']
+export type AffiliateCatalogItem = components['schemas']['AffiliateCatalogItem']
+export type AffiliateCatalogGroup = components['schemas']['AffiliateCatalogGroup']
+export type AffiliateCatalogTag = components['schemas']['AffiliateCatalogTag']
+export type AffiliateCatalogGroupKey = 'food' | 'beauty' | 'daily'
 export type AffiliateTaxonomy = components['schemas']['AffiliateTaxonomyView']
 export type AffiliateConvertResult = components['schemas']['AffiliateConvertResult']
 export type AffiliateResolveResult = components['schemas']['AffiliateResolveResult']
@@ -21,6 +29,15 @@ export type AffiliateProductQuery = {
   categoryId?: number
   topicId?: number
 }
+
+export type AffiliateRankingQuery = Pick<
+  NonNullable<operations['ListAffiliateRankings']['parameters']['query']>,
+  'category_id' | 'page' | 'page_size' | 'snapshot_id'
+>
+export type AffiliateCatalogQuery = Pick<
+  NonNullable<operations['ListAffiliateCatalog']['parameters']['query']>,
+  'group' | 'tag' | 'page' | 'page_size' | 'snapshot_id'
+>
 
 const normalizePage = (value?: number) => (
   Number.isInteger(value) && value && value > 0 ? value : 1
@@ -39,6 +56,33 @@ export const listAffiliateProducts = (query: AffiliateProductQuery = {}) => (
       page_size: normalizePageSize(query.pageSize),
       category_id: query.categoryId,
       topic_id: query.topicId,
+    },
+  })
+)
+
+/** 查询启用的分类近2小时热销榜单，并用快照标识保持分页一致。 */
+export const listAffiliateRankings = (query: AffiliateRankingQuery = {}) => (
+  apiRequest<AffiliateRankingPage>({
+    path: '/api/v1/affiliate/rankings',
+    query: {
+      category_id: query.category_id,
+      page: normalizePage(query.page),
+      page_size: normalizePageSize(query.page_size),
+      snapshot_id: query.snapshot_id,
+    },
+  })
+)
+
+/** 查询已同步的推荐商品库，并用快照标识保持分类筛选和分页一致。 */
+export const listAffiliateCatalog = (query: AffiliateCatalogQuery = {}) => (
+  apiRequest<AffiliateCatalogPage>({
+    path: '/api/v1/affiliate/catalog',
+    query: {
+      group: query.group,
+      tag: query.tag,
+      page: normalizePage(query.page),
+      page_size: normalizePageSize(query.page_size),
+      snapshot_id: query.snapshot_id,
     },
   })
 )
@@ -75,6 +119,15 @@ export const resolveAffiliateContent = (content: string) => (
     path: '/api/v1/affiliate/resolve',
     method: 'POST',
     data: { content: content.trim() },
+  })
+)
+
+/** 使用当前解析结果对应的短期凭证生成推广链接。 */
+export const convertAffiliateResolution = (resolutionToken: string) => (
+  apiRequest<AffiliateConvertResult>({
+    path: '/api/v1/affiliate/resolve/convert',
+    method: 'POST',
+    data: { resolution_token: resolutionToken },
   })
 )
 

@@ -1,13 +1,16 @@
 import { useCallback, useRef, useState } from 'react'
-import Taro, { useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
+import Taro, { useDidHide, useDidShow, usePullDownRefresh, useReachBottom } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import {
   listAffiliateCategories,
+  listAffiliateCatalog,
   listAffiliateProducts,
   listAffiliateTopics,
+  type AffiliateCatalogPage,
   type AffiliateProduct,
   type AffiliateTaxonomy,
 } from '../../api/affiliate'
+import { isApiError } from '../../api/client'
 import type { AffiliatePurchaseProduct } from '../../features/affiliate/components/product-card'
 import AffiliateProductCard from '../../features/affiliate/components/product-card'
 import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purchase-sheet'
@@ -19,7 +22,28 @@ import {
 import { canUseAffiliateCapability } from '../../features/affiliate/capability-policy'
 import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilities'
 import { syncCustomTabBar } from '../../utils/tabbar'
+import AffiliateShortcutGrid from '../../features/affiliate-shortcuts/shortcut-grid'
+import AffiliateRankingSection from '../../features/affiliate/rankings/ranking-section'
+import AffiliateCatalogSection from '../../features/affiliate/catalog/catalog-section'
+import {
+  loadAffiliateShortcutDocument,
+  nextAffiliateShortcutBoundary,
+  visibleAffiliateShortcuts,
+  type AffiliateShortcutDocument,
+  type AffiliateShortcutItem,
+} from '../../features/affiliate-shortcuts/config'
+import { shouldShowAffiliateManualFallback } from '../../features/affiliate/rankings/policy'
+import { shouldShowAffiliateCatalogLegacyFallback } from '../../features/affiliate/catalog/policy'
 import './index.scss'
+
+const categoryIcons: Record<string, string> = {
+  女装: require('../../assets/affiliate/category-women.svg'),
+  数码: require('../../assets/affiliate/category-digital.svg'),
+  美食: require('../../assets/affiliate/category-food.svg'),
+  美妆: require('../../assets/affiliate/category-beauty.svg'),
+  居家: require('../../assets/affiliate/category-home.svg'),
+  母婴: require('../../assets/affiliate/category-baby.svg'),
+}
 
 const PAGE_SIZE = 20
 
@@ -49,12 +73,25 @@ export default function GoodsHomePage() {
   const [error, setError] = useState('')
   const [loadMoreError, setLoadMoreError] = useState('')
   const [taxonomyError, setTaxonomyError] = useState('')
+  const [shortcuts, setShortcuts] = useState<AffiliateShortcutItem[]>([])
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
+  const [pageActive, setPageActive] = useState(false)
+  const [rankingRefreshToken, setRankingRefreshToken] = useState(0)
+  const [rankingsEnabled, setRankingsEnabled] = useState<boolean | null>(null)
+  const [catalogMode, setCatalogMode] = useState<'checking' | 'enabled' | 'disabled' | 'error'>('checking')
+  const [catalogPage, setCatalogPage] = useState<AffiliateCatalogPage | null>(null)
+  const [catalogError, setCatalogError] = useState('')
+  const [catalogRevision, setCatalogRevision] = useState(0)
   const requestRevision = useRef(0)
+  const catalogRequestRevision = useRef(0)
+  const shortcutRequestRevision = useRef(0)
+  const shortcutDocumentRef = useRef<AffiliateShortcutDocument | null>(null)
+  const shortcutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const handledCapabilityRevision = useRef(0)
   const taxonomyRequested = useRef(false)
   const loadingRef = useRef(false)
   const loadedRef = useRef(false)
+  const pageActiveRef = useRef(false)
 
   const loadTaxonomies = useCallback(async (force = false) => {
     if (!getAffiliateCapabilitySnapshot().capabilities.enabled) return
@@ -122,8 +159,107 @@ export default function GoodsHomePage() {
     }
   }, [categoryId, topicId])
 
+  const activateLegacyFeed = useCallback(() => {
+    setRankingsEnabled(null)
+    setRankingRefreshToken((revision) => revision + 1)
+    void loadTaxonomies()
+    if (!loadedRef.current) void loadProducts(1)
+  }, [loadProducts, loadTaxonomies])
+
+  const handleCatalogDisabled = useCallback(() => {
+    setCatalogPage(null)
+    setCatalogMode('disabled')
+    activateLegacyFeed()
+  }, [activateLegacyFeed])
+
+  const loadCatalog = useCallback(async () => {
+    if (!pageActiveRef.current || !getAffiliateCapabilitySnapshot().capabilities.enabled) return
+    const revision = catalogRequestRevision.current + 1
+    catalogRequestRevision.current = revision
+    requestRevision.current += 1
+    loadingRef.current = false
+    setLoading(false)
+    setLoadingMore(false)
+    setCatalogMode('checking')
+    setCatalogPage(null)
+    setCatalogError('')
+    try {
+      const result = await listAffiliateCatalog({ page: 1, page_size: PAGE_SIZE })
+      if (
+        catalogRequestRevision.current !== revision
+        || !pageActiveRef.current
+        || !getAffiliateCapabilitySnapshot().capabilities.enabled
+      ) return
+      if (!result.enabled) {
+        handleCatalogDisabled()
+        return
+      }
+
+      setProducts([])
+      setCategories([])
+      setTopics([])
+      taxonomyRequested.current = false
+      setLoaded(false)
+      loadedRef.current = false
+      setCatalogPage(result)
+      setCatalogRevision((current) => current + 1)
+      setCatalogMode('enabled')
+    } catch (loadError) {
+      if (
+        catalogRequestRevision.current !== revision
+        || !pageActiveRef.current
+        || !getAffiliateCapabilitySnapshot().capabilities.enabled
+      ) return
+      setCatalogError(isApiError(loadError) ? loadError.message : '推荐商品暂时不可用，请检查网络后重试。')
+      setCatalogMode('error')
+    }
+  }, [handleCatalogDisabled])
+
+  const showShortcutsForCurrentTime = useCallback((document: AffiliateShortcutDocument | null) => {
+    shortcutDocumentRef.current = document
+    setShortcuts(visibleAffiliateShortcuts(document))
+    if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+    shortcutTimerRef.current = null
+
+    const scheduleNextBoundary = () => {
+      const boundary = nextAffiliateShortcutBoundary(document)
+      if (boundary === null) return
+      const delay = Math.max(1, Math.min(boundary - Date.now(), 2_147_000_000))
+      shortcutTimerRef.current = setTimeout(() => {
+        if (shortcutDocumentRef.current !== document) return
+        setShortcuts(visibleAffiliateShortcuts(document))
+        scheduleNextBoundary()
+      }, delay)
+    }
+    scheduleNextBoundary()
+  }, [])
+
+  const loadShortcuts = useCallback(async () => {
+    const revision = shortcutRequestRevision.current + 1
+    shortcutRequestRevision.current = revision
+    if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+    shortcutTimerRef.current = null
+    shortcutDocumentRef.current = null
+    setShortcuts([])
+    try {
+      const document = await loadAffiliateShortcutDocument()
+      if (shortcutRequestRevision.current !== revision) return
+      showShortcutsForCurrentTime(document)
+    } catch {
+      // 快捷入口配置读取失败只隐藏入口，不影响推荐商品和筛选加载。
+      if (shortcutRequestRevision.current === revision) showShortcutsForCurrentTime(null)
+    }
+  }, [showShortcutsForCurrentTime])
+
   useDidShow(() => {
+    setPageActive(true)
+    pageActiveRef.current = true
+    setRankingsEnabled(null)
+    setRankingRefreshToken((revision) => revision + 1)
+    setCatalogMode('checking')
+    setCatalogPage(null)
     syncCustomTabBar('goods')
+    void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
       if (handledCapabilityRevision.current !== snapshot.revision) {
         handledCapabilityRevision.current = snapshot.revision
@@ -144,22 +280,32 @@ export default function GoodsHomePage() {
         setLoadMoreError('')
         return
       }
-      void loadTaxonomies()
-      if (!loadedRef.current) void loadProducts(1)
+      void loadCatalog()
     })
   })
 
+  useDidHide(() => {
+    setPageActive(false)
+    pageActiveRef.current = false
+    catalogRequestRevision.current += 1
+    shortcutRequestRevision.current += 1
+    shortcutDocumentRef.current = null
+    if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
+    shortcutTimerRef.current = null
+  })
+
   usePullDownRefresh(() => {
+    void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
       if (!snapshot.capabilities.enabled) return
-      return Promise.all([loadTaxonomies(true), loadProducts(1)])
+      return loadCatalog()
     }).finally(() => {
       Taro.stopPullDownRefresh()
     })
   })
 
   useReachBottom(() => {
-    if (!capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
+    if (catalogMode !== 'disabled' || !shouldShowAffiliateManualFallback(rankingsEnabled) || !capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
     void loadProducts(page + 1)
   })
 
@@ -217,6 +363,8 @@ export default function GoodsHomePage() {
   const searchEnabled = canUseAffiliateCapability(capabilities, 'search')
   const resolveEnabled = canUseAffiliateCapability(capabilities, 'resolve')
   const convertEnabled = canUseAffiliateCapability(capabilities, 'convert')
+  const showCatalogFallback = shouldShowAffiliateCatalogLegacyFallback(catalogMode === 'disabled' ? false : null)
+  const showManualFallback = showCatalogFallback && shouldShowAffiliateManualFallback(rankingsEnabled)
 
   return (
     <View className='affiliate-home'>
@@ -230,7 +378,7 @@ export default function GoodsHomePage() {
           onClick={() => openGoodsSearch()}
         >
           <Image className='affiliate-home__search-icon' src={require('../../assets/community/topbar-search.svg')} mode='aspectFit' />
-          <Text>搜商品、优惠券</Text>
+          <Text>搜商品、优惠券或粘贴标题</Text>
         </View>}
         {resolveEnabled && <View
           className='affiliate-home__paste'
@@ -242,27 +390,50 @@ export default function GoodsHomePage() {
         </View>}
       </View>}
 
-      <View className='affiliate-home__hero'>
-        <View className='affiliate-home__hero-copy'>
-          <Text className='affiliate-home__hero-eyebrow'>Campus 好物</Text>
-          <Text className='affiliate-home__hero-title'>校园实用好物</Text>
-          <Text className='affiliate-home__hero-note'>精选推荐 · 购买前核验优惠</Text>
-        </View>
-        <View className='affiliate-home__hero-art'>
-          <View className='affiliate-home__hero-bag' />
-          <View className='affiliate-home__hero-spark affiliate-home__hero-spark--one' />
-          <View className='affiliate-home__hero-spark affiliate-home__hero-spark--two' />
-        </View>
-      </View>
+      <AffiliateShortcutGrid items={shortcuts} />
 
-      {categories.length > 0 && (
+      {catalogMode === 'checking' && (
+        <View className='affiliate-home__state' ariaRole='status'>正在加载推荐商品…</View>
+      )}
+      {catalogMode === 'error' && (
+        <View className='affiliate-home__state affiliate-home__state--error' ariaRole='alert'>
+          <Text>{catalogError || '推荐商品暂时不可用，请稍后重试。'}</Text>
+          <View className='affiliate-home__retry' ariaRole='button' onClick={() => void loadCatalog()}>重新加载</View>
+        </View>
+      )}
+      {catalogMode === 'enabled' && catalogPage && (
+        <AffiliateCatalogSection
+          key={catalogRevision}
+          active={pageActive}
+          capabilityEnabled={capabilities.enabled}
+          canConvert={convertEnabled}
+          initialPage={catalogPage}
+          onDisabled={handleCatalogDisabled}
+          onBuy={setPurchaseProduct}
+        />
+      )}
+      {showCatalogFallback && (
+        <AffiliateRankingSection
+          active={pageActive}
+          capabilityEnabled={capabilities.enabled}
+          canConvert={convertEnabled}
+          refreshToken={rankingRefreshToken}
+          onEnabledChange={setRankingsEnabled}
+          onBuy={setPurchaseProduct}
+        />
+      )}
+
+      {showManualFallback && categories.length > 0 && (
         <ScrollView className='affiliate-home__taxonomy-scroll' scrollX enhanced showScrollbar={false}>
           <View className='affiliate-home__taxonomy-list'>
             <View
               className={`affiliate-home__chip ${!categoryId && !topicId ? 'affiliate-home__chip--active' : ''}`}
               ariaRole='button'
               onClick={() => chooseCategory(undefined)}
-            >全部</View>
+            >
+              {!categoryId && !topicId && <Image className='affiliate-home__category-icon' src={require('../../assets/affiliate/category-featured.svg')} mode='aspectFit' />}
+              <Text>精选</Text>
+            </View>
             {categories.map((category) => (
               <View
                 key={category.id}
@@ -270,14 +441,15 @@ export default function GoodsHomePage() {
                 ariaRole='button'
                 onClick={() => chooseCategory(category.id)}
               >
-                {category.name}
+                {categoryIcons[category.name] && <Image className='affiliate-home__category-icon' src={categoryIcons[category.name]} mode='aspectFit' />}
+                <Text>{category.name}</Text>
               </View>
             ))}
           </View>
         </ScrollView>
       )}
 
-      {topics.length > 0 && (
+      {showManualFallback && topics.length > 0 && (
         <View className='affiliate-home__topics-section'>
           <View className='affiliate-home__section-heading'>
             <Text>精选专题</Text>
@@ -301,7 +473,7 @@ export default function GoodsHomePage() {
         </View>
       )}
 
-      <View className='affiliate-home__feed'>
+      {showManualFallback && <View className='affiliate-home__feed'>
         <View className='affiliate-home__section-heading'>
           <View>
             <Text>为你推荐</Text>
@@ -342,6 +514,8 @@ export default function GoodsHomePage() {
               key={product.id}
               product={product}
               recommendation
+              layout='tile'
+              clockRefreshKey={pageActive}
               onOpen={() => Taro.navigateTo({ url: `/pages/goods/detail?id=${product.id}` })}
               onBuy={setPurchaseProduct}
               canConvert={convertEnabled}
@@ -361,7 +535,7 @@ export default function GoodsHomePage() {
         {!loadingMore && !loading && !error && !loadMoreError && products.length > 0 && products.length >= total && (
           <View className='affiliate-home__load-more'>已经到底了</View>
         )}
-      </View>
+      </View>}
 
       {purchaseProduct && (
         <CouponPurchaseSheet product={purchaseProduct} onClose={() => setPurchaseProduct(null)} />

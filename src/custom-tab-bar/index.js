@@ -37,7 +37,7 @@ const fullTabs = [
     pagePath: 'pages/goods/index',
     text: '好物',
     iconPath: '/assets/tabbar/goods.png',
-    selectedIconPath: '/assets/tabbar/goods-active.png'
+    selectedIconPath: '/assets/tabbar/goods-sale-active.svg'
   },
   {
     pagePath: 'pages/messages/index',

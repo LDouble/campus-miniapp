@@ -1,16 +1,11 @@
 import type { AffiliateConvertResult } from '../../api/affiliate'
+import { normalizeAffiliateAmount } from './amount'
 import {
   isCurrentAffiliateCopyOperation,
   type AffiliateCopyOperationIdentity,
   type AffiliateCapabilities,
 } from './capability-policy'
 import type { AffiliatePurchaseProduct } from './components/product-card'
-
-const normalizeAmount = (value: string | null | undefined) => {
-  if (value == null || value.trim() === '') return null
-  const amount = Number(value)
-  return Number.isFinite(amount) ? String(amount) : value.trim()
-}
 
 /** 判断转链结果是否过期；无过期时间表示由服务端管理有效期。 */
 export const isAffiliateLinkExpired = (expiresAt: string | null, now = Date.now()) => {
@@ -47,6 +42,8 @@ export type AffiliateCopySessionIdentity = {
   generation: number
   goodsId: string | null | undefined
   capabilityRevision: number
+  resolutionToken?: string | null
+  requiresResolutionToken?: boolean
 }
 
 /** AffiliateCopyOperationLock 保存当前复制流程的唯一所有者。 */
@@ -91,6 +88,8 @@ export type AffiliateConversionIdentity = {
   requestRevision: number
   capabilityRevision: number
   goodsId: string | null | undefined
+  resolutionToken?: string | null
+  requiresResolutionToken?: boolean
 }
 
 /** runAffiliateConversionAfterRefresh 只在刷新期间商品、请求和能力代次均未变化时调用转链接口。 */
@@ -106,6 +105,8 @@ export const runAffiliateConversionAfterRefresh = async <T, TCapabilities>(optio
   const identityIsCurrent = current.requestRevision === options.captured.requestRevision
     && current.capabilityRevision === options.captured.capabilityRevision
     && current.goodsId === options.captured.goodsId
+    && current.resolutionToken === options.captured.resolutionToken
+    && current.requiresResolutionToken === options.captured.requiresResolutionToken
     && current.goodsId !== null
     && current.goodsId !== undefined
   if (!identityIsCurrent) return { kind: 'stale' }
@@ -159,10 +160,10 @@ export const hasAffiliateOfferChanged = (
   result: AffiliateConvertResult,
 ) => {
   const priceChanged = product.actual_price != null
-    && normalizeAmount(product.actual_price) !== normalizeAmount(result.actual_price)
+    && normalizeAffiliateAmount(product.actual_price) !== normalizeAffiliateAmount(result.actual_price)
   const couponStatusChanged = product.coupon_status !== result.coupon_status
   const couponAmountChanged = product.coupon_amount != null
-    && normalizeAmount(product.coupon_amount) !== normalizeAmount(result.coupon_amount)
+    && normalizeAffiliateAmount(product.coupon_amount) !== normalizeAffiliateAmount(result.coupon_amount)
   const couponConditionChanged = product.coupon_condition != null
     && product.coupon_condition.trim() !== (result.coupon_condition?.trim() || '')
 
