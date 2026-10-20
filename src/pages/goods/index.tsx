@@ -515,6 +515,7 @@ export default function GoodsHomePage() {
               product={product}
               recommendation
               layout='tile'
+              clockRefreshKey={pageActive}
               onOpen={() => Taro.navigateTo({ url: `/pages/goods/detail?id=${product.id}` })}
               onBuy={setPurchaseProduct}
               canConvert={convertEnabled}
