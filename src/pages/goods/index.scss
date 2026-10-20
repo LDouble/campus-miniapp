@@ -91,7 +91,7 @@ page { background: var(--ousea-lottery-page, #faf7f4); }
 }
 
 .affiliate-home {
-  .affiliate-product-card__buy:not(.affiliate-product-card__buy--disabled) {
+  .affiliate-product-card:not(.affiliate-product-card--tile) .affiliate-product-card__buy:not(.affiliate-product-card__buy--disabled) {
     background: var(--ousea-service-count-orange, #b45309);
     color: #fff;
   }
@@ -110,4 +110,47 @@ page { background: var(--ousea-lottery-page, #faf7f4); }
       background: var(--ousea-service-dark-orange-start, rgba(251, 191, 36, .1));
     }
   }
+}
+
+/* Stitch 14588340939094976918：胶囊搜索、紧凑入口、双列推荐。 */
+.affiliate-home {
+  &__search-row {
+    margin: 24rpx 28rpx 28rpx;
+    padding: 6rpx;
+    gap: 0;
+    border: 1rpx solid var(--ousea-danger-50, #fdecec);
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: var(--campus-surface, #fff);
+  }
+  &__search { height: 76rpx; padding: 0 20rpx; border: 0; font-size: 24rpx; }
+  &__search > text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__paste { min-width: 150rpx; height: 76rpx; box-shadow: none; font-size: 24rpx; }
+  &__taxonomy-list { padding-top: 0; padding-bottom: 16rpx; gap: 16rpx; }
+  &__chip { min-width: 108rpx; height: 60rpx; padding: 0 24rpx; }
+  &__chip--active {
+    border-color: transparent;
+    background: linear-gradient(120deg, var(--ousea-lottery-orange, #f97316), var(--ousea-danger-500, #e5484d));
+    color: #fff;
+  }
+  &__section-heading { padding: 16rpx 32rpx 20rpx; }
+  &__section-heading > view > text:first-child { border-color: var(--ousea-ink-300, #a6b2c2); font-size: 28rpx; }
+  &__product-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 28rpx;
+    gap: 20rpx;
+    align-items: stretch;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .affiliate-home {
+    &__search-row { border-color: var(--campus-border, #243244); background: var(--campus-surface, #111827); }
+    &__search { background: transparent; }
+  }
+}
+
+.affiliate-home {
+  &__chip { gap: 8rpx; }
+  &__category-icon { width: 28rpx; height: 28rpx; flex: none; }
+  &__chip--active &__category-icon { filter: brightness(0) invert(1); }
 }

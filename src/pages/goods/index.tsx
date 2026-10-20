@@ -29,6 +29,15 @@ import {
 } from '../../features/affiliate-shortcuts/config'
 import './index.scss'
 
+const categoryIcons: Record<string, string> = {
+  女装: require('../../assets/affiliate/category-women.svg'),
+  数码: require('../../assets/affiliate/category-digital.svg'),
+  美食: require('../../assets/affiliate/category-food.svg'),
+  美妆: require('../../assets/affiliate/category-beauty.svg'),
+  居家: require('../../assets/affiliate/category-home.svg'),
+  母婴: require('../../assets/affiliate/category-baby.svg'),
+}
+
 const PAGE_SIZE = 20
 
 const appendUniqueProducts = (current: AffiliateProduct[], incoming: AffiliateProduct[]) => {
@@ -287,7 +296,7 @@ export default function GoodsHomePage() {
           onClick={() => openGoodsSearch()}
         >
           <Image className='affiliate-home__search-icon' src={require('../../assets/community/topbar-search.svg')} mode='aspectFit' />
-          <Text>搜商品、优惠券</Text>
+          <Text>搜商品、优惠券或粘贴标题</Text>
         </View>}
         {resolveEnabled && <View
           className='affiliate-home__paste'
@@ -308,7 +317,10 @@ export default function GoodsHomePage() {
               className={`affiliate-home__chip ${!categoryId && !topicId ? 'affiliate-home__chip--active' : ''}`}
               ariaRole='button'
               onClick={() => chooseCategory(undefined)}
-            >全部</View>
+            >
+              {!categoryId && !topicId && <Image className='affiliate-home__category-icon' src={require('../../assets/affiliate/category-featured.svg')} mode='aspectFit' />}
+              <Text>精选</Text>
+            </View>
             {categories.map((category) => (
               <View
                 key={category.id}
@@ -316,7 +328,8 @@ export default function GoodsHomePage() {
                 ariaRole='button'
                 onClick={() => chooseCategory(category.id)}
               >
-                {category.name}
+                {categoryIcons[category.name] && <Image className='affiliate-home__category-icon' src={categoryIcons[category.name]} mode='aspectFit' />}
+                <Text>{category.name}</Text>
               </View>
             ))}
           </View>
@@ -388,6 +401,7 @@ export default function GoodsHomePage() {
               key={product.id}
               product={product}
               recommendation
+              layout='tile'
               onOpen={() => Taro.navigateTo({ url: `/pages/goods/detail?id=${product.id}` })}
               onBuy={setPurchaseProduct}
               canConvert={convertEnabled}

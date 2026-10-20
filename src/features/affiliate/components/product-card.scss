@@ -162,3 +162,51 @@
     &__buy--disabled { background: #273448; color: #aab8ca; }
   }
 }
+
+/* 双列卡片仅供首页使用，搜索和详情沿用原有列表样式。 */
+.affiliate-product-card--tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+
+  .affiliate-product-card {
+    &__main { flex-direction: column; gap: 0; }
+    &__image-wrap { width: 100%; height: auto; aspect-ratio: 1; border-radius: 0; }
+    &__image, &__image-placeholder { display: flex; width: 100%; height: 100%; aspect-ratio: 1; border-radius: 0; }
+    &__copy { padding: 18rpx 18rpx 0; }
+    &__title { min-height: 72rpx; font-size: 25rpx; line-height: 1.45; -webkit-line-clamp: 2; }
+    &__promotion { position: absolute; top: 14rpx; left: 14rpx; padding: 3rpx 10rpx; border-radius: 6rpx; }
+    &__eyebrow, &__reason, &__shop { font-size: 20rpx; }
+    &__price-row { position: relative; margin-top: auto; padding: 12rpx 18rpx 18rpx; align-items: flex-end; gap: 4rpx; }
+    &__price-copy { display: flex; flex: 1; flex-direction: column-reverse; }
+    &__prices { min-height: 58rpx; flex-wrap: wrap; gap: 4rpx 8rpx; align-items: baseline; }
+    &__actual-price { font-size: 32rpx; line-height: 1.3; }
+    &__original-price { font-size: 19rpx; }
+    &__coupon-line { margin-top: 0; margin-bottom: 8rpx; gap: 6rpx; }
+    &__coupon-amount { padding: 3rpx 8rpx; border-radius: 4rpx; background: var(--ousea-danger-500, #e5484d); color: #fff; font-size: 20rpx; }
+    &__coupon-condition { white-space: normal; overflow-wrap: anywhere; }
+    &__buy {
+      min-width: 88rpx;
+      width: 88rpx;
+      height: 88rpx;
+      padding: 0;
+      margin-left: -8rpx;
+      margin-right: -8rpx;
+      background: radial-gradient(circle, var(--ousea-danger-50, #fdecec) 0 26rpx, transparent 27rpx);
+      color: var(--ousea-danger-500, #e5484d);
+      font-size: 36rpx;
+      font-weight: 500;
+    }
+    &__buy--disabled { min-width: 92rpx; width: 92rpx; font-size: 20rpx; background: var(--campus-page, #f5f8fc); color: var(--campus-text-muted, #6b7a90); }
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .affiliate-product-card--tile .affiliate-product-card {
+    &__buy { background: var(--campus-surface-primary, #172554); color: var(--ousea-service-dark-count-orange, #fcd34d); }
+    &__buy--disabled { background: var(--campus-border, #243244); color: var(--campus-text-muted, #8494aa); }
+  }
+}

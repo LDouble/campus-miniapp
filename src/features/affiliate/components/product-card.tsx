@@ -16,6 +16,7 @@ export type AffiliatePurchaseProduct = Pick<
 
 type ProductCardProps = {
   product: AffiliateProduct | AffiliateResolutionGoods
+  layout?: 'list' | 'tile'
   recommendation?: boolean
   canConvert: boolean
   onOpen?: () => void
@@ -44,6 +45,7 @@ const purchaseLabel = (couponStatus: AffiliateGoods['coupon_status']) => {
 export default function AffiliateProductCard({
   product,
   recommendation = false,
+  layout = 'list',
   canConvert,
   onOpen,
   onBuy,
@@ -66,7 +68,7 @@ export default function AffiliateProductCard({
     && (typeof product.resolution_token !== 'string' || !product.resolution_token.trim())
 
   return (
-    <View className='affiliate-product-card'>
+    <View className={`affiliate-product-card ${layout === 'tile' ? 'affiliate-product-card--tile' : ''}`}>
       <View
         className={`affiliate-product-card__main ${onOpen ? 'affiliate-product-card__main--link' : ''}`}
         ariaRole={onOpen ? 'button' : undefined}
@@ -145,7 +147,7 @@ export default function AffiliateProductCard({
             if (canPurchase) onBuy(product)
           }}
         >
-          {!canConvert
+          {layout === 'tile' && canPurchase && !resolutionTokenMissing ? '+' : !canConvert
             ? '推广暂不可用'
             : product.availability === 'valid'
             ? resolutionTokenMissing ? '重新解析' : purchaseLabel(product.coupon_status)

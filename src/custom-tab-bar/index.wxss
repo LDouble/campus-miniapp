@@ -125,3 +125,9 @@
   }
 
 }
+
+/* 好物入口沿用该页促销色，其他 Tab 的品牌色保持不变。 */
+.tab-bar__item--goods.tab-bar__item--active .tab-bar__text {
+  color: var(--ousea-lottery-accent, #ea580c);
+  font-weight: var(--ousea-font-weight-semibold, 600);
+}

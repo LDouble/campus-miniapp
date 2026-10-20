@@ -1,6 +1,6 @@
 .affiliate-shortcuts {
   margin: 0 28rpx 20rpx;
-  padding: 28rpx 14rpx;
+  padding: 28rpx 18rpx 22rpx;
   box-sizing: border-box;
   border: 1rpx solid var(--ousea-bg-line, #e8edf4);
   border-radius: var(--ousea-radius-card, 32rpx);
@@ -16,7 +16,7 @@
   &__item {
     display: flex;
     min-width: 0;
-    min-height: 132rpx;
+    min-height: 138rpx;
     padding: 4rpx 2rpx;
     align-items: center;
     justify-content: center;
@@ -38,7 +38,7 @@
     flex: none;
   }
 
-  &__icon { width: 88rpx; height: 88rpx; }
+  &__icon { width: 96rpx; height: 96rpx; }
 
   &__icon-fallback {
     display: flex;
@@ -56,19 +56,21 @@
 
   &__badge {
     position: absolute;
-    top: -2rpx;
-    right: -16rpx;
-    max-width: 76rpx;
+    top: -10rpx;
+    right: -8rpx;
+    max-width: 108rpx;
     padding: 3rpx 8rpx;
     overflow: hidden;
     box-sizing: border-box;
-    border-radius: 8rpx;
+    border-radius: var(--ousea-radius-pill, 999rpx);
     background: var(--ousea-danger-500, #e5484d);
     color: #fff;
-    font-size: var(--ousea-font-size-badge, 20rpx);
+    font-size: 18rpx;
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
+    animation: affiliate-shortcut-bounce 2.2s ease-in-out infinite;
+    transform-origin: center bottom;
   }
 
   &__title {
@@ -96,4 +98,12 @@
 
     &__title { color: var(--campus-text-body, #d7e0ec); }
   }
+}
+
+@keyframes affiliate-shortcut-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3rpx); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .affiliate-shortcuts__badge { animation: none; }
 }
