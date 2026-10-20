@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Image, Text, View } from '@tarojs/components'
 import type { AffiliateGoods, AffiliateProduct } from '../../../api/affiliate'
+import { compareAffiliateAmounts } from '../amount'
 import { createAffiliateImageFallbackState } from '../image-fallback'
 import type { AffiliateResolutionGoods } from '../resolution-ticket'
 import './product-card.scss'
@@ -65,6 +66,7 @@ export default function AffiliateProductCard({
     ? product.recommendation_reason
     : undefined
   const canPurchase = canConvert && product.availability === 'valid'
+  const showOriginalPrice = compareAffiliateAmounts(product.original_price, product.actual_price) === 1
   const resolutionTokenMissing = 'requires_resolution_token' in product
     && product.requires_resolution_token === true
     && (typeof product.resolution_token !== 'string' || !product.resolution_token.trim())
@@ -123,7 +125,7 @@ export default function AffiliateProductCard({
                 {formatPrice(product.original_price)}
               </Text>
             )}
-            {product.original_price && product.actual_price && (
+            {showOriginalPrice && (
               <Text className='affiliate-product-card__original-price'>¥{product.original_price}</Text>
             )}
           </View>

@@ -42,8 +42,8 @@ const deferred = <T>() => {
   return { promise, resolve, reject }
 }
 const flush = async () => { for (let i = 0; i < 10; i += 1) await Promise.resolve() }
-const harness = () => {
-  const state = { products: [{ id: 1 }] as Product[], page: 1, total: 60, loading: false, loadingMore: false, loaded: true, error: '', loadMoreError: '', rankingRefreshToken: 0 }
+const harness = (rankingsEnabled: boolean | null = false) => {
+  const state = { products: [{ id: 1 }] as Product[], page: 1, total: 60, loading: false, loadingMore: false, loaded: true, error: '', loadMoreError: '', rankingRefreshToken: 0, rankingsEnabled }
   const refs = { loadingRef: { current: false }, requestRevision: { current: 0 }, loadedRef: { current: true } }
   const requests: { page: number; result: ReturnType<typeof deferred<Page>> }[] = []
   let stopped = 0
@@ -55,6 +55,8 @@ const harness = () => {
       getAffiliateCapabilitySnapshot: () => ({ capabilities: { enabled: true } }),
       refreshAffiliateCapabilities: async () => ({ capabilities: { enabled: true } }),
       setRankingRefreshToken: (value: number | ((current: number) => number)) => { state.rankingRefreshToken = typeof value === 'function' ? value(state.rankingRefreshToken) : value },
+      setRankingsEnabled: (value: boolean | null) => { state.rankingsEnabled = value },
+      shouldShowAffiliateManualFallback: (enabled: boolean | null) => enabled === false,
       loadShortcuts: () => undefined,
       loadTaxonomies: async () => undefined,
       Taro: { stopPullDownRefresh: () => { stopped += 1 } },
@@ -121,5 +123,12 @@ export async function runAffiliateHomePaginationSmoke() {
   await first
   firstFailure.render().reachBottom()
   assert.equal(firstFailure.requests.length, 1, '第一页失败时不得继续追加旧查询下一页')
+
+  const rankingEnabled = harness(true)
+  rankingEnabled.render().reachBottom()
+  assert.equal(rankingEnabled.requests.length, 0, '自动榜单启用时触底不再请求隐藏的人工列表')
+  const rankingUnknown = harness(null)
+  rankingUnknown.render().reachBottom()
+  assert.equal(rankingUnknown.requests.length, 0, '榜单开关未知或请求失败时不继续请求隐藏的人工列表')
   console.log('affiliate home refresh and pagination: ok')
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { ScrollView, Text, View } from '@tarojs/components'
+import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { isApiError } from '../../../api/client'
 import {
   listAffiliateRankings,
@@ -22,6 +22,18 @@ import {
 import './ranking-section.scss'
 
 const PAGE_SIZE = 20
+
+const rankingCategoryIcons: Record<number, string> = {
+  4: require('../../../assets/affiliate/category-home.svg'),
+  6: require('../../../assets/affiliate/category-food.svg'),
+  3: require('../../../assets/affiliate/category-beauty.svg'),
+  1: require('../../../assets/affiliate/category-women.svg'),
+  14: require('../../../assets/affiliate/category-home-textile.svg'),
+  5: require('../../../assets/affiliate/category-shoe.svg'),
+  9: require('../../../assets/affiliate/category-men.svg'),
+  12: require('../../../assets/affiliate/category-accessories.svg'),
+  13: require('../../../assets/affiliate/category-outdoor.svg'),
+}
 
 type AffiliateRankingSectionProps = {
   active: boolean
@@ -273,15 +285,6 @@ export default function AffiliateRankingSection({
 
   return (
     <View className='affiliate-ranking'>
-      <View className='affiliate-home__section-heading affiliate-ranking__heading'>
-        <View>
-          <Text>2小时热销</Text>
-          {state.enabled && <Text>{state.total} 件榜单商品</Text>}
-        </View>
-        {syncedAt && <Text>{syncedAt}</Text>}
-      </View>
-      <Text className='affiliate-ranking__source'>数据来源：大淘客近2小时热销榜</Text>
-
       {state.enabled && categories.length > 0 && (
         <ScrollView className='affiliate-ranking__category-scroll' scrollX enhanced showScrollbar={false}>
           <View className='affiliate-ranking__category-list'>
@@ -290,7 +293,16 @@ export default function AffiliateRankingSection({
               ariaRole='button'
               ariaLabel='查看综合热销榜'
               onClick={() => chooseCategory(undefined)}
-            >综合</View>
+            >
+              <Image
+                className='affiliate-ranking__category-icon'
+                src={selectedCategoryId === undefined
+                  ? require('../../../assets/affiliate/category-featured.svg')
+                  : require('../../../assets/affiliate/category-comprehensive.svg')}
+                mode='aspectFit'
+              />
+              <Text>综合</Text>
+            </View>
             {categories.map((category) => (
               <View
                 key={category.id}
@@ -298,11 +310,26 @@ export default function AffiliateRankingSection({
                 ariaRole='button'
                 ariaLabel={`查看${category.name}热销榜`}
                 onClick={() => chooseCategory(category.id)}
-              >{category.name}</View>
+              >
+                <Image
+                  className='affiliate-ranking__category-icon'
+                  src={rankingCategoryIcons[category.id]}
+                  mode='aspectFit'
+                />
+                <Text>{category.name}</Text>
+              </View>
             ))}
           </View>
         </ScrollView>
       )}
+
+      <View className='affiliate-home__section-heading affiliate-ranking__heading'>
+        <View className='affiliate-ranking__heading-main'>
+          <Text>为你推荐</Text>
+          {state.enabled && <Text className='affiliate-ranking__window'>近2小时热销</Text>}
+        </View>
+        {syncedAt && <Text>{syncedAt}</Text>}
+      </View>
 
       {state.phase === 'loading' && state.items.length === 0 && (
         <View className='affiliate-ranking__state' ariaRole='status'>正在加载热销商品…</View>
@@ -342,6 +369,9 @@ export default function AffiliateRankingSection({
             />
           ))}
         </View>
+      )}
+      {state.enabled && state.items.length > 0 && (
+        <Text className='affiliate-ranking__source'>数据来自大淘客榜单</Text>
       )}
 
       {state.enabled && state.phase !== 'loading' && !state.error && state.items.length === 0 && categoryState === 'ready' && (

@@ -3,6 +3,9 @@ import type { AffiliateRankingCategory, AffiliateRankingItem } from '../../../ap
 /** AFFILIATE_RANKING_CATEGORY_ORDER 保存本轮确认的热销榜分类顺序。 */
 export const AFFILIATE_RANKING_CATEGORY_ORDER = [4, 6, 3, 1, 14, 5, 9, 12, 13] as const
 
+/** shouldShowAffiliateManualFallback 仅在榜单接口明确关闭时显示人工推荐回退。 */
+export const shouldShowAffiliateManualFallback = (rankingsEnabled: boolean | null) => rankingsEnabled === false
+
 const includedCategoryIds = new Set<number>(AFFILIATE_RANKING_CATEGORY_ORDER)
 const categoryOrder = new Map<number, number>(AFFILIATE_RANKING_CATEGORY_ORDER.map((id, index) => [id, index]))
 

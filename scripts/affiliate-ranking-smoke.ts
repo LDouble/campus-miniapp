@@ -13,6 +13,7 @@ import {
   getAffiliateRankingCategoryTimestamp,
   getAffiliateRankingSnapshotRestart,
   hasMoreAffiliateRankingPages,
+  shouldShowAffiliateManualFallback,
   sortAffiliateRankingCategories,
 } from '../src/features/affiliate/rankings/policy'
 
@@ -27,6 +28,9 @@ const categories: AffiliateRankingCategory[] = [
 const sortedCategories = sortAffiliateRankingCategories(categories)
 assert.deepEqual(sortedCategories.map((category) => category.id), [4, 6, 13])
 assert.deepEqual(AFFILIATE_RANKING_CATEGORY_ORDER, [4, 6, 3, 1, 14, 5, 9, 12, 13])
+assert.equal(shouldShowAffiliateManualFallback(null), false, '榜单状态未知时不能闪现人工推荐列表')
+assert.equal(shouldShowAffiliateManualFallback(true), false, '榜单启用时只显示榜单列表')
+assert.equal(shouldShowAffiliateManualFallback(false), true, '仅服务端明确关闭榜单时回退人工推荐')
 assert.equal(sortedCategories[0].name, '居家后端名', '界面分类名应取后端元数据')
 assert.equal(sortedCategories.some((category) => [7, 8, 11].includes(category.id)), false)
 assert.equal(getAffiliateRankingCategoryState(sortedCategories, undefined), 'partial')
@@ -132,8 +136,39 @@ assert.match(sectionSource, /salesLabel=\{item\.two_hours_sales === null/u, '销
 assert.match(sectionSource, /cacheAffiliateGoods\(item\.goods\)/u, '打开详情前缓存完整商品快照')
 assert.match(sectionSource, /detail\?goods_id=\$\{encodeURIComponent\(item\.goods\.goods_id\)\}/u, '榜单详情按商品标识进入现有详情流程')
 assert.match(sectionSource, /onBuy=\{onBuy\}/u, '榜单购买必须复用当前推广位购买回调')
-assert.match(homeSource, /rankingsEnabled !== true/u, '自动榜单启用时隐藏空的人工精选大空态')
-assert.match(homeSource, /<AffiliateRankingSection/u, '首页应展示独立自动榜单区')
+assert.match(homeSource, /showManualFallback && categories\.length/u, '榜单未知或启用时隐藏人工分类')
+assert.match(homeSource, /showManualFallback && topics\.length/u, '榜单未知或启用时隐藏人工专题')
+assert.match(homeSource, /showManualFallback && <View className='affiliate-home__feed'>/u, '榜单未知或启用时隐藏人工推荐feed')
+assert.match(homeSource, /shouldShowAffiliateManualFallback\(rankingsEnabled\).*products\.length >= total/u, '仅显式人工回退时首页触底才继续请求人工列表')
+assert.match(homeSource, /<AffiliateRankingSection/u, '首页推荐列表由分类榜单组件承载')
+assert.match(sectionSource, /<Text>为你推荐<\/Text>[\s\S]*?className='affiliate-ranking__window'>近2小时热销/u, '榜单标题使用紧凑热销时间徽标')
+assert.match(sectionSource, /className='affiliate-ranking__source'>数据来自大淘客榜单/u, '榜单来源显示真实数据提供方')
+assert.ok(
+  sectionSource.indexOf("className='affiliate-ranking__source'") > sectionSource.indexOf('className=\'affiliate-home__product-list affiliate-ranking__product-list\''),
+  '榜单来源提示放在商品列表之后，不挤占标题与商品的紧凑布局',
+)
+assert.doesNotMatch(sectionSource, /<Text>2小时热销<\/Text>/u, '不再显示与推荐feed并列的热销专区标题')
+assert.match(sectionSource, /rankingCategoryIcons\[category\.id\]/u, '分类图标按后端分类ID显式映射')
+assert.ok(
+  sectionSource.indexOf('affiliate-ranking__category-scroll') < sectionSource.indexOf('<Text>为你推荐</Text>'),
+  '横向分类胶囊位于单一推荐标题之前',
+)
+const categoryIconFiles: Record<number, string> = {
+  4: 'category-home.svg',
+  6: 'category-food.svg',
+  3: 'category-beauty.svg',
+  1: 'category-women.svg',
+  14: 'category-home-textile.svg',
+  5: 'category-shoe.svg',
+  9: 'category-men.svg',
+  12: 'category-accessories.svg',
+  13: 'category-outdoor.svg',
+}
+Object.entries(categoryIconFiles).forEach(([categoryId, file]) => {
+  assert.ok(sectionSource.includes(`${categoryId}: require('../../../assets/affiliate/${file}')`), `分类 ${categoryId} 使用对应图标`)
+})
+const rankingStyle = readFileSync('src/features/affiliate/rankings/ranking-section.scss', 'utf8')
+assert.match(rankingStyle, /category--active[\s\S]*?category-icon \{ filter: brightness\(0\) invert\(1\); \}/u, '选中分类的图标转为白色并与暖色底保持对比')
 
 void Promise.all([verifyRequestCoordination(), verifyRankingApiQuery()])
   .then(() => console.log('affiliate ranking category, snapshot, request scope and API query: ok'))

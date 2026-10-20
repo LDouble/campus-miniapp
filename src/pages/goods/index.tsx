@@ -28,6 +28,7 @@ import {
   type AffiliateShortcutDocument,
   type AffiliateShortcutItem,
 } from '../../features/affiliate-shortcuts/config'
+import { shouldShowAffiliateManualFallback } from '../../features/affiliate/rankings/policy'
 import './index.scss'
 
 const categoryIcons: Record<string, string> = {
@@ -185,6 +186,8 @@ export default function GoodsHomePage() {
 
   useDidShow(() => {
     setPageActive(true)
+    setRankingsEnabled(null)
+    setRankingRefreshToken((revision) => revision + 1)
     syncCustomTabBar('goods')
     void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
@@ -224,6 +227,7 @@ export default function GoodsHomePage() {
     void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
       if (!snapshot.capabilities.enabled) return
+      setRankingsEnabled(null)
       setRankingRefreshToken((revision) => revision + 1)
       return Promise.all([loadTaxonomies(true), loadProducts(1)])
     }).finally(() => {
@@ -232,7 +236,7 @@ export default function GoodsHomePage() {
   })
 
   useReachBottom(() => {
-    if (!capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
+    if (!shouldShowAffiliateManualFallback(rankingsEnabled) || !capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
     void loadProducts(page + 1)
   })
 
@@ -290,6 +294,7 @@ export default function GoodsHomePage() {
   const searchEnabled = canUseAffiliateCapability(capabilities, 'search')
   const resolveEnabled = canUseAffiliateCapability(capabilities, 'resolve')
   const convertEnabled = canUseAffiliateCapability(capabilities, 'convert')
+  const showManualFallback = shouldShowAffiliateManualFallback(rankingsEnabled)
 
   return (
     <View className='affiliate-home'>
@@ -326,7 +331,7 @@ export default function GoodsHomePage() {
         onBuy={setPurchaseProduct}
       />
 
-      {categories.length > 0 && (
+      {showManualFallback && categories.length > 0 && (
         <ScrollView className='affiliate-home__taxonomy-scroll' scrollX enhanced showScrollbar={false}>
           <View className='affiliate-home__taxonomy-list'>
             <View
@@ -352,7 +357,7 @@ export default function GoodsHomePage() {
         </ScrollView>
       )}
 
-      {topics.length > 0 && (
+      {showManualFallback && topics.length > 0 && (
         <View className='affiliate-home__topics-section'>
           <View className='affiliate-home__section-heading'>
             <Text>精选专题</Text>
@@ -376,10 +381,10 @@ export default function GoodsHomePage() {
         </View>
       )}
 
-      <View className='affiliate-home__feed'>
+      {showManualFallback && <View className='affiliate-home__feed'>
         <View className='affiliate-home__section-heading'>
           <View>
-            <Text>{rankingsEnabled ? '人工精选' : '为你推荐'}</Text>
+            <Text>为你推荐</Text>
             {loaded && <Text>{total} 件好物</Text>}
           </View>
           {taxonomyError && (
@@ -400,7 +405,7 @@ export default function GoodsHomePage() {
             <View className='affiliate-home__retry' ariaRole='button' onClick={retry}>重新加载</View>
           </View>
         )}
-        {!loading && !error && loaded && products.length === 0 && rankingsEnabled !== true && (
+        {!loading && !error && loaded && products.length === 0 && (
           <View className='affiliate-home__state'>
             <View className='affiliate-home__empty-icon' />
             <Text>这里还没有好物，先去搜搜优惠吧</Text>
@@ -437,7 +442,7 @@ export default function GoodsHomePage() {
         {!loadingMore && !loading && !error && !loadMoreError && products.length > 0 && products.length >= total && (
           <View className='affiliate-home__load-more'>已经到底了</View>
         )}
-      </View>
+      </View>}
 
       {purchaseProduct && (
         <CouponPurchaseSheet product={purchaseProduct} onClose={() => setPurchaseProduct(null)} />
