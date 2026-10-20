@@ -40,6 +40,9 @@ import { useCampusShare } from '../../features/share'
 import { setCustomTabBarHidden } from '../../utils/tabbar'
 import goodsIcon from '../../assets/tabbar/goods.svg'
 import shareIcon from '../../assets/community/share.svg'
+import detailShopIcon from '../../assets/affiliate/detail-shop.svg'
+import detailRulesIcon from '../../assets/affiliate/detail-rules.svg'
+import detailSparkIcon from '../../assets/affiliate/detail-spark.svg'
 import './detail.scss'
 
 type ProductDetail = AffiliateProduct | AffiliateResolutionGoods
@@ -217,7 +220,7 @@ export default function AffiliateProductDetailPage() {
 
   return (
     <View className='affiliate-detail'>
-      <CustomNavbar title='好物详情' showBack />
+      <CustomNavbar title='商品优惠详情' showBack />
 
       {!capabilitySnapshot.loaded && (
         <View className='affiliate-detail__state' ariaRole='status'>正在检查好物服务…</View>
@@ -298,30 +301,27 @@ export default function AffiliateProductDetailPage() {
 
           <View className='affiliate-detail__content'>
             <View className='affiliate-detail__price-card'>
-              {(promotion || activeCoupon) && <View className='affiliate-detail__campaign-line'>
-                <Text>{promotion?.title || '领券优惠'}</Text>
-                {countdown && <View className='affiliate-detail__countdown'><Text>{countdown.label}</Text><Text className='affiliate-detail__countdown-value'>{countdown.text}</Text></View>}
-              </View>}
               <View className='affiliate-detail__price-heading'>
-                <View className='affiliate-detail__price-row'>
-                  <Text>{referencePrice?.isCouponPrice ? '参考券后价' : promotion ? '活动参考价' : '商品参考价'}</Text>
+                <View className='affiliate-detail__price-main'>
+                  <View className='affiliate-detail__price-labels'>
+                    {(activeCoupon || promotion) && <Text className='affiliate-detail__exclusive'>{promotion?.title || '领券后专享'}</Text>}
+                    <Text>{referencePrice?.isCouponPrice ? '参考券后价' : promotion ? '活动参考价' : '商品参考价'}</Text>
+                  </View>
                   <View className='affiliate-detail__price-values'>
-                    <Text className={`affiliate-detail__actual-price ${!referencePrice?.value ? 'affiliate-detail__actual-price--unknown' : ''}`}>{referencePrice?.value ? <><Text className='affiliate-detail__currency'>¥</Text>{referencePrice.value.split('.')[0]}<Text className='affiliate-detail__decimal'>{referencePrice.value.includes('.') ? `.${referencePrice.value.split('.')[1]}` : ''}</Text></> : '以淘宝商品页为准'}</Text>
-                    {referencePrice?.canStrikeOriginalPrice && product.original_price && (
-                      <Text className='affiliate-detail__original-price'>¥{product.original_price}</Text>
-                    )}
-                    {activeCoupon && <Text className='affiliate-detail__bar-coupon'>券 ¥{product.coupon_amount}</Text>}
+                    <Text className={`affiliate-detail__actual-price ${!referencePrice?.value ? 'affiliate-detail__actual-price--unknown' : ''}`}>{referencePrice?.value ? `¥${referencePrice.value}` : '以淘宝商品页为准'}</Text>
+                    {referencePrice?.canStrikeOriginalPrice && product.original_price && <Text className='affiliate-detail__original-price'>原价 ¥{product.original_price}</Text>}
                   </View>
                 </View>
+                {countdown && <View className='affiliate-detail__countdown'><Text>距{countdown.label}仅剩</Text><Text className='affiliate-detail__countdown-value'>{countdown.text}</Text></View>}
               </View>
-              {Boolean(sourceMetadata?.specialTexts.length) && <View className='affiliate-detail__offer-tags'>
-                {sourceMetadata?.specialTexts.map((label, index) => <Text className='affiliate-detail__bar-tag' key={`${label}-${index}`}>{label}</Text>)}
+              {activeCoupon && <View className='affiliate-detail__ticket-row'>
+                <Text className='affiliate-detail__bar-coupon'>优惠券</Text><Text>立减 ¥{product.coupon_amount}</Text>
               </View>}
             </View>
             <View className='affiliate-detail__info-card'>
               {recommendationTitle && <Text className='affiliate-detail__eyebrow'>{recommendationTitle}</Text>}
               <Text className='affiliate-detail__title'>{product.title}</Text>
-              {product.shop_name && <View className='affiliate-detail__shop'><Image className='affiliate-detail__shop-icon' src={goodsIcon} mode='aspectFit' /><Text>{product.shop_name}</Text></View>}
+              {product.shop_name && <View className='affiliate-detail__shop'><Image className='affiliate-detail__shop-icon' src={detailShopIcon} mode='aspectFit' /><Text>{product.shop_name}</Text></View>}
               {sourceMetadata && sourceMetadata.badges.length > 0 && (
                 <View className='affiliate-detail__source-badges'>
                   {sourceMetadata.badges.map((badge) => (
@@ -337,28 +337,28 @@ export default function AffiliateProductDetailPage() {
               )}
 
             </View>
-            {sourceMetadata?.recommendationText && (
+            {(sourceMetadata?.recommendationText || Boolean(sourceMetadata?.specialTexts.length)) && (
               <View className='affiliate-detail__source-copy'>
-                <Text className='affiliate-detail__source-copy-title'>商品推荐</Text>
-                <Text className='affiliate-detail__source-copy-text'>{sourceMetadata.recommendationText}</Text>
+                <View className='affiliate-detail__section-heading'><Image className='affiliate-detail__section-icon' src={detailSparkIcon} mode='aspectFit' /><Text className='affiliate-detail__source-copy-title'>商品推荐</Text></View>
+                {sourceMetadata?.recommendationText && <Text className='affiliate-detail__source-copy-text'>{sourceMetadata.recommendationText}</Text>}
+                {Boolean(sourceMetadata?.specialTexts.length) && <View className='affiliate-detail__special-tags'>{sourceMetadata?.specialTexts.map((label, index) => <Text className='affiliate-detail__special-tag' key={`${label}-${index}`}>{label}</Text>)}</View>}
                 <Text className='affiliate-detail__source-copy-note'>商家推广信息，优惠条件以淘宝商品页为准</Text>
               </View>
             )}
             <View className='affiliate-detail__notice-card'>
-              <Text className='affiliate-detail__notice-title'>优惠说明</Text>
-              {activeCoupon && product.coupon_condition && <Text className='affiliate-detail__disclaimer'>使用门槛：{product.coupon_condition}</Text>}
+              <View className='affiliate-detail__notice-heading'><View className='affiliate-detail__section-heading'><Image className='affiliate-detail__section-icon' src={detailRulesIcon} mode='aspectFit' /><Text className='affiliate-detail__notice-title'>优惠券规则说明</Text></View>{detailMetadata.filter((item) => item.key === 'snapshot_at').map((item) => <Text className='affiliate-detail__updated' key={item.key}>更新于 {item.value}</Text>)}</View>
+              {activeCoupon && product.coupon_condition && <View className='affiliate-detail__rule-row'><Text>门槛条件</Text><Text>{product.coupon_condition}</Text></View>}
               {!activeCoupon && couponStatus !== 'none' && <Text className='affiliate-detail__disclaimer'>{couponStatusText[couponStatus]}</Text>}
               {activeCoupon && couponTimeRange && (
                 <View className='affiliate-detail__coupon-time'>
-                  <Text>优惠券时间</Text>
+                  <Text>有效期限</Text>
                   <Text className='affiliate-detail__coupon-time-value'>{couponTimeRange}</Text>
                 </View>
               )}
               {detailMetadata.filter((item) => item.key !== 'snapshot_at').map((item) => <Text className='affiliate-detail__disclaimer' key={item.key}>{item.label}：{item.value}</Text>)}
               {promotion && <Text className='affiliate-detail__disclaimer'>{promotion.typeLabel} · {promotion.discountLabel || promotion.title} · {promotion.timeRange}</Text>}
-              {detailMetadata.filter((item) => item.key === 'snapshot_at').map((item) => <Text className='affiliate-detail__disclaimer' key={item.key}>{item.label}：{item.value}</Text>)}
-              <Text className='affiliate-detail__disclaimer'>商品价格和优惠以淘宝商品页面为准；下单前请核对优惠条件。</Text>
-              <Text className='affiliate-detail__disclaimer'>点击购买后可按指引复制口令或链接，在淘宝完成购买。</Text>
+              <View className='affiliate-detail__rule-row'><Text>购买提示</Text><Text>点击购买后按指引复制口令或链接，在淘宝完成购买。</Text></View>
+              <Text className='affiliate-detail__disclaimer affiliate-detail__safe-note'>商品价格和优惠以淘宝商品页面为准</Text>
             </View>
           </View>
 
@@ -394,6 +394,7 @@ export default function AffiliateProductDetailPage() {
                 : product.availability === 'valid'
                 ? offerPurchaseLabel
                 : '商品暂不可购买'}
+              {activeCoupon && convertEnabled && !resolutionTokenMissing && product.availability === 'valid' && <Text className='affiliate-detail__buy-saving'>券 ¥{product.coupon_amount}</Text>}
             </View>
           </View>
         </>

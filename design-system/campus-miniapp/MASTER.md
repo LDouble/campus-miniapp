@@ -340,3 +340,5 @@ Ousea / Global 的间距值按 375px 设计宽度换算，`1px = 2rpx`。
 - [ ] 动效时长为 `120–280ms`，并支持减少动态效果。
 - [ ] 用户文案统一使用“找同行”等当前产品术语。
 - [ ] 新增页面先复用公共组件与令牌，再添加页面级覆盖。
+
+商品详情以 Stitch `3025383b065d4c6fb25391ed4755894f` 为视觉源；新增 affiliate.detail-rose、detail-gold、detail-orange、detail-warm 用于详情渐变和推荐卡，保留首页色不变。

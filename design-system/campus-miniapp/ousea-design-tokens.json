@@ -3,6 +3,10 @@
   "global": {
     "color": {
       "affiliate": {
+        "detail-rose": { "value": "#e11d48", "type": "color" },
+        "detail-gold": { "value": "#d97706", "type": "color" },
+        "detail-orange": { "value": "#f97316", "type": "color" },
+        "detail-warm": { "value": "#fffbeb", "type": "color" },
         "page-top": { "value": "#FFF2EB", "type": "color", "description": "Stitch 好物导购专属色" },
         "page-middle": { "value": "#FDF8F5", "type": "color", "description": "Stitch 好物导购专属色" },
         "page-base": { "value": "#F7F8FA", "type": "color", "description": "Stitch 好物导购专属色" },
