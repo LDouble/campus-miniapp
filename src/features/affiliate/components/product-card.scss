@@ -177,25 +177,29 @@
     &__main { flex-direction: column; gap: 0; }
     &__image-wrap { width: 100%; height: auto; aspect-ratio: 1; border-radius: 0; }
     &__image, &__image-placeholder { display: flex; width: 100%; height: 100%; aspect-ratio: 1; border-radius: 0; }
-    &__copy { padding: 18rpx 18rpx 0; }
-    &__title { min-height: 72rpx; font-size: 25rpx; line-height: 1.45; -webkit-line-clamp: 2; }
+    &__copy { padding: 20rpx 20rpx 0; }
+    &__title { min-height: 70rpx; font-size: 25rpx; line-height: 1.4; -webkit-line-clamp: 2; }
     &__promotion { position: absolute; top: 14rpx; left: 14rpx; padding: 3rpx 10rpx; border-radius: 6rpx; }
     &__eyebrow, &__reason, &__shop { font-size: 20rpx; }
-    &__price-row { position: relative; margin-top: auto; padding: 12rpx 18rpx 18rpx; align-items: flex-end; gap: 4rpx; }
+    &__price-row { position: relative; min-height: 0; margin-top: auto; padding: 14rpx 20rpx 20rpx; align-items: flex-end; gap: 0; }
     &__price-copy { display: flex; flex: 1; flex-direction: column-reverse; }
-    &__prices { min-height: 58rpx; flex-wrap: wrap; gap: 4rpx 8rpx; align-items: baseline; }
-    &__actual-price { font-size: 32rpx; line-height: 1.3; }
+    &__prices { min-height: 40rpx; padding-right: 42rpx; flex-wrap: wrap; gap: 4rpx 8rpx; align-items: baseline; }
+    &__actual-price { color: var(--ousea-affiliate-price); font-size: 32rpx; line-height: 1.3; }
+    &__price-prefix { font-size: 22rpx; }
     &__original-price { font-size: 19rpx; }
-    &__coupon-line { margin-top: 0; margin-bottom: 8rpx; gap: 6rpx; }
-    &__coupon-amount { padding: 3rpx 8rpx; border-radius: 4rpx; background: var(--ousea-danger-500, #e5484d); color: #fff; font-size: 20rpx; }
+    &__coupon-line { min-height: 30rpx; margin-top: 0; margin-bottom: 20rpx; align-items: center; gap: 8rpx; }
+    &__coupon-amount { padding: 3rpx 8rpx; border-radius: 4rpx; background: linear-gradient(135deg, var(--ousea-affiliate-coupon-start), var(--ousea-affiliate-coupon-end)); color: #fff; font-size: 19rpx; }
+    &__sales-label { margin-top: 0; padding: 3rpx 6rpx; border-radius: 4rpx; background: var(--ousea-lottery-warm); font-size: 18rpx; line-height: 1.4; }
     &__coupon-condition { white-space: normal; overflow-wrap: anywhere; }
     &__buy {
+      position: absolute;
+      right: 2rpx;
+      bottom: 0;
       min-width: 88rpx;
       width: 88rpx;
       height: 88rpx;
       padding: 0;
-      margin-left: -8rpx;
-      margin-right: -8rpx;
+      margin: 0;
       background: radial-gradient(circle, var(--ousea-danger-50, #fdecec) 0 26rpx, transparent 27rpx);
       color: var(--ousea-danger-500, #e5484d);
       font-size: 36rpx;

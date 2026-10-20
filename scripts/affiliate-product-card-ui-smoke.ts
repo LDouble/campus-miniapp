@@ -60,6 +60,10 @@ try {
     onBuy: () => undefined,
   }))
   assert.ok(tile().includes('affiliate-product-card--tile'), '首页使用双列卡片')
+  const compactTile = tile({ shop_name: '测试店铺', coupon_condition: '满100元可用' })
+  assert.ok(!compactTile.includes('测试店铺'), '首页卡片不额外堆叠店铺行，详情仍保留完整信息')
+  assert.ok(!compactTile.includes('满100元可用'), '首页卡片不额外堆叠券门槛行')
+  assert.ok(compactTile.includes('affiliate-product-card__price-prefix'), '有效券显示券后价格语义')
   assert.ok(tile().includes('>+</div>'), '可购双列卡片显示紧凑购买按钮')
   assert.ok(tile().includes('>推广</div>'), '双列布局保留推广披露')
   assert.ok(tile({ coupon_status: 'unknown', coupon_amount: undefined }).includes('优惠待核验'), '未知券状态不能被样式隐藏')

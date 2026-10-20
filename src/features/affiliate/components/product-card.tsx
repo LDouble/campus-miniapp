@@ -105,11 +105,11 @@ export default function AffiliateProductCard({
             <Text className='affiliate-product-card__eyebrow'>{recommendationTitle}</Text>
           )}
           <Text className='affiliate-product-card__title'>{product.title}</Text>
-          {salesLabel && <Text className='affiliate-product-card__sales-label'>{salesLabel}</Text>}
+          {salesLabel && layout !== 'tile' && <Text className='affiliate-product-card__sales-label'>{salesLabel}</Text>}
           {recommendation && recommendationReason && (
             <Text className='affiliate-product-card__reason'>{recommendationReason}</Text>
           )}
-          {product.shop_name && (
+          {product.shop_name && layout !== 'tile' && (
             <Text className='affiliate-product-card__shop'>{product.shop_name}</Text>
           )}
         </View>
@@ -119,7 +119,10 @@ export default function AffiliateProductCard({
         <View className='affiliate-product-card__price-copy'>
           <View className='affiliate-product-card__prices'>
             {product.actual_price ? (
-              <Text className='affiliate-product-card__actual-price'>{formatPrice(product.actual_price)}</Text>
+              <Text className='affiliate-product-card__actual-price'>
+                {layout === 'tile' && product.coupon_status === 'active' && <Text className='affiliate-product-card__price-prefix'>券后</Text>}
+                {formatPrice(product.actual_price)}
+              </Text>
             ) : (
               <Text className='affiliate-product-card__actual-price affiliate-product-card__actual-price--muted'>
                 {formatPrice(product.original_price)}
@@ -132,12 +135,13 @@ export default function AffiliateProductCard({
           <View className='affiliate-product-card__coupon-line'>
             {product.coupon_status === 'active' && product.coupon_amount ? (
               <Text className='affiliate-product-card__coupon-amount'>券 ¥{product.coupon_amount}</Text>
-            ) : (
+            ) : layout !== 'tile' || product.coupon_status !== 'none' ? (
               <Text className={`affiliate-product-card__coupon-status affiliate-product-card__coupon-status--${product.coupon_status}`}>
                 {couponLabels[product.coupon_status]}
               </Text>
-            )}
-            {product.coupon_condition && (
+            ) : null}
+            {salesLabel && layout === 'tile' && <Text className='affiliate-product-card__sales-label'>{salesLabel}</Text>}
+            {product.coupon_condition && layout !== 'tile' && (
               <Text className='affiliate-product-card__coupon-condition'>{product.coupon_condition}</Text>
             )}
           </View>

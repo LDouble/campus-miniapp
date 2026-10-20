@@ -1,6 +1,6 @@
 .affiliate-shortcuts {
   margin: 0 28rpx 20rpx;
-  padding: 28rpx 18rpx 22rpx;
+  padding: 28rpx;
   box-sizing: border-box;
   border: 1rpx solid var(--ousea-bg-line, #e8edf4);
   border-radius: var(--ousea-radius-card, 32rpx);
@@ -9,7 +9,7 @@
   &__grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    column-gap: 8rpx;
+    column-gap: 16rpx;
     row-gap: 24rpx;
   }
 
@@ -36,23 +36,32 @@
     align-items: center;
     justify-content: center;
     flex: none;
+    padding: 20rpx;
+    box-sizing: border-box;
+    border-radius: 32rpx;
+    background: var(--ousea-lottery-warm, #fff7ed);
   }
 
-  &__icon { width: 96rpx; height: 96rpx; }
+  &__icon { width: 56rpx; height: 56rpx; flex: none; }
+
+  &__item:nth-child(5n + 2) &__visual { background: var(--ousea-danger-50, #fdecec); }
+  &__item:nth-child(5n + 3) &__visual { background: var(--ousea-danger-50, #fdecec); }
+  &__item:nth-child(5n + 4) &__visual { background: transparent; }
+  &__item:nth-child(5n + 5) &__visual { background: var(--campus-service-green-start, #f0fdf4); }
 
   &__icon-fallback {
     display: flex;
-    width: 76rpx;
-    height: 76rpx;
+    width: 56rpx;
+    height: 56rpx;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    border: 2rpx solid var(--ousea-ocean-100, #e3effe);
+    border: 0;
     border-radius: 24rpx;
-    background: var(--ousea-ocean-50, #f2f7fe);
+    background: transparent;
   }
 
-  &__fallback-icon { width: 64rpx; height: 64rpx; }
+  &__fallback-icon { width: 56rpx; height: 56rpx; }
 
   &__badge {
     position: absolute;
@@ -96,6 +105,7 @@
       background: var(--ousea-ocean-50, #172554);
     }
 
+    &__item:nth-child(n) .affiliate-shortcuts__visual { background: var(--campus-surface-primary); }
     &__title { color: var(--campus-text-body, #d7e0ec); }
   }
 }

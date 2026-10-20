@@ -359,7 +359,7 @@ export default function AffiliateRankingSection({
               layout='tile'
               salesLabel={item.two_hours_sales === null
                 ? undefined
-                : `近2小时热销${item.two_hours_sales}`}
+                : `2小时售${item.two_hours_sales}`}
               onOpen={() => {
                 cacheAffiliateGoods(item.goods)
                 Taro.navigateTo({ url: `/pages/goods/detail?goods_id=${encodeURIComponent(item.goods.goods_id)}` })
