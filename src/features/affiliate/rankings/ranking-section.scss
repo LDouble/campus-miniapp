@@ -1,0 +1,31 @@
+.affiliate-ranking {
+  margin-top: 8rpx;
+
+  &__heading { padding-top: 8rpx; }
+  &__heading-main { display: flex; align-items: baseline; gap: 12rpx; }
+  &__heading-main > .affiliate-ranking__window:last-child { padding: 5rpx 10rpx; border-radius: var(--ousea-radius-pill, 999rpx); background: var(--campus-service-orange-start, var(--ousea-lottery-warm, #fff7ed)); color: var(--campus-service-count-orange, var(--ousea-service-count-orange, #b45309)); font-size: 19rpx; font-weight: var(--ousea-font-weight-medium, 500); line-height: 1.3; }
+  &__source { display: block; padding: 10rpx 32rpx 14rpx; color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90)); font-size: 20rpx; line-height: 1.35; text-align: center; }
+  &__category-scroll { margin-bottom: 2rpx; white-space: nowrap; }
+  &__category-list { display: inline-flex; padding: 8rpx 28rpx 48rpx; gap: 20rpx; }
+  &__category { display: flex; min-height: 64rpx; padding: 0 26rpx; flex: none; align-items: center; justify-content: center; gap: 8rpx; box-sizing: border-box; border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4)); border-radius: var(--ousea-radius-pill, 999rpx); background: var(--campus-surface, #fff); color: var(--campus-text-body, var(--ousea-ink-700, #3a4759)); font-size: 25rpx; font-weight: var(--ousea-font-weight-medium, 500); &:active { opacity: .76; } }
+  &__category-icon { width: 28rpx; height: 28rpx; flex: none; }
+  &__category--active { border-color: transparent; background: linear-gradient(90deg, var(--ousea-affiliate-action-start), var(--ousea-affiliate-action-end)); color: #fff; font-weight: var(--ousea-font-weight-semibold, 600); .affiliate-ranking__category-icon { filter: brightness(0) invert(1); } }
+  &__notice { display: flex; min-height: 56rpx; margin: 0 28rpx 14rpx; padding: 8rpx 16rpx; align-items: center; justify-content: space-between; gap: 14rpx; box-sizing: border-box; border-radius: 14rpx; background: var(--campus-service-orange-start, var(--ousea-lottery-warm, #fff7ed)); color: var(--campus-service-count-orange, var(--ousea-service-count-orange, #b45309)); font-size: 21rpx; }
+  &__notice--failed { background: var(--campus-surface-danger, var(--ousea-danger-50, #fdecec)); color: var(--campus-danger, var(--ousea-danger-500, #e5484d)); }
+  &__notice--pending { background: var(--campus-surface-primary, var(--ousea-ocean-50, #f2f7fe)); color: var(--campus-service-blue-foreground, var(--ousea-ocean-600, #1d5fd6)); }
+  &__retry { display: flex; min-width: 100rpx; min-height: 48rpx; padding: 0 12rpx; align-items: center; justify-content: center; flex: none; border-radius: 12rpx; background: var(--campus-surface, #fff); color: var(--campus-service-count-orange, var(--ousea-service-count-orange, #b45309)); }
+  &__product-list { margin-top: 2rpx; }
+  &__state { display: flex; min-height: 120rpx; margin: 0 28rpx 12rpx; padding: 24rpx; align-items: center; justify-content: center; gap: 12rpx; flex-direction: column; box-sizing: border-box; border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4)); border-radius: var(--ousea-radius-card-sm, 24rpx); background: var(--campus-surface, #fff); color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90)); font-size: 23rpx; text-align: center; }
+  &__state--error { color: var(--campus-text-body, var(--ousea-ink-700, #3a4759)); }
+  &__load-more { display: flex; min-height: 72rpx; margin: 0 28rpx; align-items: center; justify-content: center; color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90)); font-size: 22rpx; text-align: center; }
+  &__load-more--error { gap: 14rpx; }
+  &__load-more--button { color: var(--campus-service-count-orange, var(--ousea-service-count-orange, #b45309)); }
+}
+
+.affiliate-product-card {
+  &__sales-label { display: -webkit-box; margin-top: 6rpx; overflow: hidden; color: var(--campus-service-count-orange, var(--ousea-service-count-orange, #b45309)); font-size: 20rpx; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .affiliate-ranking__category--active { border-color: transparent; background: var(--campus-service-orange-start, var(--ousea-service-dark-orange-start, rgba(251, 191, 36, .1))); color: var(--campus-service-orange-foreground, var(--ousea-service-dark-orange-foreground, #fcd34d)); }
+}

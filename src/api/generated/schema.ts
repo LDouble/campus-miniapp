@@ -2280,6 +2280,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/affiliate/catalog/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetAdminAffiliateCatalogStatus */
+        get: operations["GetAdminAffiliateCatalogStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/catalog/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** SyncAdminAffiliateCatalog */
+        post: operations["SyncAdminAffiliateCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListAffiliateCatalog */
+        get: operations["ListAffiliateCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/rankings/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetAdminAffiliateRankingStatus */
+        get: operations["GetAdminAffiliateRankingStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/rankings/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** SyncAdminAffiliateRankings */
+        post: operations["SyncAdminAffiliateRankings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/rankings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListAffiliateRankings */
+        get: operations["ListAffiliateRankings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/calendar/reminders": {
         parameters: {
             query?: never;
@@ -10103,6 +10205,7 @@ export interface components {
             image_url?: string | null;
             /** @description 人民币十进制金额字符串；缺失时为 null，不以 0 代替 */
             original_price?: string | null;
+            promotion?: components["schemas"]["AffiliatePromotionView"];
             shop_name?: string | null;
             /** Format: date-time */
             snapshot_at?: string | null;
@@ -10176,6 +10279,7 @@ export interface components {
             original_price?: string | null;
             /** Format: int64 */
             priority: number;
+            promotion?: components["schemas"]["AffiliatePromotionView"];
             recommendation_reason?: string | null;
             recommendation_title?: string | null;
             shop_name?: string | null;
@@ -10187,6 +10291,23 @@ export interface components {
             updated_at: string;
             /** Format: uint64 */
             version: number;
+        };
+        /** @enum {string} */
+        AffiliatePromotionDiscountType: "shopping_allowance" | "cross_store_reduction";
+        /** @enum {string} */
+        AffiliatePromotionType: "flash_sale" | "group_purchase" | "campaign";
+        AffiliatePromotionView: {
+            /** @description 满减优惠金额，人民币十进制字符串 */
+            discount_cut?: string | null;
+            /** @description 满减门槛金额，人民币十进制字符串 */
+            discount_full?: string | null;
+            discount_type?: components["schemas"]["AffiliatePromotionDiscountType"];
+            /** Format: date-time */
+            end_at: string;
+            name?: string | null;
+            /** Format: date-time */
+            start_at: string;
+            type: components["schemas"]["AffiliatePromotionType"];
         };
         AffiliateResolveResponseBody: {
             data: components["schemas"]["AffiliateResolveResult"];
@@ -10221,6 +10342,100 @@ export interface components {
             priority: number;
             /** Format: uint64 */
             version: number;
+        };
+        AffiliateCatalogGroup: {
+            /** Format: int64 */
+            count: number;
+            key: string;
+            name: string;
+        };
+        AffiliateCatalogItem: {
+            goods: components["schemas"]["AffiliateGoodsView"];
+            /** Format: int64 */
+            month_sales: number | null;
+        };
+        AffiliateCatalogPage: {
+            enabled: boolean;
+            groups: components["schemas"]["AffiliateCatalogGroup"][];
+            items: components["schemas"]["AffiliateCatalogItem"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            page_size: number;
+            snapshot_id: string;
+            tags: components["schemas"]["AffiliateCatalogTag"][];
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateCatalogSettings: {
+            enabled: boolean;
+            /** Format: int64 */
+            sync_interval_minutes: number;
+        };
+        AffiliateCatalogStatus: {
+            groups: components["schemas"]["AffiliateCatalogGroup"][];
+            settings: components["schemas"]["AffiliateCatalogSettings"];
+            snapshot_id: string;
+            streams: components["schemas"]["AffiliateCatalogStreamStatus"][];
+            tags: components["schemas"]["AffiliateCatalogTag"][];
+        };
+        AffiliateCatalogStreamStatus: {
+            last_error: string | null;
+            /** Format: date-time */
+            last_success_at: string | null;
+            /** Format: int64 */
+            processed: number;
+            rule_key: string;
+            state: string;
+        };
+        AffiliateCatalogTag: {
+            /** Format: int64 */
+            count: number;
+            key: string;
+            name: string;
+        };
+        AffiliateRankingCategory: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @enum {string} */
+            state: "ready" | "stale" | "pending" | "failed";
+            /** Format: date-time */
+            synced_at: string | null;
+        };
+        AffiliateRankingItem: {
+            /** Format: int64 */
+            category_id: number;
+            goods: components["schemas"]["AffiliateGoodsView"];
+            /** Format: int64 */
+            two_hours_sales: number | null;
+        };
+        AffiliateRankingPage: {
+            categories: components["schemas"]["AffiliateRankingCategory"][];
+            enabled: boolean;
+            items: components["schemas"]["AffiliateRankingItem"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            page_size: number;
+            snapshot_id: string;
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateRankingSettings: {
+            category_ids: number[];
+            enabled: boolean;
+            /** Format: int64 */
+            sync_interval_minutes: number;
+            /** Format: int64 */
+            top_per_category: number;
+        };
+        AffiliateRankingStatus: {
+            categories: components["schemas"]["AffiliateRankingCategory"][];
+            settings: components["schemas"]["AffiliateRankingSettings"];
+            snapshot_id: string;
         };
         AffiliateShortcutAction: components["schemas"]["AffiliateShortcutCopyTokenAction"] | components["schemas"]["AffiliateShortcutMiniProgramAction"];
         AffiliateShortcutCopy: {
@@ -16128,6 +16343,90 @@ export interface components {
                 "application/json": components["schemas"]["AffiliateTaxonomyPageResponseBody"];
             };
         };
+        /** @description 成功 */
+        AffiliateCatalogPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateCatalogPage"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateCatalogStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateCatalogStatus"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingCategoryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingCategory"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingItemResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingItem"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingPage"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingSettingsResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingSettings"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingStatus"];
+                    request_id: string;
+                };
+            };
+        };
         /** @description 我的校历事件提醒 */
         CalendarReminderListResponse: {
             headers: {
@@ -20865,6 +21164,119 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["AffiliateTaxonomyPageResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAffiliateCatalogStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateCatalogStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    SyncAdminAffiliateCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: components["responses"]["AffiliateCatalogStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAffiliateCatalog: {
+        parameters: {
+            query?: {
+                group?: "food" | "beauty" | "daily";
+                tag?: string;
+                page?: number;
+                page_size?: number;
+                snapshot_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateCatalogPageResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAffiliateRankingStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateRankingStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    SyncAdminAffiliateRankings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateRankingStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAffiliateRankings: {
+        parameters: {
+            query?: {
+                category_id?: number;
+                page?: number;
+                page_size?: number;
+                snapshot_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateRankingPageResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
             503: components["responses"]["Error"];
         };
     };

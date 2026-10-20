@@ -31,6 +31,12 @@ import {
 import { useAffiliateCapabilities } from '../use-capabilities'
 import type { AffiliatePurchaseProduct } from './product-card'
 import {
+  getAffiliateConversionDisplay,
+  getAffiliatePromotionDisplay,
+  useAffiliateOfferClock,
+  type AffiliateOfferData,
+} from '../promotions'
+import {
   getAffiliateResolutionTicketFailure,
   getAffiliateResolutionTicketMessage,
   type AffiliateResolutionTicketFailure,
@@ -75,6 +81,15 @@ export default function CouponPurchaseSheet({ product, onClose, onRepaste, onRes
   const [refreshConfirmationRequired, setRefreshConfirmationRequired] = useState(false)
   const [copyFallback, setCopyFallback] = useState<AffiliateCopyFallback | null>(null)
   const requestRevision = useRef(0)
+  const offer = product as AffiliateOfferData | null
+  const clockOffer = offer && result?.expires_at
+    ? { ...offer, coupon_end_at: result.expires_at }
+    : offer
+  const offerNow = useAffiliateOfferClock(clockOffer, result?.expires_at ?? undefined)
+  const promotion = getAffiliatePromotionDisplay(offer?.promotion, offerNow)
+  const convertedDisplay = result && product
+    ? getAffiliateConversionDisplay(result, product.original_price, promotion, offerNow)
+    : null
   const currentGoodsId = product?.goods_id
   const currentResolutionToken = product?.resolution_token
   const requiresResolutionToken = product?.requires_resolution_token === true
@@ -455,24 +470,40 @@ export default function CouponPurchaseSheet({ product, onClose, onRepaste, onRes
               <View className='coupon-purchase-sheet__updated' ariaRole='status'>优惠信息已更新，请确认后复制。</View>
             )}
             <View className='coupon-purchase-sheet__coupon'>
-              <Text className='coupon-purchase-sheet__coupon-label'>{convertStatusLabels[result.coupon_status]}</Text>
-              {result.coupon_amount && result.coupon_status === 'active' && (
+              <Text className='coupon-purchase-sheet__coupon-label'>
+                {convertStatusLabels[convertedDisplay?.couponStatus || result.coupon_status]}
+              </Text>
+              {convertedDisplay?.couponActive && result.coupon_amount && (
                 <Text className='coupon-purchase-sheet__coupon-amount'>¥{result.coupon_amount}</Text>
               )}
-              {result.coupon_condition && (
+              {convertedDisplay?.couponActive && result.coupon_condition && (
                 <Text className='coupon-purchase-sheet__condition'>{result.coupon_condition}</Text>
               )}
             </View>
+            {promotion && (
+              <View className='coupon-purchase-sheet__promotion' ariaRole='status'>
+                <View className='coupon-purchase-sheet__promotion-heading'>
+                  <Text className='coupon-purchase-sheet__promotion-kind'>{promotion.typeLabel}</Text>
+                  {promotion.title !== promotion.typeLabel && (
+                    <Text className='coupon-purchase-sheet__promotion-title'>{promotion.title}</Text>
+                  )}
+                </View>
+                {promotion.discountLabel && (
+                  <Text className='coupon-purchase-sheet__promotion-discount'>{promotion.discountLabel}</Text>
+                )}
+                <Text className='coupon-purchase-sheet__promotion-time'>活动时间 {promotion.timeRange}</Text>
+              </View>
+            )}
             <View className='coupon-purchase-sheet__price-row'>
-              <Text>参考券后价</Text>
+              <Text>{convertedDisplay?.priceLabel || '商品参考价'}</Text>
               <Text className='coupon-purchase-sheet__price'>
-                {result.actual_price ? `¥${result.actual_price}` : '以淘宝商品页为准'}
+                {convertedDisplay?.price.value ? `¥${convertedDisplay.price.value}` : '以淘宝商品页为准'}
               </Text>
             </View>
             {formatExpireTime(result.expires_at) && (
               <Text className='coupon-purchase-sheet__expires'>{formatExpireTime(result.expires_at)}</Text>
             )}
-            <Text className='coupon-purchase-sheet__hint'>打开淘宝后按页面提示领取优惠并下单</Text>
+            <Text className='coupon-purchase-sheet__hint'>{convertedDisplay?.hint || '打开淘宝后核对商品价格和购买规则，再下单'}</Text>
             {visibleCopyFallback && (
               <View className='coupon-purchase-sheet__copy-fallback' ariaRole='status'>
                 <Text className='coupon-purchase-sheet__copy-fallback-label'>复制失败，可长按选择下方文本手动复制</Text>

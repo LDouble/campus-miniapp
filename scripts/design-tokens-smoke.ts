@@ -19,6 +19,14 @@ const agentRules = readFileSync(resolve(__dirname, '../AGENTS.md'), 'utf8')
 const uiDesignRules = readFileSync(resolve(__dirname, '../.agents/ui-design.md'), 'utf8')
 
 const expectedCssVariables: Record<string, string> = {
+  '--ousea-affiliate-page-top': '#fff2eb',
+  '--ousea-affiliate-page-middle': '#fdf8f5',
+  '--ousea-affiliate-page-base': '#f7f8fa',
+  '--ousea-affiliate-action-start': '#ff6036',
+  '--ousea-affiliate-action-end': '#e93b2d',
+  '--ousea-affiliate-price': '#dc2626',
+  '--ousea-affiliate-coupon-start': '#ff5722',
+  '--ousea-affiliate-coupon-end': '#f5222d',
   '--ousea-lottery-accent': '#ea580c',
   '--ousea-lottery-page': '#faf7f4',
   '--ousea-lottery-warm': '#fff7ed',

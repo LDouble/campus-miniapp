@@ -1,0 +1,541 @@
+<!DOCTYPE html><html lang="zh-CN" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>好物 - 优惠导购与精选推荐</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff5f2',
+              100: '#ffe8e2',
+              500: '#ff5722',
+              600: '#f44336',
+              700: '#e53935'
+            },
+            coral: {
+              light: '#ff7a59',
+              DEFAULT: '#fa541c',
+              dark: '#d4380d'
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', 'sans-serif']
+          },
+          boxShadow: {
+            'soft': '0 8px 24px -4px rgba(254, 114, 76, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.03)',
+            'card': '0 4px 16px rgba(0, 0, 0, 0.04)',
+            'capsule': '0 0 0 0.5px rgba(0, 0, 0, 0.12), 0 2px 5px rgba(0, 0, 0, 0.04)',
+            'tab': '0 -4px 16px rgba(0, 0, 0, 0.03)'
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: CustomStyles -->
+<style data-purpose="custom-utilities">
+    /* 隐藏滚动条 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* 渐变文本 */
+    .text-gradient-primary {
+      background: linear-gradient(135deg, #ff5e3a 0%, #ff2a54 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 优惠券锯齿边缘微修饰 */
+    .coupon-tag {
+      position: relative;
+      background: linear-gradient(135deg, #ff5722, #f5222d);
+    }
+    
+    /* 呼吸脉冲微动效 */
+    @keyframes subtle-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .animate-badge-pulse {
+      animation: subtle-pulse 2s infinite ease-in-out;
+    }
+  </style>
+<!-- END: CustomStyles -->
+</head>
+<body class="bg-[#F8F9FA] text-gray-800 antialiased font-sans flex justify-center min-h-screen selection:bg-coral selection:text-white pb-24">
+<!-- BEGIN: MobileFrameWrapper -->
+<!-- 手机视口容器 (限制最大宽度并适配沉浸式体验) -->
+<div class="w-full max-w-[430px] min-h-screen bg-gradient-to-b from-[#FFF2EB] via-[#FDF8F5] to-[#F7F8FA] relative flex flex-col shadow-2xl">
+<!-- BEGIN: HeaderSection -->
+<header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md pt-2 px-4 pb-2.5 border-b border-orange-50/60 transition-all">
+<!-- iOS 状态栏模拟 -->
+<div class="flex justify-between items-center text-xs font-semibold px-2 pt-1 pb-2 tracking-tight text-gray-900" data-purpose="status-bar">
+<span class="text-[14px]">8:23</span>
+<div class="flex items-center space-x-1.5">
+<!-- 信号强度 -->
+<svg class="w-3.5 h-3.5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 22l7.03-4.39C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9z" opacity="0.3"></path>
+<path d="M2 18h3v3H2v-3zm5-4h3v7H7v-7zm5-4h3v11h-3V10zm5-4h3v15h-3V6z"></path>
+</svg>
+<!-- WiFi -->
+<svg class="w-3.5 h-3.5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98A16.88 16.88 0 0012 4zm0 3c3.75 0 7.18 1.43 9.77 3.79L12 18.66 2.23 10.79A13.9 13.9 0 0112 7z"></path>
+</svg>
+<!-- 电池 -->
+<div class="w-5 h-2.5 border border-gray-900 rounded-sm p-0.5 flex items-center">
+<div class="h-full w-3/4 bg-gray-900 rounded-[1px]"></div>
+</div>
+</div>
+</div>
+<!-- 导航栏标题与小程序胶囊按钮 -->
+<div class="flex items-center justify-between h-10 px-1 mt-1" data-purpose="nav-bar">
+<!-- 页面主标题 -->
+<div class="w-20"></div>
+<div class="flex items-center space-x-1.5">
+<h1 class="text-[19px] font-bold tracking-normal text-gray-900">好物</h1>
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-coral"></span>
+</div>
+<!-- 小程序胶囊按钮 (微信/支付宝原生质感) -->
+<div class="flex items-center h-[31px] px-2.5 py-1 rounded-full bg-white/90 border border-gray-200/80 shadow-capsule space-x-2.5" data-purpose="capsule-button">
+<button aria-label="更多选项" class="text-gray-800 hover:opacity-70 focus:outline-none flex items-center" type="button">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+<circle cx="5" cy="12" r="2.2"></circle>
+<circle cx="12" cy="12" r="2.2"></circle>
+<circle cx="19" cy="12" r="2.2"></circle>
+</svg>
+</button>
+<div class="w-[0.5px] h-3 bg-gray-300"></div>
+<button aria-label="关闭或主页" class="text-gray-800 hover:opacity-70 focus:outline-none flex items-center" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="7"></circle>
+<circle cx="12" cy="12" fill="currentColor" r="2.5" stroke="none"></circle>
+</svg>
+</button>
+</div>
+</div>
+</header>
+<!-- END: HeaderSection -->
+<!-- BEGIN: MainContent -->
+<main class="flex-1 px-3.5 pt-3 pb-8 space-y-4">
+<!-- BEGIN: SearchBarContainer -->
+<!-- 搜索栏及一键粘贴查券模块 -->
+<section class="relative" data-purpose="search-box">
+<div class="flex items-center h-[46px] p-1 bg-white rounded-full shadow-soft border border-orange-100/60 transition-all focus-within:ring-2 focus-within:ring-coral/20">
+<!-- 搜索图标 -->
+<div class="pl-3.5 pr-2 flex items-center pointer-events-none text-gray-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<circle cx="11" cy="11" r="7"></circle>
+<line stroke-linecap="round" x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</div>
+<!-- 搜索输入区 -->
+<input class="flex-1 bg-transparent border-none text-[14px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 px-1 py-1" placeholder="搜商品、优惠券或粘贴标题" type="text">
+<!-- 快捷操作按钮：粘贴查券 -->
+<button class="h-[38px] px-4 rounded-full bg-gradient-to-r from-[#FF6036] to-[#E93B2D] text-white text-[13px] font-semibold flex items-center justify-center space-x-1 shadow-sm active:scale-95 transition-transform" data-purpose="paste-search-button" type="button">
+<span class="">粘贴查券</span>
+</button>
+</div>
+</section>
+<!-- END: SearchBarContainer -->
+<!-- BEGIN: GridNavigation -->
+<!-- 核心快捷金刚区 (5大热门分类领红包) -->
+<section class="bg-white rounded-2xl p-3.5 shadow-card border border-orange-50/40" data-purpose="quick-access-channels">
+<div class="grid grid-cols-5 gap-2">
+<!-- 入口 1: 美团外卖 -->
+<a class="flex flex-col items-center group relative" href="javascript:void(0)">
+<span class="absolute -top-1.5 right-0.5 z-10 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-badge-pulse whitespace-nowrap">
+立减15
+</span>
+<div class="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FFF3D2] to-[#FFFBE8] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+<svg class="w-7 h-7 text-[#FFB300]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+<line x1="3" x2="21" y1="6" y2="6"></line>
+<path d="M16 10a4 4 0 0 1-8 0"></path>
+</svg>
+</div>
+<span class="mt-1.5 text-[12px] text-gray-700 font-medium tracking-tight">美团外卖</span>
+</a>
+<!-- 入口 2: 淘宝闪购 (带动效提示角标) -->
+<a class="flex flex-col items-center group relative" href="javascript:void(0)">
+<!-- 气泡微角标 -->
+<span class="absolute -top-1.5 right-0.5 z-10 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-badge-pulse whitespace-nowrap">
+              领红包
+            </span>
+<div class="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FFE5DB] to-[#FFF0EA] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+<svg class="w-7 h-7 text-[#FF5722]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+<path d="M3 6h18"></path>
+<circle cx="12" cy="13" r="2.5"></circle>
+</svg>
+</div>
+<span class="mt-1.5 text-[12px] text-gray-700 font-medium tracking-tight">淘宝闪购</span>
+</a>
+<!-- 入口 3: 京东外卖 -->
+<a class="flex flex-col items-center group relative" href="javascript:void(0)">
+<span class="absolute -top-1.5 -right-1 z-10 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-badge-pulse whitespace-nowrap">
+免配送费
+</span>
+<div class="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FFEBEB] to-[#FFF5F5] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+<svg class="w-7 h-7 text-[#E53935]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+<rect height="16" rx="3" width="18" x="3" y="4"></rect>
+<path d="M7 8h10M7 12h6"></path>
+<circle cx="16" cy="15" fill="currentColor" r="1.5"></circle>
+</svg>
+</div>
+<span class="mt-1.5 text-[12px] text-gray-700 font-medium tracking-tight">京东外卖</span>
+</a>
+<!-- 入口 4: 品牌点餐 -->
+<a class="flex flex-col items-center group relative" href="javascript:void(0)">
+<span class="absolute -top-1.5 right-0.5 z-10 bg-gradient-to-r from-[#FF6036] to-[#E93B2D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-badge-pulse whitespace-nowrap">
+半价周
+</span>
+<div class="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#E3F2FD] to-[#F1F8FE] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+<svg class="w-7 h-7 text-[#1E88E5]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+<path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+<line x1="6" x2="6" y1="1" y2="4"></line>
+<line x1="10" x2="10" y1="1" y2="4"></line>
+<line x1="14" x2="14" y1="1" y2="4"></line>
+</svg>
+</div>
+<span class="mt-1.5 text-[12px] text-gray-700 font-medium tracking-tight">品牌点餐</span>
+</a>
+<!-- 入口 5: 出行优惠 -->
+<a class="flex flex-col items-center group relative" href="javascript:void(0)">
+<span class="absolute -top-1.5 right-0.5 z-10 bg-gradient-to-r from-[#FF6036] to-[#E93B2D] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-badge-pulse whitespace-nowrap">
+低至1折
+</span>
+<div class="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#E8F5E9] to-[#F3FAF4] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+<svg class="w-7 h-7 text-[#43A047]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+<rect height="11" rx="2" width="18" x="3" y="8"></rect>
+<path d="M7 8V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3"></path>
+<circle cx="7.5" cy="14.5" r="1.5"></circle>
+<circle cx="16.5" cy="14.5" r="1.5"></circle>
+</svg>
+</div>
+<span class="mt-1.5 text-[12px] text-gray-700 font-medium tracking-tight">出行优惠</span>
+</a>
+</div>
+</section>
+<!-- END: GridNavigation -->
+<!-- BEGIN: RecommendationSection -->
+<!-- 为你推荐模块 (标题 + 原型高保真空状态卡片) -->
+<div class="flex items-center space-x-2.5 overflow-x-auto no-scrollbar py-1 px-0.5" data-purpose="category-scroll-bar"><button type="button" class="relative flex-shrink-0 flex items-center space-x-1 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#FF6036] to-[#E93B2D] text-white text-[13px] font-semibold shadow-sm active:scale-95 transition-transform"><svg class="w-3.5 h-3.5 text-white fill-current" viewBox="0 0 24 24"><path d="M12 23c-4.97 0-9-4.03-9-9 0-4.63 3.52-8.44 8-8.94V3a1 1 0 0 1 1.7-.71l3.59 3.59A8.99 8.99 0 0 1 21 14c0 4.97-4.03 9-9 9zm0-16.94C8.61 6.55 6 9.98 6 14c0 3.31 2.69 6 6 6s6-2.69 6-6c0-2.22-.91-4.23-2.38-5.69L12 4.67v1.39z"></path></svg><span class="">精选</span></button><button type="button" class="relative flex-shrink-0 flex items-center space-x-1 px-3.5 py-1.5 rounded-full bg-white text-gray-700 text-[13px] font-medium shadow-card border border-orange-50/40 hover:text-coral active:scale-95 transition-all"><span class="absolute -top-1.5 -right-1 z-10 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[9px] font-bold px-1 py-0.2 rounded-full shadow-sm leading-tight scale-90 whitespace-nowrap">HOT</span><svg class="w-3.5 h-3.5 text-orange-600" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24"><path d="M12 4a2 2 0 0 1 2 2c0 .74-.4 1.38-1 1.72V10l8 6a2 2 0 0 1-1.2 3.6H3.2A2 2 0 0 1 2 16l8-6V7.72c-.6-.34-1-.98-1-1.72a2 2 0 0 1 2-2z"></path></svg><span class="">女装</span></button><button type="button" class="relative flex-shrink-0 flex items-center space-x-1 px-3.5 py-1.5 rounded-full bg-white text-gray-700 text-[13px] font-medium shadow-card border border-orange-50/40 hover:text-coral active:scale-95 transition-all"><span class="absolute -top-1.5 -right-1 z-10 bg-red-500 text-white text-[9px] font-bold px-1 py-0.2 rounded-full shadow-sm leading-tight scale-90 whitespace-nowrap">降价</span><svg class="w-3.5 h-3.5 text-orange-600" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24"><rect height="18" rx="2" width="12" x="6" y="3"></rect><line x1="11" x2="13" y1="18" y2="18"></line></svg><span class="">数码</span></button><button type="button" class="relative flex-shrink-0 flex items-center space-x-1 px-3.5 py-1.5 rounded-full bg-white text-gray-700 text-[13px] font-medium shadow-card border border-orange-50/40 hover:text-coral active:scale-95 transition-all"><span class="absolute -top-1 -right-0.5 z-10 w-2 h-2 bg-red-500 rounded-full border border-white"></span><svg class="w-3.5 h-3.5 text-orange-600" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" x2="6" y1="1" y2="4"></line><line x1="10" x2="10" y1="1" y2="4"></line><line x1="14" x2="14" y1="1" y2="4"></line></svg><span class="">美食</span></button><button type="button" class="relative flex-shrink-0 flex items-center space-x-1 px-3.5 py-1.5 rounded-full bg-white text-gray-700 text-[13px] font-medium shadow-card border border-orange-50/40 hover:text-coral active:scale-95 transition-all"><svg class="w-3.5 h-3.5 text-orange-600" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24"><path d="M12 2l2.4 5 5.6.8-4 4 1 5.6-5-2.6-5 2.6 1-5.6-4-4 5.6-.8z"></path></svg><span class="">美妆</span></button><button type="button" class="relative flex-shrink-0 flex items-center space-x-1 px-3.5 py-1.5 rounded-full bg-white text-gray-700 text-[13px] font-medium shadow-card border border-orange-50/40 hover:text-coral active:scale-95 transition-all"><svg class="w-3.5 h-3.5 text-orange-600" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span class="">居家</span></button><button type="button" class="relative flex-shrink-0 flex items-center space-x-1 px-3.5 py-1.5 rounded-full bg-white text-gray-700 text-[13px] font-medium shadow-card border border-orange-50/40 hover:text-coral active:scale-95 transition-all"><svg class="w-3.5 h-3.5 text-orange-600" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4l3 3"></path></svg><span class="">母婴</span></button></div>
+<!-- END: RecommendationSection -->
+<!-- BEGIN: TrendingDealsSection -->
+<!-- 补充扩展模块：爆款大额神券推荐 (让页面更丰富丰满且极具购买欲) -->
+<section class="pt-2" data-purpose="trending-deals">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center space-x-1.5">
+<span class="w-1.5 h-3.5 bg-gray-400 rounded-full"></span>
+<h3 class="text-[14.5px] font-bold text-gray-800">热门爆款券</h3>
+<span class="bg-red-50 text-red-500 text-[10px] px-1.5 py-0.5 rounded font-medium">限时补贴</span>
+</div>
+<span class="text-[11.5px] text-gray-400">实时更新中</span>
+</div>
+<!-- 双列瀑布流商品卡片 -->
+<div class="grid grid-cols-2 gap-3">
+<!-- 商品卡片 1 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-card border border-gray-100 flex flex-col justify-between group">
+<div class="relative bg-gray-100 w-full pt-[100%] overflow-hidden">
+<img alt="保温杯" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUaeYWeaRf2dFOqDKPov5qYkHVh75qAowcXvC9SE2QZa547tjfLH467c4NQb4eQIjxca8f2mgSoAS857-735eGVqdrQHMRA4w1DLiMVeicf4mPw3MO4q0NZDySlZ7idocvxt_a0jmNwa9zDao5ysUtJKnnQ83aAEQvW9NpgVT4ELZG3uuz_8m6tm1cBmkrwQAS6dAwOf_R12G-oxHuT8lXU5zLckOhQQa2oMvGv4M3vs2m7MN39gzF0w">
+<span class="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded">天猫品质</span>
+</div>
+<div class="p-2.5 flex flex-col flex-1 justify-between">
+<div>
+<p class="text-[13px] font-medium text-gray-800 line-clamp-2 leading-snug">
+                  高档316不锈钢智能保温水杯 48小时长效锁温
+                </p>
+<!-- 满减优惠券标签 -->
+<div class="flex items-center space-x-1.5 mt-2">
+<span class="coupon-tag text-white text-[10px] px-1.5 py-0.5 rounded-sm font-semibold">
+                    券 ¥20
+                  </span>
+<span class="text-[10px] text-orange-600 bg-orange-50 px-1 py-0.5 rounded">热销1万+</span>
+</div>
+</div>
+<!-- 价格与购买按钮 -->
+<div class="mt-3 flex items-baseline justify-between">
+<div>
+<span class="text-xs text-red-600 font-bold">券后¥</span>
+<span class="text-base text-red-600 font-bold leading-none">39.9</span>
+<span class="text-[11px] text-gray-400 line-through ml-1">¥59.9</span>
+</div>
+<button class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<line x1="12" x2="12" y1="5" y2="19"></line>
+<line x1="5" x2="19" y1="12" y2="12"></line>
+</svg>
+</button>
+</div>
+</div>
+</div>
+<!-- 商品卡片 2 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-card border border-gray-100 flex flex-col justify-between group">
+<div class="relative bg-gray-100 w-full pt-[100%] overflow-hidden">
+<img alt="无线耳机" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOR6XzikzjBuYp9RtzDRZcqSiWKBEqXidQgm6q91TtKw7JNGL7-V9IZWgYYAC00SHWVhdLWtwJTLiNHvM6C21et_RQvTabEjtqiub4q6FhAa5wk-x58bW0yCQmr-dazd3d0SvxCQSaE-8YQ4xPGK2sY_uXF6tJnSP6-a1HaGsYGloaCCwj_Mx0tMX5r4r4FrtfedZpnCKDU7LGzKD59RSlCz2Fl3TYTrQixcXRxH4GrLYUTWCiiIfJUw">
+<span class="absolute top-2 left-2 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded">降价¥50</span>
+</div>
+<div class="p-2.5 flex flex-col flex-1 justify-between">
+<div>
+<p class="text-[13px] font-medium text-gray-800 line-clamp-2 leading-snug">
+                  入耳式主动降噪真无线蓝牙耳机 超长续航低延迟
+                </p>
+<!-- 满减优惠券标签 -->
+<div class="flex items-center space-x-1.5 mt-2">
+<span class="coupon-tag text-white text-[10px] px-1.5 py-0.5 rounded-sm font-semibold">
+                    券 ¥50
+                  </span>
+<span class="text-[10px] text-orange-600 bg-orange-50 px-1 py-0.5 rounded">返利5%</span>
+</div>
+</div>
+<!-- 价格与购买按钮 -->
+<div class="mt-3 flex items-baseline justify-between">
+<div>
+<span class="text-xs text-red-600 font-bold">券后¥</span>
+<span class="text-base text-red-600 font-bold leading-none">129</span>
+<span class="text-[11px] text-gray-400 line-through ml-1">¥179</span>
+</div>
+<button class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<line x1="12" x2="12" y1="5" y2="19"></line>
+<line x1="5" x2="19" y1="12" y2="12"></line>
+</svg>
+</button>
+</div>
+</div>
+</div>
+<!-- 商品卡片 3 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-card border border-gray-100 flex flex-col justify-between group">
+  <div class="relative bg-gray-100 w-full pt-[100%] overflow-hidden">
+    <img alt="智能手表" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1GnaNQoQS9nDEYe71FhRNYH0Kru4M_N1rTcaJh-Bq_SeiieMxg7wlhoJdURQtgrH7-lVJW0qx8iR95LA6PsdX7Bn90mp6nCeFlU22qwWWR6COVt_4b7lZ4SaevOLXZANQHqfvjvi3OO6QuK-wQQkomjWINtGyVBizQuWlTVEUSvRXvnYdN2cjVo7z5KItVSYKCoG_BzK5GYrStNbMW1urNaljv5vp3i1sCVnJe-EHOTknGoZ2JAnGuA">
+    <span class="absolute top-2 left-2 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded">降价¥100</span>
+  </div>
+  <div class="p-2.5 flex flex-col flex-1 justify-between">
+    <div>
+      <p class="text-[13px] font-medium text-gray-800 line-clamp-2 leading-snug">
+        智能运动健康监测手表 测心率血氧超长续航
+      </p>
+      <div class="flex items-center space-x-1.5 mt-2">
+        <span class="coupon-tag text-white text-[10px] px-1.5 py-0.5 rounded-sm font-semibold animate-badge-pulse">
+          券 ¥100
+        </span>
+        <span class="text-[10px] text-orange-600 bg-orange-50 px-1 py-0.5 rounded">爆卖2万+</span>
+      </div>
+    </div>
+    <div class="mt-3 flex items-baseline justify-between">
+      <div>
+        <span class="text-xs text-red-600 font-bold">券后¥</span>
+        <span class="text-base text-red-600 font-bold leading-none">299</span>
+        <span class="text-[11px] text-gray-400 line-through ml-1">¥399</span>
+      </div>
+      <button class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors" type="button">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" x2="12" y1="5" y2="19"></line>
+          <line x1="5" x2="19" y1="12" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- 商品卡片 4 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-card border border-gray-100 flex flex-col justify-between group">
+  <div class="relative bg-gray-100 w-full pt-[100%] overflow-hidden">
+    <img alt="复古咖啡机" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB35xbfU_JttqVgeuXAE2SfFFzIfzdxosxe_PKI1G1rSWq0MLWV_e8Kq3eXkXJq8eIsNX2e3JDnqJhPh8PirFfYQghGznUJboYABqcaK_LR4ZYorTUbK0hnuEmvkIzjkcQvoZ4XNyxU4Zvki7sJmC1iJRrTYauYIDkXjqcwY7OFFdtUmzD8PCHYV3BhCBrwgKlX4Fz28edJB5GGMRNhk9O9_WLhzWhhl5ffGRNCl_D-kvj3umo4FCTzkg">
+    <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded">京东自营</span>
+  </div>
+  <div class="p-2.5 flex flex-col flex-1 justify-between">
+    <div>
+      <p class="text-[13px] font-medium text-gray-800 line-clamp-2 leading-snug">
+        复古意式半自动咖啡机 家用浓缩奶泡一体机
+      </p>
+      <div class="flex items-center space-x-1.5 mt-2">
+        <span class="coupon-tag text-white text-[10px] px-1.5 py-0.5 rounded-sm font-semibold animate-badge-pulse">
+          券 ¥80
+        </span>
+        <span class="text-[10px] text-orange-600 bg-orange-50 px-1 py-0.5 rounded">返利8%</span>
+      </div>
+    </div>
+    <div class="mt-3 flex items-baseline justify-between">
+      <div>
+        <span class="text-xs text-red-600 font-bold">券后¥</span>
+        <span class="text-base text-red-600 font-bold leading-none">459</span>
+        <span class="text-[11px] text-gray-400 line-through ml-1">¥699</span>
+      </div>
+      <button class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors" type="button">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" x2="12" y1="5" y2="19"></line>
+          <line x1="5" x2="19" y1="12" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- 商品卡片 5 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-card border border-gray-100 flex flex-col justify-between group">
+  <div class="relative bg-gray-100 w-full pt-[100%] overflow-hidden">
+    <img alt="机械键盘" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY5jAWNIT9FyfanL5IcH4y0KXEkkVuYVEFABHqibiGha3FidoVyG_ffvUaX0AJOOspCXUkF2LBdb8xVPAKlbgj0fnhbEjVPZQ0GzvjNE8eLjMz1bZpsFJBfaFAEUNONUr_dAdf8gdODocYrvmV_C5GVNK0x9LiChsYPgmhrdwRK-xSwzu8OFxayNA-pVgJKWr53VVIEaXyD9lYNOXOPoYs7riXjKhzVgrPd6Yd8KXm8X_BbHT4_b95kA">
+    <span class="absolute top-2 left-2 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded">爆款特惠</span>
+  </div>
+  <div class="p-2.5 flex flex-col flex-1 justify-between">
+    <div>
+      <p class="text-[13px] font-medium text-gray-800 line-clamp-2 leading-snug">
+        客制化三模机械键盘 渐变键帽低延迟无线办公
+      </p>
+      <div class="flex items-center space-x-1.5 mt-2">
+        <span class="coupon-tag text-white text-[10px] px-1.5 py-0.5 rounded-sm font-semibold animate-badge-pulse">
+          券 ¥30
+        </span>
+        <span class="text-[10px] text-orange-600 bg-orange-50 px-1 py-0.5 rounded">热销5000+</span>
+      </div>
+    </div>
+    <div class="mt-3 flex items-baseline justify-between">
+      <div>
+        <span class="text-xs text-red-600 font-bold">券后¥</span>
+        <span class="text-base text-red-600 font-bold leading-none">169</span>
+        <span class="text-[11px] text-gray-400 line-through ml-1">¥229</span>
+      </div>
+      <button class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors" type="button">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" x2="12" y1="5" y2="19"></line>
+          <line x1="5" x2="19" y1="12" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- 商品卡片 6 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-card border border-gray-100 flex flex-col justify-between group">
+  <div class="relative bg-gray-100 w-full pt-[100%] overflow-hidden">
+    <img alt="香薰机" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPY43eeKWMI7nnJWp2Fjkj8GJty9IUZTnFaSpXW_UL3uwyKFrRQ0sgWKeqht-sQavt234Lsj_vV5N-NS7lb-yhs4iz2YpPcz-JHUnuwkEtWDs1adWcJklAZx39s2xKe9Vo9EVwRUIoUE5JVc3jQWC_d7PWMRVnIq-NvQXCJcc8tTdW4z0ujxozpQSZ7hnGbMYOtCmkzwpV2GVlUGAB26KoOaEPy2lOBZGwhzFoRSVwFH9OFF5E_jj0gg">
+    <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded">天猫优选</span>
+  </div>
+  <div class="p-2.5 flex flex-col flex-1 justify-between">
+    <div>
+      <p class="text-[13px] font-medium text-gray-800 line-clamp-2 leading-snug">
+        无火香薰精油超声波加湿器 暖光助眠静音扩香
+      </p>
+      <div class="flex items-center space-x-1.5 mt-2">
+        <span class="coupon-tag text-white text-[10px] px-1.5 py-0.5 rounded-sm font-semibold animate-badge-pulse">
+          券 ¥15
+        </span>
+        <span class="text-[10px] text-orange-600 bg-orange-50 px-1 py-0.5 rounded">限时秒杀</span>
+      </div>
+    </div>
+    <div class="mt-3 flex items-baseline justify-between">
+      <div>
+        <span class="text-xs text-red-600 font-bold">券后¥</span>
+        <span class="text-base text-red-600 font-bold leading-none">68</span>
+        <span class="text-[11px] text-gray-400 line-through ml-1">¥99</span>
+      </div>
+      <button class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors" type="button">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" x2="12" y1="5" y2="19"></line>
+          <line x1="5" x2="19" y1="12" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div></div>
+<div class="flex items-center justify-center py-4 space-x-2 text-gray-400 text-xs">
+  <span class="w-6 h-[0.5px] bg-gray-300"></span>
+  <span class="text-[11px]">已经到底啦 ~ 每日 0 点更新更多大额神券</span>
+  <span class="w-6 h-[0.5px] bg-gray-300"></span>
+</div></section>
+<!-- END: TrendingDealsSection -->
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: BottomNavigation -->
+<!-- 底部常驻磨砂毛玻璃标签栏 (包含首页、社区、好物(高亮)、消息、我的) -->
+<nav class="fixed bottom-0 max-w-[430px] w-full bg-white/90 backdrop-blur-lg border-t border-gray-200/60 shadow-tab z-50 px-3 py-1.5" data-purpose="bottom-tab-bar">
+<div class="flex items-center justify-around">
+<!-- Tab 1: 首页 -->
+<a class="flex flex-col items-center justify-center py-1 flex-1 text-gray-400 hover:text-gray-600 group" href="javascript:void(0)">
+<svg class="w-[22px] h-[22px] transition-transform group-hover:scale-105" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24">
+<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+<polyline points="9 22 9 12 15 12 15 22"></polyline>
+</svg>
+<span class="text-[10px] mt-1 font-normal">首页</span>
+</a>
+<!-- Tab 2: 社区 -->
+<a class="flex flex-col items-center justify-center py-1 flex-1 text-gray-400 hover:text-gray-600 group" href="javascript:void(0)">
+<svg class="w-[22px] h-[22px] transition-transform group-hover:scale-105" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24">
+<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+</svg>
+<span class="text-[10px] mt-1 font-normal">社区</span>
+</a>
+<!-- Tab 3: 好物 (当前选定高亮态) -->
+<a class="flex flex-col items-center justify-center py-1 flex-1 text-coral relative" href="javascript:void(0)">
+<div class="relative">
+<svg class="w-[23px] h-[23px]" fill="none" stroke="#fa541c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+<line x1="3" x2="21" y1="6" y2="6"></line>
+<path d="M16 10a4 4 0 0 1-8 0"></path>
+</svg>
+</div>
+<span class="text-[10px] mt-1 font-bold text-coral">好物</span>
+<!-- 选中提示小条点 -->
+<span class="w-1.5 h-0.5 bg-coral rounded-full mt-0.5"></span>
+</a>
+<!-- Tab 4: 消息 (带 99+ 红色未读气泡角标) -->
+<a class="flex flex-col items-center justify-center py-1 flex-1 text-gray-400 hover:text-gray-600 relative group" href="javascript:void(0)">
+<div class="relative">
+<svg class="w-[22px] h-[22px] transition-transform group-hover:scale-105" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24">
+<rect height="16" rx="2" width="20" x="2" y="4"></rect>
+<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+</svg>
+<!-- 99+ 角标 (还原原型) -->
+<span class="absolute -top-1.5 -right-3.5 bg-red-500 text-white font-bold text-[9px] px-1 py-0.2 rounded-full border border-white leading-tight">
+              99+
+            </span>
+</div>
+<span class="text-[10px] mt-1 font-normal">消息</span>
+</a>
+<!-- Tab 5: 我的 -->
+<a class="flex flex-col items-center justify-center py-1 flex-1 text-gray-400 hover:text-gray-600 group" href="javascript:void(0)">
+<svg class="w-[22px] h-[22px] transition-transform group-hover:scale-105" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24">
+<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+<circle cx="12" cy="7" r="4"></circle>
+</svg>
+<span class="text-[10px] mt-1 font-normal">我的</span>
+</a>
+</div>
+<!-- iOS Home 虚拟横条指示线占位 -->
+<div class="w-32 h-1 bg-gray-300 rounded-full mx-auto mt-1 mb-0.5"></div>
+</nav>
+<!-- END: BottomNavigation -->
+</div>
+<!-- END: MobileFrameWrapper -->
+<!-- BEGIN: InteractiveScripts -->
+<script data-purpose="clipboard-action-simulator">
+    // 模拟点击“粘贴查券”时的交互反馈
+    document.addEventListener('DOMContentLoaded', () => {
+      const pasteBtn = document.querySelector('[data-purpose="paste-search-button"]');
+      if (pasteBtn) {
+        pasteBtn.addEventListener('click', () => {
+          const originalText = pasteBtn.innerHTML;
+          pasteBtn.innerHTML = '<span>已读取</span>';
+          pasteBtn.classList.add('opacity-90');
+          setTimeout(() => {
+            pasteBtn.innerHTML = originalText;
+            pasteBtn.classList.remove('opacity-90');
+          }, 1500);
+        });
+      }
+    });
+  </script>
+<!-- END: InteractiveScripts -->
+
+
+
+
+</body></html>

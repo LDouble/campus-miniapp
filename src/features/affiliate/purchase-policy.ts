@@ -1,16 +1,11 @@
 import type { AffiliateConvertResult } from '../../api/affiliate'
+import { normalizeAffiliateAmount } from './amount'
 import {
   isCurrentAffiliateCopyOperation,
   type AffiliateCopyOperationIdentity,
   type AffiliateCapabilities,
 } from './capability-policy'
 import type { AffiliatePurchaseProduct } from './components/product-card'
-
-const normalizeAmount = (value: string | null | undefined) => {
-  if (value == null || value.trim() === '') return null
-  const amount = Number(value)
-  return Number.isFinite(amount) ? String(amount) : value.trim()
-}
 
 /** 判断转链结果是否过期；无过期时间表示由服务端管理有效期。 */
 export const isAffiliateLinkExpired = (expiresAt: string | null, now = Date.now()) => {
@@ -165,10 +160,10 @@ export const hasAffiliateOfferChanged = (
   result: AffiliateConvertResult,
 ) => {
   const priceChanged = product.actual_price != null
-    && normalizeAmount(product.actual_price) !== normalizeAmount(result.actual_price)
+    && normalizeAffiliateAmount(product.actual_price) !== normalizeAffiliateAmount(result.actual_price)
   const couponStatusChanged = product.coupon_status !== result.coupon_status
   const couponAmountChanged = product.coupon_amount != null
-    && normalizeAmount(product.coupon_amount) !== normalizeAmount(result.coupon_amount)
+    && normalizeAffiliateAmount(product.coupon_amount) !== normalizeAffiliateAmount(result.coupon_amount)
   const couponConditionChanged = product.coupon_condition != null
     && product.coupon_condition.trim() !== (result.coupon_condition?.trim() || '')
 
