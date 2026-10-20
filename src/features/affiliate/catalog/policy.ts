@@ -60,6 +60,68 @@ export const hasMoreAffiliateCatalogPages = (page: number, pageSize: number, tot
   page > 0 && pageSize > 0 && page * pageSize < total
 )
 
+export type AffiliateCatalogLoadMoreState = {
+  phase: 'idle' | 'loading' | 'ready' | 'error'
+  page: number
+  pageSize: number
+  total: number
+  snapshotId: string
+  error: string
+  loadMoreError: string
+  loadingMore: boolean
+}
+
+export type AffiliateCatalogLoadMoreScope = {
+  active: boolean
+  capabilityEnabled: boolean
+  group?: AffiliateCatalogGroupKey
+  tag?: string
+}
+
+type AffiliateCatalogLoadPage = (
+  page: number,
+  group: AffiliateCatalogGroupKey | undefined,
+  tag: string | undefined,
+  reset: boolean,
+  snapshotId: string,
+) => void
+
+/** createAffiliateCatalogLoadMoreHandlers 保证自动触底只加载空闲、无错的下一页，失败后只允许手动重试。 */
+export const createAffiliateCatalogLoadMoreHandlers = (
+  getState: () => AffiliateCatalogLoadMoreState,
+  getScope: () => AffiliateCatalogLoadMoreScope,
+  loadPage: AffiliateCatalogLoadPage,
+) => ({
+  loadMore: () => {
+    const current = getState()
+    const scope = getScope()
+    if (
+      !scope.active
+      || !scope.capabilityEnabled
+      || current.phase !== 'ready'
+      || current.error
+      || current.loadMoreError
+      || current.loadingMore
+    ) return
+    if (!hasMoreAffiliateCatalogPages(current.page, current.pageSize, current.total) || !current.snapshotId) return
+    loadPage(current.page + 1, scope.group, scope.tag, false, current.snapshotId)
+  },
+  retryMore: () => {
+    const current = getState()
+    const scope = getScope()
+    if (
+      !scope.active
+      || !scope.capabilityEnabled
+      || current.phase !== 'ready'
+      || current.error
+      || !current.loadMoreError
+      || current.loadingMore
+      || !current.snapshotId
+    ) return
+    loadPage(current.page + 1, scope.group, scope.tag, false, current.snapshotId)
+  },
+})
+
 /** formatAffiliateCatalogMonthSales 只格式化有效真实销量，未知或异常值不生成标签。 */
 export const formatAffiliateCatalogMonthSales = (monthSales: number | null) => (
   monthSales !== null && Number.isFinite(monthSales) && Number.isInteger(monthSales) && monthSales >= 0

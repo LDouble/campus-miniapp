@@ -9,6 +9,7 @@ import {
   AFFILIATE_CATALOG_DAILY_TAG_ORDER,
   AffiliateCatalogRequestCoordinator,
   appendUniqueAffiliateCatalogItems,
+  createAffiliateCatalogLoadMoreHandlers,
   formatAffiliateCatalogMonthSales,
   getAffiliateCatalogSnapshotRestart,
   hasMoreAffiliateCatalogPages,
@@ -115,6 +116,66 @@ async function verifyRequestCoordination() {
   assert.equal(coordinator.isCurrent(enabledRequest), false, '好物能力关闭后请求不再提交副作用')
 }
 
+async function verifyAutoLoadMoreRetryGuards() {
+  const state = {
+    phase: 'ready' as 'ready' | 'loading',
+    page: 1,
+    pageSize: 20,
+    total: 60,
+    snapshotId: 'snapshot-current',
+    error: '',
+    loadMoreError: '',
+    loadingMore: false,
+  }
+  const scope = {
+    active: true,
+    capabilityEnabled: true,
+    group: 'daily' as const,
+    tag: 'tissues',
+  }
+  const requests: Array<[number, string | undefined, string | undefined, boolean, string | undefined]> = []
+  const controls = createAffiliateCatalogLoadMoreHandlers(
+    () => state,
+    () => scope,
+    (page, group, tag, reset, snapshotId) => {
+      requests.push([page, group, tag, reset, snapshotId])
+      state.phase = 'loading'
+      state.loadingMore = true
+      state.loadMoreError = ''
+    },
+  )
+
+  controls.loadMore()
+  controls.loadMore()
+  assert.equal(requests.length, 1, '连续触底只发送一个分页请求')
+  assert.deepEqual(requests[0], [2, 'daily', 'tissues', false, 'snapshot-current'])
+
+  state.phase = 'ready'
+  state.loadingMore = false
+  state.loadMoreError = '网络错误'
+  controls.loadMore()
+  assert.equal(requests.length, 1, '分页失败后再次触底不会自动重试')
+
+  state.loadMoreError = ''
+  state.error = '首屏错误'
+  controls.loadMore()
+  assert.equal(requests.length, 1, '存在页面错误时不会因触底发起下一页请求')
+
+  state.error = ''
+  state.loadMoreError = '网络错误'
+  controls.retryMore()
+  assert.equal(requests.length, 2, '明确点击重试仍可发起下一页请求')
+  assert.deepEqual(requests[1], [2, 'daily', 'tissues', false, 'snapshot-current'])
+
+  scope.active = false
+  controls.loadMore()
+  assert.equal(requests.length, 2, '页面隐藏后触底不继续发送请求')
+  scope.active = true
+  scope.capabilityEnabled = false
+  controls.retryMore()
+  assert.equal(requests.length, 2, '好物能力关闭后重试不发送请求')
+}
+
 async function verifyCatalogApiQuery() {
   const originalLoad = (Module as any)._load
   let captured: { path: string; query: Record<string, unknown> } | undefined
@@ -169,14 +230,20 @@ const homeSource = readFileSync('src/pages/goods/index.tsx', 'utf8')
 const sectionSource = readFileSync('src/features/affiliate/catalog/catalog-section.tsx', 'utf8')
 assert.match(homeSource, /if \(!result\.enabled\) \{\s*handleCatalogDisabled\(\)/u, '只有商品库明确关闭时切换旧推荐路径')
 assert.match(homeSource, /setCatalogMode\('error'\)/u, '请求错误保留错误状态，不当作接口关闭')
-assert.match(homeSource, /catalogMode !== 'disabled'.*shouldShowAffiliateManualFallback/u, '触底分页仅在商品库明确关闭后运行')
+assert.match(homeSource, /catalogMode === 'enabled'[\s\S]*?catalogLoadMoreRef\.current\?\.\(\)/u, '商品库启用时页面触底会触发商品库自动翻页')
+assert.match(homeSource, /catalogMode !== 'disabled'.*shouldShowAffiliateManualFallback/u, '旧推荐翻页仍仅在商品库明确关闭后运行')
+assert.match(sectionSource, /onLoadMoreReady\(loadMore\)/u, '商品库向页面注册当前筛选的自动翻页处理器')
+assert.match(sectionSource, /return \(\) => onLoadMoreReady\(null\)/u, '页面隐藏或商品库卸载时注销自动翻页处理器')
+assert.match(sectionSource, /createAffiliateCatalogLoadMoreHandlers/u, '商品库组件使用可回归验证的自动翻页和手动重试回调')
+assert.doesNotMatch(sectionSource, /ariaRole='button' onClick=\{loadMore\}>加载更多商品/u, '普通翻页由触底自动触发，不要求用户再点加载按钮')
+assert.match(sectionSource, /上拉加载更多商品/u, '还有商品时提示用户继续上拉')
 assert.match(sectionSource, /salesLabel=\{formatAffiliateCatalogMonthSales\(item\.month_sales\)\}/u, '卡片销量来自真实月销量字段')
 assert.doesNotMatch(sectionSource, /2小时热销|2小时售/u, '商品库不混入两小时销量标签')
 assert.match(sectionSource, /cacheAffiliateGoods\(item\.goods\)/u, '详情页使用商品库商品快照')
 assert.match(sectionSource, /goods_id=\$\{encodeURIComponent\(item\.goods\.goods_id\)\}/u, '详情路由按不透明商品标识编码')
 assert.match(sectionSource, /tag\.name[\s\S]*?tag\.count/u, '日用子类显示后端提供的标签名和数量')
 
-void Promise.all([verifyRequestCoordination(), verifyCatalogApiQuery()])
+void Promise.all([verifyRequestCoordination(), verifyAutoLoadMoreRetryGuards(), verifyCatalogApiQuery()])
   .then(() => console.log('affiliate catalog groups, tags, snapshot, stale requests and API query: ok'))
   .catch((error: unknown) => {
     process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`)

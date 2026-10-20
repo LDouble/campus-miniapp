@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import { isApiError } from '../../../api/client'
@@ -15,6 +15,7 @@ import { cacheAffiliateGoods } from '../session-cache'
 import {
   AffiliateCatalogRequestCoordinator,
   appendUniqueAffiliateCatalogItems,
+  createAffiliateCatalogLoadMoreHandlers,
   formatAffiliateCatalogMonthSales,
   getAffiliateCatalogSnapshotRestart,
   hasMoreAffiliateCatalogPages,
@@ -40,6 +41,7 @@ type AffiliateCatalogSectionProps = {
   capabilityEnabled: boolean
   canConvert: boolean
   initialPage: AffiliateCatalogPage
+  onLoadMoreReady: (handler: (() => void) | null) => void
   onDisabled: () => void
   onBuy: (product: AffiliatePurchaseProduct) => void
 }
@@ -97,6 +99,7 @@ export default function AffiliateCatalogSection({
   capabilityEnabled,
   canConvert,
   initialPage,
+  onLoadMoreReady,
   onDisabled,
   onBuy,
 }: AffiliateCatalogSectionProps) {
@@ -284,18 +287,21 @@ export default function AffiliateCatalogSection({
     }
   }
 
-  const loadMore = () => {
-    const current = stateRef.current
-    if (!active || !capabilityEnabled || current.phase === 'loading' || current.loadingMore) return
-    if (!hasMoreAffiliateCatalogPages(current.page, current.pageSize, current.total) || !current.snapshotId) return
-    void loadPage(current.page + 1, selectedGroupRef.current, selectedTagRef.current, false, current.snapshotId)
-  }
+  const { loadMore, retryMore } = useMemo(() => createAffiliateCatalogLoadMoreHandlers(
+    () => stateRef.current,
+    () => ({
+      active: scopeRef.current.active,
+      capabilityEnabled: scopeRef.current.capabilityEnabled,
+      group: selectedGroupRef.current,
+      tag: selectedTagRef.current,
+    }),
+    (page, group, tag, reset, snapshotId) => { void loadPage(page, group, tag, reset, snapshotId) },
+  ), [loadPage])
 
-  const retryMore = () => {
-    const current = stateRef.current
-    if (!current.loadMoreError || !current.snapshotId || current.loadingMore) return
-    void loadPage(current.page + 1, selectedGroupRef.current, selectedTagRef.current, false, current.snapshotId)
-  }
+  useEffect(() => {
+    onLoadMoreReady(loadMore)
+    return () => onLoadMoreReady(null)
+  }, [loadMore, onLoadMoreReady])
 
   if (!active || !capabilityEnabled) return null
 
@@ -413,7 +419,7 @@ export default function AffiliateCatalogSection({
         </View>
       )}
       {hasMore && !state.loadingMore && !state.loadMoreError && state.phase === 'ready' && (
-        <View className='affiliate-ranking__load-more affiliate-ranking__load-more--button' ariaRole='button' onClick={loadMore}>加载更多商品</View>
+        <View className='affiliate-ranking__load-more'>上拉加载更多商品</View>
       )}
       {!hasMore && state.page > 0 && state.items.length > 0 && (
         <View className='affiliate-ranking__load-more'>已经到底了</View>

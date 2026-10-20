@@ -1,0 +1,452 @@
+<!DOCTYPE html><html lang="zh-CN" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>好物详情 - 唐棠良品 A4加厚牛皮笔记本</title>
+<!-- Tailwind CSS v3 CDN with forms and container-queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#EA3F2C',
+              redDark: '#C92A1A',
+              orange: '#FF5722',
+              lightOrange: '#FFF3EE',
+              couponBg: '#FFF0ED',
+              textDark: '#1D2129',
+              textMuted: '#4E5969',
+              textSub: '#86909C',
+              lightGray: '#F2F3F5',
+              border: '#E5E6EB',
+              gold: '#FA8C16'
+            }
+          },
+          boxShadow: {
+            'action': '0 8px 24px -4px rgba(234, 63, 44, 0.45)',
+            'card': '0 2px 14px 0 rgba(0, 0, 0, 0.04)',
+            'subtle': '0 1px 3px rgba(0, 0, 0, 0.02)',
+            'coupon': '0 2px 8px -2px rgba(234, 63, 44, 0.15)'
+          }
+        }
+      }
+    };
+  </script>
+<!-- BEGIN: CustomStyles -->
+<style data-purpose="system-tweaks">
+    body {
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* 优惠券锯齿边缘效果 */
+    .coupon-ticket {
+      position: relative;
+    }
+    .coupon-ticket::before, .coupon-ticket::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      background-color: #F7F8FA;
+      border-radius: 50%;
+      z-index: 10;
+    }
+    .coupon-ticket::before {
+      left: -5px;
+    }
+    .coupon-ticket::after {
+      right: -5px;
+    }
+  </style>
+<style data-purpose="component-styles">
+    .capsule-pill {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      border: 0.5px solid rgba(0, 0, 0, 0.12);
+    }
+    .nav-blur-bg {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+    }
+  </style>
+<!-- END: CustomStyles -->
+</head>
+<body class="bg-[#F0F2F5] text-brand-textDark antialiased min-h-screen flex justify-center selection:bg-red-100">
+<!-- BEGIN: MobileContainer -->
+<div class="w-full max-w-md bg-[#F7F8FA] min-h-screen relative flex flex-col shadow-2xl overflow-hidden pb-32">
+<!-- BEGIN: StickyNavigationHeader -->
+<!-- 顶部状态栏与导航栏一体化吸顶 -->
+<div class="sticky top-0 z-40 nav-blur-bg border-b border-neutral-200/60 shadow-xs">
+<!-- 顶部状态栏: 时间与系统指标 -->
+<header class="w-full h-10 pt-2 px-6 flex justify-between items-center select-none text-neutral-900">
+<span class="text-[15px] font-semibold tracking-tight">22:11</span>
+<div class="flex items-center space-x-1.5">
+<svg class="w-4 h-3.5 fill-current" viewBox="0 0 17 12">
+<rect height="4" rx="0.8" width="2.5" x="0" y="8"></rect>
+<rect height="6.5" rx="0.8" width="2.5" x="4.5" y="5.5"></rect>
+<rect height="9" rx="0.8" width="2.5" x="9" y="3"></rect>
+<rect height="11.5" rx="0.8" width="2.5" x="13.5" y="0.5"></rect>
+</svg>
+<svg class="w-4 h-3.5 fill-current" viewBox="0 0 16 12">
+<path d="M8 2.8c2.4 0 4.6.9 6.2 2.5l1.4-1.4C13.8 2 11 1 8 1 5 1 2.2 2 .4 3.9l1.4 1.4C3.4 3.7 5.6 2.8 8 2.8zm0 3.7c1.4 0 2.8.6 3.8 1.6l1.4-1.4C11.8 5.3 10 4.5 8 4.5s-3.8.8-5.2 2.2l1.4 1.4c1-1 2.4-1.6 3.8-1.6zm0 3.8c-.8 0-1.5.3-2 .9L8 13.2l2-2c-.5-.6-1.2-.9-2-.9z"></path>
+</svg>
+<div class="w-5 h-2.5 border border-neutral-900 rounded-sm p-0.5 flex items-center relative ml-0.5">
+<div class="h-full bg-neutral-900 rounded-[1px] w-3.5"></div>
+<div class="w-0.5 h-1 bg-neutral-900 absolute -right-1 top-0.5 rounded-r-xs"></div>
+</div>
+</div>
+</header>
+<!-- 导航条 -->
+<nav class="w-full h-11 flex items-center justify-between px-3.5">
+<button aria-label="返回上一页" class="w-8 h-8 rounded-full flex items-center justify-center text-neutral-800 active:scale-95 transition-transform" type="button">
+<svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15.75 19.5L8.25 12l7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<div class="flex items-center space-x-1.5">
+<span class="w-2 h-2 rounded-full bg-brand-red"></span>
+<h1 class="text-[16px] font-bold text-neutral-900 tracking-tight">好物推荐详情</h1>
+</div>
+<!-- 微信小程序标准右上胶囊按钮组件 -->
+<div class="capsule-pill h-7 rounded-full flex items-center px-2 space-x-2.5 shadow-sm">
+<button aria-label="更多选项" class="flex items-center space-x-0.5 px-0.5 py-1 text-neutral-800" type="button">
+<span class="w-1.5 h-1.5 bg-neutral-800 rounded-full inline-block"></span>
+<span class="w-1 h-1 bg-neutral-800 rounded-full inline-block"></span>
+<span class="w-1.5 h-1.5 bg-neutral-800 rounded-full inline-block"></span>
+</button>
+<span class="w-[0.5px] h-3.5 bg-neutral-300"></span>
+<button aria-label="关闭" class="p-0.5 text-neutral-800" type="button">
+<span class="w-3.5 h-3.5 rounded-full border-[1.5px] border-neutral-800 flex items-center justify-center">
+<span class="w-1 h-1 bg-neutral-800 rounded-full"></span>
+</span>
+</button>
+</div>
+</nav>
+</div>
+<!-- END: StickyNavigationHeader -->
+<!-- BEGIN: MainContent -->
+<main class="flex-1 flex flex-col">
+<!-- 1. 【顶部多图/轮播与头图区】 -->
+<section class="relative w-full aspect-square bg-[#FAF9F5] overflow-hidden" data-purpose="product-hero-carousel">
+<!-- 商品真实质感大图展示 -->
+<div class="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-[#FAF5EE] via-[#F4ECE1] to-[#E9DFCF]">
+<!-- 模拟精美笔记本渲染图主体 -->
+<div class="relative w-4/5 h-4/5 rounded-xl shadow-2xl bg-[#C89B67] border-4 border-[#B0814D] overflow-hidden flex flex-col justify-between p-6 transform -rotate-1 hover:rotate-0 transition-transform duration-300">
+<!-- 笔记本封面烫金纹理 -->
+<div class="flex justify-between items-start">
+<div class="w-9 h-9 rounded-full border border-[#DFB786] flex items-center justify-center text-[#DFB786] text-[10px] font-serif font-bold">
+            TT
+          </div>
+<span class="text-[10px] tracking-widest text-[#E6C59C] font-mono uppercase">VINTAGE 2024</span>
+</div>
+<div class="text-center space-y-1 my-auto">
+<p class="text-[11px] text-[#F3E5D3] tracking-[0.25em] uppercase font-medium">Original Notebook</p>
+<p class="text-xl font-serif text-[#FFF9F2] font-semibold tracking-wider">唐棠良品 · 经典加厚</p>
+<div class="w-12 h-0.5 bg-[#DFB786] mx-auto my-2 opacity-80"></div>
+<p class="text-[10px] text-[#F1DFCA]">加厚道林纸 · 256页 · 裸线精装</p>
+</div>
+<!-- 笔记本侧边绑带质感 -->
+<div class="flex justify-between items-center text-[9px] text-[#DEBF99] border-t border-[#DFB786]/30 pt-2">
+<span class="">A4 / A5 标准规格</span>
+<span class="">双向平摊 180°</span>
+</div>
+</div>
+<!-- 左上角高性价比推荐品质角标 -->
+<div class="absolute top-3 left-3 flex items-center space-x-1 bg-gradient-to-r from-[#EA3F2C] to-[#FF6B4A] text-white px-2.5 py-1 rounded-full text-[11px] font-bold shadow-md">
+<svg class="w-3.5 h-3.5 fill-current text-amber-200" viewBox="0 0 20 20">
+<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+</svg>
+<span class="">导购精选 · 热销TOP1</span>
+</div>
+<!-- 右上角降价提醒浮签 -->
+<div class="absolute top-3 right-3 bg-neutral-900/60 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center space-x-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span class="">历史低价区</span>
+</div>
+<!-- 右下角多图轮播指示器 -->
+<div class="absolute right-3.5 bottom-3.5 bg-neutral-900/70 backdrop-blur-md text-white px-2.5 py-0.5 rounded-full text-xs font-mono tracking-wider shadow">
+<span class="font-bold text-white">1</span><span class="text-white/60">/5</span>
+</div>
+</div>
+</section>
+<!-- BEGIN: ContentCards -->
+<div class="px-3.5 -mt-3 space-y-3 relative z-10">
+<!-- 2. 【价格与优惠核心利益区（前置强化，超大醒目字号 + 券后价 + 降价时效）】 -->
+<section class="bg-gradient-to-b from-white to-[#FFFDFD] rounded-2xl p-4 shadow-card border border-red-100/70 relative overflow-hidden" data-purpose="primary-price-card">
+<div class="flex items-end justify-between">
+<div class="space-y-0.5">
+<div class="flex items-center space-x-1.5">
+<span class="px-2 py-0.5 rounded bg-brand-red text-white text-[11px] font-bold tracking-tight">券后参考价</span>
+<span class="px-1.5 py-0.5 rounded bg-red-50 text-brand-red text-[10px] font-semibold border border-red-200">立省70%</span>
+</div>
+<div class="flex items-baseline space-x-1 pt-1">
+<span class="text-brand-red text-xl font-bold font-sans">¥</span>
+<span class="text-brand-red text-4xl font-extrabold tracking-tight font-sans">5.90</span>
+<span class="text-xs text-neutral-400 line-through ml-1.5 font-sans">¥19.90</span>
+</div>
+</div>
+<!-- 价格走势与更新时间小卡片 -->
+<div class="flex flex-col items-end text-right pb-1">
+<div class="flex items-center space-x-1 text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 mb-1">
+<svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+<span class="">直降 ¥14.00</span>
+</div>
+<span class="text-[10px] text-neutral-400">更新于 10月20日 22:00</span>
+</div>
+</div>
+<!-- 专属优惠券卡片模块（点睛转化组件） -->
+
+</section>
+<!-- 3. 【商品标题、卖点标签与店铺背书】 -->
+<article class="bg-white rounded-2xl p-4 shadow-card space-y-3.5" data-purpose="product-info-trust">
+<!-- 真实商品核心标题 -->
+<div>
+<h2 class="text-[16px] font-bold text-brand-textDark leading-snug tracking-tight">
+          唐棠良品 A4/A5加厚牛皮纸笔记本 (256页加厚不透墨·学生办公手账草稿本)
+        </h2>
+</div>
+<!-- 结构化卖点 Tag 流 -->
+<div class="flex flex-wrap gap-1.5">
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[#FFF5F2] text-[#DE350B] text-xs font-medium border border-[#FFDCD4]">
+<span class="w-1 h-1 rounded-full bg-brand-red mr-1"></span>加厚256页
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[#FFF5F2] text-[#DE350B] text-xs font-medium border border-[#FFDCD4]">
+<span class="w-1 h-1 rounded-full bg-brand-red mr-1"></span>书写不透墨
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 text-xs">
+          180°平摊装订
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 text-xs">
+          A5两本特惠装
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 text-xs">
+          办公/学生通用
+        </span>
+</div>
+<!-- 店铺权威背书卡片 -->
+<div class="pt-3 border-t border-neutral-100 flex items-center justify-between">
+<div class="flex items-center space-x-2.5">
+<div class="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-brand-orange font-bold text-xs border border-orange-200">
+            唐棠
+          </div>
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-xs font-bold text-neutral-800">唐棠良品图书旗舰店</span>
+<span class="px-1 py-0.2 bg-blue-50 text-blue-600 text-[10px] rounded border border-blue-200/70 font-semibold">品牌官方</span>
+</div>
+<div class="flex items-center space-x-2 text-[11px] text-neutral-400 mt-0.5">
+<span class="text-amber-600 font-medium flex items-center">
+                ★ 4.9分高评
+              </span>
+<span class="">·</span>
+<span class="">金牌卖家</span>
+<span class="">·</span>
+<span class="">海淘品质</span>
+</div>
+</div>
+</div>
+
+</div>
+<!-- 服务与保障承诺 -->
+
+</article>
+<!-- 4. 【达人/买手推荐理由与测评（突出导购种草属性）】 -->
+<section class="bg-white rounded-2xl p-4 shadow-card space-y-3.5" data-purpose="editorial-review-card">
+<!-- 模块标题与选品官认证 -->
+<div class="flex items-center justify-between pb-2.5 border-b border-neutral-100">
+<div class="flex items-center space-x-2">
+<span class="w-1.5 h-4 bg-brand-red rounded-full"></span>
+<h3 class="text-sm font-bold text-neutral-900 tracking-tight">买手选品测评 · 为什么值得买</h3>
+</div>
+<div class="flex items-center text-amber-500 text-xs font-semibold">
+<span class="mr-1 text-[11px] text-neutral-400">推荐指数</span>
+<span class="">★★★★★</span>
+</div>
+</div>
+<!-- 导购买手信息栏 -->
+<div class="flex items-center space-x-2 bg-gradient-to-r from-neutral-50 to-amber-50/30 p-2.5 rounded-xl border border-neutral-100">
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-rose-400 flex items-center justify-center text-white text-xs font-bold shadow-xs">
+          精选
+        </div>
+<div class="flex-1">
+<div class="flex items-center space-x-1.5">
+<span class="text-xs font-bold text-neutral-800">文具生活买手 · 林晨</span>
+<span class="text-[10px] bg-amber-100 text-amber-800 px-1 rounded font-medium">资深测评官</span>
+</div>
+<p class="text-[10px] text-neutral-400 mt-0.5">连续推荐办公好物 3 年 · 严格实测打分</p>
+</div>
+</div>
+<!-- 结构化买手实测推荐要点 -->
+<div class="space-y-2.5">
+<div class="flex items-start space-x-2.5">
+<div class="w-5 h-5 rounded-full bg-red-100 text-brand-red flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+            1
+          </div>
+<div class="text-xs leading-relaxed text-neutral-700">
+<span class="font-bold text-neutral-900">加厚道林纸质：</span>实测水性签字笔与钢笔书写均不透墨，双面书写空间完全利用，每本达 256 页厚度扎实。
+          </div>
+</div>
+<div class="flex items-start space-x-2.5">
+<div class="w-5 h-5 rounded-full bg-red-100 text-brand-red flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+            2
+          </div>
+<div class="text-xs leading-relaxed text-neutral-700">
+<span class="font-bold text-neutral-900">复古质感与装订：</span>牛皮纸真皮触感封面，烫金工艺低调耐看，裸线胶装支持 180° 完全平铺，书写无阻碍。
+          </div>
+</div>
+<div class="flex items-start space-x-2.5">
+<div class="w-5 h-5 rounded-full bg-red-100 text-brand-red flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
+            3
+          </div>
+<div class="text-xs leading-relaxed text-neutral-700">
+<span class="font-bold text-neutral-900">超级性价比：</span>领券到手价仅需 ¥5.90（两本包邮折合单本不到 3 元），对比同质竞品单本 ¥12+ 优势极大。
+          </div>
+</div>
+</div>
+<!-- 用户真实反馈精华条 -->
+<div class="mt-2 bg-[#F8F9FA] rounded-xl p-2.5 flex items-center justify-between border border-neutral-100 text-xs">
+<div class="flex items-center space-x-2 truncate">
+<span class="text-brand-orange font-bold text-[11px] shrink-0">98.6% 好评</span>
+<span class="text-neutral-600 text-[11px] truncate">“纸质很厚实，练字写手账特别舒服，已经回购三次了”</span>
+</div>
+<span class="text-[10px] text-neutral-400 shrink-0 ml-2">2300+ 评价</span>
+</div>
+</section>
+<!-- 5. 【购买须知与导购免责提示（精炼规整排版）】 -->
+<section class="bg-white rounded-2xl p-3.5 shadow-card space-y-2 border border-neutral-100/60" data-purpose="notice-disclaimer">
+<div class="flex items-center space-x-1.5 text-xs font-semibold text-neutral-600">
+<svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="">导购说明与下单提示</span>
+</div>
+<div class="text-[11px] text-neutral-400 leading-relaxed space-y-1 pl-5">
+<p class="">1. 本平台提供实时优惠信息导购服务，点击领券将直接跳转淘宝官方APP完成结算。</p>
+<p class="">2. 最终成交价受店铺限时券、跨店满减或红包影响，请以淘宝实际提交订单为准。</p>
+</div>
+</section>
+</div>
+<!-- END: ContentCards -->
+</main>
+<!-- END: MainContent -->
+<!-- 6. 【吸底操作栏（Bottom Bar）全面升级】 -->
+<aside class="fixed bottom-0 inset-x-0 w-full max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-neutral-200/90 px-3.5 pt-2 pb-[max(10px,env(safe-area-inset-bottom))] z-50 shadow-[0_-6px_20px_rgba(0,0,0,0.06)]" data-purpose="sticky-bottom-action-bar">
+<div class="flex items-center justify-between space-x-2.5">
+<!-- 左侧快捷工具集合 -->
+<div class="flex items-center space-x-3 shrink-0 pl-1">
+<!-- 首页入口 -->
+<button aria-label="首页" class="flex flex-col items-center justify-center text-neutral-600 active:scale-95 transition-transform" type="button">
+<svg class="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] mt-0.5 text-neutral-500">首页</span>
+</button>
+<!-- 收藏按钮（带点击互动状态） -->
+<button aria-label="收藏商品" class="flex flex-col items-center justify-center text-neutral-600 active:scale-90 transition-transform group" id="fav-btn" type="button">
+<svg class="w-5 h-5 text-neutral-700 group-hover:text-brand-red transition-colors" fill="none" id="fav-icon" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] mt-0.5 text-neutral-500" id="fav-text">收藏</span>
+</button>
+<!-- 分享赚返利 -->
+<button aria-label="分享" class="flex flex-col items-center justify-center text-neutral-600 active:scale-95 transition-transform" type="button">
+<svg class="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] mt-0.5 text-neutral-500">分享</span>
+</button>
+</div>
+<!-- 右侧核心转化 CTA 按钮组合 -->
+<div class="flex-1 flex items-center space-x-2 pl-1">
+<!-- 复制淘口令次按钮 -->
+<button class="flex-1 h-11 bg-[#FFF0ED] text-brand-red font-bold text-xs rounded-full border border-[#FFCFBF] active:scale-98 transition-all flex flex-col items-center justify-center" id="copy-tkl-btn" type="button">
+<span class="">复制淘口令</span>
+<span class="text-[9px] font-normal opacity-85 text-brand-red">直接去淘宝打开</span>
+</button>
+<!-- 领券购买主按钮 -->
+<button class="flex-[1.4] h-11 bg-gradient-to-r from-[#FF5722] via-[#EA3F2C] to-[#D92B19] text-white font-bold text-sm rounded-full shadow-action active:scale-98 transition-all flex flex-col items-center justify-center" id="buy-button" type="button">
+<div class="flex items-baseline space-x-0.5">
+<span class="">领券购买</span>
+<span class="text-xs font-medium">·</span>
+<span class="text-xs font-semibold">省¥14</span>
+</div>
+<span class="text-[9px] font-light opacity-90 tracking-tight">官方保障·正品保障</span>
+</button>
+</div>
+</div>
+<!-- iOS Home 虚拟横条 Indicator 适配 -->
+<div class="w-32 h-1 bg-neutral-900/20 rounded-full mx-auto mt-2"></div>
+</aside>
+<!-- END: FixedBottomActionBar -->
+</div>
+<!-- END: MobileContainer -->
+<!-- BEGIN: InteractiveHandlers -->
+<script data-purpose="interaction-feedback">
+  document.addEventListener('DOMContentLoaded', () => {
+    // 收藏按钮交互
+    const favBtn = document.getElementById('fav-btn');
+    const favIcon = document.getElementById('fav-icon');
+    const favText = document.getElementById('fav-text');
+    let isFav = false;
+
+    if (favBtn) {
+      favBtn.addEventListener('click', () => {
+        isFav = !isFav;
+        if (isFav) {
+          favIcon.setAttribute('fill', '#EA3F2C');
+          favIcon.setAttribute('stroke', '#EA3F2C');
+          favText.textContent = '已收藏';
+          favText.classList.add('text-brand-red');
+        } else {
+          favIcon.setAttribute('fill', 'none');
+          favIcon.setAttribute('stroke', 'currentColor');
+          favText.textContent = '收藏';
+          favText.classList.remove('text-brand-red');
+        }
+      });
+    }
+
+    // 复制淘口令交互
+    const copyBtn = document.getElementById('copy-tkl-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<span>已复制口令!</span><span class="text-[9px]">请打开手机淘宝</span>';
+        copyBtn.classList.add('bg-emerald-50', 'text-emerald-600', 'border-emerald-200');
+        setTimeout(() => {
+          copyBtn.innerHTML = originalText;
+          copyBtn.classList.remove('bg-emerald-50', 'text-emerald-600', 'border-emerald-200');
+        }, 1800);
+      });
+    }
+
+    // 购买按钮按压反馈
+    const buyBtn = document.getElementById('buy-button');
+    if (buyBtn) {
+      buyBtn.addEventListener('click', () => {
+        buyBtn.classList.add('scale-95');
+        setTimeout(() => {
+          buyBtn.classList.remove('scale-95');
+        }, 150);
+      });
+    }
+  });
+</script>
+<!-- END: InteractiveHandlers -->
+
+
+</body></html>

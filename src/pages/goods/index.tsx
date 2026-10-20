@@ -92,6 +92,7 @@ export default function GoodsHomePage() {
   const loadingRef = useRef(false)
   const loadedRef = useRef(false)
   const pageActiveRef = useRef(false)
+  const catalogLoadMoreRef = useRef<(() => void) | null>(null)
 
   const loadTaxonomies = useCallback(async (force = false) => {
     if (!getAffiliateCapabilitySnapshot().capabilities.enabled) return
@@ -174,6 +175,7 @@ export default function GoodsHomePage() {
 
   const loadCatalog = useCallback(async () => {
     if (!pageActiveRef.current || !getAffiliateCapabilitySnapshot().capabilities.enabled) return
+    catalogLoadMoreRef.current = null
     const revision = catalogRequestRevision.current + 1
     catalogRequestRevision.current = revision
     requestRevision.current += 1
@@ -251,6 +253,10 @@ export default function GoodsHomePage() {
     }
   }, [showShortcutsForCurrentTime])
 
+  const registerCatalogLoadMore = useCallback((handler: (() => void) | null) => {
+    catalogLoadMoreRef.current = handler
+  }, [])
+
   useDidShow(() => {
     setPageActive(true)
     pageActiveRef.current = true
@@ -274,6 +280,7 @@ export default function GoodsHomePage() {
         setPurchaseProduct(null)
       }
       if (!snapshot.capabilities.enabled) {
+        catalogLoadMoreRef.current = null
         setLoading(false)
         setLoadingMore(false)
         setError('')
@@ -287,6 +294,7 @@ export default function GoodsHomePage() {
   useDidHide(() => {
     setPageActive(false)
     pageActiveRef.current = false
+    catalogLoadMoreRef.current = null
     catalogRequestRevision.current += 1
     shortcutRequestRevision.current += 1
     shortcutDocumentRef.current = null
@@ -305,6 +313,10 @@ export default function GoodsHomePage() {
   })
 
   useReachBottom(() => {
+    if (catalogMode === 'enabled') {
+      if (pageActiveRef.current) catalogLoadMoreRef.current?.()
+      return
+    }
     if (catalogMode !== 'disabled' || !shouldShowAffiliateManualFallback(rankingsEnabled) || !capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
     void loadProducts(page + 1)
   })
@@ -408,6 +420,7 @@ export default function GoodsHomePage() {
           capabilityEnabled={capabilities.enabled}
           canConvert={convertEnabled}
           initialPage={catalogPage}
+          onLoadMoreReady={registerCatalogLoadMore}
           onDisabled={handleCatalogDisabled}
           onBuy={setPurchaseProduct}
         />
