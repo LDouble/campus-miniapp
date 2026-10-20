@@ -1,6 +1,6 @@
 .affiliate-shortcuts {
   margin: 0 28rpx 20rpx;
-  padding: 20rpx 14rpx;
+  padding: 28rpx 14rpx;
   box-sizing: border-box;
   border: 1rpx solid var(--ousea-bg-line, #e8edf4);
   border-radius: var(--ousea-radius-card, 32rpx);
@@ -10,7 +10,7 @@
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     column-gap: 8rpx;
-    row-gap: 18rpx;
+    row-gap: 24rpx;
   }
 
   &__item {
@@ -31,14 +31,14 @@
   &__visual {
     position: relative;
     display: flex;
-    width: 84rpx;
-    height: 84rpx;
+    width: 96rpx;
+    height: 96rpx;
     align-items: center;
     justify-content: center;
     flex: none;
   }
 
-  &__icon { width: 80rpx; height: 80rpx; }
+  &__icon { width: 88rpx; height: 88rpx; }
 
   &__icon-fallback {
     display: flex;
@@ -73,7 +73,7 @@
 
   &__title {
     width: 100%;
-    margin-top: 8rpx;
+    margin-top: 12rpx;
     overflow: hidden;
     color: var(--campus-text-body, #3a4759);
     font-size: var(--ousea-font-size-caption, 24rpx);
