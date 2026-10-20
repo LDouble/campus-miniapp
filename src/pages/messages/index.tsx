@@ -36,7 +36,7 @@ import {
   resolveMiniappModule,
 } from '../../features/runtime-config'
 import {
-  setCustomTabBarHidden,
+  acquireCustomTabBarHidden,
   setCustomTabBarUnreadCount,
   syncCustomTabBar,
 } from '../../utils/tabbar'
@@ -204,8 +204,8 @@ export default function MessagesPage() {
   })
 
   useEffect(() => {
-    setCustomTabBarHidden(Boolean(active))
-    return () => setCustomTabBarHidden(false)
+    if (!active) return undefined
+    return acquireCustomTabBarHidden()
   }, [active])
 
   const visible = useMemo(() => {

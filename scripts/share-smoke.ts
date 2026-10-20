@@ -99,7 +99,11 @@ const sharePages = execFileSync(
   .split('\n')
   .filter(Boolean)
 
-assert.equal(sharePages.length, 22, '朋友圈配置检查应覆盖全部现有分享页面')
+assert.ok(
+  sharePages.includes('src/pages/goods/detail.tsx'),
+  '好物详情应纳入好友与朋友圈分享配置检查',
+)
+assert.equal(sharePages.length, 23, '分享配置检查应覆盖当前全部 23 个分享页面')
 assert.equal(
   buildCampusShareMessage({
     path: '/pages/lottery/detail',

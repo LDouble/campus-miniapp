@@ -1,6 +1,6 @@
 import { useEffect, type PropsWithChildren, type ReactNode } from 'react'
 import { ScrollView, Text, View } from '@tarojs/components'
-import { setCustomTabBarHidden } from '../utils/tabbar'
+import { acquireCustomTabBarHidden } from '../utils/tabbar'
 import './bottom-sheet.scss'
 
 type SheetClickEvent = {
@@ -29,8 +29,7 @@ export default function BottomSheet({
 }: Props) {
   useEffect(() => {
     if (!visible) return undefined
-    setCustomTabBarHidden(visible)
-    return () => setCustomTabBarHidden(false)
+    return acquireCustomTabBarHidden()
   }, [visible])
 
   if (!visible) return null

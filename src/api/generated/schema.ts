@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/api/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 兼容旧客户端公开配置
+         * @description 原样返回配置中心 weouc.config 的公开非加密 JSON，不包装响应 envelope。缺失或非公开配置返回 404。
+         */
+        get: operations["LegacyWeoucConfig"];
+        put?: never;
+        /**
+         * 兼容旧客户端 POST 读取公开配置
+         * @description 原样返回配置中心 weouc.config 的公开非加密 JSON，不包装响应 envelope。缺失或非公开配置返回 404。
+         */
+        post: operations["LegacyWeoucConfigPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jw/bind": {
         parameters: {
             query?: never;
@@ -899,6 +923,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academic/credential-hosting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人教务凭据托管状态 */
+        get: operations["GetAcademicCredentialHosting"];
+        put?: never;
+        post?: never;
+        /** 撤销并删除本人教务凭据托管 */
+        delete: operations["DeleteAcademicCredentialHosting"];
+        options?: never;
+        head?: never;
+        /** 更新本人教务凭据托管的后台同步设置 */
+        patch: operations["UpdateAcademicCredentialHosting"];
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/intents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建一次性教务凭据托管绑定意图 */
+        post: operations["CreateAcademicCredentialHostingIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建一次教务只读查询任务 */
+        post: operations["CreateAcademicCredentialHostingTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academic/credential-hosting/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询本人教务只读查询任务 */
+        get: operations["GetAcademicCredentialHostingTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-credential-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 枚举教务账号凭据元数据 */
+        get: operations["ListAdminAcademicCredentialAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-credential-accounts/{account_id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 按版本禁用、启用或删除教务账号凭据 */
+        post: operations["UpdateAdminAcademicCredentialAccountState"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academic/pass-rates": {
         parameters: {
             query?: never;
@@ -995,6 +1123,126 @@ export interface paths {
         put?: never;
         /** 管理端手动触发学业统计重算 */
         post: operations["TriggerAdminAcademicStatisticsRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询教务同步批次 */
+        get: operations["ListAdminAcademicSyncBatches"];
+        put?: never;
+        /** 按候选学号创建教务同步批次 */
+        post: operations["CreateAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询教务同步批次详情 */
+        get: operations["GetAdminAcademicSyncBatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消尚未完成的教务同步批次 */
+        post: operations["CancelAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/retry-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试批次内的失败子任务 */
+        post: operations["RetryFailedAdminAcademicSyncBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/batches/{batch_id}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 分页查询批次子任务安全状态 */
+        get: operations["ListAdminAcademicSyncBatchTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/previews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建按教务账号候选的同步人数预演 */
+        post: operations["CreateAdminAcademicSyncPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/academic-sync/previews/{preview_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询候选人数预演进度 */
+        get: operations["GetAdminAcademicSyncPreview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1716,6 +1964,418 @@ export interface paths {
         put?: never;
         /** 发布活动弹框 */
         post: operations["PublishAdminActivityPopup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看推广开关、推广位和上游健康状态，不返回密钥 */
+        get: operations["GetAdminAffiliateHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询好物商品和状态 */
+        get: operations["ListAdminAffiliateProducts"];
+        put?: never;
+        /** 从上游选品创建好物草稿并服务端刷新商品快照 */
+        post: operations["CreateAdminAffiliateProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看好物商品和佣金率来源字段 */
+        get: operations["GetAdminAffiliateProduct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 按版本更新推荐文案、分类专题和展示时间 */
+        patch: operations["UpdateAdminAffiliateProduct"];
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/products/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 下架或暂停好物推荐并保留记录 */
+        post: operations["PauseAdminAffiliateProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/products/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 校验商品后发布或恢复好物推荐 */
+        post: operations["PublishAdminAffiliateProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/products/{id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 刷新商品与优惠券来源快照且保留运营文案 */
+        post: operations["RefreshAdminAffiliateProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 解析商品分享内容并返回来源标识用于管理端建档，不保存原始内容 */
+        post: operations["ResolveAdminAffiliateContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端搜索上游商品库并查看来源标识 */
+        get: operations["SearchAdminAffiliateGoods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/taxonomies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查询分类与专题 */
+        get: operations["ListAdminAffiliateTaxonomies"];
+        put?: never;
+        /** 创建好物分类或专题 */
+        post: operations["CreateAdminAffiliateTaxonomy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/taxonomies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 管理端查看分类或专题 */
+        get: operations["GetAdminAffiliateTaxonomy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 按版本修改分类或专题，停用代替删除 */
+        patch: operations["UpdateAdminAffiliateTaxonomy"];
+        trace?: never;
+    };
+    "/api/v1/affiliate/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已启用的好物分类 */
+        get: operations["ListAffiliateCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 使用服务端当前配置的推广位为商品转链 */
+        post: operations["ConvertAffiliateGoods"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已发布且当前有效的推荐好物 */
+        get: operations["ListAffiliateProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看已发布好物详情 */
+        get: operations["GetAffiliateProduct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 解析用户主动粘贴的商品链接或淘口令，不保存原始内容 */
+        post: operations["ResolveAffiliateContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/resolve/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 使用解析时签发的短期凭据重新解析并生成当前推广位链接 */
+        post: operations["ConvertResolvedAffiliateContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 按关键词搜索大淘客商品库 */
+        get: operations["SearchAffiliateGoods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询已启用的好物专题 */
+        get: operations["ListAffiliateTopics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/catalog/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetAdminAffiliateCatalogStatus */
+        get: operations["GetAdminAffiliateCatalogStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/catalog/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** SyncAdminAffiliateCatalog */
+        post: operations["SyncAdminAffiliateCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListAffiliateCatalog */
+        get: operations["ListAffiliateCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/rankings/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GetAdminAffiliateRankingStatus */
+        get: operations["GetAdminAffiliateRankingStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/affiliate/rankings/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** SyncAdminAffiliateRankings */
+        post: operations["SyncAdminAffiliateRankings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/affiliate/rankings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ListAffiliateRankings */
+        get: operations["ListAffiliateRankings"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8537,6 +9197,125 @@ export interface components {
             notice_url?: string | null;
             title: string;
         };
+        AcademicCredentialAccount: {
+            /** @description 独立教务账号 ID，十进制字符串防止客户端精度丢失 */
+            account_id: string;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            grant_epoch: string;
+            provider: string;
+            revision: string;
+            /** @enum {string} */
+            state: "none" | "active" | "reauth_required" | "action_required" | "disabled";
+            student_no: string;
+        };
+        AcademicCredentialAccountPage: {
+            has_more: boolean;
+            items: components["schemas"]["AcademicCredentialAccount"][];
+            max_account_id: string;
+            next_after_account_id: string;
+        };
+        AcademicCredentialAccountPageResponseBody: {
+            data: components["schemas"]["AcademicCredentialAccountPage"];
+            request_id: string;
+        };
+        AcademicCredentialAccountResponseBody: {
+            data: components["schemas"]["AcademicCredentialAccount"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingEducationLevel: "undergraduate" | "graduate";
+        AcademicCredentialHostingIntent: {
+            /** Format: date-time */
+            expires_at: string;
+            intent_id: string;
+            /** Format: uri */
+            submit_url: string;
+            token: string;
+        };
+        AcademicCredentialHostingIntentInput: {
+            /** @description 业务查询自动托管时为 true，遇在途绑定不覆盖；主动绑定省略或为 false，省略时按 false 处理 */
+            automatic?: boolean;
+            /** @enum {string} */
+            education_level: "undergraduate" | "graduate";
+            /** Format: uint64 */
+            expected_revision: number;
+        };
+        AcademicCredentialHostingIntentResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingIntent"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingPurpose: "courses" | "exams" | "grades" | "course_selections" | "selection_schedule" | "addition_results";
+        /** @enum {string} */
+        AcademicCredentialHostingState: "none" | "active" | "reauth_required" | "action_required" | "revoked";
+        AcademicCredentialHostingStatus: {
+            automatic_sync: boolean;
+            credential_id: string | null;
+            /** @description 当前身份版本绑定的已验证学校类型 */
+            education_level?: components["schemas"]["AcademicCredentialHostingEducationLevel"];
+            enabled: boolean;
+            last_error_code: string | null;
+            /** Format: date-time */
+            last_sync_at: string | null;
+            /** @description 服务端生效的托管策略版本，不表示用户另行授权 */
+            policy_version: string | null;
+            /** Format: uint64 */
+            revision: number;
+            revocation_pending: boolean;
+            state: components["schemas"]["AcademicCredentialHostingState"];
+        };
+        AcademicCredentialHostingStatusResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingStatus"];
+            request_id: string;
+        };
+        AcademicCredentialHostingTask: {
+            cache?: components["schemas"]["AcademicQueryCache"] | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: uint64 */
+            credential_revision: number;
+            error_code: string | null;
+            /** Format: uint64 */
+            grant_epoch: number;
+            period_id: string;
+            purpose: components["schemas"]["AcademicCredentialHostingPurpose"];
+            result: (components["schemas"]["AcademicCourse"][] | components["schemas"]["AcademicExam"][] | components["schemas"]["AcademicGrade"][] | components["schemas"]["AcademicCourseSelection"][] | components["schemas"]["AcademicCourse"][] | components["schemas"]["AcademicCourseAdditionResult"][]) | null;
+            schedule_note?: string | null;
+            state: components["schemas"]["AcademicCredentialHostingTaskState"];
+            task_id: string;
+        };
+        AcademicCredentialHostingTaskResponseBody: {
+            data: components["schemas"]["AcademicCredentialHostingTask"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicCredentialHostingTaskState: "queued" | "leased" | "running" | "awaiting_archive" | "succeeded" | "failed" | "needs_attention" | "canceled";
+        CreateAcademicCredentialHostingTaskInput: {
+            idempotency_key: string;
+            /** @description grades 允许省略或为空，其余用途必填 */
+            period_id?: string;
+            purpose: components["schemas"]["AcademicCredentialHostingPurpose"];
+        };
+        DeleteAcademicCredentialHostingInput: {
+            /** Format: uint64 */
+            expected_revision: number;
+        };
+        UpdateAcademicCredentialAccountStateInput: {
+            /**
+             * @description 禁用阻止取用；删除清除密码并保持禁用；启用仅等待下一次有效凭据录制
+             * @enum {string}
+             */
+            action: "disable" | "enable" | "delete";
+            expected_revision: string;
+        };
+        UpdateAcademicCredentialHostingInput: {
+            automatic_sync: boolean;
+            /** Format: uint64 */
+            expected_revision: number;
+        };
         AcademicCoursePassRatePage: {
             items: components["schemas"]["AcademicCoursePassRateView"][];
             metadata: components["schemas"]["AcademicStatisticsMetadata"];
@@ -8732,6 +9511,162 @@ export interface components {
         };
         /** @enum {string} */
         AcademicTeacherIdentityScope: "normalized_name";
+        AcademicSyncBatch: {
+            /** Format: uint64 */
+            awaiting_archive_count: number;
+            batch_id: string;
+            /** Format: date-time */
+            canceled_at: string | null;
+            /** Format: uint64 */
+            canceled_count: number;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            error_code: string | null;
+            /** Format: uint64 */
+            failed_count: number;
+            /** Format: uint64 */
+            needs_attention_count: number;
+            period_id: string | null;
+            /** Format: date-time */
+            prepared_at: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            /** Format: uint64 */
+            queued_count: number;
+            /** Format: uint64 */
+            running_count: number;
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** Format: uint64 */
+            skipped_count: number;
+            /** Format: date-time */
+            started_at: string | null;
+            state: components["schemas"]["AcademicSyncBatchState"];
+            /** Format: uint64 */
+            succeeded_count: number;
+            /** Format: uint64 */
+            total_count: number | null;
+            /** Format: uint64 */
+            version: number;
+        };
+        AcademicSyncBatchInput: {
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            /** @description 成绩可省略或为空表示全部学期，其余用途必填 */
+            period_id?: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** @description selected 范围必填；按字符串保留前导零，服务端规范化后去重 */
+            student_nos?: string[];
+            /**
+             * @deprecated
+             * @description 旧契约兼容字段，不再支持按平台用户创建新批次
+             */
+            user_ids?: number[];
+        };
+        AcademicSyncBatchPage: {
+            items: components["schemas"]["AcademicSyncBatch"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicSyncBatchPageResponseBody: {
+            data: components["schemas"]["AcademicSyncBatchPage"];
+            request_id: string;
+        };
+        AcademicSyncBatchResponseBody: {
+            data: components["schemas"]["AcademicSyncBatch"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncBatchState: "preparing" | "queued" | "running" | "awaiting_archive" | "partially_succeeded" | "succeeded" | "failed" | "canceling" | "canceled" | "needs_attention";
+        AcademicSyncCancelBatchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        AcademicSyncEducationLevel: "undergraduate" | "graduate";
+        AcademicSyncPreview: {
+            /** Format: uint64 */
+            candidate_count: number | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            error_code: string | null;
+            period_id: string | null;
+            preview_id: string;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            state: components["schemas"]["AcademicSyncPreviewState"];
+        };
+        AcademicSyncPreviewInput: {
+            education_level: components["schemas"]["AcademicSyncEducationLevel"];
+            /** @description 成绩可省略或为空表示全部学期，其余用途必填 */
+            period_id?: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            scope: components["schemas"]["AcademicSyncScope"];
+            /** @description selected 范围必填；按字符串保留前导零，服务端规范化后去重 */
+            student_nos?: string[];
+            /**
+             * @deprecated
+             * @description 旧契约兼容字段，不再支持按平台用户创建新批次
+             */
+            user_ids?: number[];
+        };
+        AcademicSyncPreviewResponseBody: {
+            data: components["schemas"]["AcademicSyncPreview"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncPreviewState: "preparing" | "ready" | "failed";
+        /** @enum {string} */
+        AcademicSyncPurpose: "grades" | "course_selections" | "courses" | "exams";
+        AcademicSyncRetryBatchInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        /** @enum {string} */
+        AcademicSyncScope: "all" | "selected";
+        AcademicSyncTask: {
+            /** @description 独立教务账号 ID，缺少托管记录的候选为零 */
+            account_id: string;
+            /** Format: uint64 */
+            attempt_count: number;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            error_code: string | null;
+            period_id: string | null;
+            purpose: components["schemas"]["AcademicSyncPurpose"];
+            /** Format: date-time */
+            started_at: string | null;
+            state: components["schemas"]["AcademicSyncTaskState"];
+            student_no: string;
+            task_id: string;
+            /**
+             * Format: uint64
+             * @deprecated
+             * @description 旧用户任务兼容字段，新账号任务固定为零
+             */
+            user_id: number;
+        };
+        AcademicSyncTaskPage: {
+            items: components["schemas"]["AcademicSyncTask"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AcademicSyncTaskPageResponseBody: {
+            data: components["schemas"]["AcademicSyncTaskPage"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AcademicSyncTaskState: "queued" | "running" | "awaiting_archive" | "succeeded" | "failed" | "skipped" | "canceled" | "needs_attention";
         AcademicIdentity: {
             /** Format: date-time */
             created_at: string;
@@ -9116,6 +10051,428 @@ export interface components {
             priority: number;
             /** Format: date-time */
             start_at: string;
+        };
+        AffiliateAdminGoodsPage: {
+            items: components["schemas"]["AffiliateAdminGoodsView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateAdminGoodsPageResponseBody: {
+            data: components["schemas"]["AffiliateAdminGoodsPage"];
+            request_id: string;
+        };
+        AffiliateAdminGoodsView: components["schemas"]["AffiliateGoodsView"] & {
+            commission_rate: string | null;
+            source_id: string;
+        };
+        AffiliateAdminProductCreateInput: {
+            /** Format: uint64 */
+            category_id?: number | null;
+            /** Format: date-time */
+            display_end_at?: string | null;
+            /** Format: date-time */
+            display_start_at?: string | null;
+            goods_id: string;
+            /** Format: int64 */
+            priority?: number;
+            recommendation_reason?: string;
+            recommendation_title?: string;
+            source_id: string;
+            topic_ids?: number[];
+        };
+        AffiliateAdminProductPage: {
+            items: components["schemas"]["AffiliateAdminProductView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateAdminProductPageResponseBody: {
+            data: components["schemas"]["AffiliateAdminProductPage"];
+            request_id: string;
+        };
+        AffiliateAdminProductResponseBody: {
+            data: components["schemas"]["AffiliateAdminProductView"];
+            request_id: string;
+        };
+        AffiliateAdminProductUpdateInput: {
+            /** Format: uint64 */
+            category_id?: number | null;
+            /** Format: date-time */
+            display_end_at?: string | null;
+            /** Format: date-time */
+            display_start_at?: string | null;
+            /** Format: uint64 */
+            expected_version: number;
+            /** Format: int64 */
+            priority?: number;
+            recommendation_reason?: string | null;
+            recommendation_title?: string | null;
+            topic_ids?: number[];
+        };
+        AffiliateAdminProductView: components["schemas"]["AffiliateProductView"] & {
+            /** @description 上游佣金率原始文本，仅管理端返回 */
+            commission_rate: string | null;
+            /** @description 上游曾明确失效，须管理员重新核验发布后才公开 */
+            requires_review: boolean;
+            /** @description 大淘客商品记录标识，与 goods_id 分开保存 */
+            source_id: string;
+            source_provider: string;
+            status: components["schemas"]["AffiliateProductStatus"];
+        };
+        AffiliateAdminResolveResponseBody: {
+            data: components["schemas"]["AffiliateAdminResolveResult"];
+            request_id: string;
+        };
+        AffiliateAdminResolveResult: {
+            product?: components["schemas"]["AffiliateAdminGoodsView"];
+            status: components["schemas"]["AffiliateResolveStatus"];
+        };
+        AffiliateAdminTaxonomyCreateInput: {
+            enabled: boolean;
+            kind: components["schemas"]["AffiliateTaxonomyKind"];
+            name: string;
+            /** Format: int64 */
+            priority: number;
+        };
+        AffiliateAdminTaxonomyPageResponseBody: {
+            data: components["schemas"]["AffiliateTaxonomyPage"];
+            request_id: string;
+        };
+        AffiliateAdminTaxonomyResponseBody: {
+            data: components["schemas"]["AffiliateTaxonomyView"];
+            request_id: string;
+        };
+        AffiliateAdminTaxonomyUpdateInput: {
+            enabled?: boolean;
+            /** Format: uint64 */
+            expected_version: number;
+            name?: string;
+            /** Format: int64 */
+            priority?: number;
+        };
+        /** @enum {string} */
+        AffiliateAvailability: "valid" | "invalid" | "unknown";
+        AffiliateConvertResponseBody: {
+            data: components["schemas"]["AffiliateConvertResult"];
+            request_id: string;
+        };
+        AffiliateConvertResult: {
+            actual_price?: string | null;
+            coupon_amount?: string | null;
+            coupon_condition?: string | null;
+            coupon_status: components["schemas"]["AffiliateCouponStatus"];
+            coupon_url: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            goods_id: string;
+            share_url: string | null;
+            taobao_password: string | null;
+        };
+        /** @enum {string} */
+        AffiliateCouponStatus: "unknown" | "not_started" | "active" | "expired" | "sold_out" | "none";
+        AffiliateExpectedVersionInput: {
+            /** Format: uint64 */
+            expected_version: number;
+        };
+        AffiliateGoodsPage: {
+            items: components["schemas"]["AffiliateGoodsView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateGoodsPageResponseBody: {
+            data: components["schemas"]["AffiliateGoodsPage"];
+            request_id: string;
+        };
+        AffiliateGoodsView: {
+            /** @description 上游返回的参考券后价；缺失时为 null */
+            actual_price?: string | null;
+            availability: components["schemas"]["AffiliateAvailability"];
+            /** @description 人民币十进制优惠金额字符串；缺失时为 null */
+            coupon_amount?: string | null;
+            coupon_condition?: string | null;
+            /** Format: date-time */
+            coupon_end_at?: string | null;
+            /** Format: date-time */
+            coupon_start_at?: string | null;
+            coupon_status: components["schemas"]["AffiliateCouponStatus"];
+            /** @description 上游转链所需的淘宝商品不透明标识 */
+            goods_id: string;
+            image_url?: string | null;
+            /** @description 人民币十进制金额字符串；缺失时为 null，不以 0 代替 */
+            original_price?: string | null;
+            shop_name?: string | null;
+            /** Format: date-time */
+            snapshot_at?: string | null;
+            title: string;
+        };
+        AffiliateHealth: {
+            auth_id: string | null;
+            /** Format: date-time */
+            checked_at: string | null;
+            convert_enabled: boolean;
+            credentials_configured: boolean;
+            enabled: boolean;
+            last_error_code?: string | null;
+            /** Format: date-time */
+            last_failure_at?: string | null;
+            /** Format: date-time */
+            last_success_at?: string | null;
+            pid_masked: string | null;
+            resolve_enabled: boolean;
+            search_enabled: boolean;
+            status: components["schemas"]["AffiliateRuntimeStatus"];
+        };
+        AffiliateHealthResponseBody: {
+            data: components["schemas"]["AffiliateHealth"];
+            request_id: string;
+        };
+        AffiliatePauseInput: {
+            /** Format: uint64 */
+            expected_version: number;
+            reason?: string;
+        };
+        AffiliateProductPage: {
+            items: components["schemas"]["AffiliateProductView"][];
+            page: number;
+            page_size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateProductPageResponseBody: {
+            data: components["schemas"]["AffiliateProductPage"];
+            request_id: string;
+        };
+        AffiliateProductResponseBody: {
+            data: components["schemas"]["AffiliateProductView"];
+            request_id: string;
+        };
+        /** @enum {string} */
+        AffiliateProductStatus: "draft" | "published" | "paused";
+        AffiliateProductView: {
+            actual_price?: string | null;
+            availability: components["schemas"]["AffiliateAvailability"];
+            /** Format: uint64 */
+            category_id: number | null;
+            coupon_amount?: string | null;
+            coupon_condition?: string | null;
+            /** Format: date-time */
+            coupon_end_at?: string | null;
+            /** Format: date-time */
+            coupon_start_at?: string | null;
+            coupon_status: components["schemas"]["AffiliateCouponStatus"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            display_end_at?: string | null;
+            /** Format: date-time */
+            display_start_at?: string | null;
+            goods_id: string;
+            /** Format: uint64 */
+            id: number;
+            image_url?: string | null;
+            original_price?: string | null;
+            /** Format: int64 */
+            priority: number;
+            recommendation_reason?: string | null;
+            recommendation_title?: string | null;
+            shop_name?: string | null;
+            /** Format: date-time */
+            snapshot_at?: string | null;
+            title: string;
+            topic_ids: number[];
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: uint64 */
+            version: number;
+        };
+        AffiliateResolveResponseBody: {
+            data: components["schemas"]["AffiliateResolveResult"];
+            request_id: string;
+        };
+        AffiliateResolveResult: {
+            product?: components["schemas"]["AffiliateGoodsView"];
+            /** @description 短期有效的服务端加密解析凭据，仅用于本次商品转链 */
+            resolution_token?: string | null;
+            status: components["schemas"]["AffiliateResolveStatus"];
+        };
+        /** @enum {string} */
+        AffiliateResolveStatus: "resolved" | "unsupported_format" | "unsupported_type" | "not_found" | "unavailable";
+        /** @enum {string} */
+        AffiliateRuntimeStatus: "not_configured" | "disabled" | "ready" | "degraded";
+        /** @enum {string} */
+        AffiliateTaxonomyKind: "category" | "topic";
+        AffiliateTaxonomyPage: {
+            items: components["schemas"]["AffiliateTaxonomyView"][];
+        };
+        AffiliateTaxonomyPageResponseBody: {
+            data: components["schemas"]["AffiliateTaxonomyPage"];
+            request_id: string;
+        };
+        AffiliateTaxonomyView: {
+            enabled: boolean;
+            /** Format: uint64 */
+            id: number;
+            kind: components["schemas"]["AffiliateTaxonomyKind"];
+            name: string;
+            /** Format: int64 */
+            priority: number;
+            /** Format: uint64 */
+            version: number;
+        };
+        AffiliateCatalogGroup: {
+            /** Format: int64 */
+            count: number;
+            key: string;
+            name: string;
+        };
+        AffiliateCatalogItem: {
+            goods: components["schemas"]["AffiliateGoodsView"];
+            /** Format: int64 */
+            month_sales: number | null;
+        };
+        AffiliateCatalogPage: {
+            enabled: boolean;
+            groups: components["schemas"]["AffiliateCatalogGroup"][];
+            items: components["schemas"]["AffiliateCatalogItem"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            page_size: number;
+            snapshot_id: string;
+            tags: components["schemas"]["AffiliateCatalogTag"][];
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateCatalogSettings: {
+            enabled: boolean;
+            /** Format: int64 */
+            sync_interval_minutes: number;
+        };
+        AffiliateCatalogStatus: {
+            groups: components["schemas"]["AffiliateCatalogGroup"][];
+            settings: components["schemas"]["AffiliateCatalogSettings"];
+            snapshot_id: string;
+            streams: components["schemas"]["AffiliateCatalogStreamStatus"][];
+            tags: components["schemas"]["AffiliateCatalogTag"][];
+        };
+        AffiliateCatalogStreamStatus: {
+            last_error: string | null;
+            /** Format: date-time */
+            last_success_at: string | null;
+            /** Format: int64 */
+            processed: number;
+            rule_key: string;
+            state: string;
+        };
+        AffiliateCatalogTag: {
+            /** Format: int64 */
+            count: number;
+            key: string;
+            name: string;
+        };
+        AffiliateRankingCategory: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @enum {string} */
+            state: "ready" | "stale" | "pending" | "failed";
+            /** Format: date-time */
+            synced_at: string | null;
+        };
+        AffiliateRankingItem: {
+            /** Format: int64 */
+            category_id: number;
+            goods: components["schemas"]["AffiliateGoodsView"];
+            /** Format: int64 */
+            two_hours_sales: number | null;
+        };
+        AffiliateRankingPage: {
+            categories: components["schemas"]["AffiliateRankingCategory"][];
+            enabled: boolean;
+            items: components["schemas"]["AffiliateRankingItem"][];
+            /** Format: int64 */
+            page: number;
+            /** Format: int64 */
+            page_size: number;
+            snapshot_id: string;
+            /** Format: int64 */
+            total: number;
+        };
+        AffiliateRankingSettings: {
+            category_ids: number[];
+            enabled: boolean;
+            /** Format: int64 */
+            sync_interval_minutes: number;
+            /** Format: int64 */
+            top_per_category: number;
+        };
+        AffiliateRankingStatus: {
+            categories: components["schemas"]["AffiliateRankingCategory"][];
+            settings: components["schemas"]["AffiliateRankingSettings"];
+            snapshot_id: string;
+        };
+        AffiliateShortcutAction: components["schemas"]["AffiliateShortcutCopyTokenAction"] | components["schemas"]["AffiliateShortcutMiniProgramAction"];
+        AffiliateShortcutCopy: {
+            button_text: string;
+            content: string;
+            description?: string;
+            /** Format: uri */
+            hero_image_url?: string;
+            page_title: string;
+            steps: string[];
+            success_text: string;
+            target_app: string;
+            title: string;
+        };
+        AffiliateShortcutCopyTokenAction: {
+            copy: components["schemas"]["AffiliateShortcutCopy"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "copy_token";
+        };
+        AffiliateShortcutDocument: {
+            items: components["schemas"]["AffiliateShortcutItem"][];
+            /**
+             * Format: int32
+             * @enum {integer}
+             */
+            schema_version: 1;
+        };
+        AffiliateShortcutItem: {
+            action: components["schemas"]["AffiliateShortcutAction"];
+            badge?: string;
+            enabled: boolean;
+            /** Format: date-time */
+            end_at?: string;
+            /** Format: uri */
+            icon_url: string;
+            id: string;
+            /** Format: int32 */
+            priority: number;
+            /** Format: date-time */
+            start_at?: string;
+            title: string;
+        };
+        AffiliateShortcutMiniProgramAction: {
+            app_id: string;
+            /** @enum {string} */
+            env_version: "develop" | "trial" | "release";
+            /** @description 相对小程序页面路径，可带 query，不得包含 scheme、fragment 或反斜杠；服务端另行校验这些语义约束。 */
+            path: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "mini_program";
         };
         CalendarReminderList: {
             items: components["schemas"]["CalendarReminderView"][];
@@ -10202,8 +11559,15 @@ export interface components {
             /** Format: uint64 */
             expected_version: number;
         };
+        AffiliateClientCapabilities: {
+            convert_enabled: boolean;
+            enabled: boolean;
+            resolve_enabled: boolean;
+            search_enabled: boolean;
+        };
         ClientBootstrap: {
             academic_verification?: components["schemas"]["AcademicVerificationStatus"] | null;
+            affiliate?: components["schemas"]["AffiliateClientCapabilities"];
             checkin?: components["schemas"]["DailyCheckinStatus"] | null;
             errors: {
                 [key: string]: components["schemas"]["ClientBootstrapSectionError"];
@@ -14564,6 +15928,51 @@ export interface components {
                 "application/json": components["schemas"]["MemberGeneralEducationModuleListResponseBody"];
             };
         };
+        /** @description 教务账号凭据元数据游标分页 */
+        AcademicCredentialAccountPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialAccountPageResponseBody"];
+            };
+        };
+        /** @description 教务账号凭据元数据，不包含密码 */
+        AcademicCredentialAccountResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialAccountResponseBody"];
+            };
+        };
+        /** @description 一次性托管绑定意图和凭据入口票据 */
+        AcademicCredentialHostingIntentResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingIntentResponseBody"];
+            };
+        };
+        /** @description 本人教务凭据托管状态 */
+        AcademicCredentialHostingStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingStatusResponseBody"];
+            };
+        };
+        /** @description 教务凭据托管查询任务 */
+        AcademicCredentialHostingTaskResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingTaskResponseBody"];
+            };
+        };
         /** @description 课程通过率分页 */
         AcademicCoursePassRatePageResponse: {
             headers: {
@@ -14607,6 +16016,42 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["AcademicStatisticsRunAcceptedResponseBody"];
+            };
+        };
+        /** @description 教务同步批次分页 */
+        AcademicSyncBatchPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchPageResponseBody"];
+            };
+        };
+        /** @description 教务同步批次 */
+        AcademicSyncBatchResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchResponseBody"];
+            };
+        };
+        /** @description 教务批次候选人数预演 */
+        AcademicSyncPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncPreviewResponseBody"];
+            };
+        };
+        /** @description 教务同步子任务分页 */
+        AcademicSyncTaskPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AcademicSyncTaskPageResponseBody"];
             };
         };
         /** @description 校园身份认证材料上传结果 */
@@ -14760,6 +16205,207 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ActivityPopupResponseBody"];
+            };
+        };
+        /** @description 管理端选品搜索结果分页 */
+        AffiliateAdminGoodsPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminGoodsPageResponseBody"];
+            };
+        };
+        /** @description 管理端好物商品分页 */
+        AffiliateAdminProductPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminProductPageResponseBody"];
+            };
+        };
+        /** @description 管理端好物商品详情 */
+        AffiliateAdminProductResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminProductResponseBody"];
+            };
+        };
+        /** @description 管理端解析商品分享内容并返回可用于选品的来源标识 */
+        AffiliateAdminResolveResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminResolveResponseBody"];
+            };
+        };
+        /** @description 管理端分类或专题分页 */
+        AffiliateAdminTaxonomyPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminTaxonomyPageResponseBody"];
+            };
+        };
+        /** @description 管理端分类或专题 */
+        AffiliateAdminTaxonomyResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminTaxonomyResponseBody"];
+            };
+        };
+        /** @description 当前推广位生成的商品推广链接 */
+        AffiliateConvertResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateConvertResponseBody"];
+            };
+        };
+        /** @description 大淘客商品搜索结果分页 */
+        AffiliateGoodsPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateGoodsPageResponseBody"];
+            };
+        };
+        /** @description 联盟推广接入运行状态，不包含密钥 */
+        AffiliateHealthResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateHealthResponseBody"];
+            };
+        };
+        /** @description 面向小程序的好物商品分页 */
+        AffiliateProductPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateProductPageResponseBody"];
+            };
+        };
+        /** @description 面向小程序的好物商品详情 */
+        AffiliateProductResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateProductResponseBody"];
+            };
+        };
+        /** @description 用户主动提交的商品分享内容解析结果 */
+        AffiliateResolveResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateResolveResponseBody"];
+            };
+        };
+        /** @description 分类或专题列表 */
+        AffiliateTaxonomyPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["AffiliateTaxonomyPageResponseBody"];
+            };
+        };
+        /** @description 成功 */
+        AffiliateCatalogPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateCatalogPage"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateCatalogStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateCatalogStatus"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingCategoryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingCategory"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingItemResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingItem"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingPageResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingPage"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingSettingsResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingSettings"];
+                    request_id: string;
+                };
+            };
+        };
+        /** @description 成功 */
+        AffiliateRankingStatusResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["AffiliateRankingStatus"];
+                    request_id: string;
+                };
             };
         };
         /** @description 我的校历事件提醒 */
@@ -16388,6 +18034,52 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    LegacyWeoucConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 配置 JSON 原文结构 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    LegacyWeoucConfigPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 配置 JSON 原文结构 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     LegacyWeoucBind: {
         parameters: {
             query?: never;
@@ -17546,6 +19238,164 @@ export interface operations {
             200: components["responses"]["MemberGeneralEducationModuleListResponse"];
         };
     };
+    GetAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    DeleteAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAcademicCredentialHostingInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAcademicCredentialHosting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAcademicCredentialHostingInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAcademicCredentialHostingIntent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicCredentialHostingIntentInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["AcademicCredentialHostingIntentResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAcademicCredentialHostingTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAcademicCredentialHostingTaskInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicCredentialHostingTaskResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAcademicCredentialHostingTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialHostingTaskResponse"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicCredentialAccounts: {
+        parameters: {
+            query?: {
+                after_account_id?: string;
+                max_account_id?: string;
+                page_size?: number;
+                provider?: string;
+                education_level?: "undergraduate" | "graduate";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicCredentialAccountPageResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminAcademicCredentialAccountState: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAcademicCredentialAccountStateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicCredentialAccountResponse"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
     ListAcademicCoursePassRates: {
         parameters: {
             query?: {
@@ -17654,6 +19504,162 @@ export interface operations {
             202: components["responses"]["AcademicStatisticsRunAcceptedResponse"];
             400: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicSyncBatches: {
+        parameters: {
+            query?: {
+                purpose?: "grades" | "course_selections" | "courses" | "exams";
+                education_level?: "undergraduate" | "graduate";
+                state?: "preparing" | "queued" | "running" | "awaiting_archive" | "partially_succeeded" | "succeeded" | "failed" | "canceling" | "canceled" | "needs_attention";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncBatchPageResponse"];
+        };
+    };
+    CreateAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncBatchInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncBatchResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CancelAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncCancelBatchInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    RetryFailedAdminAcademicSyncBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncRetryBatchInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncBatchResponse"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    ListAdminAcademicSyncBatchTasks: {
+        parameters: {
+            query?: {
+                state?: "queued" | "running" | "awaiting_archive" | "succeeded" | "failed" | "skipped" | "canceled" | "needs_attention";
+                user_id?: number;
+                account_id?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncTaskPageResponse"];
+            404: components["responses"]["Error"];
+        };
+    };
+    CreateAdminAcademicSyncPreview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicSyncPreviewInput"];
+            };
+        };
+        responses: {
+            202: components["responses"]["AcademicSyncPreviewResponse"];
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAcademicSyncPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                preview_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AcademicSyncPreviewResponse"];
+            404: components["responses"]["Error"];
         };
     };
     GetAcademicVerification: {
@@ -18675,6 +20681,584 @@ export interface operations {
         responses: {
             200: components["responses"]["ActivityPopupResponse"];
             409: components["responses"]["Error"];
+        };
+    };
+    GetAdminAffiliateHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateHealthResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAffiliateProducts: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                goods_id?: string;
+                category_id?: number;
+                topic_id?: number;
+                status?: "draft" | "published" | "paused";
+                availability?: "valid" | "invalid" | "unknown";
+                coupon_status?: "unknown" | "not_started" | "active" | "expired" | "sold_out" | "none";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateAdminProductPageResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAdminAffiliateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminProductCreateInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAffiliateProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminAffiliateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminProductUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    PauseAdminAffiliateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliatePauseInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    PublishAdminAffiliateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliateExpectedVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    RefreshAdminAffiliateProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliateExpectedVersionInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateAdminProductResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ResolveAdminAffiliateContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    content: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateAdminResolveResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    SearchAdminAffiliateGoods: {
+        parameters: {
+            query: {
+                keyword: string;
+                page?: number;
+                page_size?: number;
+                category_id?: number;
+                has_coupon?: boolean;
+                min_price?: string;
+                max_price?: string;
+                sort?: "comprehensive" | "sales" | "price_asc" | "price_desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateAdminGoodsPageResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAdminAffiliateTaxonomies: {
+        parameters: {
+            query?: {
+                kind?: "category" | "topic";
+                enabled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateAdminTaxonomyPageResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    CreateAdminAffiliateTaxonomy: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminTaxonomyCreateInput"];
+            };
+        };
+        responses: {
+            201: components["responses"]["AffiliateAdminTaxonomyResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAffiliateTaxonomy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateAdminTaxonomyResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    UpdateAdminAffiliateTaxonomy: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliateAdminTaxonomyUpdateInput"];
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateAdminTaxonomyResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAffiliateCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateTaxonomyPageResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ConvertAffiliateGoods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    goods_id: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateConvertResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAffiliateProducts: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                category_id?: number;
+                topic_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateProductPageResponse"];
+            400: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAffiliateProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateProductResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ResolveAffiliateContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    content: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateResolveResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ConvertResolvedAffiliateContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    resolution_token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["AffiliateConvertResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    SearchAffiliateGoods: {
+        parameters: {
+            query: {
+                keyword: string;
+                page?: number;
+                page_size?: number;
+                category_id?: number;
+                has_coupon?: boolean;
+                min_price?: string;
+                max_price?: string;
+                sort?: "comprehensive" | "sales" | "price_asc" | "price_desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateGoodsPageResponse"];
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAffiliateTopics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateTaxonomyPageResponse"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAffiliateCatalogStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateCatalogStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    SyncAdminAffiliateCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: components["responses"]["AffiliateCatalogStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAffiliateCatalog: {
+        parameters: {
+            query?: {
+                group?: "food" | "beauty" | "daily";
+                tag?: string;
+                page?: number;
+                page_size?: number;
+                snapshot_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateCatalogPageResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    GetAdminAffiliateRankingStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateRankingStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    SyncAdminAffiliateRankings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateRankingStatusResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    ListAffiliateRankings: {
+        parameters: {
+            query?: {
+                category_id?: number;
+                page?: number;
+                page_size?: number;
+                snapshot_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["AffiliateRankingPageResponse"];
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     ListMyCalendarReminders: {

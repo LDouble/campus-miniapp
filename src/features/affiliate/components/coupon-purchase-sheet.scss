@@ -1,0 +1,65 @@
+.coupon-purchase-sheet {
+  padding: 24rpx 32rpx 36rpx;
+
+  &__title {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--ousea-ink-900, #1a2333);
+    font-size: var(--ousea-font-size-body, 32rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  &__shop,
+  &__expires { display: block; margin-top: 8rpx; color: var(--ousea-ink-500, #6b7a90); font-size: var(--ousea-font-size-caption, 24rpx); }
+  &__state { display: flex; min-height: 184rpx; align-items: center; justify-content: center; color: var(--ousea-ink-500, #6b7a90); font-size: var(--ousea-font-size-body, 32rpx); }
+  &__error { display: flex; min-height: 184rpx; align-items: center; justify-content: center; gap: 16rpx; flex-direction: column; color: var(--ousea-ink-700, #3a4759); font-size: var(--ousea-font-size-caption, 24rpx); text-align: center; }
+  &__retry { display: flex; min-width: 128rpx; min-height: 64rpx; align-items: center; justify-content: center; border: 1rpx solid var(--ousea-ocean-500, #2b7aef); border-radius: var(--ousea-radius-pill, 999rpx); color: var(--ousea-ocean-600, #1d5fd6); }
+  &__result { margin-top: 24rpx; padding: 24rpx; border-radius: var(--ousea-radius-card, 32rpx); background: var(--ousea-ocean-50, #f2f7fe); }
+  &__updated { margin-bottom: 18rpx; padding: 16rpx 18rpx; border-radius: var(--ousea-radius-control, 20rpx); background: var(--ousea-service-orange-start, #fffbeb); color: var(--ousea-service-count-orange, #b45309); font-size: var(--ousea-font-size-caption, 24rpx); line-height: 1.5; }
+  &__coupon { display: flex; min-height: 84rpx; align-items: center; justify-content: space-between; gap: 12rpx; flex-wrap: wrap; }
+  &__coupon-label { color: var(--ousea-ink-700, #3a4759); font-size: var(--ousea-font-size-label, 27rpx); font-weight: var(--ousea-font-weight-semibold, 600); }
+  &__coupon-amount { color: var(--ousea-danger-500, #e5484d); font-size: 38rpx; font-weight: var(--ousea-font-weight-bold, 700); }
+  &__condition { width: 100%; color: var(--ousea-ink-500, #6b7a90); font-size: var(--ousea-font-size-caption, 24rpx); }
+  &__price-row { display: flex; min-height: 72rpx; margin-top: 12rpx; align-items: center; justify-content: space-between; border-top: 1rpx solid var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); font-size: var(--ousea-font-size-caption, 24rpx); }
+  &__price { color: var(--ousea-danger-500, #e5484d); font-size: var(--ousea-font-size-title, 33rpx); font-weight: var(--ousea-font-weight-bold, 700); }
+  &__hint { display: block; margin-top: 18rpx; color: var(--ousea-ink-500, #6b7a90); font-size: 22rpx; line-height: 1.5; }
+  &__copy-fallback { margin-top: 20rpx; padding: 20rpx; border: 1rpx solid var(--campus-border, var(--ousea-bg-line, #e8edf4)); border-radius: var(--ousea-radius-control, 20rpx); background: var(--campus-surface, #fff); }
+  &__copy-fallback-label { display: block; margin-bottom: 12rpx; color: var(--campus-text-secondary, var(--ousea-ink-500, #6b7a90)); font-size: var(--ousea-font-size-caption, 24rpx); line-height: 1.5; }
+  &__copy-fallback-text { display: block; overflow-wrap: anywhere; color: var(--campus-text-primary, var(--ousea-ink-900, #1a2333)); font-size: var(--ousea-font-size-body, 32rpx); line-height: 1.6; user-select: text; }
+
+  &__primary {
+    display: flex;
+    min-height: 96rpx;
+    margin: 0 28rpx calc(20rpx + env(safe-area-inset-bottom));
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: var(--ousea-ocean-500, #2b7aef);
+    color: #fff;
+    font-size: var(--ousea-font-size-body, 32rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+
+    &--disabled { background: var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .coupon-purchase-sheet {
+    &__title { color: #f8fafc; }
+    &__shop,
+    &__expires,
+    &__state,
+    &__error,
+    &__condition,
+    &__price-row { color: #aab8ca; }
+    &__retry { border-color: #4c96f5; color: #8ec5ff; }
+    &__result { background: #172554; }
+    &__updated { background: var(--ousea-service-dark-orange-start, rgba(251, 191, 36, 0.1)); color: var(--ousea-service-dark-count-orange, #fcd34d); }
+    &__price-row { border-color: #2e3a4e; }
+    &__coupon-label { color: #d7e0ec; }
+    &__primary--disabled { background: #273448; color: #aab8ca; }
+  }
+}
