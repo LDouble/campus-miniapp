@@ -21,6 +21,7 @@ page { background: var(--campus-surface, #fff); }
   &__countdown { display: flex; flex: none; align-items: flex-end; flex-direction: column; gap: 6rpx; font-size: 20rpx; }
   &__countdown-value { padding: 6rpx 14rpx; border: 1rpx solid rgba(255, 255, 255, .2); border-radius: 16rpx; background: rgba(0, 0, 0, .3); color: #fff; font-size: 22rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
   &__ticket-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12rpx; margin-top: 20rpx; padding-top: 16rpx; border-top: 1rpx solid rgba(255, 255, 255, .2); font-size: 24rpx; }
+  &__ticket-tag { max-width: 100%; padding: 4rpx 12rpx; border: 1rpx solid rgba(255, 255, 255, .5); border-radius: 6rpx; color: #fff; font-size: 22rpx; line-height: 1.4; overflow-wrap: anywhere; }
   &__bar-coupon { padding: 2rpx 12rpx; background: #fff; color: var(--ousea-affiliate-detail-rose, #e11d48); border-radius: 6rpx; font-size: 20rpx; font-weight: 700; }
   &__info-card, &__source-copy, &__notice-card { margin: 0 32rpx; padding: 32rpx; border: 1rpx solid var(--campus-border, #e8edf4); border-radius: 32rpx; background: var(--campus-surface, #fff); box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, .04); }
   &__title { display: block; font-size: 32rpx; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }

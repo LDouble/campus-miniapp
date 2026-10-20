@@ -314,8 +314,9 @@ export default function AffiliateProductDetailPage() {
                 </View>
                 {countdown && <View className='affiliate-detail__countdown'><Text>距{countdown.label}仅剩</Text><Text className='affiliate-detail__countdown-value'>{countdown.text}</Text></View>}
               </View>
-              {activeCoupon && <View className='affiliate-detail__ticket-row'>
-                <Text className='affiliate-detail__bar-coupon'>优惠券</Text><Text>立减 ¥{product.coupon_amount}</Text>
+              {(activeCoupon || Boolean(sourceMetadata?.specialTexts.length)) && <View className='affiliate-detail__ticket-row'>
+                {activeCoupon && <><Text className='affiliate-detail__bar-coupon'>优惠券</Text><Text>立减 ¥{product.coupon_amount}</Text></>}
+                {sourceMetadata?.specialTexts.map((label, index) => <Text className='affiliate-detail__ticket-tag' key={`${label}-${index}`}>{label}</Text>)}
               </View>}
             </View>
             <View className='affiliate-detail__info-card'>
@@ -337,11 +338,10 @@ export default function AffiliateProductDetailPage() {
               )}
 
             </View>
-            {(sourceMetadata?.recommendationText || Boolean(sourceMetadata?.specialTexts.length)) && (
+            {sourceMetadata?.recommendationText && (
               <View className='affiliate-detail__source-copy'>
                 <View className='affiliate-detail__section-heading'><Image className='affiliate-detail__section-icon' src={detailSparkIcon} mode='aspectFit' /><Text className='affiliate-detail__source-copy-title'>商品推荐</Text></View>
                 {sourceMetadata?.recommendationText && <Text className='affiliate-detail__source-copy-text'>{sourceMetadata.recommendationText}</Text>}
-                {Boolean(sourceMetadata?.specialTexts.length) && <View className='affiliate-detail__special-tags'>{sourceMetadata?.specialTexts.map((label, index) => <Text className='affiliate-detail__special-tag' key={`${label}-${index}`}>{label}</Text>)}</View>}
                 <Text className='affiliate-detail__source-copy-note'>商家推广信息，优惠条件以淘宝商品页为准</Text>
               </View>
             )}
