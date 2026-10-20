@@ -3,11 +3,14 @@ import Taro, { useDidHide, useDidShow, usePullDownRefresh, useReachBottom } from
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import {
   listAffiliateCategories,
+  listAffiliateCatalog,
   listAffiliateProducts,
   listAffiliateTopics,
+  type AffiliateCatalogPage,
   type AffiliateProduct,
   type AffiliateTaxonomy,
 } from '../../api/affiliate'
+import { isApiError } from '../../api/client'
 import type { AffiliatePurchaseProduct } from '../../features/affiliate/components/product-card'
 import AffiliateProductCard from '../../features/affiliate/components/product-card'
 import CouponPurchaseSheet from '../../features/affiliate/components/coupon-purchase-sheet'
@@ -21,6 +24,7 @@ import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilit
 import { syncCustomTabBar } from '../../utils/tabbar'
 import AffiliateShortcutGrid from '../../features/affiliate-shortcuts/shortcut-grid'
 import AffiliateRankingSection from '../../features/affiliate/rankings/ranking-section'
+import AffiliateCatalogSection from '../../features/affiliate/catalog/catalog-section'
 import {
   loadAffiliateShortcutDocument,
   nextAffiliateShortcutBoundary,
@@ -29,6 +33,7 @@ import {
   type AffiliateShortcutItem,
 } from '../../features/affiliate-shortcuts/config'
 import { shouldShowAffiliateManualFallback } from '../../features/affiliate/rankings/policy'
+import { shouldShowAffiliateCatalogLegacyFallback } from '../../features/affiliate/catalog/policy'
 import './index.scss'
 
 const categoryIcons: Record<string, string> = {
@@ -73,7 +78,12 @@ export default function GoodsHomePage() {
   const [pageActive, setPageActive] = useState(false)
   const [rankingRefreshToken, setRankingRefreshToken] = useState(0)
   const [rankingsEnabled, setRankingsEnabled] = useState<boolean | null>(null)
+  const [catalogMode, setCatalogMode] = useState<'checking' | 'enabled' | 'disabled' | 'error'>('checking')
+  const [catalogPage, setCatalogPage] = useState<AffiliateCatalogPage | null>(null)
+  const [catalogError, setCatalogError] = useState('')
+  const [catalogRevision, setCatalogRevision] = useState(0)
   const requestRevision = useRef(0)
+  const catalogRequestRevision = useRef(0)
   const shortcutRequestRevision = useRef(0)
   const shortcutDocumentRef = useRef<AffiliateShortcutDocument | null>(null)
   const shortcutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -81,6 +91,7 @@ export default function GoodsHomePage() {
   const taxonomyRequested = useRef(false)
   const loadingRef = useRef(false)
   const loadedRef = useRef(false)
+  const pageActiveRef = useRef(false)
 
   const loadTaxonomies = useCallback(async (force = false) => {
     if (!getAffiliateCapabilitySnapshot().capabilities.enabled) return
@@ -148,6 +159,62 @@ export default function GoodsHomePage() {
     }
   }, [categoryId, topicId])
 
+  const activateLegacyFeed = useCallback(() => {
+    setRankingsEnabled(null)
+    setRankingRefreshToken((revision) => revision + 1)
+    void loadTaxonomies()
+    if (!loadedRef.current) void loadProducts(1)
+  }, [loadProducts, loadTaxonomies])
+
+  const handleCatalogDisabled = useCallback(() => {
+    setCatalogPage(null)
+    setCatalogMode('disabled')
+    activateLegacyFeed()
+  }, [activateLegacyFeed])
+
+  const loadCatalog = useCallback(async () => {
+    if (!pageActiveRef.current || !getAffiliateCapabilitySnapshot().capabilities.enabled) return
+    const revision = catalogRequestRevision.current + 1
+    catalogRequestRevision.current = revision
+    requestRevision.current += 1
+    loadingRef.current = false
+    setLoading(false)
+    setLoadingMore(false)
+    setCatalogMode('checking')
+    setCatalogPage(null)
+    setCatalogError('')
+    try {
+      const result = await listAffiliateCatalog({ page: 1, page_size: PAGE_SIZE })
+      if (
+        catalogRequestRevision.current !== revision
+        || !pageActiveRef.current
+        || !getAffiliateCapabilitySnapshot().capabilities.enabled
+      ) return
+      if (!result.enabled) {
+        handleCatalogDisabled()
+        return
+      }
+
+      setProducts([])
+      setCategories([])
+      setTopics([])
+      taxonomyRequested.current = false
+      setLoaded(false)
+      loadedRef.current = false
+      setCatalogPage(result)
+      setCatalogRevision((current) => current + 1)
+      setCatalogMode('enabled')
+    } catch (loadError) {
+      if (
+        catalogRequestRevision.current !== revision
+        || !pageActiveRef.current
+        || !getAffiliateCapabilitySnapshot().capabilities.enabled
+      ) return
+      setCatalogError(isApiError(loadError) ? loadError.message : '推荐商品暂时不可用，请检查网络后重试。')
+      setCatalogMode('error')
+    }
+  }, [handleCatalogDisabled])
+
   const showShortcutsForCurrentTime = useCallback((document: AffiliateShortcutDocument | null) => {
     shortcutDocumentRef.current = document
     setShortcuts(visibleAffiliateShortcuts(document))
@@ -186,8 +253,11 @@ export default function GoodsHomePage() {
 
   useDidShow(() => {
     setPageActive(true)
+    pageActiveRef.current = true
     setRankingsEnabled(null)
     setRankingRefreshToken((revision) => revision + 1)
+    setCatalogMode('checking')
+    setCatalogPage(null)
     syncCustomTabBar('goods')
     void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
@@ -210,13 +280,14 @@ export default function GoodsHomePage() {
         setLoadMoreError('')
         return
       }
-      void loadTaxonomies()
-      if (!loadedRef.current) void loadProducts(1)
+      void loadCatalog()
     })
   })
 
   useDidHide(() => {
     setPageActive(false)
+    pageActiveRef.current = false
+    catalogRequestRevision.current += 1
     shortcutRequestRevision.current += 1
     shortcutDocumentRef.current = null
     if (shortcutTimerRef.current) clearTimeout(shortcutTimerRef.current)
@@ -227,16 +298,14 @@ export default function GoodsHomePage() {
     void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
       if (!snapshot.capabilities.enabled) return
-      setRankingsEnabled(null)
-      setRankingRefreshToken((revision) => revision + 1)
-      return Promise.all([loadTaxonomies(true), loadProducts(1)])
+      return loadCatalog()
     }).finally(() => {
       Taro.stopPullDownRefresh()
     })
   })
 
   useReachBottom(() => {
-    if (!shouldShowAffiliateManualFallback(rankingsEnabled) || !capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
+    if (catalogMode !== 'disabled' || !shouldShowAffiliateManualFallback(rankingsEnabled) || !capabilities.enabled || loadingRef.current || error || loadMoreError || products.length >= total || !loaded) return
     void loadProducts(page + 1)
   })
 
@@ -294,7 +363,8 @@ export default function GoodsHomePage() {
   const searchEnabled = canUseAffiliateCapability(capabilities, 'search')
   const resolveEnabled = canUseAffiliateCapability(capabilities, 'resolve')
   const convertEnabled = canUseAffiliateCapability(capabilities, 'convert')
-  const showManualFallback = shouldShowAffiliateManualFallback(rankingsEnabled)
+  const showCatalogFallback = shouldShowAffiliateCatalogLegacyFallback(catalogMode === 'disabled' ? false : null)
+  const showManualFallback = showCatalogFallback && shouldShowAffiliateManualFallback(rankingsEnabled)
 
   return (
     <View className='affiliate-home'>
@@ -322,14 +392,36 @@ export default function GoodsHomePage() {
 
       <AffiliateShortcutGrid items={shortcuts} />
 
-      <AffiliateRankingSection
-        active={pageActive}
-        capabilityEnabled={capabilities.enabled}
-        canConvert={convertEnabled}
-        refreshToken={rankingRefreshToken}
-        onEnabledChange={setRankingsEnabled}
-        onBuy={setPurchaseProduct}
-      />
+      {catalogMode === 'checking' && (
+        <View className='affiliate-home__state' ariaRole='status'>正在加载推荐商品…</View>
+      )}
+      {catalogMode === 'error' && (
+        <View className='affiliate-home__state affiliate-home__state--error' ariaRole='alert'>
+          <Text>{catalogError || '推荐商品暂时不可用，请稍后重试。'}</Text>
+          <View className='affiliate-home__retry' ariaRole='button' onClick={() => void loadCatalog()}>重新加载</View>
+        </View>
+      )}
+      {catalogMode === 'enabled' && catalogPage && (
+        <AffiliateCatalogSection
+          key={catalogRevision}
+          active={pageActive}
+          capabilityEnabled={capabilities.enabled}
+          canConvert={convertEnabled}
+          initialPage={catalogPage}
+          onDisabled={handleCatalogDisabled}
+          onBuy={setPurchaseProduct}
+        />
+      )}
+      {showCatalogFallback && (
+        <AffiliateRankingSection
+          active={pageActive}
+          capabilityEnabled={capabilities.enabled}
+          canConvert={convertEnabled}
+          refreshToken={rankingRefreshToken}
+          onEnabledChange={setRankingsEnabled}
+          onBuy={setPurchaseProduct}
+        />
+      )}
 
       {showManualFallback && categories.length > 0 && (
         <ScrollView className='affiliate-home__taxonomy-scroll' scrollX enhanced showScrollbar={false}>
