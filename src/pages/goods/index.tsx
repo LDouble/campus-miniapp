@@ -301,19 +301,6 @@ export default function GoodsHomePage() {
 
       <AffiliateShortcutGrid items={shortcuts} />
 
-      <View className='affiliate-home__hero'>
-        <View className='affiliate-home__hero-copy'>
-          <Text className='affiliate-home__hero-eyebrow'>Campus 好物</Text>
-          <Text className='affiliate-home__hero-title'>校园实用好物</Text>
-          <Text className='affiliate-home__hero-note'>精选推荐 · 购买前核验优惠</Text>
-        </View>
-        <View className='affiliate-home__hero-art'>
-          <View className='affiliate-home__hero-bag' />
-          <View className='affiliate-home__hero-spark affiliate-home__hero-spark--one' />
-          <View className='affiliate-home__hero-spark affiliate-home__hero-spark--two' />
-        </View>
-      </View>
-
       {categories.length > 0 && (
         <ScrollView className='affiliate-home__taxonomy-scroll' scrollX enhanced showScrollbar={false}>
           <View className='affiliate-home__taxonomy-list'>
