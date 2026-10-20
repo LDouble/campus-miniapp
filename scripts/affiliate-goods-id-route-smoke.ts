@@ -44,14 +44,14 @@ const component = sourceFile.statements.find((statement) => (
 ))
 assert.ok(component, '应能找到商品详情页面组件')
 
-const extractHookCallback = (hookName: string) => {
+const extractHookCallback = (hookName: string, bodyMarker?: string) => {
   let found: ts.ArrowFunction | undefined
   const visit = (node: ts.Node) => {
     if (ts.isCallExpression(node)
       && ts.isIdentifier(node.expression)
       && node.expression.text === hookName) {
       const callback = node.arguments[0]
-      if (callback && ts.isArrowFunction(callback)) found = callback
+      if (callback && ts.isArrowFunction(callback) && (!bodyMarker || callback.getText(sourceFile).includes(bodyMarker))) found = callback
       return
     }
     if (!found) node.forEachChild(visit)
@@ -63,7 +63,7 @@ const extractHookCallback = (hookName: string) => {
 
 const callbackSource = [
   `const onLoad = ${extractHookCallback('useLoad').getText(sourceFile)}`,
-  `const routeEffect = ${extractHookCallback('useEffect').getText(sourceFile)}`,
+  `const routeEffect = ${extractHookCallback('useEffect', 'getCachedAffiliateGoods').getText(sourceFile)}`,
   'return { onLoad, routeEffect }',
 ].join('\n')
 const compiledCallbacks = ts.transpileModule(callbackSource, {

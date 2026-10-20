@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { AffiliateConvertResult, AffiliateGoods } from '../src/api/affiliate'
 import {
+  getAffiliateOfferCountdown,
   getAffiliateConvertedCouponStatusForDisplay,
   getAffiliateConversionDisplay,
   getAffiliateConvertedPrice,
@@ -229,3 +230,11 @@ assert.equal(
 )
 
 console.log('affiliate promotion and coupon validity, labels, amounts, and clock boundaries: ok')
+
+assert.equal(getAffiliateOfferCountdown(couponOffer, now)?.text, '01:00:00')
+assert.equal(getAffiliateOfferCountdown(couponOffer, now)?.label, '优惠券到期')
+assert.equal(getAffiliateOfferCountdown({ ...couponOffer, promotion }, now)?.label, '活动结束')
+assert.equal(getAffiliateOfferCountdown(couponOffer, now + 3600000), null)
+assert.equal(getAffiliateOfferCountdown({ ...couponOffer, coupon_end_at: 'invalid' }, now), null)
+assert.equal(getAffiliateOfferCountdown(couponOffer, now - 7200000), null)
+assert.equal(getAffiliateOfferCountdown(couponOffer, now + 3599999)?.text, '00:00:01')

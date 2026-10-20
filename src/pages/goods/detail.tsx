@@ -26,6 +26,7 @@ import {
   getAffiliateProductDetailSourceMetadata,
 } from '../../features/affiliate/detail-source-metadata'
 import {
+  getAffiliateOfferCountdown,
   getAffiliateCouponStatusForDisplay,
   getAffiliateCouponTimeRange,
   getAffiliateReferencePrice,
@@ -62,6 +63,7 @@ export default function AffiliateProductDetailPage() {
   const [missingGoodsContext, setMissingGoodsContext] = useState(false)
   const [purchaseProduct, setPurchaseProduct] = useState<AffiliatePurchaseProduct | null>(null)
   const [imageFallback] = useState(createAffiliateImageFallbackState)
+  const [pageVisible, setPageVisible] = useState(true)
   const [offerClockRevision, setOfferClockRevision] = useState(0)
   const [, setImageRenderRevision] = useState(0)
   const requestRevision = useRef(0)
@@ -74,6 +76,14 @@ export default function AffiliateProductDetailPage() {
   const referencePrice = product && offer
     ? getAffiliateReferencePrice(offer, product.actual_price, product.original_price, offerNow)
     : null
+
+  const countdown = getAffiliateOfferCountdown(offer, offerNow)
+  const countdownEnd = countdown?.end
+  useEffect(() => {
+    if (!pageVisible || !countdownEnd) return undefined
+    const timer = setInterval(() => setOfferClockRevision((revision) => revision + 1), 1000)
+    return () => clearInterval(timer)
+  }, [pageVisible, countdownEnd])
 
   const loadProduct = useCallback(async (id: number) => {
     const revision = requestRevision.current + 1
@@ -163,11 +173,12 @@ export default function AffiliateProductDetailPage() {
   }, [capabilitySnapshot.loaded, capabilitySnapshot.revision, capabilities.enabled, loadProduct, route])
 
   useDidShow(() => {
+    setPageVisible(true)
     setOfferClockRevision((revision) => revision + 1)
     setCustomTabBarHidden(true)
     void refreshAffiliateCapabilities()
   })
-  useDidHide(() => setCustomTabBarHidden(false))
+  useDidHide(() => { setPageVisible(false); setCustomTabBarHidden(false) })
 
   useCampusShare(() => {
     if (product && 'id' in product) {
@@ -287,7 +298,10 @@ export default function AffiliateProductDetailPage() {
 
           <View className='affiliate-detail__content'>
             <View className='affiliate-detail__price-card'>
-              {promotion && <View className='affiliate-detail__campaign-line'><Text>{promotion.title}</Text></View>}
+              {(promotion || activeCoupon) && <View className='affiliate-detail__campaign-line'>
+                <Text>{promotion?.title || '领券优惠'}</Text>
+                {countdown && <View className='affiliate-detail__countdown'><Text>{countdown.label}</Text><Text className='affiliate-detail__countdown-value'>{countdown.text}</Text></View>}
+              </View>}
               <View className='affiliate-detail__price-heading'>
                 <View className='affiliate-detail__price-row'>
                   <Text>{referencePrice?.isCouponPrice ? '参考券后价' : promotion ? '活动参考价' : '商品参考价'}</Text>
@@ -296,43 +310,17 @@ export default function AffiliateProductDetailPage() {
                     {referencePrice?.canStrikeOriginalPrice && product.original_price && (
                       <Text className='affiliate-detail__original-price'>¥{product.original_price}</Text>
                     )}
+                    {activeCoupon && <Text className='affiliate-detail__bar-coupon'>券 ¥{product.coupon_amount}</Text>}
                   </View>
                 </View>
               </View>
+              {Boolean(sourceMetadata?.specialTexts.length) && <View className='affiliate-detail__offer-tags'>
+                {sourceMetadata?.specialTexts.map((label, index) => <Text className='affiliate-detail__bar-tag' key={`${label}-${index}`}>{label}</Text>)}
+              </View>}
             </View>
             <View className='affiliate-detail__info-card'>
-              {(activeCoupon || (!promotion && couponStatus !== 'none')) && (
-                <View className='affiliate-detail__benefits'>
-                  <View className='affiliate-detail__coupon-row'>
-                    {activeCoupon && product.coupon_amount ? (
-                      <View className='affiliate-detail__coupon-offer'>
-                        <Text className='affiliate-detail__coupon-lead'>可领券</Text>
-                        <Text className='affiliate-detail__coupon-amount'>¥{product.coupon_amount} 优惠券</Text>
-                      </View>
-                    ) : (
-                      <Text className={`affiliate-detail__coupon-status affiliate-detail__coupon-status--${couponStatus}`}>
-                        {couponStatusText[couponStatus]}
-                      </Text>
-                    )}
-                    {activeCoupon && product.coupon_condition && (
-                      <Text className='affiliate-detail__condition'>{product.coupon_condition}</Text>
-                    )}
-                  </View>
-                </View>
-              )}
               {recommendationTitle && <Text className='affiliate-detail__eyebrow'>{recommendationTitle}</Text>}
               <Text className='affiliate-detail__title'>{product.title}</Text>
-              {sourceMetadata && sourceMetadata.specialTexts.length > 0 && (
-                <View className='affiliate-detail__special-section'>
-                  <View className='affiliate-detail__special-tags'>
-                    {sourceMetadata.specialTexts.map((specialText, index) => (
-                      <Text className='affiliate-detail__special-tag' key={`${specialText}-${index}`}>
-                        {specialText}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-              )}
               {product.shop_name && <View className='affiliate-detail__shop'><Image className='affiliate-detail__shop-icon' src={goodsIcon} mode='aspectFit' /><Text>{product.shop_name}</Text></View>}
               {sourceMetadata && sourceMetadata.badges.length > 0 && (
                 <View className='affiliate-detail__source-badges'>
@@ -358,6 +346,8 @@ export default function AffiliateProductDetailPage() {
             )}
             <View className='affiliate-detail__notice-card'>
               <Text className='affiliate-detail__notice-title'>优惠说明</Text>
+              {activeCoupon && product.coupon_condition && <Text className='affiliate-detail__disclaimer'>使用门槛：{product.coupon_condition}</Text>}
+              {!activeCoupon && couponStatus !== 'none' && <Text className='affiliate-detail__disclaimer'>{couponStatusText[couponStatus]}</Text>}
               {activeCoupon && couponTimeRange && (
                 <View className='affiliate-detail__coupon-time'>
                   <Text>优惠券时间</Text>

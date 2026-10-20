@@ -292,3 +292,20 @@ export const useAffiliateOfferClock = (
 
   return now
 }
+
+/** getAffiliateOfferCountdown 使用当前有效活动或优惠券的真实截止时间计算剩余时长。 */
+export const getAffiliateOfferCountdown = (offer: AffiliateOfferData | null, now = Date.now()) => {
+  if (!offer) return null
+  const promotion = getAffiliatePromotionDisplay(offer.promotion, now)
+  const couponActive = hasCurrentAffiliateCoupon(offer, now)
+  const end = promotion ? readTimestamp(offer.promotion?.end_at) : couponActive ? readTimestamp(offer.coupon_end_at) : null
+  if (end === null || end <= now) return null
+  const seconds = Math.ceil((end - now) / 1000)
+  const days = Math.floor(seconds / 86400)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return {
+    label: promotion ? '活动结束' : '优惠券到期',
+    text: `${days ? `${days}天 ` : ''}${pad(Math.floor(seconds / 3600) % 24)}:${pad(Math.floor(seconds / 60) % 60)}:${pad(seconds % 60)}`,
+    end,
+  }
+}
