@@ -10203,12 +10203,18 @@ export interface components {
             /** @description 上游转链所需的淘宝商品不透明标识 */
             goods_id: string;
             image_url?: string | null;
+            is_gold_seller?: boolean | null;
+            is_overseas?: boolean | null;
             /** @description 人民币十进制金额字符串；缺失时为 null，不以 0 代替 */
             original_price?: string | null;
             promotion?: components["schemas"]["AffiliatePromotionView"];
+            recommendation_text?: string | null;
             shop_name?: string | null;
             /** Format: date-time */
             snapshot_at?: string | null;
+            source_category_id?: string | null;
+            source_subcategory_ids?: string[] | null;
+            special_text?: string[] | null;
             title: string;
         };
         AffiliateHealth: {
@@ -10276,15 +10282,21 @@ export interface components {
             /** Format: uint64 */
             id: number;
             image_url?: string | null;
+            is_gold_seller?: boolean | null;
+            is_overseas?: boolean | null;
             original_price?: string | null;
             /** Format: int64 */
             priority: number;
             promotion?: components["schemas"]["AffiliatePromotionView"];
             recommendation_reason?: string | null;
+            recommendation_text?: string | null;
             recommendation_title?: string | null;
             shop_name?: string | null;
             /** Format: date-time */
             snapshot_at?: string | null;
+            source_category_id?: string | null;
+            source_subcategory_ids?: string[] | null;
+            special_text?: string[] | null;
             title: string;
             topic_ids: number[];
             /** Format: date-time */

@@ -23,6 +23,9 @@ import { useAffiliateCapabilities } from '../../features/affiliate/use-capabilit
 import { createAffiliateImageFallbackState } from '../../features/affiliate/image-fallback'
 import { getAffiliateProductDetailMetadata } from '../../features/affiliate/detail-metadata'
 import {
+  getAffiliateProductDetailSourceMetadata,
+} from '../../features/affiliate/detail-source-metadata'
+import {
   getAffiliateCouponStatusForDisplay,
   getAffiliateCouponTimeRange,
   getAffiliateReferencePrice,
@@ -192,6 +195,7 @@ export default function AffiliateProductDetailPage() {
   const detailMetadata = product
     ? getAffiliateProductDetailMetadata(product).filter((item) => !(activeCoupon && item.key === 'coupon_end_at'))
     : []
+  const sourceMetadata = product ? getAffiliateProductDetailSourceMetadata(product) : null
   const offerPurchaseLabel = getAffiliatePurchaseLabel(activeCoupon, Boolean(promotion), couponStatus)
   const resolutionTokenMissing = product
     && 'requires_resolution_token' in product
@@ -275,6 +279,25 @@ export default function AffiliateProductDetailPage() {
             {recommendationTitle && <Text className='affiliate-detail__eyebrow'>{recommendationTitle}</Text>}
             <Text className='affiliate-detail__title'>{product.title}</Text>
             {product.shop_name && <Text className='affiliate-detail__shop'>{product.shop_name}</Text>}
+            {sourceMetadata && sourceMetadata.badges.length > 0 && (
+              <View className='affiliate-detail__source-badges'>
+                {sourceMetadata.badges.map((badge) => (
+                  <Text className='affiliate-detail__source-badge' key={badge.key}>{badge.label}</Text>
+                ))}
+              </View>
+            )}
+            {sourceMetadata && sourceMetadata.specialTexts.length > 0 && (
+              <View className='affiliate-detail__special-section'>
+                <Text className='affiliate-detail__section-label'>商品卖点</Text>
+                <View className='affiliate-detail__special-tags'>
+                  {sourceMetadata.specialTexts.map((specialText, index) => (
+                    <Text className='affiliate-detail__special-tag' key={`${specialText}-${index}`}>
+                      {specialText}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            )}
             {recommendationReason && (
               <View className='affiliate-detail__recommendation'>
                 <Text className='affiliate-detail__recommendation-label'>校园推荐</Text>
@@ -337,6 +360,13 @@ export default function AffiliateProductDetailPage() {
                 </View>
               ))}
             </View>
+            {sourceMetadata?.recommendationText && (
+              <View className='affiliate-detail__source-copy'>
+                <Text className='affiliate-detail__source-copy-title'>商品推荐</Text>
+                <Text className='affiliate-detail__source-copy-text'>{sourceMetadata.recommendationText}</Text>
+                <Text className='affiliate-detail__source-copy-note'>商家推广信息，优惠条件以淘宝商品页为准</Text>
+              </View>
+            )}
             <Text className='affiliate-detail__disclaimer'>商品价格和优惠以淘宝商品页面为准；下单前请核对优惠条件。</Text>
           </View>
 

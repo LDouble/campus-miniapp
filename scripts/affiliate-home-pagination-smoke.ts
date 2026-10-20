@@ -43,10 +43,11 @@ const deferred = <T>() => {
 }
 const flush = async () => { for (let i = 0; i < 10; i += 1) await Promise.resolve() }
 const harness = (rankingsEnabled: boolean | null = false) => {
-  const state = { products: [{ id: 1 }] as Product[], page: 1, total: 60, loading: false, loadingMore: false, loaded: true, error: '', loadMoreError: '', rankingRefreshToken: 0, rankingsEnabled }
+  const state = { products: [{ id: 1 }] as Product[], page: 1, total: 60, loading: false, loadingMore: false, loaded: true, error: '', loadMoreError: '', rankingRefreshToken: 0, rankingsEnabled, catalogMode: 'disabled' as 'checking' | 'enabled' | 'disabled' | 'error' }
   const refs = { loadingRef: { current: false }, requestRevision: { current: 0 }, loadedRef: { current: true } }
   const requests: { page: number; result: ReturnType<typeof deferred<Page>> }[] = []
   let stopped = 0
+  let catalogRefreshes = 0
   const render = () => {
     const env = {
       ...state, ...refs,
@@ -59,6 +60,11 @@ const harness = (rankingsEnabled: boolean | null = false) => {
       shouldShowAffiliateManualFallback: (enabled: boolean | null) => enabled === false,
       loadShortcuts: () => undefined,
       loadTaxonomies: async () => undefined,
+      loadCatalog: async () => {
+        catalogRefreshes += 1
+        refs.requestRevision.current += 1
+        refs.loadingRef.current = false
+      },
       Taro: { stopPullDownRefresh: () => { stopped += 1 } },
       useCallback: (callback: unknown) => callback,
       listAffiliateProducts: (params: { page: number }) => {
@@ -82,24 +88,28 @@ const harness = (rankingsEnabled: boolean | null = false) => {
       retryMore?: () => void
     }
   }
-  return { state, refs, requests, render, get stopped() { return stopped } }
+  return { state, refs, requests, render, get stopped() { return stopped }, get catalogRefreshes() { return catalogRefreshes } }
 }
 
 export async function runAffiliateHomePaginationSmoke() {
   const refreshing = harness()
   const older = refreshing.render().loadProducts(2)
-  refreshing.render().pullDown()
-  await flush()
-  assert.deepEqual(refreshing.requests.map((request) => request.page), [2, 1], '下拉必须新取第一页，不能被进行中的翻页跳过')
-  assert.equal(refreshing.stopped, 0, '刷新完成前不能结束刷新提示')
+  const latest = refreshing.render().loadProducts(1)
+  assert.deepEqual(refreshing.requests.map((request) => request.page), [2, 1], '第一页刷新必须取代进行中的翻页')
   refreshing.requests[0].result.resolve({ items: [{ id: 2 }], page: 2, total: 60 })
   await older
   assert.deepEqual(refreshing.state.products, [{ id: 1 }], '已被刷新取代的旧页不能追加')
   assert.equal(refreshing.refs.loadingRef.current, true, '旧页finally不能释放当前刷新锁')
   refreshing.requests[1].result.resolve({ items: [{ id: 10 }], page: 1, total: 60 })
-  await flush()
+  await latest
   assert.deepEqual(refreshing.state.products, [{ id: 10 }])
-  assert.equal(refreshing.stopped, 1)
+
+  const pullDownRefresh = harness()
+  pullDownRefresh.render().pullDown()
+  await flush()
+  assert.equal(pullDownRefresh.catalogRefreshes, 1, '商品库模式下拉刷新应重新加载商品库')
+  assert.equal(pullDownRefresh.requests.length, 0, '商品库模式下拉刷新不能直接请求旧人工商品列表')
+  assert.equal(pullDownRefresh.stopped, 1, '商品库刷新完成后应结束原生刷新提示')
 
   const failed = harness()
   const pending = failed.render().loadProducts(2)
