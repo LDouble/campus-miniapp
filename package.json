@@ -66,7 +66,7 @@
     "test:cat-atlas": "ts-node --transpile-only scripts/cat-atlas-smoke.ts",
     "test:community-performance": "ts-node --transpile-only scripts/community-performance-smoke.ts",
     "test:community-list-figma": "ts-node --transpile-only scripts/community-list-figma-smoke.ts",
-    "test:community-tab-scroll-top": "ts-node --transpile-only scripts/community-tab-scroll-top-smoke.ts",
+    "test:community-tab-scroll-top": "ts-node --transpile-only scripts/community-tab-scroll-top-smoke.ts && node scripts/home-tab-scroll-top-smoke.cjs",
     "test:community-detail-figma": "ts-node --transpile-only scripts/community-detail-figma-smoke.ts",
     "test:community-detail-navigation": "ts-node --transpile-only scripts/community-detail-navigation-smoke.ts && yarn test:community-post-view",
     "test:community-post-view": "ts-node --transpile-only scripts/community-post-view-smoke.ts && ts-node --transpile-only scripts/community-post-view-batch-smoke.ts && ts-node --transpile-only scripts/community-post-exposure-smoke.ts && ts-node --transpile-only scripts/community-post-exposure-hook-smoke.ts",
@@ -140,7 +140,7 @@
     "test:timetable-buddy-custom-storage": "ts-node --transpile-only scripts/timetable-buddy-custom-storage-smoke.ts",
     "test:timetable-buddy-state-coordinator": "ts-node --transpile-only scripts/timetable-buddy-state-coordinator-smoke.ts",
     "test:timetable-buddy-page-state": "ts-node --transpile-only scripts/timetable-buddy-page-state-smoke.ts",
-    "test:affiliate-catalog": "ts-node --transpile-only scripts/affiliate-catalog-smoke.ts",
+    "test:affiliate-catalog": "ts-node --transpile-only scripts/affiliate-catalog-smoke.ts && node scripts/affiliate-return-state-smoke.cjs",
     "test:affiliate-promotions": "ts-node --transpile-only scripts/affiliate-promotions-smoke.ts",
     "test:affiliate-detail-source-metadata": "ts-node --transpile-only scripts/affiliate-detail-source-metadata-smoke.ts"
   },

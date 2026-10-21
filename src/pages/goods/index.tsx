@@ -260,14 +260,12 @@ export default function GoodsHomePage() {
   useDidShow(() => {
     setPageActive(true)
     pageActiveRef.current = true
-    setRankingsEnabled(null)
-    setRankingRefreshToken((revision) => revision + 1)
-    setCatalogMode('checking')
-    setCatalogPage(null)
     syncCustomTabBar('goods')
     void loadShortcuts()
     void refreshAffiliateCapabilities().then((snapshot) => {
-      if (handledCapabilityRevision.current !== snapshot.revision) {
+      if (!pageActiveRef.current) return
+      const capabilityChanged = handledCapabilityRevision.current !== snapshot.revision
+      if (capabilityChanged) {
         handledCapabilityRevision.current = snapshot.revision
         requestRevision.current += 1
         loadingRef.current = false
@@ -287,7 +285,9 @@ export default function GoodsHomePage() {
         setLoadMoreError('')
         return
       }
-      void loadCatalog()
+      if (capabilityChanged || catalogMode === 'checking' || catalogMode === 'error') {
+        void loadCatalog()
+      }
     })
   })
 

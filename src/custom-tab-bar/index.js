@@ -35,7 +35,7 @@ const fullTabs = [
   },
   {
     pagePath: 'pages/goods/index',
-    text: '好物',
+    text: '优惠中心',
     iconPath: '/assets/tabbar/goods.png',
     selectedIconPath: '/assets/tabbar/goods-sale-active.svg'
   },
@@ -89,6 +89,7 @@ Component({
 
   pageLifetimes: {
     show() {
+      this.lastHomeTapAt = null
       if (this.data.hidden) {
         this.setData({ hidden: false })
       }
@@ -134,12 +135,22 @@ Component({
       if (!item) return
 
       if (index === this.data.selected) {
+        if (item.pagePath === 'pages/index/index') {
+          const now = Date.now()
+          if (this.lastHomeTapAt != null && now - this.lastHomeTapAt >= 0 && now - this.lastHomeTapAt <= 300) {
+            this.lastHomeTapAt = null
+            wx.pageScrollTo({ scrollTop: 0, duration: 240 })
+          } else {
+            this.lastHomeTapAt = now
+          }
+        }
         if (item.pagePath === 'pages/community/index' || item.pagePath === 'pages/goods/index') {
           wx.pageScrollTo({ scrollTop: 0, duration: 240 })
         }
         return
       }
 
+      this.lastHomeTapAt = null
       if (item.pagePath === 'pages/community/index') {
         requestWechatSubscriptionForModule('community')
       }

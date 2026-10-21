@@ -299,11 +299,11 @@ export default function AffiliateCatalogSection({
   ), [loadPage])
 
   useEffect(() => {
-    onLoadMoreReady(loadMore)
+    onLoadMoreReady(active && capabilityEnabled ? loadMore : null)
     return () => onLoadMoreReady(null)
-  }, [loadMore, onLoadMoreReady])
+  }, [active, capabilityEnabled, loadMore, onLoadMoreReady])
 
-  if (!active || !capabilityEnabled) return null
+  if (!capabilityEnabled) return null
 
   const dailyGroup = getGroupByKey(state.groups, 'daily')
   const dailyTags = sortAffiliateCatalogDailyTags(state.tags)

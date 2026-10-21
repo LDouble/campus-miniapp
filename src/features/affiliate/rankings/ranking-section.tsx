@@ -275,7 +275,7 @@ export default function AffiliateRankingSection({
     void loadPage(current.page + 1, selectedCategoryRef.current, false, current.snapshotId)
   }
 
-  if (!active || !capabilityEnabled || state.enabled === false) return null
+  if (!capabilityEnabled || state.enabled === false) return null
 
   const categories = sortAffiliateRankingCategories(state.categories)
   const categoryState = getAffiliateRankingCategoryState(categories, selectedCategoryId)

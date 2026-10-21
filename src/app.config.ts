@@ -159,7 +159,7 @@ const fullTabBarList = [
   },
   {
     pagePath: 'pages/goods/index',
-    text: '好物',
+    text: '优惠中心',
     iconPath: 'assets/tabbar/goods.png',
     selectedIconPath: 'assets/tabbar/goods-active.png'
   },
@@ -192,7 +192,20 @@ const preloadRule = Object.fromEntries(
   ]),
 )
 
-const navigateToMiniProgramAppIdList = activityPopupMiniProgramAppIds()
+// 优惠中心快捷入口允许跳转的外部小程序，资格版不包含这些入口。
+const affiliateMiniProgramAppIds = isQualificationEdition ? [] : [
+  'wxde8ac0a21135c07d',
+  'wxece3a9a4c82f58c9',
+  'wx32540bd863b27570',
+  'wx91d27dbf599dff74',
+]
+const navigateToMiniProgramAppIdList = [...new Set([
+  ...activityPopupMiniProgramAppIds(),
+  ...affiliateMiniProgramAppIds,
+])]
+if (navigateToMiniProgramAppIdList.length > 10) {
+  throw new Error('跳转小程序名单不能超过 10 个 AppID。')
+}
 
 const wechatAiModeConfig = isWechatAiEnabled
   ? {
