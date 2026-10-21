@@ -778,6 +778,16 @@ function IndexContent() {
 
   useDidShow(() => {
     memberAdPageActiveRef.current = true
+    if (!homeHasShown.current || isAccountCancelled()) return
+    // 广告资格独立于 Feed 生命周期，返回首页只重查广告，不重置列表分页。
+    memberAdAttemptedRef.current = false
+    memberAdPreloadAttemptedRef.current = false
+    memberAdSuppressedRef.current = false
+    setHomeActivityDecisionResolved(true)
+    setMemberAdShowCycle((cycle) => cycle + 1)
+  })
+
+  useDidShow(() => {
     setShortcutKeys(readShortcuts())
     syncCustomTabBar('home')
     if (isAccountCancelled()) {
@@ -790,15 +800,7 @@ function IndexContent() {
     setCampusName(selectedCampus)
     setCoursePreview(loadCachedCoursePreview(config, selectedCampus))
     // 首页从详情返回时保留 Feed 分页和滚动位置，完整刷新交给下拉刷新。
-    if (homeHasShown.current) {
-      // 首页复用时重新检查三天频控，失败准备也可在下次进入时重试。
-      memberAdAttemptedRef.current = false
-      memberAdPreloadAttemptedRef.current = false
-      memberAdSuppressedRef.current = false
-      setHomeActivityDecisionResolved(true)
-      setMemberAdShowCycle((cycle) => cycle + 1)
-      return
-    }
+    if (homeHasShown.current) return
     homeHasShown.current = true
   })
 
