@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Taro from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import { KeyboardSafeInput } from '../../../components/keyboard-safe-input'
-import { setCustomTabBarHidden } from '../../../utils/tabbar'
+import { acquireCustomTabBarHidden } from '../../../utils/tabbar'
 import FilterSheet from './filter-sheet'
 import type { MarketplaceCategory } from '../../runtime-config'
 import './filters.scss'
@@ -117,8 +117,7 @@ export default function MarketplaceFilters({ value, categories, campusControl, o
 
   useEffect(() => {
     if (!typeMenuVisible) return undefined
-    setCustomTabBarHidden(true)
-    return () => setCustomTabBarHidden(false)
+    return acquireCustomTabBarHidden()
   }, [typeMenuVisible])
 
   useEffect(() => {

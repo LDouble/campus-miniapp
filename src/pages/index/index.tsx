@@ -54,6 +54,7 @@ import type {
   UserLevelTask,
 } from '../../api/types'
 import CustomNavbar from '../../components/custom-navbar'
+import PublishFloatingButton from '../../components/publish-floating-button'
 import BottomSheet from '../../components/bottom-sheet'
 import UserAvatar from '../../components/user-avatar'
 import CommunityCommentSheet from '../../features/community/comment-sheet'
@@ -408,7 +409,6 @@ function IndexContent() {
   const [homeFeedLoadMoreError, setHomeFeedLoadMoreError] = useState(false)
   const [homeFeedRefreshing, setHomeFeedRefreshing] = useState(false)
   const [homeFeedLoadMoreSignal, setHomeFeedLoadMoreSignal] = useState(0)
-  const [showHomeBackTop, setShowHomeBackTop] = useState(false)
   const [homeCommentItem, setHomeCommentItem] = useState<HomeFeedItemView | null>(null)
   const [homeCommentReplyTarget, setHomeCommentReplyTarget] = useState<CommunityPostCommentPreview | null>(null)
   const [homeCommentSubmitting, setHomeCommentSubmitting] = useState(false)
@@ -449,7 +449,6 @@ function IndexContent() {
   const loadHomeRef = useRef<((force?: boolean) => Promise<void>) | null>(null)
   const homeFeedLoadingMoreRef = useRef(false)
   const homeHasShown = useRef(false)
-  const homeBackTopVisibleRef = useRef(false)
   const activityPopupRef = useRef<ActivityPopupState | null>(null)
   const activityPopupAttemptedRef = useRef(false)
   const activityPopupInteractedRef = useRef(false)
@@ -525,10 +524,6 @@ function IndexContent() {
 
   usePageScroll(({ scrollTop }) => {
     if (Number(scrollTop) > 0) markActivityPopupInteraction()
-    const nextVisible = Number(scrollTop) > 480
-    if (nextVisible === homeBackTopVisibleRef.current) return
-    homeBackTopVisibleRef.current = nextVisible
-    setShowHomeBackTop(nextVisible)
   })
 
   useReachBottom(() => {
@@ -966,10 +961,6 @@ function IndexContent() {
     }
   }, [homeCommentItem])
 
-  const scrollHomeToTop = useCallback(() => {
-    void Taro.pageScrollTo({ scrollTop: 0, duration: 240 })
-  }, [])
-
   useDismissCommunityOverlaysOnScroll({
     active: openHomeActionKey !== null || (homeCommentItem !== null && !homeCommentSubmitting),
     onDismiss: dismissCommunityOverlays,
@@ -1229,7 +1220,7 @@ function IndexContent() {
 
   return (
     <View
-      className='campus campus--course-home'
+      className={`campus campus--course-home${isQualificationEdition ? '' : ' campus--publish-fab'}`}
       onTouchStart={markActivityPopupInteraction}
     >
       <CustomNavbar
@@ -1606,15 +1597,6 @@ function IndexContent() {
           )}
         </View>
       </View>
-      <View
-        className={`home-back-top ${showHomeBackTop ? 'home-back-top--visible' : ''}`}
-        ariaRole='button'
-        ariaLabel='返回顶部'
-        onClick={scrollHomeToTop}
-      >
-        <Image src={icons.arrowUp} mode='aspectFit' />
-        <Text>顶部</Text>
-      </View>
       <BottomSheet
         visible={quickQuestionCourse !== null}
         title='向同学提问'
@@ -1725,6 +1707,7 @@ function IndexContent() {
         />
       )}
       </>)}
+      <PublishFloatingButton />
 
     </View>
   )

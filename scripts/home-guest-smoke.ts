@@ -155,18 +155,7 @@ assert.ok(
     && homeSource.includes('homeHasShown.current = true'),
   '首页从详情返回时必须保留 Feed 分页状态，完整刷新交给下拉刷新',
 )
-assert.ok(
-  homeSource.includes('home-back-top')
-    && homeSource.includes("ariaLabel='返回顶部'")
-    && homeSource.includes('Taro.pageScrollTo({ scrollTop: 0, duration: 240 })'),
-  '首页下滚后必须提供返回顶部操作',
-)
-assert.match(
-  homeStyleSource,
-  /\.home-back-top\s*\{[\s\S]*?bottom:\s*calc\(176rpx \+ env\(safe-area-inset-bottom\)\);/u,
-  '返回顶部按钮必须保持 88rpx 热区并避开底部安全区',
-)
-assert.match(homeStyleSource, /\.home-back-top\s*\{[\s\S]*?width:\s*88rpx;[\s\S]*?height:\s*88rpx;/u)
+assert.ok(!homeSource.includes('home-back-top'), '首页不应展示悬浮返回顶部按钮')
 assert.ok(
   !homeSource.includes("className='community-panel'")
     && !homeSource.includes("className='market-panel'")

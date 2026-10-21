@@ -13,6 +13,7 @@ import type {
   CampusCircleTopicView,
 } from '../../api/types'
 import CustomNavbar, { getNavbarMetrics } from '../../components/custom-navbar'
+import PublishFloatingButton from '../../components/publish-floating-button'
 import CommunityFeedPanel from '../../features/community/feed-panel'
 import { consumeCommunityFeedPin } from '../../features/community/feed-pin'
 import {
@@ -60,6 +61,7 @@ import {
 } from '../../utils/tabbar'
 import { consumeTodayHotCommunityIntent } from '../../features/today-hot/navigation'
 import { reportTodayHotEvent } from '../../features/today-hot/analytics'
+import { isQualificationEdition } from '../../features/app-edition'
 import {
   getPageCacheScope,
   readPageCache,
@@ -443,7 +445,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <View className={`community-page community-page--${displayedSection}`}>
+    <View className={`community-page community-page--${displayedSection}${isQualificationEdition ? '' : ' community-page--publish-fab'}`}>
       <CustomNavbar
         title='社区'
         immersive
@@ -623,7 +625,7 @@ export default function CommunityPage() {
           />
         )}
       </View>
-
+      <PublishFloatingButton />
     </View>
   )
 }

@@ -75,9 +75,17 @@ if (!pages.includes('pages/feature-migrated/index')) {
   fail('资格版 app.json 未注册 pages/feature-migrated/index。')
 }
 
-const expectedTabs = ['pages/index/index', 'pages/messages/index', 'pages/profile/index']
+const expectedTabs = [
+  'pages/index/index',
+  'pages/goods/index',
+  'pages/messages/index',
+  'pages/profile/index',
+]
 if (JSON.stringify(tabPagePaths) !== JSON.stringify(expectedTabs)) {
   fail(`资格版 Tab 必须且只能为 ${expectedTabs.join('、')}，实际为 ${tabPagePaths.join('、')}。`)
+}
+if (!pages.includes('pages/goods/index')) {
+  fail('资格版 app.json 未注册 pages/goods/index。')
 }
 
 const expectedQualificationAppId = process.env.TARO_APP_QUALIFICATION_WECHAT_APP_ID?.trim()
@@ -92,12 +100,16 @@ const expectedTargetAppId =
   process.env.TARO_APP_FULL_WECHAT_APP_ID?.trim() ||
   ''
 const declaredTargetAppIds = appConfig.navigateToMiniProgramAppIdList || []
+const expectedActivityAppId = 'wxaf35009675aa0b2a'
+const expectedDeclaredAppIds = [...new Set(
+  [expectedTargetAppId, expectedActivityAppId].filter(Boolean),
+)].sort()
 if (expectedTargetAppId) {
-  if (JSON.stringify(declaredTargetAppIds) !== JSON.stringify([expectedTargetAppId])) {
-    fail('资格版 navigateToMiniProgramAppIdList 未准确声明目标新版 AppID。')
+  if (JSON.stringify([...declaredTargetAppIds].sort()) !== JSON.stringify(expectedDeclaredAppIds)) {
+    fail('资格版 navigateToMiniProgramAppIdList 未准确声明新版和活动小程序 AppID。')
   }
-} else if (declaredTargetAppIds.length > 0) {
-  fail('目标新版 AppID 未配置时，资格版不得声明 navigateToMiniProgramAppIdList。')
+} else if (JSON.stringify([...declaredTargetAppIds].sort()) !== JSON.stringify([expectedActivityAppId])) {
+  fail('新版 AppID 未配置时，资格版不得额外声明未知的 navigateToMiniProgramAppIdList。')
 }
 
 for (const filePath of listFiles(outputRoot).filter((path) => /\.(?:js|json|wxml)$/u.test(path))) {

@@ -2,6 +2,20 @@
   "$schema": "https://tr.designtokens.org/format/",
   "global": {
     "color": {
+      "affiliate": {
+        "detail-rose": { "value": "#e11d48", "type": "color" },
+        "detail-gold": { "value": "#d97706", "type": "color" },
+        "detail-orange": { "value": "#f97316", "type": "color" },
+        "detail-warm": { "value": "#fffbeb", "type": "color" },
+        "page-top": { "value": "#FFF2EB", "type": "color", "description": "Stitch 好物导购专属色" },
+        "page-middle": { "value": "#FDF8F5", "type": "color", "description": "Stitch 好物导购专属色" },
+        "page-base": { "value": "#F7F8FA", "type": "color", "description": "Stitch 好物导购专属色" },
+        "action-start": { "value": "#FF6036", "type": "color", "description": "Stitch 好物导购专属色" },
+        "action-end": { "value": "#E93B2D", "type": "color", "description": "Stitch 好物导购专属色" },
+        "price": { "value": "#DC2626", "type": "color", "description": "Stitch 好物导购专属色" },
+        "coupon-start": { "value": "#FF5722", "type": "color", "description": "Stitch 好物导购专属色" },
+        "coupon-end": { "value": "#F5222D", "type": "color", "description": "Stitch 好物导购专属色" }
+      },
       "lottery": {
         "accent": { "value": "#EA580C", "type": "color", "description": "3750:2 抽奖强调色" },
         "page": { "value": "#FAF7F4", "type": "color", "description": "抽奖详情页面底色" },

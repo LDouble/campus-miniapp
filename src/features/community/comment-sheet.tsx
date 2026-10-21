@@ -7,7 +7,7 @@ import DetailComments, {
   type DetailReplyTarget,
 } from '../life-services/components/detail-comments'
 import { markLifeHubSectionDirty } from '../life-services/refresh-policy'
-import { setCustomTabBarHidden } from '../../utils/tabbar'
+import { acquireCustomTabBarHidden } from '../../utils/tabbar'
 import './comment-sheet.scss'
 
 type CommentSheetTarget = {
@@ -56,8 +56,7 @@ export default function CommunityCommentSheet({
   const placeholder = target?.placeholder || '友善交流，分享你的想法'
 
   useEffect(() => {
-    setCustomTabBarHidden(true)
-    return () => setCustomTabBarHidden(false)
+    return acquireCustomTabBarHidden()
   }, [])
 
   const requestClose = useCallback(() => {

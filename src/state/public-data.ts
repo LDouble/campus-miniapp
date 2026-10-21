@@ -16,6 +16,7 @@ import {
   loadAcademicCalendar,
 } from '../features/calendar/repository'
 import { seedMiniappRuntimeConfig } from '../features/runtime-config'
+import { seedAffiliateCapabilities } from '../features/affiliate/capabilities'
 import type { AcademicVerificationStatus } from '../api/types'
 
 type Settled<T> = { ok: true; value: T } | { ok: false }
@@ -39,12 +40,16 @@ const settle = async <T,>(promise: Promise<T>): Promise<Settled<T>> => {
  * 决定是否真正访问网络。
  */
 export const preloadClientBootstrap = async (): Promise<ClientBootstrapPreload> => {
-  if (isAccountCancelled()) return { verification: null }
+  if (isAccountCancelled()) {
+    seedAffiliateCapabilities(undefined)
+    return { verification: null }
+  }
   const bootstrap = await settle(getClientBootstrap())
   const bootstrapVerification = bootstrap.ok
     ? bootstrap.value.academic_verification ?? null
     : null
   if (bootstrap.ok) {
+    seedAffiliateCapabilities(bootstrap.value.affiliate)
     if (bootstrapVerification) seedAcademicVerificationStatus(bootstrapVerification)
     if (bootstrap.value.checkin) seedMyDailyCheckinStatus(bootstrap.value.checkin)
     if (bootstrap.value.runtime_config) {
@@ -54,6 +59,8 @@ export const preloadClientBootstrap = async (): Promise<ClientBootstrapPreload> 
         // Invalid aggregate sections fall back to their existing loaders.
       }
     }
+  } else {
+    seedAffiliateCapabilities(undefined)
   }
 
   return { verification: bootstrapVerification }

@@ -1,0 +1,232 @@
+.affiliate-product-card {
+  padding: 24rpx;
+  border: 1rpx solid var(--ousea-bg-line, #e8edf4);
+  border-radius: var(--ousea-radius-card, 32rpx);
+  background: var(--campus-surface, #fff);
+
+  &__main {
+    display: flex;
+    min-width: 0;
+    gap: 20rpx;
+
+    &--link:active { opacity: .76; }
+  }
+
+  &__image-wrap,
+  &__image-placeholder {
+    width: 196rpx;
+    height: 196rpx;
+    flex: none;
+    overflow: hidden;
+    border-radius: var(--ousea-radius-card-sm, 24rpx);
+    background: var(--ousea-ocean-50, #f2f7fe);
+  }
+
+  &__image { width: 100%; height: 100%; }
+
+  &__image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__bag-icon {
+    position: relative;
+    width: 48rpx;
+    height: 42rpx;
+    border: 4rpx solid var(--ousea-ocean-400, #4c96f5);
+    border-radius: 8rpx;
+
+    &::before {
+      position: absolute;
+      top: -20rpx;
+      left: 10rpx;
+      width: 20rpx;
+      height: 20rpx;
+      border: 4rpx solid var(--ousea-ocean-400, #4c96f5);
+      border-bottom: 0;
+      border-radius: 14rpx 14rpx 0 0;
+      content: '';
+    }
+  }
+
+  &__copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  &__eyebrow {
+    margin-bottom: 6rpx;
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: var(--ousea-line-height-ui, 1.4);
+  }
+
+  &__offer-badges { display: flex; min-width: 0; margin-top: 8rpx; flex-wrap: wrap; gap: 8rpx; }
+  &__activity-badge,
+  &__discount-badge { display: inline-flex; max-width: 100%; min-height: 32rpx; padding: 3rpx 8rpx; align-items: center; box-sizing: border-box; border-radius: 5rpx; font-size: 19rpx; line-height: 1.35; }
+  &__activity-badge { overflow: hidden; gap: 6rpx; background: linear-gradient(110deg, var(--ousea-affiliate-action-start), var(--ousea-affiliate-action-end)); color: #fff; }
+  &__activity-kind { flex: none; font-weight: var(--ousea-font-weight-semibold, 600); }
+  &__activity-title { overflow: hidden; min-width: 0; text-overflow: ellipsis; white-space: nowrap; }
+  &__discount-badge { border: 1rpx solid var(--ousea-danger-50, #fdecec); background: var(--ousea-danger-50, #fdecec); color: var(--ousea-danger-500, #e5484d); }
+
+  &__promotion {
+    margin-bottom: 6rpx;
+    padding: 4rpx 10rpx;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: var(--ousea-ocean-50, #f2f7fe);
+    color: var(--ousea-ocean-600, #1d5fd6);
+    font-size: var(--ousea-font-size-badge, 20rpx);
+    line-height: 1.4;
+  }
+
+  &__title {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--ousea-ink-900, #1a2333);
+    font-size: var(--ousea-font-size-label, 27rpx);
+    font-weight: var(--ousea-font-weight-medium, 500);
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  &__reason,
+  &__shop {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--ousea-ink-500, #6b7a90);
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  &__reason { margin-top: 6rpx; }
+  &__shop { margin-top: auto; padding-top: 8rpx; }
+
+  &__price-row {
+    display: flex;
+    min-height: 72rpx;
+    margin-top: 20rpx;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12rpx;
+  }
+
+  &__price-copy { min-width: 0; }
+  &__prices,
+  &__coupon-line { display: flex; align-items: baseline; gap: 12rpx; }
+  &__actual-price { color: var(--ousea-danger-500, #e5484d); font-size: 32rpx; font-weight: var(--ousea-font-weight-bold, 700); }
+  &__actual-price--muted { color: var(--ousea-ink-700, #3a4759); }
+  &__price-prefix { margin-right: 6rpx; color: var(--ousea-ink-500, #6b7a90); font-size: 20rpx; font-weight: var(--ousea-font-weight-regular, 400); }
+  &__original-price { color: var(--ousea-ink-300, #a6b2c2); font-size: var(--ousea-font-size-caption, 24rpx); text-decoration: line-through; }
+  &__coupon-line { margin-top: 4rpx; flex-wrap: wrap; }
+  &__coupon-amount { color: var(--ousea-danger-500, #e5484d); font-size: var(--ousea-font-size-caption, 24rpx); font-weight: var(--ousea-font-weight-semibold, 600); }
+  &__coupon-status,
+  &__coupon-condition { color: var(--ousea-ink-500, #6b7a90); font-size: 21rpx; line-height: 1.4; }
+  &__coupon-condition { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  &__buy {
+    display: flex;
+    min-width: 154rpx;
+    height: 64rpx;
+    padding: 0 22rpx;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: var(--ousea-radius-pill, 999rpx);
+    background: var(--ousea-ocean-500, #2b7aef);
+    color: #fff;
+    font-size: var(--ousea-font-size-caption, 24rpx);
+    font-weight: var(--ousea-font-weight-semibold, 600);
+    line-height: 1;
+
+    &:active { background: var(--ousea-ocean-600, #1d5fd6); }
+    &--disabled { background: var(--ousea-bg-line, #e8edf4); color: var(--ousea-ink-500, #6b7a90); }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .affiliate-product-card {
+    border-color: #2e3a4e;
+    background: #111827;
+
+    &__image-wrap,
+    &__image-placeholder { background: #172554; }
+    &__promotion { background: var(--campus-surface-primary, #172554); color: var(--ousea-ocean-400, #4c96f5); }
+    &__activity-badge { background: var(--ousea-service-dark-orange-start, rgba(251, 191, 36, .1)); color: var(--ousea-service-dark-count-orange, #fcd34d); }
+    &__discount-badge { border-color: var(--campus-border, #243244); background: var(--ousea-service-dark-orange-start, rgba(251, 191, 36, .1)); color: var(--ousea-service-dark-count-orange, #fcd34d); }
+    &__bag-icon { border-color: #4c96f5; &::before { border-color: #4c96f5; border-bottom: 0; } }
+    &__title { color: #f8fafc; }
+    &__reason,
+    &__shop,
+    &__coupon-status,
+    &__coupon-condition,
+    &__original-price { color: #aab8ca; }
+    &__actual-price--muted { color: #d7e0ec; }
+    &__buy--disabled { background: #273448; color: #aab8ca; }
+  }
+}
+
+/* 双列卡片仅供首页使用，搜索和详情沿用原有列表样式。 */
+.affiliate-product-card--tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border-radius: var(--ousea-radius-card-sm, 24rpx);
+
+  .affiliate-product-card {
+    &__main { flex-direction: column; gap: 0; }
+    &__image-wrap { width: 100%; height: auto; aspect-ratio: 1; border-radius: 0; }
+    &__image, &__image-placeholder { display: flex; width: 100%; height: 100%; aspect-ratio: 1; border-radius: 0; }
+    &__copy { padding: 20rpx 20rpx 0; }
+    &__title { min-height: 70rpx; font-size: 25rpx; line-height: 1.4; -webkit-line-clamp: 2; }
+    &__promotion { position: absolute; top: 14rpx; left: 14rpx; padding: 3rpx 10rpx; border-radius: 6rpx; }
+    &__eyebrow, &__reason, &__shop { font-size: 20rpx; }
+    &__price-row { position: relative; min-height: 0; margin-top: auto; padding: 14rpx 20rpx 20rpx; align-items: flex-end; gap: 0; }
+    &__price-copy { display: flex; flex: 1; flex-direction: column-reverse; }
+    &__prices { min-height: 40rpx; padding-right: 42rpx; flex-wrap: wrap; gap: 4rpx 8rpx; align-items: baseline; }
+    &__actual-price { color: var(--ousea-affiliate-price); font-size: 32rpx; line-height: 1.3; }
+    &__price-prefix { font-size: 22rpx; }
+    &__offer-badges { margin-top: 8rpx; gap: 6rpx; }
+    &__activity-badge,
+    &__discount-badge { min-height: 30rpx; padding: 3rpx 7rpx; font-size: 18rpx; }
+    &__original-price { font-size: 19rpx; }
+    &__coupon-line { min-height: 30rpx; margin-top: 0; margin-bottom: 20rpx; align-items: center; gap: 8rpx; }
+    &__coupon-amount { padding: 3rpx 8rpx; border-radius: 4rpx; background: linear-gradient(135deg, var(--ousea-affiliate-coupon-start), var(--ousea-affiliate-coupon-end)); color: #fff; font-size: 19rpx; }
+    &__sales-label { margin-top: 0; padding: 3rpx 6rpx; border-radius: 4rpx; background: var(--ousea-lottery-warm); font-size: 18rpx; line-height: 1.4; }
+    &__coupon-condition { white-space: normal; overflow-wrap: anywhere; }
+    &__buy {
+      position: absolute;
+      right: 2rpx;
+      bottom: 0;
+      min-width: 88rpx;
+      width: 88rpx;
+      height: 88rpx;
+      padding: 0;
+      margin: 0;
+      background: radial-gradient(circle, var(--ousea-danger-50, #fdecec) 0 26rpx, transparent 27rpx);
+      color: var(--ousea-danger-500, #e5484d);
+      font-size: 36rpx;
+      font-weight: 500;
+    }
+    &__buy--disabled { min-width: 92rpx; width: 92rpx; font-size: 20rpx; background: var(--campus-page, #f5f8fc); color: var(--campus-text-muted, #6b7a90); }
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .affiliate-product-card--tile .affiliate-product-card {
+    &__buy { background: var(--campus-surface-primary, #172554); color: var(--ousea-service-dark-count-orange, #fcd34d); }
+    &__buy--disabled { background: var(--campus-border, #243244); color: var(--campus-text-muted, #8494aa); }
+    &__activity-badge,
+    &__discount-badge { border-color: var(--campus-border, #243244); background: var(--ousea-service-dark-orange-start, rgba(251, 191, 36, .1)); color: var(--ousea-service-dark-count-orange, #fcd34d); }
+  }
+}

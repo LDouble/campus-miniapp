@@ -19,6 +19,8 @@
 - Ousea 未覆盖的业务色（跑腿、二手、找同行、成功态）可以保留，使用面积仅限业务识别和状态反馈。
 - 修改 Token 时必须同步 JSON、全局 CSS 变量、Sass 映射、本文档与对应 smoke test。
 
+好物导购按 Stitch `b05d41793d6d4be1b7281340279a2b47` 的珊瑚橙与浅暖灰渐变执行，专属色登记在 `global.color.affiliate`，只由好物页使用；不再借抽奖色近似代替原稿。
+
 ## 1. 设计原则
 
 抽奖详情按用户于 2026-09-12 指定的最新 Figma 3750:2 执行暖灰底、白卡与橙黄渐变覆盖，详见 [抽奖详情](pages/lottery.md)。lottery accent/page/warm/golden 原始令牌已同步 JSON、CSS、Sass 与测试；不影响其他页面。
@@ -338,3 +340,5 @@ Ousea / Global 的间距值按 375px 设计宽度换算，`1px = 2rpx`。
 - [ ] 动效时长为 `120–280ms`，并支持减少动态效果。
 - [ ] 用户文案统一使用“找同行”等当前产品术语。
 - [ ] 新增页面先复用公共组件与令牌，再添加页面级覆盖。
+
+商品详情以 Stitch `3025383b065d4c6fb25391ed4755894f` 为视觉源；新增 affiliate.detail-rose、detail-gold、detail-orange、detail-warm 用于详情渐变和推荐卡，保留首页色不变。

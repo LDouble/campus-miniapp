@@ -1,0 +1,40 @@
+.publish-floating-button {
+  position: fixed;
+  z-index: 80;
+  right: 28rpx;
+  bottom: calc(112rpx + env(safe-area-inset-bottom));
+  display: flex;
+  width: 164rpx;
+  height: 88rpx;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  box-sizing: border-box;
+  border-radius: var(--ousea-radius-pill, 999rpx);
+  background: var(--ousea-ocean-500, #2b7aef);
+  box-shadow: 0 8rpx 24rpx rgba(29, 95, 214, 0.24);
+  color: #fff;
+  font-size: var(--ousea-font-size-label, 27rpx);
+  font-weight: var(--ousea-font-weight-semibold, 600);
+  transition: background-color 140ms ease, transform 140ms ease;
+
+  &:active { background: var(--ousea-ocean-600, #1d5fd6); transform: scale(0.97); }
+
+  &__icon {
+    width: 34rpx;
+    height: 34rpx;
+    filter: brightness(0) invert(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .publish-floating-button { transition: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .publish-floating-button {
+    background: #2b7aef;
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.3);
+    &:active { background: #1d5fd6; }
+  }
+}

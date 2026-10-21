@@ -2,6 +2,11 @@ import {
   requestWechatSubscriptionForModule,
   requestWechatSubscriptionForPublishSection
 } from '../features/wechat-subscription'
+import {
+  getAffiliateCapabilitySnapshot,
+  refreshAffiliateCapabilities,
+  subscribeAffiliateCapabilities,
+} from '../features/affiliate/capabilities'
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
 const unreadCountStorageKey = 'campus.messages.unread-count.v1'
@@ -29,6 +34,12 @@ const fullTabs = [
     selectedIconPath: '/assets/tabbar/community-active.png'
   },
   {
+    pagePath: 'pages/goods/index',
+    text: '优惠中心',
+    iconPath: '/assets/tabbar/goods.png',
+    selectedIconPath: '/assets/tabbar/goods-sale-active.svg'
+  },
+  {
     pagePath: 'pages/messages/index',
     text: '消息',
     iconPath: '/assets/tabbar/messages.png',
@@ -42,6 +53,15 @@ const fullTabs = [
   }
 ]
 
+const buildTabList = (affiliateEnabled) => {
+  const editionTabs = qualification
+    ? fullTabs.filter(item => item.pagePath !== 'pages/community/index')
+    : fullTabs
+  return affiliateEnabled
+    ? editionTabs
+    : editionTabs.filter(item => item.pagePath !== 'pages/goods/index')
+}
+
 Component({
   data: {
     selected: 0,
@@ -49,25 +69,45 @@ Component({
     unreadCount: getStoredUnreadCount(),
     publishSection: 'community',
     qualification,
-    list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
+    list: buildTabList(getAffiliateCapabilitySnapshot().capabilities.enabled)
   },
 
   lifetimes: {
     attached() {
+      this.affiliateCapabilitiesUnsubscribe = subscribeAffiliateCapabilities((snapshot) => {
+        this.applyAffiliateCapabilities(snapshot)
+      })
+      void refreshAffiliateCapabilities().then((snapshot) => {
+        this.applyAffiliateCapabilities(snapshot)
+      })
       this.syncSelected()
+    },
+    detached() {
+      this.affiliateCapabilitiesUnsubscribe?.()
     }
   },
 
   pageLifetimes: {
     show() {
+      this.lastHomeTapAt = null
       if (this.data.hidden) {
         this.setData({ hidden: false })
       }
       this.syncSelected()
+      void refreshAffiliateCapabilities().then((snapshot) => {
+        this.applyAffiliateCapabilities(snapshot)
+      })
     }
   },
 
   methods: {
+    applyAffiliateCapabilities(snapshot) {
+      const enabled = snapshot.capabilities.enabled
+      const list = buildTabList(enabled)
+      this.setData({ list })
+      this.syncSelected()
+    },
+
     syncSelected() {
       const pages = getCurrentPages()
       const route = pages.length
@@ -76,7 +116,7 @@ Component({
       const selected = this.data.list.findIndex(item => item.pagePath === route)
       const nextData = {}
 
-      if (selected >= 0 && selected !== this.data.selected) {
+      if (selected !== this.data.selected) {
         nextData.selected = selected
       }
       const unreadCount = getStoredUnreadCount()
@@ -95,12 +135,22 @@ Component({
       if (!item) return
 
       if (index === this.data.selected) {
-        if (item.pagePath === 'pages/community/index') {
+        if (item.pagePath === 'pages/index/index') {
+          const now = Date.now()
+          if (this.lastHomeTapAt != null && now - this.lastHomeTapAt >= 0 && now - this.lastHomeTapAt <= 300) {
+            this.lastHomeTapAt = null
+            wx.pageScrollTo({ scrollTop: 0, duration: 240 })
+          } else {
+            this.lastHomeTapAt = now
+          }
+        }
+        if (item.pagePath === 'pages/community/index' || item.pagePath === 'pages/goods/index') {
           wx.pageScrollTo({ scrollTop: 0, duration: 240 })
         }
         return
       }
 
+      this.lastHomeTapAt = null
       if (item.pagePath === 'pages/community/index') {
         requestWechatSubscriptionForModule('community')
       }
