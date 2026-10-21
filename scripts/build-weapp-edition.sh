@@ -65,7 +65,7 @@ else
   unset TARO_APP_TARGET_WECHAT_APP_ID || true
 fi
 
-./node_modules/.bin/taro build --type weapp
+sh scripts/build-weapp.sh
 
 if [ "$edition" = "qualification" ] && [ "$check_mode" = "check" ]; then
   ./node_modules/.bin/ts-node --transpile-only scripts/qualification-build-smoke.ts

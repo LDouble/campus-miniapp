@@ -35,6 +35,8 @@ import { mergePublicCommentPreview } from '../../../features/community/comments'
 import { saveCommunityDetailSnapshot } from '../../../features/community/detail-snapshot'
 import { useDismissCommunityOverlaysOnScroll } from '../../../features/community/use-overlay-dismissal'
 import { useCampusShare } from '../../../features/share'
+// 列表样式通过同一个 webpack 模块共享，避免 Sass 再内联一份到页面。
+import '../../../features/community/feed-panel.scss'
 import './index.scss'
 import { openPublicProfile } from '../../../features/profile/public-profile'
 import { apiDateTimeCampusParts } from '../../../utils/date-time'

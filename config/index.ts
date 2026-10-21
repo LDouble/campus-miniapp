@@ -105,6 +105,14 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       }
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'campus-miniapp',
+    ...(process.env.TARO_ENV === 'weapp' ? {
+      terser: {
+        config: {
+          // 微信代码包使用 UTF-8；中文直接编码比逐字 Unicode 转义更小。
+          output: { ascii_only: false },
+        },
+      },
+    } : {}),
     date: '2026-7-25',
     designWidth: 750,
     deviceRatio: {
@@ -170,6 +178,17 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
         ignoreOrder: true,
       },
       postcss: {
+        autoprefixer: {
+          enable: true,
+          config: {
+            // 微信不使用 IE 内核；保留既有移动端兼容范围及 WebKit 回退。
+            overrideBrowserslist: [
+              'last 3 versions and not IE <= 11 and not IE_mob <= 11',
+              'Android >= 4.1',
+              'iOS >= 8',
+            ],
+          },
+        },
         pxtransform: {
           enable: true,
           config: {
