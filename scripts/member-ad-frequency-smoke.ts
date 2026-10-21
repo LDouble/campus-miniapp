@@ -41,3 +41,8 @@ assert.equal(writeFailure.isDue(3, ['member']), true)
 assert.equal(writeFailure.recordShown(3), false)
 assert.equal(writeFailure.isDue(3, ['member']), false, '持久化失败时，实际展示仍进入运行期冷却')
 console.log('广告三天频控：准备不扣减、实际展示、账号隔离、重启、72小时边界及存储异常检查通过')
+
+const beforeExcludedCheck = writes.length
+assert.equal(frequency.isDue(4, ['member'], '13020031080'), false)
+assert.equal(frequency.isDue(4, ['member'], '13020031081'), true)
+assert.equal(writes.length, beforeExcludedCheck, '排除账号不得消耗展示频控')

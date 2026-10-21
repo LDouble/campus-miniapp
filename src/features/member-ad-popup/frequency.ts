@@ -11,16 +11,16 @@ const storageKey = (userId: number) => `campus.member-ad-popup.v1.${userId}`
 export const createMemberAdFrequency = (storage: FrequencyStorage, now = Date.now) => {
   const shownInMemory = new Map<number, number>()
   return {
-    isDue(userId: number, roles: readonly string[]) {
+    isDue(userId: number, roles: readonly string[], studentNo?: string | null) {
       const timestamp = now()
-      if (!canShowMemberAd(userId, roles, undefined, timestamp)) return false
+      if (!canShowMemberAd(userId, roles, undefined, timestamp, studentNo)) return false
       try {
         const stored = storage.getStorageSync(storageKey(userId))
         const memory = shownInMemory.get(userId)
         const lastShownAt = memory === undefined ? stored
           : typeof stored === 'number' && Number.isFinite(stored) && stored > 0
             ? Math.max(memory, stored) : memory
-        return canShowMemberAd(userId, roles, lastShownAt, timestamp)
+        return canShowMemberAd(userId, roles, lastShownAt, timestamp, studentNo)
       } catch {
         // 无法读取记录时保守跳过，避免存储异常造成反复弹出。
         return false

@@ -435,6 +435,7 @@ function IndexContent() {
   const [memberAdReady, setMemberAdReady] = useState(false)
   const memberAdUserRef = useRef(0)
   const memberAdRolesRef = useRef<readonly string[]>([])
+  const memberAdStudentNoRef = useRef<string | null>(null)
   const memberAdAttemptedRef = useRef(false)
   const [memberAdShowCycle, setMemberAdShowCycle] = useState(0)
   const memberAdOtherOverlayRef = useRef(false)
@@ -451,6 +452,7 @@ function IndexContent() {
     if (!memberAdUserRef.current) return
     memberAdUserRef.current = 0
     memberAdRolesRef.current = []
+    memberAdStudentNoRef.current = null
     setMemberAdUserId(0)
     setMemberAdReady(false)
   }, [])
@@ -628,7 +630,10 @@ function IndexContent() {
       refreshHomeSection(() => accountPromise, (account) => {
         if (!account.ok) return
         if (!isQualificationEdition && memberAdFrequency.isDue(account.value.user.id, account.value.roles)) {
-          preloadHomeMemberAd()
+          void getAcademicVerificationStatus({ force }).then((verification) => {
+            if (isCurrent() && memberAdFrequency.isDue(account.value.user.id,
+              account.value.roles, verification.identity?.student_no)) preloadHomeMemberAd()
+          }).catch(() => { /* 无法确认学号时跳过广告，不影响首页。 */ })
         }
         setUsername(account.value.user.username)
         setAvatarUrl(account.value.user.avatar_url || '')
@@ -896,13 +901,14 @@ function IndexContent() {
       && requestScope === getPageCacheScope() && !isAccountCancelled()
     void (async () => {
       try {
-        const accountPromise = getCurrentUser({ force: true }).then((account) => {
-          if (isCurrent() && memberAdFrequency.isDue(account.user.id, account.roles)) preloadHomeMemberAd()
-          return account
-        })
-        const account = await accountPromise
+        const account = await getCurrentUser({ force: true })
+        if (!isCurrent() || !memberAdFrequency.isDue(account.user.id, account.roles)) return
+        const verification = await getAcademicVerificationStatus({ force: true })
+        const studentNo = verification.identity?.student_no ?? null
         if (!isCurrent() || account.user.id !== getCachedPageUserId()
-          || !memberAdFrequency.isDue(account.user.id, account.roles)) return
+          || !memberAdFrequency.isDue(account.user.id, account.roles, studentNo)) return
+        preloadHomeMemberAd()
+        memberAdStudentNoRef.current = studentNo
         memberAdRolesRef.current = account.roles
         memberAdUserRef.current = account.user.id
         setMemberAdReady(false)
@@ -919,7 +925,7 @@ function IndexContent() {
       && memberAdUserRef.current === getCachedPageUserId() && memberAdUserRef.current > 0
       && !isAccountCancelled()) {
       // 准备期间若其他入口已展示，不能继续使用过期资格。
-      if (!memberAdFrequency.isDue(memberAdUserRef.current, memberAdRolesRef.current)) { closeMemberAd(); return }
+      if (!memberAdFrequency.isDue(memberAdUserRef.current, memberAdRolesRef.current, memberAdStudentNoRef.current)) { closeMemberAd(); return }
       setMemberAdReady(true)
     }
   }

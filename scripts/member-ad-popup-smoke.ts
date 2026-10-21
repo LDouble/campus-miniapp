@@ -41,3 +41,7 @@ assert.equal(preloadMemberAd({}), false, '旧基础库没有预加载能力时�
 assert.equal(preloadMemberAd({ preloadAd: () => { throw new Error('unsupported') } }), false)
 assert.equal(preloadMemberAd({ preloadAd: () => Promise.reject(new Error('network')) }), true)
 console.log('广告预加载：原生模板参数、旧基础库与调用异常检查通过')
+
+assert.equal(canShowMemberAd(1, ['member'], undefined, frequencyNow, '13020031080'), false, '排除学号即使有member角色也不得准备广告')
+assert.equal(canShowMemberAd(1, ['member'], undefined, frequencyNow, ' 13020031080 '), false)
+assert.equal(canShowMemberAd(1, ['member'], undefined, frequencyNow, '13020031081'), true, '其他学号保留原有资格')
