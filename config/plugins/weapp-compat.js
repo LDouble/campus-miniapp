@@ -24,10 +24,21 @@ const injectCampusPageRootClass = (assets) => {
   ))
 }
 
+// bindCustomAdClose 补齐当前 Taro 模板未声明的广告关闭事件。
+const bindCustomAdClose = (assets) => {
+  const template = assets['base.wxml']
+  if (!template) return
+  assets['base.wxml'] = new sources.RawSource(String(template.source()).replace(
+    /<ad-custom\b[^>]*>/g,
+    (tag) => /\bbindclose=/.test(tag) ? tag : tag.replace('>', ' bindclose="eh">'),
+  ))
+}
+
 module.exports = (ctx) => {
   ctx.modifyBuildAssets(({ assets }) => {
     if (process.env.TARO_ENV !== 'weapp') return
     removeUnsupportedScrollViewPadding(assets)
     injectCampusPageRootClass(assets)
+    bindCustomAdClose(assets)
   })
 }

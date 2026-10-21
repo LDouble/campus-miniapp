@@ -13,6 +13,9 @@ import {
   Text,
   View,
 } from '@tarojs/components'
+import MemberAdPopup from '../../features/member-ad-popup/popup'
+import { memberAdFrequency } from '../../features/member-ad-popup/storage'
+import { preloadMemberAd } from '../../features/member-ad-popup/preload'
 import { getCachedPageUser, getCachedPageUserId, getPageCacheScope, subscribePageCacheScope } from '../../state/page-cache'
 import { homeCacheKey, readHomeSnapshot, updateHomeSnapshot, refreshHomeSection } from '../../features/home/page-cache'
 import { createHomeFeedRequestCoordinator } from '../../features/home/feed-request-coordinator'
@@ -140,7 +143,7 @@ import {
   getCachedAcademicCalendar,
   loadAcademicCalendar,
 } from '../../features/calendar/repository'
-import { setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
+import { acquireCustomTabBarHidden, setCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
 import { useCampusShare } from '../../features/share'
 import ActivityPopup, { type ActivityPopupState } from '../../features/activity-popup/popup'
 import {
@@ -428,6 +431,30 @@ function IndexContent() {
   const [calendarReminders, setCalendarReminders] = useState<CalendarReminderView[]>(initialSnapshot.reminders || [])
   const [dailyCheckin, setDailyCheckin] = useState<DailyCheckinStatus | null>(initialSnapshot.checkin || null)
   const [homeCheckinSubmitting, setHomeCheckinSubmitting] = useState(false)
+  const [memberAdUserId, setMemberAdUserId] = useState(0)
+  const [memberAdReady, setMemberAdReady] = useState(false)
+  const memberAdUserRef = useRef(0)
+  const memberAdRolesRef = useRef<readonly string[]>([])
+  const memberAdAttemptedRef = useRef(false)
+  const [memberAdShowCycle, setMemberAdShowCycle] = useState(0)
+  const memberAdOtherOverlayRef = useRef(false)
+  const [homeActivityDecisionResolved, setHomeActivityDecisionResolved] = useState(false)
+  const memberAdSuppressedRef = useRef(false)
+  const memberAdPageActiveRef = useRef(true)
+  const memberAdPreloadAttemptedRef = useRef(false)
+  const preloadHomeMemberAd = useCallback(() => {
+    if (memberAdPreloadAttemptedRef.current) return
+    memberAdPreloadAttemptedRef.current = true
+    preloadMemberAd()
+  }, [])
+  const closeMemberAd = useCallback(() => {
+    if (!memberAdUserRef.current) return
+    memberAdUserRef.current = 0
+    memberAdRolesRef.current = []
+    setMemberAdUserId(0)
+    setMemberAdReady(false)
+  }, [])
+  useEffect(() => subscribePageCacheScope(closeMemberAd), [closeMemberAd])
   const [showNotificationGuide, setShowNotificationGuide] = useState(false)
   const [notificationGuideUserId, setNotificationGuideUserId] = useState(0)
   const [homeOverlaysResolved, setHomeOverlaysResolved] = useState(false)
@@ -488,12 +515,15 @@ function IndexContent() {
     reportClose()
   }
   const markActivityPopupInteraction = () => {
-    if (activityPopupRef.current || activityPopupAttemptedRef.current) return
+    if (activityPopupRef.current) return
     activityPopupInteractedRef.current = true
+    setHomeActivityDecisionResolved(true)
     clearActivityPopupTimer()
   }
   useDidHide(() => {
     activityPopupPageActiveRef.current = false
+    memberAdPageActiveRef.current = false
+    closeMemberAd()
     clearActivityPopupTimer()
     dismissActivityPopup()
   })
@@ -597,6 +627,9 @@ function IndexContent() {
       refreshFeed(latestRuntimeConfig),
       refreshHomeSection(() => accountPromise, (account) => {
         if (!account.ok) return
+        if (!isQualificationEdition && memberAdFrequency.isDue(account.value.user.id, account.value.roles)) {
+          preloadHomeMemberAd()
+        }
         setUsername(account.value.user.username)
         setAvatarUrl(account.value.user.avatar_url || '')
         setAvatarUserId(account.value.user.id)
@@ -676,7 +709,7 @@ function IndexContent() {
         void Taro.stopPullDownRefresh()
       }
     }
-  }, [])
+  }, [preloadHomeMemberAd])
   loadHomeRef.current = loadHome
 
   // 校区变化时立即换为对应缓存；返回详情不重置同校区分页。
@@ -744,6 +777,7 @@ function IndexContent() {
   }, [campusName, runtimeConfig])
 
   useDidShow(() => {
+    memberAdPageActiveRef.current = true
     setShortcutKeys(readShortcuts())
     syncCustomTabBar('home')
     if (isAccountCancelled()) {
@@ -756,7 +790,15 @@ function IndexContent() {
     setCampusName(selectedCampus)
     setCoursePreview(loadCachedCoursePreview(config, selectedCampus))
     // 首页从详情返回时保留 Feed 分页和滚动位置，完整刷新交给下拉刷新。
-    if (homeHasShown.current) return
+    if (homeHasShown.current) {
+      // 首页复用时重新检查三天频控，失败准备也可在下次进入时重试。
+      memberAdAttemptedRef.current = false
+      memberAdPreloadAttemptedRef.current = false
+      memberAdSuppressedRef.current = false
+      setHomeActivityDecisionResolved(true)
+      setMemberAdShowCycle((cycle) => cycle + 1)
+      return
+    }
     homeHasShown.current = true
   })
 
@@ -815,6 +857,8 @@ function IndexContent() {
           setActivityPopup(nextPopup)
         } catch {
           // 候选、图片或预占失败时静默放弃，首页不显示空弹层。
+        } finally {
+          if (mounted.current) setHomeActivityDecisionResolved(true)
         }
       })()
     }, ACTIVITY_POPUP_IDLE_MS)
@@ -827,6 +871,64 @@ function IndexContent() {
     quickQuestionCourse,
     showNotificationGuide,
   ])
+
+  memberAdOtherOverlayRef.current = showNotificationGuide || !!homeCommentItem
+    || !!quickQuestionCourse || campusLocationPromptPending || !!activityPopup
+  const memberAdVisible = Boolean(memberAdUserId && memberAdReady && viewPageVisible
+    && homeOverlaysResolved && homeActivityDecisionResolved && !memberAdSuppressedRef.current
+    && !memberAdOtherOverlayRef.current && !isAccountCancelled())
+
+  useEffect(() => {
+    if (!memberAdVisible) return
+    return acquireCustomTabBarHidden()
+  }, [memberAdVisible])
+
+  useEffect(() => {
+    if (isQualificationEdition || !viewPageVisible || !homeOverlaysResolved
+      || memberAdAttemptedRef.current || isAccountCancelled()) return
+    memberAdAttemptedRef.current = true
+    let cancelled = false
+    const requestScope = getPageCacheScope()
+    const isCurrent = () => !cancelled && mounted.current && memberAdPageActiveRef.current
+      && !memberAdSuppressedRef.current
+      && requestScope === getPageCacheScope() && !isAccountCancelled()
+    void (async () => {
+      try {
+        const accountPromise = getCurrentUser({ force: true }).then((account) => {
+          if (isCurrent() && memberAdFrequency.isDue(account.user.id, account.roles)) preloadHomeMemberAd()
+          return account
+        })
+        const account = await accountPromise
+        if (!isCurrent() || account.user.id !== getCachedPageUserId()
+          || !memberAdFrequency.isDue(account.user.id, account.roles)) return
+        memberAdRolesRef.current = account.roles
+        memberAdUserRef.current = account.user.id
+        setMemberAdReady(false)
+        setMemberAdUserId(account.user.id)
+      } catch {
+        // 身份、活动或广告准备失败时不影响首页，不显示空白弹层。
+      }
+    })()
+    return () => { cancelled = true }
+  }, [preloadHomeMemberAd, homeOverlaysResolved, memberAdShowCycle, viewPageVisible])
+
+  const handleMemberAdReady = () => {
+    if (mounted.current && memberAdPageActiveRef.current
+      && memberAdUserRef.current === getCachedPageUserId() && memberAdUserRef.current > 0
+      && !isAccountCancelled()) {
+      // 准备期间若其他入口已展示，不能继续使用过期资格。
+      if (!memberAdFrequency.isDue(memberAdUserRef.current, memberAdRolesRef.current)) { closeMemberAd(); return }
+      setMemberAdReady(true)
+    }
+  }
+
+  const handleMemberAdPresented = () => {
+    const userId = memberAdUserRef.current
+    if (mounted.current && memberAdPageActiveRef.current && userId > 0
+      && userId === getCachedPageUserId() && !isAccountCancelled()) {
+      memberAdFrequency.recordShown(userId)
+    }
+  }
 
   usePullDownRefresh(() => {
     setCoursePreview(loadCachedCoursePreview(runtimeConfig, campusName))
@@ -1112,6 +1214,8 @@ function IndexContent() {
   const confirmActivityPopup = () => {
     const current = activityPopupRef.current
     if (!current || activityPopupConfirmPromiseRef.current) return
+    memberAdSuppressedRef.current = true
+    closeMemberAd()
     activityPopupPresentedRef.current = true
     const confirmation = confirmActivityPopupDisplay(current.displayId).then(
       () => {
@@ -1553,7 +1657,7 @@ function IndexContent() {
                 instanceKey={key}
                 trackViews={item.source_type === 'campus_circle_post'}
                 viewExposureSurface='home'
-                viewTrackingEnabled={viewPageVisible && !homeCommentItem && !showNotificationGuide}
+                viewTrackingEnabled={viewPageVisible && !homeCommentItem && !showNotificationGuide && !memberAdVisible}
                 variant={variant}
                 businessPreview={homeFeedBusinessPreview(item) || undefined}
                 motionDelay={index + 1}
@@ -1696,6 +1800,14 @@ function IndexContent() {
             </View>
           </View>
         </View>
+      )}
+      {!!memberAdUserId && (
+        <MemberAdPopup
+          visible={memberAdVisible}
+          onReady={handleMemberAdReady}
+          onPresented={handleMemberAdPresented}
+          onClose={closeMemberAd}
+        />
       )}
       {activityPopup && (
         <ActivityPopup
