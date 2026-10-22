@@ -1,6 +1,4 @@
 import { strict as assert } from 'node:assert'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import {
   applyAffiliateRequestIfCurrent,
   canUseAffiliateCapability,
@@ -8,7 +6,6 @@ import {
   isCurrentAffiliateCopyOperation,
   isCurrentAffiliateRequest,
   normalizeAffiliateCapabilities,
-  resolveAffiliateTabIndex,
   runAffiliateCopyIfCurrent,
 } from '../src/features/affiliate/capability-policy'
 
@@ -19,9 +16,6 @@ assert.deepEqual(disabled, {
   resolve_enabled: false,
   convert_enabled: false,
 })
-assert.equal(resolveAffiliateTabIndex('goods', false, disabled), -1)
-assert.equal(resolveAffiliateTabIndex('messages', false, disabled), 2)
-assert.equal(resolveAffiliateTabIndex('messages', true, disabled), 1)
 
 const enabledWithoutSearch = normalizeAffiliateCapabilities({
   enabled: true,
@@ -32,9 +26,6 @@ const enabledWithoutSearch = normalizeAffiliateCapabilities({
 assert.equal(canUseAffiliateCapability(enabledWithoutSearch, 'search'), false)
 assert.equal(canUseAffiliateCapability(enabledWithoutSearch, 'resolve'), true)
 assert.equal(canUseAffiliateCapability(enabledWithoutSearch, 'convert'), false)
-assert.equal(resolveAffiliateTabIndex('goods', false, enabledWithoutSearch), 2)
-assert.equal(resolveAffiliateTabIndex('messages', false, enabledWithoutSearch), 3)
-assert.equal(resolveAffiliateTabIndex('goods', true, enabledWithoutSearch), 1)
 
 const inconsistent = normalizeAffiliateCapabilities({
   enabled: false,
@@ -193,32 +184,6 @@ assert.equal(isCurrentAffiliateCopyOperation(
   }),
 ), false)
 
-const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
-const tabBar = read('src/custom-tab-bar/index.js')
-const tabBarHelpers = read('src/utils/tabbar.ts')
-const homePage = read('src/pages/goods/index.tsx')
-const searchPage = read('src/pages/goods/search.tsx')
-const detailPage = read('src/pages/goods/detail.tsx')
-const purchaseSheet = read('src/features/affiliate/components/coupon-purchase-sheet.tsx')
-const publicData = read('src/state/public-data.ts')
-assert.match(tabBar, /buildTabList\(getAffiliateCapabilitySnapshot\(\)\.capabilities\.enabled\)/u)
-assert.match(tabBar, /item\.pagePath !== 'pages\/goods\/index'/u)
-assert.match(tabBarHelpers, /resolveAffiliateTabIndex\(/u)
-assert.match(homePage, /好物服务暂时关闭/u)
-assert.match(homePage, /refreshAffiliateCapabilities\(\)/u)
-assert.match(searchPage, /商品搜索功能暂不可用/u)
-assert.match(searchPage, /链接解析功能暂不可用/u)
-assert.match(detailPage, /好物服务暂时关闭/u)
-assert.match(detailPage, /getCachedAffiliateGoods\(route\.goodsId\)/u)
-assert.match(detailPage, /applyAffiliateRequestIfCurrent\(/u)
-assert.match(purchaseSheet, /refreshAffiliateCapabilities\(\)/u)
-assert.match(purchaseSheet, /isCurrentAffiliateCopyOperation\(/u)
-assert.match(purchaseSheet, /currentGoodsIdRef\.current/u)
-const copyGuardIndex = purchaseSheet.indexOf('runAffiliateCopyIfCurrent(', purchaseSheet.indexOf('const clipboardText'))
-const clipboardIndex = purchaseSheet.indexOf('Taro.setClipboardData', copyGuardIndex)
-assert.ok(copyGuardIndex >= 0 && clipboardIndex > copyGuardIndex)
-assert.match(publicData, /seedAffiliateCapabilities\(bootstrap\.value\.affiliate\)/u)
-
 const runAsyncAssertions = async () => {
   await Promise.all([
     oldDetailCommit,
@@ -233,7 +198,7 @@ const runAsyncAssertions = async () => {
   assert.equal(toggledCapabilityClipboardCalls, 0)
   assert.equal(disabledClipboardCalls, 0)
   assert.equal(successfulClipboardCalls, 1)
-  console.log('affiliate capabilities smoke passed')
+  console.log('affiliate capability and stale-operation policy smoke passed')
 }
 
 void runAsyncAssertions().catch((error: unknown) => {

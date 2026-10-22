@@ -1,6 +1,4 @@
 import { strict as assert } from 'node:assert'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import type { AffiliateConvertResult, AffiliateGoods } from '../src/api/affiliate'
 import {
   getAffiliateOfferCountdown,
@@ -192,13 +190,6 @@ const activeCouponWithoutAnyPriceDisplay = getAffiliateConversionDisplay(
 assert.equal(activeCouponWithoutAnyPriceDisplay.couponActive, true, '没有参考价也保留有效券领取状态')
 assert.equal(activeCouponWithoutAnyPriceDisplay.price.value, null, '没有券后价和原价时不展示价格')
 assert.equal(activeCouponWithoutAnyPriceDisplay.priceLabel, '商品参考价', '没有实际券后价时使用通用价格标题')
-
-const detailSource = readFileSync(join(__dirname, '../src/pages/goods/detail.tsx'), 'utf8')
-assert.match(
-  detailSource,
-  /referencePrice\?\.isCouponPrice\s*\?\s*'参考券后价'/u,
-  '详情页价格标题应依据可展示的券后价，而不是 activeCoupon 状态',
-)
 
 const withBoundaries: AffiliateOfferData = {
   ...couponOffer,

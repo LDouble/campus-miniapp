@@ -100,10 +100,10 @@ const sharePages = execFileSync(
   .filter(Boolean)
 
 assert.ok(
-  sharePages.includes('src/pages/goods/detail.tsx'),
-  '好物详情应纳入好友与朋友圈分享配置检查',
+  !sharePages.includes('src/pages/goods/detail.tsx'),
+  '已移除的优惠中心详情不得继续出现在分享页面列表',
 )
-assert.equal(sharePages.length, 23, '分享配置检查应覆盖当前全部 23 个分享页面')
+assert.equal(sharePages.length, 22, '分享配置检查应覆盖当前全部 22 个分享页面')
 assert.equal(
   buildCampusShareMessage({
     path: '/pages/lottery/detail',

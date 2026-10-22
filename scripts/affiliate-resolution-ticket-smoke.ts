@@ -103,15 +103,6 @@ const createResolutionApi = new Function('apiRequest', extractedResolutionApi.ou
 ) => (token: string) => unknown
 const convertResolutionApi = createResolutionApi((options) => options)
 
-const searchSource = readSource('../src/pages/goods/search.tsx')
-const resolvedProductFactory = ts.transpileModule(
-  `const resolvedProduct = ${readVariable(searchSource, 'search.tsx', 'resolvedProduct')}; return resolvedProduct`,
-  { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None } },
-)
-const createResolvedProduct = new Function('result', resolvedProductFactory.outputText) as (
-  result: { product: Record<string, unknown>; resolution_token?: string | null },
-) => Record<string, unknown>
-
 const enabledCapabilities = {
   enabled: true,
   search_enabled: true,
@@ -196,25 +187,6 @@ const run = async () => {
   assert.equal(apiOptions.method, 'POST')
   assert.deepEqual(apiOptions.data, { resolution_token: 'opaque-ticket-only' })
   assert.equal('goods_id' in (apiOptions.data as Record<string, unknown>), false, '解析凭证请求不能携带替代 goods_id')
-
-  const parsedSourceProduct = {
-    goods_id: 'goods-1',
-    title: '大淘客解析商品',
-    coupon_status: 'none',
-    availability: 'valid',
-    actual_price: null,
-  }
-  assert.deepEqual(
-    createResolvedProduct({ product: parsedSourceProduct, resolution_token: resolutionToken }),
-    {
-      ...parsedSourceProduct,
-      resolution_token: resolutionToken,
-      requires_resolution_token: true,
-    },
-    '解析返回的商品展示字段应直接使用，同时绑定本次短期凭证，不追加素材查询',
-  )
-  assert.match(searchSource, /Taro\.navigateTo\(\{ url: `\/pages\/goods\/detail\?goods_id=\$\{encodeURIComponent\(goods\.goods_id\)\}` \}\)/u)
-  assert.doesNotMatch(searchSource, /goods_id=[^`]*resolution_token/u, '详情路由中不得携带解析凭证')
 
   const parsed = createHarness({ token: resolutionToken, requiresToken: true })
   await parsed.convert(parsedGoods)

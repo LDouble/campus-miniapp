@@ -2,11 +2,6 @@ import {
   requestWechatSubscriptionForModule,
   requestWechatSubscriptionForPublishSection
 } from '../features/wechat-subscription'
-import {
-  getAffiliateCapabilitySnapshot,
-  refreshAffiliateCapabilities,
-  subscribeAffiliateCapabilities,
-} from '../features/affiliate/capabilities'
 
 const qualification = __CAMPUS_APP_EDITION__ === 'qualification'
 const unreadCountStorageKey = 'campus.messages.unread-count.v1'
@@ -34,12 +29,6 @@ const fullTabs = [
     selectedIconPath: '/assets/tabbar/community-active.png'
   },
   {
-    pagePath: 'pages/goods/index',
-    text: '优惠中心',
-    iconPath: '/assets/tabbar/goods.png',
-    selectedIconPath: '/assets/tabbar/goods-sale-active.svg'
-  },
-  {
     pagePath: 'pages/messages/index',
     text: '消息',
     iconPath: '/assets/tabbar/messages.png',
@@ -53,15 +42,6 @@ const fullTabs = [
   }
 ]
 
-const buildTabList = (affiliateEnabled) => {
-  const editionTabs = qualification
-    ? fullTabs.filter(item => item.pagePath !== 'pages/community/index')
-    : fullTabs
-  return affiliateEnabled
-    ? editionTabs
-    : editionTabs.filter(item => item.pagePath !== 'pages/goods/index')
-}
-
 Component({
   data: {
     selected: 0,
@@ -69,21 +49,12 @@ Component({
     unreadCount: getStoredUnreadCount(),
     publishSection: 'community',
     qualification,
-    list: buildTabList(getAffiliateCapabilitySnapshot().capabilities.enabled)
+    list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
   },
 
   lifetimes: {
     attached() {
-      this.affiliateCapabilitiesUnsubscribe = subscribeAffiliateCapabilities((snapshot) => {
-        this.applyAffiliateCapabilities(snapshot)
-      })
-      void refreshAffiliateCapabilities().then((snapshot) => {
-        this.applyAffiliateCapabilities(snapshot)
-      })
       this.syncSelected()
-    },
-    detached() {
-      this.affiliateCapabilitiesUnsubscribe?.()
     }
   },
 
@@ -94,20 +65,10 @@ Component({
         this.setData({ hidden: false })
       }
       this.syncSelected()
-      void refreshAffiliateCapabilities().then((snapshot) => {
-        this.applyAffiliateCapabilities(snapshot)
-      })
     }
   },
 
   methods: {
-    applyAffiliateCapabilities(snapshot) {
-      const enabled = snapshot.capabilities.enabled
-      const list = buildTabList(enabled)
-      this.setData({ list })
-      this.syncSelected()
-    },
-
     syncSelected() {
       const pages = getCurrentPages()
       const route = pages.length
@@ -144,7 +105,7 @@ Component({
             this.lastHomeTapAt = now
           }
         }
-        if (item.pagePath === 'pages/community/index' || item.pagePath === 'pages/goods/index') {
+        if (item.pagePath === 'pages/community/index') {
           wx.pageScrollTo({ scrollTop: 0, duration: 240 })
         }
         return
