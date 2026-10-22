@@ -1,20 +1,19 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../features/app-edition'
-import { getAffiliateCapabilitySnapshot } from '../features/affiliate/capabilities'
-import { resolveAffiliateTabIndex } from '../features/affiliate/capability-policy'
 import type { LifeHubSection } from '../features/life-services/business-theme'
 import { createCustomTabBarVisibilityController } from './tabbar-visibility'
 
-export type TabBarPage = 'home' | 'community' | 'goods' | 'messages' | 'profile'
+export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
 
 const TAB_BAR_NOTICE_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
 const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v1'
 
-export const tabBarIndex = (page: TabBarPage) => resolveAffiliateTabIndex(
-  page,
-  isQualificationEdition,
-  getAffiliateCapabilitySnapshot().capabilities,
-)
+export const tabBarIndex = (page: TabBarPage) => {
+  const pages: TabBarPage[] = isQualificationEdition
+    ? ['home', 'messages', 'profile']
+    : ['home', 'community', 'messages', 'profile']
+  return pages.indexOf(page)
+}
 
 interface CustomTabBarInstance {
   setData: (data: {

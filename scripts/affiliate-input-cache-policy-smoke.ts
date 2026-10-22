@@ -1,5 +1,4 @@
 import { strict as assert } from 'node:assert'
-import { readFileSync } from 'node:fs'
 import Module = require('node:module')
 import {
   classifyAffiliateSearchInput,
@@ -188,20 +187,5 @@ capabilityStore.seedAffiliateCapabilities({
 })
 assert.equal(getCachedAffiliateGoods(goods.goods_id), undefined)
 
-const read = (path: string) => readFileSync(path, 'utf8')
-const searchPage = read('src/pages/goods/search.tsx')
-const capabilities = read('src/features/affiliate/capabilities.ts')
-const detailPage = read('src/pages/goods/detail.tsx')
-assert.match(searchPage, /dispatchAffiliateSearchInput\(/u)
-assert.match(searchPage, /resolve:\s*\(content\)[\s\S]*handlePasteAndResolve\(content\)/u)
-assert.match(searchPage, /搜索范围：仅限已接入商品库/u)
-assert.match(searchPage, /不会作为关键词搜索/u)
-assert.match(searchPage, /maxlength=\{2048\}/u)
-assert.match(searchPage, /解析内容/u)
-assert.match(capabilities, /shouldClearAffiliateGoodsCache\(/u)
-assert.match(capabilities, /revision:\s*snapshot\.revision \+ 1/u)
-assert.match(detailPage, /getCachedAffiliateGoods\(route\.goodsId\)/u)
-assert.match(detailPage, /convertEnabled && product\.availability === 'valid'/u)
-
 clearAffiliateGoodsCache()
-console.log('affiliate input/cache policy smoke passed')
+console.log('affiliate input classification and cache policy smoke passed')

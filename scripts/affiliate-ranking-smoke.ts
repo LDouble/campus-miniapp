@@ -130,17 +130,11 @@ async function verifyRankingApiQuery() {
 }
 
 const sectionSource = readFileSync('src/features/affiliate/rankings/ranking-section.tsx', 'utf8')
-const homeSource = readFileSync('src/pages/goods/index.tsx', 'utf8')
 assert.match(sectionSource, /onEnabledChange\(false\)/u, '仅后端明确关闭时通知首页关闭榜单')
 assert.match(sectionSource, /salesLabel=\{item\.two_hours_sales === null/u, '销量未知时必须隐藏销量文案')
 assert.match(sectionSource, /cacheAffiliateGoods\(item\.goods\)/u, '打开详情前缓存完整商品快照')
 assert.match(sectionSource, /detail\?goods_id=\$\{encodeURIComponent\(item\.goods\.goods_id\)\}/u, '榜单详情按商品标识进入现有详情流程')
 assert.match(sectionSource, /onBuy=\{onBuy\}/u, '榜单购买必须复用当前推广位购买回调')
-assert.match(homeSource, /showManualFallback && categories\.length/u, '榜单未知或启用时隐藏人工分类')
-assert.match(homeSource, /showManualFallback && topics\.length/u, '榜单未知或启用时隐藏人工专题')
-assert.match(homeSource, /showManualFallback && <View className='affiliate-home__feed'>/u, '榜单未知或启用时隐藏人工推荐feed')
-assert.match(homeSource, /shouldShowAffiliateManualFallback\(rankingsEnabled\).*products\.length >= total/u, '仅显式人工回退时首页触底才继续请求人工列表')
-assert.match(homeSource, /<AffiliateRankingSection/u, '首页推荐列表由分类榜单组件承载')
 assert.match(sectionSource, /<Text>为你推荐<\/Text>[\s\S]*?className='affiliate-ranking__window'>近2小时热销/u, '榜单标题使用紧凑热销时间徽标')
 assert.match(sectionSource, /className='affiliate-ranking__source'>数据来自大淘客榜单/u, '榜单来源显示真实数据提供方')
 assert.ok(

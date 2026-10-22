@@ -48,6 +48,10 @@ tap(0)
 assert.equal(scrolls.length, 3)
 console.log('home tab scroll top: ok')
 
-instance.data.selected = 2
+instance.data.selected = 0
 tap(2)
-assert.equal(scrolls.length, 4, '好物Tab原有回顶行为保留')
+assert.equal(switches.at(-1).url, '/pages/messages/index', '移除优惠中心后消息Tab位于第三项')
+assert.equal(scrolls.length, 3, '切换消息Tab不会触发首页回顶')
+instance.data.selected = 2
+tap(3)
+assert.equal(switches.at(-1).url, '/pages/profile/index', '我的Tab位于第四项')

@@ -6,6 +6,7 @@ const appJsonPath = join(outputRoot, 'app.json')
 const projectConfigPath = join(outputRoot, 'project.config.json')
 
 const forbiddenPages = [
+  'pages/goods/index',
   'pages/community/index',
   'pages/community/detail',
   'pages/community/topic/index',
@@ -77,15 +78,11 @@ if (!pages.includes('pages/feature-migrated/index')) {
 
 const expectedTabs = [
   'pages/index/index',
-  'pages/goods/index',
   'pages/messages/index',
   'pages/profile/index',
 ]
 if (JSON.stringify(tabPagePaths) !== JSON.stringify(expectedTabs)) {
   fail(`资格版 Tab 必须且只能为 ${expectedTabs.join('、')}，实际为 ${tabPagePaths.join('、')}。`)
-}
-if (!pages.includes('pages/goods/index')) {
-  fail('资格版 app.json 未注册 pages/goods/index。')
 }
 
 const expectedQualificationAppId = process.env.TARO_APP_QUALIFICATION_WECHAT_APP_ID?.trim()
