@@ -19,6 +19,21 @@ page {
   }
 }
 
+.materials-page--browse .custom-navbar__fixed {
+  background: var(--campus-page, #f5f8fc);
+  border-bottom-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.materials-page--browse .materials-plaza-navbar-content {
+  left: 32rpx !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .materials-page--browse .custom-navbar__fixed { background: var(--campus-page, #0b1220); }
+}
+
 .materials-view-tabs {
   display: flex;
   gap: 8rpx;

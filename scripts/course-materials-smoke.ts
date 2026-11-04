@@ -118,14 +118,26 @@ assert.equal(inferMaterialKind('高数二期末真题.pdf'), 'exam')
 assert.equal(normalizeMaterialTitle('高数二-期末真题.pdf'), '高数二 期末真题')
 const routeParams = new URLSearchParams(buildCourseMaterialQuery({
   courseName: '高等数学（二）',
+  courseId: 42,
   courseCode: 'MATH-002',
   periodId: '2025-2026-2',
   periodLabel: '2025-2026 学年春季学期',
+  sourceType: 'cloud_share',
+  materialType: 'exam',
+  keyword: '线性代数',
   source: 'grades',
+  view: 'mine',
+  materialId: 88,
 }))
 assert.equal(routeParams.get('courseName'), '高等数学（二）')
+assert.equal(routeParams.get('courseId'), '42')
 assert.equal(routeParams.get('periodLabel'), '2025-2026 学年春季学期')
+assert.equal(routeParams.get('sourceType'), 'cloud_share')
+assert.equal(routeParams.get('materialType'), 'exam')
+assert.equal(routeParams.get('keyword'), '线性代数')
 assert.equal(routeParams.get('source'), 'grades')
+assert.equal(routeParams.get('view'), 'mine')
+assert.equal(routeParams.get('material_id'), '88')
 
 const draft: MaterialUploadDraft = {
   id: 'draft-1',
@@ -163,9 +175,11 @@ assert.match(validateMaterialDrafts([
   { ...draft, filePath: '', status: 'needs_file' },
 ], metadata), /需要重新选择/)
 assert.match(validateMaterialDrafts(Array.from(
-  { length: 6 },
+  { length: 101 },
   (_, index) => ({ ...draft, id: `draft-${index}` }),
-), metadata), /最多上传 5 个文件/)
+), metadata), /最多上传 100 个文件/)
+assert.equal(validateMaterialDrafts(Array.from({ length: 100 }, (_, index) => ({ ...draft, id: `batch-${index}`, fileSize: 1024 })), metadata), '', '100 个小文件应能作为一份合辑提交')
+assert.match(validateMaterialDrafts(Array.from({ length: 100 }, (_, index) => ({ ...draft, id: `large-${index}`, fileSize: 1024 * 1024 })), metadata), /超过 50MB/, '增加数量上限不能绕过合辑总大小限制')
 assert.equal(isMaterialUploadSessionReusable({
   createIdempotencyKey: 'create-key',
   completeIdempotencyKey: 'complete-key',
@@ -214,13 +228,13 @@ assert.deepEqual(selectedFiles.map((file) => file.name), [
   '课程课件.pptx',
 ])
 assert.equal(selectSupportedMaterialFiles(Array.from(
-  { length: 7 },
+  { length: 101 },
   (_, index) => ({
     name: `资料-${index}.pdf`,
     path: `wxfile://material-${index}.pdf`,
     size: 1024,
   }),
-)).length, 5)
+)).length, 100)
 
 assert.deepEqual(getSelectedTempFiles(undefined), [])
 assert.deepEqual(getSelectedTempFiles(null), [])

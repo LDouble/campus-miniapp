@@ -75,6 +75,7 @@ const qualificationExcludedPages = new Set([
 const mainPagePaths = new Set([
   'pages/index/index',
   'pages/community/index',
+  'pages/materials/index',
   'pages/messages/index',
   'pages/profile/index',
 ])
@@ -106,7 +107,6 @@ const packageDefinitions = [
   { root: 'pages/shuttle', sourceRoot: 'pages/shuttle', pages: ['index', 'detail'] },
   { root: 'pages/official-notices', sourceRoot: 'pages/official-notices', pages: ['index', 'detail'] },
   { root: 'pages/academic-verification', sourceRoot: 'pages/academic-verification', pages: ['index'] },
-  { root: 'pages/materials', sourceRoot: 'pages/materials', pages: ['index'] },
   { root: 'pages/empty-classroom', sourceRoot: 'pages/empty-classroom', pages: ['index'] },
   { root: 'pages/calendar', sourceRoot: 'pages/calendar', pages: ['index'] },
   { root: 'pages/services', sourceRoot: 'pages/services', pages: ['index'] },
@@ -150,6 +150,12 @@ const fullTabBarList = [
     selectedIconPath: 'assets/tabbar/community-active.png'
   },
   {
+    pagePath: 'pages/materials/index',
+    text: '资料',
+    iconPath: 'assets/tabbar/materials.png',
+    selectedIconPath: 'assets/tabbar/materials-active.png'
+  },
+  {
     pagePath: 'pages/messages/index',
     text: '消息',
     iconPath: 'assets/tabbar/messages.png',
@@ -164,7 +170,10 @@ const fullTabBarList = [
 ]
 
 const tabBarList = isQualificationEdition
-  ? fullTabBarList.filter((item) => item.pagePath !== 'pages/community/index')
+  ? fullTabBarList.filter((item) => ![
+      'pages/community/index',
+      'pages/materials/index',
+    ].includes(item.pagePath))
   : fullTabBarList
 
 const preloadPackageRoots = subPackages.map(({ root }) => root)

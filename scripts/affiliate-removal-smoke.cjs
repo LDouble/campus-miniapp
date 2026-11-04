@@ -22,6 +22,7 @@ const tabBarHelpers = read('src/utils/tabbar.ts')
 const expectedFullTabs = [
   'pages/index/index',
   'pages/community/index',
+  'pages/materials/index',
   'pages/messages/index',
   'pages/profile/index',
 ]
@@ -44,9 +45,12 @@ const customTabs = evaluateArray(customTabBar, 'src/custom-tab-bar/index.js', 'f
 assert.deepEqual(appTabs.map(({ pagePath }) => pagePath), expectedFullTabs, '应用声明的主版本 Tab 顺序应正确')
 assert.deepEqual(customTabs.map(({ pagePath }) => pagePath), expectedFullTabs, '自定义 Tab 顺序应与应用声明一致')
 assert.deepEqual(
-  appTabs.filter(({ pagePath }) => pagePath !== 'pages/community/index').map(({ pagePath }) => pagePath),
+  appTabs.filter(({ pagePath }) => ![
+    'pages/community/index',
+    'pages/materials/index',
+  ].includes(pagePath)).map(({ pagePath }) => pagePath),
   expectedQualificationTabs,
-  '资格版移除社区后保留首页、消息、我的顺序',
+  '资格版移除社区和资料后保留首页、消息、我的顺序',
 )
 
 const helperAst = ts.createSourceFile('src/utils/tabbar.ts', tabBarHelpers, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
@@ -79,8 +83,8 @@ const resolveTabIndex = new Function(
   'page',
   `const pages = ${pageListExpression}; return pages.indexOf(page)`,
 )
-assert.equal(resolveTabIndex(false, 'messages'), 2, '主版本消息 Tab 应位于第三项')
-assert.equal(resolveTabIndex(false, 'profile'), 3, '主版本我的 Tab 应位于第四项')
+assert.equal(resolveTabIndex(false, 'messages'), 3, '主版本消息 Tab 应位于第四项')
+assert.equal(resolveTabIndex(false, 'profile'), 4, '主版本我的 Tab 应位于第五项')
 assert.equal(resolveTabIndex(true, 'messages'), 1, '资格版消息 Tab 应位于第二项')
 assert.equal(resolveTabIndex(true, 'profile'), 2, '资格版我的 Tab 应位于第三项')
 

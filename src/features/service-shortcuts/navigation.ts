@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../app-edition'
 import { openMigratedFeaturePage } from '../app-edition/navigation'
+import { openCourseMaterials } from '../course-materials/navigation'
 import { openMiniappModule, resolveMiniappModule, type MiniappRuntimeConfig } from '../runtime-config'
 import { migratedServiceKeys, serviceModules, type ServiceItem } from './catalog'
 
@@ -40,6 +41,13 @@ export function openService(item: ServiceItem, runtimeConfig: MiniappRuntimeConf
     }
     if (item.tab) {
       Taro.switchTab({ url: item.tab })
+      return
+    }
+    if (item.key === 'materials') {
+      void openCourseMaterials({}, {
+        config: runtimeConfig,
+        requestSubscription: true,
+      })
       return
     }
     if (item.route) {

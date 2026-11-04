@@ -3,7 +3,7 @@ import { isQualificationEdition } from '../features/app-edition'
 import type { LifeHubSection } from '../features/life-services/business-theme'
 import { createCustomTabBarVisibilityController } from './tabbar-visibility'
 
-export type TabBarPage = 'home' | 'community' | 'messages' | 'profile'
+export type TabBarPage = 'home' | 'community' | 'materials' | 'messages' | 'profile'
 
 const TAB_BAR_NOTICE_UNREAD_COUNT_KEY = 'campus.messages.unread-count.v1'
 const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v1'
@@ -11,7 +11,7 @@ const TAB_BAR_PRIVATE_UNREAD_COUNT_KEY = 'campus.private-messages.unread-count.v
 export const tabBarIndex = (page: TabBarPage) => {
   const pages: TabBarPage[] = isQualificationEdition
     ? ['home', 'messages', 'profile']
-    : ['home', 'community', 'messages', 'profile']
+    : ['home', 'community', 'materials', 'messages', 'profile']
   return pages.indexOf(page)
 }
 

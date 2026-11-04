@@ -17,6 +17,7 @@ import type {
 import { getMyUserLevel } from '../../api/user-levels'
 import { getMyDailyCheckinStatus } from '../../api/daily-checkins'
 import { openMiniProgramPrivacyContract } from '../../features/privacy/contract'
+import { openMyCourseMaterials } from '../../features/course-materials/navigation'
 import {
   normalizeUsername,
   USERNAME_MAX_LENGTH,
@@ -98,7 +99,7 @@ const menus = [
     name: '资料',
     iconKey: 'materials' as ProfileMenuIconKey,
     tone: 'cyan',
-    route: '/pages/materials/index?view=mine',
+    route: '/pages/materials/index',
   },
   {
     key: 'published',
@@ -422,6 +423,10 @@ export default function ProfilePage() {
       const type = availableLifeServicePublicationTypes(runtimeConfig)[0]
       if (!type) return
       Taro.navigateTo({ url: `/pages/my-services/index?section=published&publishedType=${type}` })
+      return
+    }
+    if (item.key === 'materials') {
+      void openMyCourseMaterials({ config: runtimeConfig })
       return
     }
     Taro.navigateTo({ url: item.route })

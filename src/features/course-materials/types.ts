@@ -47,6 +47,14 @@ export interface MaterialUploadBatch {
   sessionId?: number
   sessionVersion?: number
   sessionExpiresAt?: string
+  archive?: {
+    filePath: string
+    fileName: string
+    fileSize: number
+    uploadTarget?: MaterialUploadTarget
+    fileId?: number
+    uploaded?: boolean
+  }
 }
 
 export interface MaterialUploadState {
@@ -58,6 +66,7 @@ export interface MaterialUploadState {
 
 export interface MaterialRouteContext {
   courseName?: string
+  courseId?: number
   courseCode?: string
   periodId?: string
   periodLabel?: string
@@ -65,6 +74,9 @@ export interface MaterialRouteContext {
   action?: 'upload'
   view?: 'mine'
   materialId?: number
+  sourceType?: 'file' | 'cloud_share'
+  materialType?: MaterialKind
+  keyword?: string
 }
 
 export const materialKindLabels: Record<MaterialKind, string> = {

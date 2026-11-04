@@ -29,6 +29,12 @@ const fullTabs = [
     selectedIconPath: '/assets/tabbar/community-active.png'
   },
   {
+    pagePath: 'pages/materials/index',
+    text: '资料',
+    iconPath: '/assets/tabbar/materials.png',
+    selectedIconPath: '/assets/tabbar/materials-active.png'
+  },
+  {
     pagePath: 'pages/messages/index',
     text: '消息',
     iconPath: '/assets/tabbar/messages.png',
@@ -49,7 +55,12 @@ Component({
     unreadCount: getStoredUnreadCount(),
     publishSection: 'community',
     qualification,
-    list: qualification ? fullTabs.filter(item => item.pagePath !== 'pages/community/index') : fullTabs
+    list: qualification
+      ? fullTabs.filter(item => ![
+        'pages/community/index',
+        'pages/materials/index'
+      ].includes(item.pagePath))
+      : fullTabs
   },
 
   lifetimes: {
