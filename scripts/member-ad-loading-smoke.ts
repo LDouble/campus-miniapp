@@ -15,10 +15,24 @@ loader._load = function (name, ...args) {
   }
   if (name === 'react') return {
     useCallback: (callback) => callback,
+    useState: (value) => [value, () => {}],
     useRef: (value: unknown) => refs[refIndex++] ||= { current: value },
     useEffect: (callback: () => void | (() => void)) => { effects.push(callback) },
   }
-  if (name === '@tarojs/taro') return { __esModule: true, default: { nextTick: (callback) => ticks.push(callback) } }
+  if (name === '@tarojs/taro') return { __esModule: true, default: {
+    nextTick: (callback) => ticks.push(callback),
+    onWindowResize: () => {},
+    offWindowResize: () => {},
+    createSelectorQuery: () => {
+      let callback: ((rect: unknown) => void) | null = null
+      const query = {
+        select: () => query,
+        boundingClientRect: (handler) => { callback = handler; return query },
+        exec: () => { callback?.({ left: 20, top: 30, right: 300, bottom: 180, width: 280, height: 150 }) },
+      }
+      return query
+    },
+  } }
   if (name === '@tarojs/components') return { View: 'View', Text: 'Text', Image: 'Image', AdCustom: 'AdCustom' }
   if (/\.(svg|png|scss)$/.test(name)) return name
   return originalLoad.call(this, name, ...args)

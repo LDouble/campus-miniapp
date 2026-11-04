@@ -27,6 +27,8 @@
   &__repeat { font-size: 24rpx; }
   &__thanks { margin-top: 4rpx; font-weight: 600; }
   &__thanks text { margin-left: 8rpx; font-size: 28rpx; }
+  &__reward-count { display: inline-flex; align-items: center; justify-content: center; margin-top: 12rpx; padding: 8rpx 20rpx; border-radius: 999rpx; background: #fff1c2; color: #8a4b12; font-size: 26rpx; font-weight: 700; }
+  &__claiming { margin-top: 12rpx; color: #6b7a90; font-size: 24rpx; }
   &__burst { position: absolute; display: flex; flex-direction: column; gap: 8rpx; opacity: 0.9; pointer-events: none; }
   &__burst--left { top: 288rpx; left: -8rpx; }
   &__burst--right { top: 352rpx; right: -8rpx; transform: rotate(140deg); }
@@ -38,9 +40,13 @@
   &__guide-label { position: absolute; top: -24rpx; left: 8rpx; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 8rpx 24rpx; border: 2rpx solid rgba(255, 255, 255, 0.4); border-radius: 999rpx; background: #ff4d2d; box-shadow: 0 8rpx 20rpx rgba(255, 77, 45, 0.4); color: #fff; font-size: 22rpx; font-weight: 700; letter-spacing: 1rpx; line-height: 1.5; transform: rotate(-6deg); }
   &__guide-arrow { position: absolute; top: 28rpx; left: -8rpx; width: 88rpx; height: 112rpx; }
   &__ad { min-height: 192rpx; text-align: left; }
+  &__ad--claiming { opacity: 0.72; }
   &__bottom-decor { position: absolute; bottom: 14rpx; display: flex; flex-direction: column; gap: 4rpx; pointer-events: none; }
   &__bottom-decor--left { left: 12rpx; }
   &__bottom-decor--right { right: 12rpx; transform: scaleX(-1); }
   &__bottom-decor image { width: 32rpx; height: 24rpx; transform: rotate(-20deg); }
   &__bottom-decor image + image { width: 24rpx; height: 16rpx; margin-left: 8rpx; transform: none; }
 }
+
+.member-ad-popup__closed-status { display: flex; min-height: 192rpx; flex-direction: column; align-items: center; justify-content: center; gap: 24rpx; color: var(--campus-text-secondary); font-size: 26rpx; }
+.member-ad-popup__retry { padding: 16rpx 36rpx; border-radius: 999rpx; color: #fff; background: var(--campus-primary, #2b7aef); }
