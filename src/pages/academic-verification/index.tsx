@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Taro, {
   useDidShow,
   useLoad,
@@ -32,6 +32,10 @@ import type {
   AcademicVerificationStatus,
 } from '../../api/types'
 import { finishAcademicVerification } from '../../features/academic-verification/guard'
+import {
+  getCachedPageUserId,
+  getPageSessionGeneration,
+} from '../../state/page-cache'
 import {
   academicChallengeRemainingMinutes,
   academicChallengeRetryAt,
@@ -73,6 +77,27 @@ const verificationMethodIcons: Record<VerificationMethod, string> = {
 const securityIcon = require('../../assets/icons/result.svg')
 const passwordVisibleIcon = require('../../assets/icons/eye.svg')
 const passwordHiddenIcon = require('../../assets/icons/eye-off.svg')
+
+const resolveAcademicCredentialActionLabel = (hasPassword: boolean | null) => {
+  if (hasPassword === null) return '正在读取本机密码'
+  return hasPassword ? '去更新密码' : '去绑定'
+}
+
+const isCurrentAcademicCredentialRead = (input: {
+  requestId: number
+  currentRequestId: number
+  requestSessionGeneration: number
+  currentSessionGeneration: number
+  cachedUserId: number
+  resolvedUserId: number
+}) => (
+  input.requestId === input.currentRequestId
+  && (!input.cachedUserId || input.cachedUserId === input.resolvedUserId)
+  && (
+    input.requestSessionGeneration === input.currentSessionGeneration
+    || input.cachedUserId === input.resolvedUserId
+  )
+)
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
@@ -170,6 +195,7 @@ export default function AcademicVerificationPage() {
   const [rejectedCredential, setRejectedCredential] = useState<RejectedAcademicCredential | null>(null)
   const [credentialError, setCredentialError] = useState('')
   const [passwordCoachMarkDismissed, setPasswordCoachMarkDismissed] = useState(false)
+  const [hasLocalAcademicPassword, setHasLocalAcademicPassword] = useState<boolean | null>(null)
   const [educationLevel, setEducationLevel] = useState<AcademicEducationLevel | null>(null)
   const [realName, setRealName] = useState('')
   const [selectedMaterial, setSelectedMaterial] = useState<SelectedMaterial | null>(null)
@@ -177,6 +203,8 @@ export default function AcademicVerificationPage() {
   const [working, setWorking] = useState(false)
   const [workingText, setWorkingText] = useState('')
   const [challengeRetryAt, setChallengeRetryAt] = useState(0)
+  const credentialReadRequestRef = useRef(0)
+  const credentialOwnerUserIdRef = useRef(0)
   const currentCredentialRejected = rejectedCredential !== null
     && educationLevel !== null
     && isRepeatedRejectedCredential(rejectedCredential, {
@@ -192,6 +220,32 @@ export default function AcademicVerificationPage() {
       : '')
   const credentialFeedbackKind = credentialError || currentCredentialRejected ? 'error' : 'ready'
   const showPasswordCoachMark = currentCredentialRejected && !passwordCoachMarkDismissed
+
+  const updateLocalCredentialState = (userId: number) => {
+    const previousUserId = credentialOwnerUserIdRef.current
+    const accountChanged = previousUserId > 0 && previousUserId !== userId
+    credentialOwnerUserIdRef.current = userId
+    let credential: ReturnType<typeof loadAcademicCredential> | null = null
+    try {
+      credential = loadAcademicCredential(userId)
+    } catch {
+      // 本地没有该用户的凭据时，引导其重新绑定。
+    }
+    setHasLocalAcademicPassword(Boolean(credential?.password))
+    if (accountChanged) {
+      setStudentNo(credential?.studentNo || '')
+      setPassword('')
+      setRejectedCredential(null)
+      setCredentialError('')
+      setEducationLevel(credential?.educationLevel || null)
+      return
+    }
+    const loadedCredential = credential
+    if (loadedCredential) {
+      setStudentNo((current) => current || loadedCredential.studentNo)
+      setEducationLevel((current) => current || loadedCredential.educationLevel)
+    }
+  }
 
   const loadStatus = async (silent = false, force = false) => {
     if (silent) setRefreshing(true)
@@ -224,14 +278,49 @@ export default function AcademicVerificationPage() {
     }
   })
   useDidShow(() => {
+    const requestId = credentialReadRequestRef.current + 1
+    credentialReadRequestRef.current = requestId
+    const requestSessionGeneration = getPageSessionGeneration()
+    setHasLocalAcademicPassword(null)
     void loadStatus()
     void getCurrentIdentity()
       .then((currentUser) => {
-        const credential = loadAcademicCredential(currentUser.user_id)
-        setStudentNo((current) => current || credential.studentNo)
+        const cachedUserId = getCachedPageUserId()
+        if (!isCurrentAcademicCredentialRead({
+          requestId,
+          currentRequestId: credentialReadRequestRef.current,
+          requestSessionGeneration,
+          currentSessionGeneration: getPageSessionGeneration(),
+          cachedUserId,
+          resolvedUserId: currentUser.user_id,
+        })) return
+        updateLocalCredentialState(currentUser.user_id)
       })
       .catch(() => {
-        // 未绑定或旧版本凭据由页面正常引导重新填写。
+        if (requestId !== credentialReadRequestRef.current) return
+        const currentUserId = getCachedPageUserId()
+        if (!currentUserId) {
+          setHasLocalAcademicPassword(false)
+          if (credentialOwnerUserIdRef.current) {
+            credentialOwnerUserIdRef.current = 0
+            setStudentNo('')
+            setPassword('')
+            setRejectedCredential(null)
+            setCredentialError('')
+            setEducationLevel(null)
+          }
+          return
+        }
+        const cachedUserId = getCachedPageUserId()
+        if (!isCurrentAcademicCredentialRead({
+          requestId,
+          currentRequestId: credentialReadRequestRef.current,
+          requestSessionGeneration,
+          currentSessionGeneration: getPageSessionGeneration(),
+          cachedUserId,
+          resolvedUserId: currentUserId,
+        })) return
+        updateLocalCredentialState(currentUserId)
       })
   })
   usePullDownRefresh(() => {
@@ -556,14 +645,16 @@ export default function AcademicVerificationPage() {
                 </View>
                 <View
                   className='verification-credential-action'
-                  ariaRole='button'
-                  ariaLabel='更新信息门户认证'
+                  ariaRole={hasLocalAcademicPassword === null ? undefined : 'button'}
+                  ariaLabel={resolveAcademicCredentialActionLabel(hasLocalAcademicPassword)}
+                  aria-disabled={hasLocalAcademicPassword === null}
                   onClick={() => {
+                    if (hasLocalAcademicPassword === null) return
                     setMethod('credentials')
                     setForceCredentialBinding(true)
                   }}
                 >
-                  更新信息门户认证
+                  {resolveAcademicCredentialActionLabel(hasLocalAcademicPassword)}
                 </View>
                 <View
                   className='verification-primary'

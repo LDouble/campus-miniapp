@@ -13,7 +13,7 @@ import {
 import { openCourseMaterials } from '../../../features/course-materials/navigation'
 import CoursePassRatePreview from '../../../features/academic-statistics/course-pass-rate-preview'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
-import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
+import { isAcademicBindingRequiredError, isAcademicCredentialActionRequiredError } from '../../../features/academic-verification/binding-guidance'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
 import { academicRepository } from '../repository'
@@ -317,6 +317,9 @@ export default function SelectionPage() {
         ) ? (
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : <>
+          {isAcademicCredentialActionRequiredError(loadError) && (
+            <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
+          )}
           <AcademicCacheNotice
             cache={serverCache}
             updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}

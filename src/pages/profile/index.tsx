@@ -6,6 +6,9 @@ import UserAvatar from '../../components/user-avatar'
 import { KeyboardSafeInput } from '../../components/keyboard-safe-input'
 import { getCurrentUser, updateCurrentAvatar, updateCurrentUsername } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
+import { hasAcademicCredential } from '../../api/academic-credential'
+import { getCachedPageUserId } from '../../state/page-cache'
+import { openAcademicCredentialBinding } from '../../features/academic-verification/binding-guidance'
 import { isApiError } from '../../api/client'
 import { getMedia, uploadMediaImage } from '../../api/media'
 import type {
@@ -186,6 +189,9 @@ export default function ProfilePage() {
   const [academicStatus, setAcademicStatus] = useState<AcademicVerificationStatus | null>(null)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [accountLoaded, setAccountLoaded] = useState(false)
+  const [hasLocalAcademicPassword, setHasLocalAcademicPassword] = useState(() => (
+    hasAcademicCredential(getCachedPageUserId())
+  ))
   const [userLevel, setUserLevel] = useState<UserLevelSummary | null>(null)
   const [checkinStatus, setCheckinStatus] = useState<DailyCheckinStatus | null>(null)
   const [editingUsername, setEditingUsername] = useState(false)
@@ -245,6 +251,7 @@ export default function ProfilePage() {
         approvedAvatarUrlRef.current = userAvatarUrl(account.user)
       }
       setCurrentUser(account)
+      setHasLocalAcademicPassword(hasAcademicCredential(userId))
       setUsernameDraft(account.user.username)
       return account
     } catch {
@@ -263,10 +270,11 @@ export default function ProfilePage() {
     setProfileVisible(true)
     setAccountLoaded(false)
     setSavingAvatar(false)
+    setHasLocalAcademicPassword(hasAcademicCredential(getCachedPageUserId()))
     syncCustomTabBar('profile')
     setCheckinStatus(null)
     void loadMiniappRuntimeConfig().then(setRuntimeConfig)
-    void loadCurrentUser().then((account) => {
+    void loadCurrentUser(false, false, () => profileShowVersionRef.current === showVersion).then((account) => {
       if (
         !account
         || !profileVisibleRef.current
@@ -578,6 +586,7 @@ export default function ProfilePage() {
       })
     }
   }
+  const identityCredentialAction = hasLocalAcademicPassword ? '去更新密码' : '去绑定'
   const identity = academicStatus?.identity
   const latestRequest = academicStatus?.latest_request
   const identityVerified = identity?.status === 'verified'
@@ -842,15 +851,15 @@ export default function ProfilePage() {
             <View
               className='profile-identity-entry'
               ariaRole='button'
-              ariaLabel={`校园身份，${identityMeta}`}
-              onClick={() => openMenu(identityMenu)}
+              ariaLabel={`校园身份，${identityMeta}，${identityCredentialAction}`}
+              onClick={() => { void openAcademicCredentialBinding() }}
             >
               <View className='profile-identity-entry__icon'>
                 <Image src={identityMenu.icon} mode='aspectFit' />
               </View>
               <View className='profile-identity-entry__main'>
                 <Text>{identityMenu.name}</Text>
-                <Text>{identityMeta}</Text>
+                <Text>{identityCredentialAction}</Text>
               </View>
               <Image
                 className='profile-identity-entry__arrow'
