@@ -55,7 +55,7 @@ import {
   sanitizeCoursesByPeriod,
   setCoursesForPeriod,
 } from '../schedule-courses'
-import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
+import { isAcademicBindingRequiredError, isAcademicCredentialActionRequiredError } from '../../../features/academic-verification/binding-guidance'
 import { academicStorage } from '../storage'
 import {
   AcademicPeriod,
@@ -895,12 +895,21 @@ export function SchedulePageContent({
       ]
       academicStorage.setCourseSelectionScheduleCourses(academicUserId, nextCourses)
       setSelectedScheduleCourses(nextCourses)
+      setLoadError((current) => (
+        isAcademicCredentialActionRequiredError(current) || isAcademicBindingRequiredError(current)
+          ? null
+          : current
+      ))
       Taro.showToast({
         title: courses.length ? `已同步 ${courses.length} 个课表时段` : '未同步到已选课程',
         icon: 'none',
       })
-    } catch {
+    } catch (error) {
       if (!isCurrentPageCacheScope()) return
+      if (isAcademicCredentialActionRequiredError(error) || isAcademicBindingRequiredError(error)) {
+        setLoadError(error)
+        return
+      }
       // 失败时保留上次已成功同步的教务课表和全部本地模拟草稿。
       Taro.showToast({ title: '同步失败，已保留当前模拟课表', icon: 'none' })
     } finally {
@@ -1990,7 +1999,10 @@ export function SchedulePageContent({
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />
         ) : (
           <>
-            {Boolean(loadError) && (
+            {(isAcademicCredentialActionRequiredError(loadError) || isAcademicBindingRequiredError(loadError)) && (
+              <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshSchedule} />
+            )}
+            {Boolean(loadError) && !isAcademicCredentialActionRequiredError(loadError) && !isAcademicBindingRequiredError(loadError) && (
               <View className='schedule-note' ariaRole='status' onClick={refreshSchedule}>
                 <Text className='schedule-note__label'>课表查询失败</Text>
                 <Text className='schedule-note__copy'>已保留可用课程和蹭课数据，点击重试。</Text>

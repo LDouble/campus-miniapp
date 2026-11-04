@@ -10,7 +10,7 @@ import { isApiError } from '../../../api/client'
 import type { AcademicCacheMetadata } from '../../../api/types'
 import { requestWechatSubscriptionAndStopPropagation } from '../../../features/wechat-subscription'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
-import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
+import { isAcademicBindingRequiredError, isAcademicCredentialActionRequiredError } from '../../../features/academic-verification/binding-guidance'
 import { subscribePageCacheScope } from '../../../state/page-cache'
 import AcademicHeader from '../components/academic-header'
 import { AcademicCacheNotice, AcademicLoadState } from '../components/academic-load-state'
@@ -303,6 +303,9 @@ function CourseAdditionResultsPageContent({
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
         ) : (
           <>
+            {isAcademicCredentialActionRequiredError(loadError) && (
+              <AcademicLoadState error={loadError} retrying={retrying} onRetry={retryPage} />
+            )}
             <AcademicCacheNotice
               cache={serverCache}
               updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}

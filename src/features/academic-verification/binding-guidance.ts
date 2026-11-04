@@ -20,6 +20,16 @@ export const isAcademicBindingRequiredError = (error: unknown) => (
   )
 )
 
+// isAcademicCredentialActionRequiredError 识别需要用户处理的凭据问题，网络异常仍走重试。
+export const isAcademicCredentialActionRequiredError = (error: unknown) => (
+  isApiError(error)
+  && (
+    error.code === 'invalid_academic_credentials'
+    || error.code === 'academic_password_expired'
+    || error.code === 'academic_account_restricted'
+  )
+)
+
 export const openAcademicCredentialBinding = () => (
   Taro.navigateTo({ url: '/pages/academic-verification/index?rebind=1' })
     .catch(() => Taro.showToast({ title: '暂时无法打开账号绑定页', icon: 'none' }))

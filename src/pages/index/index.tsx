@@ -72,11 +72,13 @@ import { useDismissCommunityOverlaysOnScroll } from '../../features/community/us
 import { showActionSheetSelection } from '../../utils/action-sheet'
 import { isQualificationEdition } from '../../features/app-edition'
 import { openMigratedFeaturePage } from '../../features/app-edition/navigation'
+import { isAcademicCredentialActionRequiredError } from '../../features/academic-verification/binding-guidance'
 import { openClassDiscussion } from '../../features/class-discussion/navigation'
 import { type ClassQuickQuestionId } from '../../features/class-discussion/topic'
 import scheduleCalendarArrowIcon from '../../assets/icons/home-schedule-calendar-arrow.svg'
 import allServicesIcon from '../../assets/icons/home-services-all.svg'
 import HomeCourseCarousel from '../../features/home/course-carousel'
+import { AcademicLoadState } from '../academic/components/academic-load-state'
 import {
   avatarText,
   resolveCoursePreview,
@@ -249,12 +251,12 @@ const mergeHomeFeedItems = (
 const LIFE_HUB_SECTION_KEY = 'campus.lifeHub.section.v1'
 type LifeHubSection = 'community' | 'errands' | 'market' | 'carpool'
 
-type Settled<T> = { ok: true; value: T } | { ok: false }
+type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown }
 const settle = async <T,>(promise: Promise<T>): Promise<Settled<T>> => {
   try {
     return { ok: true, value: await promise }
-  } catch {
-    return { ok: false }
+  } catch (error) {
+    return { ok: false, error }
   }
 }
 
@@ -283,6 +285,7 @@ const loadLatestAcademic = async (
   cache: AcademicScheduleCache | null,
   force = false,
   isCurrent: () => boolean = () => true,
+  onCredentialActionRequired: (error: unknown) => void = () => undefined,
 ) => {
   const periodsResult = await settle(academicRepository.getPeriods({ force }))
   if (!isCurrent() || !periodsResult.ok) return cache
@@ -309,7 +312,12 @@ const loadLatestAcademic = async (
 
   if (periodId && (isCurrentPeriod || startingTomorrow) && hasCredential) {
     const coursesResult = await settle(academicRepository.getCourses(periodId))
-    if (isCurrent() && coursesResult.ok) {
+    if (!isCurrent()) return cache
+    if (!coursesResult.ok) {
+      if (isAcademicCredentialActionRequiredError(coursesResult.error)) {
+        onCredentialActionRequired(coursesResult.error)
+      }
+    } else {
       const latest = academicStorage.getScheduleCache(userId)
       coursesByPeriod = latest?.coursesByPeriod || coursesByPeriod
       coursesUpdatedAtByPeriod = latest?.coursesUpdatedAtByPeriod || coursesUpdatedAtByPeriod
@@ -356,6 +364,7 @@ const loadHomeAcademic = async (
   accountPromise: Promise<Settled<Awaited<ReturnType<typeof getCurrentUser>>>>,
   force = false,
   isCurrent: () => boolean = () => true,
+  onCredentialActionRequired: (error: unknown) => void = () => undefined,
 ) => {
   const account = await accountPromise
   const userId = account.ok ? account.value.user.id : getCachedPageUserId()
@@ -364,7 +373,7 @@ const loadHomeAcademic = async (
 
   const verification = await settle(getAcademicVerificationStatus({ force }))
   if (!isCurrent() || !verification.ok || verification.value.identity?.status !== 'verified') return cache
-  return loadLatestAcademic(userId, cache, force, isCurrent)
+  return loadLatestAcademic(userId, cache, force, isCurrent, onCredentialActionRequired)
 }
 
 function Index() {
@@ -474,6 +483,7 @@ function IndexContent() {
   const [coursePreview, setCoursePreview] = useState(() => (
     loadCachedCoursePreview(runtimeConfig, campusName)
   ))
+  const [homeAcademicCredentialError, setHomeAcademicCredentialError] = useState<unknown>(null)
   const [discussionOpeningCourseId, setDiscussionOpeningCourseId] = useState('')
   const discussionOpeningRef = useRef(false)
   const [quickQuestionCourse, setQuickQuestionCourse] = useState<Parameters<typeof openClassDiscussion>[0] | null>(null)
@@ -576,6 +586,7 @@ function IndexContent() {
     const homeConfigRequestId = homeFeedRequests.current.beginConfig()
     const isCurrent = () => mounted.current && key === homeCacheKey()
       && homeFeedRequests.current.isFeedCurrent(homeFeedRequestId)
+    if (isCurrent()) setHomeAcademicCredentialError(null)
     setQuickQuestionCourse(null)
     homeFeedLoadingMoreRef.current = false
     setHomeFeedLoadingMore(false)
@@ -647,7 +658,9 @@ function IndexContent() {
         setAvatarUserId(account.value.user.id)
       }, isCurrent),
       refreshHomeSection(() => moduleEnabled('academic_schedule')
-        ? loadHomeAcademic(accountPromise, force, isCurrent)
+        ? loadHomeAcademic(accountPromise, force, isCurrent, (error) => {
+          if (isCurrent()) setHomeAcademicCredentialError(error)
+        })
         : Promise.resolve(academicStorage.getScheduleCache(getCachedPageUserId())), (cache) => {
         setCoursePreview(resolveCoursePreview(cache, academicStorage.getCustomCourses(getCachedPageUserId()),
           getMiniappRuntimeConfig(), getSelectedCampus(getMiniappRuntimeConfig()), new Date(), HOME_COURSE_PREVIEW_LIMIT))
@@ -1471,6 +1484,12 @@ function IndexContent() {
             <Text>整周课表</Text><Image src={icons.arrow} mode='aspectFit' />
           </View>
         </View>
+        {Boolean(homeAcademicCredentialError) && (
+          <AcademicLoadState
+            error={homeAcademicCredentialError}
+            onRetry={() => { void loadHome(true) }}
+          />
+        )}
         <View className={todayCalendarEvents.length > 0 ? 'home-course-section__card home-course-section__card--with-events' : 'home-course-section__card'}>
           {coursePreview.items.length > 0 ? (
             <HomeCourseCarousel

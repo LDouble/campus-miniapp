@@ -60,14 +60,14 @@ export const resolveAcademicLoadError = (error: unknown): AcademicLoadErrorState
         title: '教务账号或密码错误',
         message: '请访问信息门户 my.ouc.edu.cn 确认或修改密码，再回来更新本机密码。',
         action: 'rebind',
-        actionLabel: '更新教务账号',
+        actionLabel: '去更新密码',
       }
     case 'academic_password_expired':
       return {
         title: '统一认证密码已过期',
         message: '请访问信息门户 my.ouc.edu.cn 修改密码，再回来更新本机保存的密码。',
         action: 'rebind',
-        actionLabel: '更新本机密码',
+        actionLabel: '去更新密码',
       }
     case 'academic_account_restricted':
       return {

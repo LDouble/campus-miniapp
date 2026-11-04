@@ -40,7 +40,7 @@ import {
 import { shareCourseMaterials } from '../../../features/course-materials/navigation'
 import { rememberCourseSuggestions } from '../../../features/course-materials/storage'
 import { consumeAcademicRefreshAfterVerification } from '../../../features/academic-verification/refresh-signal'
-import { isAcademicBindingRequiredError } from '../../../features/academic-verification/binding-guidance'
+import { isAcademicBindingRequiredError, isAcademicCredentialActionRequiredError } from '../../../features/academic-verification/binding-guidance'
 import '../index.scss'
 
 const DEFAULT_PERIOD_ID = '2025-2026-2'
@@ -669,6 +669,9 @@ export default function GradesPage() {
           <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshGrades} />
         ) : (
           <>
+            {isAcademicCredentialActionRequiredError(loadError) && (
+              <AcademicLoadState error={loadError} retrying={retrying} onRetry={refreshGrades} />
+            )}
             <AcademicCacheNotice
               cache={serverCache}
               updatedAt={!usingCache && !loadError ? cacheUpdatedAt : 0}
