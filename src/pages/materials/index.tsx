@@ -10,8 +10,12 @@ import {
 import {
   completeMaterialUploadSession,
   createCourseMaterialFeedback,
+  createMaterialAdRewardSession,
+  createMaterialCloudShare,
   createMaterialUploadSession,
-  downloadAndOpenMaterial,
+  getCourseMaterialCloudShare,
+  getCurrentMaterialQuota,
+  getMaterialDownload,
   getCourseMaterial,
   listMaterialCourses,
   listAllMyCourseMaterials,
@@ -24,7 +28,21 @@ import {
 import { getCurrentIdentity } from '../../api/account'
 import { createIdempotencyKey } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
+import { consumeCourseMaterialNavigationIntent } from '../../features/course-materials/navigation'
+import { clearMaterialAdRewardIntent, saveMaterialAdRewardIntent } from '../../features/course-materials/ad-reward-intent'
+import MaterialsPlazaView, {
+  MaterialsPlazaHeader,
+  type MaterialsPlazaCourse,
+  type MaterialsPlazaFilter,
+  type MaterialsPlazaItem,
+  type MaterialsPlazaShortcut,
+  type MaterialsPlazaUploadSource,
+} from '../../features/materials-plaza/view'
+import { createWeappZipArchive, removeZipArchive, zipArchiveExists } from '../../features/course-materials/zip-archive-weapp'
 import { getSelectedTempFiles } from '../../utils/file-selection'
+import { acquireCustomTabBarHidden, syncCustomTabBar } from '../../utils/tabbar'
+import { showActionSheetSelection } from '../../utils/action-sheet'
+import { enabledCampuses, getMiniappRuntimeConfig, getSelectedCampus, saveSelectedCampus } from '../../features/runtime-config'
 import { useCampusShare } from '../../features/share'
 import type {
   CourseMaterialView,
@@ -32,6 +50,8 @@ import type {
   MaterialCourseView,
   MaterialFeedbackCategory,
   MaterialFeedbackView,
+  MaterialQuotaView,
+  MaterialCloudShareView,
   MaterialUploadFileInput,
 } from '../../api/types'
 import {
@@ -42,7 +62,6 @@ import {
 } from '../../features/course-materials/inference'
 import {
   coursePickerSelectedIds,
-  hasMaterialCourseSelection,
   materialEducationLevelLabels,
   resolveCompleteMaterialCoursePage,
 } from '../../features/course-materials/course-directory'
@@ -107,6 +126,22 @@ string
   exams: '从考试安排进入',
   discussion: '从课堂讨论进入',
 }
+const plazaSourceFilters: MaterialsPlazaFilter[] = [
+  { id: 'all', label: '全部来源' },
+  { id: 'file', label: '文件资料' },
+  { id: 'cloud_share', label: '网盘分享' },
+]
+const plazaTypeFilters: MaterialsPlazaFilter[] = [
+  { id: 'all', label: '全部类型' },
+  ...materialKinds.map((kind) => ({ id: kind, label: materialKindLabels[kind] })),
+]
+const plazaShortcuts: MaterialsPlazaShortcut[] = [
+  { id: 'graduate', label: '考研升学', keyword: '考研', icon: require('../../assets/icons/material-category-graduate.svg') },
+  { id: 'exam', label: '期末真题', keyword: '期末', materialType: 'exam', icon: require('../../assets/icons/material-category-exam.svg') },
+  { id: 'course', label: '课程课件', keyword: '课件', materialType: 'slides', icon: require('../../assets/icons/material-category-course.svg') },
+  { id: 'lab', label: '实验报告', keyword: '实验报告', icon: require('../../assets/icons/material-category-lab.svg') },
+  { id: 'competition', label: '学术竞赛', keyword: '竞赛', icon: require('../../assets/icons/material-category-competition.svg') },
+]
 
 const decodeRouteValue = (value?: string) => {
   if (!value) return ''
@@ -128,9 +163,14 @@ const formatFileSize = (size: number) => (
     : `${Math.max(1, Math.round(size / 1024))} KB`
 )
 
-const packageSize = (material: CourseMaterialView) => (
-  material.files.reduce((total, file) => total + file.size_bytes, 0)
-)
+const parseCloudShareText = (value: string) => {
+  const urlMatch = value.match(/https?:\/\/[^\s<>"']+/i)
+  if (!urlMatch) return null
+  const url = urlMatch[0].replace(/[，。；、)）\]}]+$/g, '')
+  const codeFromText = value.match(/(?:提取码|访问码|密码|pwd|passcode)[\s:：=]*([a-z0-9]{2,24})/i)?.[1]
+  const codeFromUrl = url.match(/[?&](?:pwd|passcode|code)=([^&#\s]+)/i)?.[1]
+  return { url, code: codeFromText || codeFromUrl }
+}
 
 const materialCourses = (material: CourseMaterialView) => (
   material.courses?.length ? material.courses : material.course ? [material.course] : []
@@ -138,7 +178,7 @@ const materialCourses = (material: CourseMaterialView) => (
 
 const materialCourseLabel = (material: CourseMaterialView, limit = 2) => {
   const courses = materialCourses(material)
-  if (!courses.length) return material.candidate_course_name || '课程待确认'
+  if (!courses.length) return material.candidate_course_name || '未关联课程'
   const names = courses.slice(0, limit).map((course) => course.name)
   return `${names.join('、')}${courses.length > limit ? ` +${courses.length - limit}` : ''}`
 }
@@ -221,8 +261,9 @@ const useDebouncedValue = <T,>(value: T, delay: number) => {
 
 export default function MaterialsPage() {
   const router = useRouter()
-  const routeContext = useMemo<MaterialRouteContext>(() => ({
+  const routerRouteContext = useMemo<MaterialRouteContext>(() => ({
     courseName: decodeRouteValue(router.params.courseName),
+    courseId: toPositiveInteger(router.params.courseId),
     courseCode: decodeRouteValue(router.params.courseCode),
     periodId: decodeRouteValue(router.params.periodId),
     periodLabel: decodeRouteValue(router.params.periodLabel),
@@ -232,14 +273,24 @@ export default function MaterialsPage() {
     action: router.params.action === 'upload' ? 'upload' : undefined,
     view: router.params.view === 'mine' ? 'mine' : undefined,
     materialId: toPositiveInteger(router.params.material_id),
+    sourceType: router.params.sourceType === 'file' || router.params.sourceType === 'cloud_share'
+      ? router.params.sourceType
+      : undefined,
+    materialType: materialKinds.includes(router.params.materialType as MaterialKind)
+      ? router.params.materialType as MaterialKind
+      : undefined,
+    keyword: decodeRouteValue(router.params.keyword),
   }), [router.params])
+  const [navigationContext, setNavigationContext] = useState<MaterialRouteContext | null>(null)
+  const routeContext = useMemo(() => navigationContext || routerRouteContext, [navigationContext, routerRouteContext])
   const { keyboardHeight, onKeyboardVisibilityChange } = useKeyboardInset()
   const [cachedCourseSuggestions] = useState(getRecentCourseSuggestions)
-  const [keyword, setKeyword] = useState('')
+  const [keyword, setKeyword] = useState(routeContext.keyword || '')
   const debouncedKeyword = useDebouncedValue(keyword, 300)
-  const [courseId, setCourseId] = useState<number | undefined>()
+  const [courseId, setCourseId] = useState<number | undefined>(routeContext.courseId)
   const [courseLabel, setCourseLabel] = useState(routeContext.courseName || '全部课程')
-  const [kind, setKind] = useState<'all' | MaterialKind>('all')
+  const [kind, setKind] = useState<'all' | MaterialKind>(routeContext.materialType || 'all')
+  const [sourceType, setSourceType] = useState<'all' | 'file' | 'cloud_share'>(routeContext.sourceType || 'all')
   const [viewMode, setViewMode] = useState<ViewMode>(
     routeContext.view === 'mine' ? 'mine' : 'browse',
   )
@@ -260,6 +311,13 @@ export default function MaterialsPage() {
   const [sheet, setSheet] = useState<Sheet>(
     routeContext.action === 'upload' ? 'upload' : null,
   )
+  const [uploadSource, setUploadSource] = useState<MaterialsPlazaUploadSource>('file')
+  const [cloudShareText, setCloudShareText] = useState('')
+  const [parsedCloudShare, setParsedCloudShare] = useState<{ url: string; code?: string } | null>(null)
+  const [quota, setQuota] = useState<MaterialQuotaView | null>(null)
+  const [quotaLoading, setQuotaLoading] = useState(true)
+  const [campusName, setCampusName] = useState(() => getSelectedCampus(getMiniappRuntimeConfig()))
+  const quotaRequestVersion = useRef(0)
   const [drafts, setDrafts] = useState<MaterialUploadDraft[]>([])
   const [metadata, setMetadata] = useState<MaterialUploadMetadata>(
     createUploadMetadata(routeContext),
@@ -298,6 +356,13 @@ export default function MaterialsPage() {
   const [materialsPage, setMaterialsPage] = useState(1)
   const [materialsTotal, setMaterialsTotal] = useState(0)
   const [uploading, setUploading] = useState(false)
+  const choosingFilesRef = useRef(false)
+  const [uploadPhase, setUploadPhase] = useState<'packing' | 'uploading' | 'publishing' | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const downloadAddressCache = useRef(new Map<string, { url: string; expiresAt: number }>())
+  const cloudAddressCache = useRef(new Map<number, MaterialCloudShareView>())
+  const addressRequestsRef = useRef(new Set<string>())
+  const adRewardStartingRef = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -336,9 +401,47 @@ export default function MaterialsPage() {
     })
   }, [draftStorageReady, draftUserId, drafts, metadata, uploadBatch])
 
+  useEffect(() => {
+    if (!sheet) return undefined
+    return acquireCustomTabBarHidden()
+  }, [sheet])
+
+  const refreshQuota = async (notifyFailure = false) => {
+    const requestVersion = ++quotaRequestVersion.current
+    setQuotaLoading(true)
+    try {
+      const nextQuota = await getCurrentMaterialQuota()
+      if (requestVersion === quotaRequestVersion.current) setQuota(nextQuota)
+    } catch {
+      if (requestVersion === quotaRequestVersion.current) {
+        setQuota(null)
+        if (notifyFailure) Taro.showToast({ title: '额度暂时无法获取', icon: 'none' })
+      }
+    } finally {
+      if (requestVersion === quotaRequestVersion.current) setQuotaLoading(false)
+    }
+  }
+
   useDidShow(() => {
+    syncCustomTabBar('materials')
+    setCampusName(getSelectedCampus(getMiniappRuntimeConfig()))
+    const navigationIntent = consumeCourseMaterialNavigationIntent()
+    if (navigationIntent) {
+      routeCoursePreselected.current = false
+      uploadMetadataTouched.current = false
+      setNavigationContext(navigationIntent)
+      setKeyword(navigationIntent.keyword || '')
+      setCourseId(navigationIntent.courseId)
+      setCourseLabel(navigationIntent.courseName || '全部课程')
+      setKind(navigationIntent.materialType || 'all')
+      setSourceType(navigationIntent.sourceType || 'all')
+      setViewMode(navigationIntent.view === 'mine' ? 'mine' : 'browse')
+      setSheet(navigationIntent.action === 'upload' ? 'upload' : null)
+      if (navigationIntent.action === 'upload') setUploadSource('file')
+    }
     void listAllMyCourseMaterials().then(setMyMaterials).catch(() => undefined)
     void listMyCourseMaterialFeedbacks().then((page) => setMyFeedbacks(page.items)).catch(() => undefined)
+    void refreshQuota()
   })
 
   useEffect(() => {
@@ -468,23 +571,15 @@ export default function MaterialsPage() {
   const selectedCourse = useMemo(() => (
     courseId ? apiCourses.find((item) => item.id === courseId) : undefined
   ), [apiCourses, courseId])
-  const unresolvedCourse = coursesLoaded && courseLabel !== '全部课程' && !courseId
-
   useEffect(() => {
     if (viewMode !== 'browse' || !coursesLoaded) return
-    if (unresolvedCourse) {
-      setMaterials([])
-      setMaterialsPage(1)
-      setMaterialsTotal(0)
-      setLoading(false)
-      return
-    }
     let active = true
     setLoading(true)
     setMaterialsLoadFailed(false)
     listCourseMaterials({
       courseId,
       materialType: kind === 'all' ? undefined : kind,
+      sourceType: sourceType === 'all' ? undefined : sourceType,
       keyword: debouncedKeyword,
       periodId: undefined,
       page: 1,
@@ -511,9 +606,9 @@ export default function MaterialsPage() {
     coursesLoaded,
     debouncedKeyword,
     kind,
+    sourceType,
     materialsReloadKey,
     courseId,
-    unresolvedCourse,
     viewMode,
   ])
 
@@ -521,13 +616,13 @@ export default function MaterialsPage() {
     if (
       viewMode !== 'browse'
       || loading
-      || unresolvedCourse
       || materials.length >= materialsTotal
     ) return
     setLoading(true)
     listCourseMaterials({
       courseId,
       materialType: kind === 'all' ? undefined : kind,
+      sourceType: sourceType === 'all' ? undefined : sourceType,
       keyword: debouncedKeyword,
       periodId: undefined,
       page: materialsPage + 1,
@@ -548,7 +643,10 @@ export default function MaterialsPage() {
   const visibleMyMaterials = useMemo(() => myMaterials.filter((item) => {
     const search = keyword.trim().toLowerCase()
     const courseNames = materialCourses(item).map((itemCourse) => itemCourse.name).join(' ')
-    const filenames = item.files.map((file) => file.original_filename).join('')
+    const filenames = [
+      ...(item.source_filenames || []),
+      ...item.files.map((file) => file.original_filename),
+    ].join('')
     return (!search || `${item.title}${courseNames}${item.candidate_course_name || ''}${filenames}`.toLowerCase().includes(search))
       && (!courseId || materialCourses(item).some((itemCourse) => itemCourse.id === courseId))
       && (kind === 'all' || item.material_type === kind)
@@ -559,6 +657,37 @@ export default function MaterialsPage() {
     if (courseId && !records.some((item) => item.id === courseId) && selectedCourse) records.unshift(selectedCourse)
     return records.map(courseOptionFromRecord)
   }, [apiCourses, courseId, selectedCourse])
+  const materialsPlazaItems = useMemo<MaterialsPlazaItem[]>(() => materials.map((material) => {
+    const fileNames = material.source_filenames?.length
+      ? material.source_filenames
+      : material.files.map((file) => file.original_filename)
+    const formats = Array.from(new Set(fileNames.map((filename) => materialExtension(filename).toUpperCase()).filter(Boolean)))
+    const sizeBytes = material.files.reduce((total, file) => total + file.size_bytes, 0)
+    const relatedCourses = materialCourses(material).map((course) => course.name)
+    const courseName = relatedCourses.length
+      ? relatedCourses.join('、')
+      : material.candidate_course_name || undefined
+    return {
+      id: String(material.id),
+      title: material.title,
+      typeLabel: materialKindLabels[material.material_type],
+      formatLabel: material.source_type === 'cloud_share'
+        ? '网盘分享'
+        : material.files.length === 1 && materialExtension(material.files[0].original_filename) === 'zip'
+          ? 'ZIP'
+          : formats.length > 1 ? '多格式' : formats[0] || '文件资料',
+      sizeLabel: material.source_type !== 'cloud_share' && sizeBytes > 0
+        ? formatFileSize(sizeBytes)
+        : undefined,
+      fileCount: fileNames.length || undefined,
+      isCollection: material.files.length > 1
+        || material.files.some((file) => materialExtension(file.original_filename) === 'zip'),
+      courseName,
+      createdAtLabel: material.created_at.slice(0, 10),
+      downloadCountLabel: `${material.download_count} 次下载`,
+      sourceLabel: material.source_type === 'cloud_share' ? '网盘资料' : '文件资料',
+    }
+  }), [materials])
   const uploadCourseMatch = useMemo(() => resolveMaterialCourse(apiCourses, {
     id: metadata.courseId,
     name: metadata.courseName,
@@ -600,21 +729,15 @@ export default function MaterialsPage() {
     ? routeContext.action === 'upload'
       ? '课程已自动带入，可继续关联其他课程'
       : '正在查看这门课程的全部资料'
-    : '一份资料可包含多个文件，审核通过后统一展示'
+    : '搜索和复制资料下载地址，也可以上传资料与同学分享'
   const selectBrowseCourse = (nextCourse?: UploadCourseOption) => {
     setCourseId(nextCourse?.id)
     setCourseLabel(nextCourse
       ? (`${nextCourse.name} · ${nextCourse.courseCode} · ${nextCourse.educationLevel}`)
       : '全部课程')
   }
-  const handleMaterialsEmptyClick = () => {
-    if (materialsLoadFailed) {
-      setMaterialsReloadKey((current) => current + 1)
-      return
-    }
-  }
-
   const invalidateUploadSession = () => {
+    void removeZipArchive(uploadBatch.archive?.filePath)
     setDrafts((current) => current.map((draft) => ({
       ...draft,
       status: draft.filePath ? 'draft' : 'needs_file',
@@ -722,20 +845,26 @@ export default function MaterialsPage() {
   }
 
   const chooseFiles = async () => {
-    if (uploading) return
+    if (uploading || choosingFilesRef.current) return
     if (!draftStorageReady || !draftUserId) {
       Taro.showToast({ title: '账号信息加载中，请稍后重试', icon: 'none' })
       return
     }
+    const remainingCount = MAX_MATERIAL_FILES - drafts.length
+    if (remainingCount <= 0) {
+      Taro.showToast({ title: `单次最多选择 ${MAX_MATERIAL_FILES} 个文件`, icon: 'none' })
+      return
+    }
+    choosingFilesRef.current = true
     try {
       const result = await Taro.chooseMessageFile({
-        count: MAX_MATERIAL_FILES,
+        count: remainingCount,
         type: 'file',
         extension: [...supportedMaterialExtensions],
       })
       const returnedFiles = getSelectedTempFiles(result)
       if (!returnedFiles.length) return
-      const selected = selectSupportedMaterialFiles(returnedFiles)
+      const selected = selectSupportedMaterialFiles(returnedFiles, remainingCount)
       if (selected.length < returnedFiles.length) {
         Taro.showToast({ title: '已跳过格式不支持或超过 50MB 的文件', icon: 'none' })
       }
@@ -764,7 +893,7 @@ export default function MaterialsPage() {
           const persisted = await persistMaterialFile(file.path)
           if (!persisted.persistent) hasTemporaryFile = true
           nextDrafts.push({
-            id: `material-draft-${Date.now()}-${index}`,
+            id: `material-draft-${Date.now()}-${Math.random().toString(36).slice(2)}-${index}`,
             filePath: persisted.filePath,
             persistentFile: persisted.persistent,
             fileName: file.name,
@@ -777,17 +906,22 @@ export default function MaterialsPage() {
         await removePersistedMaterialFiles(nextDrafts)
         throw error
       }
-      await removePersistedMaterialFiles(drafts)
-      setDrafts(nextDrafts)
-      setMetadata({
-        title: normalizeMaterialTitle(selected[0].name) || selected[0].name,
-        kind: inferMaterialKind(selected[0].name),
-        courseName: courseRecord?.name || firstSuggestion?.name || '',
-        courseId: courseRecord?.id,
-        courseIds: courseRecord?.id ? [courseRecord.id] : [],
-        candidateCourseName: courseRecord ? '' : firstSuggestion?.name || '',
-        description: '',
-      })
+      void removeZipArchive(uploadBatch.archive?.filePath)
+      setDrafts((current) => [...current, ...nextDrafts])
+      if (!drafts.length) {
+        setMetadata({
+          title: normalizeMaterialTitle(selected[0].name) || selected[0].name,
+          kind: inferMaterialKind(selected[0].name),
+          courseName: courseRecord?.name || firstSuggestion?.name || '',
+          courseId: courseRecord?.id,
+          courseIds: courseRecord?.id ? [courseRecord.id] : [],
+          candidateCourseName: courseRecord ? '' : firstSuggestion?.name || '',
+          description: '',
+        })
+      }
+      setUploadSource('file')
+      setCloudShareText('')
+      setParsedCloudShare(null)
       setUploadBatch(createUploadBatch())
       setSheet('upload')
       if (hasTemporaryFile) {
@@ -801,13 +935,16 @@ export default function MaterialsPage() {
           : ''
       if (/cancel/i.test(message)) return
       Taro.showToast({ title: '文件选择失败，请重试', icon: 'none' })
+    } finally {
+      choosingFilesRef.current = false
     }
   }
 
   const removeDraft = (id: string) => {
-    if (uploading) return
+    if (uploading || choosingFilesRef.current) return
     const removed = drafts.find((draft) => draft.id === id)
     if (removed) void removePersistedMaterialFiles([removed])
+    void removeZipArchive(uploadBatch.archive?.filePath)
     setDrafts((current) => current.filter((draft) => draft.id !== id).map((draft) => ({
       ...draft,
       status: draft.filePath ? 'draft' : 'needs_file',
@@ -818,7 +955,16 @@ export default function MaterialsPage() {
     setUploadBatch(createUploadBatch())
   }
 
+  const clearDrafts = () => {
+    if (uploading || choosingFilesRef.current) return
+    void removePersistedMaterialFiles(drafts)
+    void removeZipArchive(uploadBatch.archive?.filePath)
+    setDrafts([])
+    setUploadBatch(createUploadBatch())
+  }
+
   const submitDrafts = async () => {
+    if (choosingFilesRef.current) return
     const validationError = validateMaterialDrafts(drafts, metadata)
     if (validationError) {
       Taro.showToast({ title: validationError, icon: 'none' })
@@ -826,6 +972,8 @@ export default function MaterialsPage() {
     }
     if (uploading) return
     setUploading(true)
+    setUploadPhase(drafts.length > 1 ? 'packing' : 'uploading')
+    setUploadProgress(0)
     const persistState = (
       nextDrafts: MaterialUploadDraft[],
       nextBatch: MaterialUploadBatch,
@@ -843,8 +991,40 @@ export default function MaterialsPage() {
     }
     let workingDrafts = drafts.map((draft) => ({ ...draft }))
     let workingBatch = { ...uploadBatch }
+    const isCollection = workingDrafts.length > 1
     try {
-      const reusable = isMaterialUploadSessionReusable(workingBatch, workingDrafts)
+      if (isCollection && workingBatch.archive && !(await zipArchiveExists(workingBatch.archive.filePath))) {
+        await removeZipArchive(workingBatch.archive.filePath)
+        workingBatch = createUploadBatch()
+      }
+      if (isCollection && !workingBatch.archive) {
+        const archive = await createWeappZipArchive(workingDrafts.map((draft) => ({
+          name: draft.fileName,
+          path: draft.filePath,
+          size: draft.fileSize,
+        })), ({ progress }) => {
+          setUploadProgress(progress)
+          setDrafts((current) => current.map((draft) => ({ ...draft, progress, status: 'uploading' })))
+        })
+        workingBatch = {
+          ...workingBatch,
+          archive: {
+            filePath: archive.filePath,
+            fileName: `${metadata.title.trim() || '资料合辑'}.zip`,
+            fileSize: archive.size,
+          },
+        }
+        persistState(workingDrafts, workingBatch)
+      }
+      const sessionValid = !!workingBatch.sessionId
+        && workingBatch.sessionVersion !== undefined
+        && !!workingBatch.sessionExpiresAt
+        && new Date(workingBatch.sessionExpiresAt).getTime() > Date.now() + 5_000
+      const reusable = isCollection
+        ? sessionValid
+          && !!workingBatch.archive?.uploadTarget
+          && workingBatch.archive.fileId === workingBatch.archive.uploadTarget.file_id
+        : isMaterialUploadSessionReusable(workingBatch, workingDrafts)
       if (workingBatch.sessionId && !reusable) {
         workingDrafts = workingDrafts.map((draft) => ({
           ...draft,
@@ -853,28 +1033,50 @@ export default function MaterialsPage() {
           uploadTarget: undefined,
           fileId: undefined,
         }))
-        workingBatch = createUploadBatch()
+        workingBatch = isCollection && workingBatch.archive
+          ? {
+              ...createUploadBatch(),
+              archive: {
+                ...workingBatch.archive,
+                uploadTarget: undefined,
+                fileId: undefined,
+                uploaded: false,
+              },
+            }
+          : createUploadBatch()
       }
-      const files = workingDrafts.map<MaterialUploadFileInput>((draft) => {
-        const mimeType = mimeTypes[materialExtension(draft.fileName)]
-        if (!mimeType) throw new Error(`${draft.fileName} 的文件类型暂不支持`)
-        return {
-          filename: draft.fileName,
-          mime_type: mimeType,
-          size_bytes: draft.fileSize,
-        }
-      })
+      const uploadObjects = isCollection
+        ? [workingBatch.archive].filter((archive): archive is NonNullable<typeof workingBatch.archive> => !!archive)
+        : workingDrafts
+      const files = isCollection
+        ? uploadObjects.map<MaterialUploadFileInput>((archive) => ({
+            filename: archive.fileName,
+            mime_type: 'application/zip' as MaterialUploadFileInput['mime_type'],
+            size_bytes: archive.fileSize,
+          }))
+        : workingDrafts.map<MaterialUploadFileInput>((draft) => {
+            const mimeType = mimeTypes[materialExtension(draft.fileName)]
+            if (!mimeType) throw new Error(`${draft.fileName} 的文件类型暂不支持`)
+            return {
+              filename: draft.fileName,
+              mime_type: mimeType,
+              size_bytes: draft.fileSize,
+            }
+          })
       if (!workingBatch.sessionId) {
         const session = await createMaterialUploadSession({
           title: metadata.title.trim(),
           material_type: metadata.kind,
           course_ids: metadata.courseIds,
           course_id: metadata.courseIds[0],
-          candidate_course_name: metadata.courseIds.length ? undefined : metadata.candidateCourseName.trim(),
+          candidate_course_name: metadata.courseIds.length || !metadata.candidateCourseName.trim()
+            ? undefined
+            : metadata.candidateCourseName.trim(),
           description: metadata.description.trim() || undefined,
           files,
+          source_filenames: isCollection ? workingDrafts.map((draft) => draft.fileName) : undefined,
         }, workingBatch.createIdempotencyKey)
-        if (session.uploads.length !== workingDrafts.length) {
+        if (session.uploads.length !== files.length) {
           throw new Error('上传任务数量与所选文件不一致')
         }
         workingBatch = {
@@ -883,53 +1085,95 @@ export default function MaterialsPage() {
           sessionVersion: session.version,
           sessionExpiresAt: session.expires_at,
         }
-        workingDrafts = workingDrafts.map((draft, index) => ({
-          ...draft,
-          uploadTarget: session.uploads[index],
-          fileId: session.uploads[index].file_id,
-        }))
+        if (isCollection && workingBatch.archive) {
+          workingBatch = {
+            ...workingBatch,
+            archive: {
+              ...workingBatch.archive,
+              uploadTarget: session.uploads[0],
+              fileId: session.uploads[0].file_id,
+            },
+          }
+        } else {
+          workingDrafts = workingDrafts.map((draft, index) => ({
+            ...draft,
+            uploadTarget: session.uploads[index],
+            fileId: session.uploads[index].file_id,
+          }))
+        }
         persistState(workingDrafts, workingBatch)
       }
-      for (let index = 0; index < workingDrafts.length; index += 1) {
-        const draft = workingDrafts[index]
-        if (draft.status === 'uploaded') continue
-        if (!draft.uploadTarget) throw new Error('上传凭证缺失，请重新上传')
-        workingDrafts[index] = {
-          ...draft,
-          status: 'uploading',
-          progress: 0,
-          errorMessage: undefined,
+      setUploadPhase('uploading')
+      if (isCollection) {
+        const archive = workingBatch.archive
+        if (!archive?.filePath || !archive.uploadTarget || !archive.fileId) {
+          throw new Error('ZIP 上传凭证缺失，请重新上传')
         }
-        persistState([...workingDrafts], workingBatch)
-        try {
-          await uploadMaterialFile(draft.uploadTarget, draft.filePath, (progress) => {
-            setDrafts((current) => current.map((item) => (
-              item.id === draft.id ? { ...item, status: 'uploading', progress } : item
-            )))
-          })
-          workingDrafts[index] = {
-            ...workingDrafts[index],
-            status: 'uploaded',
-            progress: 100,
+        if (!archive.uploaded) {
+          try {
+            await uploadMaterialFile(archive.uploadTarget, archive.filePath, (progress) => {
+              setUploadProgress(progress)
+              setDrafts((current) => current.map((draft) => ({
+                ...draft,
+                status: 'uploading',
+                progress,
+              })))
+            })
+            workingBatch = {
+              ...workingBatch,
+              archive: { ...archive, uploaded: true },
+            }
+            workingDrafts = workingDrafts.map((draft) => ({ ...draft, status: 'uploaded', progress: 100 }))
+            persistState(workingDrafts, workingBatch)
+          } catch (error) {
+            workingDrafts = workingDrafts.map((draft) => ({
+              ...draft,
+              status: 'failed',
+              errorMessage: error instanceof Error ? error.message : 'ZIP 上传失败',
+            }))
+            persistState(workingDrafts, workingBatch)
+            throw error
           }
-          persistState([...workingDrafts], workingBatch)
-        } catch (error) {
-          workingDrafts[index] = {
-            ...workingDrafts[index],
-            status: 'failed',
-            errorMessage: error instanceof Error ? error.message : '文件上传失败',
+        }
+      } else {
+        const draft = workingDrafts[0]
+        if (draft.status !== 'uploaded') {
+          if (!draft.uploadTarget) throw new Error('上传凭证缺失，请重新上传')
+          workingDrafts[0] = { ...draft, status: 'uploading', progress: 0, errorMessage: undefined }
+          persistState(workingDrafts, workingBatch)
+          try {
+            await uploadMaterialFile(draft.uploadTarget, draft.filePath, (progress) => {
+              setUploadProgress(progress)
+              setDrafts((current) => current.map((item) => (
+                item.id === draft.id ? { ...item, status: 'uploading', progress } : item
+              )))
+            })
+            workingDrafts[0] = { ...workingDrafts[0], status: 'uploaded', progress: 100 }
+            persistState(workingDrafts, workingBatch)
+          } catch (error) {
+            workingDrafts[0] = {
+              ...workingDrafts[0],
+              status: 'failed',
+              errorMessage: error instanceof Error ? error.message : '文件上传失败',
+            }
+            persistState(workingDrafts, workingBatch)
+            throw error
           }
-          persistState([...workingDrafts], workingBatch)
-          throw error
         }
       }
       if (!workingBatch.sessionId || workingBatch.sessionVersion === undefined) {
         throw new Error('上传会话无效，请重新上传')
       }
-      const completedFiles = workingDrafts.map((draft) => {
-        if (!draft.fileId) throw new Error('上传任务无效，请重新上传')
-        return { file_id: draft.fileId }
-      })
+      const completedFiles = isCollection
+        ? workingBatch.archive?.fileId
+          ? [{ file_id: workingBatch.archive.fileId }]
+          : []
+        : workingDrafts.map((draft) => {
+            if (!draft.fileId) throw new Error('上传任务无效，请重新上传')
+            return { file_id: draft.fileId }
+          })
+      if (!completedFiles.length) throw new Error('上传任务无效，请重新上传')
+      setUploadPhase('publishing')
       console.info('[对象存储直传] 课程资料开始完成确认')
       const completed = await completeMaterialUploadSession(
         workingBatch.sessionId,
@@ -939,39 +1183,194 @@ export default function MaterialsPage() {
       )
       console.info('[对象存储直传] 课程资料完成确认成功')
       await removePersistedMaterialFiles(workingDrafts)
+      await removeZipArchive(workingBatch.archive?.filePath)
       setDrafts([])
       setMetadata(createUploadMetadata(routeContext))
       setUploadBatch(createUploadBatch())
+      quotaRequestVersion.current += 1
+      setQuota((current) => current ? {
+        ...current,
+        remaining: Math.min(current.daily_limit, current.remaining + (completed.rewarded_downloads || 0)),
+      } : current)
+      void refreshQuota()
       materialDraftStorage.clear(draftUserId)
       setMyMaterials((current) => [
         completed.material,
         ...current.filter((item) => item.id !== completed.material.id),
       ])
-      setViewMode('mine')
+      setViewMode('browse')
+      setMaterialsReloadKey((current) => current + 1)
       setSheet(null)
-      Taro.showToast({ title: '已提交安全检查', icon: 'success' })
-    } catch (error) {
       Taro.showToast({
-        title: error instanceof Error ? error.message : '上传失败，请重试',
+        title: completed.rewarded_downloads
+          ? `已发布，额度 +${completed.rewarded_downloads}`
+          : '资料已发布',
+        icon: 'success',
+      })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '上传失败，请重试'
+      setDrafts((current) => current.map((draft) => draft.status === 'uploading'
+        ? { ...draft, status: 'failed', progress: 0, errorMessage }
+        : draft))
+      Taro.showToast({
+        title: errorMessage,
         icon: 'none',
       })
     } finally {
       setUploading(false)
+      setUploadPhase(null)
     }
   }
 
   const openUpload = () => {
-    if (drafts.length) {
-      setSheet('upload')
+    setUploadSource('file')
+    setViewMode('browse')
+    setSheet('upload')
+  }
+
+  const parseCloudShare = () => {
+    const parsed = parseCloudShareText(cloudShareText)
+    if (!parsed) {
+      setParsedCloudShare(null)
+      Taro.showToast({ title: '没有识别到有效的网盘链接', icon: 'none' })
       return
     }
-    void chooseFiles()
+    setParsedCloudShare(parsed)
+    Taro.showToast({ title: parsed.code ? '已识别链接和提取码' : '已识别分享链接', icon: 'success' })
+  }
+
+  const submitCloudShare = async () => {
+    if (uploading) return
+    if (!parsedCloudShare) {
+      Taro.showToast({ title: '请先解析网盘分享链接', icon: 'none' })
+      return
+    }
+    if (!metadata.title.trim()) {
+      Taro.showToast({ title: '请补全资料名称', icon: 'none' })
+      return
+    }
+    setUploading(true)
+    setUploadPhase('publishing')
+    try {
+      const material = await createMaterialCloudShare({
+        title: metadata.title.trim(),
+        material_type: metadata.kind,
+        share_url: parsedCloudShare.url,
+        share_code: parsedCloudShare.code,
+        course_ids: metadata.courseIds,
+        course_id: metadata.courseIds[0],
+        candidate_course_name: metadata.courseIds.length || !metadata.candidateCourseName.trim()
+          ? undefined
+          : metadata.candidateCourseName.trim(),
+        period_id: routeContext.periodId,
+        description: metadata.description.trim() || undefined,
+      }, createIdempotencyKey('material-cloud-share-create'))
+      setMyMaterials((current) => [material, ...current.filter((item) => item.id !== material.id)])
+      setMaterialsReloadKey((current) => current + 1)
+      setCloudShareText('')
+      setParsedCloudShare(null)
+      setUploadSource('file')
+      setViewMode('browse')
+      setSheet(null)
+      Taro.showToast({ title: '网盘资料已发布', icon: 'success' })
+    } catch (error) {
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '网盘资料发布失败，请重试',
+        icon: 'none',
+      })
+    } finally {
+      setUploading(false)
+      setUploadPhase(null)
+    }
+  }
+
+  const copyToClipboard = async (value: string, successTitle = '下载地址已复制') => {
+    await Taro.setClipboardData({ data: value })
+    Taro.showToast({ title: successTitle, icon: 'success' })
+  }
+
+  const copyMaterialDownloadAddress = async (material: CourseMaterialView, fileId?: number) => {
+    const requestKey = material.source_type === 'cloud_share'
+      ? `cloud:${material.id}`
+      : `file:${material.id}:${fileId || material.files[0]?.id || 0}`
+    if (addressRequestsRef.current.has(requestKey)) return
+    addressRequestsRef.current.add(requestKey)
+    try {
+      if (material.source_type === 'cloud_share') {
+        let share = cloudAddressCache.current.get(material.id)
+        if (!share) {
+          const authorizedShare = await getCourseMaterialCloudShare(material.id)
+          share = authorizedShare
+          cloudAddressCache.current.set(material.id, authorizedShare)
+          quotaRequestVersion.current += 1
+          setQuotaLoading(false)
+          setQuota((current) => current ? { ...current, remaining: authorizedShare.remaining_downloads } : current)
+        }
+        await copyToClipboard(
+          [share.share_url, share.share_code ? `提取码：${share.share_code}` : ''].filter(Boolean).join('\n'),
+        )
+        return
+      }
+      const file = fileId
+        ? material.files.find((item) => item.id === fileId)
+        : material.files.length === 1 ? material.files[0] : undefined
+      if (!file) {
+        Taro.showToast({ title: '请进入详情选择要复制的文件地址', icon: 'none' })
+        return
+      }
+      const cacheKey = `${material.id}:${file.id}:${file.version}`
+      let target = downloadAddressCache.current.get(cacheKey)
+      if (!target || target.expiresAt <= Date.now() + 5_000) {
+        const result = await getMaterialDownload(material.id, file.id)
+        target = { url: result.url, expiresAt: new Date(result.expires_at).getTime() }
+        downloadAddressCache.current.set(cacheKey, target)
+        quotaRequestVersion.current += 1
+        setQuotaLoading(false)
+        setQuota((current) => current ? { ...current, remaining: result.remaining_downloads } : current)
+      }
+      await copyToClipboard(target.url)
+    } catch (error) {
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '获取下载地址失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      addressRequestsRef.current.delete(requestKey)
+    }
+  }
+
+  const copyDownloadAddressForItem = (item: MaterialsPlazaItem) => {
+    const material = materials.find((record) => String(record.id) === item.id)
+    if (material) void copyMaterialDownloadAddress(material)
+  }
+
+  const startAdReward = async () => {
+    if (!quota?.ad_reward_enabled || quota.ad_rewards_remaining <= 0 || adRewardStartingRef.current) return
+    adRewardStartingRef.current = true
+    try {
+      const session = await createMaterialAdRewardSession(createIdempotencyKey('material-ad-reward-session'))
+      saveMaterialAdRewardIntent({
+        sessionId: session.id,
+        sessionToken: session.session_token,
+        expiresAt: session.expires_at,
+        idempotencyKey: createIdempotencyKey(`material-ad-reward-claim-${session.id}`),
+      })
+      await Taro.switchTab({ url: '/pages/index/index' })
+    } catch (error) {
+      clearMaterialAdRewardIntent()
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '广告入口暂不可用，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      adRewardStartingRef.current = false
+    }
   }
 
   const saveRejectedMaterial = async () => {
     const courseIds = Array.from(new Set(editCourseIds))
-    if (!activeMaterial || !editTitle.trim() || !hasMaterialCourseSelection(courseIds, editCourse)) {
-      Taro.showToast({ title: '请补全资料名称和课程', icon: 'none' })
+    if (!activeMaterial || !editTitle.trim()) {
+      Taro.showToast({ title: '请补全资料名称', icon: 'none' })
       return
     }
     if (courseIds.length > 10) {
@@ -985,7 +1384,7 @@ export default function MaterialsPage() {
         material_type: editKind,
         course_ids: courseIds,
         course_id: courseIds[0],
-        candidate_course_name: courseIds.length ? undefined : editCourse.trim(),
+        candidate_course_name: courseIds.length || !editCourse.trim() ? undefined : editCourse.trim(),
         description: activeMaterial.description || undefined,
       })
       setMyMaterials((current) => current.map((item) => (
@@ -1001,7 +1400,7 @@ export default function MaterialsPage() {
   const withdrawMaterial = async (material: CourseMaterialView) => {
     const result = await Taro.showModal({
       title: '撤回资料',
-      content: '撤回后将停止展示和审核，确认继续吗？',
+      content: '撤回后将停止展示和下载，确认继续吗？',
       confirmColor: '#b76d5c',
     })
     if (!result.confirm) return
@@ -1061,12 +1460,159 @@ export default function MaterialsPage() {
     }
   }
 
+  const selectedUploadCourses: MaterialsPlazaCourse[] = apiCourses
+    .filter((course) => metadata.courseIds.includes(course.id))
+    .map((course) => ({ id: String(course.id), name: course.name }))
+  const suggestedUploadCourses: MaterialsPlazaCourse[] = uploadCourseOptions
+    .filter((course) => !metadata.courseIds.includes(course.id))
+    .map((course) => ({ id: String(course.id), name: course.name }))
+  const materialsPlazaUpload = {
+    visible: sheet === 'upload',
+    source: uploadSource,
+    files: drafts.map((draft) => ({
+      id: draft.id,
+      name: draft.fileName,
+      sizeLabel: formatFileSize(draft.fileSize),
+      extensionLabel: materialExtension(draft.fileName).toUpperCase() || 'FILE',
+      statusLabel: uploadPhase === 'packing'
+        ? '打包中'
+        : draftStatusMeta[draft.status].label,
+      progress: uploadPhase === 'packing' || draft.status === 'uploading'
+        ? uploadPhase === 'packing' ? uploadProgress : draft.progress
+        : undefined,
+    })),
+    totalSizeLabel: drafts.length ? formatFileSize(drafts.reduce((total, draft) => total + draft.fileSize, 0)) : undefined,
+    maxFileCount: MAX_MATERIAL_FILES,
+    cloudLink: cloudShareText,
+    parsedCloudLinkLabel: parsedCloudShare
+      ? `已识别网盘链接${parsedCloudShare.code ? ' · 提取码已识别' : ''}`
+      : undefined,
+    title: metadata.title,
+    typeOptions: plazaTypeFilters.filter((filter) => filter.id !== 'all'),
+    selectedTypeId: metadata.kind,
+    selectedCourses: selectedUploadCourses,
+    suggestedCourses: suggestedUploadCourses,
+    rewardCount: quota && quota.upload_rewards_remaining > 0 && quota.upload_reward_count > 0
+      ? quota.upload_reward_count
+      : undefined,
+    canSubmit: !uploading && !!metadata.title.trim() && (
+      uploadSource === 'file' ? drafts.length > 0 : !!parsedCloudShare
+    ),
+    submitting: uploading,
+    submitLabel: uploadSource === 'cloud' ? '发布网盘资料' : drafts.some((draft) => draft.status === 'failed') ? '重试上传' : undefined,
+    phaseLabel: uploadPhase === 'packing'
+      ? `正在本地打包 ZIP（${uploadProgress}%）`
+      : uploadPhase === 'uploading'
+        ? `${drafts.length > 1 ? '正在上传 ZIP 合辑' : '正在上传文件'}（${uploadProgress}%）`
+        : uploadPhase === 'publishing' ? '正在确认发布…' : undefined,
+    onClose: closeSheet,
+    onSourceChange: (source: MaterialsPlazaUploadSource) => {
+      if (!uploading && !choosingFilesRef.current) setUploadSource(source)
+    },
+    onChooseFiles: () => void chooseFiles(),
+    onRemoveFile: removeDraft,
+    onClearFiles: clearDrafts,
+    onCloudLinkChange: (value: string) => {
+      setCloudShareText(value)
+      setParsedCloudShare(null)
+    },
+    onParseCloudLink: parseCloudShare,
+    onTitleChange: (value: string) => updateMetadata({ title: value }),
+    onTypeSelect: (value: string) => updateMetadata({ kind: value as MaterialKind }),
+    onCourseToggle: (value: string) => {
+      const id = Number(value)
+      if (!Number.isSafeInteger(id) || id <= 0) return
+      const nextIds = metadata.courseIds.includes(id)
+        ? metadata.courseIds.filter((courseIdValue) => courseIdValue !== id)
+        : [...metadata.courseIds, id]
+      if (nextIds.length > 10) {
+        Taro.showToast({ title: '最多关联 10 门课程', icon: 'none' })
+        return
+      }
+      updateMetadata({
+        courseName: '',
+        courseId: undefined,
+        candidateCourseName: '',
+        courseIds: nextIds,
+      })
+    },
+    onOpenCourseSearch: openUploadCoursePicker,
+    onSubmit: () => {
+      if (uploadSource === 'cloud') void submitCloudShare()
+      else void submitDrafts()
+    },
+  }
+
+  const chooseCampus = async () => {
+    const campuses = enabledCampuses(getMiniappRuntimeConfig())
+    if (!campuses.length) return
+    const index = await showActionSheetSelection(campuses)
+    if (index === null || !campuses[index]) return
+    try {
+      saveSelectedCampus(campuses[index])
+      setCampusName(campuses[index])
+    } catch {
+      Taro.showToast({ title: '校区保存失败，请重试', icon: 'none' })
+    }
+  }
+
   return (
-    <View className={`materials-page ${sheet ? 'materials-page--locked' : ''}`}>
-      <CustomNavbar title='课程资料' subtitle='中国海洋大学' showBack />
+    <View className={`materials-page ${viewMode === 'browse' ? 'materials-page--browse' : ''} ${sheet ? 'materials-page--locked' : ''}`}>
+      {viewMode === 'browse'
+        ? <CustomNavbar title='资料' barContent={<MaterialsPlazaHeader campusName={campusName} contextLabel={sourceCourseActive ? sourceLabel : undefined} onCampusSelect={() => void chooseCampus()} />} barContentClassName='materials-plaza-navbar-content' />
+        : <CustomNavbar title='资料' />}
+      {viewMode === 'browse' ? (
+        <MaterialsPlazaView
+          searchValue={keyword}
+          onSearchChange={setKeyword}
+          onSearch={() => setMaterialsReloadKey((current) => current + 1)}
+          shortcuts={plazaShortcuts}
+          onShortcutSelect={(shortcut) => {
+            setKeyword(shortcut.keyword)
+            setKind(materialKinds.includes(shortcut.materialType as MaterialKind)
+              ? shortcut.materialType as MaterialKind
+              : 'all')
+          }}
+          sourceFilters={plazaSourceFilters}
+          selectedSourceFilterId={sourceType}
+          onSourceFilterSelect={(value) => setSourceType(value as typeof sourceType)}
+          filters={plazaTypeFilters}
+          selectedFilterId={kind}
+          onFilterSelect={(value) => setKind(value as typeof kind)}
+          courseFilterLabel={courseId ? courseLabel : '全部课程'}
+          onCourseFilterClick={() => setSheet('filter')}
+          listTitle='全部试卷与资料'
+          totalCountLabel={`共 ${materialsTotal} 份`}
+          items={materialsPlazaItems}
+          quota={quota ? {
+            remaining: quota.remaining,
+            total: quota.daily_limit,
+            resetHint: `今日已用 ${quota.used} 次，额度每日刷新`,
+            adEntryLabel: quota.ad_reward_enabled && quota.ad_rewards_remaining > 0 ? '看广告领额度' : undefined,
+            adEntryHint: quota.ad_rewards_remaining > 0 ? `今日还可领 ${quota.ad_rewards_remaining} 次` : undefined,
+          } : undefined}
+          quotaLoading={quotaLoading}
+          loading={loading}
+          errorMessage={materialsLoadFailed ? '资料暂时没有加载出来' : undefined}
+          upload={materialsPlazaUpload}
+          onOpenMine={() => setViewMode('mine')}
+          onRewardEntry={() => void startAdReward()}
+          onQuotaRetry={() => void refreshQuota(true)}
+          onMaterialOpen={(item) => {
+            const material = materials.find((record) => String(record.id) === item.id)
+            if (material) openMaterialDetail(material)
+          }}
+          onCopyDownloadAddress={copyDownloadAddressForItem}
+          onOpenUpload={() => {
+            setUploadSource('file')
+            setSheet('upload')
+          }}
+          onRetry={() => setMaterialsReloadKey((current) => current + 1)}
+        />
+      ) : (
       <View className='materials-page__content'>
         <View className='materials-view-tabs'>
-          <View className={viewMode === 'browse' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看课程资料库' onClick={() => setViewMode('browse')}>资料库</View>
+          <View ariaRole='tab' ariaLabel='返回资料广场' onClick={() => setViewMode('browse')}>资料广场</View>
           <View className={viewMode === 'mine' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看我的资料' onClick={() => setViewMode('mine')}>我的资料{drafts.length ? <Text>{drafts.length}</Text> : null}</View>
           <View className={viewMode === 'feedbacks' ? 'materials-view-tabs__active' : ''} ariaRole='tab' ariaLabel='查看我的反馈' onClick={() => setViewMode('feedbacks')}>我的反馈</View>
         </View>
@@ -1101,36 +1647,10 @@ export default function MaterialsPage() {
           <View className='materials-upload-button' ariaRole='button' ariaLabel='分享课程资料' onClick={openUpload}>分享资料</View>
         </View>}
 
-        {viewMode === 'browse' && <>
-          <View className='materials-heading'><View><Text>课程资料</Text><Text>跨学期汇总 · 仅展示已审核内容</Text></View><Text>{materialsTotal} 份</Text></View>
-          {loading && !materials.length ? <View className='materials-empty'><View /><Text>正在加载资料</Text><Text>请稍候</Text></View> : <View className='materials-list'>
-            {materials.map((item) => <View key={item.id} className='material-card' onClick={() => openMaterialDetail(item)}>
-              <View className={`material-card__file material-card__file--${item.material_type}`}><Text>{materialKindLabels[item.material_type]}</Text></View>
-              <View className='material-card__main'>
-                <Text className='material-card__title'>{item.title}</Text>
-                <Text className='material-card__course'>{materialCourseLabel(item)} · {item.files.length} 个文件</Text>
-                <Text className='material-card__status'>{item.download_count} 次下载 · {formatFileSize(packageSize(item))}</Text>
-              </View>
-              <Text className='material-card__arrow'>›</Text>
-            </View>)}
-          </View>}
-          {loading && !!materials.length && <Text className='materials-loading-more'>正在加载更多…</Text>}
-          {!loading && !materials.length && <View
-            className={`materials-empty ${materialsLoadFailed ? 'materials-empty--action' : ''}`}
-            onClick={handleMaterialsEmptyClick}
-          >
-            <View />
-            <Text>{materialsLoadFailed ? '资料暂时没有加载出来' : unresolvedCourse ? '该课程尚未归入课程目录' : '没有找到相关资料'}</Text>
-            <Text>
-              {materialsLoadFailed ? '点击这里重新加载' : unresolvedCourse ? '仍可直接分享，审核时会完成课程归类' : '试试更换课程、类型或关键词'}
-            </Text>
-          </View>}
-        </>}
-
         {viewMode === 'mine' && <>
-          <View className='materials-heading'><View><Text>我的上传</Text><Text>查看草稿、安全检查和审核进度</Text></View><Text>{(drafts.length ? 1 : 0) + visibleMyMaterials.length} 份</Text></View>
+          <View className='materials-heading'><View><Text>我的上传</Text><Text>查看已发布资料和未完成草稿</Text></View><Text>{(drafts.length ? 1 : 0) + visibleMyMaterials.length} 份</Text></View>
           <View className='materials-list'>
-            {!!drafts.length && <View className='material-card' onClick={() => setSheet('upload')}>
+            {!!drafts.length && <View className='material-card' onClick={() => { setViewMode('browse'); setSheet('upload') }}>
               <View className={`material-card__file material-card__file--${metadata.kind}`}><Text>{materialKindLabels[metadata.kind]}</Text></View>
               <View className='material-card__main'>
                 <Text className='material-card__title'>{metadata.title || '未完成的资料'}</Text>
@@ -1168,8 +1688,9 @@ export default function MaterialsPage() {
           {!myFeedbacks.length && <View className='materials-empty'><View /><Text>还没有反馈记录</Text><Text>发现资料有问题时，可以在详情中告诉我们</Text></View>}
         </>}
       </View>
+      )}
 
-      {sheet && <View className='materials-overlay' onClick={closeSheet}>
+      {sheet && (sheet !== 'upload' || viewMode !== 'browse') && <View className='materials-overlay' onClick={closeSheet}>
         <View
           className={`materials-sheet materials-sheet--${sheet} ${sheet === 'upload' && drafts.length ? 'materials-sheet--upload-filled' : ''}`}
           style={keyboardHeight ? {
@@ -1222,12 +1743,12 @@ export default function MaterialsPage() {
                   : 'materials-sheet__field-status'}
                 >
                   {!metadata.courseName.trim()
-                    ? '请选择'
+                    ? '选填'
                     : !coursesLoaded
                       ? '正在匹配'
                       : metadata.courseIds.length
                         ? `已关联 ${metadata.courseIds.length} 门`
-                        : '将由管理员归类'}
+                        : '候选课程名'}
                 </Text>
               </View>
               <View className='materials-course-picker'>
@@ -1327,7 +1848,7 @@ export default function MaterialsPage() {
           </View>}
 
           {sheet === 'upload' && !!drafts.length && <View className='materials-upload-sheet__footer'>
-            <View className={`materials-primary ${uploading ? 'materials-primary--disabled' : ''}`} onClick={submitDrafts}>{uploading ? '正在上传…' : drafts.some((draft) => draft.status === 'failed') ? '重试上传' : '上传并提交审核'}</View>
+            <View className={`materials-primary ${uploading ? 'materials-primary--disabled' : ''}`} onClick={submitDrafts}>{uploading ? '正在上传…' : drafts.some((draft) => draft.status === 'failed') ? '重试上传' : '上传并发布'}</View>
             <Text className='materials-upload-notice'>上传即表示确认资料不包含隐私、侵权或违规内容</Text>
           </View>}
 
@@ -1400,12 +1921,22 @@ export default function MaterialsPage() {
             <Text className='materials-sheet__title'>{activeMaterial.title}</Text>
             <Text className='materials-sheet__subtitle'>{materialCourseLabel(activeMaterial, 999)} · {materialStatusLabels[activeMaterial.status]}</Text>
             {!!activeMaterial.description && <Text className='materials-detail-description'>{activeMaterial.description}</Text>}
-            <View className='materials-detail-list'>
+            {activeMaterial.source_type === 'cloud_share' && (
+              <View className='materials-detail-list'>
+                <Text>网盘分享地址会在授权后复制到剪贴板。</Text>
+                {activeMaterial.status === 'published' && (
+                  <View className='materials-secondary' onClick={() => void copyMaterialDownloadAddress(activeMaterial)}>
+                    复制网盘地址和提取码
+                  </View>
+                )}
+              </View>
+            )}
+            {!!activeMaterial.files.length && <View className='materials-detail-list'>
               {activeMaterial.files.map((file, index) => <View key={file.id} className='materials-detail-file-row'>
                 <View><Text>{index + 1}. {file.original_filename}</Text><Text>{formatFileSize(file.size_bytes)} · {file.download_count} 次下载</Text></View>
-                {activeMaterial.status === 'published' && <Text onClick={() => downloadAndOpenMaterial(activeMaterial.id, file.id).catch(() => Taro.showToast({ title: '资料下载失败', icon: 'none' }))}>打开</Text>}
+                {activeMaterial.status === 'published' && <Text onClick={() => void copyMaterialDownloadAddress(activeMaterial, file.id)}>复制地址</Text>}
               </View>)}
-            </View>
+            </View>}
             {activeMaterial.rejection_reason && <View className='materials-note'><Text>未通过原因</Text><Text>{activeMaterial.rejection_reason}</Text></View>}
             {viewMode === 'mine' && activeMaterial.status === 'rejected' && <View className='materials-rejected-edit'>
               <Text className='materials-sheet__label'>修改资料名称</Text>

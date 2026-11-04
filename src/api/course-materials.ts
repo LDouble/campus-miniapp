@@ -1,4 +1,3 @@
-import Taro from '@tarojs/taro'
 import {
   apiRequest,
   createIdempotencyKey,
@@ -12,6 +11,10 @@ import type {
   MaterialFeedbackView,
   MaterialCoursePage,
   MaterialDownloadView,
+  MaterialQuotaView,
+  MaterialAdRewardSessionView,
+  MaterialCloudShareView,
+  CreateMaterialCloudShareRequest,
   MaterialUploadSessionView,
   MaterialUploadTarget,
 } from './types'
@@ -23,10 +26,12 @@ operations['ListCourseMaterials']['parameters']['query']
 >
 export type UpdateMyCourseMaterialRequest = operations['UpdateMyCourseMaterial']['requestBody']['content']['application/json']
 export type CreateMaterialUploadSessionRequest = operations['CreateMaterialUploadSession']['requestBody']['content']['application/json']
+export type CreateMaterialAdRewardSessionResponse = MaterialAdRewardSessionView
 
 export interface ListCourseMaterialsQuery {
   courseId?: ListCourseMaterialsParameters['course_id']
   materialType?: ListCourseMaterialsParameters['material_type']
+  sourceType?: ListCourseMaterialsParameters['source_type']
   keyword?: ListCourseMaterialsParameters['keyword']
   periodId?: ListCourseMaterialsParameters['period_id']
   page?: ListCourseMaterialsParameters['page']
@@ -58,6 +63,7 @@ export const listCourseMaterials = (query: ListCourseMaterialsQuery = {}) => (
     query: {
       course_id: query.courseId,
       material_type: query.materialType,
+      source_type: query.sourceType,
       keyword: query.keyword,
       period_id: query.periodId,
       page: query.page || 1,
@@ -137,6 +143,46 @@ export const getMaterialDownload = (materialId: number, fileId: number) => (
   })
 )
 
+export const getCurrentMaterialQuota = () => apiRequest<MaterialQuotaView>({
+  path: '/api/v1/course-materials/quota',
+})
+
+export const createMaterialAdRewardSession = (idempotencyKey: string) => (
+  apiRequest<CreateMaterialAdRewardSessionResponse>({
+    path: '/api/v1/course-materials/ad-reward-sessions',
+    method: 'POST',
+    idempotencyKey,
+  })
+)
+
+export const claimMaterialAdReward = (
+  sessionId: number,
+  sessionToken: string,
+  idempotencyKey: string,
+) => apiRequest<MaterialQuotaView>({
+  path: `/api/v1/course-materials/ad-reward-sessions/${sessionId}/claim`,
+  method: 'POST',
+  data: { session_token: sessionToken },
+  idempotencyKey,
+})
+
+export const createMaterialCloudShare = (
+  data: CreateMaterialCloudShareRequest,
+  idempotencyKey: string,
+) => apiRequest<CourseMaterialView>({
+  path: '/api/v1/course-materials/cloud-shares',
+  method: 'POST',
+  data,
+  idempotencyKey,
+})
+
+export const getCourseMaterialCloudShare = (materialId: number) => (
+  apiRequest<MaterialCloudShareView>({
+    path: `/api/v1/course-materials/${materialId}/cloud-share`,
+    method: 'POST',
+  })
+)
+
 export const createCourseMaterialFeedback = (
   materialId: number,
   data: {
@@ -178,22 +224,3 @@ export const updateMyCourseMaterial = (
   data,
   idempotencyKey: createIdempotencyKey(`material-update-${materialId}`),
 })
-
-export const downloadAndOpenMaterial = async (materialId: number, fileId: number) => {
-  const target = await getMaterialDownload(materialId, fileId)
-  const result = await Taro.downloadFile({ url: target.url })
-  if (result.statusCode < 200 || result.statusCode >= 300) {
-    throw new Error('资料下载失败')
-  }
-  const extension = target.filename.split('.').pop()?.toLowerCase()
-  const fileType = (
-    extension && ['doc', 'xls', 'ppt', 'pdf', 'docx', 'xlsx', 'pptx'].includes(extension)
-      ? extension
-      : undefined
-  ) as 'doc' | 'xls' | 'ppt' | 'pdf' | 'docx' | 'xlsx' | 'pptx' | undefined
-  await Taro.openDocument({
-    filePath: result.tempFilePath,
-    fileType,
-    showMenu: true,
-  })
-}

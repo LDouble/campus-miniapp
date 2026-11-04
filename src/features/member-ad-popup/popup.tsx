@@ -8,9 +8,15 @@ import dashMark from './dash.svg'
 import { MEMBER_AD_UNIT_ID } from './preload'
 import './popup.scss'
 
-type Props = { visible: boolean; onReady: () => void; onPresented: () => void; onClose: () => void }
+type Props = {
+  visible: boolean
+  onReady: () => void
+  onPresented: () => void
+  onClose: () => void
+  onAdTap?: () => void
+}
 
-const MemberAdPopup = ({ visible, onReady, onPresented, onClose }: Props) => {
+const MemberAdPopup = ({ visible, onReady, onPresented, onClose, onAdTap }: Props) => {
   const loaded = useRef(false)
   const active = useRef(true)
   const presented = useRef(false)
@@ -67,7 +73,7 @@ const MemberAdPopup = ({ visible, onReady, onPresented, onClose }: Props) => {
               <Text className='member-ad-popup__guide-label'>这是广告哦～</Text>
               <Image className='member-ad-popup__guide-arrow' src={guideArrow} mode='aspectFit' />
             </View>
-            <View className='member-ad-popup__ad'>
+            <View className='member-ad-popup__ad' onClick={onAdTap}>
               <AdCustom
                 unitId={MEMBER_AD_UNIT_ID}
                 onLoad={() => {

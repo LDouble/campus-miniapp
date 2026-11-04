@@ -1,5 +1,7 @@
 import Taro from '@tarojs/taro'
 import { isQualificationEdition } from '../app-edition'
+import { rememberCourseMaterialNavigationIntent } from '../course-materials/navigation-intent'
+import type { CourseMaterialNavigation } from '../course-materials/route'
 import {
   markAcademicRefreshAfterVerification,
   resolveAcademicRefreshReturnRoute,
@@ -11,7 +13,9 @@ const RETURN_TARGET_TTL = 30 * 60 * 1000
 
 const TAB_PAGES = new Set([
   '/pages/index/index',
-  ...(!isQualificationEdition ? ['/pages/community/index'] : []),
+  ...(!isQualificationEdition
+    ? ['/pages/community/index', '/pages/materials/index']
+    : []),
   '/pages/messages/index',
   '/pages/profile/index',
 ])
@@ -69,7 +73,7 @@ const safeQuery = (options?: Record<string, unknown>) => {
   const sensitiveKey = /password|token|secret|credential|file|image|code/i
   const parts = Object.entries(options)
     .filter(([key, value]) => (
-      !sensitiveKey.test(key)
+      (!sensitiveKey.test(key) || key === 'courseCode')
       && value !== undefined
       && value !== null
       && String(value).length <= 300
@@ -77,6 +81,51 @@ const safeQuery = (options?: Record<string, unknown>) => {
     .slice(0, 10)
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
   return parts.length ? `?${parts.join('&')}` : ''
+}
+
+const parseCourseMaterialReturnContext = (url: string): CourseMaterialNavigation => {
+  const query = url.split('?')[1]
+  if (!query) return {}
+  const values: Record<string, string> = {}
+  query.split('&').forEach((part) => {
+    const separator = part.indexOf('=')
+    if (separator < 0) return
+    try {
+      const key = decodeURIComponent(part.slice(0, separator).replace(/\+/g, ' '))
+      const value = decodeURIComponent(part.slice(separator + 1).replace(/\+/g, ' '))
+      values[key] = value
+    } catch {
+      // 丢弃无法解析的旧路由参数。
+    }
+  })
+  const positiveNumber = (value?: string) => {
+    const parsed = Number(value)
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined
+  }
+  const source = ['schedule', 'grades', 'selection', 'exams', 'discussion'].includes(values.source)
+    ? values.source as CourseMaterialNavigation['source']
+    : undefined
+  const sourceType = ['file', 'cloud_share'].includes(values.sourceType)
+    ? values.sourceType as CourseMaterialNavigation['sourceType']
+    : undefined
+  const materialType = ['slides', 'notes', 'exam', 'homework', 'review', 'other']
+    .includes(values.materialType)
+    ? values.materialType as CourseMaterialNavigation['materialType']
+    : undefined
+  return {
+    courseName: values.courseName,
+    courseId: positiveNumber(values.courseId),
+    courseCode: values.courseCode,
+    periodId: values.periodId,
+    periodLabel: values.periodLabel,
+    source,
+    sourceType,
+    materialType,
+    keyword: values.keyword,
+    action: values.action === 'upload' ? 'upload' : undefined,
+    view: values.view === 'mine' ? 'mine' : undefined,
+    materialId: positiveNumber(values.material_id),
+  }
 }
 
 const captureReturnTarget = () => {
@@ -175,6 +224,12 @@ export const finishAcademicVerification = async (
     )
   }
   if (TAB_PAGES.has(path)) {
+    if (path === '/pages/materials/index') {
+      const context = parseCourseMaterialReturnContext(target.url)
+      if (Object.values(context).some((value) => value !== undefined && value !== '')) {
+        rememberCourseMaterialNavigationIntent(context)
+      }
+    }
     await Taro.switchTab({ url: path })
     return
   }

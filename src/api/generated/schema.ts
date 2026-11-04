@@ -4926,7 +4926,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 管理端查询待审核和历史资料 */
+        /** 管理端搜索资料和历史记录 */
         get: operations["ListAdminCourseMaterials"];
         put?: never;
         post?: never;
@@ -4943,61 +4943,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 管理端查询资料详情和扫描状态 */
+        /** 管理端查询资料详情 */
         get: operations["GetAdminCourseMaterial"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/course-materials/{id}/files/{file_id}/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 获取已完成安全扫描资料的短期审核预览地址 */
-        post: operations["GetAdminCourseMaterialPreview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/course-materials/{id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 审核资料并同时确认或新建课程归类 */
-        post: operations["ReviewCourseMaterial"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/course-materials/{id}/review/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 撤销最近一次资料审核并退回待审核 */
-        post: operations["RevokeCourseMaterialReview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5015,23 +4964,6 @@ export interface paths {
         put?: never;
         /** 下架违规资料 */
         post: operations["TakeDownCourseMaterial"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/material-course-candidates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查询学生提交但尚未归一的课程名称 */
-        get: operations["ListMaterialCourseCandidates"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5141,6 +5073,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/course-materials/ad-reward-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建一次性资料广告奖励会话 */
+        post: operations["CreateMaterialAdRewardSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/ad-reward-sessions/{id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 命中广告热区后领取一次性奖励 */
+        post: operations["ClaimMaterialAdReward"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/course-materials/cloud-shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布网盘分享资料 */
+        post: operations["CreateMaterialCloudShare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/course-materials/mine": {
         parameters: {
             query?: never;
@@ -5158,6 +5141,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/course-materials/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询当前用户资料下载额度 */
+        get: operations["GetCurrentMaterialQuota"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/course-materials/upload-sessions": {
         parameters: {
             query?: never;
@@ -5167,7 +5167,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 创建包含最多五个文件的资料上传会话 */
+        /** 创建资料上传会话；多文件客户端应先打包为一个 ZIP 对象 */
         post: operations["CreateMaterialUploadSession"];
         delete?: never;
         options?: never;
@@ -5184,7 +5184,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 确认文件上传完成并自动提交扫描审核 */
+        /** 核验 OSS 对象并直接发布资料 */
         post: operations["CompleteMaterialUploadSession"];
         delete?: never;
         options?: never;
@@ -5208,6 +5208,23 @@ export interface paths {
         head?: never;
         /** 修改上传中或被驳回的资料信息 */
         patch: operations["UpdateMyCourseMaterial"];
+        trace?: never;
+    };
+    "/api/v1/course-materials/{id}/cloud-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 授权获取网盘链接和提取码 */
+        post: operations["GetCourseMaterialCloudShare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/course-materials/{id}/feedbacks": {
@@ -5236,7 +5253,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 获取私有文件短期下载地址 */
+        /** 获取私有文件短期下载地址并按用户/资料/日期幂等计次 */
         post: operations["GetCourseMaterialDownload"];
         delete?: never;
         options?: never;
@@ -12794,12 +12811,30 @@ export interface components {
             reviewed_at?: string | null;
             /** Format: uint64 */
             reviewed_by?: number | null;
+            /** @description 网盘链接和提取码须取得下载授权后获取 */
+            share_protected?: boolean;
+            /** @description 客户端声明的合辑原文件名，仅用于展示和搜索 */
+            source_filenames?: string[];
+            /** @enum {string} */
+            source_type: "file" | "cloud_share";
             status: components["schemas"]["MaterialStatus"];
             title: string;
             /** Format: date-time */
             updated_at: string;
             /** Format: uint64 */
             version: number;
+        };
+        CreateMaterialCloudShareRequest: {
+            candidate_course_name?: string | null;
+            /** Format: uint64 */
+            course_id?: number | null;
+            course_ids?: number[];
+            description?: string | null;
+            material_type: components["schemas"]["MaterialType"];
+            period_id?: string | null;
+            share_code?: string;
+            share_url: string;
+            title: string;
         };
         CreateMaterialUploadSessionRequest: {
             candidate_course_name?: string | null;
@@ -12811,10 +12846,36 @@ export interface components {
             files: components["schemas"]["MaterialUploadFileInput"][];
             material_type: components["schemas"]["MaterialType"];
             period_id?: string | null;
+            /** @description 客户端声明的合辑原文件名，仅用于展示和搜索 */
+            source_filenames?: string[];
             title: string;
         };
         /** @enum {string} */
         EducationLevel: "undergraduate" | "graduate" | "general";
+        MaterialAdRewardSessionResponseBody: {
+            data: components["schemas"]["MaterialAdRewardSessionView"];
+            request_id: string;
+        };
+        MaterialAdRewardSessionView: {
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uint64 */
+            id: number;
+            session_token: string;
+        };
+        MaterialCloudShareResponseBody: {
+            data: components["schemas"]["MaterialCloudShareView"];
+            request_id: string;
+        };
+        MaterialCloudShareView: {
+            consumed_quota: boolean;
+            /** Format: uint64 */
+            material_id: number;
+            remaining_downloads: number;
+            share_code: string;
+            /** Format: uri */
+            share_url: string;
+        };
         MaterialCourseCatalogSyncPage: {
             items: components["schemas"]["MaterialCourseCatalogSyncView"][];
             page: number;
@@ -12890,11 +12951,13 @@ export interface components {
             request_id: string;
         };
         MaterialDownloadView: {
+            consumed_quota: boolean;
             /** Format: date-time */
             expires_at: string;
             /** Format: uint64 */
             file_id: number;
             filename: string;
+            remaining_downloads: number;
             /** Format: uri */
             url: string;
         };
@@ -12963,6 +13026,22 @@ export interface components {
             /** Format: uint64 */
             version: number;
         };
+        MaterialQuotaResponseBody: {
+            data: components["schemas"]["MaterialQuotaView"];
+            request_id: string;
+        };
+        MaterialQuotaView: {
+            ad_reward_count: number;
+            ad_reward_enabled: boolean;
+            ad_rewards_remaining: number;
+            daily_limit: number;
+            /** @description 北京时间自然日，格式 YYYY-MM-DD */
+            quota_day: string;
+            remaining: number;
+            upload_reward_count: number;
+            upload_rewards_remaining: number;
+            used: number;
+        };
         MaterialReviewView: {
             /** @enum {string} */
             action: "approve" | "reject" | "revoke" | "take_down";
@@ -12992,7 +13071,7 @@ export interface components {
         MaterialUploadFileInput: {
             filename: string;
             /** @enum {string} */
-            mime_type: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            mime_type: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/zip";
             /** Format: int64 */
             size_bytes: number;
         };
@@ -13008,6 +13087,7 @@ export interface components {
             /** Format: uint64 */
             id: number;
             material: components["schemas"]["CourseMaterialView"];
+            rewarded_downloads?: number;
             /** @enum {string} */
             status: "created" | "promoting" | "cleaning" | "completed" | "expired" | "failed";
             uploads: components["schemas"]["MaterialUploadTarget"][];
@@ -17159,6 +17239,24 @@ export interface components {
                 "application/json": components["schemas"]["CourseMaterialResponseBody"];
             };
         };
+        /** @description 一次性广告奖励会话 */
+        MaterialAdRewardSessionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialAdRewardSessionResponseBody"];
+            };
+        };
+        /** @description 经授权的网盘分享内容 */
+        MaterialCloudShareResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialCloudShareResponseBody"];
+            };
+        };
         /** @description 资料课程目录同步记录 */
         MaterialCourseCatalogSyncPageResponse: {
             headers: {
@@ -17211,6 +17309,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["MaterialFeedbackResponseBody"];
+            };
+        };
+        /** @description 当前用户资料下载额度 */
+        MaterialQuotaResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["MaterialQuotaResponseBody"];
             };
         };
         /** @description 资料更新结果 */
@@ -24658,10 +24765,7 @@ export interface operations {
                     /** Format: uint64 */
                     expected_version: number;
                     /** @enum {string} */
-                    action: "keep" | "correct_course" | "take_down" | "reject";
-                    /** Format: uint64 */
-                    course_id?: number;
-                    course_ids?: number[];
+                    action: "keep" | "take_down" | "reject";
                     resolution_note: string;
                 };
             };
@@ -24676,6 +24780,7 @@ export interface operations {
         parameters: {
             query?: {
                 course_id?: number;
+                source_type?: "file" | "cloud_share";
                 material_type?: "slides" | "notes" | "exam" | "homework" | "review" | "other";
                 uploader_id?: number;
                 candidate_only?: boolean;
@@ -24709,82 +24814,6 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
-    GetAdminCourseMaterialPreview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-                file_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["MaterialDownloadResponse"];
-            404: components["responses"]["Error"];
-        };
-    };
-    ReviewCourseMaterial: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** Format: uint64 */
-                    expected_version: number;
-                    /** @enum {string} */
-                    action: "approve" | "reject";
-                    /** Format: uint64 */
-                    course_id?: number;
-                    course_ids?: number[];
-                    create_course_name?: string;
-                    create_course_code?: string;
-                    /** @enum {string} */
-                    education_level?: "undergraduate" | "graduate" | "general";
-                    reason?: string;
-                    save_candidate_as_alias?: boolean;
-                };
-            };
-        };
-        responses: {
-            200: components["responses"]["CourseMaterialResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
-    RevokeCourseMaterialReview: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** Format: uint64 */
-                    expected_version: number;
-                    reason: string;
-                };
-            };
-        };
-        responses: {
-            200: components["responses"]["CourseMaterialResponse"];
-            409: components["responses"]["Error"];
-        };
-    };
     TakeDownCourseMaterial: {
         parameters: {
             query?: never;
@@ -24808,22 +24837,6 @@ export interface operations {
         responses: {
             200: components["responses"]["MaterialUpdatedResponse"];
             409: components["responses"]["Error"];
-        };
-    };
-    ListMaterialCourseCandidates: {
-        parameters: {
-            query?: {
-                keyword?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["CourseMaterialPageResponse"];
         };
     };
     ListMaterialCourseCatalogSyncRuns: {
@@ -24969,6 +24982,7 @@ export interface operations {
         parameters: {
             query?: {
                 course_id?: number;
+                source_type?: "file" | "cloud_share";
                 material_type?: "slides" | "notes" | "exam" | "homework" | "review" | "other";
                 keyword?: string;
                 period_id?: string;
@@ -24982,6 +24996,65 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    CreateMaterialAdRewardSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: components["responses"]["MaterialAdRewardSessionResponse"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    ClaimMaterialAdReward: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    session_token: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["MaterialQuotaResponse"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    CreateMaterialCloudShare: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMaterialCloudShareRequest"];
+            };
+        };
+        responses: {
+            201: components["responses"]["CourseMaterialResponse"];
+            400: components["responses"]["Error"];
         };
     };
     ListMyCourseMaterials: {
@@ -24998,6 +25071,18 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CourseMaterialPageResponse"];
+        };
+    };
+    GetCurrentMaterialQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialQuotaResponse"];
         };
     };
     CreateMaterialUploadSession: {
@@ -25089,6 +25174,22 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    GetCourseMaterialCloudShare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["MaterialCloudShareResponse"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
     CreateCourseMaterialFeedback: {
         parameters: {
             query?: never;
@@ -25132,6 +25233,7 @@ export interface operations {
         responses: {
             200: components["responses"]["MaterialDownloadResponse"];
             404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     WithdrawCourseMaterial: {
