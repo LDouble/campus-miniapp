@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import Taro, { useDidShow, useReachBottom, useRouter } from '@tarojs/taro'
+import Taro, { useDidHide, useDidShow, useReachBottom, useRouter } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import {
@@ -8,6 +8,7 @@ import {
   useKeyboardInset,
 } from '../../components/keyboard-safe-input'
 import {
+  claimMaterialAdReward,
   completeMaterialUploadSession,
   createCourseMaterialFeedback,
   createMaterialAdRewardSession,
@@ -29,7 +30,10 @@ import { getCurrentIdentity } from '../../api/account'
 import { createIdempotencyKey } from '../../api/client'
 import { requestWechatSubscriptionAndStopPropagation } from '../../features/wechat-subscription'
 import { consumeCourseMaterialNavigationIntent } from '../../features/course-materials/navigation'
-import { clearMaterialAdRewardIntent, saveMaterialAdRewardIntent } from '../../features/course-materials/ad-reward-intent'
+import MemberAdPopup from '../../features/member-ad-popup/popup'
+import { preloadMemberAd } from '../../features/member-ad-popup/preload'
+import { createAdRewardController, type AdRewardPhase } from '../../features/course-materials/ad-reward-controller'
+import { getPageCacheScope, subscribePageCacheScope } from '../../state/page-cache'
 import MaterialsPlazaView, {
   MaterialsPlazaHeader,
   type MaterialsPlazaCourse,
@@ -362,7 +366,49 @@ export default function MaterialsPage() {
   const downloadAddressCache = useRef(new Map<string, { url: string; expiresAt: number }>())
   const cloudAddressCache = useRef(new Map<number, MaterialCloudShareView>())
   const addressRequestsRef = useRef(new Set<string>())
-  const adRewardStartingRef = useRef(false)
+  const [adRewardPhase, setAdRewardPhase] = useState<AdRewardPhase>('idle')
+  const [adRewardController] = useState(() => createAdRewardController<MaterialQuotaView>({
+    create: () => createMaterialAdRewardSession(createIdempotencyKey('material-ad-reward-session')),
+    claim: (session, key) => claimMaterialAdReward(session.id, session.session_token, key),
+    createKey: () => createIdempotencyKey('material-ad-reward-claim'),
+    scope: getPageCacheScope,
+    change: setAdRewardPhase,
+    success: (nextQuota) => {
+      quotaRequestVersion.current += 1
+      setQuota(nextQuota)
+      setQuotaLoading(false)
+      Taro.showToast({ title: '下载额度已增加', icon: 'success' })
+    },
+    error: (message) => { Taro.showToast({ title: message, icon: 'none' }) },
+  }))
+  useDidHide(() => {
+    // 广告落地页会隐藏小程序，不能在这里清掉会话；内部离页仍取消领取。
+    Taro.nextTick(() => {
+      const pages = Taro.getCurrentPages()
+      if (pages[pages.length - 1]?.route !== 'pages/materials/index') adRewardController.close()
+    })
+  })
+  useEffect(() => {
+    const onHide = () => adRewardController.background()
+    const onShow = () => {
+      const pages = Taro.getCurrentPages()
+      if (pages[pages.length - 1]?.route !== 'pages/materials/index') {
+        adRewardController.close()
+        return
+      }
+      void adRewardController.foreground()
+    }
+    Taro.onAppHide(onHide)
+    Taro.onAppShow(onShow)
+    return () => { Taro.offAppHide(onHide); Taro.offAppShow(onShow) }
+  }, [adRewardController])
+  useEffect(() => {
+    const unsubscribe = subscribePageCacheScope(() => adRewardController.close())
+    return () => { unsubscribe(); adRewardController.dispose() }
+  }, [adRewardController])
+  useEffect(() => {
+    if (adRewardPhase === 'visible' || adRewardPhase === 'claiming') return acquireCustomTabBarHidden()
+  }, [adRewardPhase])
 
   useEffect(() => {
     let active = true
@@ -1345,26 +1391,9 @@ export default function MaterialsPage() {
   }
 
   const startAdReward = async () => {
-    if (!quota?.ad_reward_enabled || quota.ad_rewards_remaining <= 0 || adRewardStartingRef.current) return
-    adRewardStartingRef.current = true
-    try {
-      const session = await createMaterialAdRewardSession(createIdempotencyKey('material-ad-reward-session'))
-      saveMaterialAdRewardIntent({
-        sessionId: session.id,
-        sessionToken: session.session_token,
-        expiresAt: session.expires_at,
-        idempotencyKey: createIdempotencyKey(`material-ad-reward-claim-${session.id}`),
-      })
-      await Taro.switchTab({ url: '/pages/index/index' })
-    } catch (error) {
-      clearMaterialAdRewardIntent()
-      Taro.showToast({
-        title: error instanceof Error ? error.message : '广告入口暂不可用，请稍后重试',
-        icon: 'none',
-      })
-    } finally {
-      adRewardStartingRef.current = false
-    }
+    if (!quota?.ad_reward_enabled || quota.ad_reward_count <= 0 || quota.ad_rewards_remaining <= 0) return
+    preloadMemberAd()
+    await adRewardController.open()
   }
 
   const saveRejectedMaterial = async () => {
@@ -1588,7 +1617,9 @@ export default function MaterialsPage() {
             remaining: quota.remaining,
             total: quota.daily_limit,
             resetHint: `今日已用 ${quota.used} 次，额度每日刷新`,
-            adEntryLabel: quota.ad_reward_enabled && quota.ad_rewards_remaining > 0 ? '看广告领额度' : undefined,
+            adEntryLabel: quota.ad_reward_enabled && quota.ad_reward_count > 0 && quota.ad_rewards_remaining > 0
+              ? adRewardPhase === 'loading' || adRewardPhase === 'preparing' ? '广告加载中…' : '看广告领额度'
+              : undefined,
             adEntryHint: quota.ad_rewards_remaining > 0 ? `今日还可领 ${quota.ad_rewards_remaining} 次` : undefined,
           } : undefined}
           quotaLoading={quotaLoading}
@@ -1985,6 +2016,18 @@ export default function MaterialsPage() {
           </View>}
         </View>
       </View>}
+      {(adRewardPhase === 'preparing' || adRewardPhase === 'visible' || adRewardPhase === 'claiming') && (
+        <MemberAdPopup
+          visible={adRewardPhase === 'visible' || adRewardPhase === 'claiming'}
+          rewardCount={quota?.ad_reward_count}
+          claiming={adRewardPhase === 'claiming'}
+          onReady={adRewardController.ready}
+          onPresented={() => adRewardController.presented()}
+          onClose={adRewardController.close}
+          onError={adRewardController.fail}
+          onAdTap={() => void adRewardController.tap()}
+        />
+      )}
     </View>
   )
 }

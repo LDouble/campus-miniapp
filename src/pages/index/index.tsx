@@ -32,11 +32,6 @@ import { getCurrentUser } from '../../api/account'
 import { getAcademicVerificationStatus } from '../../api/academic-verification'
 import { createDailyCheckin, getMyDailyCheckinStatus } from '../../api/daily-checkins'
 import { isApiError } from '../../api/client'
-import { claimMaterialAdReward } from '../../api/course-materials'
-import {
-  consumeMaterialAdRewardIntent,
-  type MaterialAdRewardIntent,
-} from '../../features/course-materials/ad-reward-intent'
 import {
   claimActivityPopup,
   clickActivityPopupDisplay,
@@ -438,8 +433,6 @@ function IndexContent() {
   const [homeCheckinSubmitting, setHomeCheckinSubmitting] = useState(false)
   const [memberAdUserId, setMemberAdUserId] = useState(0)
   const [memberAdReady, setMemberAdReady] = useState(false)
-  const [materialAdRewardIntent, setMaterialAdRewardIntent] = useState<MaterialAdRewardIntent | null>(null)
-  const materialAdRewardClaimingRef = useRef(false)
   const memberAdUserRef = useRef(0)
   const memberAdRolesRef = useRef<readonly string[]>([])
   const memberAdStudentNoRef = useRef<string | null>(null)
@@ -790,28 +783,9 @@ function IndexContent() {
 
   useDidShow(() => {
     memberAdPageActiveRef.current = true
-    const rewardIntent = consumeMaterialAdRewardIntent()
-    if (rewardIntent) {
-      memberAdAttemptedRef.current = true
-      memberAdSuppressedRef.current = false
-      materialAdRewardClaimingRef.current = false
-      preloadHomeMemberAd()
-      setMaterialAdRewardIntent(rewardIntent)
-      void getCurrentUser({ force: true }).then((account) => {
-        if (!memberAdPageActiveRef.current || account.user.id !== getCachedPageUserId()
-          || isAccountCancelled()) return
-        memberAdUserRef.current = account.user.id
-        memberAdRolesRef.current = account.roles
-        setMemberAdReady(false)
-        setMemberAdUserId(account.user.id)
-      }).catch(() => {
-        setMaterialAdRewardIntent(null)
-        Taro.showToast({ title: '广告入口暂不可用，请稍后重试', icon: 'none' })
-      })
-    }
     if (!homeHasShown.current || isAccountCancelled()) return
     // 广告资格独立于 Feed 生命周期，返回首页只重查广告，不重置列表分页。
-    memberAdAttemptedRef.current = !!rewardIntent
+    memberAdAttemptedRef.current = false
     memberAdPreloadAttemptedRef.current = false
     memberAdSuppressedRef.current = false
     setHomeActivityDecisionResolved(true)
@@ -946,31 +920,12 @@ function IndexContent() {
     return () => { cancelled = true }
   }, [preloadHomeMemberAd, homeOverlaysResolved, memberAdShowCycle, viewPageVisible])
 
-  const claimMaterialAdRewardOnTap = useCallback(async () => {
-    const intent = materialAdRewardIntent
-    if (!intent || materialAdRewardClaimingRef.current) return
-    materialAdRewardClaimingRef.current = true
-    try {
-      await claimMaterialAdReward(intent.sessionId, intent.sessionToken, intent.idempotencyKey)
-      setMaterialAdRewardIntent(null)
-      closeMemberAd()
-      Taro.showToast({ title: '下载额度已增加', icon: 'success' })
-    } catch (error) {
-      materialAdRewardClaimingRef.current = false
-      Taro.showToast({
-        title: error instanceof Error ? error.message : '领取失败，请再点一次广告',
-        icon: 'none',
-      })
-    }
-  }, [closeMemberAd, materialAdRewardIntent])
-
   const handleMemberAdReady = () => {
     if (mounted.current && memberAdPageActiveRef.current
       && memberAdUserRef.current === getCachedPageUserId() && memberAdUserRef.current > 0
       && !isAccountCancelled()) {
-      // 准备期间若其他入口已展示，不能继续使用过期资格。
-      if (!materialAdRewardIntent
-        && !memberAdFrequency.isDue(memberAdUserRef.current, memberAdRolesRef.current, memberAdStudentNoRef.current)) { closeMemberAd(); return }
+      // 广告准备期间若用户资格已过期，结束本次准备。
+      if (!memberAdFrequency.isDue(memberAdUserRef.current, memberAdRolesRef.current, memberAdStudentNoRef.current)) { closeMemberAd(); return }
       setMemberAdReady(true)
     }
   }
@@ -1859,11 +1814,7 @@ function IndexContent() {
           visible={memberAdVisible}
           onReady={handleMemberAdReady}
           onPresented={handleMemberAdPresented}
-          onClose={() => {
-            setMaterialAdRewardIntent(null)
-            closeMemberAd()
-          }}
-          onAdTap={claimMaterialAdRewardOnTap}
+          onClose={closeMemberAd}
         />
       )}
       {activityPopup && (
