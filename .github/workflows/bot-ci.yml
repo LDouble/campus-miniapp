@@ -1,0 +1,56 @@
+name: Bot CI
+
+# Public repository: this job must never reach the self-hosted runner for a
+# fork pull request. A fork can still replace this file, so outside
+# collaborators also need workflow-run approval in Settings → Actions.
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number to rerun
+        required: true
+        type: string
+      head_sha:
+        description: Head commit SHA of that pull request
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bot-ci-${{ github.repository }}-${{ github.event.pull_request.number || github.event.inputs.pr }}
+  cancel-in-progress: false
+
+jobs:
+  pr-ci:
+    name: Self-hosted PR CI
+    if: >-
+      (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.full_name == github.repository
+        && github.event.pull_request.user.login == 'LDouble')
+      || (github.event_name == 'workflow_dispatch'
+        && github.actor == 'LDouble')
+    runs-on: [self-hosted, bot-ci]
+    timeout-minutes: 150
+    steps:
+      - name: Run PR CI
+        env:
+          BOT_CI_EVENT: ${{ github.event.action }}
+          BOT_CI_REPO: ${{ github.repository }}
+          BOT_CI_PR: ${{ github.event.pull_request.number || github.event.inputs.pr }}
+          BOT_CI_SHA: ${{ github.event.pull_request.head.sha || github.event.inputs.head_sha }}
+        run: |
+          code=0
+          /home/box/agent-data/workflows/bot-hosted-pr-ci/scripts/run-pr-ci.sh \
+            "$BOT_CI_REPO" "$BOT_CI_PR" "$BOT_CI_SHA" || code=$?
+          if [ "$code" -eq 4 ]; then
+            echo "PR head moved; treating superseded run as success."
+            exit 0
+          fi
+          exit "$code"
