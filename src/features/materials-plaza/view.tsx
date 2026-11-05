@@ -110,6 +110,7 @@ export interface MaterialsPlazaViewProps {
   items: MaterialsPlazaItem[]
   quota?: MaterialsPlazaQuota
   quotaLoading?: boolean
+  loadingMore?: boolean
   loading?: boolean
   errorMessage?: string
   emptyTitle?: string
@@ -232,6 +233,7 @@ export default function MaterialsPlazaView({
   quota,
   quotaLoading = false,
   loading = false,
+  loadingMore = false,
   errorMessage,
   emptyTitle = '还没有找到资料',
   emptyDescription = '换个关键词搜索，或上传一份资料和同学分享。',
@@ -417,6 +419,7 @@ export default function MaterialsPlazaView({
               onCopy={onCopyDownloadAddress}
             />
           ))}
+          {loadingMore && <View className='materials-loading-more' ariaRole='status'><Text>正在加载更多…</Text></View>}
         </View>
       </View>
 

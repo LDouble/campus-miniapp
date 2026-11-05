@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import Taro, { useDidHide, useDidShow, useReachBottom, useRouter } from '@tarojs/taro'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Taro, { useDidHide, useDidShow, usePullDownRefresh, useReachBottom, useRouter } from '@tarojs/taro'
 import { Image, ScrollView, Text, View } from '@tarojs/components'
 import CustomNavbar from '../../components/custom-navbar'
 import {
@@ -354,7 +354,12 @@ export default function MaterialsPage() {
   const [feedbackFileId, setFeedbackFileId] = useState<number | undefined>()
   const [feedbackDescription, setFeedbackDescription] = useState('')
   const [submittingFeedback, setSubmittingFeedback] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [listPhase, setListPhase] = useState<'idle' | 'initial' | 'refresh' | 'append'>('idle')
+  const listRequest = useRef(0)
+  const listBusy = useRef(false)
+  const pulling = useRef(false)
+  const mineRequest = useRef(0)
+  const feedbackRequest = useRef(0)
   const [materialsLoadFailed, setMaterialsLoadFailed] = useState(false)
   const [materialsReloadKey, setMaterialsReloadKey] = useState(0)
   const [materialsPage, setMaterialsPage] = useState(1)
@@ -468,6 +473,18 @@ export default function MaterialsPage() {
     }
   }
 
+  const refreshMyMaterials = async () => {
+    const version = ++mineRequest.current
+    const items = await listAllMyCourseMaterials()
+    if (version === mineRequest.current) setMyMaterials(items)
+  }
+
+  const refreshMyFeedbacks = async () => {
+    const version = ++feedbackRequest.current
+    const page = await listMyCourseMaterialFeedbacks()
+    if (version === feedbackRequest.current) setMyFeedbacks(page.items)
+  }
+
   useDidShow(() => {
     syncCustomTabBar('materials')
     setCampusName(getSelectedCampus(getMiniappRuntimeConfig()))
@@ -485,8 +502,8 @@ export default function MaterialsPage() {
       setSheet(navigationIntent.action === 'upload' ? 'upload' : null)
       if (navigationIntent.action === 'upload') setUploadSource('file')
     }
-    void listAllMyCourseMaterials().then(setMyMaterials).catch(() => undefined)
-    void listMyCourseMaterialFeedbacks().then((page) => setMyFeedbacks(page.items)).catch(() => undefined)
+    void refreshMyMaterials().catch(() => undefined)
+    void refreshMyFeedbacks().catch(() => undefined)
     void refreshQuota()
   })
 
@@ -617,73 +634,75 @@ export default function MaterialsPage() {
   const selectedCourse = useMemo(() => (
     courseId ? apiCourses.find((item) => item.id === courseId) : undefined
   ), [apiCourses, courseId])
+  const loadMaterialsPage = useCallback(async (mode: 'initial' | 'refresh' | 'append', pageNumber: number) => {
+    if (mode === 'append' && listBusy.current) return
+    const version = ++listRequest.current
+    listBusy.current = true
+    setListPhase(mode)
+    setMaterialsLoadFailed(false)
+    try {
+      const page = await listCourseMaterials({
+        courseId,
+        materialType: kind === 'all' ? undefined : kind,
+        sourceType: sourceType === 'all' ? undefined : sourceType,
+        keyword: debouncedKeyword,
+        page: pageNumber,
+        pageSize: 20,
+      })
+      if (version !== listRequest.current) return
+      setMaterials((current) => mode === 'append'
+        ? [...current, ...page.items.filter((item) => !current.some((record) => record.id === item.id))]
+        : page.items)
+      setMaterialsPage(page.page)
+      setMaterialsTotal(page.total)
+    } catch {
+      if (version !== listRequest.current) return
+      if (mode !== 'append') setMaterialsLoadFailed(true)
+      Taro.showToast({ title: mode === 'append' ? '下一页加载失败' : '资料加载失败，请稍后重试', icon: 'none' })
+    } finally {
+      if (version === listRequest.current) {
+        listBusy.current = false
+        setListPhase('idle')
+      }
+    }
+  }, [courseId, kind, sourceType, debouncedKeyword])
+
   useEffect(() => {
     if (viewMode !== 'browse' || !coursesLoaded) return
-    let active = true
-    setLoading(true)
-    setMaterialsLoadFailed(false)
-    listCourseMaterials({
-      courseId,
-      materialType: kind === 'all' ? undefined : kind,
-      sourceType: sourceType === 'all' ? undefined : sourceType,
-      keyword: debouncedKeyword,
-      periodId: undefined,
-      page: 1,
-      pageSize: 20,
-    })
-      .then((page) => {
-        if (!active) return
-        setMaterials(page.items)
-        setMaterialsPage(page.page)
-        setMaterialsTotal(page.total)
-      })
-      .catch(() => {
-        if (!active) return
-        setMaterialsLoadFailed(true)
-        Taro.showToast({ title: '资料加载失败，请稍后重试', icon: 'none' })
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
+    setMaterials([])
+    setMaterialsPage(1)
+    setMaterialsTotal(0)
+    void loadMaterialsPage('initial', 1)
     return () => {
-      active = false
+      listRequest.current += 1
+      listBusy.current = false
     }
-  }, [
-    coursesLoaded,
-    debouncedKeyword,
-    kind,
-    sourceType,
-    materialsReloadKey,
-    courseId,
-    viewMode,
-  ])
+  }, [coursesLoaded, loadMaterialsPage, materialsReloadKey, viewMode])
+
+  usePullDownRefresh(async () => {
+    if (pulling.current) return
+    pulling.current = true
+    try {
+      if (sheet || adRewardPhase !== 'idle') return
+      if (viewMode === 'browse') {
+        await Promise.all([loadMaterialsPage('refresh', 1), refreshQuota()])
+      } else if (viewMode === 'mine') {
+        await refreshMyMaterials()
+      } else {
+        await refreshMyFeedbacks()
+      }
+    } catch {
+      Taro.showToast({ title: '刷新失败，请稍后重试', icon: 'none' })
+    } finally {
+      pulling.current = false
+      void Taro.stopPullDownRefresh()
+    }
+  })
 
   useReachBottom(() => {
-    if (
-      viewMode !== 'browse'
-      || loading
-      || materials.length >= materialsTotal
-    ) return
-    setLoading(true)
-    listCourseMaterials({
-      courseId,
-      materialType: kind === 'all' ? undefined : kind,
-      sourceType: sourceType === 'all' ? undefined : sourceType,
-      keyword: debouncedKeyword,
-      periodId: undefined,
-      page: materialsPage + 1,
-      pageSize: 20,
-    })
-      .then((page) => {
-        setMaterials((current) => [
-          ...current,
-          ...page.items.filter((item) => !current.some((record) => record.id === item.id)),
-        ])
-        setMaterialsPage(page.page)
-        setMaterialsTotal(page.total)
-      })
-      .catch(() => Taro.showToast({ title: '下一页加载失败', icon: 'none' }))
-      .finally(() => setLoading(false))
+    if (viewMode !== 'browse' || !coursesLoaded || listBusy.current || !materials.length
+      || materialsPage * 20 >= materialsTotal) return
+    void loadMaterialsPage('append', materialsPage + 1)
   })
 
   const visibleMyMaterials = useMemo(() => myMaterials.filter((item) => {
@@ -1623,8 +1642,9 @@ export default function MaterialsPage() {
             adEntryHint: quota.ad_rewards_remaining > 0 ? `今日还可领 ${quota.ad_rewards_remaining} 次` : undefined,
           } : undefined}
           quotaLoading={quotaLoading}
-          loading={loading}
-          errorMessage={materialsLoadFailed ? '资料暂时没有加载出来' : undefined}
+          loading={listPhase === 'initial' || (listPhase === 'refresh' && !materials.length)}
+          loadingMore={listPhase === 'append'}
+          errorMessage={materialsLoadFailed && !materials.length ? '资料暂时没有加载出来' : undefined}
           upload={materialsPlazaUpload}
           onOpenMine={() => setViewMode('mine')}
           onRewardEntry={() => void startAdReward()}
