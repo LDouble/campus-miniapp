@@ -25,7 +25,7 @@
     "test:subpackage-preload": "ts-node --transpile-only scripts/subpackage-preload-smoke.ts && node scripts/package-size-smoke.cjs",
     "test:navigation-guard": "ts-node --transpile-only scripts/navigation-guard-smoke.ts",
     "test:favorites": "ts-node --transpile-only scripts/favorites-smoke.ts",
-    "test:course-materials": "ts-node --transpile-only scripts/course-materials-smoke.ts && ts-node --transpile-only scripts/course-materials-zip-smoke.ts && ts-node --transpile-only scripts/materials-ad-reward-smoke.ts",
+    "test:course-materials": "ts-node --transpile-only scripts/course-materials-smoke.ts && ts-node --transpile-only scripts/course-materials-zip-smoke.ts && ts-node --transpile-only scripts/materials-ad-reward-smoke.ts && ts-node --transpile-only scripts/materials-list-refresh-smoke.ts",
     "test:academic-credential": "ts-node --transpile-only scripts/academic-credential-smoke.ts",
     "test:academic-credential-repeat": "ts-node --transpile-only scripts/academic-credential-repeat-smoke.ts",
     "test:academic-verification-refresh": "ts-node --transpile-only scripts/academic-verification-refresh-smoke.ts",
